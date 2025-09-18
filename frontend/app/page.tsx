@@ -1,103 +1,186 @@
-import Image from "next/image";
+import { Navigation } from "@/components/navigation"
+import { HeroSection } from "@/components/hero-section"
+import { BookCarousel } from "@/components/book-carousel"
+import { TrendingStories } from "@/components/trending-stories"
+import { BookOpen } from "lucide-react" // Declare the BookOpen variable
+// Sample book data
+const featuredBooks = [
+  {
+    id: "1",
+    title: "Thế Giới Phép Thuật",
+    author: "Nguyễn Văn A",
+    cover: "/fantasy-magic-world-book-cover.jpg",
+    rating: 4.8,
+    reads: "2.1M",
+    genre: "Fantasy",
+    description: "Một thế giới đầy phép thuật và những cuộc phiêu lưu kỳ thú đang chờ đón bạn...",
+    isNew: true,
+    isTrending: true,
+  },
+  {
+    id: "2",
+    title: "Tình Yêu Tuổi 17",
+    author: "Trần Thị B",
+    cover: "/teen-romance-book-cover.jpg",
+    rating: 4.9,
+    reads: "1.8M",
+    genre: "Romance",
+    description: "Câu chuyện tình yêu ngọt ngào của tuổi học trò với những cung bậc cảm xúc...",
+    isNew: false,
+    isTrending: true,
+  },
+  {
+    id: "3",
+    title: "Kiếm Hiệp Giang Hồ",
+    author: "Lê Văn C",
+    cover: "/martial-arts-swordsman-book.jpg",
+    rating: 4.7,
+    reads: "1.5M",
+    genre: "Võ hiệp",
+    description: "Hành trình trở thành cao thủ võ lâm của một chàng trai trẻ...",
+    isNew: true,
+    isTrending: false,
+  },
+  {
+    id: "4",
+    title: "Bí Ẩn Thành Phố",
+    author: "Phạm Thị D",
+    cover: "/mystery-city-detective-book.jpg",
+    rating: 4.6,
+    reads: "1.2M",
+    genre: "Mystery",
+    description: "Những vụ án bí ẩn trong thành phố lớn và cuộc truy tìm sự thật...",
+    isNew: false,
+    isTrending: true,
+  },
+  {
+    id: "5",
+    title: "Công Chúa Rồng",
+    author: "Hoàng Văn E",
+    cover: "/dragon-princess-fantasy-book.jpg",
+    rating: 4.8,
+    reads: "980K",
+    genre: "Fantasy",
+    description: "Cuộc phiêu lưu của công chúa rồng trong thế giới thần thoại...",
+    isNew: true,
+    isTrending: false,
+  },
+]
 
-export default function Home() {
+const newBooks = [
+  {
+    id: "6",
+    title: "Học Viện Siêu Năng Lực",
+    author: "Vũ Thị F",
+    cover: "/superhero-academy-book-cover.jpg",
+    rating: 4.5,
+    reads: "850K",
+    genre: "Sci-Fi",
+    description: "Trường học dành cho những người có siêu năng lực đặc biệt...",
+    isNew: true,
+    isTrending: false,
+  },
+  {
+    id: "7",
+    title: "Nàng Tiên Cá",
+    author: "Đỗ Văn G",
+    cover: "/mermaid-fantasy-book-cover.jpg",
+    rating: 4.7,
+    reads: "720K",
+    genre: "Fantasy",
+    description: "Câu chuyện về nàng tiên cá và cuộc tình với hoàng tử...",
+    isNew: true,
+    isTrending: true,
+  },
+  {
+    id: "8",
+    title: "Thám Tử Nhí",
+    author: "Bùi Thị H",
+    cover: "/young-detective-mystery-book.jpg",
+    rating: 4.4,
+    reads: "650K",
+    genre: "Mystery",
+    description: "Những vụ án được giải quyết bởi thám tử nhí thông minh...",
+    isNew: true,
+    isTrending: false,
+  },
+  {
+    id: "9",
+    title: "Chiến Binh Ánh Sáng",
+    author: "Ngô Văn I",
+    cover: "/light-warrior-fantasy-book.jpg",
+    rating: 4.6,
+    reads: "580K",
+    genre: "Fantasy",
+    description: "Cuộc chiến giữa ánh sáng và bóng tối trong thế giới fantasy...",
+    isNew: true,
+    isTrending: true,
+  },
+  {
+    id: "10",
+    title: "Tình Yêu Văn Phòng",
+    author: "Lý Thị J",
+    cover: "/placeholder.svg?height=400&width=300",
+    rating: 4.3,
+    reads: "520K",
+    genre: "Romance",
+    description: "Chuyện tình lãng mạn nơi công sở giữa sếp và nhân viên...",
+    isNew: true,
+    isTrending: false,
+  },
+]
+
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-background">
+      <Navigation />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <main>
+        <HeroSection />
+
+        <div className="space-y-16">
+          <BookCarousel title="Truyện Nổi Bật" books={featuredBooks} variant="featured" />
+
+          <TrendingStories />
+
+          <BookCarousel title="Truyện Mới Cập Nhật" books={newBooks} variant="new" />
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="bg-muted/30 mt-20 py-12">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              BookVerse
+            </h3>
+          </div>
+          <p className="text-muted-foreground mb-8 text-balance">Nền tảng đọc sách trực tuyến hàng đầu Việt Nam</p>
+          <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
+            <a href="#" className="hover:text-primary transition-colors">
+              Về chúng tôi
+            </a>
+            <a href="#" className="hover:text-primary transition-colors">
+              Điều khoản
+            </a>
+            <a href="#" className="hover:text-primary transition-colors">
+              Bảo mật
+            </a>
+            <a href="#" className="hover:text-primary transition-colors">
+              Liên hệ
+            </a>
+            <a href="#" className="hover:text-primary transition-colors">
+              Hỗ trợ
+            </a>
+          </div>
+          <div className="mt-8 pt-8 border-t text-sm text-muted-foreground">
+            © 2024 BookVerse. Tất cả quyền được bảo lưu.
+          </div>
+        </div>
       </footer>
     </div>
-  );
+  )
 }
