@@ -1,4 +1,4 @@
-import { Navigation } from "@/components/navigation"
+import { Navigation } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { BookCarousel } from "@/components/book-carousel"
 import { TrendingStories } from "@/components/trending-stories"
