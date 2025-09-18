@@ -1,6 +1,6 @@
 import Axios, { AxiosError } from 'axios';
-import { AUTH_ENDPOINTS } from '../constants/api';
-import { AuthResponse } from '../types/auth';
+import { AUTH_ENDPOINTS } from '@/constants/api';
+import { AuthResponse } from '@/types/auth';
 
 const api = Axios.create({
   baseURL: AUTH_ENDPOINTS.signup.split('/auth')[0],

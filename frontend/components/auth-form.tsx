@@ -7,11 +7,11 @@ import {
   signupSchema,
   LoginFormData,
   loginSchema,
-} from '../lib/validation';
+} from '@/lib/validation';
 import { useMutation } from '@tanstack/react-query';
-import { signup, login } from '../lib/api';
-import { useAppDispatch } from '../hooks/use-app-dispatch';
-import { setAccessToken } from '../lib/auth-slice';
+import { signup, login } from '@/lib/api';
+import { useAppDispatch } from '@/hooks/use-app-dispatch';
+import { setAccessToken } from '@/lib/auth-slice';
 import { useRouter } from 'next/navigation';
 
 interface AuthFormProps {
