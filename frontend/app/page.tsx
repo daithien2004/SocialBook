@@ -1,4 +1,4 @@
-import { Navigation } from "@/components/header"
+import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { BookCarousel } from "@/components/book-carousel"
 import { TrendingStories } from "@/components/trending-stories"
@@ -133,7 +133,6 @@ const newBooks = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
 
       <main>
         <HeroSection />

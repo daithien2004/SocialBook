@@ -3,9 +3,15 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { BooksModule } from './modules/books/books.module';
+import { ChaptersModule } from './modules/chapters/chapters.module';
 
+
+// import seeders
+import { BooksSeed } from './seeds/books.seeder';
+import { ChaptersSeed } from './seeds/chapters.seeder';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -21,8 +27,12 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    BooksModule,
+    ChaptersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, BooksSeed, ChaptersSeed],
+  // register seeders
+  exports: [BooksSeed, ChaptersSeed],
 })
-export class AppModule {}
+export class AppModule { }

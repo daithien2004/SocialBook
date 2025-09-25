@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts",
+    "seed": "ts-node src/seeds/seed.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -29,6 +29,7 @@
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.0",
     "argon2": "^0.44.0",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, Eye, Heart, BookOpen, MessageCircle, Share2, Bookmark } from "lucide-react"
-import { Navigation } from "@/components/header"
+import { Header } from "@/components/header"
 
 // Mock data - trong thực tế sẽ fetch từ database
 const booksData = {
@@ -125,7 +125,6 @@ export default function BookDetail({ params }: BookDetailProps) {
 
     return (
         <div className="min-h-screen bg-background">
-            <Navigation />
 
             <div className="container mx-auto px-4 py-8 mt-12">
                 {/* Hero Section */}

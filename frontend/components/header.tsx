@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Menu, X, BookOpen, User, Bell, Settings, Heart, Library, PenTool, Crown } from "lucide-react"
 
-export function Navigation() {
+export function Header() {
     const [isScrolled, setIsScrolled] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -30,7 +30,7 @@ export function Navigation() {
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-background/80 backdrop-blur-md shadow-lg border-b" : "bg-transparent"
                 }`}
         >
-            <div className="max-w-7xl mx-auto px-4">
+            <div className="max-w-8xl mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <div className="flex items-center gap-3">
