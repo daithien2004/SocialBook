@@ -7,6 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
+import { ChatModule } from './chat/chat.module';
 
 
 // import seeders
@@ -17,17 +18,18 @@ import { ChaptersSeed } from './seeds/chapters.seeder';
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>(
           'MONGO_URI',
           'mongodb://localhost:27017/socialbook',
         ),
       }),
-      inject: [ConfigService],
     }),
     UsersModule,
     AuthModule,
-    BooksModule,
+    ChatModule,
+    ChatModule,    BooksModule,
     ChaptersModule,
   ],
   controllers: [AppController],
