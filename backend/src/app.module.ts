@@ -13,6 +13,8 @@ import { ChatModule } from './chat/chat.module';
 // import seeders
 import { BooksSeed } from './seeds/books.seeder';
 import { ChaptersSeed } from './seeds/chapters.seeder';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from '@/src/modules/auth/passport/guards/jwt-auth.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -29,11 +31,17 @@ import { ChaptersSeed } from './seeds/chapters.seeder';
     UsersModule,
     AuthModule,
     ChatModule,
-    ChatModule,    BooksModule,
+    ChatModule,
+    BooksModule,
     ChaptersModule,
   ],
   controllers: [AppController],
-  providers: [AppService, BooksSeed, ChaptersSeed],
+  providers: [AppService, BooksSeed, ChaptersSeed,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    }
+  ],
   // register seeders
   exports: [BooksSeed, ChaptersSeed],
 })

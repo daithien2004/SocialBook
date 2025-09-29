@@ -12,7 +12,7 @@ import { ConfigService } from '@nestjs/config';
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwt: JwtService,
+    private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
 
@@ -26,14 +26,19 @@ export class AuthService {
     return this.signTokens(user._id.toString(), user.email);
   }
 
-  async login(email: string, password: string) {
+  async login(user: any) {
+    const payload = { email: user.email, id: user._id };
+    return this.signTokens(payload.id,payload.email);
+  }
+
+  async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const pwMatches = await argon2.verify(user.password, password);
     if (!pwMatches) throw new UnauthorizedException('Invalid credentials');
 
-    return this.signTokens(user._id.toString(), user.email);
+    return user;
   }
 
   async logout(userId: string) {
@@ -48,11 +53,11 @@ export class AuthService {
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwt.signAsync(payload, {
+      this.jwtService.signAsync(payload, {
         secret: accessSecret,
         expiresIn: '15m',
       }),
-      this.jwt.signAsync(payload, {
+      this.jwtService.signAsync(payload, {
         secret: refreshSecret,
         expiresIn: '7d',
       }),

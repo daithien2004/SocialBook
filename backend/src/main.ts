@@ -23,7 +23,10 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // Cấu hình ValidationPipe
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }));
 
   // Cấu hình cookie-parser
   app.use(cookieParser());
