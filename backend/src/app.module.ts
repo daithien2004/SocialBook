@@ -7,7 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
-import { ChatModule } from './chat/chat.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 
 // import seeders

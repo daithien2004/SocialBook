@@ -1,8 +1,8 @@
 'use client';
 
-import { useAppSelector } from '@/hooks/use-app-selector';
-import { useAppDispatch } from '@/hooks/use-app-dispatch';
-import { logout } from '@/lib/auth-slice';
+import { useAppSelector } from '@/store/hooks';
+import { useAppDispatch } from '@/store/hooks';
+import { logout } from '@/features/auth/slice';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 

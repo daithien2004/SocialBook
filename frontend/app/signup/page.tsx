@@ -1,7 +1,7 @@
 'use client';
 
 import AuthForm from '@/components/auth-form';
-import { useRefreshToken } from '@/hooks/use-refresh-token';
+import { useRefreshToken } from '@/features/auth/hooks/useRefreshToken';
 
 export default function SignupPage() {
   useRefreshToken(); // Kích hoạt làm mới token
