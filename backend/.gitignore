@@ -58,3 +58,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # IntelliJ IDEA
 .idea/
 *.iml
+
+/src/configs/serviceAccountKey.json

@@ -9,5 +9,4 @@ export class BooksService {
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
   ) {}
-
 }

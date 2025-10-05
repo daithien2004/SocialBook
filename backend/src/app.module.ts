@@ -8,13 +8,42 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
 import { ChatModule } from './modules/chat/chat.module';
+import mongoose from 'mongoose';
 
+// Cấu hình toàn cục cho Mongoose để chuẩn hóa id
+mongoose.set('toJSON', {
+  virtuals: true,
+  transform: (doc, ret: any) => {
+    // Chỉ thêm id nếu chưa tồn tại
+    if (!ret.id && ret._id) {
+      ret.id = ret._id.toString();
+      delete ret._id;
+    }
+    delete ret.__v; // Xóa trường __v
+    return ret;
+  },
+});
+
+mongoose.set('toObject', {
+  virtuals: true,
+  transform: (doc, ret: any) => {
+    // Chỉ thêm id nếu chưa tồn tại
+    if (!ret.id && ret._id) {
+      ret.id = ret._id.toString();
+      delete ret._id;
+    }
+    delete ret.__v; // Xóa trường __v
+    return ret;
+  },
+});
 
 // import seeders
-import { BooksSeed } from './seeds/books.seeder';
-import { ChaptersSeed } from './seeds/chapters.seeder';
+import { BooksSeed } from './shared/database/seeds/books.seeder';
+import { ChaptersSeed } from './shared/database/seeds/chapters.seeder';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from '@/src/modules/auth/passport/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
+import { OtpModule } from './modules/otp/otp.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -28,21 +57,42 @@ import { JwtAuthGuard } from '@/src/modules/auth/passport/guards/jwt-auth.guard'
         ),
       }),
     }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: configService.get<string>('EMAIL_USER'),
+            pass: configService.get<string>('EMAIL_PASS'),
+          },
+        },
+        defaults: {
+          from: `"No Reply" <${configService.get<string>('EMAIL_USER')}>`,
+        },
+      }),
+    }),
     UsersModule,
     AuthModule,
     ChatModule,
-    ChatModule,
     BooksModule,
     ChaptersModule,
+    OtpModule,
   ],
   controllers: [AppController],
-  providers: [AppService, BooksSeed, ChaptersSeed,
+  providers: [
+    AppService,
+    BooksSeed,
+    ChaptersSeed,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
-    }
+    },
   ],
   // register seeders
   exports: [BooksSeed, ChaptersSeed],
 })
-export class AppModule { }
+export class AppModule {}

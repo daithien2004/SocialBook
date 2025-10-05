@@ -4,11 +4,33 @@ import { HydratedDocument } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ unique: true, required: true, trim: true })
+  username: string;
+
   @Prop({ unique: true, required: true })
   email: string;
 
-  @Prop({ required: true })
-  password: string;
+  // ✅ Password là OPTIONAL (cho OAuth users)
+  @Prop({ required: false })
+  password?: string;
+
+  @Prop({ default: false })
+  isVerified: boolean;
+
+  // Thêm field để phân biệt loại đăng nhập
+  @Prop({
+    type: String,
+    enum: ['local', 'google', 'facebook'],
+    default: 'local',
+  })
+  provider: string;
+
+  // Lưu providerId (Google ID, Facebook ID, etc.)
+  @Prop({ required: false })
+  providerId?: string;
+
+  @Prop()
+  avatar?: string;
 
   @Prop()
   hashedRt?: string; // lưu refresh token hash

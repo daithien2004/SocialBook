@@ -1,12 +1,22 @@
-// apps/backend/src/modules/chapters/chapter.controller.ts
-import { Controller, Get, Post, Body, Param, Put, Delete, Query, BadRequestException, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  Query,
+  BadRequestException,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
 import { Chapter } from './schemas/chapter.schema';
-import { ChapterService } from './chapters.service';
+import { ChaptersService } from './chapters.service';
 
 @Controller('books')
-export class ChapterController {
-  constructor(private readonly chapterService: ChapterService) { }
-
+export class ChaptersController {
+  constructor(private readonly chapterService: ChaptersService) {}
 
   @Get('chapter/by-id/:id/content')
   async getChapterContent(@Param('id') id: string) {
@@ -27,6 +37,4 @@ export class ChapterController {
   ) {
     return this.chapterService.getNextChapterMeta(slug, currentOrderIndex);
   }
-
-
 }

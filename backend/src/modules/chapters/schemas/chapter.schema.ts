@@ -1,4 +1,3 @@
-// apps/backend/src/modules/chapters/schemas/chapter.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
