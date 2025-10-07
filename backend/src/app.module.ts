@@ -44,6 +44,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { OtpModule } from './modules/otp/otp.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -75,6 +77,17 @@ import { MailerModule } from '@nestjs-modules/mailer';
         },
       }),
     }),
+    RedisModule.forRoot({
+      type: 'single',
+      url: 'redis://localhost:6379', // Hoặc từ env variable
+    }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'global', // đặt tên tuỳ ý
+        ttl: 60, // 60 giây
+        limit: 10, // 10 request trong 60s
+      },
+    ]),
     UsersModule,
     AuthModule,
     ChatModule,
@@ -90,6 +103,10 @@ import { MailerModule } from '@nestjs-modules/mailer';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
   // register seeders

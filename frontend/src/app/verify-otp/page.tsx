@@ -3,7 +3,10 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useVerifyOtpMutation } from '@/src/features/auth/api/authApi';
+import {
+  useResendOtpMutation,
+  useVerifyOtpMutation,
+} from '@/src/features/auth/api/authApi';
 
 export default function VerifyOtpPage() {
   const router = useRouter();
@@ -11,6 +14,7 @@ export default function VerifyOtpPage() {
   const email = searchParams.get('email') || '';
 
   const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
+  const [resendOtp, { isLoading: isLoadingResend }] = useResendOtpMutation();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -54,6 +58,14 @@ export default function VerifyOtpPage() {
       }, 2000);
     } catch (err: any) {
       setError(err.data?.message || 'Invalid OTP');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await resendOtp({ email }).unwrap();
+    } catch (err: any) {
+      setError(err.data?.message || 'Resend OTP failed');
     }
   };
 
@@ -137,12 +149,9 @@ export default function VerifyOtpPage() {
             <button
               type="button"
               className="font-medium text-indigo-600 hover:text-indigo-500"
-              onClick={() => {
-                // Implement resend OTP logic
-                console.log('Resend OTP');
-              }}
+              onClick={handleResendOtp}
             >
-              Resend
+              {isLoadingResend ? 'Resending...' : 'Resent OTP'}
             </button>
           </div>
         </form>

@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto, UpdateRefreshTokenDto } from './dto/user.dto';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcrypt';
 import aqp from 'api-query-params';
 @Injectable()
 export class UsersService {
@@ -15,7 +15,8 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
-    const { username, email, password, provider } = createUserDto;
+    const { username, email, password, provider, providerId, avatar } =
+      createUserDto;
 
     const isExist = await this.isEmailExist(email);
     if (isExist) {
@@ -24,7 +25,17 @@ export class UsersService {
       );
     }
 
-    const hashPassword = await argon2.hash(password!);
+    if (!password) {
+      return this.userModel.create({
+        username,
+        email,
+        provider,
+        providerId,
+        avatar,
+      });
+    }
+
+    const hashPassword = await bcrypt.hash(password!, 10);
     return this.userModel.create({
       username,
       email,

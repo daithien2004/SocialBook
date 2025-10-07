@@ -9,6 +9,7 @@ export interface User {
   name: string;
   avatar?: string;
 }
+
 export interface AuthResponse {
   accessToken: string;
   user: User;
@@ -27,15 +28,19 @@ export interface SignupRequest {
 }
 
 export interface GoogleAuthRequest {
-  username: string;
-  email: string;
-  googleId: string;
-  avatar: string;
+  username: string | null;
+  email: string | null;
+  googleId: string | null;
+  avatar: string | null;
 }
 
 export interface VerifyOtpRequest {
   email: string;
   otp: string;
+}
+
+export interface ResendOtpRequest {
+  email: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -118,6 +123,14 @@ export const authApi = createApi({
       providesTags: ['User'],
     }),
 
+    resendOtp: builder.mutation<string, ResendOtpRequest>({
+      query: (data) => ({
+        url: AUTH_ENDPOINTS.resendOtp,
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
     logout: builder.mutation<void, void>({
       query: () => ({
         url: AUTH_ENDPOINTS.logout,
@@ -138,4 +151,5 @@ export const {
   useRefreshTokenMutation,
   useGetProfileQuery,
   useLogoutMutation,
+  useResendOtpMutation,
 } = authApi;

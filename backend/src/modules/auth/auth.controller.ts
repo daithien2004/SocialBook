@@ -102,6 +102,22 @@ export class AuthController {
     }
   }
 
+  @Public()
+  @Post('resend-otp')
+  async resendOtp(@Body('email') email: string) {
+    try {
+      const result = await this.authService.resendOtp(email);
+      return {
+        message: 'OTP resent successfully',
+        data: {
+          remainingTime: result.remainingTime,
+        },
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @UseGuards(JwtRefreshAuthGuard)
   @Public()
   @Post('refresh')

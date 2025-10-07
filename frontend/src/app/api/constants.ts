@@ -10,6 +10,7 @@ export const AUTH_ENDPOINTS = {
   refresh: '/auth/refresh',
   profile: '/auth/profile',
   logout: '/auth/logout',
+  resendOtp: '/auth/resend-otp',
 } as const;
 
 export const BOOKS_ENDPOINTS = {

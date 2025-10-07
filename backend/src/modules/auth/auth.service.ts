@@ -7,7 +7,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { OtpService } from '../otp/otp.service';
@@ -69,16 +69,15 @@ export class AuthService {
     }
 
     // EXECUTION
-    const hash = await argon2.hash(dto.password);
     await this.usersService.create({
       username: dto.username,
       email: dto.email,
-      password: hash,
+      password: dto.password,
       provider: 'local',
     });
 
     // RETURN
-    return await this.otpService.generateOTP(dto.email);
+    return await this.sendOtp(dto.email);
   }
 
   // Endpoint xử lý cả login VÀ signup
@@ -92,7 +91,6 @@ export class AuthService {
       user = await this.usersService.create({
         username: dto.username || dto.email.split('@')[0],
         email: dto.email,
-        password: undefined, // Không có password
         provider: 'google',
         providerId: dto.googleId,
         avatar: dto.avatar,
@@ -152,7 +150,6 @@ export class AuthService {
     if (!existingUser) {
       throw new BadRequestException('User not found');
     }
-
     // RETURN
     return this.otpService.generateOTP(email);
   }
@@ -163,18 +160,25 @@ export class AuthService {
     newPassword: string,
   ): Promise<string> {
     // VALIDATION
-    const isValid = await this.otpService.verifyOTP(email, otp);
-    if (!isValid) {
-      throw new BadRequestException('Invalid OTP');
-    }
-
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new BadRequestException('User not found');
     }
 
+    const isSamePassword = await bcrypt.compare(newPassword, user.password!);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
+    }
+
+    const isValid = await this.otpService.verifyOTP(email, otp);
+    if (!isValid) {
+      throw new BadRequestException('Invalid OTP');
+    }
+
     // EXECUTION
-    const hashPassword = await argon2.hash(newPassword);
+    const hashPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashPassword;
     await user.save();
 
@@ -188,11 +192,56 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     // EXECUTION
-    const pwMatches = argon2.verify(user.password!, password);
+    const pwMatches = await bcrypt.compare(password, user.password!);
     if (!pwMatches) throw new UnauthorizedException('Invalid credentials');
 
     // RETURN
     return user;
+  }
+
+  async sendOtp(email: string): Promise<string> {
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      throw new BadRequestException('Email not found in system');
+    }
+
+    // Nếu user chưa active, cho phép gửi OTP
+    if (!user.isVerified) {
+      const otp = await this.otpService.generateOTP(email);
+      return otp;
+    }
+
+    throw new BadRequestException('Account already activated');
+  }
+
+  async resendOtp(email: string): Promise<{ remainingTime: number }> {
+    // Kiểm tra TTL của OTP hiện tại
+    const ttl = await this.otpService.getOtpTTL(email);
+
+    // Nếu không có OTP nào tồn tại
+    if (ttl === -2) {
+      throw new BadRequestException(
+        'No previous OTP request found. Please request a new OTP.',
+      );
+    }
+
+    // Chỉ cho phép resend nếu OTP cũ còn ít hơn 4 phút (240s)
+    // Tránh spam khi vừa mới gửi OTP
+    const RESEND_COOLDOWN = 60; // 1 phút
+    if (ttl > 300 - RESEND_COOLDOWN) {
+      const waitTime = ttl - (300 - RESEND_COOLDOWN);
+      throw new BadRequestException(
+        `Please wait ${waitTime} seconds before resending OTP`,
+      );
+    }
+
+    // Gửi OTP mới
+    await this.otpService.generateOTP(email);
+
+    return {
+      remainingTime: 300, // OTP mới có hiệu lực 5 phút
+    };
   }
 
   async signTokens(userId: string, email: string) {
@@ -218,7 +267,7 @@ export class AuthService {
       }),
     ]);
 
-    const hashedRt = await argon2.hash(refreshToken);
+    const hashedRt = await bcrypt.hash(refreshToken, 10);
     await this.usersService.updateRefreshToken(userId, { hashedRt });
 
     // RETURN
@@ -233,8 +282,7 @@ export class AuthService {
     }
 
     // EXECUTION
-    const { hashedRt } = user;
-    const rtMatches = await argon2.verify(hashedRt, refreshToken);
+    const rtMatches = await bcrypt.compare(refreshToken, user.hashedRt);
     if (!rtMatches) {
       throw new ForbiddenException('Access denied');
     }

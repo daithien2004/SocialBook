@@ -3,94 +3,73 @@
 import { useState } from 'react';
 import {
   useForgotPasswordMutation,
+  useResendOtpMutation,
   useResetPasswordMutation,
 } from '@/src/features/auth/api/authApi';
 import { Mail, Lock, ArrowLeft, CheckCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import {
+  ForgotPasswordFormValues,
+  forgotPasswordSchema,
+} from '@/src/types/auth';
+import { zodResolver } from '@hookform/resolvers/zod';
 
-const ForgotPasswordPage = () => {
+export default function ForgotPasswordPage() {
+  const router = useRouter();
+  const [resendOtp, { isLoading: isLoadingResend }] = useResendOtpMutation();
   const [step, setStep] = useState<'email' | 'otp' | 'success'>('email');
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState('');
+
+  const {
+    register,
+    formState: { errors },
+    watch,
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: 'onChange',
+  });
+  const email = watch('email');
+  const otp = watch('otp');
 
   const [forgotPassword, { isLoading: isSendingOtp }] =
     useForgotPasswordMutation();
   const [resetPassword, { isLoading: isResetting }] =
     useResetPasswordMutation();
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePassword = (password: string) => {
-    return password.length >= 6;
-  };
-
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
-
-    if (!validateEmail(email)) {
-      setErrors({ email: 'Please enter a valid email address' });
-      return;
-    }
 
     try {
       await forgotPassword({ email }).unwrap();
       setStep('otp');
     } catch (error: any) {
-      setErrors({
-        email: error?.data?.message || 'Failed to send OTP. Please try again.',
-      });
+      setServerError(
+        error?.data?.message || 'Failed to send OTP. Please try again.'
+      );
     }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
-
-    const newErrors: Record<string, string> = {};
-
-    if (!otp || otp.length !== 6) {
-      newErrors.otp = 'Please enter a valid 6-digit OTP';
-    }
-
-    if (!validatePassword(newPassword)) {
-      newErrors.newPassword = 'Password must be at least 6 characters';
-    }
-
-    if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
 
     try {
       await resetPassword({ email, otp, newPassword }).unwrap();
       setStep('success');
     } catch (error: any) {
-      setErrors({
-        otp:
-          error?.data?.message ||
-          'Invalid OTP or reset failed. Please try again.',
-      });
+      setServerError(
+        error?.data?.message || 'Invalid OTP or reset failed. Please try again.'
+      );
     }
   };
 
   const handleResendOtp = async () => {
     try {
-      await forgotPassword({ email }).unwrap();
-      setErrors({});
-    } catch (error: any) {
-      setErrors({
-        otp: error?.data?.message || 'Failed to resend OTP',
-      });
+      await resendOtp({ email }).unwrap();
+    } catch (err: any) {
+      setServerError(err.data?.message || 'Resend OTP failed');
     }
   };
 
@@ -98,13 +77,14 @@ const ForgotPasswordPage = () => {
     if (step === 'otp') {
       setStep('email');
     } else {
-      // Navigate to login - you'll need to implement this based on your routing
-      window.location.href = '/login';
+      router.push('/login');
+      // window.location.href = '/login';
     }
   };
 
   const handleLoginClick = () => {
-    window.location.href = '/login';
+    // window.location.href = '/login';
+    router.push('/login');
   };
 
   return (
@@ -145,8 +125,7 @@ const ForgotPasswordPage = () => {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      {...register('email')}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleSendOtp(e);
@@ -160,7 +139,9 @@ const ForgotPasswordPage = () => {
                     />
                   </div>
                   {errors.email && (
-                    <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
 
@@ -198,10 +179,7 @@ const ForgotPasswordPage = () => {
                   </label>
                   <input
                     type="text"
-                    value={otp}
-                    onChange={(e) =>
-                      setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
-                    }
+                    {...register('otp')}
                     className={`w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
                       errors.otp ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -210,14 +188,16 @@ const ForgotPasswordPage = () => {
                     required
                   />
                   {errors.otp && (
-                    <p className="mt-2 text-sm text-red-600">{errors.otp}</p>
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.otp.message}
+                    </p>
                   )}
                   <button
                     onClick={handleResendOtp}
                     disabled={isSendingOtp}
                     className="mt-2 text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
                   >
-                    Resend OTP
+                    {isLoadingResend ? 'Resending...' : 'Resent OTP'}
                   </button>
                 </div>
 
@@ -227,7 +207,7 @@ const ForgotPasswordPage = () => {
                   </label>
                   <input
                     type="password"
-                    value={newPassword}
+                    {...register('newPassword')}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
                       errors.newPassword ? 'border-red-500' : 'border-gray-300'
@@ -237,10 +217,15 @@ const ForgotPasswordPage = () => {
                   />
                   {errors.newPassword && (
                     <p className="mt-2 text-sm text-red-600">
-                      {errors.newPassword}
+                      {errors.newPassword.message}
                     </p>
                   )}
                 </div>
+                {serverError && (
+                  <div className="rounded-md bg-red-50 p-4">
+                    <p className="text-sm text-red-800">{serverError}</p>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -265,7 +250,7 @@ const ForgotPasswordPage = () => {
                   />
                   {errors.confirmPassword && (
                     <p className="mt-2 text-sm text-red-600">
-                      {errors.confirmPassword}
+                      {errors.confirmPassword.message}
                     </p>
                   )}
                 </div>
@@ -317,6 +302,4 @@ const ForgotPasswordPage = () => {
       </div>
     </div>
   );
-};
-
-export default ForgotPasswordPage;
+}
