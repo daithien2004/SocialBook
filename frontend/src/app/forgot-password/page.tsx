@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
       }).unwrap();
       setStep('success');
     } catch (err) {
-      console.error('Reset password failed:', err);
+      
     }
   };
 
@@ -73,9 +73,7 @@ export default function ForgotPasswordPage() {
     try {
       await forgotPassword({ email }).unwrap();
       setStep('otp');
-    } catch (err) {
-      console.error('Send OTP failed:', err);
-    }
+    } catch (err) {}
   };
 
   // Xử lý gửi lại OTP
@@ -87,9 +85,7 @@ export default function ForgotPasswordPage() {
     try {
       await resendOtp({ email }).unwrap();
       setResendMessage('A new OTP has been sent successfully.');
-    } catch (err) {
-      console.error('Resend OTP failed:', err);
-    }
+    } catch (err) {}
   };
 
   // Các hàm điều hướng

@@ -36,9 +36,7 @@ export default function SignupPage() {
       setEmailForOtp(data.email);
       setShowOtpModal(true);
       reset();
-    } catch (err: any) {
-      console.error('Signup failed:', err);
-    }
+    } catch (err: any) {}
   };
 
   if (showOtpModal) {

@@ -116,7 +116,11 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
-        token.user = user;
+
+        token.id = user.id;
+        token.username = user.username;
+        token.email = user.email!;
+        token.image = user.image!;
 
         // Giải mã token để lấy thời gian hết hạn
         const decodedAccessToken = jwtDecode<{ exp: number }>(user.accessToken);
@@ -138,11 +142,13 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       // `token` ở đây là object được trả về từ callback `jwt` ở trên
       if (token) {
+        session.user.name = token.username; // Vẫn giữ tên hiển thị
+
         session.user.id = token.id;
         session.user.username = token.username; // <-- Quan trọng
-        session.user.name = token.username; // Vẫn giữ tên hiển thị
         session.user.email = token.email; // Vẫn giữ email
         session.user.image = token.picture; // Vẫn giữ ảnh (từ Google)
+
         session.accessToken = token.accessToken;
       }
       return session;

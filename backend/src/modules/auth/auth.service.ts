@@ -189,11 +189,17 @@ export class AuthService {
   async validateUser(email: string, password: string) {
     // VALIDATION
     const user = await this.usersService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user)
+      throw new UnauthorizedException(
+        'Invalid email. Please check and try again.',
+      );
 
     // EXECUTION
     const pwMatches = await bcrypt.compare(password, user.password!);
-    if (!pwMatches) throw new UnauthorizedException('Invalid credentials');
+    if (!pwMatches)
+      throw new UnauthorizedException(
+        'Invalid password. Please check and try again.',
+      );
 
     // RETURN
     return user;
