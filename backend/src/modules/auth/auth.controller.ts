@@ -28,14 +28,14 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Post('google/callback')
-  async handleGoogleCallback(
+  @Post('google/login')
+  async handleGoogleLogin(
     @Body()
     data: {
       username: string;
       email: string;
       googleId: string;
-      avatar: string;
+      image: string;
     },
   ) {
     return this.authService.googleAuth(data);
@@ -45,26 +45,16 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(
-    @Request() req: any,
-    @Body() dto: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Request() req: any, @Body() dto: LoginDto) {
     const result = await this.authService.login(req.user);
 
-    // Set refresh token in HTTP-only cookie
-    res.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    // Response sẽ được transform bởi TransformInterceptor
+    // Trả về cả accessToken và refreshToken
+    // BFF sẽ xử lý việc set cookies
     return {
       message: 'Login successful',
       data: {
         accessToken: result.accessToken,
+        refreshToken: result.refreshToken, // ← Thêm này
         user: result.user,
       },
     };
@@ -121,26 +111,31 @@ export class AuthController {
   @UseGuards(JwtRefreshAuthGuard)
   @Public()
   @Post('refresh')
-  async refresh(@Req() req: any, @Res({ passthrough: true }) res: Response) {
-    const userId = req.user['sub'];
-    const refreshToken = req.user['refreshToken'];
+  async refresh(@Body('refreshToken') refreshToken: string) {
+    if (!refreshToken) {
+      throw new HttpException(
+        'Refresh token is required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-    const { accessToken, refreshToken: newRt } = await this.authService.refresh(
-      userId,
-      refreshToken,
-    );
+    try {
+      // Validate refresh token và lấy userId
+      const payload = await this.authService.validateRefreshToken(refreshToken);
 
-    res.cookie('refresh_token', newRt, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+      const { accessToken, refreshToken: newRefreshToken } =
+        await this.authService.refresh(payload.sub, refreshToken);
 
-    return {
-      message: 'Refresh successful',
-      data: { accessToken },
-    };
+      return {
+        message: 'Refresh successful',
+        data: {
+          accessToken,
+          refreshToken: newRefreshToken, // ← Trả về refresh token mới
+        },
+      };
+    } catch (error) {
+      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+    }
   }
 
   @Public()

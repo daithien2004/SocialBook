@@ -3,8 +3,8 @@ export interface AuthResponse {
   user: {
     id: string;
     email: string;
-    name: string;
-    avatar?: string;
+    username: string;
+    image?: string;
   };
 }
 // Định nghĩa type cho ResponseDto từ backend

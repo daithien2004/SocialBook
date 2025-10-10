@@ -49,7 +49,7 @@ export class AuthService {
       user: {
         id: user.id.toString(),
         email: user.email,
-        name: user.name,
+        username: user.username,
       },
     };
   }
@@ -93,7 +93,7 @@ export class AuthService {
         email: dto.email,
         provider: 'google',
         providerId: dto.googleId,
-        avatar: dto.avatar,
+        image: dto.image,
         isVerified: true, // Google đã verify rồi
       });
     } else {
@@ -118,8 +118,8 @@ export class AuthService {
       user: {
         id: user.id.toString(),
         email: user.email,
-        name: user.username,
-        avatar: user.avatar,
+        username: user.username,
+        image: user.image,
       },
     };
   }
@@ -289,5 +289,26 @@ export class AuthService {
 
     // RETURN
     return this.signTokens(user.id.toString(), user.email);
+  }
+
+  async validateRefreshToken(token: string) {
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+
+      // Kiểm tra token có trong DB không (nếu dùng token rotation)
+      const isValid = await this.usersService.checkRefreshTokenInDB(
+        payload.sub,
+        token,
+      );
+      if (!isValid) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      return payload;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 }

@@ -1,7 +1,8 @@
 import './globals.css';
 import { Providers } from '../context/Providers';
-import { Header } from '../components/header';
+import { Header } from '../components/Header';
 import { Toaster } from 'sonner';
+import AuthSync from '../components/AuthSync';
 
 export const metadata = {
   title: 'SocialBook',
@@ -16,7 +17,10 @@ export default function RootLayout({
     <html lang="vi" className="mdl-js">
       <body>
         <Header />
-        <Providers>{children}</Providers>
+        <Providers>
+          <AuthSync />
+          {children}
+        </Providers>
         <Toaster richColors position="top-right" />
       </body>
     </html>

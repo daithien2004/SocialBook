@@ -15,7 +15,7 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
-    const { username, email, password, provider, providerId, avatar } =
+    const { username, email, password, provider, providerId, image } =
       createUserDto;
 
     const isExist = await this.isEmailExist(email);
@@ -31,7 +31,7 @@ export class UsersService {
         email,
         provider,
         providerId,
-        avatar,
+        image,
       });
     }
 
@@ -93,5 +93,12 @@ export class UsersService {
     updateDto: UpdateRefreshTokenDto,
   ): Promise<UserDocument | null> {
     return this.userModel.findByIdAndUpdate(userId, updateDto, { new: true });
+  }
+
+  async checkRefreshTokenInDB(userId: string, rt: string) {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user || !user.hashedRt) return false;
+    const isMatch = await bcrypt.compare(rt, user.hashedRt);
+    return isMatch;
   }
 }

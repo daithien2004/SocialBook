@@ -1,14 +1,7 @@
-// store/api/authApi.ts
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/app/api';
-import { AUTH_ENDPOINTS } from '@/src/app/api/constants';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-}
+import { axiosBaseQuery } from '@/src/lib/client-api';
+import { User } from '../slice/authSlice';
+import { BFF_AUTH_ENDPOINTS } from '@/src/constants/client-endpoints';
 
 export interface AuthResponse {
   accessToken: string;
@@ -25,13 +18,6 @@ export interface SignupRequest {
   email: string;
   password: string;
   confirmPassword: string;
-}
-
-export interface GoogleAuthRequest {
-  username: string | null;
-  email: string | null;
-  googleId: string | null;
-  avatar: string | null;
 }
 
 export interface VerifyOtpRequest {
@@ -58,18 +44,9 @@ export const authApi = createApi({
   baseQuery: axiosBaseQuery(),
   tagTypes: ['User'],
   endpoints: (builder) => ({
-    login: builder.mutation<AuthResponse, LoginRequest>({
-      query: (credentials) => ({
-        url: AUTH_ENDPOINTS.login,
-        method: 'POST',
-        body: credentials,
-      }),
-      invalidatesTags: ['User'],
-    }),
-
     signup: builder.mutation<{ otp: string }, SignupRequest>({
       query: (data) => ({
-        url: AUTH_ENDPOINTS.signup,
+        url: BFF_AUTH_ENDPOINTS.signup,
         method: 'POST',
         body: data,
       }),
@@ -77,24 +54,15 @@ export const authApi = createApi({
 
     verifyOtp: builder.mutation<string, VerifyOtpRequest>({
       query: (data) => ({
-        url: AUTH_ENDPOINTS.verifyOtp,
+        url: BFF_AUTH_ENDPOINTS.verifyOtp,
         method: 'POST',
         body: data,
       }),
-    }),
-
-    googleAuth: builder.mutation<AuthResponse, GoogleAuthRequest>({
-      query: (data) => ({
-        url: AUTH_ENDPOINTS.googleCallback,
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: ['User'],
     }),
 
     forgotPassword: builder.mutation<string, ForgotPasswordRequest>({
       query: (data) => ({
-        url: AUTH_ENDPOINTS.forgotPassword,
+        url: BFF_AUTH_ENDPOINTS.forgotPassword,
         method: 'POST',
         body: data,
       }),
@@ -102,22 +70,15 @@ export const authApi = createApi({
 
     resetPassword: builder.mutation<string, ResetPasswordRequest>({
       query: (data) => ({
-        url: AUTH_ENDPOINTS.resetPassword,
+        url: BFF_AUTH_ENDPOINTS.resetPassword,
         method: 'POST',
         body: data,
       }),
     }),
 
-    refreshToken: builder.mutation<AuthResponse, void>({
-      query: () => ({
-        url: AUTH_ENDPOINTS.refresh,
-        method: 'POST',
-      }),
-    }),
-
     getProfile: builder.query<User, void>({
       query: () => ({
-        url: AUTH_ENDPOINTS.profile,
+        url: BFF_AUTH_ENDPOINTS.profile,
         method: 'GET',
       }),
       providesTags: ['User'],
@@ -125,31 +86,19 @@ export const authApi = createApi({
 
     resendOtp: builder.mutation<string, ResendOtpRequest>({
       query: (data) => ({
-        url: AUTH_ENDPOINTS.resendOtp,
+        url: BFF_AUTH_ENDPOINTS.resendOtp,
         method: 'POST',
         body: data,
       }),
-    }),
-
-    logout: builder.mutation<void, void>({
-      query: () => ({
-        url: AUTH_ENDPOINTS.logout,
-        method: 'POST',
-      }),
-      invalidatesTags: ['User'],
     }),
   }),
 });
 
 export const {
-  useLoginMutation,
   useSignupMutation,
   useVerifyOtpMutation,
-  useGoogleAuthMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
-  useRefreshTokenMutation,
   useGetProfileQuery,
-  useLogoutMutation,
   useResendOtpMutation,
 } = authApi;

@@ -8,14 +8,12 @@ import Link from 'next/link';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { SignupFormValues, signupSchema } from '@/src/types/auth';
+import { SignupFormValues, signupSchema } from '@/src/features/auth/types/auth';
 
 export default function SignupPage() {
   const router = useRouter();
-  const [signup, { isLoading }] = useSignupMutation();
+  const [signup, { isLoading, error }] = useSignupMutation();
 
-  // Lưu lỗi server (API) riêng — lỗi validate client sẽ từ react-hook-form/zod
-  const [serverError, setServerError] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [emailForOtp, setEmailForOtp] = useState('');
@@ -23,40 +21,23 @@ export default function SignupPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors: formErrors },
     reset,
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     mode: 'onChange',
-    defaultValues: {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
   });
 
   const onSubmit = async (data: SignupFormValues) => {
-    setServerError('');
     try {
-      const result = await signup({
-        username: data.username,
-        email: data.email,
-        password: data.password,
-        confirmPassword: data.confirmPassword,
-      }).unwrap();
+      const result = await signup(data).unwrap();
 
       setOtpCode(result.otp);
       setEmailForOtp(data.email);
       setShowOtpModal(true);
       reset();
     } catch (err: any) {
-      const msg =
-        err?.data?.message ||
-        err?.error ||
-        (err?.status && String(err.status)) ||
-        'Signup failed';
-      setServerError(msg);
+      console.error('Signup failed:', err);
     }
   };
 
@@ -129,10 +110,14 @@ export default function SignupPage() {
           onSubmit={handleSubmit(onSubmit)}
           noValidate
         >
-          {/* server error */}
-          {serverError && (
+          {/* 4. Hiển thị lỗi trực tiếp từ `error` của RTK Query */}
+          {error && 'data' in error && (
             <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{serverError}</p>
+              <p className="text-sm text-red-800">
+                {/* Truy cập an toàn vào message lỗi */}
+                {(error.data as { message: string }).message ||
+                  'An unknown error occurred'}
+              </p>
             </div>
           )}
 
@@ -148,17 +133,17 @@ export default function SignupPage() {
                 id="username"
                 {...register('username')}
                 className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                  errors.username ? 'border-red-500' : 'border-gray-300'
+                  formErrors.username ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter username"
-                aria-invalid={!!errors.username}
+                aria-invalid={!!formErrors.username}
                 aria-describedby={
-                  errors.username ? 'username-error' : undefined
+                  formErrors.username ? 'username-error' : undefined
                 }
               />
-              {errors.username && (
+              {formErrors.username && (
                 <p id="username-error" className="text-xs text-red-600 mt-1">
-                  {errors.username.message}
+                  {formErrors.username.message}
                 </p>
               )}
             </div>
@@ -175,15 +160,15 @@ export default function SignupPage() {
                 {...register('email')}
                 type="email"
                 className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
+                  formErrors.email ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter email"
-                aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? 'email-error' : undefined}
+                aria-invalid={!!formErrors.email}
+                aria-describedby={formErrors.email ? 'email-error' : undefined}
               />
-              {errors.email && (
+              {formErrors.email && (
                 <p id="email-error" className="text-xs text-red-600 mt-1">
-                  {errors.email.message}
+                  {formErrors.email.message}
                 </p>
               )}
             </div>
@@ -200,17 +185,17 @@ export default function SignupPage() {
                 {...register('password')}
                 type="password"
                 className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
+                  formErrors.password ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter password"
-                aria-invalid={!!errors.password}
+                aria-invalid={!!formErrors.password}
                 aria-describedby={
-                  errors.password ? 'password-error' : undefined
+                  formErrors.password ? 'password-error' : undefined
                 }
               />
-              {errors.password && (
+              {formErrors.password && (
                 <p id="password-error" className="text-xs text-red-600 mt-1">
-                  {errors.password.message}
+                  {formErrors.password.message}
                 </p>
               )}
             </div>
@@ -227,20 +212,24 @@ export default function SignupPage() {
                 {...register('confirmPassword')}
                 type="password"
                 className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                  formErrors.confirmPassword
+                    ? 'border-red-500'
+                    : 'border-gray-300'
                 }`}
                 placeholder="Confirm password"
-                aria-invalid={!!errors.confirmPassword}
+                aria-invalid={!!formErrors.confirmPassword}
                 aria-describedby={
-                  errors.confirmPassword ? 'confirmPassword-error' : undefined
+                  formErrors.confirmPassword
+                    ? 'confirmPassword-error'
+                    : undefined
                 }
               />
-              {errors.confirmPassword && (
+              {formErrors.confirmPassword && (
                 <p
                   id="confirmPassword-error"
                   className="text-xs text-red-600 mt-1"
                 >
-                  {errors.confirmPassword.message}
+                  {formErrors.confirmPassword.message}
                 </p>
               )}
             </div>

@@ -6,7 +6,7 @@ export class CreateUserDto {
   password?: string; // Optional
   provider: 'local' | 'google' | 'facebook';
   providerId?: string;
-  avatar?: string;
+  image?: string;
   isVerified?: boolean;
 }
 

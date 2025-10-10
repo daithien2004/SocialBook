@@ -36,7 +36,7 @@ export class SignupGoogleDto {
 
   @IsString()
   @IsOptional()
-  avatar?: string;
+  image?: string;
 }
 
 export class LoginDto {

@@ -30,7 +30,7 @@ export class User {
   providerId?: string;
 
   @Prop()
-  avatar?: string;
+  image?: string;
 
   @Prop()
   hashedRt?: string; // lưu refresh token hash
