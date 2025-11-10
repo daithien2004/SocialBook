@@ -1,8 +1,9 @@
 import './globals.css';
 import { Providers } from '../context/Providers';
-import { Header } from '../components/Header';
+
 import { Toaster } from 'sonner';
 import AuthSync from '../components/AuthSync';
+import { Header } from '../components/header';
 
 export const metadata = {
   title: 'SocialBook',

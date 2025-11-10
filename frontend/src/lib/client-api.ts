@@ -4,7 +4,7 @@ import { ErrorResponseDto, ResponseDto } from '../types/response';
 
 // Client chỉ gọi Next.js API routes (BFF)
 const clientApi = axios.create({
-  baseURL: '/api', // ← Same origin, no CORS
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // ← Same origin, no CORS
   withCredentials: true, // ← Tự động gửi cookies
   headers: {
     'Content-Type': 'application/json',
