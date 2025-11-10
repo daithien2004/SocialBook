@@ -14,7 +14,7 @@ import {
 import {
   ForgotPasswordFormValues,
   forgotPasswordSchema,
-} from '@/src/features/auth/types/auth';
+} from '@/src/features/auth/types/auth.type';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -54,9 +54,7 @@ export default function ForgotPasswordPage() {
         newPassword: data.newPassword,
       }).unwrap();
       setStep('success');
-    } catch (err) {
-      
-    }
+    } catch (err) {}
   };
 
   const handleSendOtp = async () => {
