@@ -8,7 +8,10 @@ import Link from 'next/link';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { SignupFormValues, signupSchema } from '@/src/features/auth/types/auth';
+import {
+  SignupFormValues,
+  signupSchema,
+} from '@/src/features/auth/types/auth.type';
 
 export default function SignupPage() {
   const router = useRouter();

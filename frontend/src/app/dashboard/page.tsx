@@ -3,18 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Image from 'next/image';
-import { useSession, signOut } from 'next-auth/react'; // 👈 1. Import useSession và signOut
-
-// Bạn có thể không cần Redux ở đây nữa, hoặc chỉ dùng để lấy dữ liệu khác
-// import { useDispatch } from 'react-redux';
-// import { logout } from '@/src/features/auth/slice/authSlice';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function DashboardPage() {
   const router = useRouter();
-  // 2. Dùng useSession làm nguồn chân lý duy nhất cho xác thực
+  // Dùng useSession làm nguồn chân lý duy nhất cho xác thực
   const { data: session, status } = useSession();
-
-  // const dispatch = useDispatch();
 
   // Trạng thái loading và chuyển hướng dựa trên `status` của NextAuth
   useEffect(() => {
@@ -26,7 +20,7 @@ export default function DashboardPage() {
 
   // Hàm xử lý logout mới
   const handleLogout = async () => {
-    // 3. Gọi signOut() của NextAuth để xóa session và cookie
+    // Gọi signOut() của NextAuth để xóa session và cookie
     // Nó sẽ tự động xóa session, bạn không cần dispatch logout thủ công nữa.
     await signOut({ redirect: true, callbackUrl: '/login' });
   };
@@ -81,9 +75,6 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
-
-          {/* ... Phần còn lại của Dashboard Content không thay đổi ... */}
-          {/* ... Bạn sẽ dùng `user` từ `session` thay vì từ Redux ... */}
         </div>
       </div>
     );

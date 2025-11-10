@@ -6,7 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
-import { loginSchema, LoginFormValues } from '@/src/features/auth/types/auth';
+import {
+  loginSchema,
+  LoginFormValues,
+} from '@/src/features/auth/types/auth.type';
 
 export default function LoginPage() {
   const router = useRouter();
