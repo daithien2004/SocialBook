@@ -46,6 +46,7 @@ import { OtpModule } from './modules/otp/otp.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { PostsModule } from '@/src/modules/posts/posts.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -94,6 +95,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     BooksModule,
     ChaptersModule,
     OtpModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [

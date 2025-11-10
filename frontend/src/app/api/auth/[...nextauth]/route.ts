@@ -136,7 +136,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       console.log('Access token has expired, refreshing...');
-      return await refreshAccessToken(token);
+      return  await refreshAccessToken(token);
     },
 
     async session({ session, token }) {
