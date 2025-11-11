@@ -22,12 +22,22 @@ export class PostsService {
     return created.save();
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async findByUser(userId: string): Promise<PostDocument[]> {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid userId format');
+    }
+
+    return this.postModel
+      .find({ userId: new Types.ObjectId(userId) })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findAll(): Promise<PostDocument[]> {
+    return this.postModel
+      .find()
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {

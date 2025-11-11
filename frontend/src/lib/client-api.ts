@@ -4,7 +4,7 @@ import { ErrorResponseDto, ResponseDto } from '../types/response';
 
 // Client chỉ gọi Next.js API routes (BFF)
 const clientApi = axios.create({
-  baseURL: 'http://localhost:3000/api', // ← Same origin, no CORS
+  baseURL: '/api', // ← Same origin, no CORS
   withCredentials: true, // ← Tự động gửi cookies
   headers: {
     'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ export const axiosBaseQuery =
         data: body,
         headers,
       });
-
+      console.log("re",result);
       const responseData = result.data as ResponseDto<unknown>;
 
       if (!responseData.success) {

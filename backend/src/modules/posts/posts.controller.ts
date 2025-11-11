@@ -24,14 +24,14 @@ export class PostsController {
     };
   }
 
-  @Get()
-  findAll() {
+  @Get('all')
+  async findAll() {
     return this.postsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+  @Get()
+  async findByUser(@Request() req: any) {
+    return this.postsService.findByUser(req.user.id);
   }
 
   @Patch(':id')
