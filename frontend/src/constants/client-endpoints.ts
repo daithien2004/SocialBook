@@ -6,3 +6,7 @@ export const BFF_AUTH_ENDPOINTS = {
   profile: '/auth/profile',
   resendOtp: '/auth/resend-otp',
 };
+
+export const BFF_POSTS_ENDPOINTS = {
+  getAll: '/posts',
+};
