@@ -37,12 +37,14 @@ export class ChaptersSeed implements OnApplicationBootstrap {
         {
           bookId: book1._id as Types.ObjectId,
           title: 'Chapter 1: Shadows of the Past',
+          slug: 'chapter-1-shadows-of-the-past',
           content: `Prince Kael stood at the edge of the battlefield, the moonlight casting long shadows across the ruins...`,
           orderIndex: 1,
         },
         {
           bookId: book1._id as Types.ObjectId,
           title: 'Chapter 2: The Warrior\'s Oath',
+          slug: 'chapter-2-the-warriors-oath',
           content: `Lyra tightened the leather straps of her armor, her gaze sharp as steel...`,
           orderIndex: 2,
         },
@@ -56,12 +58,14 @@ export class ChaptersSeed implements OnApplicationBootstrap {
         {
           bookId: book2._id as Types.ObjectId,
           title: 'Chapter 1: A Chance Encounter',
+          slug: 'chapter-1-a-chance-encounter',
           content: `Mia adjusted her blazer as she stepped into the boardroom, her heart racing...`,
           orderIndex: 1,
         },
         {
           bookId: book2._id as Types.ObjectId,
           title: 'Chapter 2: Behind Closed Doors',
+          slug: 'chapter-2-behind-closed-doors',
           content: `Late at night, Alexander poured himself a glass of whiskey in his penthouse office...`,
           orderIndex: 2,
         },
@@ -75,12 +79,14 @@ export class ChaptersSeed implements OnApplicationBootstrap {
         {
           bookId: book3._id as Types.ObjectId,
           title: 'Chapter 1: The Awakening',
+          slug: 'chapter-1-the-awakening',
           content: `Elena\'s hands trembled as sparks of blue fire danced across her fingertips...`,
           orderIndex: 1,
         },
         {
           bookId: book3._id as Types.ObjectId,
           title: 'Chapter 2: Secrets of Arcanum',
+          slug: 'chapter-2-secrets-of-arcanum',
           content: `The library of Arcanum Academy stretched beyond sight, filled with ancient tomes bound in leather and magic...`,
           orderIndex: 2,
         },
