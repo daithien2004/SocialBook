@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { User } from '@/src/modules/users/schemas/user.schema';
 
 @Schema({ timestamps: true })
 export class Post {

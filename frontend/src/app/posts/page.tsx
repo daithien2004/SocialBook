@@ -13,8 +13,8 @@ export default function Post() {
                 </ul>
             </div>
 
-            <div className="w-full lg:w-2/5 bg-white">
-                <div className="bg-white rounded-2xl shadow p-4 space-y-4 mt-4 mb-4 border-2r">
+            <div className="w-full lg:w-2/5 bg-white p-4">
+                <div className="bg-white rounded-2xl shadow p-4 space-y-4 mb-4 border-2r">
                     <div className="flex items-center space-x-3">
                         <img
                             src="/abstract-book-pattern.png" // Thay đường dẫn ảnh avatar ở đây

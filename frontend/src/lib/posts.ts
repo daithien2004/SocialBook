@@ -14,6 +14,26 @@ export const posts = [
         totalLikes: 124,
         totalComments: 8,
         likedByCurrentUser: true,
+        comments: [
+            {
+                userName: 'Lê Hoàng',
+                userAvatar: 'https://i.pravatar.cc/150?img=12',
+                content: 'Công nhận! Mình cũng mê thế giới phép thuật này lắm 🪄',
+                createdAt: '2 giờ trước',
+            },
+            {
+                userName: 'Trần Mai',
+                userAvatar: 'https://i.pravatar.cc/150?img=25',
+                content: 'Tác giả viết mượt thật, đọc cuốn không dừng được 😍',
+                createdAt: '1 giờ trước',
+            },
+            {
+                userName: 'Ngọc Anh',
+                userAvatar: 'https://i.pravatar.cc/150?img=36',
+                content: 'Cảnh chiến đấu ở chương 10 đỉnh quá trời 🔥🔥',
+                createdAt: '45 phút trước',
+            },
+        ],
     },
     {
         id: 'p2',
@@ -30,6 +50,26 @@ export const posts = [
         totalLikes: 200,
         totalComments: 15,
         likedByCurrentUser: false,
+        comments: [
+            {
+                userName: 'Tuấn Kiệt',
+                userAvatar: 'https://i.pravatar.cc/150?img=14',
+                content: 'Đọc xong tự nhiên nhớ crush cấp 3 🥹',
+                createdAt: '3 giờ trước',
+            },
+            {
+                userName: 'Phương Linh',
+                userAvatar: 'https://i.pravatar.cc/150?img=9',
+                content: 'Nhân vật chính dễ thương quá trời 💕',
+                createdAt: '2 giờ trước',
+            },
+            {
+                userName: 'Duy Tân',
+                userAvatar: 'https://i.pravatar.cc/150?img=33',
+                content: 'Cảm xúc y chang mình hồi đi học 😄',
+                createdAt: '1 giờ trước',
+            },
+        ],
     },
     {
         id: 'p3',
@@ -46,6 +86,20 @@ export const posts = [
         totalLikes: 89,
         totalComments: 4,
         likedByCurrentUser: false,
+        comments: [
+            {
+                userName: 'Hải Nam',
+                userAvatar: 'https://i.pravatar.cc/150?img=17',
+                content: 'Đọc mà cảm giác như đang xem phim kiếm hiệp luôn 😎',
+                createdAt: '30 phút trước',
+            },
+            {
+                userName: 'Phúc Hậu',
+                userAvatar: 'https://i.pravatar.cc/150?img=41',
+                content: 'Tác giả viết võ công chi tiết, đọc cuốn hút cực 💪',
+                createdAt: '10 phút trước',
+            },
+        ],
     },
     {
         id: 'p4',
@@ -62,6 +116,20 @@ export const posts = [
         totalLikes: 312,
         totalComments: 27,
         likedByCurrentUser: true,
+        comments: [
+            {
+                userName: 'Thu Trang',
+                userAvatar: 'https://i.pravatar.cc/150?img=45',
+                content: 'Plot twist cuối truyện làm mình nổi da gà 😱',
+                createdAt: '1 ngày trước',
+            },
+            {
+                userName: 'Minh Đức',
+                userAvatar: 'https://i.pravatar.cc/150?img=28',
+                content: 'Cảm giác như đang xem Sherlock Holmes bản Việt 🔎',
+                createdAt: '22 giờ trước',
+            },
+        ],
     },
     {
         id: 'p5',
@@ -78,5 +146,19 @@ export const posts = [
         totalLikes: 178,
         totalComments: 10,
         likedByCurrentUser: false,
+        comments: [
+            {
+                userName: 'Hồng Nhung',
+                userAvatar: 'https://i.pravatar.cc/150?img=56',
+                content: 'Công chúa dũng cảm và đáng yêu quá 😍',
+                createdAt: '3 giờ trước',
+            },
+            {
+                userName: 'Bảo Long',
+                userAvatar: 'https://i.pravatar.cc/150?img=64',
+                content: 'Mình thích mạch truyện kết hợp giữa phép thuật và cảm xúc ❤️‍🔥',
+                createdAt: '1 giờ trước',
+            },
+        ],
     },
 ];
