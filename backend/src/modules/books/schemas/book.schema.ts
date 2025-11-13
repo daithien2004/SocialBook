@@ -42,4 +42,5 @@ export class Book {
   isDeleted: boolean;
 }
 
+
 export const BookSchema = SchemaFactory.createForClass(Book);
