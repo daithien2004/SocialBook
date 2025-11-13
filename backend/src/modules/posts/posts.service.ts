@@ -7,7 +7,9 @@ import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
 
 @Injectable()
 export class PostsService {
+
   constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
+
   async create(userId: string,createPostDto: CreatePostDto):Promise<PostDocument> {
     if (!Types.ObjectId.isValid(createPostDto.bookId)) {
       throw new BadRequestException('Invalid bookId format');

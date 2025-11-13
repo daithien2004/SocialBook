@@ -37,7 +37,6 @@ export const axiosBaseQuery =
         data: body,
         headers,
       });
-      console.log("re",result);
       const responseData = result.data as ResponseDto<unknown>;
 
       if (!responseData.success) {
