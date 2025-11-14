@@ -10,3 +10,8 @@ export const BFF_AUTH_ENDPOINTS = {
 export const BFF_POSTS_ENDPOINTS = {
   getAll: '/posts',
 };
+
+export const BFF_BOOKS_ENDPOINTS = {
+  getAll: '/books',
+  getBySlug: (slug: string) => `/books/${slug}`,
+};

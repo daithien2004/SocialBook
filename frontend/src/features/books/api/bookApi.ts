@@ -1,4 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { axiosBaseQuery } from '@/src/lib/client-api';
+import { BFF_BOOKS_ENDPOINTS } from '@/src/constants/client-endpoints';
 
 export interface Author {
   _id: string;
@@ -53,17 +55,20 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-// ✅ API ĐƠN GIẢN - gọi thẳng đến backend
 export const booksApi = createApi({
   reducerPath: 'booksApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:5000/api', // ✅ TRỰC TIẾP đến backend
-  }),
+  baseQuery: axiosBaseQuery(),
   tagTypes: ['Book'],
   endpoints: (builder) => ({
+    // Lấy chi tiết sách theo slug
     getBookBySlug: builder.query<Book, string>({
-      query: (slug) => `/books/${slug}`,
-      transformResponse: (response: ApiResponse<Book>) => response.data,
+      query: (slug) => ({
+        url: BFF_BOOKS_ENDPOINTS.getBySlug(slug),
+        method: 'GET',
+      }),
+      providesTags: (result, error, slug) => [
+        { type: 'Book', id: slug },
+      ],
     }),
   }),
 });
