@@ -28,16 +28,45 @@ export class BooksService {
       throw new NotFoundException('Book not found');
     }
 
+    // Lấy chapters
     const chapters = await this.chapterModel
       .find({ bookId: book._id })
       .sort({ orderIndex: 1 })
       .lean();
 
+    // Lấy comments với populate user
     const comments = await this.commentModel
       .find({ targetType: 'book', targetId: book._id })
-      .populate('userId', 'name avatar')
+      .populate({
+        path: 'userId',
+        select: 'username image',
+      })
       .sort({ createdAt: -1 })
       .lean();
+
+    // TÍNH AVERAGE RATING & TOTAL RATINGS
+    const ratingStats = await this.commentModel.aggregate([
+      { 
+        $match: { 
+          targetType: 'book', 
+          targetId: new Types.ObjectId(book._id as Types.ObjectId),
+          rating: { $exists: true, $ne: null } // Chỉ tính comments có rating
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          averageRating: { $avg: '$rating' },
+          totalRatings: { $sum: 1 }
+        } 
+      }
+    ]);
+
+    const ratingData = ratingStats[0] || {};
+    const averageRating = ratingData.averageRating 
+      ? Math.round(ratingData.averageRating * 10) / 10 // Làm tròn 1 chữ số thập phân
+      : 0;
+    const totalRatings = ratingData.totalRatings || 0;
 
     return {
       ...book,
@@ -45,6 +74,39 @@ export class BooksService {
       genres: book.genre,
       chapters,
       comments,
+      averageRating,
+      totalRatings,
+      ratingDistribution: await this.getRatingDistribution(book._id as Types.ObjectId), 
     };
+  }
+
+  // thống kê của các rating (1-5 sao)
+  private async getRatingDistribution(bookId: Types.ObjectId) {
+    const distribution = await this.commentModel.aggregate([
+      { 
+        $match: { 
+          targetType: 'book', 
+          targetId: bookId,
+          rating: { $exists: true, $ne: null }
+        } 
+      },
+      {
+        $group: {
+          _id: '$rating',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // Chuyển đổi thành object {1: count, 2: count, ...}
+    const result = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    distribution.forEach(item => {
+      result[item._id] = item.count;
+    });
+
+    return result;
   }
 }

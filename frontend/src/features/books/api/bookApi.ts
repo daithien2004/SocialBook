@@ -25,7 +25,13 @@ export interface Chapter {
 export interface Comment {
   _id: string;
   content: string;
+  userId: {
+    _id: string;
+    username: string;
+    image?: string;
+  };
   likesCount: number;
+  rating: number;
   createdAt: string;
 }
 
@@ -37,6 +43,8 @@ export interface Book {
   coverUrl: string;
   status: string;
   tags: string[];
+  totalRatings: number;
+  averageRating: number;
   views: number;
   likes: number;
   publishedYear: string;
