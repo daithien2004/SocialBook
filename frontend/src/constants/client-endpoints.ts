@@ -1,5 +1,4 @@
-
- const BFF_AUTH_ENDPOINTS = {
+export const BFF_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
   verifyOtp: '/auth/verify-otp',
   forgotPassword: '/auth/forgot-password',
@@ -14,10 +13,15 @@ export const BFF_POSTS_ENDPOINTS = {
 
 export const BFF_BOOKS_ENDPOINTS = {
   getAll: '/books',
-  getBySlug: (slug: string) => `/books/${slug}`,
+  getBySlug: (bookSlug: string) => `/books/${bookSlug}`,
 };
 
 export const BFF_COMMENTS_ENDPOINTS = {
   getCommentsByTarget: '/comments',
+};
 
+export const BFF_CHAPTERS_ENDPOINTS = {
+  getChapter: (bookSlug: string, chapterSlug: string) =>
+    `/books/${bookSlug}/chapters/${chapterSlug}`,
+  getChapters: (bookSlug: string) => `/books/${bookSlug}/chapters`,
 };

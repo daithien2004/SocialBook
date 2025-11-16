@@ -8,35 +8,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
 import { ChatModule } from './modules/chat/chat.module';
-import mongoose from 'mongoose';
-
-// Cấu hình toàn cục cho Mongoose để chuẩn hóa id
-mongoose.set('toJSON', {
-  virtuals: true,
-  transform: (doc, ret: any) => {
-    // Chỉ thêm id nếu chưa tồn tại
-    if (!ret.id && ret._id) {
-      ret.id = ret._id.toString();
-      delete ret._id;
-    }
-    delete ret.__v; // Xóa trường __v
-    return ret;
-  },
-});
-
-mongoose.set('toObject', {
-  virtuals: true,
-  transform: (doc, ret: any) => {
-    // Chỉ thêm id nếu chưa tồn tại
-    if (!ret.id && ret._id) {
-      ret.id = ret._id.toString();
-      delete ret._id;
-    }
-    delete ret.__v; // Xóa trường __v
-    return ret;
-  },
-});
-
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { OtpModule } from './modules/otp/otp.module';

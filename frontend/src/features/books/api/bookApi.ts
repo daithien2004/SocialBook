@@ -3,19 +3,19 @@ import { axiosBaseQuery } from '@/src/lib/client-api';
 import { BFF_BOOKS_ENDPOINTS } from '@/src/constants/client-endpoints';
 
 export interface Author {
-  _id: string;
+  id: string;
   name: string;
   bio: string;
 }
 
 export interface Genre {
-  _id: string;
+  id: string;
   name: string;
   description: string;
 }
 
 export interface Chapter {
-  _id: string;
+  id: string;
   title: string;
   slug: string;
   content: string;
@@ -23,14 +23,14 @@ export interface Chapter {
 }
 
 export interface Comment {
-  _id: string;
+  id: string;
   content: string;
   likesCount: number;
   createdAt: string;
 }
 
 export interface Book {
-  _id: string;
+  id: string;
   title: string;
   slug: string;
   description: string;
@@ -55,20 +55,22 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+interface GetBookRequest {
+  bookSlug: string;
+}
+
 export const booksApi = createApi({
   reducerPath: 'booksApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Book'],
+  tagTypes: ['Books'],
   endpoints: (builder) => ({
     // Lấy chi tiết sách theo slug
-    getBookBySlug: builder.query<Book, string>({
-      query: (slug) => ({
-        url: BFF_BOOKS_ENDPOINTS.getBySlug(slug),
+    getBookBySlug: builder.query<Book, GetBookRequest>({
+      query: (data) => ({
+        url: BFF_BOOKS_ENDPOINTS.getBySlug(data.bookSlug),
         method: 'GET',
       }),
-      providesTags: (result, error, slug) => [
-        { type: 'Book', id: slug },
-      ],
+      providesTags: ['Books'],
     }),
   }),
 });

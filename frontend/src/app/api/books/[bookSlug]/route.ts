@@ -4,24 +4,23 @@ import serverApi from '@/src/lib/server-api';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: { bookSlug: string } }
 ) {
-  const { slug } = params;
+  const { bookSlug } = params;
 
   try {
     // Gọi backend thật (NestJS)
-    const res = await serverApi.get(`/books/${slug}`); 
+    const res = await serverApi.get(`/books/${bookSlug}`);
     // Trả về đúng format mà client mong đợi
     return NextResponse.json({
       success: true,
       statusCode: 200,
       message: 'Book retrieved successfully',
-      data: res.data.data || res.data, 
+      data: res.data.data || res.data,
     });
-    
   } catch (err: any) {
     console.error('GET /api/books/[slug] error:', err);
-    
+
     return NextResponse.json(
       {
         success: false,
@@ -29,7 +28,7 @@ export async function GET(
         message: err.response?.data?.message || 'Internal Server Error',
         error: 'Backend Error',
         timestamp: new Date().toISOString(),
-        path: `/api/books/${slug}`,
+        path: `/api/books/${bookSlug}`,
       },
       { status: err.response?.status || 500 }
     );

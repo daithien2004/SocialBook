@@ -3,7 +3,7 @@ import { Providers } from '../context/Providers';
 
 import { Toaster } from 'sonner';
 import AuthSync from '../components/AuthSync';
-import { Header } from '../components/header';
+import { Header } from '../components/Header';
 
 export const metadata = {
   title: 'SocialBook',

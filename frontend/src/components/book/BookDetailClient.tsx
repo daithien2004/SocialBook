@@ -1,16 +1,24 @@
 'use client';
 
 import { useGetBookBySlugQuery } from '@/src/features/books/api/bookApi';
-import Image from "next/image"
-import Link from "next/link"
-import { Star, Eye, Heart, BookOpen, MessageCircle, Share2, Bookmark } from "lucide-react"
+import Image from 'next/image';
+import Link from 'next/link';
+import {
+  Star,
+  Eye,
+  Heart,
+  BookOpen,
+  MessageCircle,
+  Share2,
+  Bookmark,
+} from 'lucide-react';
 
 interface BookDetailClientProps {
-  slug: string;
+  bookSlug: string;
 }
 
-export default function BookDetailClient({ slug }: BookDetailClientProps) {
-  const { data: book, isLoading, error } = useGetBookBySlugQuery(slug);
+export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
+  const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });
 
   // Loading state
   if (isLoading) {
@@ -39,8 +47,12 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
     return (
       <div className="min-h-screen bg-white-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Không tìm thấy sách</h1>
-          <p className="text-gray-600">Sách bạn tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            Không tìm thấy sách
+          </h1>
+          <p className="text-gray-600">
+            Sách bạn tìm kiếm không tồn tại hoặc đã bị xóa.
+          </p>
         </div>
       </div>
     );
@@ -48,13 +60,13 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
 
   // Transform API data to match your component structure
   const bookData = {
-    id: book._id,
+    id: book.id,
     title: book.title,
     author: book.author.name,
-    cover: book.coverUrl || "/placeholder.svg",
+    cover: book.coverUrl || '/placeholder.svg',
     description: book.description,
     fullDescription: `${book.description}\n\nCuốn sách "${book.title}" của tác giả ${book.author.name} mang đến một hành trình đầy cảm xúc...`,
-    genre: book.genres.map(g => g.name),
+    genre: book.genres.map((g) => g.name),
     rating: 4.8, // Có thể tính từ comments/reviews
     totalRatings: book.comments.length,
     views: book.views,
@@ -63,16 +75,16 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
     status: book.status === 'completed' ? 'Completed' : 'Ongoing',
     publishedDate: book.createdAt,
     lastUpdated: book.updatedAt,
-    language: "Vietnamese",
+    language: 'Vietnamese',
     tags: book.tags,
-    ageRating: "16+",
+    ageRating: '16+',
     readingTime: `${Math.ceil(book.chapters.length * 10)} phút`,
   };
 
   const reviews = book.comments.map((comment, index) => ({
-    id: comment._id,
+    id: comment.id,
     user: `User${index + 1}`,
-    avatar: "/placeholder.svg",
+    avatar: '/placeholder.svg',
     rating: 5,
     comment: comment.content,
     date: new Date(comment.createdAt).toLocaleDateString('vi-VN'),
@@ -101,9 +113,14 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
           {/* Book Info */}
           <div className="lg:w-2/3 space-y-6">
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">{bookData.title}</h1>
+              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                {bookData.title}
+              </h1>
               <p className="text-xl text-gray-600 mb-4">
-                Tác giả: <span className="text-orange-600 font-semibold">{bookData.author}</span>
+                Tác giả:{' '}
+                <span className="text-orange-600 font-semibold">
+                  {bookData.author}
+                </span>
               </p>
 
               {/* Tags */}
@@ -119,21 +136,27 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                 <span className="px-3 py-1 border border-orange-500 text-orange-600 rounded-full text-sm">
                   {bookData.ageRating}
                 </span>
-                <span className={`px-3 py-1 border rounded-full text-sm ${
-                  bookData.status === "Completed" 
-                    ? "border-green-500 text-green-600" 
-                    : "border-blue-500 text-blue-600"
-                }`}>
-                  {bookData.status === "Completed" ? "Hoàn thành" : "Đang cập nhật"}
+                <span
+                  className={`px-3 py-1 border rounded-full text-sm ${
+                    bookData.status === 'Completed'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-blue-500 text-blue-600'
+                  }`}
+                >
+                  {bookData.status === 'Completed'
+                    ? 'Hoàn thành'
+                    : 'Đang cập nhật'}
                 </span>
               </div>
 
-              <p className="text-lg text-gray-700 leading-relaxed mb-6">{bookData.description}</p>
+              <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                {bookData.description}
+              </p>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link 
-                  href={`/books/${slug}/chapters/${book.chapters[0]?.slug}`}
+                <Link
+                  href={`/books/${bookSlug}/chapters/${book.chapters[0]?.slug}`}
                   className="flex items-center justify-center bg-gradient-to-r from-yellow-500 to-orange-400 
                               hover:from-yellow-700 hover:to-orange-600 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
@@ -167,15 +190,21 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
           <div className="bg-gradient-to-br from-blue-500/5 to-blue-500/10 border border-blue-500/20 rounded-lg hover:shadow-lg transition-shadow p-6 text-center">
             <div className="flex items-center justify-center mb-2">
               <Star className="w-6 h-6 text-yellow-500 mr-1" />
-              <span className="text-2xl font-bold text-gray-900">{bookData.rating}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {bookData.rating}
+              </span>
             </div>
-            <p className="text-sm text-gray-600">{bookData.totalRatings.toLocaleString()} đánh giá</p>
+            <p className="text-sm text-gray-600">
+              {bookData.totalRatings.toLocaleString()} đánh giá
+            </p>
           </div>
 
           <div className="bg-gradient-to-br from-purple-500/5 to-purple-500/10 border border-purple-500/20 rounded-lg hover:shadow-lg transition-shadow p-6 text-center">
             <div className="flex items-center justify-center mb-2">
               <Eye className="w-6 h-6 text-purple-500 mr-1" />
-              <span className="text-2xl font-bold text-gray-900">{(bookData.views / 1000000).toFixed(1)}M</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {(bookData.views / 1000000).toFixed(1)}M
+              </span>
             </div>
             <p className="text-sm text-gray-600">Lượt xem</p>
           </div>
@@ -183,7 +212,9 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
           <div className="bg-gradient-to-br from-red-500/5 to-red-500/10 border border-red-500/20 rounded-lg hover:shadow-lg transition-shadow p-6 text-center">
             <div className="flex items-center justify-center mb-2">
               <Heart className="w-6 h-6 text-red-500 mr-1" />
-              <span className="text-2xl font-bold text-gray-900">{(bookData.likes / 1000).toFixed(0)}K</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {(bookData.likes / 1000).toFixed(0)}K
+              </span>
             </div>
             <p className="text-sm text-gray-600">Yêu thích</p>
           </div>
@@ -191,7 +222,9 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
           <div className="bg-gradient-to-br from-green-500/5 to-green-500/10 border border-green-500/20 rounded-lg hover:shadow-lg transition-shadow p-6 text-center">
             <div className="flex items-center justify-center mb-2">
               <BookOpen className="w-6 h-6 text-green-500 mr-1" />
-              <span className="text-2xl font-bold text-gray-900">{bookData.chapters}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {bookData.chapters}
+              </span>
             </div>
             <p className="text-sm text-gray-600">Chương</p>
           </div>
@@ -203,13 +236,17 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
             {/* Description */}
             <div className="bg-yellow-50 backdrop-blur-sm rounded-lg border border-neutral-500 border-2">
               <div className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Mô tả chi tiết</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Mô tả chi tiết
+                </h2>
                 <div className="text-gray-700">
-                  {bookData.fullDescription.split("\n\n").map((paragraph, index) => (
-                    <p key={index} className="mb-4 leading-relaxed">
-                      {paragraph}
-                    </p>
-                  ))}
+                  {bookData.fullDescription
+                    .split('\n\n')
+                    .map((paragraph, index) => (
+                      <p key={index} className="mb-4 leading-relaxed">
+                        {paragraph}
+                      </p>
+                    ))}
                 </div>
               </div>
             </div>
@@ -218,7 +255,9 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
             <div className="bg-yellow-50 backdrop-blur-sm rounded-lg border border-neutral-500 border-2">
               <div className="p-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Đánh giá từ độc giả</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Đánh giá từ độc giả
+                  </h2>
                   <button className="flex items-center border-2 border-amber-200 text-yellow-800 px-4 py-2 hover:bg-amber-300 rounded-lg transition-colors">
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Viết đánh giá
@@ -227,7 +266,10 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
 
                 <div className="space-y-6">
                   {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-neutral-500 border-2/50 pb-6 last:border-b-0">
+                    <div
+                      key={review.id}
+                      className="border-b border-neutral-500 border-2/50 pb-6 last:border-b-0"
+                    >
                       <div className="flex items-start gap-4">
                         <Image
                           src={review.avatar}
@@ -238,18 +280,24 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="font-semibold text-gray-900">{review.user}</span>
+                            <span className="font-semibold text-gray-900">
+                              {review.user}
+                            </span>
                             <div className="flex items-center">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
                                   className={`w-4 h-4 ${
-                                    i < review.rating ? "text-yellow-500 fill-current" : "text-gray-300"
+                                    i < review.rating
+                                      ? 'text-yellow-500 fill-current'
+                                      : 'text-gray-300'
                                   }`}
                                 />
                               ))}
                             </div>
-                            <span className="text-sm text-gray-500">{review.date}</span>
+                            <span className="text-sm text-gray-500">
+                              {review.date}
+                            </span>
                           </div>
                           <p className="text-gray-700 mb-2">{review.comment}</p>
                           <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -272,7 +320,9 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
             {/* Book Details */}
             <div className="bg-yellow-50 backdrop-blur-sm rounded-lg border-neutral-500 border-2">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Chi tiết sách</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Chi tiết sách
+                </h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Ngôn ngữ:</span>
@@ -280,15 +330,25 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Thời gian đọc:</span>
-                    <span className="text-gray-900">{bookData.readingTime}</span>
+                    <span className="text-gray-900">
+                      {bookData.readingTime}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Xuất bản:</span>
-                    <span className="text-gray-900">{new Date(bookData.publishedDate).toLocaleDateString("vi-VN")}</span>
+                    <span className="text-gray-900">
+                      {new Date(bookData.publishedDate).toLocaleDateString(
+                        'vi-VN'
+                      )}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Cập nhật:</span>
-                    <span className="text-gray-900">{new Date(bookData.lastUpdated).toLocaleDateString("vi-VN")}</span>
+                    <span className="text-gray-900">
+                      {new Date(bookData.lastUpdated).toLocaleDateString(
+                        'vi-VN'
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -297,7 +357,9 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
             {/* Tags */}
             <div className="bg-yellow-50 backdrop-blur-sm rounded-lg border-neutral-500 border-2">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Thẻ</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Thẻ
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {bookData.tags.map((tag) => (
                     <span
@@ -314,12 +376,14 @@ export default function BookDetailClient({ slug }: BookDetailClientProps) {
             {/* Chapters List */}
             <div className="bg-amber-50 backdrop-blur-sm rounded-lg border-neutral-500 border-2">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Chương mới nhất</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Chương mới nhất
+                </h3>
                 <div className="space-y-4">
                   {book.chapters.slice(-3).map((chapter) => (
-                    <Link 
-                      key={chapter._id} 
-                      href={`/books/${slug}/read/${chapter._id}`} 
+                    <Link
+                      key={chapter.id}
+                      href={`/books/${bookSlug}/read/${chapter.id}`}
                       className="block group"
                     >
                       <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors">
