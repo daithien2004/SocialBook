@@ -32,3 +32,7 @@ export class Comment {
 
 export type CommentDocument = HydratedDocument<Comment>;
 export const CommentSchema = SchemaFactory.createForClass(Comment);
+
+CommentSchema.virtual('id').get(function () {
+  return this._id.toString();
+});

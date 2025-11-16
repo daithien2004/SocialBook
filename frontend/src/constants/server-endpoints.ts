@@ -7,6 +7,11 @@ export const NESTJS_AUTH_ENDPOINTS = {
   resendOtp: '/auth/resend-otp',
 };
 
+export const NESTJS_COMMENTS_ENDPOINTS = {
+  getCommentsByTarget: '/comments/level1'
+};
+
+
 export const NESTJS_BOOKS_ENDPOINTS = {
   bookAndFirstChapter: (bookSlug: string) => `/books/${bookSlug}/first-chapter`,
   getMetadataNextChapter: (bookSlug: string, currentOrderIndex: number) =>

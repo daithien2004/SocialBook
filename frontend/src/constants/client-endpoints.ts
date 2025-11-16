@@ -10,3 +10,7 @@ export const BFF_AUTH_ENDPOINTS = {
 export const BFF_POSTS_ENDPOINTS = {
   getAll: '/posts',
 };
+
+export const BFF_COMMENTS_ENDPOINTS = {
+  getCommentsByTarget: '/comments',
+};

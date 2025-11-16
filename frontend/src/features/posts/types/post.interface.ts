@@ -1,5 +1,3 @@
-import {PostComment} from "@/src/features/posts/types/posCommentst.interface";
-
 export interface Post {
     id: string;
     userId: string;
@@ -14,5 +12,4 @@ export interface Post {
     totalLikes?: number;
     totalComments?: number;
     likedByCurrentUser?: boolean;
-    comments?: PostComment[];
 }

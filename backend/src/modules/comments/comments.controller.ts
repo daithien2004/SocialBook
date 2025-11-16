@@ -4,6 +4,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Public } from '@/src/common/decorators/customize';
 import type { CommentTargetType } from '@/src/modules/comments/constants/comment.constant';
+import { GetLevel1CommentsDto } from '@/src/modules/comments/dto/get-comment.dto';
 
 @Controller('comments')
 export class CommentsController {
@@ -14,19 +15,14 @@ export class CommentsController {
     return this.commentsService.create(createCommentDto);
   }
 
-  @Public()
-  @Get()
-  async getLevel1Comments(
-    @Query('targetId') targetId: string,
-    @Query('targetType') targetType: CommentTargetType,
-    @Query('page') page = '1',
-    @Query('limit') limit = '20',
-  ) {
+  @Get('level1')
+  async getLevel1Comments(@Query() query: GetLevel1CommentsDto) {
+    const { targetId, parentId, cursor, limit } = query;
     return this.commentsService.getLevel1(
       targetId,
-      targetType,
-        Number(page),
-      Number(limit),
+      parentId ?? null,
+      cursor,
+      limit,
     );
   }
 

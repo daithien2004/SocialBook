@@ -1,6 +1,6 @@
 export const posts = [
     {
-        id: 'p1',
+        id: '6911b0a53ff60a8639bb8509',
         userId: 'u1',
         userName: 'Nguyễn Văn A',
         userAvatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,
@@ -36,7 +36,7 @@ export const posts = [
         ],
     },
     {
-        id: 'p2',
+        id: '6911b0a73ff60a8639bb850b',
         userId: 'u2',
         userName: 'Trần Thị B',
         userAvatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}`,

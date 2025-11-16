@@ -11,7 +11,7 @@ const PostList = () => {
     useEffect(() => {
         (async () => {
             try {
-                // ✅ unwrap() giúp lấy data thật (từ server)
+                console.log("Post",posts);
                 const result = await getPosts().unwrap();
                 console.log("✅ Dữ liệu bài viết:", result);
             } catch (e) {
