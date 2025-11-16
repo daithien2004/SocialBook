@@ -1,5 +1,6 @@
+// src/shared/database/seeds/chapters.seeder.ts
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import {
   Chapter,
@@ -8,14 +9,18 @@ import {
 import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
 
 @Injectable()
-export class ChaptersSeed {
+export class ChaptersSeed implements OnApplicationBootstrap {
   constructor(
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
   ) {}
 
+  async onApplicationBootstrap() {
+    await this.run();
+  }
+
   async run() {
-    await this.chapterModel.deleteMany({}); // clear cũ
+    await this.chapterModel.deleteMany({});
 
     const books = await this.bookModel.find();
     if (!books.length) {
@@ -30,19 +35,17 @@ export class ChaptersSeed {
     if (book1) {
       chaptersData.push(
         {
-          bookId: book1._id as Types.ObjectId, // ✅ dùng trực tiếp
+          bookId: book1._id as Types.ObjectId,
           title: 'Chapter 1: Shadows of the Past',
-          content: `
-Prince Kael stood at the edge of the battlefield, the moonlight casting long shadows across the ruins...
-          `,
+          slug: 'chapter-1-shadows-of-the-past',
+          content: `Prince Kael stood at the edge of the battlefield, the moonlight casting long shadows across the ruins...`,
           orderIndex: 1,
         },
         {
           bookId: book1._id as Types.ObjectId,
-          title: 'Chapter 2: The Warrior’s Oath',
-          content: `
-Lyra tightened the leather straps of her armor, her gaze sharp as steel...
-          `,
+          title: 'Chapter 2: The Warrior\'s Oath',
+          slug: 'chapter-2-the-warriors-oath',
+          content: `Lyra tightened the leather straps of her armor, her gaze sharp as steel...`,
           orderIndex: 2,
         },
       );
@@ -55,17 +58,15 @@ Lyra tightened the leather straps of her armor, her gaze sharp as steel...
         {
           bookId: book2._id as Types.ObjectId,
           title: 'Chapter 1: A Chance Encounter',
-          content: `
-Mia adjusted her blazer as she stepped into the boardroom, her heart racing...
-          `,
+          slug: 'chapter-1-a-chance-encounter',
+          content: `Mia adjusted her blazer as she stepped into the boardroom, her heart racing...`,
           orderIndex: 1,
         },
         {
           bookId: book2._id as Types.ObjectId,
           title: 'Chapter 2: Behind Closed Doors',
-          content: `
-Late at night, Alexander poured himself a glass of whiskey in his penthouse office...
-          `,
+          slug: 'chapter-2-behind-closed-doors',
+          content: `Late at night, Alexander poured himself a glass of whiskey in his penthouse office...`,
           orderIndex: 2,
         },
       );
@@ -78,23 +79,21 @@ Late at night, Alexander poured himself a glass of whiskey in his penthouse offi
         {
           bookId: book3._id as Types.ObjectId,
           title: 'Chapter 1: The Awakening',
-          content: `
-Elena’s hands trembled as sparks of blue fire danced across her fingertips...
-          `,
+          slug: 'chapter-1-the-awakening',
+          content: `Elena\'s hands trembled as sparks of blue fire danced across her fingertips...`,
           orderIndex: 1,
         },
         {
           bookId: book3._id as Types.ObjectId,
           title: 'Chapter 2: Secrets of Arcanum',
-          content: `
-The library of Arcanum Academy stretched beyond sight, filled with ancient tomes bound in leather and magic...
-          `,
+          slug: 'chapter-2-secrets-of-arcanum',
+          content: `The library of Arcanum Academy stretched beyond sight, filled with ancient tomes bound in leather and magic...`,
           orderIndex: 2,
         },
       );
     }
 
     await this.chapterModel.insertMany(chaptersData);
-    console.log('✅ Seed chapters done!');
+    console.log(`✅ Seed chapters done! Created ${chaptersData.length} chapters.`);
   }
 }

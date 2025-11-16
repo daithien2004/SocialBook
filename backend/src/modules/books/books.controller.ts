@@ -1,16 +1,14 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Put,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { BooksService } from './books.service';
-import { Book } from './schemas/book.schema';
+import { Public } from '@/src/common/decorators/customize';
 
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) {}
+  constructor(private readonly booksService: BooksService) { }
+
+  @Public()
+  @Get(':slug')
+  async getBookDetail(@Param('slug') slug: string) {
+    return await this.booksService.findBySlug(slug);
+  }
 }

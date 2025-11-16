@@ -37,9 +37,6 @@ mongoose.set('toObject', {
   },
 });
 
-// import seeders
-import { BooksSeed } from './shared/database/seeds/books.seeder';
-import { ChaptersSeed } from './shared/database/seeds/chapters.seeder';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { OtpModule } from './modules/otp/otp.module';
@@ -48,6 +45,8 @@ import { RedisModule } from '@nestjs-modules/ioredis';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PostsModule } from '@/src/modules/posts/posts.module';
 import { CommentsModule } from '@/src/modules/comments/comments.module';
+import { AuthorsModule } from '@/src/modules/authors/authors.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -81,13 +80,13 @@ import { CommentsModule } from '@/src/modules/comments/comments.module';
     }),
     RedisModule.forRoot({
       type: 'single',
-      url: 'redis://localhost:6379', // Hoặc từ env variable
+      url: 'redis://localhost:6379',
     }),
     ThrottlerModule.forRoot([
       {
-        name: 'global', // đặt tên tuỳ ý
-        ttl: 60, // 60 giây
-        limit: 10, // 10 request trong 60s
+        name: 'global',
+        ttl: 60,
+        limit: 10,
       },
     ]),
     UsersModule,
@@ -97,13 +96,12 @@ import { CommentsModule } from '@/src/modules/comments/comments.module';
     ChaptersModule,
     OtpModule,
     PostsModule,
+    AuthorsModule,
     CommentsModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    BooksSeed,
-    ChaptersSeed,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -113,7 +111,5 @@ import { CommentsModule } from '@/src/modules/comments/comments.module';
       useClass: ThrottlerGuard,
     },
   ],
-  // register seeders
-  exports: [BooksSeed, ChaptersSeed],
 })
 export class AppModule {}

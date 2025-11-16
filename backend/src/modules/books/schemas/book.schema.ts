@@ -5,7 +5,7 @@ export type BookDocument = Book & Document;
 
 @Schema({ timestamps: true }) // tự sinh createdAt, updatedAt
 export class Book {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Author', required: true })
   authorId: Types.ObjectId;
 
   @Prop({ type: [Types.ObjectId], ref: 'Genre', default: [] })
@@ -41,5 +41,6 @@ export class Book {
   @Prop({ default: false })
   isDeleted: boolean;
 }
+
 
 export const BookSchema = SchemaFactory.createForClass(Book);

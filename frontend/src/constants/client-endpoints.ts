@@ -1,4 +1,5 @@
-export const BFF_AUTH_ENDPOINTS = {
+
+ const BFF_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
   verifyOtp: '/auth/verify-otp',
   forgotPassword: '/auth/forgot-password',
@@ -11,6 +12,12 @@ export const BFF_POSTS_ENDPOINTS = {
   getAll: '/posts',
 };
 
+export const BFF_BOOKS_ENDPOINTS = {
+  getAll: '/books',
+  getBySlug: (slug: string) => `/books/${slug}`,
+};
+
 export const BFF_COMMENTS_ENDPOINTS = {
   getCommentsByTarget: '/comments',
+
 };
