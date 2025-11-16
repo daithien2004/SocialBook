@@ -26,7 +26,7 @@ export class User {
   provider: string;
 
   // Lưu providerId (Google ID, Facebook ID, etc.)
-  @Prop({ required: false })
+  @Prop({ required: false})
   providerId?: string;
 
   @Prop()

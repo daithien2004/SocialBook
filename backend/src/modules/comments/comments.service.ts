@@ -2,10 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { PostDocument } from '@/src/modules/posts/schemas/post.schema';
 import { Model, Types } from 'mongoose';
 import { Comment, CommentDocument } from '@/src/modules/comments/schemas/comment.schema';
-import { COMMENT_TARGET_TYPES, CommentTargetType } from '@/src/modules/comments/constants/comment.constant';
 
 @Injectable()
 export class CommentsService {
@@ -43,47 +41,74 @@ export class CommentsService {
 
   async getLevel1(
     targetId: string,
-    targetType: CommentTargetType,
-    page: number = 1,
-    limit: number = 20,
+    parentId: string | null,
+    cursor?: string,
+    limit: number = 10,
   ) {
     if (!targetId) {
       throw new BadRequestException('targetId is required');
     }
 
-    if (!COMMENT_TARGET_TYPES.includes(targetType)) {
-      throw new BadRequestException('Invalid targetType');
+    const targetObjectId = new Types.ObjectId(targetId);
+
+    const filter: any = {
+      targetId: targetObjectId,
+    };
+
+    if (parentId === null) {
+      filter.parentId = null;
+    } else if (parentId) {
+      filter.parentId = new Types.ObjectId(parentId);
+    }
+    // Nếu có cursor → lấy comment cũ hơn nó
+    if (cursor) {
+      filter._id = { $lt: new Types.ObjectId(cursor) };
     }
 
-    const targetObjectId = new Types.ObjectId(targetId);
-    const skip = (page - 1) * limit;
+    const itemsRaw = await this.commentModel
+      .find(filter)
+      .sort({ _id: -1 })       // Dựa theo id để phân trang
+      .limit(limit + 1)        // Lấy thêm 1 để check còn dữ liệu không
+      .populate({
+        path: 'userId',
+        select: 'username image',
+      })
+      .lean();
 
-    const [items, total] = await Promise.all([
-      this.commentModel
-        .find({
-          targetType,
-          targetId: targetObjectId,
-          parentId: null,
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('userId', 'username'),
-      this.commentModel.countDocuments({
-        targetType,
-        targetId: targetObjectId,
-        parentId: null,
-      }),
+    const hasMore = itemsRaw.length > limit;
+    const itemsCut = hasMore ? itemsRaw.slice(0, limit) : itemsRaw;
+
+    const parentIds = itemsCut.map((c) => c._id);
+
+    const repliesGroup = await this.commentModel.aggregate([
+      { $match: { parentId: { $in: parentIds } } },
+      { $group: { _id: "$parentId", count: { $sum: 1 } } }
     ]);
+
+    const replyCountMap = repliesGroup.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr.count;
+      return acc;
+    }, {});
+
+    const items = itemsCut.map((c: any) => ({
+      id: c._id.toString(),
+      content: c.content,
+      likesCount: c.likesCount,
+      createdAt: c.createdAt,
+      repliesCount: replyCountMap[c._id.toString()] ?? 0,
+      user: c.userId
+        ? {
+          id: c.userId._id.toString(),
+          username: c.userId.username,
+          image: c.userId.image ?? null,
+        }
+        : null,
+    }));
 
     return {
       items,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      nextCursor: hasMore ? itemsCut[itemsCut.length - 1]._id.toString() : null,
+      hasMore,
     };
   }
 }

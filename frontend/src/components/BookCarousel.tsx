@@ -1,8 +1,7 @@
 'use client';
 
 import { Book } from '../features/books/types/book.interface';
-import { Card, CardContent } from './ui/card';
-
+import { Card, CardContent } from './ui/Card';
 interface BookCarouselProps {
   title: string;
   books: Book[];
