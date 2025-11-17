@@ -22,7 +22,7 @@ export interface Chapter {
   orderIndex: number;
 }
 
-export interface Comment {
+export interface Review {
   id: string;
   content: string;
   userId: {
@@ -51,7 +51,7 @@ export interface Book {
   author: Author;
   genres: Genre[];
   chapters: Chapter[];
-  comments: Comment[];
+  reviews: Review[];
   createdAt: string;
   updatedAt: string;
 }

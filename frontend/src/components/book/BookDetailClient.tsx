@@ -67,8 +67,8 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     description: book.description,
     fullDescription: `${book.description}\n\nCuốn sách "${book.title}" của tác giả ${book.author.name} mang đến một hành trình đầy cảm xúc...`,
     genre: book.genres.map((g) => g.name),
-    rating: 4.8, // Có thể tính từ comments/reviews
-    totalRatings: book.comments.length,
+    rating: book.averageRating,
+    totalRatings: book.totalRatings,
     views: book.views,
     likes: book.likes,
     chapters: book.chapters.length,
@@ -81,14 +81,14 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     readingTime: `${Math.ceil(book.chapters.length * 10)} phút`,
   };
 
-  const reviews = book.comments.map((comment, index) => ({
-    id: comment.id,
-    user: `User${index + 1}`,
-    avatar: '/placeholder.svg',
-    rating: 5,
-    comment: comment.content,
-    date: new Date(comment.createdAt).toLocaleDateString('vi-VN'),
-    likes: comment.likesCount,
+  const reviews = book.reviews.map((review, index) => ({
+    id: review.id,
+    user: review.userId.username,
+    avatar: review.userId.image || '/default-avatar.png',
+    rating: review.rating,
+    comment: review.content,
+    date: new Date(review.createdAt).toLocaleDateString('vi-VN'),
+    likes: review.likesCount,
   }));
 
   return (
@@ -165,7 +165,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                 </Link>
                 <button className="flex items-center justify-center border border-pink-400 text-pink-600 hover:bg-pink-600 hover:text-white px-8 py-3 rounded-xl transition-colors duration-300">
                   <Heart className="w-5 h-5 mr-2" />
-                  Thêm vào yêu thích
+                  Thêm vào thư viện
                 </button>
               </div>
 
@@ -383,7 +383,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                   {book.chapters.slice(-3).map((chapter) => (
                     <Link
                       key={chapter.id}
-                      href={`/books/${bookSlug}/read/${chapter.id}`}
+                      href={`/books/${bookSlug}/chapters/${chapter.slug}`}
                       className="block group"
                     >
                       <div className="p-3 rounded-lg hover:bg-gray-50 transition-colors">

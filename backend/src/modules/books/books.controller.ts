@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Param } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { Public } from '@/src/common/decorators/customize';
 
@@ -8,7 +8,12 @@ export class BooksController {
 
   @Public()
   @Get(':slug')
+  @HttpCode(HttpStatus.OK)
   async getBookDetail(@Param('slug') slug: string) {
-    return await this.booksService.findBySlug(slug);
+    const result = await this.booksService.findBySlug(slug);
+    return {
+      message: 'Get book detail successfully',
+      data: result,
+    };
   }
 }

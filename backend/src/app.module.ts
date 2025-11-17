@@ -17,6 +17,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PostsModule } from '@/src/modules/posts/posts.module';
 import { CommentsModule } from '@/src/modules/comments/comments.module';
 import { AuthorsModule } from '@/src/modules/authors/authors.module';
+import { ReviewsModule } from '@/src/modules/reviews/reviews.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { AuthorsModule } from '@/src/modules/authors/authors.module';
     PostsModule,
     AuthorsModule,
     CommentsModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
 import { BooksSeed } from './books.seeder';
-import { CommentsSeed } from './comments.seeder';
+import { ReviewsSeed } from './reviews.seeder';
 import { ChaptersSeed } from './chapters.seeder';
-
+import { UsersSeed } from './users.seeder';
 @Injectable()
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
@@ -13,20 +13,22 @@ export class SeederService {
     private readonly authorsSeed: AuthorsSeed,
     private readonly genresSeed: GenresSeed,
     private readonly booksSeed: BooksSeed,
-    private readonly commentsSeed: CommentsSeed,
+    private readonly reviewsSeed: ReviewsSeed,
     private readonly chaptersSeed: ChaptersSeed,
-  ) {}
+    private readonly usersSeed: UsersSeed,
+  ) { }
 
   async seed() {
     try {
       this.logger.log('🎯 Starting database seeding...');
 
       // Thứ tự seeding quan trọng
+      await this.usersSeed.run();
       await this.authorsSeed.run();
       await this.genresSeed.run();
       await this.booksSeed.run();
       await this.chaptersSeed.run();
-      await this.commentsSeed.run();
+      await this.reviewsSeed.run();
 
       this.logger.log('✅ All seeding completed successfully!');
     } catch (error) {
@@ -38,9 +40,10 @@ export class SeederService {
   async clear() {
     try {
       this.logger.log('🗑️ Clearing all seed data...');
-      
+
       // Xóa theo thứ tự ngược để tránh constraint errors
-      await this.commentsSeed['commentModel'].deleteMany({});
+      await this.usersSeed['userModel'].deleteMany({});
+      await this.reviewsSeed['reviewModel'].deleteMany({});
       await this.chaptersSeed['chapterModel'].deleteMany({});
       await this.booksSeed['bookModel'].deleteMany({});
       await this.authorsSeed['authorModel'].deleteMany({});
