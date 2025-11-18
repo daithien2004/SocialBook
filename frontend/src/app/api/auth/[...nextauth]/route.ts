@@ -136,7 +136,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       console.log('Access token has expired, refreshing...');
-      return  await refreshAccessToken(token);
+      return await refreshAccessToken(token);
     },
 
     async session({ session, token }) {
@@ -160,8 +160,8 @@ export const authOptions: NextAuthOptions = {
       if (url.startsWith(baseUrl)) {
         return url;
       }
-      // Nếu url không hợp lệ, chuyển về dashboard
-      return `${baseUrl}/dashboard`;
+      // Nếu url không hợp lệ, chuyển về url gốc
+      return `${baseUrl}`;
     },
   },
 

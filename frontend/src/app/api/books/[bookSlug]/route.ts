@@ -1,36 +1,30 @@
-// pages/api/books/[slug].ts
 import { NextRequest, NextResponse } from 'next/server';
 import serverApi from '@/src/lib/server-api';
+import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { bookSlug: string } }
+  {
+    params,
+  }: {
+    params: Promise<{
+      bookSlug: string;
+    }>;
+  }
 ) {
-  const { bookSlug } = params;
+  const { bookSlug } = await params;
 
   try {
-    // Gọi backend thật (NestJS)
-    const res = await serverApi.get(`/books/${bookSlug}`);
-    // Trả về đúng format mà client mong đợi
-    return NextResponse.json({
-      success: true,
-      statusCode: 200,
-      message: 'Book retrieved successfully',
-      data: res.data.data || res.data,
-    });
-  } catch (err: any) {
-    console.error('GET /api/books/[slug] error:', err);
-
+    const response = await serverApi.get(
+      NESTJS_BOOKS_ENDPOINTS.getBookBySlug(bookSlug)
+    );
+    return NextResponse.json(response.data);
+  } catch (error: any) {
     return NextResponse.json(
       {
-        success: false,
-        statusCode: err.response?.status || 500,
-        message: err.response?.data?.message || 'Internal Server Error',
-        error: 'Backend Error',
-        timestamp: new Date().toISOString(),
-        path: `/api/books/${bookSlug}`,
+        message: error.response?.data?.message || 'Failed to fetch books',
       },
-      { status: err.response?.status || 500 }
+      { status: error.response?.status || 500 }
     );
   }
 }

@@ -10,7 +10,7 @@ export interface Chapter {
   slug: string;
   orderIndex: number;
   viewsCount: number;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  createdAt: string;
+  updatedAt: string;
   paragraphs: Paragraph[];
 }

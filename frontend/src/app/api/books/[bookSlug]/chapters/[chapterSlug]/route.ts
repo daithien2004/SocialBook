@@ -1,27 +1,27 @@
-import { books } from '@/src/lib/books';
-import { chapters } from '@/src/lib/chapters';
+import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import serverApi from '@/src/lib/server-api';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ bookSlug: string; chapterSlug: string }> }
+  req: NextRequest,
+  {
+    params,
+  }: {
+    params: Promise<{ bookSlug: string; chapterSlug: string }>;
+  }
 ) {
-  const { bookSlug, chapterSlug } = await context.params;
+  try {
+    const { bookSlug, chapterSlug } = await params;
 
-  const book = books.find((b) => b.slug === bookSlug);
+    const response = await serverApi.get(
+      NESTJS_BOOKS_ENDPOINTS.getChapterBySlug(bookSlug, chapterSlug)
+    );
 
-  const chapter = chapters.find(
-    (ch) => ch.slug === chapterSlug && ch.bookId === book?.id
-  );
-
-  return NextResponse.json(
-    {
-      success: true,
-      statusCode: 200,
-      data: chapter,
-      timestamp: new Date().toISOString(),
-      path: request.nextUrl.pathname,
-    },
-    { status: 200 }
-  );
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    return NextResponse.json(
+      { message: error.response?.data?.message || 'Failed to resend OTP' },
+      { status: error.response?.status || 500 }
+    );
+  }
 }

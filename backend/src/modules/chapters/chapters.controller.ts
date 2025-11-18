@@ -1,40 +1,38 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  Query,
-  BadRequestException,
-  ParseIntPipe,
-  DefaultValuePipe,
-} from '@nestjs/common';
-import { Chapter } from './schemas/chapter.schema';
+import { Controller, Get, Param, HttpStatus, HttpCode } from '@nestjs/common';
 import { ChaptersService } from './chapters.service';
+import { Public } from '@/src/common/decorators/customize';
 
-@Controller('books')
+@Controller('books/:bookSlug/chapters')
 export class ChaptersController {
-  constructor(private readonly chapterService: ChaptersService) {}
+  constructor(private readonly chaptersService: ChaptersService) {}
 
-  @Get('chapter/by-id/:id/content')
-  async getChapterContent(@Param('id') id: string) {
-    return this.chapterService.getChapterContent(id);
+  @Public()
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async getChaptersByBookId(@Param('bookSlug') bookSlug: string) {
+    const result = await this.chaptersService.getChaptersByBookSlug(bookSlug);
+
+    return {
+      message: 'Get chapters successfully',
+      data: result,
+    };
   }
 
-  // GET /books/:slug/first-chapter
-  @Get(':slug/first-chapter')
-  async getBookWithFirstChapter(@Param('slug') slug: string) {
-    return this.chapterService.getBookWithFirstChapterBySlug(slug);
-  }
-
-  // Lấy chương tiếp theo theo slug và orderIndex hiện tại
-  @Get(':slug/next-chapter')
-  async getNextChapterMeta(
-    @Param('slug') slug: string,
-    @Query('currentOrderIndex') currentOrderIndex: number,
+  @Public()
+  @Get(':chapterSlug')
+  @HttpCode(HttpStatus.OK)
+  async getChapterById(
+    @Param('bookSlug') bookSlug: string,
+    @Param('chapterSlug') chapterSlug: string,
   ) {
-    return this.chapterService.getNextChapterMeta(slug, currentOrderIndex);
+    const result = await this.chaptersService.getChapterBySlug(
+      bookSlug,
+      chapterSlug,
+    );
+
+    return {
+      message: 'Get chapter successfully',
+      data: result,
+    };
   }
 }

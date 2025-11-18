@@ -13,11 +13,9 @@ export const NESTJS_COMMENTS_ENDPOINTS = {
   getResolveParent: '/comments/resolve-parent',
 };
 
-
 export const NESTJS_BOOKS_ENDPOINTS = {
-  bookAndFirstChapter: (bookSlug: string) => `/books/${bookSlug}/first-chapter`,
-  getMetadataNextChapter: (bookSlug: string, currentOrderIndex: number) =>
-    `/books/${bookSlug}/next-chapter?currentOrderIndex=${currentOrderIndex}`,
-  chapterContent: (chapterId: string) =>
-    `/books/chapter/by-id/${chapterId}/content`,
+  getBooks: '/books',
+  getBookBySlug: (bookSlug: string) => `/books/${bookSlug}`,
+  getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
+    `/books/${bookSlug}/chapters/${chapterSlug}`,
 };
