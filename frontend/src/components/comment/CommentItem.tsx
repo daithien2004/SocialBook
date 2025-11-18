@@ -1,9 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ListComments from "./ListComments";
 import { Post } from "@/src/features/posts/types/post.interface";
-import { type CommentItem as CommentItemType } from "@/src/features/comments/api/commentApi";
+import {
+    type CommentItem as CommentItemType,
+    useLazyGetResolveParentQuery,
+    usePostCreateMutation,
+} from "@/src/features/comments/api/commentApi";
 
 interface CommentItemProps {
     comment: CommentItemType;
@@ -11,12 +15,68 @@ interface CommentItemProps {
 }
 
 const CommentItemCard: React.FC<CommentItemProps> = (props) => {
-    const { comment, post } = props; // ✅ destructure đúng
+    const { comment, post } = props;
+
     const [showReplies, setShowReplies] = useState(false);
+    const [isReplying, setIsReplying] = useState(false);
+    const [replyText, setReplyText] = useState("");
+
+    const [createComment, { isLoading: isPostingReply }] = usePostCreateMutation();
+
+    const [
+        triggerResolveParent,
+        { data: resolvedData, isLoading: isResolvingParent },
+    ] = useLazyGetResolveParentQuery();
+
+    const handleShowReplies = () => {
+        setShowReplies(true);
+    };
+
+    const handleReplyClick = () => {
+        setShowReplies(true);
+        setIsReplying((prev) => !prev);
+    };
+
+    // Gọi BE để resolve parent khi lần đầu mở replies
+    useEffect(() => {
+        if (!showReplies) return;
+
+        // chỉ gọi nếu chưa resolve lần nào
+        if (!resolvedData) {
+            triggerResolveParent({
+                targetId: post.id,
+                parentId: comment.id,
+                targetType: "post",
+            });
+        }
+    }, [showReplies, triggerResolveParent, post.id, comment.id, resolvedData]);
+
+    // parentId chuẩn (dùng BE trả về, fallback comment.id cho chắc)
+    const effectiveParentId = resolvedData?.parentId ?? comment.id;
+    const level = resolvedData?.level; // 👈 lấy level từ backend
+
+    const handleSubmitReply = async () => {
+        const content = replyText.trim();
+        if (!content) return;
+
+        try {
+            await createComment({
+                targetType: "post",
+                targetId: post.id,
+                content,
+                parentId: effectiveParentId,
+            }).unwrap();
+
+            setReplyText("");
+            setShowReplies(true);
+            setIsReplying(false);
+        } catch (e) {
+            console.error("Create reply failed:", e);
+        }
+    };
 
     return (
         <div className="flex items-start gap-3">
-            {/* Avatar */}
             <img
                 src={comment.user?.image ?? ""}
                 alt=""
@@ -24,7 +84,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
             />
 
             <div>
-                {/* Nội dung */}
+                {/* Nội dung comment */}
                 <div className="bg-gray-50 rounded-xl px-3 py-2">
                     <p className="text-sm">
             <span className="font-semibold mr-2">
@@ -40,9 +100,13 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
                         <p className="text-xs text-gray-500 cursor-pointer hover:underline underline-offset-2">
                             Thích
                         </p>
-                        <p className="text-xs text-gray-500 cursor-pointer hover:underline underline-offset-2">
+                        <button
+                            type="button"
+                            onClick={handleReplyClick}
+                            className="text-xs text-gray-500 cursor-pointer hover:underline underline-offset-2"
+                        >
                             Trả lời
-                        </p>
+                        </button>
                     </div>
                 </div>
 
@@ -50,7 +114,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
                 <div className="mt-1 ms-2">
                     {!showReplies && comment.repliesCount > 0 && (
                         <button
-                            onClick={() => setShowReplies(true)}
+                            onClick={handleShowReplies}
                             className="text-xs text-gray-500 font-semibold"
                         >
                             Xem tất cả phản hồi ({comment.repliesCount})
@@ -58,12 +122,47 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
                     )}
 
                     {showReplies && (
-                        <div className="border-l border-gray-200 ms-3">
-                            <ListComments
-                                post={post}
-                                isCommentOpen={true}
-                                parentId={comment.id}
-                            />
+                        <div className="border-l border-gray-200 ms-3 space-y-2">
+                            {/* Nếu đang resolve lần đầu */}
+                            {isResolvingParent && !resolvedData && (
+                                <p className="text-xs text-gray-400 px-2">
+                                    Đang tải phản hồi...
+                                </p>
+                            )}
+
+                            {/*
+                Nếu đã có resolvedData và level KHÁC 3
+                => mới render ListComments lồng bên dưới
+              */}
+                            {resolvedData && level !== 3 && (
+                                <ListComments
+                                    post={post}
+                                    isCommentOpen={true}
+                                    parentId={effectiveParentId}
+                                />
+                            )}
+
+                            {/* Ô nhập reply: luôn hiện khi isReplying,
+                  kể cả level = 3 (chỉ có textbox, không có list lồng thêm) */}
+                            {isReplying && (
+                                <div className="mt-1 ms-3 flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Trả lời..."
+                                        className="flex-1 border border-gray-300 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        value={replyText}
+                                        onChange={(e) => setReplyText(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        disabled={isPostingReply || !replyText.trim()}
+                                        onClick={handleSubmitReply}
+                                        className="text-xs text-indigo-600 font-semibold cursor-pointer hover:text-indigo-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isPostingReply ? "Đang gửi..." : "Gửi"}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

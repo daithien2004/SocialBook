@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { COMMENT_TARGET_TYPES } from '@/src/modules/comments/constants/comment.constant';
+import { TARGET_TYPES } from '@/src/modules/comments/constants/targetType.constant';
 
 @Schema({ timestamps: true })
 export class Comment {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  @Prop({ type: String, enum: COMMENT_TARGET_TYPES, required: true })
+  @Prop({ type: String, enum: TARGET_TYPES, required: true })
   targetType: string;
 
   @Prop({ type: Types.ObjectId, required: true })

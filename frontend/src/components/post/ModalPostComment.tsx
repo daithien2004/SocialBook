@@ -1,10 +1,12 @@
+// ModalPostComment.tsx
 "use client";
 
-import React, { Fragment } from "react";
+import React, {Fragment, useState} from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Heart, MessageCircle, Send, X } from "lucide-react";
 import { Post } from "@/src/features/posts/types/post.interface";
 import ListComments from "@/src/components/comment/ListComments";
+import {usePostCreateMutation} from "@/src/features/comments/api/commentApi";
 
 interface ModalPostCommentProps {
     post: Post;
@@ -14,6 +16,30 @@ interface ModalPostCommentProps {
 
 const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
     const { post, isCommentOpen, closeCommentModal } = props;
+
+    const [commentText, setCommentText] = useState("");
+    const [reloadKey, setReloadKey] = useState(0);
+    const [createComment, { isLoading: isPosting }] = usePostCreateMutation();
+
+    const onSubmitComment = async () => {
+        const content = commentText.trim();
+        if (!content) return;
+
+        try {
+            await createComment({
+                targetType: "post",
+                targetId: post.id,
+                content,
+                parentId: null,  // 👈 cấp 1
+            }).unwrap();
+
+            setCommentText("");
+            setReloadKey((k) => k + 1); // cho ListComments refetch
+        } catch (e) {
+            console.error("Create comment failed:", e);
+        }
+    };
+
     return (
         <Transition appear show={isCommentOpen} as={Fragment}>
             <Dialog
@@ -92,12 +118,16 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                                     </div>
 
                                     {/* Danh sách comment */}
-                                    <ListComments post={post}
-                                                  isCommentOpen={isCommentOpen}
-                                                  parentId={null}/>
+                                    <ListComments
+                                        post={post}
+                                        isCommentOpen={isCommentOpen}
+                                        parentId={null}
+                                        reloadKey={reloadKey}
+                                    />
 
-                                    {/* Actions + Input */}
-                                    <div className="px-4 py-3">
+                                    {/* 🔻 ĐOẠN BẠN MUỐN ĐỂ NGOÀI LISTCOMMENTS */}
+                                    <div className="px-4 py-3 border-t border-gray-100">
+                                        {/* Nút like, comment, send */}
                                         <div className="flex items-center gap-4 mb-3">
                                             <Heart
                                                 size={22}
@@ -116,14 +146,21 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                                             {post.totalLikes ?? 0} lượt thích •{" "}
                                             {post.totalComments ?? 0} bình luận
                                         </p>
+
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="text"
                                                 placeholder="Thêm bình luận..."
                                                 className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                value={commentText}
+                                                onChange={(e) => setCommentText(e.target.value)}
                                             />
-                                            <button className="text-indigo-600 font-semibold hover:text-indigo-700">
-                                                Đăng
+                                            <button
+                                                disabled={isPosting || !commentText.trim()}
+                                                onClick={onSubmitComment}
+                                                className="text-indigo-600 font-semibold cursor-pointer hover:text-indigo-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isPosting ? "Đang đăng..." : "Đăng"}
                                             </button>
                                         </div>
                                     </div>

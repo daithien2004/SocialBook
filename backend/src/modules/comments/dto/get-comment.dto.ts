@@ -1,7 +1,7 @@
-import { IsMongoId, IsInt, Min, IsOptional, ValidateIf } from 'class-validator';
+import { IsMongoId, IsInt, Min, IsOptional, ValidateIf, IsNotEmpty, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class GetLevel1CommentsDto {
+export class GetCommentsDto {
   @IsMongoId()
   targetId: string;
 
@@ -19,4 +19,19 @@ export class GetLevel1CommentsDto {
   @IsInt()
   @Min(1)
   limit: number = 20;
+}
+
+export class ResolveParentQueryDto {
+  @IsMongoId()
+  @IsNotEmpty()
+  targetId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  targetType: string;
+
+  @IsOptional()
+  @ValidateIf((o) => o.parentId !== null)
+  @IsMongoId()
+  parentId: string | null;
 }

@@ -8,7 +8,9 @@ export const NESTJS_AUTH_ENDPOINTS = {
 };
 
 export const NESTJS_COMMENTS_ENDPOINTS = {
-  getCommentsByTarget: '/comments/level1'
+  getCommentsByTarget: '/comments/target',
+  postCreate: '/comments',
+  getResolveParent: '/comments/resolve-parent',
 };
 
 

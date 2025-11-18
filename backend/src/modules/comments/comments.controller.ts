@@ -1,43 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
-import { Public } from '@/src/common/decorators/customize';
-import type { CommentTargetType } from '@/src/modules/comments/constants/comment.constant';
-import { GetLevel1CommentsDto } from '@/src/modules/comments/dto/get-comment.dto';
+import {
+  GetCommentsDto,
+  ResolveParentQueryDto,
+} from '@/src/modules/comments/dto/get-comment.dto';
+import { Types } from 'mongoose';
 
 @Controller('comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(createCommentDto);
+  async postCreate(
+    @Req() req: any,
+    @Body() createCommentDto: CreateCommentDto,
+  ) {
+    return await this.commentsService.createForTarget(req.user.id, createCommentDto);
   }
 
-  @Get('level1')
-  async getLevel1Comments(@Query() query: GetLevel1CommentsDto) {
+  @Get('resolve-parent')
+  async getResolveParent(@Query() query: ResolveParentQueryDto) {
+    const { targetId, targetType, parentId } = query;
+    const targetObjectId = new Types.ObjectId(targetId);
+
+    return await this.commentsService.resolveParentId(
+      targetObjectId,
+      targetType,
+      parentId,
+    );
+  }
+
+  @Get('target')
+  async getCommentByTarget(@Query() query: GetCommentsDto) {
     const { targetId, parentId, cursor, limit } = query;
-    return this.commentsService.getLevel1(
+    return await this.commentsService.getCommentByTarget(
       targetId,
       parentId ?? null,
       cursor,
       limit,
     );
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(+id, updateCommentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.commentsService.remove(+id);
   }
 }
