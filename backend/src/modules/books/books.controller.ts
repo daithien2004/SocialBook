@@ -8,11 +8,12 @@ export class BooksController {
 
   @Public()
   @Get(':slug')
+  @HttpCode(HttpStatus.OK)
   async getBookDetail(@Param('slug') slug: string) {
     const result = await this.booksService.findBySlug(slug);
 
     return {
-      message: 'Get books successfully',
+      message: 'Get book detail successfully',
       data: result,
     };
   }

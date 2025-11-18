@@ -55,8 +55,8 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     );
   }
 
-  // Calculate rating from comments
-  const rating = book.comments.length > 0 ? 4.5 : 0;
+  // Calculate rating from reviews
+  const rating = book.reviews.length > 0 ? 4.5 : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -165,7 +165,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <span className="text-2xl font-bold text-gray-900">{rating}</span>
             </div>
             <p className="text-sm text-gray-600">
-              {book.comments.length} đánh giá
+              {book.reviews.length} đánh giá
             </p>
           </div>
 
@@ -213,11 +213,11 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               </div>
             </div>
 
-            {/* Comments */}
+            {/* reviews */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Đánh giá ({book.comments.length})
+                  Đánh giá ({book.reviews.length})
                 </h2>
                 <button className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
                   <MessageCircle size={18} />
@@ -226,9 +226,9 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               </div>
 
               <div className="space-y-6">
-                {book.comments.slice(0, 5).map((comment) => (
+                {book.reviews.slice(0, 5).map((review) => (
                   <div
-                    key={comment.id}
+                    key={review.id}
                     className="border-b border-gray-100 pb-6 last:border-0"
                   >
                     <div className="flex gap-3">
@@ -243,15 +243,15 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                             User
                           </span>
                           <span className="text-sm text-gray-500">
-                            {new Date(comment.createdAt).toLocaleDateString(
+                            {new Date(review.createdAt).toLocaleDateString(
                               'vi-VN'
                             )}
                           </span>
                         </div>
-                        <p className="text-gray-700 mb-2">{comment.content}</p>
+                        <p className="text-gray-700 mb-2">{review.content}</p>
                         <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500">
                           <Heart size={14} />
-                          <span>{comment.likesCount}</span>
+                          <span>{review.likesCount}</span>
                         </button>
                       </div>
                     </div>

@@ -4,14 +4,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Author, AuthorSchema } from '@/src/modules/authors/schemas/author.schema';
 import { Book, BookSchema } from '@/src/modules/books/schemas/book.schema';
 import { Genre, GenreSchema } from '@/src/modules/genres/schemas/genre.schema';
-import { Comment, CommentSchema } from '@/src/modules/comments/schemas/comment.schema';
+import { Review, ReviewSchema } from '@/src/modules/reviews/schemas/review.schema'; // Update this path to the correct location of review.schema
 import { Chapter, ChapterSchema } from '@/src/modules/chapters/schemas/chapter.schema';
 import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
 
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
 import { BooksSeed } from './books.seeder';
-import { CommentsSeed } from './comments.seeder';
+import { ReviewsSeed } from './reviews.seeder';
 import { ChaptersSeed } from './chapters.seeder';
 import { SeederService } from './seeder.service';
 import { UsersSeed } from './users.seeder';
@@ -35,7 +35,7 @@ import { UsersSeed } from './users.seeder';
             { name: Author.name, schema: AuthorSchema },
             { name: Genre.name, schema: GenreSchema },
             { name: Book.name, schema: BookSchema },
-            { name: Comment.name, schema: CommentSchema },
+            { name: Review.name, schema: ReviewSchema },
             { name: Chapter.name, schema: ChapterSchema },
             { name: User.name, schema: UserSchema },
         ]),
@@ -45,7 +45,7 @@ import { UsersSeed } from './users.seeder';
         AuthorsSeed,
         GenresSeed,
         BooksSeed,
-        CommentsSeed,
+        ReviewsSeed,
         ChaptersSeed,
         SeederService,
     ],
@@ -54,7 +54,7 @@ import { UsersSeed } from './users.seeder';
         AuthorsSeed,
         GenresSeed,
         BooksSeed,
-        CommentsSeed,
+        ReviewsSeed,
         ChaptersSeed,
         SeederService,
     ],
