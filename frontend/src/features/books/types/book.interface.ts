@@ -16,6 +16,8 @@ export interface Book {
   updatedAt: string;
   comments: Comment[];
   chapters: Chapter[];
+  totalRatings: number;
+  averageRating: number;
 }
 
 export interface Author {
@@ -42,6 +44,11 @@ export interface Chapter {
 export interface Comment {
   id: string;
   content: string;
+  user: {
+    id: string;
+    username: string;
+    image?: string;
+  };
   likesCount: number;
   createdAt: string;
 }
