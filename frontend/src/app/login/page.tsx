@@ -24,7 +24,7 @@ export default function LoginPage() {
   // Chuyển hướng người dùng nếu họ đã đăng nhập
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [status, router]);
 
@@ -61,7 +61,7 @@ export default function LoginPage() {
       });
 
       if (result?.ok) {
-        router.push('/dashboard'); // Chuyển hướng khi thành công
+        router.push('/'); // Chuyển hướng khi thành công
       } else {
         setServerError(result?.error || 'Invalid email or password.');
       }
@@ -76,7 +76,7 @@ export default function LoginPage() {
   const handleGoogleSignin = () => {
     setIsGoogleLoading(true);
     // Để NextAuth tự xử lý redirect cho Google
-    signIn('google', { callbackUrl: '/dashboard' });
+    signIn('google', { callbackUrl: '/' });
   };
 
   // Cờ chung để vô hiệu hóa các nút

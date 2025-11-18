@@ -3,11 +3,7 @@
 import { use, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { comments } from '@/src/lib/comments';
-import {
-  useGetChapterQuery,
-  useGetChaptersQuery,
-} from '@/src/features/chapters/api/chaptersApi';
-import { useGetBookBySlugQuery } from '@/src/features/books/api/bookApi';
+import { useGetChapterQuery } from '@/src/features/chapters/api/chaptersApi';
 import ChapterNavigation from '@/src/components/chapter/ChapterNavigation';
 import CommentSection from '@/src/components/chapter/CommentSection';
 import ChapterHeader from '@/src/components/chapter/ChapterHeader';
@@ -24,48 +20,10 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const { bookSlug, chapterSlug } = use(params);
   const router = useRouter();
 
-  // API Queries
-  const { data: book } = useGetBookBySlugQuery({ bookSlug });
-  const { data: chapter } = useGetChapterQuery({ bookSlug, chapterSlug });
-  const { data: chapters } = useGetChaptersQuery({ bookSlug });
-
-  // Sorted chapters for the current book
-  const sortedChapters = useMemo(() => {
-    if (!chapters || !book?.id) return [];
-
-    return chapters
-      .filter((ch) => ch.bookId === book.id)
-      .sort((a, b) => a.orderIndex - b.orderIndex);
-  }, [chapters, book?.id]);
-
-  // Current chapter position
-  const currentIndex = useMemo(
-    () => sortedChapters.findIndex((ch) => ch.id === chapter?.id),
-    [sortedChapters, chapter?.id]
-  );
-
-  // Navigation handlers
-  const navigateToChapter = useCallback(
-    (index: number) => {
-      const targetChapter = sortedChapters[index];
-      if (targetChapter) {
-        router.push(`/books/${bookSlug}/chapters/${targetChapter.slug}`);
-      }
-    },
-    [sortedChapters, bookSlug, router]
-  );
-
-  const goToPrevious = useCallback(() => {
-    if (currentIndex > 0) {
-      navigateToChapter(currentIndex - 1);
-    }
-  }, [currentIndex, navigateToChapter]);
-
-  const goToNext = useCallback(() => {
-    if (currentIndex < sortedChapters.length - 1) {
-      navigateToChapter(currentIndex + 1);
-    }
-  }, [currentIndex, sortedChapters.length, navigateToChapter]);
+  const { data, isLoading } = useGetChapterQuery({ bookSlug, chapterSlug });
+  const chapter = data?.chapter;
+  const book = data?.book;
+  const navigation = data?.navigation;
 
   // Chapter comments
   const chapterComments = useMemo(() => {
@@ -92,13 +50,35 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     console.log('Reply to:', commentId);
   }, []);
 
-  // Error states
-  if (!book) {
-    return null;
+  // Navigation handlers
+  const handlePrevious = useCallback(() => {
+    if (navigation?.previous) {
+      router.push(`/books/${bookSlug}/chapters/${navigation.previous.slug}`);
+    }
+  }, [navigation?.previous, bookSlug, router]);
+
+  const handleNext = useCallback(() => {
+    if (navigation?.next) {
+      router.push(`/books/${bookSlug}/chapters/${navigation.next.slug}`);
+    }
+  }, [navigation?.next, bookSlug, router]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black/90 text-white">
+        <p>Đang tải...</p>
+      </div>
+    );
   }
 
-  if (!chapter) {
-    return null;
+  // Error states
+  if (!book || !chapter) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black/90 text-white">
+        <p>Không tìm thấy chương</p>
+      </div>
+    );
   }
 
   return (
@@ -112,11 +92,14 @@ export default function ChapterPage({ params }: ChapterPageProps) {
       />
 
       <ChapterNavigation
-        currentIndex={currentIndex}
-        totalChapters={sortedChapters.length}
-        onPrevious={goToPrevious}
-        onNext={goToNext}
         variant="top"
+        hasPrevious={!!navigation?.previous}
+        hasNext={!!navigation?.next}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        showTableOfContents={true}
+        tableOfContentsHref={`/books/${bookSlug}`}
+        tableOfContentsText="Mục lục"
       />
 
       <ChapterContent paragraphs={chapter.paragraphs} />
@@ -131,13 +114,11 @@ export default function ChapterPage({ params }: ChapterPageProps) {
       />
 
       <ChapterNavigation
-        currentIndex={currentIndex}
-        totalChapters={sortedChapters.length}
-        onPrevious={goToPrevious}
-        onNext={goToNext}
         variant="bottom"
-        showTableOfContents
-        tableOfContentsHref={`/books/${bookSlug}`}
+        hasPrevious={!!navigation?.previous}
+        hasNext={!!navigation?.next}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
       />
     </div>
   );

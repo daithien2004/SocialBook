@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Date, Document, Types } from 'mongoose';
 
 export type BookDocument = Book & Document;
 
@@ -40,7 +40,9 @@ export class Book {
 
   @Prop({ default: false })
   isDeleted: boolean;
-}
 
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export const BookSchema = SchemaFactory.createForClass(Book);

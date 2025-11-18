@@ -1,5 +1,5 @@
 import { books } from '@/src/lib/books';
-import { chapters } from '@/src/lib/chapters';
+
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -10,13 +10,13 @@ export async function GET(
 
   const book = books.find((b) => b.slug === bookSlug);
 
-  const bookChapters = chapters.filter((ch) => ch.bookId === book?.id);
+  // const bookChapters = chapters.filter((ch) => ch.bookId === book?.id);
 
   return NextResponse.json(
     {
       success: true,
       statusCode: 200,
-      data: bookChapters,
+      // data: bookChapters,
       timestamp: new Date().toISOString(),
       path: request.nextUrl.pathname,
     },

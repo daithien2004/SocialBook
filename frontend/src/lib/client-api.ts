@@ -30,7 +30,7 @@ export const axiosBaseQuery =
     unknown,
     { status: number; data: ErrorResponseDto }
   > =>
-  async ({ url, method = 'GET', body, headers, params}) => {
+  async ({ url, method = 'GET', body, headers, params }) => {
     try {
       const result = await clientApi({
         url,

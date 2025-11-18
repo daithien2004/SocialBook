@@ -18,6 +18,7 @@ import { PostsModule } from '@/src/modules/posts/posts.module';
 import { CommentsModule } from '@/src/modules/comments/comments.module';
 import { AuthorsModule } from '@/src/modules/authors/authors.module';
 import { ReviewsModule } from '@/src/modules/reviews/reviews.module';
+import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { ReviewsModule } from '@/src/modules/reviews/reviews.module';
     AuthorsModule,
     CommentsModule,
     ReviewsModule,
+    TextToSpeechModule,
   ],
   controllers: [AppController],
   providers: [
