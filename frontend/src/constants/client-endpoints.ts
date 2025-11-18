@@ -17,7 +17,9 @@ export const BFF_BOOKS_ENDPOINTS = {
 };
 
 export const BFF_COMMENTS_ENDPOINTS = {
-  getCommentsByTarget: '/comments',
+  getCommentsByTarget: '/comments/target',
+  postCreateComment: '/comments',
+  getResolveParent: '/comments/resolve-parent',
 };
 
 export const BFF_CHAPTERS_ENDPOINTS = {

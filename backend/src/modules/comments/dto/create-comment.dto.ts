@@ -1,1 +1,18 @@
-export class CreateCommentDto {}
+import { IsEnum, IsMongoId, IsOptional, ValidateIf } from 'class-validator';
+import { TARGET_TYPES } from '@/src/modules/comments/constants/targetType.constant';
+
+export class CreateCommentDto {
+  @IsEnum(TARGET_TYPES)
+  targetType: string;
+
+  @IsMongoId()
+  targetId: string;
+
+  @IsOptional()
+  content: string
+
+  @IsOptional()
+  @ValidateIf((o) => o.parentId !== null)
+  @IsMongoId()
+  parentId: string | null;
+}

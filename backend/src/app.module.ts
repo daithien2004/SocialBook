@@ -19,6 +19,7 @@ import { CommentsModule } from '@/src/modules/comments/comments.module';
 import { AuthorsModule } from '@/src/modules/authors/authors.module';
 import { ReviewsModule } from '@/src/modules/reviews/reviews.module';
 import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.module';
+import { LikesModule } from '@/src/modules/likes/likes.module';
 
 @Module({
   imports: [
@@ -71,8 +72,6 @@ import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.modu
     PostsModule,
     AuthorsModule,
     CommentsModule,
-    ReviewsModule,
-    TextToSpeechModule,
   ],
   controllers: [AppController],
   providers: [

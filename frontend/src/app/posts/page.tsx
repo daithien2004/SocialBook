@@ -2,7 +2,7 @@ import PostList from "@/src/components/post/PostList";
 
 export default function Post() {
     return (
-        <div className="mt-16 flex justify-center gap-4">
+        <div className="mt-4 flex justify-center gap-4">
             <div className="hidden lg:block w-1/5 bg-gray-50 rounded-2xl p-4 m-4 shadow-sm h-fit sticky top-20">
                 <h2 className="font-semibold mb-3">Menu</h2>
                 <ul className="space-y-2 text-sm">
