@@ -29,16 +29,4 @@ export class BooksController {
       data: result,
     };
   }
-
-  @Public()
-  @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  async getBookById(@Param('id') id: string) {
-    const result = await this.booksService.getBookById(id);
-
-    return {
-      message: 'Get book successfully',
-      data: result,
-    };
-  }
 }
