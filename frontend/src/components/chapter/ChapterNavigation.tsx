@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ChapterNavigationProps {
-  currentIndex: number;
-  totalChapters: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
   onPrevious: () => void;
   onNext: () => void;
   showTableOfContents?: boolean;
@@ -14,8 +14,8 @@ interface ChapterNavigationProps {
 }
 
 export default function ChapterNavigation({
-  currentIndex,
-  totalChapters,
+  hasPrevious,
+  hasNext,
   onPrevious,
   onNext,
   showTableOfContents = false,
@@ -23,9 +23,6 @@ export default function ChapterNavigation({
   tableOfContentsText = 'Mục lục',
   variant = 'top',
 }: ChapterNavigationProps) {
-  const isPreviousDisabled = currentIndex === 0;
-  const isNextDisabled = currentIndex >= totalChapters - 1;
-
   const buttonBaseClass =
     'flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition';
   const buttonActiveClass = 'bg-blue-600 text-white hover:bg-blue-700';
@@ -39,9 +36,9 @@ export default function ChapterNavigation({
       {/* Nút Chương trước */}
       <button
         onClick={onPrevious}
-        disabled={isPreviousDisabled}
+        disabled={!hasPrevious}
         className={`${buttonBaseClass} ${
-          isPreviousDisabled ? buttonDisabledClass : buttonActiveClass
+          !hasPrevious ? buttonDisabledClass : buttonActiveClass
         }`}
         aria-label="Chương trước"
       >
@@ -49,7 +46,7 @@ export default function ChapterNavigation({
         {previousButtonText}
       </button>
 
-      {/* Hiển thị vị trí hoặc nút Mục lục */}
+      {/* Hiển thị nút Mục lục hoặc khoảng trống */}
       {showTableOfContents ? (
         <Link
           href={tableOfContentsHref}
@@ -58,17 +55,15 @@ export default function ChapterNavigation({
           {tableOfContentsText}
         </Link>
       ) : (
-        <span className="text-sm font-semibold">
-          {currentIndex + 1} / {totalChapters}
-        </span>
+        <div className="w-20" /> // Spacer để giữ layout cân đối
       )}
 
       {/* Nút Chương sau */}
       <button
         onClick={onNext}
-        disabled={isNextDisabled}
+        disabled={!hasNext}
         className={`${buttonBaseClass} ${
-          isNextDisabled ? buttonDisabledClass : buttonActiveClass
+          !hasNext ? buttonDisabledClass : buttonActiveClass
         }`}
         aria-label="Chương sau"
       >

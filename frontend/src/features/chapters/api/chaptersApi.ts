@@ -2,10 +2,27 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
 import { BFF_CHAPTERS_ENDPOINTS } from '@/src/constants/client-endpoints';
 import { Chapter } from '../types/chapter.interface';
+import { Book } from '../../books/types/book.interface';
 
 interface GetChapterRequest {
   bookSlug: string;
   chapterSlug: string;
+}
+
+interface GetChapterResponse {
+  book: Book;
+  chapter: Chapter;
+  navigation: {
+    previous: ChapterNavigation | null;
+    next: ChapterNavigation | null;
+  };
+}
+
+interface ChapterNavigation {
+  id: string;
+  title: string;
+  slug: string;
+  orderIndex: number;
 }
 
 interface GetChaptersRequest {
@@ -15,21 +32,21 @@ interface GetChaptersRequest {
 export const chaptersApi = createApi({
   reducerPath: 'chapterApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Chapters'],
+  tagTypes: ['Chapters', 'Chapter'],
   endpoints: (builder) => ({
-    getChapter: builder.query<Chapter, GetChapterRequest>({
+    getChapter: builder.query<GetChapterResponse, GetChapterRequest>({
       query: (data) => ({
         url: BFF_CHAPTERS_ENDPOINTS.getChapter(data.bookSlug, data.chapterSlug),
         method: 'GET',
-        body: data,
       }),
-      providesTags: ['Chapters'],
+      providesTags: (result, error, arg) => [
+        { type: 'Chapter', id: arg.chapterSlug },
+      ],
     }),
     getChapters: builder.query<Chapter[], GetChaptersRequest>({
       query: (data) => ({
         url: BFF_CHAPTERS_ENDPOINTS.getChapters(data.bookSlug),
         method: 'GET',
-        body: data,
       }),
       providesTags: ['Chapters'],
     }),

@@ -8,14 +8,12 @@ export const NESTJS_AUTH_ENDPOINTS = {
 };
 
 export const NESTJS_COMMENTS_ENDPOINTS = {
-  getCommentsByTarget: '/comments/level1'
+  getCommentsByTarget: '/comments/level1',
 };
 
-
 export const NESTJS_BOOKS_ENDPOINTS = {
-  bookAndFirstChapter: (bookSlug: string) => `/books/${bookSlug}/first-chapter`,
-  getMetadataNextChapter: (bookSlug: string, currentOrderIndex: number) =>
-    `/books/${bookSlug}/next-chapter?currentOrderIndex=${currentOrderIndex}`,
-  chapterContent: (chapterId: string) =>
-    `/books/chapter/by-id/${chapterId}/content`,
+  getBooks: '/books',
+  getBookBySlug: (bookSlug: string) => `/books/${bookSlug}`,
+  getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
+    `/books/${bookSlug}/chapters/${chapterSlug}`,
 };

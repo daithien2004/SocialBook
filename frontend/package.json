@@ -22,6 +22,7 @@
     "badge": "^0.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "geist": "^1.5.1",
     "jwt-decode": "^4.0.0",
     "lodash.debounce": "^4.0.8",
