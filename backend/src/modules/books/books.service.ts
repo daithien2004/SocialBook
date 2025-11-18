@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Book, BookDocument } from './schemas/book.schema';
 import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
-import { Comment, CommentDocument } from '../comments/schemas/comment.schema';
+import { Review, ReviewDocument } from '../reviews/schemas/review.schema';
 import { Author, AuthorDocument } from '../authors/schemas/author.schema';
 import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
 
@@ -16,7 +16,7 @@ export class BooksService {
   constructor(
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
-    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+    @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Author.name) private authorModel: Model<AuthorDocument>,
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
   ) {}
@@ -44,9 +44,9 @@ export class BooksService {
       .sort({ orderIndex: 1 })
       .lean();
 
-    // Lấy comments với populate user
-    const comments = await this.commentModel
-      .find({ targetType: 'book', targetId: book._id })
+    // Lấy reviews với populate user
+    const reviews = await this.reviewModel
+      .find({ bookId: book._id })
       .populate({
         path: 'userId',
         select: 'username image',
@@ -54,13 +54,11 @@ export class BooksService {
       .sort({ createdAt: -1 })
       .lean();
 
-    // TÍNH AVERAGE RATING & TOTAL RATINGS
-    const ratingStats = await this.commentModel.aggregate([
+    // TÍNH AVERAGE RATING & TOTAL RATINGS từ reviews
+    const ratingStats = await this.reviewModel.aggregate([
       {
         $match: {
-          targetType: 'book',
-          targetId: new Types.ObjectId(book._id as Types.ObjectId),
-          rating: { $exists: true, $ne: null }, // Chỉ tính comments có rating
+          bookId: new Types.ObjectId(book._id as Types.ObjectId),
         },
       },
       {
@@ -74,7 +72,7 @@ export class BooksService {
 
     const ratingData = ratingStats[0] || {};
     const averageRating = ratingData.averageRating
-      ? Math.round(ratingData.averageRating * 10) / 10 // Làm tròn 1 chữ số thập phân
+      ? Math.round(ratingData.averageRating * 10) / 10
       : 0;
     const totalRatings = ratingData.totalRatings || 0;
 
@@ -95,7 +93,7 @@ export class BooksService {
       createdAt: book.createdAt,
       updatedAt: book.updatedAt,
       chapters,
-      comments,
+      reviews, // Đổi từ comments sang reviews
       averageRating,
       totalRatings,
       ratingDistribution: await this.getRatingDistribution(
@@ -138,73 +136,12 @@ export class BooksService {
     };
   }
 
-  /**
-   * Lấy thông tin chi tiết 1 book theo ID
-   */
-  async getBookById(id: string) {
-    // VALIDATION
-    if (!id) {
-      throw new BadRequestException('Book ID is required');
-    }
-
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid book ID format');
-    }
-
-    // EXECUTION
-    const book = await this.bookModel
-      .findOne({ _id: id })
-      .populate('authorId', 'username email')
-      .populate('genre', 'name slug')
-      .lean();
-
-    if (!book) {
-      throw new NotFoundException(`Book with ID "${id}" not found`);
-    }
-
-    const chapters = await this.chapterModel
-      .find({ bookId: book._id })
-      .sort({ orderIndex: 1 })
-      .lean();
-
-    const comments = await this.commentModel
-      .find({ targetType: 'book', targetId: book._id })
-      .populate('userId', 'name avatar')
-      .sort({ createdAt: -1 })
-      .lean();
-
-    // RETURN
-    return {
-      id: book._id,
-      title: book.title,
-      slug: book.slug,
-      description: book.description,
-      coverUrl: book.coverUrl,
-      status: book.status,
-      tags: book.tags,
-      views: book.views,
-      likes: book.likes,
-      publishedYear: book.publishedYear,
-      author: book.authorId,
-      genres: book.genre,
-      createdAt: book.createdAt,
-      updatedAt: book.updatedAt,
-      chapters,
-      comments,
-      ratingDistribution: await this.getRatingDistribution(
-        book._id as Types.ObjectId,
-      ),
-    };
-  }
-
-  // thống kê của các rating (1-5 sao)
+  // thống kê của các rating (1-5 sao) từ reviews
   private async getRatingDistribution(bookId: Types.ObjectId) {
-    const distribution = await this.commentModel.aggregate([
+    const distribution = await this.reviewModel.aggregate([
       {
         $match: {
-          targetType: 'book',
-          targetId: bookId,
-          rating: { $exists: true, $ne: null },
+          bookId: bookId,
         },
       },
       {
@@ -225,5 +162,36 @@ export class BooksService {
     });
 
     return result;
+  }
+
+  // Thêm method mới để lấy thống kê review chi tiết
+  async getReviewStats(bookId: Types.ObjectId) {
+    const stats = await this.reviewModel.aggregate([
+      {
+        $match: {
+          bookId: bookId,
+        },
+      },
+      {
+        $group: {
+          _id: '$bookId',
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 },
+          verifiedPurchases: {
+            $sum: { $cond: ['$verifiedPurchase', 1, 0] },
+          },
+          totalLikes: { $sum: '$likesCount' },
+        },
+      },
+    ]);
+
+    return (
+      stats[0] || {
+        averageRating: 0,
+        totalReviews: 0,
+        verifiedPurchases: 0,
+        totalLikes: 0,
+      }
+    );
   }
 }

@@ -6,7 +6,7 @@ import { BooksController } from './books.controller';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema';
 import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
 import { Author, AuthorSchema } from '../authors/schemas/author.schema';
-import { Comment, CommentSchema } from '../comments/schemas/comment.schema';
+import { Review, ReviewSchema } from '../reviews/schemas/review.schema';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { Comment, CommentSchema } from '../comments/schemas/comment.schema';
       { name: Chapter.name, schema: ChapterSchema },
       { name: Genre.name, schema: GenreSchema },
       { name: Author.name, schema: AuthorSchema },
-      { name: Comment.name, schema: CommentSchema },
+      { name: Review.name, schema: ReviewSchema },
 
     ]),
   ],

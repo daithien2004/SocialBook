@@ -14,7 +14,7 @@ export interface Book {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
-  comments: Comment[];
+  reviews: Review[];
   chapters: Chapter[];
   totalRatings: number;
   averageRating: number;
@@ -41,7 +41,7 @@ export interface Chapter {
   viewsCount: number;
 }
 
-export interface Comment {
+export interface Review {
   id: string;
   content: string;
   user: {

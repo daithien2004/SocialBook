@@ -22,14 +22,6 @@ export class Comment {
   @Prop({ type: Number, default: 0 })
   likesCount: number;
 
-  @Prop({
-    type: Number,
-    min: 1,
-    max: 5,
-    default: 5
-  })
-  rating: number;
-
   @Prop({ type: Date, default: Date.now })
   createdAt: Date;
 
