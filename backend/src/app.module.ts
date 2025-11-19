@@ -72,6 +72,7 @@ import { LikesModule } from '@/src/modules/likes/likes.module';
     PostsModule,
     AuthorsModule,
     CommentsModule,
+    LikesModule
   ],
   controllers: [AppController],
   providers: [

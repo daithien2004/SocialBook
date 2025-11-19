@@ -12,22 +12,16 @@ import {
   CommentDocument,
 } from '@/src/modules/comments/schemas/comment.schema';
 import { TARGET_TYPES } from '@/src/modules/comments/constants/targetType.constant';
+import { LikesService } from '@/src/modules/likes/likes.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
-    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-  ) {
+    private readonly likesService: LikesService,
+    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,) {
   }
 
-  async countByTarget(targetId: string): Promise<number> {
-    const targetObjectId = new Types.ObjectId(targetId);
-    return this.commentModel.countDocuments({
-      targetId: targetObjectId,
-    });
-  }
-
-  async getCommentByTarget(
+  async   getCommentByTarget(
     targetId: string,
     parentId: string | null,
     cursor?: string,
@@ -48,7 +42,6 @@ export class CommentsService {
     } else if (parentId) {
       filter.parentId = new Types.ObjectId(parentId);
     }
-    // Nếu có cursor → lấy comment cũ hơn nó
     if (cursor) {
       filter._id = { $lt: new Types.ObjectId(cursor) };
     }
@@ -68,20 +61,25 @@ export class CommentsService {
 
     const parentIds = itemsCut.map((c) => c._id);
 
-    const repliesGroup = await this.commentModel.aggregate([
-      { $match: { parentId: { $in: parentIds } } },
-      { $group: { _id: '$parentId', count: { $sum: 1 } } },
-    ]);
-
+    // 2) Đếm số reply cho các comment trong page
+    const repliesGroup = await this.aggregateReplyCounts(parentIds);
     const replyCountMap = repliesGroup.reduce((acc, curr) => {
       acc[curr._id.toString()] = curr.count;
       return acc;
     }, {});
 
+    // 3) Đếm like CHO TẤT CẢ comment trong page CHỈ 1 LẦN
+    const likesGroup = await this.likesService.aggregateLikeCounts(parentIds, 'comment');
+    const likeCountMap: Record<string, number> = likesGroup.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr.count;
+      return acc;
+    }, {} as Record<string, number>);
+
     const items = itemsCut.map((c: any) => ({
       id: c._id.toString(),
       content: c.content,
-      likesCount: c.likesCount,
+      parentId: c.parentId,
+      likesCount: likeCountMap[c._id.toString()] ?? 0,
       createdAt: c.createdAt,
       repliesCount: replyCountMap[c._id.toString()] ?? 0,
       user: c.userId
@@ -127,6 +125,13 @@ export class CommentsService {
     });
 
     return newComment.toObject();
+  }
+
+  async aggregateReplyCounts(targetIds: Types.ObjectId[]){
+    return this.commentModel.aggregate([
+      { $match: { parentId: { $in: targetIds } } },
+      { $group: { _id: '$parentId', count: { $sum: 1 } } },
+    ]);
   }
 
   async resolveParentId(

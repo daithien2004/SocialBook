@@ -22,6 +22,10 @@ export const BFF_COMMENTS_ENDPOINTS = {
   getResolveParent: '/comments/resolve-parent',
 };
 
+export const BFF_LIKES_ENDPOINTS = {
+  postToggleLike: '/likes/toggle',
+};
+
 export const BFF_CHAPTERS_ENDPOINTS = {
   getChapter: (bookSlug: string, chapterSlug: string) =>
     `/books/${bookSlug}/chapters/${chapterSlug}`,

@@ -6,7 +6,7 @@ import { Post } from "@/src/features/posts/types/post.interface";
 import {
     type CommentItem as CommentItemType,
     useLazyGetResolveParentQuery,
-    usePostCreateMutation,
+    usePostCreateMutation, usePostToggleLikeMutation,
 } from "@/src/features/comments/api/commentApi";
 
 interface CommentItemProps {
@@ -21,6 +21,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState("");
 
+    const [postToggleLike, { isLoading: isPosting }] = usePostToggleLikeMutation();
     const [createComment, { isLoading: isPostingReply }] = usePostCreateMutation();
 
     const [
@@ -75,6 +76,19 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
         }
     };
 
+    const handleLikeComment = async () => {
+        try {
+            await postToggleLike({
+                targetId: comment.id,
+                targetType: "comment",
+                parentId: comment.parentId,
+                postId: post.id,
+            }).unwrap();
+        } catch (e) {
+            console.error("Like comment failed:", e);
+        }
+    };
+
     return (
         <div className="flex items-start gap-3">
             <img
@@ -97,7 +111,8 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
                         <p className="text-xs text-gray-500">
                             {comment.likesCount} lượt thích
                         </p>
-                        <p className="text-xs text-gray-500 cursor-pointer hover:underline underline-offset-2">
+                        <p  onClick={handleLikeComment}
+                            className="text-xs text-gray-500 cursor-pointer hover:underline underline-offset-2">
                             Thích
                         </p>
                         <button

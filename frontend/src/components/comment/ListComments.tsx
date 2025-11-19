@@ -20,7 +20,6 @@ const ListComments:React.FC<ListCommentsProps> = (props) => {
 
     const [cursor, setCursor] = useState<string | undefined>(undefined);
     const [allComments, setAllComments] = useState<CommentItem[]>([]);
-    const [isShowComment] = useState(isCommentOpen);
 
     const [
         fetchComments,
@@ -30,23 +29,17 @@ const ListComments:React.FC<ListCommentsProps> = (props) => {
     const isFirstLoading = isLoading || (isFetching && isUninitialized);
 
     useEffect(() => {
-        if (isShowComment && post?.id) {
+        if (!isCommentOpen) return;
+        if (isCommentOpen && post?.id) {
             setAllComments([]);
             setCursor(undefined);
             fetchComments({ targetId: post.id, parentId, limit: 20 });
         }
-    }, [isShowComment, post.id, parentId, fetchComments]);
+    }, [isCommentOpen, post.id, parentId, fetchComments]);
 
     useEffect(() => {
         if (data?.items) {
-            setAllComments((prev) => {
-                const existed = new Set(prev.map((c) => c.id));
-                return [
-                    ...prev,
-                    ...data.items.filter((c) => !existed.has(c.id)),
-                ];
-            });
-
+            setAllComments(data.items);
             setCursor(data.nextCursor ?? undefined);
         }
     }, [data]);
