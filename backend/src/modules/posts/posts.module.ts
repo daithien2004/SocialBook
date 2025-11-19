@@ -3,9 +3,13 @@ import { PostsController } from './posts.controller';
 import { Post, PostSchema } from '@/src/modules/posts/schemas/post.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Module } from '@nestjs/common';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }])],
+  imports: [
+    CloudinaryModule,
+    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
+  ],
   controllers: [PostsController],
   providers: [PostsService],
 })

@@ -85,7 +85,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <p className="text-lg text-gray-600 mb-4">
                 Tác giả:{' '}
                 <span className="font-semibold text-gray-900">
-                  {book.author.name}
+                  {book.author.username}
                 </span>
               </p>
 
@@ -205,9 +205,9 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <div className="text-gray-700 leading-relaxed">
                 <p className="mb-4">{book.description}</p>
                 <p>
-                  Cuốn sách "{book.title}" của tác giả {book.author.name} mang
-                  đến một câu chuyện đầy cảm xúc và ý nghĩa. Đây là một trong
-                  những tác phẩm tiêu biểu thuộc thể loại{' '}
+                  Cuốn sách "{book.title}" của tác giả {book.author.username}{' '}
+                  mang đến một câu chuyện đầy cảm xúc và ý nghĩa. Đây là một
+                  trong những tác phẩm tiêu biểu thuộc thể loại{' '}
                   {book.genres.map((g) => g.name).join(', ')}.
                 </p>
               </div>

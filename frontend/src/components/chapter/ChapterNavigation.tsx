@@ -9,6 +9,7 @@ interface ChapterNavigationProps {
   onNext: () => void;
   showTableOfContents?: boolean;
   tableOfContentsHref?: string;
+  onTableOfContentsClick?: () => void; // ← Thêm prop này
   tableOfContentsText?: string;
   variant?: 'top' | 'bottom';
 }
@@ -19,7 +20,8 @@ export default function ChapterNavigation({
   onPrevious,
   onNext,
   showTableOfContents = false,
-  tableOfContentsHref = '#',
+  tableOfContentsHref,
+  onTableOfContentsClick,
   tableOfContentsText = 'Mục lục',
   variant = 'top',
 }: ChapterNavigationProps) {
@@ -48,12 +50,22 @@ export default function ChapterNavigation({
 
       {/* Hiển thị nút Mục lục hoặc khoảng trống */}
       {showTableOfContents ? (
-        <Link
-          href={tableOfContentsHref}
-          className="px-5 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm font-medium"
-        >
-          {tableOfContentsText}
-        </Link>
+        // Nếu có onTableOfContentsClick thì dùng button, không thì dùng Link
+        onTableOfContentsClick ? (
+          <button
+            onClick={onTableOfContentsClick}
+            className="px-5 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm font-medium"
+          >
+            {tableOfContentsText}
+          </button>
+        ) : (
+          <Link
+            href={tableOfContentsHref || '#'}
+            className="px-5 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm font-medium"
+          >
+            {tableOfContentsText}
+          </Link>
+        )
       ) : (
         <div className="w-20" /> // Spacer để giữ layout cân đối
       )}

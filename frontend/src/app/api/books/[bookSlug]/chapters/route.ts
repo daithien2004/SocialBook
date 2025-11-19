@@ -1,25 +1,32 @@
+import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { books } from '@/src/lib/books';
+import serverApi from '@/src/lib/server-api';
 
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ bookSlug: string }> }
+  req: NextRequest,
+  {
+    params,
+  }: {
+    params: Promise<{
+      bookSlug: string;
+    }>;
+  }
 ) {
-  const { bookSlug } = await context.params;
+  const { bookSlug } = await params;
 
-  const book = books.find((b) => b.slug === bookSlug);
-
-  // const bookChapters = chapters.filter((ch) => ch.bookId === book?.id);
-
-  return NextResponse.json(
-    {
-      success: true,
-      statusCode: 200,
-      // data: bookChapters,
-      timestamp: new Date().toISOString(),
-      path: request.nextUrl.pathname,
-    },
-    { status: 200 }
-  );
+  try {
+    const response = await serverApi.get(
+      NESTJS_CHAPTERS_ENDPOINTS.getChapters(bookSlug)
+    );
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        message: error.response?.data?.message || 'Failed to fetch books',
+      },
+      { status: error.response?.status || 500 }
+    );
+  }
 }

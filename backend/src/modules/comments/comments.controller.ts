@@ -6,6 +6,7 @@ import {
   ResolveParentQueryDto,
 } from '@/src/modules/comments/dto/get-comment.dto';
 import { Types } from 'mongoose';
+import { Public } from '@/src/common/decorators/customize';
 
 @Controller('comments')
 export class CommentsController {
@@ -16,9 +17,13 @@ export class CommentsController {
     @Req() req: any,
     @Body() createCommentDto: CreateCommentDto,
   ) {
-    return await this.commentsService.createForTarget(req.user.id, createCommentDto);
+    return await this.commentsService.createForTarget(
+      req.user.id,
+      createCommentDto,
+    );
   }
 
+  @Public()
   @Get('resolve-parent')
   async getResolveParent(@Query() query: ResolveParentQueryDto) {
     const { targetId, targetType, parentId } = query;
@@ -31,6 +36,7 @@ export class CommentsController {
     );
   }
 
+  @Public()
   @Get('target')
   async getCommentByTarget(@Query() query: GetCommentsDto) {
     const { targetId, parentId, cursor, limit } = query;

@@ -6,14 +6,14 @@ export class Post {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Book', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Book' })
   bookId: Types.ObjectId;
 
   @Prop({ type: String, required: true, trim: true })
   content: string;
 
   @Prop({ type: [String], default: [] })
-  image: string[];
+  imageUrls: string[];
 
   @Prop({ type: Boolean, default: false })
   isDelete: boolean;
@@ -27,5 +27,3 @@ export class Post {
 export type PostDocument = HydratedDocument<Post>;
 
 export const PostSchema = SchemaFactory.createForClass(Post);
-
-

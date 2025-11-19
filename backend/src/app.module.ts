@@ -20,6 +20,7 @@ import { AuthorsModule } from '@/src/modules/authors/authors.module';
 import { ReviewsModule } from '@/src/modules/reviews/reviews.module';
 import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.module';
 import { LikesModule } from '@/src/modules/likes/likes.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { LikesModule } from '@/src/modules/likes/likes.module';
     PostsModule,
     AuthorsModule,
     CommentsModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [

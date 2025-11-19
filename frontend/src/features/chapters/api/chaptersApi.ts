@@ -29,6 +29,12 @@ interface GetChaptersRequest {
   bookSlug: string;
 }
 
+interface GetChaptersResponse {
+  book: Partial<Book>;
+  chapters: Chapter[];
+  total: number;
+}
+
 export const chaptersApi = createApi({
   reducerPath: 'chapterApi',
   baseQuery: axiosBaseQuery(),
@@ -36,14 +42,17 @@ export const chaptersApi = createApi({
   endpoints: (builder) => ({
     getChapter: builder.query<GetChapterResponse, GetChapterRequest>({
       query: (data) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.getChapter(data.bookSlug, data.chapterSlug),
+        url: BFF_CHAPTERS_ENDPOINTS.getChapterBySlug(
+          data.bookSlug,
+          data.chapterSlug
+        ),
         method: 'GET',
       }),
       providesTags: (result, error, arg) => [
         { type: 'Chapter', id: arg.chapterSlug },
       ],
     }),
-    getChapters: builder.query<Chapter[], GetChaptersRequest>({
+    getChapters: builder.query<GetChaptersResponse, GetChaptersRequest>({
       query: (data) => ({
         url: BFF_CHAPTERS_ENDPOINTS.getChapters(data.bookSlug),
         method: 'GET',

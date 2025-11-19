@@ -1,19 +1,28 @@
 'use client';
 
-import { books } from '@/src/lib/books';
-import Link from 'next/link';
+import { useGetBooksQuery } from '@/src/features/books/api/bookApi';
+import { BookCard } from '@/src/components/book/BookCard';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
+import { Search, X } from 'lucide-react';
 
 export default function BooksPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
+  const { data, isLoading } = useGetBooksQuery();
+
+  const books = data?.books ?? [];
+
+  // State cho search input
+  const [searchInput, setSearchInput] = useState('');
+
   // Lấy danh sách genre từ query (có thể nhiều: ?genre=Fantasy,Romance)
   const selectedGenres =
     searchParams.get('genre')?.split(',')?.filter(Boolean) || [];
   const sortBy = searchParams.get('sort') || 'newest';
+  const searchQuery = searchParams.get('search') || '';
 
   // Tạo URL mới khi thay đổi filter/sort
   const createQueryString = useCallback(
@@ -52,6 +61,31 @@ export default function BooksPage() {
     const query = createQueryString({
       genre: selectedGenres.join(','),
       sort: value,
+      search: searchQuery,
+    });
+
+    router.push(`${pathname}?${query}`);
+  };
+
+  // Xử lý search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = createQueryString({
+      genre: selectedGenres.join(','),
+      sort: sortBy,
+      search: searchInput.trim(),
+    });
+
+    router.push(`${pathname}?${query}`);
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchInput('');
+    const query = createQueryString({
+      genre: selectedGenres.join(','),
+      sort: sortBy,
+      search: '',
     });
 
     router.push(`${pathname}?${query}`);
@@ -59,40 +93,105 @@ export default function BooksPage() {
 
   // Lọc + Sắp xếp
   const filteredAndSortedBooks = useMemo(() => {
-    let filtered =
-      selectedGenres.length > 0
-        ? books.filter((book) => selectedGenres.includes(book.genre))
-        : books;
+    let filtered = books;
+
+    // Lọc theo search query
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (book) =>
+          book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          book.author.username
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          book.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Lọc theo genres
+    if (selectedGenres.length > 0) {
+      filtered = filtered.filter((book) =>
+        book.genres.some((g) => selectedGenres.includes(g.name))
+      );
+    }
 
     switch (sortBy) {
       case 'newest':
-        return [...filtered].sort((a, b) =>
-          (b.publishedYear || '0').localeCompare(a.publishedYear || '0')
+        return [...filtered].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       case 'oldest':
-        return [...filtered].sort((a, b) =>
-          (a.publishedYear || '0').localeCompare(b.publishedYear || '0')
+        return [...filtered].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       case 'most-read':
-        return [...filtered].sort(
-          (a, b) => parseFloat(b.reads) - parseFloat(a.reads)
-        );
+        return [...filtered].sort((a, b) => b.views - a.views);
       case 'highest-rating':
-        return [...filtered].sort((a, b) => b.rating - a.rating);
-      case 'trending':
-        return [...filtered].sort(
-          (a, b) => Number(b.isTrending) - Number(a.isTrending)
-        );
+        return [...filtered].sort((a, b) => b.averageRating - a.averageRating);
+      case 'most-liked':
+        return [...filtered].sort((a, b) => b.likes - a.likes);
       default:
         return filtered;
     }
-  }, [selectedGenres, sortBy]);
+  }, [books, selectedGenres, sortBy, searchQuery]);
 
-  const allGenres = Array.from(new Set(books.map((b) => b.genre)));
+  // Lấy tất cả genres từ books
+  const allGenres = useMemo(() => {
+    const genreSet = new Set<string>();
+    books.forEach((book) => {
+      book.genres.forEach((genre) => genreSet.add(genre.name));
+    });
+    return Array.from(genreSet);
+  }, [books]);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-lg text-gray-600">Đang tải...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Danh sách truyện</h1>
+
+      {/* Thanh tìm kiếm */}
+      <form onSubmit={handleSearch} className="mb-6">
+        <div className="relative max-w-2xl">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
+          />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Tìm kiếm theo tên truyện, tác giả, mô tả..."
+            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          {(searchInput || searchQuery) && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
+        {/* Hiển thị từ khóa đang tìm */}
+        {searchQuery && (
+          <div className="mt-2 text-sm text-gray-600">
+            Kết quả tìm kiếm cho:{' '}
+            <span className="font-semibold">"{searchQuery}"</span> (
+            {filteredAndSortedBooks.length} truyện)
+          </div>
+        )}
+      </form>
 
       {/* Bộ lọc thể loại (multi-select) */}
       <div className="mb-6">
@@ -170,49 +269,14 @@ export default function BooksPage() {
           <option value="oldest">Cũ nhất</option>
           <option value="most-read">Đọc nhiều nhất</option>
           <option value="highest-rating">Đánh giá cao</option>
-          <option value="trending">Đang hot</option>
+          <option value="most-liked">Yêu thích nhất</option>
         </select>
       </div>
 
       {/* Danh sách sách */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {filteredAndSortedBooks.map((book) => (
-          <Link
-            key={book.id}
-            href={`/books/${book.slug}`}
-            className="group block border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200"
-          >
-            <div className="relative aspect-[3/4]">
-              <img
-                src={book.cover}
-                alt={book.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              {book.isNew && (
-                <span className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                  Mới
-                </span>
-              )}
-              {book.isTrending && (
-                <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                  Hot
-                </span>
-              )}
-            </div>
-            <div className="p-3 space-y-1">
-              <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-blue-600">
-                {book.title}
-              </h3>
-              <p className="text-xs text-gray-600">{book.author}</p>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span className="text-yellow-600">Rating: {book.rating}</span>
-                <span>• {book.reads}</span>
-              </div>
-              <p className="text-xs text-gray-500">
-                {book.chapters} chương • {book.status}
-              </p>
-            </div>
-          </Link>
+          <BookCard key={book.id} book={book} />
         ))}
       </div>
 

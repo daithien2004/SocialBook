@@ -1,5 +1,5 @@
 import { Book } from '@/src/features/books/types/book.interface';
-import { Eye, Heart, Star } from 'lucide-react';
+import { Eye, Heart, Star, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 export function BookCard({ book }: { book: Book }) {
@@ -23,75 +23,79 @@ export function BookCard({ book }: { book: Book }) {
 
   return (
     <Link href={`/books/${book.slug}`}>
-      <div className="group relative bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-        {/* Badges - Đơn giản */}
-        <div className="absolute top-2 right-2 z-20 flex flex-col gap-1.5">
-          {isNew() && (
-            <span className="px-2.5 py-1 bg-green-500 text-white text-xs font-bold rounded-md shadow-sm">
-              MỚI
-            </span>
-          )}
-          {isTrending && (
-            <span className="px-2.5 py-1 bg-red-500 text-white text-xs font-bold rounded-md shadow-sm">
-              HOT
-            </span>
-          )}
-          {book.status === 'completed' && (
-            <span className="px-2.5 py-1 bg-blue-500 text-white text-xs font-bold rounded-md shadow-sm">
-              HOÀN
-            </span>
-          )}
-        </div>
-
+      <div className="group bg-white rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-100">
         {/* Book Cover */}
         <div className="relative aspect-[2/3] overflow-hidden bg-gray-100">
           <img
             src={book.coverUrl}
             alt={book.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
-          {/* Overlay đơn giản */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          {/* Badges - Top Right */}
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
+            {isNew() && (
+              <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded">
+                MỚI
+              </span>
+            )}
+            {isTrending && (
+              <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
+                HOT
+              </span>
+            )}
+            {book.status === 'completed' && (
+              <span className="px-2 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">
+                FULL
+              </span>
+            )}
+          </div>
 
-          {/* Rating */}
+          {/* Rating Badge - Top Left */}
           {ratingNum > 0 && (
-            <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-yellow-400 rounded-md shadow-sm">
+            <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-yellow-400 rounded shadow-sm">
               <Star size={12} className="fill-white text-white" />
               <span className="text-white font-bold text-xs">{rating}</span>
             </div>
           )}
         </div>
 
-        {/* Content overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {/* Info Section - Always Visible */}
+        <div className="p-3">
+          {/* Title */}
+          <h3 className="font-bold text-base text-gray-900 mb-1.5 line-clamp-2 group-hover:text-blue-600 transition-colors">
+            {book.title}
+          </h3>
+
+          {/* Author */}
+          <p className="text-sm text-gray-600 mb-2.5">{book.author.username}</p>
+
           {/* Genres */}
-          <div className="mb-2 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5 mb-3">
             {book.genres.slice(0, 2).map((g) => (
               <span
                 key={g.id}
-                className="px-2 py-0.5 bg-white/20 text-xs rounded"
+                className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs rounded"
               >
                 {g.name}
               </span>
             ))}
+            {book.genres.length > 2 && (
+              <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                +{book.genres.length - 2}
+              </span>
+            )}
           </div>
 
-          {/* Title & Author */}
-          <h3 className="font-bold text-base mb-1 line-clamp-2">
-            {book.title}
-          </h3>
-          <p className="text-sm opacity-90 mb-2">{book.author.name}</p>
-
           {/* Stats */}
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
             <div className="flex items-center gap-1">
-              <Eye size={14} />
+              <Eye size={12} />
               <span>{formatNumber(book.views)}</span>
             </div>
 
             <div className="flex items-center gap-1">
-              <Heart size={14} className="fill-current" />
+              <Heart size={12} className="fill-red-400 text-red-400" />
               <span>{formatNumber(book.likes)}</span>
             </div>
           </div>

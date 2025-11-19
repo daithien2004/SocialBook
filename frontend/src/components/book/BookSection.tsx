@@ -47,14 +47,14 @@ export function BookSection({
   };
 
   return (
-    <div className="mb-16">
+    <div className="mb-12">
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-6 px-2">
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className={`p-3 rounded-xl ${iconColor} text-white shadow-md`}>
-            <Icon size={28} strokeWidth={2} />
+          <div className={`p-2.5 rounded-lg ${iconColor} shadow-sm`}>
+            <Icon size={22} strokeWidth={2.5} className="text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
         </div>
 
         {/* Navigation Buttons */}
@@ -62,44 +62,44 @@ export function BookSection({
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className={`p-2.5 rounded-lg transition-colors ${
+            className={`p-2 rounded-lg border transition-all duration-300 ${
               canScrollLeft
-                ? 'bg-white hover:bg-gray-50 text-gray-700 shadow-sm'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
+                : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
             }`}
             aria-label="Scroll left"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={18} />
           </button>
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className={`p-2.5 rounded-lg transition-colors ${
+            className={`p-2 rounded-lg border transition-all duration-300 ${
               canScrollRight
-                ? 'bg-white hover:bg-gray-50 text-gray-700 shadow-sm'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300'
+                : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
             }`}
             aria-label="Scroll right"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
       {/* Books Container */}
       <div className="relative">
-        {/* Gradient Overlays - Chỉ hiện khi cần */}
+        {/* Gradient Overlays */}
         {canScrollLeft && (
-          <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
         )}
         {canScrollRight && (
-          <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
         )}
 
         {/* Scrollable Books */}
         <div
           ref={containerRef}
-          className="flex gap-5 overflow-x-auto scrollbar-hide scroll-smooth px-2 py-2"
+          className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',

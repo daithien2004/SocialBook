@@ -14,95 +14,72 @@ export class GenresSeed {
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
   ) {}
 
-  async run(): Promise<void> {
-    this.logger.log('🔄 Seeding genres...');
+  async run() {
+    try {
+      this.logger.log('🌱 Seeding genres...');
 
-    const genres = [
-      {
-        name: 'Tiểu thuyết',
-        description:
-          'Thể loại văn học kể về một câu chuyện có cốt truyện phức tạp và phát triển nhân vật.',
-      },
-      {
-        name: 'Truyện ngắn',
-        description:
-          'Tác phẩm văn xuôi ngắn gọn, tập trung vào một sự kiện hoặc nhân vật chính.',
-      },
-      {
-        name: 'Thơ',
-        description:
-          'Thể loại văn học sử dụng ngôn ngữ có nhịp điệu và hình ảnh để diễn đạt cảm xúc.',
-      },
-      {
-        name: 'Văn học thiếu nhi',
-        description: 'Tác phẩm dành cho độc giả từ thiếu nhi đến tuổi teen.',
-      },
-      {
-        name: 'Lãng mạn',
-        description:
-          'Thể loại tập trung vào tình yêu và mối quan hệ giữa các nhân vật.',
-      },
-      {
-        name: 'Trinh thám',
-        description:
-          'Thể loại văn học xoay quanh việc giải quyết bí ẩn hoặc tội phạm.',
-      },
-      {
-        name: 'Kinh dị',
-        description:
-          'Thể loại văn học nhằm tạo ra cảm giác sợ hãi, bất an cho người đọc.',
-      },
-      {
-        name: 'Khoa học viễn tưởng',
-        description:
-          'Thể loại dựa trên khoa học và công nghệ tưởng tượng trong tương lai.',
-      },
-      {
-        name: 'Huyền bí',
-        description:
-          'Thể loại chứa các yếu tố siêu nhiên, phép thuật và thế giới tưởng tượng.',
-      },
-      {
-        name: 'Lịch sử',
-        description:
-          'Tác phẩm lấy bối cảnh hoặc dựa trên các sự kiện lịch sử có thật.',
-      },
-      {
-        name: 'Phiêu lưu',
-        description:
-          'Thể loại kể về những cuộc hành trình và trải nghiệm mạo hiểm.',
-      },
-      {
-        name: 'Hiện thực',
-        description:
-          'Thể loại phản ánh cuộc sống thực tế và xã hội một cách chân thực.',
-      },
-      {
-        name: 'Châm biếm',
-        description:
-          'Thể loại sử dụng sự mỉa mai và hài hước để phê phán xã hội.',
-      },
-      {
-        name: 'Tự truyện',
-        description:
-          'Tác phẩm kể về cuộc đời và trải nghiệm của chính tác giả.',
-      },
-      {
-        name: 'Tâm lý',
-        description:
-          'Thể loại tập trung vào tâm lý, cảm xúc và nội tâm nhân vật.',
-      },
-    ];
+      const existingGenres = await this.genreModel.countDocuments();
+      if (existingGenres > 0) {
+        this.logger.log('⏭️  Genres already exist, skipping...');
+        return;
+      }
 
-    const existingCount = await this.genreModel.countDocuments();
-    if (existingCount > 0) {
-      this.logger.warn(
-        `⚠️ Found ${existingCount} existing genres. Skipping...`,
-      );
-      return;
+      const genres = [
+        {
+          name: 'Fantasy',
+          description:
+            'Fiction involving magic and adventure, often set in imaginary worlds.',
+        },
+        {
+          name: 'Mystery',
+          description:
+            'Fiction dealing with the solution of a crime or the unraveling of secrets.',
+        },
+        {
+          name: 'Horror',
+          description:
+            'Fiction intended to frighten, scare, or disgust readers.',
+        },
+        {
+          name: 'Romance',
+          description: 'Fiction focusing on romantic love between characters.',
+        },
+        {
+          name: 'Science Fiction',
+          description:
+            'Fiction based on imagined future scientific or technological advances.',
+        },
+        {
+          name: 'Thriller',
+          description:
+            'Fiction characterized by fast pacing, suspense, and excitement.',
+        },
+        {
+          name: 'Historical Fiction',
+          description:
+            'Fiction set in the past, often during a significant time period.',
+        },
+        {
+          name: 'Adventure',
+          description: 'Fiction involving exciting undertakings and journeys.',
+        },
+        {
+          name: 'Contemporary',
+          description:
+            'Fiction set in modern times dealing with current issues.',
+        },
+        {
+          name: 'Dystopian',
+          description:
+            'Fiction depicting an imagined society that is dehumanizing and frightening.',
+        },
+      ];
+
+      await this.genreModel.insertMany(genres);
+      this.logger.log(`✅ Successfully seeded ${genres.length} genres`);
+    } catch (error) {
+      this.logger.error('❌ Error seeding genres:', error);
+      throw error;
     }
-
-    await this.genreModel.insertMany(genres);
-    this.logger.log(`✅ Seeded ${genres.length} genres successfully!`);
   }
 }

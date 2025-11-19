@@ -4,21 +4,35 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class PostsService {
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private cloudinaryService: CloudinaryService,
+  ) {}
 
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
-
-  async create(userId: string,createPostDto: CreatePostDto):Promise<PostDocument> {
+  async create(
+    userId: string,
+    createPostDto: CreatePostDto,
+    files?: Express.Multer.File[],
+  ): Promise<PostDocument> {
     if (!Types.ObjectId.isValid(createPostDto.bookId)) {
       throw new BadRequestException('Invalid bookId format');
+    }
+
+    // Upload nhiều ảnh lên Cloudinary
+    let imageUrls: string[] = [];
+    if (files && files.length > 0) {
+      imageUrls = await this.cloudinaryService.uploadMultipleImages(files);
     }
 
     const created = new this.postModel({
       ...createPostDto,
       userId: new Types.ObjectId(userId),
       bookId: new Types.ObjectId(createPostDto.bookId),
+      imageUrls, // Lưu array URLs
     });
 
     return created.save();
@@ -36,10 +50,7 @@ export class PostsService {
   }
 
   async findAll(): Promise<PostDocument[]> {
-    return this.postModel
-      .find()
-      .sort({ createdAt: -1 })
-      .exec();
+    return this.postModel.find().sort({ createdAt: -1 }).exec();
   }
 
   update(id: number, updatePostDto: UpdatePostDto) {

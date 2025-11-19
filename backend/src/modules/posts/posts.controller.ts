@@ -1,27 +1,52 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseInterceptors,
+  UploadedFiles,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  BadRequestException,
+  Get,
+  Request,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { Public } from '@/src/common/decorators/customize';
+
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  async create(@Request() req: any, @Body() createPostDto: CreatePostDto) {
-    const post = await this.postsService.create(req.user.id, createPostDto);
-    return {
-      message: 'Post created successfully',
-      data: {
-        id: post._id.toString(),
-        content: post.content,
-        image: post.image,
-        userId: post.userId.toString(),
-        bookId: post.bookId.toString(),
-        createdAt: post.createdAt,
-      },
-    };
+  @UseInterceptors(FilesInterceptor('images', 10)) // 'images' field, max 10 files
+  async create(
+    @Body() createPostDto: CreatePostDto,
+    @Body('userId') userId: string,
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB mỗi file
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp)$/ }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    // Kiểm tra số lượng file
+    if (files && files.length > 10) {
+      throw new BadRequestException('Maximum 10 images allowed');
+    }
+
+    return this.postsService.create(userId, createPostDto, files);
   }
 
   @Get('all')

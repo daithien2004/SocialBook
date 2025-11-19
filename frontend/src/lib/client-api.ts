@@ -32,11 +32,17 @@ export const axiosBaseQuery =
   > =>
   async ({ url, method = 'GET', body, headers, params }) => {
     try {
+      // ← Tự động detect FormData và bỏ Content-Type
+      const isFormData = body instanceof FormData;
+      const requestHeaders = isFormData
+        ? { ...headers } // Không set Content-Type cho FormData
+        : { 'Content-Type': 'application/json', ...headers };
+
       const result = await clientApi({
         url,
         method,
         data: body,
-        headers,
+        headers: requestHeaders,
         params,
       });
       const responseData = result.data as ResponseDto<unknown>;

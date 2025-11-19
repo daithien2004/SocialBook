@@ -1,120 +1,177 @@
-// src/shared/database/seeds/reviews.seeder.ts
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Book } from '@/src/modules/books/schemas/book.schema';
-import { User } from '@/src/modules/users/schemas/user.schema';
-import { Review } from '@/src/modules/reviews/schemas/review.schema';
+import {
+  Review,
+  ReviewDocument,
+} from '@/src/modules/reviews/schemas/review.schema';
+import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
+import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
 
 @Injectable()
-export class ReviewsSeed implements OnApplicationBootstrap {
-    constructor(
-        @InjectModel(Review.name) private reviewModel: Model<Review>,
-        @InjectModel(Book.name) private bookModel: Model<Book>,
-        @InjectModel(User.name) private userModel: Model<User>,
-    ) { }
+export class ReviewsSeed {
+  private readonly logger = new Logger(ReviewsSeed.name);
 
-    async onApplicationBootstrap() {
-        await this.seedReviews();
+  constructor(
+    @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
+  ) {}
+
+  async run() {
+    try {
+      this.logger.log('🌱 Seeding reviews...');
+
+      const existingReviews = await this.reviewModel.countDocuments();
+      if (existingReviews > 0) {
+        this.logger.log('⏭️  Reviews already exist, skipping...');
+        return;
+      }
+
+      const users = await this.userModel.find();
+      const books = await this.bookModel.find();
+
+      if (users.length === 0 || books.length === 0) {
+        this.logger.error(
+          '❌ Users or Books not found. Please seed them first.',
+        );
+        return;
+      }
+
+      const reviews = [
+        {
+          userId: users[1]._id,
+          bookId: books[0]._id,
+          content:
+            'An absolutely magical start to an incredible series! The world-building is phenomenal and the characters are unforgettable. A must-read for all ages.',
+          rating: 5,
+          likesCount: 245,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[2]._id,
+          bookId: books[0]._id,
+          content:
+            'Great book for young readers. The story is engaging and teaches valuable lessons about friendship and courage.',
+          rating: 4,
+          likesCount: 128,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[3]._id,
+          bookId: books[1]._id,
+          content:
+            'Epic in every sense of the word. The political intrigue and complex characters make this a masterpiece of fantasy literature.',
+          rating: 5,
+          likesCount: 567,
+          verifiedPurchase: false,
+        },
+        {
+          userId: users[1]._id,
+          bookId: books[1]._id,
+          content:
+            'Brilliant storytelling but can be slow at times. The payoff is worth it though. Highly recommended for fantasy fans.',
+          rating: 4,
+          likesCount: 234,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[4]._id,
+          bookId: books[2]._id,
+          content:
+            'Terrifying and brilliant. Stephen King at his finest. I could not put this book down even though it gave me nightmares!',
+          rating: 5,
+          likesCount: 432,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[2]._id,
+          bookId: books[2]._id,
+          content:
+            'A psychological horror masterpiece. The atmosphere is incredibly tense and the characters feel real.',
+          rating: 5,
+          likesCount: 298,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[3]._id,
+          bookId: books[3]._id,
+          content:
+            'Classic mystery at its best. Agatha Christie never disappoints. The twist at the end is absolutely genius!',
+          rating: 5,
+          likesCount: 189,
+          verifiedPurchase: false,
+        },
+        {
+          userId: users[1]._id,
+          bookId: books[4]._id,
+          content:
+            'The ultimate fantasy epic. Tolkiens world-building sets the standard for all fantasy literature that followed.',
+          rating: 5,
+          likesCount: 789,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[4]._id,
+          bookId: books[4]._id,
+          content:
+            'A timeless classic that every fantasy fan must read. The depth and detail are unmatched.',
+          rating: 5,
+          likesCount: 654,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[2]._id,
+          bookId: books[5]._id,
+          content:
+            'Page-turner from start to finish! Dan Brown knows how to keep you hooked. Perfect blend of history and thriller.',
+          rating: 4,
+          likesCount: 345,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[3]._id,
+          bookId: books[5]._id,
+          content:
+            'Entertaining and fast-paced. Some historical inaccuracies but still a fun read.',
+          rating: 3,
+          likesCount: 87,
+          verifiedPurchase: false,
+        },
+        {
+          userId: users[4]._id,
+          bookId: books[6]._id,
+          content:
+            'Surreal and beautiful. Murakamis writing transports you to another world. Not for everyone, but I loved it.',
+          rating: 5,
+          likesCount: 267,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[1]._id,
+          bookId: books[7]._id,
+          content:
+            'Another horror masterpiece from King. The character development is outstanding and the scares are real.',
+          rating: 5,
+          likesCount: 523,
+          verifiedPurchase: true,
+        },
+        {
+          userId: users[2]._id,
+          bookId: books[7]._id,
+          content:
+            'Long but worth every page. The friendship between the characters is the heart of this terrifying story.',
+          rating: 4,
+          likesCount: 412,
+          verifiedPurchase: true,
+        },
+      ];
+
+      await this.reviewModel.insertMany(reviews);
+      this.logger.log(`✅ Successfully seeded ${reviews.length} reviews`);
+    } catch (error) {
+      this.logger.error('❌ Error seeding reviews:', error);
+      throw error;
     }
-
-    async run() {
-        await this.seedReviews();
-    }
-
-    async seedReviews() {
-        await this.reviewModel.deleteMany({});
-
-        // Lấy books và users từ database
-        const books = await this.bookModel.find().exec();
-        const users = await this.userModel.find().exec();
-        
-        // ✅ KIỂM TRA DỮ LIỆU
-        if (!books || books.length === 0) {
-            console.log('❌ No books found for seeding reviews. Please seed books first.');
-            return;
-        }
-
-        if (!users || users.length === 0) {
-            console.log('❌ No users found for seeding reviews. Please seed users first.');
-            return;
-        }
-
-        console.log(`📚 Found ${books.length} books for seeding reviews`);
-        console.log(`👤 Found ${users.length} users for seeding reviews`);
-
-        const reviews = [
-            {
-                userId: users[0]._id,
-                bookId: books[0]._id,
-                content: 'This book is amazing! The character development is phenomenal.',
-                rating: 5,
-                likesCount: 125,
-                verifiedPurchase: true, // Đã mua hàng
-            },
-            {
-                userId: users[1]._id,
-                bookId: books[1]._id,
-                content: 'I love the CEO romance story! Could not put it down.',
-                rating: 4,
-                likesCount: 42,
-                verifiedPurchase: true,
-            },
-            {
-                userId: users[2]._id,
-                bookId: books[2]._id,
-                content: 'Magic Academy is so immersive! The world-building is incredible.',
-                rating: 5,
-                likesCount: 98,
-                verifiedPurchase: false, // Chưa mua hàng
-            },
-            {
-                userId: users[3]._id,
-                bookId: books[0]._id,
-                content: 'As a Google user, I found this book fantastic! The plot twists were unexpected.',
-                rating: 4,
-                likesCount: 56,
-                verifiedPurchase: true,
-            },
-            {
-                userId: users[0]._id,
-                bookId: books[3]?._id || books[0]._id, // Fallback nếu books[3] không tồn tại
-                content: 'The fantasy elements in this book are well-crafted and engaging.',
-                rating: 4,
-                likesCount: 33,
-                verifiedPurchase: true,
-            },
-            {
-                userId: users[1]._id,
-                bookId: books[4]?._id || books[1]._id,
-                content: 'Romance was good but the ending felt rushed. Still enjoyed it overall.',
-                rating: 3,
-                likesCount: 27,
-                verifiedPurchase: false,
-            },
-        ];
-
-        try {
-            await this.reviewModel.insertMany(reviews);
-            console.log(`✅ Seed reviews done! Created ${reviews.length} reviews with real users.`);
-        } catch (error) {
-            // Xử lý lỗi duplicate key (user đã review cùng một book)
-            if (error.code === 11000) {
-                console.log('⚠️ Some reviews were skipped due to duplicate user-book combinations');
-                // Có thể thử insert từng cái một để bỏ qua các bản ghi trùng
-                let successCount = 0;
-                for (const review of reviews) {
-                    try {
-                        await this.reviewModel.create(review);
-                        successCount++;
-                    } catch (err) {
-                        // Bỏ qua lỗi duplicate
-                    }
-                }
-                console.log(`✅ Seed reviews done! Created ${successCount} reviews.`);
-            } else {
-                throw error;
-            }
-        }
-    }
+  }
 }

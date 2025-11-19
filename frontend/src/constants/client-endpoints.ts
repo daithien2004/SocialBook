@@ -9,6 +9,7 @@ export const BFF_AUTH_ENDPOINTS = {
 
 export const BFF_POSTS_ENDPOINTS = {
   getAll: '/posts',
+  create: '/posts',
 };
 
 export const BFF_BOOKS_ENDPOINTS = {
@@ -23,7 +24,7 @@ export const BFF_COMMENTS_ENDPOINTS = {
 };
 
 export const BFF_CHAPTERS_ENDPOINTS = {
-  getChapter: (bookSlug: string, chapterSlug: string) =>
+  getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
     `/books/${bookSlug}/chapters/${chapterSlug}`,
   getChapters: (bookSlug: string) => `/books/${bookSlug}/chapters`,
 };

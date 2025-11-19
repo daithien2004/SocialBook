@@ -3,15 +3,23 @@ import { Document, Types } from 'mongoose';
 
 export type ChapterDocument = Chapter & Document;
 
+// Interface cho Paragraph với _id
+export interface ParagraphDocument {
+  _id: Types.ObjectId;
+  content: string;
+}
+
+@Schema({ _id: true }) // Bật tự động tạo _id
 class Paragraph {
-  @Prop({ required: true })
-  id: string;
+  // Không cần khai báo _id ở đây, MongoDB tự thêm
 
   @Prop({ required: true })
   content: string;
 }
 
-@Schema({ timestamps: true }) // tự động thêm createdAt, updatedAt
+const ParagraphSchema = SchemaFactory.createForClass(Paragraph);
+
+@Schema({ timestamps: true })
 export class Chapter {
   @Prop({ type: Types.ObjectId, required: true, ref: 'Book' })
   bookId: Types.ObjectId;
@@ -23,12 +31,12 @@ export class Chapter {
     required: true,
     trim: true,
     lowercase: true,
-    index: true, // Để query nhanh
+    index: true,
   })
   slug: string;
 
-  @Prop({ type: [Paragraph], required: true })
-  paragraphs: Paragraph[];
+  @Prop({ type: [ParagraphSchema], required: true })
+  paragraphs: Types.DocumentArray<ParagraphDocument>; // 👈 Sử dụng Types.DocumentArray
 
   @Prop({ default: 0 })
   viewsCount: number;

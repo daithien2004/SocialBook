@@ -9,6 +9,7 @@ import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
 import {
   Chapter,
   ChapterDocument,
+  ParagraphDocument,
 } from '@/src/modules/chapters/schemas/chapter.schema';
 
 @Injectable()
@@ -55,8 +56,7 @@ export class CommentsSeed {
 
     // Comments cho books
     for (const book of books) {
-      // Parent comments
-      const parentComment1 = {
+      comments.push({
         userId: fakeUserIds[0],
         targetType: 'book',
         targetId: book._id,
@@ -68,10 +68,9 @@ export class CommentsSeed {
           Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
         ),
         updatedAt: new Date(),
-      };
-      comments.push(parentComment1);
+      });
 
-      const parentComment2 = {
+      comments.push({
         userId: fakeUserIds[1],
         targetType: 'book',
         targetId: book._id,
@@ -83,15 +82,13 @@ export class CommentsSeed {
           Date.now() - Math.random() * 25 * 24 * 60 * 60 * 1000,
         ),
         updatedAt: new Date(),
-      };
-      comments.push(parentComment2);
+      });
 
-      // Reply comments (sẽ cập nhật parentId sau khi insert)
       comments.push({
         userId: fakeUserIds[2],
         targetType: 'book',
         targetId: book._id,
-        parentId: null, // Sẽ cập nhật sau
+        parentId: null,
         content:
           'Mình cũng nghĩ vậy! Phong cách viết của tác giả rất cuốn hút.',
         likesCount: Math.floor(Math.random() * 50),
@@ -157,6 +154,38 @@ export class CommentsSeed {
         ),
         updatedAt: new Date(),
       });
+
+      // 🆕 Comments cho paragraphs trong chapter
+      if (chapter.paragraphs && chapter.paragraphs.length > 0) {
+        const numParagraphsToComment = Math.min(2, chapter.paragraphs.length);
+
+        // Sử dụng toObject() để lấy plain object với _id
+        const chapterObj = chapter.toObject();
+        const paragraphsToComment = chapterObj.paragraphs.slice(
+          0,
+          numParagraphsToComment,
+        );
+
+        for (const paragraph of paragraphsToComment) {
+          const numComments = Math.floor(Math.random() * 2) + 1;
+
+          for (let i = 0; i < numComments; i++) {
+            comments.push({
+              userId:
+                fakeUserIds[Math.floor(Math.random() * fakeUserIds.length)],
+              targetType: 'paragraph',
+              targetId: paragraph._id, // ✅ TypeScript hiểu _id tồn tại
+              parentId: null,
+              content: this.getRandomParagraphCommentContent(),
+              likesCount: Math.floor(Math.random() * 30),
+              createdAt: new Date(
+                Date.now() - Math.random() * 8 * 24 * 60 * 60 * 1000,
+              ),
+              updatedAt: new Date(),
+            });
+          }
+        }
+      }
     }
 
     // Insert tất cả comments
@@ -164,12 +193,9 @@ export class CommentsSeed {
 
     // Tạo thêm một số reply comments với parentId hợp lệ
     const replyComments: any[] = [];
-
-    // Lấy một số parent comments để tạo replies
-    const parentComments = insertedComments.slice(0, 10);
+    const parentComments = insertedComments.slice(0, 15);
 
     for (const parentComment of parentComments) {
-      // Tạo 1-2 replies cho mỗi parent comment
       const numReplies = Math.floor(Math.random() * 2) + 1;
 
       for (let i = 0; i < numReplies; i++) {
@@ -196,6 +222,25 @@ export class CommentsSeed {
     this.logger.log(
       `✅ Seeded ${insertedComments.length + replyComments.length} comments successfully!`,
     );
+  }
+
+  private getRandomParagraphCommentContent(): string {
+    const paragraphComments = [
+      'Đoạn này viết rất hay, mình đọc đi đọc lại mấy lần!',
+      'Chi tiết này thật thú vị, không ngờ tác giả lại viết như vậy.',
+      'Phần miêu tả ở đoạn này rất sinh động!',
+      'Mình thích cách tác giả diễn đạt ở đoạn này.',
+      'Đoạn văn này chạm đến cảm xúc của mình quá!',
+      'Câu chữ ở đây thật tuyệt vời!',
+      'Đọc đến đoạn này mình phải dừng lại suy nghĩ.',
+      'Tác giả dùng từ rất tinh tế ở đoạn này.',
+      'Ấn tượng với cách miêu tả trong đoạn văn này!',
+      'Đoạn này là một trong những đoạn hay nhất!',
+    ];
+
+    return paragraphComments[
+      Math.floor(Math.random() * paragraphComments.length)
+    ];
   }
 
   private getRandomReplyContent(): string {

@@ -5,6 +5,7 @@ import { BooksSeed } from './books.seeder';
 import { ReviewsSeed } from './reviews.seeder';
 import { ChaptersSeed } from './chapters.seeder';
 import { UsersSeed } from './users.seeder';
+import { CommentsSeed } from './comments.seeder';
 @Injectable()
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
@@ -16,7 +17,8 @@ export class SeederService {
     private readonly reviewsSeed: ReviewsSeed,
     private readonly chaptersSeed: ChaptersSeed,
     private readonly usersSeed: UsersSeed,
-  ) { }
+    private readonly commentsSeed: CommentsSeed,
+  ) {}
 
   async seed() {
     try {
@@ -29,6 +31,7 @@ export class SeederService {
       await this.booksSeed.run();
       await this.chaptersSeed.run();
       await this.reviewsSeed.run();
+      await this.commentsSeed.run();
 
       this.logger.log('✅ All seeding completed successfully!');
     } catch (error) {
@@ -48,6 +51,7 @@ export class SeederService {
       await this.booksSeed['bookModel'].deleteMany({});
       await this.authorsSeed['authorModel'].deleteMany({});
       await this.genresSeed['genreModel'].deleteMany({});
+      await this.commentsSeed['commentModel'].deleteMany({});
 
       this.logger.log('✅ All seed data cleared!');
     } catch (error) {

@@ -1,4 +1,10 @@
-import { IsArray, IsBoolean, IsMongoId, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsMongoId,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreatePostDto {
   @IsMongoId()
@@ -6,10 +12,6 @@ export class CreatePostDto {
 
   @IsString()
   content: string;
-
-  @IsArray()
-  @IsOptional()
-  image?: string[];
 
   @IsBoolean()
   @IsOptional()

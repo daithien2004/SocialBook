@@ -1,4 +1,4 @@
-import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import serverApi from '@/src/lib/server-api';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -14,7 +14,7 @@ export async function GET(
     const { bookSlug, chapterSlug } = await params;
 
     const response = await serverApi.get(
-      NESTJS_BOOKS_ENDPOINTS.getChapterBySlug(bookSlug, chapterSlug)
+      NESTJS_CHAPTERS_ENDPOINTS.getChapterBySlug(bookSlug, chapterSlug)
     );
 
     return NextResponse.json(response.data);

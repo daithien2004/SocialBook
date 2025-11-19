@@ -17,8 +17,7 @@ import { TARGET_TYPES } from '@/src/modules/comments/constants/targetType.consta
 export class CommentsService {
   constructor(
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-  ) {
-  }
+  ) {}
 
   async countByTarget(targetId: string): Promise<number> {
     const targetObjectId = new Types.ObjectId(targetId);
@@ -86,10 +85,10 @@ export class CommentsService {
       repliesCount: replyCountMap[c._id.toString()] ?? 0,
       user: c.userId
         ? {
-          id: c.userId._id.toString(),
-          username: c.userId.username,
-          image: c.userId.image ?? null,
-        }
+            id: c.userId._id.toString(),
+            username: c.userId.username,
+            image: c.userId.image ?? null,
+          }
         : null,
     }));
 
@@ -103,7 +102,10 @@ export class CommentsService {
   async createForTarget(userId: string, dto: CreateCommentDto) {
     const { targetType, targetId, content, parentId } = dto;
 
-    if (!targetType || !Object.values(TARGET_TYPES).includes(targetType as any)) {
+    if (
+      !targetType ||
+      !Object.values(TARGET_TYPES).includes(targetType as any)
+    ) {
       throw new BadRequestException('targetType không hợp lệ');
     }
     if (!targetId) throw new BadRequestException('targetId là bắt buộc');
