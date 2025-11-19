@@ -10,7 +10,7 @@ export class Like {
   @Prop({ type: String, enum: TARGET_TYPES, required: true })
   targetType: string;
 
-  @Prop({ type: Types.ObjectId, required: true, refPath: 'targetType' })
+  @Prop({ type: Types.ObjectId, required: true })
   targetId: Types.ObjectId;
 
   @Prop({ type: Date, default: Date.now })

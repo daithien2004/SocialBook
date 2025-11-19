@@ -74,6 +74,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
     AuthorsModule,
     CommentsModule,
     CloudinaryModule,
+    LikesModule,
   ],
   controllers: [AppController],
   providers: [

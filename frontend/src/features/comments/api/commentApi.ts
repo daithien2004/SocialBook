@@ -1,12 +1,23 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "@/src/lib/client-api";
-import {BFF_COMMENTS_ENDPOINTS} from "@/src/constants/client-endpoints";
+import {BFF_COMMENTS_ENDPOINTS, BFF_LIKES_ENDPOINTS} from "@/src/constants/client-endpoints";
 
 export interface GetCommentsRequest {
     targetId: string;
     parentId: string | null,
     cursor?: string;
     limit: number;
+}
+
+export interface PostToggleLikeRequest {
+    targetId: string;
+    targetType: string;
+    parentId: string | null;
+    postId: string;
+}
+
+export interface PostToggleLikeResponse {
+    liked: boolean
 }
 
 export interface GetResolveParentRequest {
@@ -37,6 +48,7 @@ export interface CommentItem {
     createdAt: string;
     likesCount: number;
     repliesCount: number;
+    parentId: string | null,
     user: {
         id: string;
         username: string;
@@ -86,6 +98,7 @@ export const commentApi = createApi({
                 ];
             },
         }),
+
         getResolveParent: builder.query<
             ResolveParentResponse,
             GetResolveParentRequest
@@ -96,6 +109,7 @@ export const commentApi = createApi({
                 params: { targetId, parentId, targetType },
             }),
         }),
+
         postCreate: builder.mutation<PostCommentsResponse, PostCommentsRequest>({
             query: (data) => ({
                 url: BFF_COMMENTS_ENDPOINTS.postCreateComment,
@@ -109,6 +123,20 @@ export const commentApi = createApi({
                 },
             ],
         }),
+
+        postToggleLike: builder.mutation<PostToggleLikeResponse, PostToggleLikeRequest>({
+            query: (data) => ({
+                url: BFF_LIKES_ENDPOINTS.postToggleLike,
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: (_, __, arg) => [
+                {
+                    type: "Comment",
+                    id: `THREAD-${arg.postId}-${arg.parentId ?? "root"}`,
+                },
+            ],
+        }),
     }),
 });
 
@@ -116,4 +144,5 @@ export const {
     useLazyGetCommentsByTargetQuery,
     usePostCreateMutation,
     useLazyGetResolveParentQuery,
+    usePostToggleLikeMutation
 } = commentApi;

@@ -18,7 +18,6 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
     const { post, isCommentOpen, closeCommentModal } = props;
 
     const [commentText, setCommentText] = useState("");
-    const [reloadKey, setReloadKey] = useState(0);
     const [createComment, { isLoading: isPosting }] = usePostCreateMutation();
 
     const onSubmitComment = async () => {
@@ -30,11 +29,10 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                 targetType: "post",
                 targetId: post.id,
                 content,
-                parentId: null,  // 👈 cấp 1
+                parentId: null,
             }).unwrap();
 
             setCommentText("");
-            setReloadKey((k) => k + 1); // cho ListComments refetch
         } catch (e) {
             console.error("Create comment failed:", e);
         }
@@ -122,7 +120,6 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                                         post={post}
                                         isCommentOpen={isCommentOpen}
                                         parentId={null}
-                                        reloadKey={reloadKey}
                                     />
 
                                     {/* 🔻 ĐOẠN BẠN MUỐN ĐỂ NGOÀI LISTCOMMENTS */}

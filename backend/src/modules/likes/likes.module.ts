@@ -8,5 +8,6 @@ import { Like, LikeSchema } from '@/src/modules/likes/schemas/like.schema';
   imports: [MongooseModule.forFeature([{ name: Like.name, schema: LikeSchema }])],
   controllers: [LikesController],
   providers: [LikesService],
+  exports: [LikesService],
 })
 export class LikesModule {}

@@ -13,6 +13,10 @@ export const NESTJS_COMMENTS_ENDPOINTS = {
   getResolveParent: '/comments/resolve-parent',
 };
 
+export const NESTJS_LIKES_ENDPOINTS = {
+  postToggleLike: '/likes/toggle',
+};
+
 export const NESTJS_BOOKS_ENDPOINTS = {
   getBooks: '/books',
   getBookBySlug: (bookSlug: string) => `/books/${bookSlug}`,
