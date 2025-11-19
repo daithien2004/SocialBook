@@ -7,6 +7,7 @@ import { Genre, GenreSchema } from '@/src/modules/genres/schemas/genre.schema';
 import { Review, ReviewSchema } from '@/src/modules/reviews/schemas/review.schema'; // Update this path to the correct location of review.schema
 import { Chapter, ChapterSchema } from '@/src/modules/chapters/schemas/chapter.schema';
 import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
+import { Role, RoleSchema } from '@/src/modules/roles/schemas/role.schema';
 
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
@@ -15,6 +16,7 @@ import { ReviewsSeed } from './reviews.seeder';
 import { ChaptersSeed } from './chapters.seeder';
 import { SeederService } from './seeder.service';
 import { UsersSeed } from './users.seeder';
+import { RolesSeed } from './roles.seed';
 @Module({
     imports: [
         // Cần import ConfigModule để sử dụng ConfigService
@@ -32,15 +34,17 @@ import { UsersSeed } from './users.seeder';
         }),
         // Register các schema
         MongooseModule.forFeature([
+            { name: Role.name, schema: RoleSchema },
+            { name: User.name, schema: UserSchema },
             { name: Author.name, schema: AuthorSchema },
             { name: Genre.name, schema: GenreSchema },
             { name: Book.name, schema: BookSchema },
             { name: Review.name, schema: ReviewSchema },
             { name: Chapter.name, schema: ChapterSchema },
-            { name: User.name, schema: UserSchema },
         ]),
     ],
     providers: [
+        RolesSeed,
         UsersSeed,
         AuthorsSeed,
         GenresSeed,
@@ -50,6 +54,7 @@ import { UsersSeed } from './users.seeder';
         SeederService,
     ],
     exports: [
+        RolesSeed,
         UsersSeed,
         AuthorsSeed,
         GenresSeed,

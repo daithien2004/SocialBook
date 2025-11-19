@@ -14,7 +14,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
 
   // State để quản lý trạng thái loading và lỗi từ server
   const [isCredentialsLoading, setIsCredentialsLoading] = useState(false);
@@ -23,10 +23,15 @@ export default function LoginPage() {
 
   // Chuyển hướng người dùng nếu họ đã đăng nhập
   useEffect(() => {
-    if (status === 'authenticated') {
-      router.push('/');
+    if (status === 'authenticated' && session?.user) {
+      const userRole = session.user.role;
+      if (userRole === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   // Lấy lỗi từ URL (ví dụ: khi đăng nhập Google thất bại)
   useEffect(() => {
@@ -61,7 +66,20 @@ export default function LoginPage() {
       });
 
       if (result?.ok) {
-        router.push('/'); // Chuyển hướng khi thành công
+        // Đợi một chút để session được cập nhật
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Lấy session mới nhất
+        const sessionResponse = await fetch('/api/auth/session');
+        const sessionData = await sessionResponse.json();
+        const userRole = sessionData?.user?.role;
+        
+        // Điều hướng dựa trên role
+        if (userRole === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/'); // User thường điều hướng về trang chủ
+        }
       } else {
         setServerError(result?.error || 'Invalid email or password.');
       }
@@ -73,10 +91,11 @@ export default function LoginPage() {
   };
 
   // Xử lý đăng nhập bằng Google
-  const handleGoogleSignin = () => {
+  const handleGoogleSignin = async () => {
     setIsGoogleLoading(true);
     // Để NextAuth tự xử lý redirect cho Google
-    signIn('google', { callbackUrl: '/' });
+    // Callback sẽ được xử lý trong signIn callback của NextAuth
+    signIn('google', { redirect: true, callbackUrl: '/' });
   };
 
   // Cờ chung để vô hiệu hóa các nút

@@ -18,4 +18,5 @@ export const NESTJS_BOOKS_ENDPOINTS = {
   getBookBySlug: (bookSlug: string) => `/books/${bookSlug}`,
   getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
     `/books/${bookSlug}/chapters/${chapterSlug}`,
+  createBook: '/books',
 };

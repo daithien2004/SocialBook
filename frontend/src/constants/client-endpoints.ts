@@ -14,6 +14,7 @@ export const BFF_POSTS_ENDPOINTS = {
 export const BFF_BOOKS_ENDPOINTS = {
   getAll: '/books',
   getBySlug: (bookSlug: string) => `/books/${bookSlug}`,
+  createBook: '/books',
 };
 
 export const BFF_COMMENTS_ENDPOINTS = {

@@ -19,6 +19,18 @@ interface GetBooksResponse {
   books: Book[];
 }
 
+interface CreateBookDto {
+  title: string;
+  slug?: string;
+  authorId: string;
+  genre: string[];
+  description?: string;
+  coverUrl?: string;
+  publishedYear?: string;
+  status?: 'draft' | 'published' | 'completed';
+  tags?: string[];
+}
+
 export const booksApi = createApi({
   reducerPath: 'booksApi',
   baseQuery: axiosBaseQuery(),
@@ -43,15 +55,25 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.books.map((book) => ({
-                type: 'Book' as const,
-                id: book.slug,
-              })),
-              { type: 'Books', id: 'LIST' },
-            ]
+            ...result.books.map((book) => ({
+              type: 'Book' as const,
+              id: book.slug,
+            })),
+            { type: 'Books', id: 'LIST' },
+          ]
           : [{ type: 'Books', id: 'LIST' }],
+    }),
+
+    createBook: builder.mutation<Book, CreateBookDto>({
+      query: (data) => ({
+        url: BFF_BOOKS_ENDPOINTS.createBook,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: [{ type: 'Books', id: 'LIST' }],
     }),
   }),
 });
 
-export const { useGetBooksQuery, useGetBookBySlugQuery } = booksApi;
+export const { useGetBooksQuery, useGetBookBySlugQuery,
+  useCreateBookMutation } = booksApi;

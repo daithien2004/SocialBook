@@ -15,6 +15,7 @@ export default function DashboardPage() {
     // Nếu chưa xác thực và không phải đang loading, chuyển về trang login
     if (status === 'unauthenticated') {
       router.push('/login');
+      return;
     }
   }, [status, router]);
 

@@ -5,6 +5,7 @@ import { BooksSeed } from './books.seeder';
 import { ReviewsSeed } from './reviews.seeder';
 import { ChaptersSeed } from './chapters.seeder';
 import { UsersSeed } from './users.seeder';
+import { RolesSeed } from './roles.seed';
 @Injectable()
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
@@ -16,6 +17,7 @@ export class SeederService {
     private readonly reviewsSeed: ReviewsSeed,
     private readonly chaptersSeed: ChaptersSeed,
     private readonly usersSeed: UsersSeed,
+    private readonly rolesSeed: RolesSeed,
   ) { }
 
   async seed() {
@@ -23,6 +25,7 @@ export class SeederService {
       this.logger.log('🎯 Starting database seeding...');
 
       // Thứ tự seeding quan trọng
+      await this.rolesSeed.run();
       await this.usersSeed.run();
       await this.authorsSeed.run();
       await this.genresSeed.run();
@@ -42,6 +45,7 @@ export class SeederService {
       this.logger.log('🗑️ Clearing all seed data...');
 
       // Xóa theo thứ tự ngược để tránh constraint errors
+      await this.rolesSeed['roleModel'].deleteMany({});
       await this.usersSeed['userModel'].deleteMany({});
       await this.reviewsSeed['reviewModel'].deleteMany({});
       await this.chaptersSeed['chapterModel'].deleteMany({});

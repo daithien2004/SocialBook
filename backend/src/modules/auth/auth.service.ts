@@ -39,8 +39,19 @@ export class AuthService {
       throw new UnauthorizedException('Account has not been verified');
     }
 
+    // Populate role để lấy role name
+    const userWithRole = await this.usersService.findById(user.id.toString());
+    let roleName = 'user'; // default
+    if (userWithRole?.roleId && typeof userWithRole.roleId === 'object' && 'name' in userWithRole.roleId) {
+      roleName = (userWithRole.roleId as any).name || 'user';
+    }
+
     // EXECUTION
-    const tokens = await this.signTokens(user.id.toString(), user.email);
+    const tokens = await this.signTokens(
+      user.id.toString(),
+      user.email,
+      roleName,
+    );
 
     // RETURN
     return {
@@ -50,6 +61,7 @@ export class AuthService {
         id: user.id.toString(),
         email: user.email,
         username: user.username,
+        role: roleName,
       },
     };
   }
@@ -108,8 +120,19 @@ export class AuthService {
       // Nếu user.provider === 'google' → Cho phép login
     }
 
+    // Populate role để lấy role name
+    const userWithRole = await this.usersService.findById(user.id.toString());
+    let roleName = 'user'; // default
+    if (userWithRole?.roleId && typeof userWithRole.roleId === 'object' && 'name' in userWithRole.roleId) {
+      roleName = (userWithRole.roleId as any).name || 'user';
+    }
+
     // EXECUTION
-    const tokens = await this.signTokens(user.id.toString(), user.email);
+    const tokens = await this.signTokens(
+      user.id.toString(),
+      user.email,
+      roleName,
+    );
 
     // RESPONSE
     return {
@@ -120,6 +143,7 @@ export class AuthService {
         email: user.email,
         username: user.username,
         image: user.image,
+        role: roleName,
       },
     };
   }
@@ -250,9 +274,9 @@ export class AuthService {
     };
   }
 
-  async signTokens(userId: string, email: string) {
+  async signTokens(userId: string, email: string, role: string) {
     // VALIDATION
-    const payload = { sub: userId, email };
+    const payload = { sub: userId, email, role };
 
     const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
@@ -294,7 +318,16 @@ export class AuthService {
     }
 
     // RETURN
-    return this.signTokens(user.id.toString(), user.email);
+    let roleName = 'user';
+    if (
+      user.roleId &&
+      typeof user.roleId === 'object' &&
+      'name' in (user.roleId as any)
+    ) {
+      roleName = ((user.roleId as any).name as string) || 'user';
+    }
+
+    return this.signTokens(user.id.toString(), user.email, roleName);
   }
 
   async validateRefreshToken(token: string) {

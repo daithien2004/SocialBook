@@ -17,9 +17,11 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PostsModule } from '@/src/modules/posts/posts.module';
 import { CommentsModule } from '@/src/modules/comments/comments.module';
 import { AuthorsModule } from '@/src/modules/authors/authors.module';
+import { RolesModule } from './modules/roles/roles.module';
 import { ReviewsModule } from '@/src/modules/reviews/reviews.module';
 import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.module';
 import { LikesModule } from '@/src/modules/likes/likes.module';
+import { Role } from './modules/roles/schemas/role.schema';
 
 @Module({
   imports: [
@@ -63,6 +65,10 @@ import { LikesModule } from '@/src/modules/likes/likes.module';
         limit: 10,
       },
     ]),
+    RolesModule,
+    ReviewsModule,
+    TextToSpeechModule,
+    LikesModule,
     UsersModule,
     AuthModule,
     ChatModule,
