@@ -3,7 +3,6 @@ import { Providers } from '../context/Providers';
 
 import { Toaster } from 'sonner';
 import AuthSync from '../components/AuthSync';
-import { Header } from '../components/header';
 
 export const metadata = {
   title: 'SocialBook',
@@ -17,7 +16,6 @@ export default function RootLayout({
   return (
     <html lang="vi" className="mdl-js">
       <body>
-        <Header />
         <Providers>
           <AuthSync />
           {children}

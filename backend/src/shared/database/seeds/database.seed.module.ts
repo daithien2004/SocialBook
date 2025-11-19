@@ -16,6 +16,7 @@ import {
   ChapterSchema,
 } from '@/src/modules/chapters/schemas/chapter.schema';
 import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
+import { Role, RoleSchema } from '@/src/modules/roles/schemas/role.schema';
 
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
@@ -25,7 +26,12 @@ import { ChaptersSeed } from './chapters.seeder';
 import { SeederService } from './seeder.service';
 import { UsersSeed } from './users.seeder';
 import { CommentsSeed } from './comments.seeder';
-import { Comment, CommentSchema } from '@/src/modules/comments/schemas/comment.schema';
+import {
+  Comment,
+  CommentSchema,
+} from '@/src/modules/comments/schemas/comment.schema';
+import { RolesSeed } from './roles.seed';
+
 @Module({
   imports: [
     // Cần import ConfigModule để sử dụng ConfigService
@@ -46,6 +52,8 @@ import { Comment, CommentSchema } from '@/src/modules/comments/schemas/comment.s
     }),
     // Register các schema
     MongooseModule.forFeature([
+      { name: Role.name, schema: RoleSchema },
+
       { name: Author.name, schema: AuthorSchema },
       { name: Genre.name, schema: GenreSchema },
       { name: Book.name, schema: BookSchema },
@@ -56,6 +64,8 @@ import { Comment, CommentSchema } from '@/src/modules/comments/schemas/comment.s
     ]),
   ],
   providers: [
+    RolesSeed,
+
     UsersSeed,
     AuthorsSeed,
     GenresSeed,
@@ -66,6 +76,7 @@ import { Comment, CommentSchema } from '@/src/modules/comments/schemas/comment.s
     SeederService,
   ],
   exports: [
+    RolesSeed,
     UsersSeed,
     AuthorsSeed,
     GenresSeed,

@@ -4,6 +4,9 @@ import { HydratedDocument } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class User {
+  @Prop({ type: Types.ObjectId, ref: 'Role', required: true })
+  roleId: Types.ObjectId;
+
   @Prop({ unique: true, required: true, trim: true })
   username: string;
 
@@ -26,7 +29,7 @@ export class User {
   provider: string;
 
   // Lưu providerId (Google ID, Facebook ID, etc.)
-  @Prop({ required: false})
+  @Prop({ required: false })
   providerId?: string;
 
   @Prop()

@@ -54,64 +54,6 @@ export class CommentsSeed {
       new Types.ObjectId(),
     ];
 
-    // Comments cho books
-    for (const book of books) {
-      comments.push({
-        userId: fakeUserIds[0],
-        targetType: 'book',
-        targetId: book._id,
-        parentId: null,
-        content:
-          'Cuốn sách hay quá! Tôi đã đọc xong trong một ngày và không thể rời mắt.',
-        likesCount: Math.floor(Math.random() * 100),
-        createdAt: new Date(
-          Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
-        ),
-        updatedAt: new Date(),
-      });
-
-      comments.push({
-        userId: fakeUserIds[1],
-        targetType: 'book',
-        targetId: book._id,
-        parentId: null,
-        content:
-          'Tác giả viết rất hay, cảm xúc được truyền tải một cách chân thật.',
-        likesCount: Math.floor(Math.random() * 80),
-        createdAt: new Date(
-          Date.now() - Math.random() * 25 * 24 * 60 * 60 * 1000,
-        ),
-        updatedAt: new Date(),
-      });
-
-      comments.push({
-        userId: fakeUserIds[2],
-        targetType: 'book',
-        targetId: book._id,
-        parentId: null,
-        content:
-          'Mình cũng nghĩ vậy! Phong cách viết của tác giả rất cuốn hút.',
-        likesCount: Math.floor(Math.random() * 50),
-        createdAt: new Date(
-          Date.now() - Math.random() * 20 * 24 * 60 * 60 * 1000,
-        ),
-        updatedAt: new Date(),
-      });
-
-      comments.push({
-        userId: fakeUserIds[3],
-        targetType: 'book',
-        targetId: book._id,
-        parentId: null,
-        content: 'Đây là một trong những cuốn sách hay nhất mình từng đọc!',
-        likesCount: Math.floor(Math.random() * 120),
-        createdAt: new Date(
-          Date.now() - Math.random() * 15 * 24 * 60 * 60 * 1000,
-        ),
-        updatedAt: new Date(),
-      });
-    }
-
     // Comments cho chapters
     for (const chapter of chapters) {
       comments.push({

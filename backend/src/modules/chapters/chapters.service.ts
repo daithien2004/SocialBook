@@ -5,15 +5,17 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Chapter, ChapterDocument } from './schemas/chapter.schema';
-import { Model, Types } from 'mongoose';
+import { HydratedDocument, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../books/schemas/book.schema';
+import { slugify } from '@/src/utils/slugify';
+import { CreateChapterDto } from './dto/create-chapter.dto';
 
 @Injectable()
 export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-  ) {}
+  ) { }
 
   async getChapterBySlug(bookSlug: string, chapterSlug: string) {
     // VALIDATION
@@ -94,19 +96,19 @@ export class ChaptersService {
       navigation: {
         previous: previousChapter
           ? {
-              id: previousChapter._id,
-              title: previousChapter.title,
-              slug: previousChapter.slug,
-              orderIndex: previousChapter.orderIndex,
-            }
+            id: previousChapter._id,
+            title: previousChapter.title,
+            slug: previousChapter.slug,
+            orderIndex: previousChapter.orderIndex,
+          }
           : null,
         next: nextChapter
           ? {
-              id: nextChapter._id.toString(),
-              title: nextChapter.title,
-              slug: nextChapter.slug,
-              orderIndex: nextChapter.orderIndex,
-            }
+            id: nextChapter._id.toString(),
+            title: nextChapter.title,
+            slug: nextChapter.slug,
+            orderIndex: nextChapter.orderIndex,
+          }
           : null,
       },
     };
@@ -152,4 +154,74 @@ export class ChaptersService {
       })),
     };
   }
+  async createChapter(bookId: string, dto: CreateChapterDto, user: any) {
+    // 1. Kiểm tra sách tồn tại
+    const book = await this.bookModel.findById(bookId).lean();
+    if (!book) throw new NotFoundException('Sách không tồn tại');
+
+    // 2. Tính orderIndex
+    const lastChapter = await this.chapterModel
+      .findOne({ bookId: new Types.ObjectId(bookId) })
+      .sort({ orderIndex: -1 })
+      .select('orderIndex')
+      .lean();
+
+    const orderIndex = lastChapter ? lastChapter.orderIndex + 1 : 1;
+
+    // 3. Tạo slug duy nhất trong sách
+    const baseSlug = dto.slug?.trim() || slugify(dto.title);
+    let slug = baseSlug;
+    let counter = 1;
+    while (
+      await this.chapterModel.findOne({ bookId: new Types.ObjectId(bookId), slug }).lean()
+    ) {
+      slug = `${baseSlug}-${counter++}`;
+    }
+
+    // 4. Tạo chapter
+    const createdChapter = await this.chapterModel.create({
+      bookId: new Types.ObjectId(bookId),
+      title: dto.title,
+      slug,
+      paragraphs: dto.paragraphs,
+      orderIndex,
+      viewsCount: 0,
+    });
+
+    // 5. Lấy lại + populate với .lean() để tránh circular refs
+    const populated = await this.chapterModel
+      .findById(createdChapter._id)
+      .populate('bookId', 'title slug')
+      .lean<{
+        _id: Types.ObjectId;
+        bookId: { _id: Types.ObjectId; title: string; slug: string };
+        title: string;
+        slug: string;
+        paragraphs: { id: string; content: string }[];
+        orderIndex: number;
+        viewsCount: number;
+        createdAt: Date;
+        updatedAt: Date;
+      }>();  // Use lean() + generic type for plain object (type-safe)
+
+    if (!populated) throw new Error('Tạo chương thất bại');
+
+    // 6. Trả về response đẹp
+    return {
+      id: populated._id.toString(),
+      title: populated.title,
+      slug: populated.slug,
+      orderIndex: populated.orderIndex,
+      viewsCount: populated.viewsCount,
+      paragraphs: populated.paragraphs,
+      book: {
+        id: populated.bookId._id.toString(),
+        title: populated.bookId.title,
+        slug: populated.bookId.slug,
+      },
+      createdAt: populated.createdAt,
+      updatedAt: populated.updatedAt,
+    };
+  }
+
 }

@@ -6,6 +6,10 @@ import { Clock, Sparkles, Star, TrendingUp } from 'lucide-react';
 import { useGetBooksQuery } from '../features/books/api/bookApi';
 import { Book } from '../features/books/types/book.interface';
 import { useMemo } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Header } from '../components/Header';
 
 const ONE_DAY_IN_MS = 86400000; // Tính trước thay vì 1000 * 60 * 60 * 24
 const NEW_BOOK_THRESHOLD_DAYS = 30;
@@ -83,6 +87,8 @@ const BOOK_SECTIONS = [
 
 export default function HomePage() {
   const { data, isLoading } = useGetBooksQuery();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   const books = data?.books ?? [];
 
@@ -100,6 +106,17 @@ export default function HomePage() {
   const featuredBooks = useMemo(() => {
     return getNewBooks(books).slice(0, 5);
   }, [books]);
+
+  // Xử lý redirect sau khi đăng nhập bằng Google
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const userRole = session.user.role;
+      // Nếu là admin và đang ở trang chủ, redirect đến /admin
+      if (userRole === 'admin' && window.location.pathname === '/') {
+        router.push('/admin');
+      }
+    }
+  }, [status, session, router]);
 
   if (isLoading) {
     return (
@@ -121,22 +138,25 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <main className="container mx-auto px-4 py-8">
-        <BannerSlider books={featuredBooks} />
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <main className="container mx-auto px-4 py-8">
+          <BannerSlider books={featuredBooks} />
 
-        <div className="space-y-8 mt-8">
-          {sections.map((section) => (
-            <BookSection
-              key={section.title}
-              title={section.title}
-              icon={section.icon}
-              iconColor={section.iconColor}
-              books={section.books}
-            />
-          ))}
-        </div>
-      </main>
-    </div>
+          <div className="space-y-8 mt-8">
+            {sections.map((section) => (
+              <BookSection
+                key={section.title}
+                title={section.title}
+                icon={section.icon}
+                iconColor={section.iconColor}
+                books={section.books}
+              />
+            ))}
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

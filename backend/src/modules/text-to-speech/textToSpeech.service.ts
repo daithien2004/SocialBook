@@ -2,14 +2,18 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { TextToSpeechDto } from './dto/textToSpeech.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { TextToSpeech, TextToSpeechDocument } from './schemas/textToSpeech.schema';
-import { uploadBufferToCloudinary } from '@/src/shared/cloudinary/cloudinary.utils';
+import {
+  TextToSpeech,
+  TextToSpeechDocument,
+} from './schemas/textToSpeech.schema';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class TextToSpeechService {
   constructor(
     @InjectModel(TextToSpeech.name)
     private readonly ttsModel: Model<TextToSpeechDocument>,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async generate(dto: TextToSpeechDto): Promise<string> {
@@ -37,20 +41,28 @@ export class TextToSpeechService {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload lên Cloudinary
-    const result = await uploadBufferToCloudinary(buffer, {
-      resource_type: 'video', // Cloudinary dùng video cho audio
-      folder: 'tts',
-      format: 'mp3',
-    });
+    const fakeAudioFile: Express.Multer.File = {
+      buffer,
+      originalname: `tts-${Date.now()}.${format}`,
+      mimetype: `audio/${format}`,
+      fieldname: 'audio',
+      encoding: '7bit',
+      size: buffer.length,
+      stream: null as any,
+      destination: '',
+      filename: '',
+      path: '',
+    };
+
+    const audioUrl = await this.cloudinaryService.uploadAudio(fakeAudioFile);
 
     // Lưu DB
     await this.ttsModel.create({
       text,
       voice,
-      audioUrl: result.secure_url,
+      audioUrl,
     });
 
-    return result.secure_url;
+    return audioUrl;
   }
 }

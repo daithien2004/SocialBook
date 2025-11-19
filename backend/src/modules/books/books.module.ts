@@ -7,20 +7,21 @@ import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema';
 import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
 import { Author, AuthorSchema } from '../authors/schemas/author.schema';
 import { Review, ReviewSchema } from '../reviews/schemas/review.schema';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
+    CloudinaryModule,
     MongooseModule.forFeature([
       { name: Book.name, schema: BookSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: Genre.name, schema: GenreSchema },
       { name: Author.name, schema: AuthorSchema },
       { name: Review.name, schema: ReviewSchema },
-
     ]),
   ],
   providers: [BooksService],
   controllers: [BooksController],
   exports: [BooksService, MongooseModule],
 })
-export class BooksModule { }
+export class BooksModule {}

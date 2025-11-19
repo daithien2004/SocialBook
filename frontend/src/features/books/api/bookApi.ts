@@ -51,7 +51,20 @@ export const booksApi = createApi({
             ]
           : [{ type: 'Books', id: 'LIST' }],
     }),
+
+    createBook: builder.mutation<Book, FormData>({
+      query: (formData) => ({
+        url: '/books',
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: [{ type: 'Books', id: 'LIST' }],
+    }),
   }),
 });
 
-export const { useGetBooksQuery, useGetBookBySlugQuery } = booksApi;
+export const {
+  useGetBooksQuery,
+  useGetBookBySlugQuery,
+  useCreateBookMutation,
+} = booksApi;

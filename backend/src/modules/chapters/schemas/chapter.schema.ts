@@ -36,7 +36,7 @@ export class Chapter {
   slug: string;
 
   @Prop({ type: [ParagraphSchema], required: true })
-  paragraphs: Types.DocumentArray<ParagraphDocument>; // 👈 Sử dụng Types.DocumentArray
+  paragraphs: Types.DocumentArray<ParagraphDocument>;
 
   @Prop({ default: 0 })
   viewsCount: number;

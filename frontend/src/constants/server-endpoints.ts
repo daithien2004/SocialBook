@@ -20,6 +20,7 @@ export const NESTJS_LIKES_ENDPOINTS = {
 export const NESTJS_BOOKS_ENDPOINTS = {
   getBooks: '/books',
   getBookBySlug: (bookSlug: string) => `/books/${bookSlug}`,
+  createBook: '/books',
 };
 
 export const NESTJS_CHAPTERS_ENDPOINTS = {

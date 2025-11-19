@@ -96,11 +96,16 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             googleId: user.id,
             avatar: user.image,
+
           });
           authData = response.data.data;
 
           user.accessToken = authData.accessToken;
           user.refreshToken = authData.refreshToken;
+          // Lưu role từ backend response
+          if (authData.user?.role) {
+            user.role = authData.user.role;
+          }
 
           return true; // Cho phép đăng nhập
         } catch (error) {
@@ -121,6 +126,7 @@ export const authOptions: NextAuthOptions = {
         token.username = user.username;
         token.email = user.email!;
         token.image = user.image!;
+        token.role = user.role || 'user';
 
         // Giải mã token để lấy thời gian hết hạn
         const decodedAccessToken = jwtDecode<{ exp: number }>(user.accessToken);
@@ -147,8 +153,8 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.username = token.username; // <-- Quan trọng
         session.user.email = token.email; // Vẫn giữ email
-        session.user.image = token.picture; // Vẫn giữ ảnh (từ Google)
-
+        session.user.image = token.image as string;
+        session.user.role = token.role;
         session.accessToken = token.accessToken;
       }
       return session;
@@ -156,11 +162,11 @@ export const authOptions: NextAuthOptions = {
 
     // Callback khi redirect sau khi đăng nhập
     async redirect({ url, baseUrl }) {
-      // Luôn chuyển về dashboard sau khi đăng nhập thành công
+      // Nếu url đã được chỉ định và hợp lệ, sử dụng nó
       if (url.startsWith(baseUrl)) {
         return url;
       }
-      // Nếu url không hợp lệ, chuyển về url gốc
+      // Nếu url không hợp lệ, chuyển về url gốc (sẽ được xử lý bởi client)
       return `${baseUrl}`;
     },
   },

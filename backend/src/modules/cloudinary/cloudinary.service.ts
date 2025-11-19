@@ -40,4 +40,26 @@ export class CloudinaryService {
     const deletePromises = publicIds.map((id) => this.deleteImage(id));
     await Promise.all(deletePromises);
   }
+
+  async uploadAudio(file: Express.Multer.File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'tts', // hoặc 'socialbook/audios'
+          resource_type: 'video', // Cloudinary dùng 'video' cho audio
+          format: 'mp3',
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result)
+            return reject(new Error('Upload failed: result is undefined'));
+
+          resolve(result.secure_url);
+        },
+      );
+
+      const stream = Readable.from(file.buffer);
+      stream.pipe(uploadStream);
+    });
+  }
 }
