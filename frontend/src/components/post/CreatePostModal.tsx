@@ -3,16 +3,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export interface CreatePostModalProps {
+  isSubmitting: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePostData) => Promise<void>;
   defaultContent?: string;
-  defaultImages?: File[];
   title?: string;
   contentLabel?: string;
   contentPlaceholder?: string;
-  allowEditContent?: boolean;
-  allowEditImages?: boolean;
   maxImages?: number;
 }
 
@@ -22,44 +20,30 @@ export interface CreatePostData {
 }
 
 export default function CreatePostModal({
+  isSubmitting,
   isOpen,
   onClose,
   onSubmit,
   defaultContent = '',
-  defaultImages = [],
   title = 'Tạo bài viết mới',
   contentLabel = 'Nội dung',
   contentPlaceholder = 'Chia sẻ suy nghĩ của bạn...',
-  allowEditContent = true,
-  allowEditImages = true,
   maxImages = 10,
 }: CreatePostModalProps) {
   const [content, setContent] = useState(defaultContent);
-  const [images, setImages] = useState<File[]>(defaultImages);
+  const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset form khi modal mở/đóng hoặc default values thay đổi
   useEffect(() => {
     if (isOpen) {
       setContent(defaultContent);
-      setImages(defaultImages);
-
-      // Tạo preview URLs cho defaultImages
-      const urls = defaultImages.map((file) => URL.createObjectURL(file));
-      setPreviewUrls(urls);
-
-      // Cleanup function for this effect
-      return () => {
-        urls.forEach((url) => URL.revokeObjectURL(url));
-      };
     } else {
-      // Cleanup preview URLs khi đóng modal
       setPreviewUrls((prevUrls) => {
         prevUrls.forEach((url) => URL.revokeObjectURL(url));
         return [];
       });
+      setImages([]);
     }
   }, [isOpen, defaultContent]);
 
@@ -68,16 +52,13 @@ export default function CreatePostModal({
     if (!files || files.length === 0) return;
 
     const filesArray = Array.from(files);
-    const remainingSlots = maxImages - images.length;
+    const totalImages = images.length + filesArray.length;
 
-    if (filesArray.length > remainingSlots) {
-      alert(
-        `Chỉ có thể thêm ${remainingSlots} ảnh nữa (tối đa ${maxImages} ảnh)`
-      );
+    if (totalImages > maxImages) {
+      alert(`Chỉ có thể thêm tối đa ${maxImages} ảnh`);
       return;
     }
 
-    // Validate file types
     const validFiles = filesArray.filter((file) => {
       const isValid = file.type.startsWith('image/');
       if (!isValid) {
@@ -86,22 +67,11 @@ export default function CreatePostModal({
       return isValid;
     });
 
-    // Validate file sizes (5MB mỗi file)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const validSizeFiles = validFiles.filter((file) => {
-      const isValid = file.size <= maxSize;
-      if (!isValid) {
-        alert(`File ${file.name} vượt quá 5MB`);
-      }
-      return isValid;
-    });
-
-    if (validSizeFiles.length > 0) {
-      const newImages = [...images, ...validSizeFiles];
-      setImages(newImages);
+    if (validFiles.length > 0) {
+      setImages([...images, ...validFiles]);
 
       // Tạo preview URLs
-      const newPreviewUrls = validSizeFiles.map((file) =>
+      const newPreviewUrls = validFiles.map((file) =>
         URL.createObjectURL(file)
       );
       setPreviewUrls([...previewUrls, ...newPreviewUrls]);
@@ -114,9 +84,7 @@ export default function CreatePostModal({
   };
 
   const handleRemoveImage = (index: number) => {
-    // Revoke URL để tránh memory leak
     URL.revokeObjectURL(previewUrls[index]);
-
     setImages(images.filter((_, i) => i !== index));
     setPreviewUrls(previewUrls.filter((_, i) => i !== index));
   };
@@ -128,7 +96,6 @@ export default function CreatePostModal({
       return;
     }
 
-    setIsSubmitting(true);
     try {
       await onSubmit({
         content: trimmedContent,
@@ -138,8 +105,6 @@ export default function CreatePostModal({
     } catch (error) {
       console.error('Submit failed:', error);
       alert('Có lỗi xảy ra khi đăng bài');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -149,7 +114,8 @@ export default function CreatePostModal({
 
   if (!isOpen) return null;
 
-  const canAddMore = images.length < maxImages && allowEditImages;
+  const totalImages = images.length;
+  const canAddMore = totalImages < maxImages;
 
   return (
     <div
@@ -190,20 +156,12 @@ export default function CreatePostModal({
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               {contentLabel}
-              {!allowEditContent && (
-                <span className="ml-2 text-xs font-normal text-gray-500">
-                  (Không thể chỉnh sửa)
-                </span>
-              )}
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={contentPlaceholder}
-              disabled={!allowEditContent}
-              className={`w-full border text-black border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none ${
-                !allowEditContent ? 'bg-gray-50 text-gray-600' : ''
-              }`}
+              className="w-full border text-black border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
               rows={6}
             />
             <p className="text-xs text-gray-500 mt-1">{content.length} ký tự</p>
@@ -213,11 +171,6 @@ export default function CreatePostModal({
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Hình ảnh
-              {!allowEditImages && (
-                <span className="ml-2 text-xs font-normal text-gray-500">
-                  (Không thể chỉnh sửa)
-                </span>
-              )}
             </label>
 
             {/* Hidden File Input */}
@@ -231,37 +184,35 @@ export default function CreatePostModal({
             />
 
             {/* Upload Button */}
-            {allowEditImages && (
-              <button
-                onClick={handleClickUpload}
-                disabled={!canAddMore}
-                className="w-full mb-3 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            <button
+              onClick={handleClickUpload}
+              disabled={!canAddMore}
+              className="w-full mb-3 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                {canAddMore
-                  ? `Chọn ảnh (${images.length}/${maxImages})`
-                  : `Đã đạt giới hạn ${maxImages} ảnh`}
-              </button>
-            )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              {canAddMore
+                ? `Chọn ảnh (${totalImages}/${maxImages})`
+                : `Đã đạt giới hạn ${maxImages} ảnh`}
+            </button>
 
             {/* Images Preview */}
-            {images.length > 0 ? (
+            {totalImages > 0 ? (
               <div className="grid grid-cols-2 gap-3">
                 {previewUrls.map((url, index) => (
                   <div
-                    key={index}
+                    key={`upload-${index}`}
                     className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden"
                   >
                     <img
@@ -275,27 +226,25 @@ export default function CreatePostModal({
                     <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
                       {(images[index].size / 1024 / 1024).toFixed(2)} MB
                     </div>
-                    {allowEditImages && (
-                      <button
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-2 left-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                        aria-label="Xóa"
+                    <button
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 left-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      aria-label="Xóa"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -321,11 +270,9 @@ export default function CreatePostModal({
               </div>
             )}
 
-            {allowEditImages && (
-              <p className="text-xs text-gray-500 mt-2">
-                Đã thêm {images.length}/{maxImages} hình ảnh • Tối đa 5MB/ảnh
-              </p>
-            )}
+            <p className="text-xs text-gray-500 mt-2">
+              Đã thêm {totalImages}/{maxImages} hình ảnh
+            </p>
           </div>
         </div>
 

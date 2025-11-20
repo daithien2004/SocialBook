@@ -21,6 +21,7 @@ export const NESTJS_BOOKS_ENDPOINTS = {
   getBooks: '/books',
   getBookBySlug: (bookSlug: string) => `/books/${bookSlug}`,
   createBook: '/books',
+  getAllBookForAdmin: '/books/all',
 };
 
 export const NESTJS_CHAPTERS_ENDPOINTS = {

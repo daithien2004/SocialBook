@@ -30,7 +30,6 @@ export const postApi = createApi({
         formData.append('bookId', data.bookId);
         formData.append('content', data.content);
 
-        // Append multiple images
         if (data.images && data.images.length > 0) {
           data.images.forEach((image) => {
             formData.append('images', image);

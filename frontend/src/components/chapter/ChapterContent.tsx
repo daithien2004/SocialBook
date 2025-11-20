@@ -5,6 +5,7 @@ import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 import CreatePostModal, {
   CreatePostData,
 } from '@/src/components/post/CreatePostModal';
+import { useSession } from 'next-auth/react';
 
 interface Paragraph {
   id: string;
@@ -21,11 +22,11 @@ interface ChapterContentProps {
 
 export function ChapterContent({
   paragraphs,
-  chapterId,
-  bookId, // ← Nhận bookId từ props
-  bookCoverImage,
+  bookId,
   bookTitle,
 }: ChapterContentProps) {
+  const { data: session } = useSession();
+
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
     null
   );
@@ -75,22 +76,13 @@ export function ChapterContent({
     }
 
     try {
-      // ← Gọi API thật với File objects
       await createPost({
-        userId: 'USER_ID_HERE', // TODO: Lấy từ auth context/store
+        userId: session?.user.id,
         bookId: bookId,
         content: data.content,
-        images: data.images, // Array of File objects
+        images: data.images,
       }).unwrap();
-
-      console.log('Tạo post thành công!');
-
-      // Optional: Có thể thêm toast notification
-      alert('Đã đăng bài viết thành công!');
     } catch (error: any) {
-      console.error('Create post failed:', error);
-
-      // Throw lại error để modal hiển thị thông báo
       throw new Error(error?.data?.message || 'Không thể tạo bài viết');
     }
   };
@@ -101,15 +93,12 @@ export function ChapterContent({
         <article className="prose prose-lg max-w-none space-y-6">
           {paragraphs.map((para, idx) => (
             <div key={para.id} className="relative group">
-              {/* Paragraph with hover effect */}
               <div className="flex items-start gap-3">
                 <p className="flex-1 text-lg leading-8 text-justify">
                   {para.content}
                 </p>
 
-                {/* Action buttons - appear on hover */}
                 <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {/* Comment button */}
                   <button
                     onClick={() => handleToggleComments(para.id)}
                     className={`p-2 rounded-lg transition-all ${
@@ -134,7 +123,6 @@ export function ChapterContent({
                     </svg>
                   </button>
 
-                  {/* Share/Post button */}
                   <button
                     onClick={() => handleOpenPostModal(para)}
                     className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-green-600 transition-all"
@@ -157,11 +145,9 @@ export function ChapterContent({
                 </div>
               </div>
 
-              {/* Comment section - slides in when active */}
               {activeParagraphId === para.id && (
                 <div className="mt-4 ml-4 border-l-2 border-indigo-200 pl-4 animate-slideDown">
                   <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-                    {/* Comment input */}
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-semibold text-gray-700">
                         Bình luận về đoạn này
@@ -219,36 +205,18 @@ export function ChapterContent({
             </div>
           ))}
         </article>
-
-        <style jsx>{`
-          @keyframes slideDown {
-            from {
-              opacity: 0;
-              transform: translateY(-10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          .animate-slideDown {
-            animation: slideDown 0.3s ease-out;
-          }
-        `}</style>
       </main>
 
       {/* Create Post Modal */}
       <CreatePostModal
+        isSubmitting={isCreatingPost}
         isOpen={postModalOpen}
         onClose={() => setPostModalOpen(false)}
         onSubmit={handleSubmitPost}
         defaultContent={selectedParagraph?.content || ''}
-        // ← BỎ defaultImages vì bookCoverImage là string URL, không phải File
         title={`Chia sẻ đoạn văn${bookTitle ? ` từ "${bookTitle}"` : ''}`}
         contentLabel="Nội dung đoạn văn"
-        allowEditContent={true}
-        allowEditImages={true}
-        maxImages={10} // ← Tăng lên 10 theo backend
+        maxImages={10}
       />
     </>
   );

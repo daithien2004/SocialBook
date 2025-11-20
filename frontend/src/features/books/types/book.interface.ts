@@ -22,7 +22,7 @@ export interface Book {
 
 export interface Author {
   id: string;
-  username: string;
+  name: string;
   bio: string;
 }
 
@@ -51,4 +51,41 @@ export interface Review {
   };
   likesCount: number;
   createdAt: string;
+}
+
+
+export interface BookForAdmin {
+  id: string;
+  authorId: {
+    id: string;
+    name: string;
+  };
+  genre: {
+    id: string;
+    name: string;
+  }[];
+  title: string;
+  slug: string;
+  publishedYear: string;
+  description: string;
+  coverUrl: string;
+  status: 'draft' | 'published' | 'completed';
+  tags: string[];
+  views: number;
+  likes: number;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  stats: {
+    chapters: number;
+    views: number;
+    likes: string; // backend trả về string
+  };
+}
+
+export interface BackendPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }

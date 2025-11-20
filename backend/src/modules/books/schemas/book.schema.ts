@@ -8,7 +8,10 @@ export class Book {
   @Prop({ type: Types.ObjectId, ref: 'Author', required: true })
   authorId: Types.ObjectId;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Genre', default: [] })
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Genre' }],
+    default: [],
+  })
   genre: Types.ObjectId[];
 
   @Prop({ required: true })

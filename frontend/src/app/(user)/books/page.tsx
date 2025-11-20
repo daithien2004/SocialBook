@@ -15,6 +15,8 @@ export default function BooksPage() {
 
   const books = data?.books ?? [];
 
+  console.log(books);
+
   // State cho search input
   const [searchInput, setSearchInput] = useState('');
 
@@ -100,9 +102,7 @@ export default function BooksPage() {
       filtered = filtered.filter(
         (book) =>
           book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          book.author.username
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
+          book.author.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           book.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -139,9 +139,19 @@ export default function BooksPage() {
   // Lấy tất cả genres từ books
   const allGenres = useMemo(() => {
     const genreSet = new Set<string>();
+
     books.forEach((book) => {
-      book.genres.forEach((genre) => genreSet.add(genre.name));
+      // Kiểm tra book.genres tồn tại và là array
+      if (book.genres && Array.isArray(book.genres)) {
+        book.genres.forEach((genre) => {
+          // Kiểm tra genre.name khác null/undefined
+          if (genre?.name) {
+            genreSet.add(genre.name);
+          }
+        });
+      }
     });
+
     return Array.from(genreSet);
   }, [books]);
 

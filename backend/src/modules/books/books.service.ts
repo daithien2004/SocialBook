@@ -25,7 +25,7 @@ export class BooksService {
     @InjectModel(Author.name) private authorModel: Model<AuthorDocument>,
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async findBySlug(slug: string) {
     // VALIDATION
@@ -36,7 +36,7 @@ export class BooksService {
     // EXECUTION
     const book = await this.bookModel
       .findOne({ slug: slug })
-      .populate('authorId', 'username email')
+      .populate('authorId', 'name ')
       .populate('genre', 'name slug')
       .lean();
 
@@ -112,7 +112,7 @@ export class BooksService {
     // EXECUTION
     const books = await this.bookModel
       .find({ isDeleted: false })
-      .populate('authorId', 'username email')
+      .populate('authorId', 'name')
       .populate('genre', 'name slug')
       .select(
         'title slug description coverUrl status tags views likes publishedYear createdAt updatedAt',
@@ -306,5 +306,75 @@ export class BooksService {
     }
 
     return slug;
+  }
+
+  // src/modules/books/books.service.ts
+  async getAllBook(filters: {
+    page: number;
+    limit: number;
+    status?: string;
+    search?: string;
+    genre?: string;
+    author?: string;
+  }) {
+    const { page, limit, status, search, genre, author } = filters;
+    const skip = (page - 1) * limit;
+
+    const query: any = {};
+
+    if (status) query.status = status;
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { slug: { $regex: search, $options: 'i' } },
+      ];
+    }
+    if (genre) query.genre = genre;
+    if (author) query.authorId = author;
+
+    const [books, total] = await Promise.all([
+      this.bookModel
+        .find(query)
+        .populate('authorId', 'name avatar') // lấy tên + ảnh tác giả
+        .populate('genre', 'name slug')     // lấy tên thể loại
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      this.bookModel.countDocuments(query),
+    ]);
+
+    // Đếm số chương cho từng sách
+    const booksWithStats = await Promise.all(
+      books.map(async (book) => {
+        const chapterCount = await this.chapterModel.countDocuments({ bookId: book._id });
+        const viewCount = book.views || 0;
+        const likeCount = book.likes?.toString() || 0;
+
+        return {
+          ...book,
+          stats: {
+            chapters: chapterCount,
+            views: viewCount,
+            likes: likeCount,
+          },
+        };
+      }),
+    );
+
+    return {
+      success: true,
+      message: 'Lấy danh sách sách thành công',
+      data: {
+        books: booksWithStats,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    };
   }
 }

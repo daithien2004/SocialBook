@@ -1,3 +1,5 @@
+import { get } from "http";
+
 export const BFF_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
   verifyOtp: '/auth/verify-otp',
@@ -15,7 +17,8 @@ export const BFF_POSTS_ENDPOINTS = {
 export const BFF_BOOKS_ENDPOINTS = {
   getAll: '/books',
   getBySlug: (bookSlug: string) => `/books/${bookSlug}`,
-  createBook: '/books',
+  createBook: '/admin/books',
+  getAllForAdmin: '/admin/books',
 };
 
 export const BFF_COMMENTS_ENDPOINTS = {

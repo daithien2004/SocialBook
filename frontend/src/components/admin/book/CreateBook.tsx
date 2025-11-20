@@ -1,4 +1,3 @@
-// app/admin/books/create/CreateBookClient.tsx
 'use client';
 
 import { ChangeEvent, FormEvent, useState, useCallback } from 'react';
@@ -46,7 +45,7 @@ export default function CreateBook() {
 
   const [formData, setFormData] = useState<FormData>(initialForm);
   const [coverPreview, setCoverPreview] = useState<string>(DEFAULT_COVER);
-  const [coverFile, setCoverFile] = useState<File | null>(null); // ✅ Lưu file thật
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [genreInput, setGenreInput] = useState('');
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
@@ -57,10 +56,8 @@ export default function CreateBook() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // ✅ Lưu file gốc
     setCoverFile(file);
 
-    // Tạo preview
     const reader = new FileReader();
     reader.onload = (event) => {
       setCoverPreview(event.target?.result as string);
@@ -90,7 +87,21 @@ export default function CreateBook() {
     e.preventDefault();
     setMessage(null);
 
-    // Validation...
+    // ✅ Validation
+    if (!formData.title.trim()) {
+      setMessage({ type: 'error', text: 'Vui lòng nhập tiêu đề sách' });
+      return;
+    }
+
+    if (!formData.authorId.trim()) {
+      setMessage({ type: 'error', text: 'Vui lòng nhập Author ID' });
+      return;
+    }
+
+    if (formData.genre.length === 0) {
+      setMessage({ type: 'error', text: 'Vui lòng chọn ít nhất 1 thể loại' });
+      return;
+    }
 
     try {
       const tags = formData.tagsInput
@@ -100,25 +111,20 @@ export default function CreateBook() {
 
       const formPayload = new FormData();
 
-      // ✅ Gửi JSON cho các field phức tạp
-      const bookData = {
-        title: formData.title.trim(),
-        authorId: formData.authorId.trim(),
-        genre: formData.genre,
-        description: formData.description.trim(),
-        status: formData.status,
-        publishedYear: formData.publishedYear,
-        tags: tags,
-      };
+      // ✅ Append text fields
+      formPayload.append('title', formData.title.trim());
+      formPayload.append('authorId', formData.authorId.trim());
+      formPayload.append('description', formData.description.trim());
+      formPayload.append('status', formData.status);
+      formPayload.append('publishedYear', formData.publishedYear);
 
-      // ✅ Append JSON string
-      Object.entries(bookData).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach(v => formPayload.append(key, v));
-        } else {
-          formPayload.append(key, value as string);
-        }
+      // ✅ Append arrays
+      formData.genre.forEach((genreId) => {
+        formPayload.append('genre', genreId);
+      });
 
+      tags.forEach((tag) => {
+        formPayload.append('tags', tag);
       });
 
       // ✅ Append file
@@ -126,18 +132,44 @@ export default function CreateBook() {
         formPayload.append('coverUrl', coverFile);
       }
 
-      console.log('📤 Sending:', {
-        data: bookData,
-        hasFile: !!coverFile,
+      console.log('📤 Sending to API...');
+
+      // ✅ Gửi request
+      const result = await createBook(formPayload).unwrap();
+
+      console.log('✅ Success:', result);
+
+      // ✅ Hiển thị success message
+      setMessage({
+        type: 'success',
+        text: 'Tạo sách thành công! Đang chuyển hướng...',
       });
 
-      await createBook(formPayload).unwrap();
+      // ✅ Reset form
+      setFormData(initialForm);
+      setCoverPreview(DEFAULT_COVER);
+      setCoverFile(null);
+      setGenreInput('');
 
-      // Success handling...
+      // ✅ Redirect sau 1.5s
+      setTimeout(() => {
+        router.push('/admin/books');
+      }, 1500);
+
     } catch (err: any) {
       console.error('❌ Error:', err);
-      const errorMsg =
-        err?.data?.message || 'Không thể tạo sách. Vui lòng kiểm tra lại thông tin.';
+      
+      // ✅ Hiển thị error message chi tiết
+      let errorMsg = 'Không thể tạo sách. Vui lòng kiểm tra lại thông tin.';
+      
+      if (err?.data?.message) {
+        if (Array.isArray(err.data.message)) {
+          errorMsg = err.data.message.join(', ');
+        } else {
+          errorMsg = err.data.message;
+        }
+      }
+      
       setMessage({ type: 'error', text: errorMsg });
     }
   };
@@ -166,10 +198,11 @@ export default function CreateBook() {
         {/* Server Message */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-xl border shadow-sm ${message.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-800'
-              : 'bg-red-50 border-red-200 text-red-800'
-              }`}
+            className={`mb-6 p-4 rounded-xl border shadow-sm ${
+              message.type === 'success'
+                ? 'bg-green-50 border-green-200 text-green-800'
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}
           >
             <p className="font-medium">{message.text}</p>
           </div>
@@ -213,7 +246,6 @@ export default function CreateBook() {
                   />
                 </label>
 
-                {/* ✅ Hiển thị tên file đã chọn */}
                 {coverFile && (
                   <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                     <p className="text-xs text-blue-800 font-medium truncate">
@@ -479,7 +511,7 @@ export default function CreateBook() {
                     onClick={() => {
                       setFormData(initialForm);
                       setCoverPreview(DEFAULT_COVER);
-                      setCoverFile(null); // ✅ Reset file
+                      setCoverFile(null);
                       setGenreInput('');
                       setMessage(null);
                     }}

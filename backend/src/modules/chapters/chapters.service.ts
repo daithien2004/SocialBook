@@ -15,7 +15,7 @@ export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-  ) { }
+  ) {}
 
   async getChapterBySlug(bookSlug: string, chapterSlug: string) {
     // VALIDATION
@@ -79,12 +79,12 @@ export class ChaptersService {
     // RETURN
     return {
       book: {
-        id: book._id,
+        id: book._id.toString(),
         title: book.title,
         slug: book.slug,
       },
       chapter: {
-        id: chapter._id,
+        id: chapter._id.toString(),
         title: chapter.title,
         slug: chapter.slug,
         orderIndex: chapter.orderIndex,
@@ -96,19 +96,19 @@ export class ChaptersService {
       navigation: {
         previous: previousChapter
           ? {
-            id: previousChapter._id,
-            title: previousChapter.title,
-            slug: previousChapter.slug,
-            orderIndex: previousChapter.orderIndex,
-          }
+              id: previousChapter._id.toString(),
+              title: previousChapter.title,
+              slug: previousChapter.slug,
+              orderIndex: previousChapter.orderIndex,
+            }
           : null,
         next: nextChapter
           ? {
-            id: nextChapter._id.toString(),
-            title: nextChapter.title,
-            slug: nextChapter.slug,
-            orderIndex: nextChapter.orderIndex,
-          }
+              id: nextChapter._id.toString(),
+              title: nextChapter.title,
+              slug: nextChapter.slug,
+              orderIndex: nextChapter.orderIndex,
+            }
           : null,
       },
     };
@@ -138,13 +138,13 @@ export class ChaptersService {
     // RETURN
     return {
       book: {
-        id: book._id,
+        id: book._id.toString(),
         title: book.title,
         slug: book.slug,
       },
       total: chapters.length,
       chapters: chapters.map((chapter) => ({
-        id: chapter._id,
+        id: chapter._id.toString(),
         title: chapter.title,
         slug: chapter.slug,
         orderIndex: chapter.orderIndex,
@@ -173,7 +173,9 @@ export class ChaptersService {
     let slug = baseSlug;
     let counter = 1;
     while (
-      await this.chapterModel.findOne({ bookId: new Types.ObjectId(bookId), slug }).lean()
+      await this.chapterModel
+        .findOne({ bookId: new Types.ObjectId(bookId), slug })
+        .lean()
     ) {
       slug = `${baseSlug}-${counter++}`;
     }
@@ -202,7 +204,7 @@ export class ChaptersService {
         viewsCount: number;
         createdAt: Date;
         updatedAt: Date;
-      }>();  // Use lean() + generic type for plain object (type-safe)
+      }>(); // Use lean() + generic type for plain object (type-safe)
 
     if (!populated) throw new Error('Tạo chương thất bại');
 
@@ -223,5 +225,4 @@ export class ChaptersService {
       updatedAt: populated.updatedAt,
     };
   }
-
 }

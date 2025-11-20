@@ -28,12 +28,12 @@ export class PostsController {
   @Post()
   @UseInterceptors(FilesInterceptor('images', 10)) // 'images' field, max 10 files
   async create(
-    @Body() createPostDto: CreatePostDto,
     @Body('userId') userId: string,
+    @Body('bookId') bookId: string,
+    @Body('content') content: string,
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB mỗi file
           new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp)$/ }),
         ],
         fileIsRequired: false,
@@ -41,12 +41,19 @@ export class PostsController {
     )
     files?: Express.Multer.File[],
   ) {
-    // Kiểm tra số lượng file
     if (files && files.length > 10) {
       throw new BadRequestException('Maximum 10 images allowed');
     }
 
-    return this.postsService.create(userId, createPostDto, files);
+    console.log(files);
+
+    const createPostDto: CreatePostDto = {
+      userId,
+      bookId,
+      content,
+    };
+
+    return this.postsService.create(createPostDto, files);
   }
 
   @Get('all')

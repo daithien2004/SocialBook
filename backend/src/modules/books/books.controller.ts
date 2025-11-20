@@ -7,10 +7,11 @@ import {
   Param,
   Post,
   UploadedFile,
-  UploadedFiles,
   UseGuards,
   UseInterceptors,
   ValidationPipe,
+  UsePipes,
+  Query,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { Public } from '@/src/common/decorators/customize';
@@ -23,6 +24,27 @@ import { FileInterceptor } from '@nestjs/platform-express';
 @Controller('books')
 export class BooksController {
   constructor(private readonly booksService: BooksService) { }
+
+  @Get('/all')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getAllForAdmin(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Query('status') status?: 'draft' | 'published' | 'completed',
+    @Query('search') search?: string,
+    @Query('genre') genre?: string,
+    @Query('author') author?: string,
+  ) {
+    return this.booksService.getAllBook({
+      page: +page,
+      limit: +limit,
+      status,
+      search,
+      genre,
+      author,
+    });
+  }
 
   @Public()
   @Get(':slug')
@@ -51,14 +73,14 @@ export class BooksController {
   @Post()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FileInterceptor('coverUrl')) // ✅ Interceptor phải đứng TRƯỚC
+  @UseInterceptors(FileInterceptor('coverUrl'))
   @HttpCode(HttpStatus.CREATED)
   async createBook(
-    @Body() createBookDto: CreateBookDto, // ✅ XÓA ValidationPipe ở đây
+    @Body() createBookDto: CreateBookDto,
     @UploadedFile() coverFile?: Express.Multer.File,
   ) {
-    console.log('📦 DTO:', createBookDto);
-    console.log('🖼️ File:', coverFile);
+    console.log('📥 Received DTO:', createBookDto);
+    console.log('📁 File:', coverFile?.originalname);
 
     const book = await this.booksService.createBook(createBookDto, coverFile);
 
