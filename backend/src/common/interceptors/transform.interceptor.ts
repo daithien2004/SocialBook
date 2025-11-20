@@ -27,9 +27,7 @@ export class TransformInterceptor<T>
         }
 
         // ✅ Transform _id → id TRƯỚC KHI wrap vào ResponseDto
-        // QUAN TRỌNG: Thêm WeakSet để track visited objects
-        const visited = new WeakSet();
-        const transformedData = this.transformIds(data, visited);
+        const transformedData = this.transformIds(data);
 
         // Transform data thành format chuẩn
         return new ResponseDto({
@@ -47,51 +45,42 @@ export class TransformInterceptor<T>
     );
   }
 
-  // ✅ Hàm transform _id → id với circular reference protection
-  private transformIds(data: any, visited: WeakSet<object>): any {
+  // ✅ Hàm transform _id → id
+  private transformIds(data: any): any {
     if (!data) return data;
-
-    // Primitive types (string, number, boolean, etc.)
-    if (typeof data !== 'object') {
-      return data;
-    }
-
-    // ⚠️ CRITICAL: Check circular reference
-    if (visited.has(data)) {
-      return undefined; // Hoặc return '[Circular]' để debug
-    }
-
-    // Nếu là Date hoặc ObjectId primitive, giữ nguyên
-    if (data instanceof Date || data._bsontype === 'ObjectId') {
-      return data;
-    }
-
-    // Add to visited set TRƯỚC KHI đệ quy
-    visited.add(data);
 
     // Nếu là array
     if (Array.isArray(data)) {
-      return data.map((item) => this.transformIds(item, visited));
+      return data.map((item) => this.transformIds(item));
     }
 
     // Nếu là object
-    const transformed: any = {};
+    if (typeof data === 'object' && data !== null) {
+      // Nếu là Date, ObjectId primitive, giữ nguyên
+      if (data instanceof Date || data._bsontype === 'ObjectId') {
+        return data;
+      }
 
-    for (const key in data) {
-      if (data.hasOwnProperty(key)) {
+      const transformed: any = {};
+
+      for (const key in data) {
         if (key === '_id') {
           // ✅ Đổi _id thành id
           transformed.id = data[key]?.toString() || data[key];
         } else if (key === '__v') {
           // ❌ Bỏ qua __v
           continue;
-        } else {
+        } else if (typeof data[key] === 'object' && data[key] !== null) {
           // 🔄 Đệ quy cho nested objects/arrays
-          transformed[key] = this.transformIds(data[key], visited);
+          transformed[key] = this.transformIds(data[key]);
+        } else {
+          transformed[key] = data[key];
         }
       }
+
+      return transformed;
     }
 
-    return transformed;
+    return data;
   }
 }

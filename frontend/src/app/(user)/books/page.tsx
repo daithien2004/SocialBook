@@ -15,6 +15,8 @@ export default function BooksPage() {
 
   const books = data?.books ?? [];
 
+  console.log(books);
+
   // State cho search input
   const [searchInput, setSearchInput] = useState('');
 
@@ -100,9 +102,7 @@ export default function BooksPage() {
       filtered = filtered.filter(
         (book) =>
           book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          book.author.name
-            ?.toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
+          book.author.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           book.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }

@@ -31,8 +31,6 @@ export class PostsService {
       .lean()
       .exec();
 
-    console.log(book);
-
     if (!book) {
       throw new NotFoundException('Book not found');
     }

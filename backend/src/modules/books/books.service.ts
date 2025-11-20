@@ -145,31 +145,30 @@ export class BooksService {
       .find({ isDeleted: false })
       .populate('authorId', 'name email')
       .populate('genre', 'name slug')
-      .select(
-        'title slug description coverUrl status tags views likes publishedYear createdAt updatedAt',
-      )
       .sort({ createdAt: -1 })
       .lean();
 
     // RETURN
     return {
       total: books.length,
-      books: books.map((book) => ({
-        id: book._id,
-        title: book.title,
-        slug: book.slug,
-        description: book.description,
-        coverUrl: book.coverUrl,
-        status: book.status,
-        tags: book.tags,
-        views: book.views,
-        likes: book.likes,
-        publishedYear: book.publishedYear,
-        author: book.authorId,
-        genres: book.genre,
-        createdAt: book.createdAt,
-        updatedAt: book.updatedAt,
-      })),
+      books: books.map((book) => {
+        return {
+          id: book._id,
+          title: book.title,
+          slug: book.slug,
+          description: book.description,
+          coverUrl: book.coverUrl,
+          status: book.status,
+          tags: book.tags,
+          views: book.views,
+          likes: book.likes,
+          publishedYear: book.publishedYear,
+          author: book.authorId,
+          genres: book.genre,
+          createdAt: book.createdAt,
+          updatedAt: book.updatedAt,
+        };
+      }),
     };
   }
 

@@ -45,6 +45,8 @@ export class PostsController {
       throw new BadRequestException('Maximum 10 images allowed');
     }
 
+    console.log(files);
+
     const createPostDto: CreatePostDto = {
       userId,
       bookId,

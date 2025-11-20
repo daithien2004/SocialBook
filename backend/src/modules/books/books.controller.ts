@@ -55,7 +55,6 @@ export class BooksController {
     @Body() createBookDto: CreateBookDto,
     @UploadedFiles() coverFile?: Express.Multer.File,
   ) {
-    console.log(13224343434);
     const book = await this.booksService.createBook(createBookDto, coverFile);
 
     return {
