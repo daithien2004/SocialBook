@@ -12,8 +12,10 @@ import {
   Calendar,
   Tag,
   FileText,
+  ChevronDown,
 } from 'lucide-react';
 import { useCreateBookMutation } from '@/src/features/books/api/bookApi';
+import { useGetAuthorsQuery, useGetGenresQuery } from '@/src/features/admin/api/bookRelationApi';
 
 const DEFAULT_COVER = '/abstract-book-pattern.png';
 
@@ -42,11 +44,12 @@ const initialForm: FormData = {
 export default function CreateBook() {
   const router = useRouter();
   const [createBook, { isLoading }] = useCreateBookMutation();
-
+  const { data: authors = [], isLoading: loadingAuthors } = useGetAuthorsQuery();
+  const { data: genres = [], isLoading: loadingGenres } = useGetGenresQuery();
   const [formData, setFormData] = useState<FormData>(initialForm);
   const [coverPreview, setCoverPreview] = useState<string>(DEFAULT_COVER);
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [genreInput, setGenreInput] = useState('');
+  const [selectedGenreId, setSelectedGenreId] = useState('');
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -66,14 +69,13 @@ export default function CreateBook() {
   }, []);
 
   const handleAddGenre = () => {
-    const trimmed = genreInput.trim();
-    if (!trimmed) return;
-    if (formData.genre.includes(trimmed)) {
-      setGenreInput('');
+    if (!selectedGenreId) return;
+    if (formData.genre.includes(selectedGenreId)) {
+      setSelectedGenreId('');
       return;
     }
-    setFormData((prev) => ({ ...prev, genre: [...prev.genre, trimmed] }));
-    setGenreInput('');
+    setFormData((prev) => ({ ...prev, genre: [...prev.genre, selectedGenreId] }));
+    setSelectedGenreId('');
   };
 
   const handleRemoveGenre = (id: string) => {
@@ -83,18 +85,27 @@ export default function CreateBook() {
     }));
   };
 
+  const getGenreName = (genreId: string) => {
+    const genre = genres.find((g: any) => g.id === genreId);
+    return genre?.name || genreId;
+  };
+
+  const getAuthorName = (authorId: string) => {
+    const author = authors.find((a: any) => a.id === authorId);
+    return author?.name || 'Chưa chọn';
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setMessage(null);
 
-    // ✅ Validation
     if (!formData.title.trim()) {
       setMessage({ type: 'error', text: 'Vui lòng nhập tiêu đề sách' });
       return;
     }
 
     if (!formData.authorId.trim()) {
-      setMessage({ type: 'error', text: 'Vui lòng nhập Author ID' });
+      setMessage({ type: 'error', text: 'Vui lòng chọn tác giả' });
       return;
     }
 
@@ -111,14 +122,12 @@ export default function CreateBook() {
 
       const formPayload = new FormData();
 
-      // ✅ Append text fields
       formPayload.append('title', formData.title.trim());
       formPayload.append('authorId', formData.authorId.trim());
       formPayload.append('description', formData.description.trim());
       formPayload.append('status', formData.status);
       formPayload.append('publishedYear', formData.publishedYear);
 
-      // ✅ Append arrays
       formData.genre.forEach((genreId) => {
         formPayload.append('genre', genreId);
       });
@@ -127,41 +136,29 @@ export default function CreateBook() {
         formPayload.append('tags', tag);
       });
 
-      // ✅ Append file
       if (coverFile) {
         formPayload.append('coverUrl', coverFile);
       }
 
-      console.log('📤 Sending to API...');
-
-      // ✅ Gửi request
       const result = await createBook(formPayload).unwrap();
 
-      console.log('✅ Success:', result);
-
-      // ✅ Hiển thị success message
       setMessage({
         type: 'success',
         text: 'Tạo sách thành công! Đang chuyển hướng...',
       });
 
-      // ✅ Reset form
       setFormData(initialForm);
       setCoverPreview(DEFAULT_COVER);
       setCoverFile(null);
-      setGenreInput('');
+      setSelectedGenreId('');
 
-      // ✅ Redirect sau 1.5s
       setTimeout(() => {
         router.push('/admin/books');
       }, 1500);
 
     } catch (err: any) {
-      console.error('❌ Error:', err);
-      
-      // ✅ Hiển thị error message chi tiết
       let errorMsg = 'Không thể tạo sách. Vui lòng kiểm tra lại thông tin.';
-      
+
       if (err?.data?.message) {
         if (Array.isArray(err.data.message)) {
           errorMsg = err.data.message.join(', ');
@@ -169,15 +166,14 @@ export default function CreateBook() {
           errorMsg = err.data.message;
         }
       }
-      
+
       setMessage({ type: 'error', text: errorMsg });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header Section */}
         <div className="mb-6">
           <button
             onClick={() => router.push('/admin/books')}
@@ -195,21 +191,18 @@ export default function CreateBook() {
           </p>
         </div>
 
-        {/* Server Message */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-xl border shadow-sm ${
-              message.type === 'success'
+            className={`mb-6 p-4 rounded-xl border shadow-sm ${message.type === 'success'
                 ? 'bg-green-50 border-green-200 text-green-800'
                 : 'bg-red-50 border-red-200 text-red-800'
-            }`}
+              }`}
           >
             <p className="font-medium">{message.text}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Main Content Section */}
           <div className="bg-white rounded-xl shadow-sm p-8 mb-6">
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Book Cover Section */}
@@ -281,25 +274,39 @@ export default function CreateBook() {
                   />
                 </div>
 
-                {/* Author ID and Published Year */}
+                {/* Author Dropdown and Published Year */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-800 mb-2">
-                      Author ID *
+                      Tác giả *
                     </label>
-                    <input
-                      type="text"
-                      value={formData.authorId}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          authorId: e.target.value,
-                        }))
-                      }
-                      placeholder="Ví dụ: 671a3f..."
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
-                      required
-                    />
+                    <div className="relative">
+                      <select
+                        value={formData.authorId}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            authorId: e.target.value,
+                          }))
+                        }
+                        className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition appearance-none bg-white"
+                        required
+                        disabled={loadingAuthors}
+                      >
+                        <option value="">
+                          {loadingAuthors ? 'Đang tải...' : 'Chọn tác giả'}
+                        </option>
+                        {authors.map((author: any) => (
+                          <option key={author.id} value={author.id}>
+                            {author.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown 
+                        size={20} 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -347,20 +354,26 @@ export default function CreateBook() {
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
                     Trạng thái
                   </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        status: e.target.value as Status,
-                      }))
-                    }
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
-                  >
-                    <option value="draft">Bản nháp</option>
-                    <option value="published">Đang xuất bản</option>
-                    <option value="completed">Hoàn thành</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={formData.status}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: e.target.value as Status,
+                        }))
+                      }
+                      className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition appearance-none bg-white"
+                    >
+                      <option value="draft">Bản nháp</option>
+                      <option value="published">Đang xuất bản</option>
+                      <option value="completed">Hoàn thành</option>
+                    </select>
+                    <ChevronDown 
+                      size={20} 
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -375,27 +388,42 @@ export default function CreateBook() {
                   Thể loại & Tags
                 </h2>
 
-                {/* Genre Input */}
+                {/* Genre Dropdown */}
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    Thể loại (Genre ID) *
+                    Thể loại *
                   </label>
                   <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={genreInput}
-                      onChange={(e) => setGenreInput(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === 'Enter' &&
-                        (e.preventDefault(), handleAddGenre())
-                      }
-                      placeholder="Nhập ObjectId thể loại..."
-                      className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
-                    />
+                    <div className="flex-1 relative">
+                      <select
+                        value={selectedGenreId}
+                        onChange={(e) => setSelectedGenreId(e.target.value)}
+                        className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition appearance-none bg-white"
+                        disabled={loadingGenres}
+                      >
+                        <option value="">
+                          {loadingGenres ? 'Đang tải...' : 'Chọn thể loại'}
+                        </option>
+                        {genres.map((genre: any) => (
+                          <option 
+                            key={genre.id} 
+                            value={genre.id}
+                            disabled={formData.genre.includes(genre.id)}
+                          >
+                            {genre.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown 
+                        size={20} 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={handleAddGenre}
-                      className="px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 font-semibold"
+                      disabled={!selectedGenreId}
+                      className="px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Plus size={18} />
                       Thêm
@@ -404,18 +432,18 @@ export default function CreateBook() {
 
                   {formData.genre.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {formData.genre.map((id) => (
+                      {formData.genre.map((genreId) => (
                         <span
-                          key={id}
-                          className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
+                          key={genreId}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
                         >
-                          {id}
+                          {getGenreName(genreId)}
                           <button
                             type="button"
-                            onClick={() => handleRemoveGenre(id)}
+                            onClick={() => handleRemoveGenre(genreId)}
                             className="hover:text-blue-900 transition"
                           >
-                            <X size={14} />
+                            <X size={16} />
                           </button>
                         </span>
                       ))}
@@ -453,6 +481,12 @@ export default function CreateBook() {
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h3 className="font-bold text-gray-900 mb-4">Tóm tắt</h3>
                 <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tác giả:</span>
+                    <span className="font-semibold text-gray-900 text-right ml-2 truncate max-w-[150px]">
+                      {getAuthorName(formData.authorId)}
+                    </span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Trạng thái:</span>
                     <span className="font-semibold text-gray-900">
@@ -512,7 +546,7 @@ export default function CreateBook() {
                       setFormData(initialForm);
                       setCoverPreview(DEFAULT_COVER);
                       setCoverFile(null);
-                      setGenreInput('');
+                      setSelectedGenreId('');
                       setMessage(null);
                     }}
                     className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"

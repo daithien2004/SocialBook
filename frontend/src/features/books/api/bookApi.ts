@@ -89,6 +89,40 @@ export const booksApi = createApi({
           ]
           : [{ type: 'AdminBooks', id: 'LIST' }],
     }),
+
+    getBookById: builder.query<BookForAdmin, string>({
+      query: (bookId) => ({
+        url: BFF_BOOKS_ENDPOINTS.getById(bookId),
+        method: 'GET',
+      }),
+      providesTags: (result, error, bookId) => [
+        { type: 'AdminBooks', id: bookId },
+      ],
+    }),
+
+    updateBook: builder.mutation<BookForAdmin, { bookId: string; formData: FormData }>({
+      query: ({ bookId, formData }) => ({
+        url: BFF_BOOKS_ENDPOINTS.updateBook(bookId),
+        method: 'PUT',
+        body: formData,
+      }),
+      invalidatesTags: (result, error, { bookId }) => [
+        { type: 'AdminBooks', id: bookId },
+        { type: 'AdminBooks', id: 'LIST' },
+        { type: 'Books', id: 'LIST' },
+      ],
+    }),
+
+    deleteBook: builder.mutation<void, string>({
+      query: (bookId) => ({
+        url: BFF_BOOKS_ENDPOINTS.deleteBook(bookId),
+        method: 'DELETE',
+      }),
+      invalidatesTags: [
+        { type: 'AdminBooks', id: 'LIST' },
+        { type: 'Books', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -99,4 +133,7 @@ export const {
   useGetBookBySlugQuery,
   useCreateBookMutation,
   useGetAdminBooksQuery,
+  useGetBookByIdQuery,
+  useUpdateBookMutation,
+  useDeleteBookMutation,
 } = booksApi;

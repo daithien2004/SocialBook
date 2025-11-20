@@ -68,14 +68,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    // Get FormData from request (not JSON)
+    const formData = await request.formData();
 
+    // Forward the FormData to NestJS backend
     const response = await serverApi.post(
       NESTJS_BOOKS_ENDPOINTS.createBook,
-      body,
+      formData,
       {
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
+          // Don't set Content-Type, let axios handle it for FormData
         },
       },
     );

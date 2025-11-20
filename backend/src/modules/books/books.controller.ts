@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -36,7 +38,7 @@ export class BooksController {
     @Query('genre') genre?: string,
     @Query('author') author?: string,
   ) {
-    return this.booksService.getAllBook({
+    const data = await this.booksService.getAllBook({
       page: +page,
       limit: +limit,
       status,
@@ -44,6 +46,25 @@ export class BooksController {
       genre,
       author,
     });
+
+    return {
+      success: true,
+      message: 'Lấy danh sách sách thành công',
+      data,
+    };
+  }
+
+  @Get('id/:id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getBookById(@Param('id') id: string) {
+    const result = await this.booksService.findById(id);
+
+    return {
+      message: 'Get book by ID successfully',
+      data: result,
+    };
   }
 
   @Public()
@@ -87,6 +108,42 @@ export class BooksController {
     return {
       message: 'Thêm sách thành công',
       data: book,
+    };
+  }
+
+  @Put(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseInterceptors(FileInterceptor('coverUrl'))
+  @HttpCode(HttpStatus.OK)
+  async updateBook(
+    @Param('id') id: string,
+    @Body() updateBookDto: CreateBookDto,
+    @UploadedFile() coverFile?: Express.Multer.File,
+  ) {
+    console.log('📝 Updating book:', id);
+    console.log('📥 Received DTO:', updateBookDto);
+    console.log('📁 File:', coverFile?.originalname);
+
+    const book = await this.booksService.updateBook(id, updateBookDto, coverFile);
+
+    return {
+      message: 'Cập nhật sách thành công',
+      data: book,
+    };
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteBook(@Param('id') id: string) {
+    console.log('🗑️ Deleting book:', id);
+
+    await this.booksService.deleteBook(id);
+
+    return {
+      message: 'Xóa sách thành công',
     };
   }
 }

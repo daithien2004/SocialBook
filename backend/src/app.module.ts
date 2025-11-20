@@ -22,6 +22,7 @@ import { ReviewsModule } from '@/src/modules/reviews/reviews.module';
 import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.module';
 import { LikesModule } from '@/src/modules/likes/likes.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { GenresModule } from './modules/genres/genres.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
     OtpModule,
     PostsModule,
     AuthorsModule,
+    GenresModule,
     CommentsModule,
     CloudinaryModule,
     LikesModule,

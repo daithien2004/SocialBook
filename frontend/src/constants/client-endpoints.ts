@@ -17,7 +17,10 @@ export const BFF_POSTS_ENDPOINTS = {
 export const BFF_BOOKS_ENDPOINTS = {
   getAll: '/books',
   getBySlug: (bookSlug: string) => `/books/${bookSlug}`,
+  getById: (bookId: string) => `/admin/books/${bookId}`,
   createBook: '/admin/books',
+  updateBook: (bookId: string) => `/admin/books/${bookId}`,
+  deleteBook: (bookId: string) => `/admin/books/${bookId}`,
   getAllForAdmin: '/admin/books',
 };
 

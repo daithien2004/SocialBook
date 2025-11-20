@@ -27,23 +27,8 @@ export class BooksService {
     private cloudinaryService: CloudinaryService,
   ) { }
 
-  async findBySlug(slug: string) {
-    // VALIDATION
-    if (!slug) {
-      throw new BadRequestException('Book slug is required');
-    }
-
-    // EXECUTION
-    const book = await this.bookModel
-      .findOne({ slug: slug })
-      .populate('authorId', 'name ')
-      .populate('genre', 'name slug')
-      .lean();
-
-    if (!book) {
-      throw new NotFoundException(`Book with slug "${slug}" not found`);
-    }
-
+  // PRIVATE HELPER: Lấy chi tiết book với chapters, reviews, ratings
+  private async findBookWithDetails(book: any) {
     // Lấy chapters
     const chapters = await this.chapterModel
       .find({ bookId: book._id })
@@ -99,13 +84,57 @@ export class BooksService {
       createdAt: book.createdAt,
       updatedAt: book.updatedAt,
       chapters,
-      reviews, // Đổi từ comments sang reviews
+      reviews,
       averageRating,
       totalRatings,
       ratingDistribution: await this.getRatingDistribution(
         book._id as Types.ObjectId,
       ),
     };
+  }
+
+  async findBySlug(slug: string) {
+    // VALIDATION
+    if (!slug) {
+      throw new BadRequestException('Book slug is required');
+    }
+
+    // EXECUTION
+    const book = await this.bookModel
+      .findOne({ slug: slug, isDeleted: false })
+      .populate('authorId', 'name avatar')
+      .populate('genre', 'name slug')
+      .lean();
+
+    if (!book) {
+      throw new NotFoundException(`Book with slug "${slug}" not found`);
+    }
+
+    return this.findBookWithDetails(book);
+  }
+
+  async findById(id: string) {
+    // VALIDATION
+    if (!id) {
+      throw new BadRequestException('Book ID is required');
+    }
+
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid book ID format');
+    }
+
+    // EXECUTION
+    const book = await this.bookModel
+      .findOne({ _id: id, isDeleted: false })
+      .populate('authorId', 'name avatar')
+      .populate('genre', 'name slug')
+      .lean();
+
+    if (!book) {
+      throw new NotFoundException(`Book with ID "${id}" not found`);
+    }
+
+    return this.findBookWithDetails(book);
   }
 
   async getBooks() {
@@ -320,23 +349,25 @@ export class BooksService {
     const { page, limit, status, search, genre, author } = filters;
     const skip = (page - 1) * limit;
 
-    const query: any = {};
+    const query: any = { isDeleted: false };
 
     if (status) query.status = status;
+
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { slug: { $regex: search, $options: 'i' } },
       ];
     }
+
     if (genre) query.genre = genre;
     if (author) query.authorId = author;
 
     const [books, total] = await Promise.all([
       this.bookModel
         .find(query)
-        .populate('authorId', 'name avatar') // lấy tên + ảnh tác giả
-        .populate('genre', 'name slug')     // lấy tên thể loại
+        .populate('authorId', 'name avatar')
+        .populate('genre', 'name slug')
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -345,36 +376,193 @@ export class BooksService {
       this.bookModel.countDocuments(query),
     ]);
 
-    // Đếm số chương cho từng sách
     const booksWithStats = await Promise.all(
       books.map(async (book) => {
-        const chapterCount = await this.chapterModel.countDocuments({ bookId: book._id });
-        const viewCount = book.views || 0;
-        const likeCount = book.likes?.toString() || 0;
+        const chapterCount = await this.chapterModel.countDocuments({
+          bookId: book._id,
+        });
 
         return {
-          ...book,
+          id: book._id,
+          title: book.title,
+          slug: book.slug,
+          description: book.description,
+          coverUrl: book.coverUrl,
+          status: book.status,
+          tags: book.tags,
+          views: book.views,
+          likes: book.likes,
+          publishedYear: book.publishedYear,
+          authorId: book.authorId,
+          genre: book.genre,
+          createdAt: book.createdAt,
+          updatedAt: book.updatedAt,
+          isDeleted: book.isDeleted,
           stats: {
             chapters: chapterCount,
-            views: viewCount,
-            likes: likeCount,
+            views: book.views || 0,
+            likes: book.likes?.toString() || 0,
           },
         };
       }),
     );
 
     return {
-      success: true,
-      message: 'Lấy danh sách sách thành công',
-      data: {
-        books: booksWithStats,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
+      books: booksWithStats,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     };
   }
+
+  async updateBook(id: string, dto: CreateBookDto, coverFile?: Express.Multer.File) {
+    // 1. VALIDATION
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid book ID');
+    }
+
+    const existingBook = await this.bookModel.findById(id);
+    if (!existingBook) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+
+    if (dto.title?.trim()) {
+      // Check if title is being changed and if new title already exists
+      if (dto.title.trim() !== existingBook.title) {
+        const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
+        const existingWithSlug = await this.bookModel.findOne({ slug: baseSlug, _id: { $ne: id } });
+        if (existingWithSlug) {
+          throw new ConflictException('A book with this title already exists');
+        }
+      }
+    }
+
+    if (dto.authorId && !Types.ObjectId.isValid(dto.authorId)) {
+      throw new BadRequestException('Valid authorId is required');
+    }
+
+    if (dto.authorId) {
+      const author = await this.authorModel.findById(dto.authorId);
+      if (!author) {
+        throw new BadRequestException(`Author with ID ${dto.authorId} not found`);
+      }
+    }
+
+    if (dto.genre && Array.isArray(dto.genre)) {
+      const invalidGenreId = dto.genre.find((genreId) => !Types.ObjectId.isValid(genreId));
+      if (invalidGenreId) {
+        throw new BadRequestException(`Invalid genre ID: ${invalidGenreId}`);
+      }
+
+      const genres = await this.genreModel.find({
+        _id: { $in: dto.genre.map((genreId) => new Types.ObjectId(genreId)) },
+      });
+
+      if (genres.length !== dto.genre.length) {
+        const existingIds = genres.map((g) => g._id);
+        const missing = dto.genre.filter((genreId) => !existingIds.includes(genreId));
+        throw new BadRequestException(`Genres not found: ${missing.join(', ')}`);
+      }
+    }
+
+    // 2. XỬ LÝ ẢNH BÌA MỚI (nếu có)
+    let coverUrl = existingBook.coverUrl;
+
+    if (coverFile) {
+      // Xóa ảnh cũ trên Cloudinary nếu có
+      if (existingBook.coverUrl) {
+        try {
+          await this.cloudinaryService.deleteImage(existingBook.coverUrl);
+        } catch (error) {
+          console.warn('Failed to delete old cover image:', error);
+        }
+      }
+
+      // Upload ảnh mới
+      coverUrl = await this.cloudinaryService.uploadImage(coverFile);
+    }
+
+    // 3. CẬP NHẬT SLUG NẾU TITLE THAY ĐỔI
+    let finalSlug = existingBook.slug;
+    if (dto.title?.trim() && dto.title.trim() !== existingBook.title) {
+      const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
+      finalSlug = await this.generateUniqueSlug(baseSlug);
+    }
+
+    // 4. CẬP NHẬT BOOK
+    const updateData: any = {};
+
+    if (dto.title?.trim()) updateData.title = dto.title.trim();
+    if (finalSlug !== existingBook.slug) updateData.slug = finalSlug;
+    if (dto.authorId) updateData.authorId = dto.authorId;
+    if (dto.genre) updateData.genre = dto.genre;
+    if (dto.description !== undefined) updateData.description = dto.description.trim();
+    if (coverUrl !== existingBook.coverUrl) updateData.coverUrl = coverUrl;
+    if (dto.publishedYear) updateData.publishedYear = dto.publishedYear;
+    if (dto.status) updateData.status = dto.status;
+    if (dto.tags) updateData.tags = dto.tags;
+
+    const updatedBook = await this.bookModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .populate('authorId', 'name avatar')
+      .populate('genre', 'name slug')
+      .lean()
+      .exec();
+
+    if (!updatedBook) {
+      throw new InternalServerErrorException('Failed to update book');
+    }
+
+    return {
+      id: updatedBook._id.toString(),
+      title: updatedBook.title,
+      slug: updatedBook.slug,
+      description: updatedBook.description,
+      coverUrl: updatedBook.coverUrl,
+      status: updatedBook.status,
+      tags: updatedBook.tags,
+      views: updatedBook.views,
+      likes: updatedBook.likes,
+      publishedYear: updatedBook.publishedYear,
+      author: updatedBook.authorId,
+      genres: updatedBook.genre,
+      createdAt: updatedBook.createdAt,
+      updatedAt: updatedBook.updatedAt,
+    };
+  }
+
+  async deleteBook(id: string) {
+    // 1. VALIDATION
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid book ID');
+    }
+
+    const book = await this.bookModel.findById(id);
+    if (!book) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+
+    if (book.isDeleted) {
+      throw new BadRequestException('Book is already deleted');
+    }
+
+    // 2. XÓA ẢNH BÌA TRÊN CLOUDINARY (nếu có)
+    if (book.coverUrl) {
+      try {
+        await this.cloudinaryService.deleteImage(book.coverUrl);
+      } catch (error) {
+        console.warn('Failed to delete cover image:', error);
+      }
+    }
+
+    // 3. XÓA SÁCH (soft delete hoặc hard delete)
+    // Soft delete: đánh dấu isDeleted = true
+    await this.bookModel.findByIdAndUpdate(id, { isDeleted: true });
+
+    return { success: true };
+  }
+
 }

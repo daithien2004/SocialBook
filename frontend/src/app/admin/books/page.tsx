@@ -2,7 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetAdminBooksQuery } from '@/src/features/books/api/bookApi';
+import { useGetAdminBooksQuery, useDeleteBookMutation } from '@/src/features/books/api/bookApi';
+import DeleteBookModal from '@/src/components/admin/book/DeleteBookModal';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -18,16 +19,46 @@ export default function AdminBooksPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState<BookForAdmin | null>(null);
+
   const { data, isLoading, isFetching } = useGetAdminBooksQuery({
     page,
     limit: 15,
     search: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
   });
+
+  const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
+
   console.log('AdminBooksPage data:', data);
   // Dữ liệu đúng cấu trúc từ API
   const books: BookForAdmin[] = data?.books || [];
   const pagination: BackendPagination | undefined = data?.pagination;
+
+  // Delete handlers
+  const handleDeleteClick = (book: BookForAdmin) => {
+    setBookToDelete(book);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!bookToDelete) return;
+    try {
+      // Use id field from interface
+      await deleteBook(bookToDelete.id).unwrap();
+      setDeleteModalOpen(false);
+      setBookToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete book:', error);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setBookToDelete(null);
+  };
 
   const getStatusBadge = (status: BookStatus) => {
     const styles: Record<BookStatus, string> = {
@@ -35,7 +66,7 @@ export default function AdminBooksPage() {
       published: 'bg-green-100 text-green-700 border-green-300',
       completed: 'bg-blue-100 text-blue-700 border-blue-300',
     };
-    return `px-3 py-1 rounded-full text-xs font-medium border ${styles[status]}`;
+    return `inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${styles[status]}`;
   };
 
   const getStatusText = (status: BookStatus) => {
@@ -120,9 +151,8 @@ export default function AdminBooksPage() {
                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Trạng thái</th>
                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Chương</th>
                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Xem</th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Thích</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cập nhật</th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -167,31 +197,33 @@ export default function AdminBooksPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="py-4 text-center">
                           <span className={getStatusBadge(book.status)}>{getStatusText(book.status)}</span>
                         </td>
-                        <td className="px-6 py-4 text-center font-bold text-lg">{book.stats.chapters}</td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="py-4 text-center font-bold text-lg">{book.stats.chapters}</td>
+                        <td className="py-4 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Eye className="w-5 h-5 text-gray-500" />
                             <span className="font-semibold">{book.stats.views.toLocaleString()}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                            <span className="font-semibold">{book.stats.likes}</span>
-                          </div>
-                        </td>
+
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {format(new Date(book.updatedAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-end gap-2">
-                            <Link href={`/admin/books/${book.slug}`} className="p-2 hover:bg-blue-50 rounded-lg transition-colors">
-                              <Edit className="w-5 h-5 text-blue-600" />
+                        <td className="px-6 py-4 justify-left">
+                          <div className="flex justify-left gap-2">
+                            <Link href={`/admin/books/${book.slug}`} className="p-2 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết">
+                              <Eye className="w-5 h-5 text-blue-600" />
                             </Link>
-                            <button className="p-2 hover:bg-red-50 rounded-lg transition-colors">
+                            <Link href={`/admin/books/edit/${book.id}`} className="p-2 hover:bg-green-50 rounded-lg transition-colors" title="Chỉnh sửa">
+                              <Edit className="w-5 h-5 text-green-600" />
+                            </Link>
+                            <button
+                              onClick={() => handleDeleteClick(book)}
+                              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Xóa sách"
+                            >
                               <Trash2 className="w-5 h-5 text-red-600" />
                             </button>
                           </div>
@@ -223,6 +255,15 @@ export default function AdminBooksPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Modal */}
+      <DeleteBookModal
+        book={bookToDelete}
+        isOpen={deleteModalOpen}
+        isDeleting={isDeleting}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }
