@@ -1,25 +1,40 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { BooksService } from '../books/books.service';
+import { Book, BookDocument } from '../books/schemas/book.schema';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     private cloudinaryService: CloudinaryService,
+    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
   ) {}
 
-  async create(
-    userId: string,
-    createPostDto: CreatePostDto,
-    files?: Express.Multer.File[],
-  ): Promise<PostDocument> {
+  async create(createPostDto: CreatePostDto, files?: Express.Multer.File[]) {
     if (!Types.ObjectId.isValid(createPostDto.bookId)) {
       throw new BadRequestException('Invalid bookId format');
+    }
+
+    const book = await this.bookModel
+      .findById(createPostDto.bookId)
+      .select('coverUrl')
+      .lean()
+      .exec();
+
+    console.log(book);
+
+    if (!book) {
+      throw new NotFoundException('Book not found');
     }
 
     // Upload nhiều ảnh lên Cloudinary
@@ -28,14 +43,27 @@ export class PostsService {
       imageUrls = await this.cloudinaryService.uploadMultipleImages(files);
     }
 
+    console.log(imageUrls);
+
     const created = new this.postModel({
       ...createPostDto,
-      userId: new Types.ObjectId(userId),
+      userId: new Types.ObjectId(createPostDto.userId),
       bookId: new Types.ObjectId(createPostDto.bookId),
-      imageUrls, // Lưu array URLs
+      imageUrls: [...imageUrls, book.coverUrl], // Lưu array URLs
     });
 
-    return created.save();
+    const saved = await created.save();
+
+    return {
+      _id: saved._id.toString(), // Rõ ràng là convert sang string
+      userId: saved.userId.toString(),
+      bookId: saved.bookId.toString(),
+      content: saved.content,
+      imageUrls: saved.imageUrls,
+      isDelete: saved.isDelete,
+      createdAt: saved.createdAt,
+      updatedAt: saved.updatedAt,
+    };
   }
 
   async findByUser(userId: string): Promise<PostDocument[]> {

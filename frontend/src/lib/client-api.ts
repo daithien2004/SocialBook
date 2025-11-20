@@ -6,13 +6,15 @@ import { ErrorResponseDto, ResponseDto } from '../types/response';
 const clientApi = axios.create({
   baseURL: '/api', // ← Same origin, no CORS
   withCredentials: true, // ← Tự động gửi cookies
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 clientApi.interceptors.request.use(
   (config) => {
+    // Nếu không phải FormData, mặc định là JSON
+    if (!(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+    // Nếu là FormData, axios sẽ tự động set Content-Type với boundary
     return config;
   },
   (error) => Promise.reject(error)
@@ -32,19 +34,14 @@ export const axiosBaseQuery =
   > =>
   async ({ url, method = 'GET', body, headers, params }) => {
     try {
-      // ← Tự động detect FormData và bỏ Content-Type
-      const isFormData = body instanceof FormData;
-      const requestHeaders = isFormData
-        ? { ...headers } // Không set Content-Type cho FormData
-        : { 'Content-Type': 'application/json', ...headers };
-
       const result = await clientApi({
         url,
         method,
         data: body,
-        headers: requestHeaders,
+        headers,
         params,
       });
+
       const responseData = result.data as ResponseDto<unknown>;
 
       if (!responseData.success) {

@@ -22,7 +22,7 @@ export interface Book {
 
 export interface Author {
   id: string;
-  username: string;
+  name: string;
   bio: string;
 }
 

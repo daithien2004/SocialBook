@@ -27,6 +27,37 @@ export class BooksService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
+  // async findById(bookId: string) {
+  //   // EXECUTION
+  //   const book = await this.bookModel
+  //     .findOne({ _id: bookId })
+  //     .populate('authorId', 'username email')
+  //     .populate('genre', 'name slug')
+  //     .lean();
+
+  //   if (!book) {
+  //     throw new NotFoundException(`Book with slug "${bookId}" not found`);
+  //   }
+
+  //   // RETURN
+  //   return {
+  //     id: book._id,
+  //     title: book.title,
+  //     slug: book.slug,
+  //     description: book.description,
+  //     coverUrl: book.coverUrl,
+  //     status: book.status,
+  //     tags: book.tags,
+  //     views: book.views,
+  //     likes: book.likes,
+  //     publishedYear: book.publishedYear,
+  //     author: book.authorId,
+  //     genres: book.genre,
+  //     createdAt: book.createdAt,
+  //     updatedAt: book.updatedAt,
+  //   };
+  // }
+
   async findBySlug(slug: string) {
     // VALIDATION
     if (!slug) {
@@ -36,7 +67,7 @@ export class BooksService {
     // EXECUTION
     const book = await this.bookModel
       .findOne({ slug: slug })
-      .populate('authorId', 'username email')
+      .populate('authorId', 'name email')
       .populate('genre', 'name slug')
       .lean();
 
@@ -112,7 +143,7 @@ export class BooksService {
     // EXECUTION
     const books = await this.bookModel
       .find({ isDeleted: false })
-      .populate('authorId', 'username email')
+      .populate('authorId', 'name email')
       .populate('genre', 'name slug')
       .select(
         'title slug description coverUrl status tags views likes publishedYear createdAt updatedAt',

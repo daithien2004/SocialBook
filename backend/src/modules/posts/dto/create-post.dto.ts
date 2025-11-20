@@ -8,6 +8,9 @@ import {
 
 export class CreatePostDto {
   @IsMongoId()
+  userId: string;
+
+  @IsMongoId()
   bookId: string;
 
   @IsString()
