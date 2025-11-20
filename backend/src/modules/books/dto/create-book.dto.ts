@@ -38,9 +38,6 @@ export class CreateBookDto {
   description?: string;
 
   @IsOptional()
-  coverUrl?: string;
-
-  @IsOptional()
   @IsString()
   publishedYear?: string;
 

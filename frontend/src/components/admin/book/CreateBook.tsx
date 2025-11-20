@@ -40,7 +40,7 @@ const initialForm: FormData = {
   tagsInput: '',
 };
 
-export default function CreateBookClient() {
+export default function CreateBook() {
   const router = useRouter();
   const [createBook, { isLoading }] = useCreateBookMutation();
 
@@ -90,18 +90,7 @@ export default function CreateBookClient() {
     e.preventDefault();
     setMessage(null);
 
-    if (!formData.title.trim()) {
-      setMessage({ type: 'error', text: 'Tiêu đề sách là bắt buộc.' });
-      return;
-    }
-    if (!formData.authorId.trim()) {
-      setMessage({ type: 'error', text: 'Author ID là bắt buộc.' });
-      return;
-    }
-    if (formData.genre.length === 0) {
-      setMessage({ type: 'error', text: 'Vui lòng thêm ít nhất 1 thể loại.' });
-      return;
-    }
+    // Validation...
 
     try {
       const tags = formData.tagsInput
@@ -109,51 +98,46 @@ export default function CreateBookClient() {
         .map((t) => t.trim())
         .filter(Boolean);
 
-      // ✅ Tạo FormData để gửi file
       const formPayload = new FormData();
 
-      formPayload.append('title', formData.title.trim());
-      formPayload.append('authorId', formData.authorId.trim());
-      formPayload.append('description', formData.description.trim());
-      formPayload.append('status', formData.status);
+      // ✅ Gửi JSON cho các field phức tạp
+      const bookData = {
+        title: formData.title.trim(),
+        authorId: formData.authorId.trim(),
+        genre: formData.genre,
+        description: formData.description.trim(),
+        status: formData.status,
+        publishedYear: formData.publishedYear,
+        tags: tags,
+      };
 
-      if (formData.publishedYear) {
-        formPayload.append('publishedYear', formData.publishedYear);
-      }
+      // ✅ Append JSON string
+      Object.entries(bookData).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => formPayload.append(key, v));
+        } else {
+          formPayload.append(key, value as string);
+        }
 
-      // Append genre array
-      formData.genre.forEach((genreId) => {
-        formPayload.append('genre[]', genreId);
       });
 
-      // Append tags array
-      if (tags.length > 0) {
-        tags.forEach((tag) => {
-          formPayload.append('tags[]', tag);
-        });
-      }
-
-      // ✅ Append cover file nếu có
+      // ✅ Append file
       if (coverFile) {
         formPayload.append('coverUrl', coverFile);
       }
 
+      console.log('📤 Sending:', {
+        data: bookData,
+        hasFile: !!coverFile,
+      });
+
       await createBook(formPayload).unwrap();
 
-      setMessage({
-        type: 'success',
-        text: 'Tạo sách thành công! Đang chuyển về danh sách...',
-      });
-      setFormData(initialForm);
-      setCoverPreview(DEFAULT_COVER);
-      setCoverFile(null); // ✅ Reset file
-      setGenreInput('');
-
-      setTimeout(() => router.push('/admin/books'), 2000);
+      // Success handling...
     } catch (err: any) {
+      console.error('❌ Error:', err);
       const errorMsg =
-        err?.data?.message ||
-        'Không thể tạo sách. Vui lòng kiểm tra lại thông tin.';
+        err?.data?.message || 'Không thể tạo sách. Vui lòng kiểm tra lại thông tin.';
       setMessage({ type: 'error', text: errorMsg });
     }
   };
@@ -182,11 +166,10 @@ export default function CreateBookClient() {
         {/* Server Message */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-xl border shadow-sm ${
-              message.type === 'success'
-                ? 'bg-green-50 border-green-200 text-green-800'
-                : 'bg-red-50 border-red-200 text-red-800'
-            }`}
+            className={`mb-6 p-4 rounded-xl border shadow-sm ${message.type === 'success'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
+              }`}
           >
             <p className="font-medium">{message.text}</p>
           </div>

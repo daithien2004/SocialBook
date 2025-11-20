@@ -6,9 +6,11 @@ import {
   HttpStatus,
   Param,
   Post,
+  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
+  ValidationPipe,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { Public } from '@/src/common/decorators/customize';
@@ -20,7 +22,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) {}
+  constructor(private readonly booksService: BooksService) { }
 
   @Public()
   @Get(':slug')
@@ -49,13 +51,15 @@ export class BooksController {
   @Post()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseInterceptors(FileInterceptor('coverUrl')) // ✅ Interceptor phải đứng TRƯỚC
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('coverUrl'))
   async createBook(
-    @Body() createBookDto: CreateBookDto,
-    @UploadedFiles() coverFile?: Express.Multer.File,
+    @Body() createBookDto: CreateBookDto, // ✅ XÓA ValidationPipe ở đây
+    @UploadedFile() coverFile?: Express.Multer.File,
   ) {
-    console.log(13224343434);
+    console.log('📦 DTO:', createBookDto);
+    console.log('🖼️ File:', coverFile);
+
     const book = await this.booksService.createBook(createBookDto, coverFile);
 
     return {
