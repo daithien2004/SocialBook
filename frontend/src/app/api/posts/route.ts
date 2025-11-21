@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NESTJS_POSTS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
+import serverApi from '@/src/lib/server-api';
 
 export async function GET(request: NextRequest) {
   try {
-    const api = await getAuthenticatedServerApi();
     const searchParams = request.nextUrl.searchParams;
-
+    
     const page = searchParams.get('page') || '1';
     const limit = searchParams.get('limit') || '10';
 
-    const response = await api.get(NESTJS_POSTS_ENDPOINTS.getAll, {
+    const response = await serverApi.get(NESTJS_POSTS_ENDPOINTS.getAll, {
       params: { page, limit },
     });
 

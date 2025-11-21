@@ -68,7 +68,7 @@ export function BookCard({ book }: { book: Book }) {
           </h3>
 
           {/* Author */}
-          <p className="text-sm text-gray-600 mb-2.5">{book.author.name}</p>
+          <p className="text-sm text-gray-600 mb-2.5">{book.authorId.name}</p>
 
           {/* Genres */}
           <div className="flex flex-wrap gap-1.5 mb-3">

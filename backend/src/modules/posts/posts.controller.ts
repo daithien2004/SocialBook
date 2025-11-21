@@ -26,7 +26,7 @@ import { Public } from '@/src/common/decorators/customize';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(private readonly postsService: PostsService) { }
 
   @Post()
   @UseInterceptors(FilesInterceptor('images', 10)) // 'images' field, max 10 files
@@ -63,6 +63,7 @@ export class PostsController {
   @Get()
   async findAll(@Query() query: PaginationDto) {
     // Giới hạn limit để tránh query quá nhiều data
+    console.log("ssssss")
     if (query.limit > 100) {
       throw new BadRequestException('Limit cannot exceed 100');
     }

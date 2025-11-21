@@ -89,7 +89,7 @@ export function BannerSlider({ books }: BannerSliderProps) {
                   </h2>
 
                   <p className="text-xl text-gray-300 mb-4">
-                    Tác giả: {book.author.name}
+                    Tác giả: {book.authorId.name}
                   </p>
 
                   {/* Genres */}
