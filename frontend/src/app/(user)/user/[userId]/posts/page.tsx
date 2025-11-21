@@ -1,15 +1,10 @@
 'use client'
-import {useEffect} from "react";
+import PostList from "@/src/components/post/PostList";
 
 const UserPostsPage = () => {
 
-    useEffect(() => {
-        console.log("UserPostsPage")
-    }, []);
     return(
-        <div>
-            UserPostsPage
-        </div>
+        <PostList/>
     )
 }
 export default UserPostsPage;

@@ -33,7 +33,7 @@ export function ProfileNav({ isOwner}: ProfileNavProps) {
                         key={tab.href}
                         href={tab.href}
                         className={[
-                          "px-4 py-3 text-base font-medium whitespace-nowrap border-b-4",
+                          "px-4 py-3 text-lg font-serif whitespace-nowrap border-b-4",
                           isActive
                               ? "border-[#ff9800] text-gray-1000"
                               : "border-transparent text-gray-500 hover:text-gray-700 hover:font-bold"

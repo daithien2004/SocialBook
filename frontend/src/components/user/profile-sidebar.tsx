@@ -10,12 +10,22 @@ export function ProfileSidebar() {
         <h3 className="mb-4 text-sm font-semibold text-gray-500 uppercase tracking-wider">Cuộc đời tôi</h3>
 
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">
-            <span className="font-medium text-gray-900">Đã tham gia</span> tháng 9 11, 2025
+          <div className="text-base font-serif text-gray-600">
+            <span className="font-semibold text-gray-900">Đã tham gia</span> tháng 9 11, 2025
           </div>
 
           <div className="pt-4 border-t border-gray-100">
-            <h4 className="mb-3 text-xs font-semibold text-gray-400 uppercase">Chia sẻ hồ sơ</h4>
+            <h4 className="mb-3 text-sm font-light font-display text-black uppercase">Đang theo dõi</h4>
+            <div className="flex gap-2">
+              <SocialButton color="bg-[#3b5998]" icon={<Facebook className="h-4 w-4" />} />
+              <SocialButton color="bg-[#1da1f2]" icon={<Twitter className="h-4 w-4" />} />
+              <SocialButton color="bg-[#bd081c]" icon={<span className="font-serif font-bold text-sm">P</span>} />
+              <SocialButton color="bg-[#35465c]" icon={<span className="font-bold text-sm">t</span>} />
+              <SocialButton color="bg-[#f96a0e]" icon={<Mail className="h-4 w-4" />} />
+            </div>
+          </div>
+          <div className="pt-4 border-t border-gray-100">
+            <h4 className="mb-3 text-sm font-light font-display text-black uppercase">Chia sẻ hồ sơ</h4>
             <div className="flex gap-2">
               <SocialButton color="bg-[#3b5998]" icon={<Facebook className="h-4 w-4" />} />
               <SocialButton color="bg-[#1da1f2]" icon={<Twitter className="h-4 w-4" />} />
