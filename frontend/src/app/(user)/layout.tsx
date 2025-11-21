@@ -1,4 +1,4 @@
-import { Header } from '@/src/components/Header';
+import { Header } from '@/src/components/header';
 import { ReactNode } from 'react';
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
