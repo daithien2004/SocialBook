@@ -8,10 +8,9 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUrl,
   Length,
-  Matches,
 } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { Types } from 'mongoose';
 
 export class CreateBookDto {
@@ -21,12 +20,18 @@ export class CreateBookDto {
 
   @IsOptional()
   @IsString()
-  slug?: string; // nếu không truyền → tự sinh từ title
+  slug?: string;
 
   @IsNotEmpty({ message: 'Tác giả là bắt buộc' })
   @IsMongoId({ message: 'Author ID không hợp lệ' })
   authorId: Types.ObjectId;
 
+  // ✅ Transform string/array thành array
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return [value];
+    return [];
+  })
   @IsArray()
   @ArrayMinSize(1, { message: 'Phải chọn ít nhất 1 thể loại' })
   @ArrayMaxSize(5, { message: 'Tối đa 5 thể loại' })
@@ -38,9 +43,6 @@ export class CreateBookDto {
   description?: string;
 
   @IsOptional()
-  coverUrl?: string;
-
-  @IsOptional()
   @IsString()
   publishedYear?: string;
 
@@ -50,6 +52,15 @@ export class CreateBookDto {
   })
   status?: 'draft' | 'published' | 'completed';
 
+  // ✅ Transform string/array thành array
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      // Nếu có dấu phẩy, split thành array
+      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value];
+    }
+    return [];
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

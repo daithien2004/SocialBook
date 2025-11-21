@@ -8,7 +8,6 @@ interface BannerSliderProps {
 }
 
 export function BannerSlider({ books }: BannerSliderProps) {
-  console.log(books);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {

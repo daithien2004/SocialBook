@@ -23,7 +23,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="flex gap-8 mb-8">
@@ -59,7 +59,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
   const rating = book.reviews.length > 0 ? 4.5 : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-sm p-8 mb-6">
@@ -85,7 +85,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <p className="text-lg text-gray-600 mb-4">
                 Tác giả:{' '}
                 <span className="font-semibold text-gray-900">
-                  {book.author.username}
+                  {book.author.name}
                 </span>
               </p>
 
@@ -205,9 +205,9 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <div className="text-gray-700 leading-relaxed">
                 <p className="mb-4">{book.description}</p>
                 <p>
-                  Cuốn sách "{book.title}" của tác giả {book.author.username}{' '}
-                  mang đến một câu chuyện đầy cảm xúc và ý nghĩa. Đây là một
-                  trong những tác phẩm tiêu biểu thuộc thể loại{' '}
+                  Cuốn sách "{book.title}" của tác giả {book.author.name} mang
+                  đến một câu chuyện đầy cảm xúc và ý nghĩa. Đây là một trong
+                  những tác phẩm tiêu biểu thuộc thể loại{' '}
                   {book.genres.map((g) => g.name).join(', ')}.
                 </p>
               </div>

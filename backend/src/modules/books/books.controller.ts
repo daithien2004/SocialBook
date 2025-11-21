@@ -1,14 +1,19 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
-  UploadedFiles,
+  Put,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
+  ValidationPipe,
+  UsePipes,
+  Query,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { Public } from '@/src/common/decorators/customize';
@@ -20,7 +25,47 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) {}
+  constructor(private readonly booksService: BooksService) { }
+
+  @Get('/all')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getAllForAdmin(
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Query('status') status?: 'draft' | 'published' | 'completed',
+    @Query('search') search?: string,
+    @Query('genre') genre?: string,
+    @Query('author') author?: string,
+  ) {
+    const data = await this.booksService.getAllBook({
+      page: +page,
+      limit: +limit,
+      status,
+      search,
+      genre,
+      author,
+    });
+
+    return {
+      success: true,
+      message: 'Lấy danh sách sách thành công',
+      data,
+    };
+  }
+
+  @Get('id/:id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async getBookById(@Param('id') id: string) {
+    const result = await this.booksService.findById(id);
+
+    return {
+      message: 'Get book by ID successfully',
+      data: result,
+    };
+  }
 
   @Public()
   @Get(':slug')
@@ -49,18 +94,56 @@ export class BooksController {
   @Post()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('coverUrl'))
+  @HttpCode(HttpStatus.CREATED)
   async createBook(
     @Body() createBookDto: CreateBookDto,
-    @UploadedFiles() coverFile?: Express.Multer.File,
+    @UploadedFile() coverFile?: Express.Multer.File,
   ) {
-    console.log(13224343434);
+    console.log('📥 Received DTO:', createBookDto);
+    console.log('📁 File:', coverFile?.originalname);
+
     const book = await this.booksService.createBook(createBookDto, coverFile);
 
     return {
       message: 'Thêm sách thành công',
       data: book,
+    };
+  }
+
+  @Put(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseInterceptors(FileInterceptor('coverUrl'))
+  @HttpCode(HttpStatus.OK)
+  async updateBook(
+    @Param('id') id: string,
+    @Body() updateBookDto: CreateBookDto,
+    @UploadedFile() coverFile?: Express.Multer.File,
+  ) {
+    console.log('📝 Updating book:', id);
+    console.log('📥 Received DTO:', updateBookDto);
+    console.log('📁 File:', coverFile?.originalname);
+
+    const book = await this.booksService.updateBook(id, updateBookDto, coverFile);
+
+    return {
+      message: 'Cập nhật sách thành công',
+      data: book,
+    };
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteBook(@Param('id') id: string) {
+    console.log('🗑️ Deleting book:', id);
+
+    await this.booksService.deleteBook(id);
+
+    return {
+      message: 'Xóa sách thành công',
     };
   }
 }
