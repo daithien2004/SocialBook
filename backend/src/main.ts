@@ -27,8 +27,9 @@ async function bootstrap() {
   // Cấu hình ValidationPipe
   app.useGlobalPipes(
     new ValidationPipe({
+      transform: true,
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
     }),
   );
 
