@@ -1,4 +1,4 @@
-import { get } from "http";
+import { get } from 'http';
 
 export const BFF_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
@@ -12,6 +12,11 @@ export const BFF_AUTH_ENDPOINTS = {
 export const BFF_POSTS_ENDPOINTS = {
   getAll: '/posts',
   create: '/posts',
+  getOne: (id: string) => `/posts/${id}`,
+  update: (id: string) => `/posts/${id}`,
+  delete: (id: string) => `/posts/${id}`,
+  deletePermanent: (id: string) => `/posts/${id}/permanent`,
+  deleteImage: (id: string) => `/posts/${id}/images`,
 };
 
 export const BFF_BOOKS_ENDPOINTS = {

@@ -47,7 +47,7 @@ export class PostsService {
       ...createPostDto,
       userId: new Types.ObjectId(createPostDto.userId),
       bookId: new Types.ObjectId(createPostDto.bookId),
-      imageUrls: [...imageUrls, book.coverUrl], // Lưu array URLs
+      imageUrls: [...imageUrls], // Lưu array URLs
     });
 
     const saved = await created.save();
@@ -64,26 +64,204 @@ export class PostsService {
     };
   }
 
-  async findByUser(userId: string): Promise<PostDocument[]> {
-    if (!Types.ObjectId.isValid(userId)) {
-      throw new BadRequestException('Invalid userId format');
+  async findAll(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      this.postModel
+        .find({ isDelete: false })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('userId', '_id name email image')
+        .populate({
+          path: 'bookId',
+          select: 'title coverUrl',
+          populate: {
+            path: 'authorId',
+            select: 'name bio',
+          },
+        })
+        .lean()
+        .exec(),
+      this.postModel.countDocuments({ isDelete: false }),
+    ]);
+
+    return {
+      data: posts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrev: page > 1,
+      },
+    };
+  }
+
+  async findOne(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid post ID format');
     }
 
-    return this.postModel
-      .find({ userId: new Types.ObjectId(userId) })
-      .sort({ createdAt: -1 })
+    const post = await this.postModel
+      .findOne({ _id: id, isDelete: false })
+      .populate('userId', 'name email image')
+      .populate({
+        path: 'bookId',
+        select: 'title coverUrl',
+        populate: {
+          path: 'authorId',
+          select: 'name bio',
+        },
+      })
+      .lean()
       .exec();
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return post;
   }
 
-  async findAll(): Promise<PostDocument[]> {
-    return this.postModel.find().sort({ createdAt: -1 }).exec();
+  async update(
+    id: string,
+    updatePostDto: UpdatePostDto,
+    files?: Express.Multer.File[],
+  ) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid post ID format');
+    }
+
+    const post = await this.postModel.findOne({ _id: id, isDelete: false });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    // Nếu có upload ảnh mới
+    let newImageUrls: string[] = [];
+    if (files && files.length > 0) {
+      newImageUrls = await this.cloudinaryService.uploadMultipleImages(files);
+    }
+
+    // Update các trường
+    if (updatePostDto.content !== undefined) {
+      post.content = updatePostDto.content;
+    }
+
+    // Xử lý khi đổi sách
+    if (updatePostDto.bookId) {
+      if (!Types.ObjectId.isValid(updatePostDto.bookId)) {
+        throw new BadRequestException('Invalid bookId format');
+      }
+
+      const newBook = await this.bookModel
+        .findById(updatePostDto.bookId)
+        .select('coverUrl')
+        .lean()
+        .exec();
+
+      if (!newBook) {
+        throw new NotFoundException('Book not found');
+      }
+
+      post.bookId = new Types.ObjectId(updatePostDto.bookId);
+    }
+
+    // Xử lý imageUrls
+    let finalImageUrls: string[];
+    if (newImageUrls.length > 0) {
+      finalImageUrls = [...post.imageUrls, ...newImageUrls];
+    } else {
+      // Không có thay đổi gì: Giữ nguyên
+      finalImageUrls = post.imageUrls;
+    }
+
+    post.imageUrls = finalImageUrls;
+    post.updatedAt = new Date();
+    const updated = await post.save();
+
+    return {
+      id: updated._id.toString(),
+      userId: updated.userId.toString(),
+      bookId: updated.bookId.toString(),
+      content: updated.content,
+      imageUrls: updated.imageUrls,
+      isDelete: updated.isDelete,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  // Soft delete
+  async remove(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid post ID format');
+    }
+
+    const post = await this.postModel.findOne({ _id: id, isDelete: false });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    post.isDelete = true;
+    post.updatedAt = new Date();
+    await post.save();
+
+    return {
+      message: 'Post deleted successfully',
+      id: post._id.toString(),
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  // Hard delete (xóa hẳn khỏi DB - optional)
+  async removeHard(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid post ID format');
+    }
+
+    const result = await this.postModel.deleteOne({ _id: id });
+
+    if (result.deletedCount === 0) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return {
+      message: 'Post permanently deleted',
+    };
+  }
+
+  // Xóa một ảnh cụ thể trong post
+  async removeImage(postId: string, imageUrl: string) {
+    if (!Types.ObjectId.isValid(postId)) {
+      throw new BadRequestException('Invalid post ID format');
+    }
+
+    const post = await this.postModel.findOne({ _id: postId, isDelete: false });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    // Xóa URL khỏi array
+    post.imageUrls = post.imageUrls.filter((url) => url !== imageUrl);
+    post.updatedAt = new Date();
+    await post.save();
+
+    // Xóa ảnh trên Cloudinary (optional)
+    try {
+      await this.cloudinaryService.deleteImage(imageUrl);
+    } catch (error) {
+      console.error('Failed to delete image from Cloudinary:', error);
+    }
+
+    return {
+      message: 'Image removed successfully',
+      imageUrls: post.imageUrls,
+    };
   }
 }
