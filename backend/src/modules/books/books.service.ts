@@ -25,7 +25,7 @@ export class BooksService {
     @InjectModel(Author.name) private authorModel: Model<AuthorDocument>,
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
     private cloudinaryService: CloudinaryService,
-  ) { }
+  ) {}
 
   // PRIVATE HELPER: Lấy chi tiết book với chapters, reviews, ratings
   private async findBookWithDetails(book: any) {
@@ -79,7 +79,7 @@ export class BooksService {
       views: book.views,
       likes: book.likes,
       publishedYear: book.publishedYear,
-      author: book.authorId,
+      authorId: book.authorId,
       genres: book.genre,
       createdAt: book.createdAt,
       updatedAt: book.updatedAt,
@@ -163,7 +163,7 @@ export class BooksService {
         views: book.views,
         likes: book.likes,
         publishedYear: book.publishedYear,
-        author: book.authorId,
+        authorId: book.authorId,
         genres: book.genre,
         createdAt: book.createdAt,
         updatedAt: book.updatedAt,
@@ -418,7 +418,11 @@ export class BooksService {
     };
   }
 
-  async updateBook(id: string, dto: CreateBookDto, coverFile?: Express.Multer.File) {
+  async updateBook(
+    id: string,
+    dto: CreateBookDto,
+    coverFile?: Express.Multer.File,
+  ) {
     // 1. VALIDATION
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('Invalid book ID');
@@ -433,7 +437,10 @@ export class BooksService {
       // Check if title is being changed and if new title already exists
       if (dto.title.trim() !== existingBook.title) {
         const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
-        const existingWithSlug = await this.bookModel.findOne({ slug: baseSlug, _id: { $ne: id } });
+        const existingWithSlug = await this.bookModel.findOne({
+          slug: baseSlug,
+          _id: { $ne: id },
+        });
         if (existingWithSlug) {
           throw new ConflictException('A book with this title already exists');
         }
@@ -447,12 +454,16 @@ export class BooksService {
     if (dto.authorId) {
       const author = await this.authorModel.findById(dto.authorId);
       if (!author) {
-        throw new BadRequestException(`Author with ID ${dto.authorId} not found`);
+        throw new BadRequestException(
+          `Author with ID ${dto.authorId} not found`,
+        );
       }
     }
 
     if (dto.genre && Array.isArray(dto.genre)) {
-      const invalidGenreId = dto.genre.find((genreId) => !Types.ObjectId.isValid(genreId));
+      const invalidGenreId = dto.genre.find(
+        (genreId) => !Types.ObjectId.isValid(genreId),
+      );
       if (invalidGenreId) {
         throw new BadRequestException(`Invalid genre ID: ${invalidGenreId}`);
       }
@@ -463,8 +474,12 @@ export class BooksService {
 
       if (genres.length !== dto.genre.length) {
         const existingIds = genres.map((g) => g._id);
-        const missing = dto.genre.filter((genreId) => !existingIds.includes(genreId));
-        throw new BadRequestException(`Genres not found: ${missing.join(', ')}`);
+        const missing = dto.genre.filter(
+          (genreId) => !existingIds.includes(genreId),
+        );
+        throw new BadRequestException(
+          `Genres not found: ${missing.join(', ')}`,
+        );
       }
     }
 
@@ -499,7 +514,8 @@ export class BooksService {
     if (finalSlug !== existingBook.slug) updateData.slug = finalSlug;
     if (dto.authorId) updateData.authorId = dto.authorId;
     if (dto.genre) updateData.genre = dto.genre;
-    if (dto.description !== undefined) updateData.description = dto.description.trim();
+    if (dto.description !== undefined)
+      updateData.description = dto.description.trim();
     if (coverUrl !== existingBook.coverUrl) updateData.coverUrl = coverUrl;
     if (dto.publishedYear) updateData.publishedYear = dto.publishedYear;
     if (dto.status) updateData.status = dto.status;
@@ -564,5 +580,4 @@ export class BooksService {
 
     return { success: true };
   }
-
 }

@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { posts } from '@/src/lib/posts';
-import serverApi from '@/src/lib/server-api';
 import { NESTJS_POSTS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 
 export async function GET(request: NextRequest) {
   try {
-    return NextResponse.json({
-      success: true,
-      statusCode: 200,
-      data: posts,
+    const api = await getAuthenticatedServerApi();
+    const searchParams = request.nextUrl.searchParams;
+
+    const page = searchParams.get('page') || '1';
+    const limit = searchParams.get('limit') || '10';
+
+    const response = await api.get(NESTJS_POSTS_ENDPOINTS.getAll, {
+      params: { page, limit },
     });
+
+    console.log(response.data);
+
+    return NextResponse.json(response.data);
   } catch (error: any) {
     return NextResponse.json(
       {
         success: false,
-        statusCode: 500,
-        message: 'Lỗi server khi lấy bài viết',
+        statusCode: error.response?.status || 500,
+        message:
+          error.response?.data?.message || 'Lỗi khi lấy danh sách bài viết',
         error: error?.message || error,
       },
-      { status: 500 }
+      { status: error.response?.status || 500 }
     );
   }
 }

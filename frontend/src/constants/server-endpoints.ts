@@ -1,3 +1,5 @@
+import { id } from 'date-fns/locale';
+
 export const NESTJS_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
   verifyOtp: '/auth/verify-otp',
@@ -36,4 +38,10 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
 export const NESTJS_POSTS_ENDPOINTS = {
   getAll: '/posts',
   create: '/posts',
+  update: (id: string) => `/posts/${id}`,
+  getOne: (id: string) => `/posts/${id}`,
+  delete: (id: string) => `/posts/${id}`,
+  deletePermanent: (id: string) => `/posts/${id}/permanent`,
+  deleteHard: (id: string) => `/posts/${id}/permanent`,
+  deleteImage: (id: string) => `/posts/${id}/images`,
 };
