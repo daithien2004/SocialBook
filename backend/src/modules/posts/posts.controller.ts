@@ -56,23 +56,8 @@ export class PostsController {
     return this.postsService.create(createPostDto, files);
   }
 
-  @Get('all')
+  @Get()
   async findAll() {
     return this.postsService.findAll();
-  }
-
-  @Get()
-  async findByUser(@Request() req: any) {
-    return this.postsService.findByUser(req.user.id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
   }
 }

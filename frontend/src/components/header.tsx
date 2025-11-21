@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Globe } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function Header() {
@@ -10,7 +10,7 @@ export function Header() {
     <div className="z-50 transition-all duration-300 border-b border-gray-200">
       <div className="px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex justify-center items-center gap-10">
+          <div className="flex justify-center items-center gap-5">
             {/* Logo */}
             <div className="flex items-center gap-3">
               <div
@@ -30,6 +30,12 @@ export function Header() {
               className="font-bold px-4 py-2 rounded-md shadow-md text-gray-600 hover:bg-gray-100 flex gap-3"
             >
               <BookOpen /> Tìm Kiếm Sách
+            </div>
+            <div
+              onClick={() => router.push('/posts')}
+              className="font-bold px-4 py-2 rounded-md shadow-md text-gray-600 hover:bg-gray-100 flex gap-3"
+            >
+              <Globe /> Bảng Feed
             </div>
           </div>
         </div>

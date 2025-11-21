@@ -64,26 +64,7 @@ export class PostsService {
     };
   }
 
-  async findByUser(userId: string): Promise<PostDocument[]> {
-    if (!Types.ObjectId.isValid(userId)) {
-      throw new BadRequestException('Invalid userId format');
-    }
-
-    return this.postModel
-      .find({ userId: new Types.ObjectId(userId) })
-      .sort({ createdAt: -1 })
-      .exec();
-  }
-
   async findAll(): Promise<PostDocument[]> {
     return this.postModel.find().sort({ createdAt: -1 }).exec();
-  }
-
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} post`;
   }
 }
