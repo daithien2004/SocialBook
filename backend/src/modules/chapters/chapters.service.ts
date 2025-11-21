@@ -9,13 +9,14 @@ import { HydratedDocument, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../books/schemas/book.schema';
 import { slugify } from '@/src/utils/slugify';
 import { CreateChapterDto } from './dto/create-chapter.dto';
+import { UpdateChapterDto } from './dto/update-chapter.dto';
 
 @Injectable()
 export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-  ) {}
+  ) { }
 
   async getChapterBySlug(bookSlug: string, chapterSlug: string) {
     // VALIDATION
@@ -96,19 +97,19 @@ export class ChaptersService {
       navigation: {
         previous: previousChapter
           ? {
-              id: previousChapter._id.toString(),
-              title: previousChapter.title,
-              slug: previousChapter.slug,
-              orderIndex: previousChapter.orderIndex,
-            }
+            id: previousChapter._id.toString(),
+            title: previousChapter.title,
+            slug: previousChapter.slug,
+            orderIndex: previousChapter.orderIndex,
+          }
           : null,
         next: nextChapter
           ? {
-              id: nextChapter._id.toString(),
-              title: nextChapter.title,
-              slug: nextChapter.slug,
-              orderIndex: nextChapter.orderIndex,
-            }
+            id: nextChapter._id.toString(),
+            title: nextChapter.title,
+            slug: nextChapter.slug,
+            orderIndex: nextChapter.orderIndex,
+          }
           : null,
       },
     };
@@ -224,5 +225,147 @@ export class ChaptersService {
       createdAt: populated.createdAt,
       updatedAt: populated.updatedAt,
     };
+  }
+
+  async findById(id: string) {
+    // VALIDATION
+    if (!id) {
+      throw new BadRequestException('Chapter ID is required');
+    }
+
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid chapter ID format');
+    }
+
+    // EXECUTION
+    const chapter = await this.chapterModel
+      .findById(id)
+      .populate('bookId', 'title slug')
+      .lean<{
+        _id: Types.ObjectId;
+        bookId: { _id: Types.ObjectId; title: string; slug: string };
+        title: string;
+        slug: string;
+        paragraphs: { id: string; content: string }[];
+        orderIndex: number;
+        viewsCount: number;
+        createdAt: Date;
+        updatedAt: Date;
+      }>();
+
+    if (!chapter) {
+      throw new NotFoundException(`Chapter with ID "${id}" not found`);
+    }
+
+    // RETURN
+    return {
+      id: chapter._id.toString(),
+      title: chapter.title,
+      slug: chapter.slug,
+      orderIndex: chapter.orderIndex,
+      viewsCount: chapter.viewsCount,
+      paragraphs: chapter.paragraphs,
+      book: {
+        id: chapter.bookId._id.toString(),
+        title: chapter.bookId.title,
+        slug: chapter.bookId.slug,
+      },
+      createdAt: chapter.createdAt,
+      updatedAt: chapter.updatedAt,
+    };
+  }
+
+  async updateChapter(id: string, dto: UpdateChapterDto) {
+    // 1. VALIDATION
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid chapter ID');
+    }
+
+    const existingChapter = await this.chapterModel.findById(id).lean();
+    if (!existingChapter) {
+      throw new NotFoundException(`Chapter with ID ${id} not found`);
+    }
+
+    // 2. CẬP NHẬT SLUG NẾU TITLE THAY ĐỔI
+    let finalSlug = existingChapter.slug;
+    if (dto.title?.trim() && dto.title.trim() !== existingChapter.title) {
+      const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
+      let slug = baseSlug;
+      let counter = 1;
+
+      // Đảm bảo slug duy nhất trong cùng sách
+      while (
+        await this.chapterModel
+          .findOne({
+            bookId: existingChapter.bookId,
+            slug,
+            _id: { $ne: id },
+          })
+          .lean()
+      ) {
+        slug = `${baseSlug}-${counter++}`;
+      }
+      finalSlug = slug;
+    }
+
+    // 3. CẬP NHẬT CHAPTER
+    const updateData: any = {};
+
+    if (dto.title?.trim()) updateData.title = dto.title.trim();
+    if (finalSlug !== existingChapter.slug) updateData.slug = finalSlug;
+    if (dto.paragraphs) updateData.paragraphs = dto.paragraphs;
+
+    const updatedChapter = await this.chapterModel
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .populate('bookId', 'title slug')
+      .lean<{
+        _id: Types.ObjectId;
+        bookId: { _id: Types.ObjectId; title: string; slug: string };
+        title: string;
+        slug: string;
+        paragraphs: { id: string; content: string }[];
+        orderIndex: number;
+        viewsCount: number;
+        createdAt: Date;
+        updatedAt: Date;
+      }>();
+
+    if (!updatedChapter) {
+      throw new NotFoundException('Failed to update chapter');
+    }
+
+    // 4. RETURN
+    return {
+      id: updatedChapter._id.toString(),
+      title: updatedChapter.title,
+      slug: updatedChapter.slug,
+      orderIndex: updatedChapter.orderIndex,
+      viewsCount: updatedChapter.viewsCount,
+      paragraphs: updatedChapter.paragraphs,
+      book: {
+        id: updatedChapter.bookId._id.toString(),
+        title: updatedChapter.bookId.title,
+        slug: updatedChapter.bookId.slug,
+      },
+      createdAt: updatedChapter.createdAt,
+      updatedAt: updatedChapter.updatedAt,
+    };
+  }
+
+  async deleteChapter(id: string) {
+    // 1. VALIDATION
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid chapter ID');
+    }
+
+    const chapter = await this.chapterModel.findById(id);
+    if (!chapter) {
+      throw new NotFoundException(`Chapter with ID ${id} not found`);
+    }
+
+    // 2. XÓA CHAPTER
+    await this.chapterModel.findByIdAndDelete(id);
+
+    return { success: true };
   }
 }

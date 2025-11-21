@@ -28,9 +28,16 @@ export const NESTJS_BOOKS_ENDPOINTS = {
 };
 
 export const NESTJS_CHAPTERS_ENDPOINTS = {
-  getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
-    `/books/${bookSlug}/chapters/${chapterSlug}`,
+  // Public endpoints
+  getChapterBySlug: (bookSlug: string, chapterSlug: string) => `/books/${bookSlug}/chapters/${chapterSlug}`,
   getChapters: (bookSlug: string) => `/books/${bookSlug}/chapters`,
+  getChapterById: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/id/${chapterId}`,
+  createChapter: (bookSlug: string) => `/books/${bookSlug}/chapters`,
+  updateChapter: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
+  deleteChapter: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
+  // Admin-specific endpoints
+  updateChapterAdmin: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
+  deleteChapterAdmin: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
 };
 
 export const NESTJS_POSTS_ENDPOINTS = {

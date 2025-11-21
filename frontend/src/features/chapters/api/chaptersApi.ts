@@ -35,6 +35,25 @@ interface GetChaptersResponse {
   total: number;
 }
 
+interface CreateChapterRequest {
+  bookSlug: string;
+  data: {
+    title: string;
+    paragraphs: { id: string; content: string }[];
+    slug?: string;
+  };
+}
+
+interface UpdateChapterRequest {
+  bookSlug: string;
+  chapterId: string;
+  data: {
+    title?: string;
+    paragraphs?: { id: string; content: string }[];
+    slug?: string;
+  };
+}
+
 export const chaptersApi = createApi({
   reducerPath: 'chapterApi',
   baseQuery: axiosBaseQuery(),
@@ -52,6 +71,7 @@ export const chaptersApi = createApi({
         { type: 'Chapter', id: arg.chapterSlug },
       ],
     }),
+
     getChapters: builder.query<GetChaptersResponse, GetChaptersRequest>({
       query: (data) => ({
         url: BFF_CHAPTERS_ENDPOINTS.getChapters(data.bookSlug),
@@ -59,7 +79,63 @@ export const chaptersApi = createApi({
       }),
       providesTags: ['Chapters'],
     }),
+
+    // Admin endpoints
+    getAdminChapters: builder.query<GetChaptersResponse, GetChaptersRequest>({
+      query: (data) => ({
+        url: `/admin/books/${data.bookSlug}/chapters`,
+        method: 'GET',
+      }),
+      providesTags: ['Chapters'],
+    }),
+
+    getChapterById: builder.query<Chapter, { bookSlug: string; chapterId: string }>({
+      query: ({ bookSlug, chapterId }) => ({
+        url: BFF_CHAPTERS_ENDPOINTS.getChapterById(bookSlug, chapterId),
+        method: 'GET',
+      }),
+      providesTags: (result, error, { chapterId }) => [
+        { type: 'Chapter', id: chapterId },
+      ],
+    }),
+
+    createChapter: builder.mutation<Chapter, CreateChapterRequest>({
+      query: ({ bookSlug, data }) => ({
+        url: BFF_CHAPTERS_ENDPOINTS.createChapter(bookSlug),
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Chapters'],
+    }),
+
+    updateChapter: builder.mutation<Chapter, UpdateChapterRequest>({
+      query: ({ bookSlug, chapterId, data }) => ({
+        url: BFF_CHAPTERS_ENDPOINTS.updateChapter(bookSlug, chapterId),
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { chapterId }) => [
+        { type: 'Chapter', id: chapterId },
+        'Chapters',
+      ],
+    }),
+
+    deleteChapter: builder.mutation<void, { bookSlug: string; chapterId: string }>({
+      query: ({ bookSlug, chapterId }) => ({
+        url: BFF_CHAPTERS_ENDPOINTS.deleteChapter(bookSlug, chapterId),
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Chapters'],
+    }),
   }),
 });
 
-export const { useGetChapterQuery, useGetChaptersQuery } = chaptersApi;
+export const {
+  useGetChapterQuery,
+  useGetChaptersQuery,
+  useGetAdminChaptersQuery,
+  useGetChapterByIdQuery,
+  useCreateChapterMutation,
+  useUpdateChapterMutation,
+  useDeleteChapterMutation,
+} = chaptersApi;

@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Search, Plus, Eye, Heart, BookOpen, Filter, ChevronLeft, ChevronRight, Loader2, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Eye, Heart, BookOpen, Filter, ChevronLeft, ChevronRight, Loader2, Edit, Trash2, BookText } from 'lucide-react';
 import { BookForAdmin, BackendPagination } from '@/src/features/books/types/book.interface';
 
 type BookStatus = 'draft' | 'published' | 'completed';
@@ -158,7 +158,7 @@ export default function AdminBooksPage() {
                 <tbody className="divide-y divide-gray-200">
                   {books.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="text-center py-16 text-gray-500 text-lg">
+                      <td colSpan={9} className="text-center py-16 text-gray-500 text-lg">
                         Không tìm thấy sách nào
                       </td>
                     </tr>
@@ -207,12 +207,14 @@ export default function AdminBooksPage() {
                             <span className="font-semibold">{book.stats.views.toLocaleString()}</span>
                           </div>
                         </td>
-
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {format(new Date(book.updatedAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
                         </td>
-                        <td className="px-6 py-4 justify-left">
-                          <div className="flex justify-left gap-2">
+                        <td className="px-6 py-4">
+                          <div className="flex justify-center gap-2">
+                            <Link href={`/admin/books/chapters/${book.id}`} className="p-2 hover:bg-purple-50 rounded-lg transition-colors" title="Quản lý chương">
+                              <BookText className="w-5 h-5 text-purple-600" />
+                            </Link>
                             <Link href={`/admin/books/${book.slug}`} className="p-2 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết">
                               <Eye className="w-5 h-5 text-blue-600" />
                             </Link>

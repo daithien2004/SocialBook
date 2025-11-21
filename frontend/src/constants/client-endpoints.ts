@@ -17,10 +17,10 @@ export const BFF_POSTS_ENDPOINTS = {
 export const BFF_BOOKS_ENDPOINTS = {
   getAll: '/books',
   getBySlug: (bookSlug: string) => `/books/${bookSlug}`,
-  getById: (bookId: string) => `/admin/books/${bookId}`,
+  getById: (bookId: string) => `/admin/books/id/${bookId}`,
   createBook: '/admin/books',
-  updateBook: (bookId: string) => `/admin/books/${bookId}`,
-  deleteBook: (bookId: string) => `/admin/books/${bookId}`,
+  updateBook: (bookId: string) => `/admin/books/id/${bookId}`,
+  deleteBook: (bookId: string) => `/admin/books/id/${bookId}`,
   getAllForAdmin: '/admin/books',
 };
 
@@ -38,4 +38,12 @@ export const BFF_CHAPTERS_ENDPOINTS = {
   getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
     `/books/${bookSlug}/chapters/${chapterSlug}`,
   getChapters: (bookSlug: string) => `/books/${bookSlug}/chapters`,
+  // Admin endpoints
+  getChapterById: (bookSlug: string, chapterId: string) =>
+    `/admin/books/${bookSlug}/chapters/${chapterId}`,
+  createChapter: (bookSlug: string) => `/admin/books/${bookSlug}/chapters`,
+  updateChapter: (bookSlug: string, chapterId: string) =>
+    `/admin/books/${bookSlug}/chapters/${chapterId}`,
+  deleteChapter: (bookSlug: string, chapterId: string) =>
+    `/admin/books/${bookSlug}/chapters/${chapterId}`,
 };

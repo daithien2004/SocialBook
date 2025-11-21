@@ -1,4 +1,4 @@
-// api/admin/books/[bookId]/route.ts
+// api/admin/books/id/[bookId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import serverApi from '@/src/lib/server-api';
 import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
@@ -33,7 +33,7 @@ export async function GET(
 
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error('GET /api/admin/books/[bookId] error:', error.response?.data);
+        console.error('GET /api/admin/books/id/[bookId] error:', error.response?.data);
         return NextResponse.json(
             error.response?.data || { error: 'Failed to fetch book' },
             { status: error.response?.status || 500 }
@@ -74,7 +74,7 @@ export async function PUT(
 
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error('PUT /api/admin/books/[bookId] error:', error.response?.data);
+        console.error('PUT /api/admin/books/id/[bookId] error:', error.response?.data);
         return NextResponse.json(
             error.response?.data || { error: 'Failed to update book' },
             { status: error.response?.status || 500 }
@@ -110,7 +110,7 @@ export async function DELETE(
 
         return NextResponse.json(response.data);
     } catch (error: any) {
-        console.error('DELETE /api/admin/books/[bookId] error:', error.response?.data);
+        console.error('DELETE /api/admin/books/id/[bookId] error:', error.response?.data);
         return NextResponse.json(
             error.response?.data || { error: 'Failed to delete book' },
             { status: error.response?.status || 500 }
