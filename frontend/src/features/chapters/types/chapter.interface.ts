@@ -13,4 +13,5 @@ export interface Chapter {
   createdAt: string;
   updatedAt: string;
   paragraphs: Paragraph[];
+  paragraphsCount?: number;
 }

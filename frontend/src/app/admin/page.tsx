@@ -65,46 +65,7 @@ export default function AdminDashboard() {
           />
         )}
 
-        {/* Sidebar */}
-        <aside
-          className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:shadow-md ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">SocialBook</h2>
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden text-gray-500 hover:text-gray-700"
-            >
-              <X size={24} />
-            </button>
-          </div>
-          <nav className="p-4">
-            <ul className="space-y-1">
-              {navItems.map((item) => (
-                <li key={item.name}>
-                  <a
-                    href={item.href}
-                    className="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                  >
-                    <item.icon size={20} className="mr-3" />
-                    {item.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
-            <button
-              onClick={handleLogout}
-              className="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors w-full"
-            >
-              <LogOut size={20} className="mr-3" />
-              Đăng xuất
-            </button>
-          </div>
-        </aside>
+       
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
