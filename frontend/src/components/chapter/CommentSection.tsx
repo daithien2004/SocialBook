@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import CommentItem from './CommentItem';
 import CommentInput from './CommentInput';
+import ListComments from "@/src/components/comment/ListComments";
+import {usePostCreateMutation} from "@/src/features/comments/api/commentApi";
 
 export interface Comment {
   id: string;
@@ -30,21 +32,31 @@ interface CommentSectionProps {
 export default function CommentSection({
   comments,
   targetId,
-  targetType,
   onSubmitComment,
-  onLikeComment,
-  onReplyComment,
-  emptyMessage = 'Chưa có bình luận. Hãy là người đầu tiên!',
   className = '',
 }: CommentSectionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createComment] = usePostCreateMutation();
 
   const handleSubmit = async (content: string) => {
-    if (!onSubmitComment) return;
+    const trimmed = content.trim();
+    if (!trimmed) return;
 
     setIsSubmitting(true);
     try {
-      await onSubmitComment(content);
+      // Ưu tiên gọi API tạo comment như ModalPostComment
+      await createComment({
+        targetType: 'chapter',   // 🔴 logic chapter
+        targetId,
+        content: trimmed,
+        parentId: null,
+      }).unwrap();
+
+      // Nếu dev code cũ có truyền onSubmitComment, vẫn gọi sau cùng (không bắt buộc)
+      if (onSubmitComment) {
+        await onSubmitComment(trimmed);
+      }
+      // CommentInput sẽ tự clear sau khi onSubmit xong (theo code của bạn)
     } catch (error) {
       console.error('Failed to submit comment:', error);
     } finally {
@@ -64,18 +76,11 @@ export default function CommentSection({
 
       {/* Danh sách bình luận */}
       <div className="space-y-4">
-        {comments.length > 0 ? (
-          comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              onLike={onLikeComment}
-              onReply={onReplyComment}
-            />
-          ))
-        ) : (
-          <p className="text-center text-gray-500 py-8">{emptyMessage}</p>
-        )}
+        <ListComments
+            targetId={targetId}
+            isCommentOpen={true}
+            parentId={null}
+            targetType={"chapter"}/>
       </div>
 
       {/* Form nhập bình luận */}

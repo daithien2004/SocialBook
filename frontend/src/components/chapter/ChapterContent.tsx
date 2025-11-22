@@ -185,9 +185,10 @@ export function ChapterContent({
                         Tất cả bình luận
                       </h4>
                       <ListComments
-                        post={{ id: para.id } as any}
+                        targetId={para.id}
                         isCommentOpen={true}
                         parentId={null}
+                        targetType={"paragraph"}
                       />
                     </div>
 

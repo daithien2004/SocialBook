@@ -83,11 +83,11 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                 {/* Trái: ảnh lớn */}
                 <div className="hidden md:block md:w-[50%] bg-black">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={post.imageUrls[0]}
-                    alt="Post"
-                    className="w-full h-full object-contain bg-black"
-                  />
+                  {/*<img*/}
+                  {/*  src={post?.imageUrls[0]}*/}
+                  {/*  alt="Post"*/}
+                  {/*  className="w-full h-full object-contain bg-black"*/}
+                  {/*/>*/}
                 </div>
 
                 {/* Phải: comment column */}
@@ -115,9 +115,10 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
 
                   {/* Danh sách comment */}
                   <ListComments
-                    post={post}
-                    isCommentOpen={isCommentOpen}
-                    parentId={null}
+                      targetId={post.id}
+                      isCommentOpen={isCommentOpen}
+                      parentId={null}
+                      targetType={"post"}
                   />
 
                   {/* 🔻 ĐOẠN BẠN MUỐN ĐỂ NGOÀI LISTCOMMENTS */}

@@ -6,17 +6,17 @@ import {
     CommentItem,
     useLazyGetCommentsByTargetQuery,
 } from "@/src/features/comments/api/commentApi";
-import {Post} from "@/src/features/posts/types/post.interface";
 import CommentItemCard from "@/src/components/comment/CommentItem";
 
 interface ListCommentsProps {
-    post: Post;
+    targetId: string
     isCommentOpen: boolean;
     parentId: string | null;
+    targetType: string;
 }
 
 const ListComments:React.FC<ListCommentsProps> = (props) => {
-    const { post, isCommentOpen, parentId} = props;
+    const {isCommentOpen, parentId, targetId, targetType} = props;
 
     const [cursor, setCursor] = useState<string | undefined>(undefined);
     const [allComments, setAllComments] = useState<CommentItem[]>([]);
@@ -30,12 +30,12 @@ const ListComments:React.FC<ListCommentsProps> = (props) => {
 
     useEffect(() => {
         if (!isCommentOpen) return;
-        if (isCommentOpen && post?.id) {
+        if (isCommentOpen && targetId) {
             setAllComments([]);
             setCursor(undefined);
-            fetchComments({ targetId: post.id, parentId, limit: 20 });
+            fetchComments({ targetId: targetId, parentId, limit: 20 });
         }
-    }, [isCommentOpen, post.id, parentId, fetchComments]);
+    }, [isCommentOpen, targetId, parentId, fetchComments]);
 
     useEffect(() => {
         if (data?.items) {
@@ -45,9 +45,9 @@ const ListComments:React.FC<ListCommentsProps> = (props) => {
     }, [data]);
 
     const handleLoadMore = () => {
-        if (cursor && post?.id) {
+        if (cursor && targetId) {
             fetchComments({
-                targetId: post.id,
+                targetId: targetId,
                 parentId,
                 cursor,
                 limit: 20,
@@ -74,8 +74,9 @@ const ListComments:React.FC<ListCommentsProps> = (props) => {
                         allComments.map((c) => (
                             <CommentItemCard
                                 key={c.id}
+                                targetType = {targetType}
                                 comment={c}
-                                post={post}
+                                targetId={targetId}
                             />
                         ))
                     ) : (
