@@ -12,11 +12,7 @@ export async function GET(
       NESTJS_POSTS_ENDPOINTS.getOne(params.id)
     );
 
-    return NextResponse.json({
-      success: true,
-      statusCode: 200,
-      data: response.data,
-    });
+    return NextResponse.json(response.data);
   } catch (error: any) {
     return NextResponse.json(
       {

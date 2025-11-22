@@ -1,0 +1,270 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import {
+  X,
+  Plus,
+  Check,
+  Lock,
+  Globe,
+  Bookmark,
+  Clock,
+  Archive,
+} from 'lucide-react';
+
+// API Hooks
+import {
+  useGetCollectionsQuery,
+  useCreateCollectionMutation,
+  useUpdateLibraryStatusMutation,
+  useAddBookToCollectionsMutation,
+} from '@/src/features/library/api/libraryApi';
+import { LibraryStatus } from '@/src/features/library/types/library.interface';
+
+interface AddToLibraryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  bookId: string;
+  // Dữ liệu ban đầu (nếu có) để hiển thị trạng thái hiện tại của sách
+  initialStatus?: LibraryStatus;
+  initialCollectionIds?: string[];
+}
+
+export default function AddToLibraryModal({
+  isOpen,
+  onClose,
+  bookId,
+  initialStatus,
+  initialCollectionIds = [],
+}: AddToLibraryModalProps) {
+  // --- STATE ---
+  // Trạng thái chính (Đọc/Muốn đọc/Lưu trữ)
+  const [selectedStatus, setSelectedStatus] = useState<LibraryStatus | null>(
+    initialStatus || null
+  );
+  // Danh sách folder đã chọn
+  const [selectedCollections, setSelectedCollections] =
+    useState<string[]>(initialCollectionIds);
+  // Tạo folder mới
+  const [isCreating, setIsCreating] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+
+  // --- API HOOKS ---
+  const { data: collectionsData } = useGetCollectionsQuery();
+  const [updateStatus] = useUpdateLibraryStatusMutation();
+  const [updateCollections] = useAddBookToCollectionsMutation();
+  const [createCollection] = useCreateCollectionMutation();
+
+  const collections = collectionsData || [];
+
+  // Reset state khi mở modal
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedStatus(initialStatus || null);
+      setSelectedCollections(initialCollectionIds);
+      setIsCreating(false);
+      setNewCollectionName('');
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  // --- HANDLERS ---
+
+  // 1. Xử lý thay đổi trạng thái chính (Tabs hệ thống)
+  const handleStatusChange = async (status: LibraryStatus) => {
+    // Nếu bấm vào cái đang chọn -> Bỏ chọn (Xóa khỏi thư viện) - Logic nâng cao
+    // Ở đây mình làm đơn giản: Bấm là chọn
+    setSelectedStatus(status);
+    try {
+      await updateStatus({ bookId, status }).unwrap();
+    } catch (error) {
+      console.error('Lỗi update status', error);
+    }
+  };
+
+  // 2. Xử lý check/uncheck folder
+  const handleToggleCollection = async (collectionId: string) => {
+    const isSelected = selectedCollections.includes(collectionId);
+    let newIds: string[] = [];
+
+    if (isSelected) {
+      newIds = selectedCollections.filter((id) => id !== collectionId);
+    } else {
+      newIds = [...selectedCollections, collectionId];
+    }
+
+    // Cập nhật UI ngay lập tức (Optimistic)
+    setSelectedCollections(newIds);
+
+    // Gọi API
+    try {
+      await updateCollections({ bookId, collectionIds: newIds }).unwrap();
+    } catch (error) {
+      // Revert nếu lỗi
+      setSelectedCollections(selectedCollections);
+      console.error('Lỗi update collection', error);
+    }
+  };
+
+  // 3. Tạo folder mới ngay trong modal
+  const handleCreateCollection = async () => {
+    if (!newCollectionName.trim()) return;
+    try {
+      // Tạo xong trả về collection mới
+      const res = await createCollection({ name: newCollectionName }).unwrap();
+      const newColId = res.id;
+
+      // Tự động tick chọn folder vừa tạo
+      await handleToggleCollection(newColId);
+
+      setNewCollectionName('');
+      setIsCreating(false);
+    } catch (error) {
+      console.error('Lỗi tạo folder', error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div
+        className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <h3 className="font-bold text-gray-900">Lưu vào thư viện</h3>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <X size={20} className="text-gray-500" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-4 space-y-6">
+          {/* SECTION 1: Trạng thái chính */}
+          <div className="grid grid-cols-3 gap-2">
+            <StatusButton
+              active={selectedStatus === LibraryStatus.READING}
+              onClick={() => handleStatusChange(LibraryStatus.READING)}
+              icon={Clock}
+              label="Đang đọc"
+              color="text-blue-600 bg-blue-50 border-blue-200"
+            />
+            <StatusButton
+              active={selectedStatus === LibraryStatus.PLAN_TO_READ}
+              onClick={() => handleStatusChange(LibraryStatus.PLAN_TO_READ)}
+              icon={Bookmark}
+              label="Muốn đọc"
+              color="text-yellow-600 bg-yellow-50 border-yellow-200"
+            />
+            <StatusButton
+              active={selectedStatus === LibraryStatus.ARCHIVED}
+              onClick={() => handleStatusChange(LibraryStatus.ARCHIVED)}
+              icon={Archive}
+              label="Lưu trữ"
+              color="text-gray-600 bg-gray-100 border-gray-200"
+            />
+          </div>
+
+          {/* SECTION 2: Danh sách Folder */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">
+              Bộ sưu tập của tôi
+            </h4>
+            <div className="space-y-1">
+              {collections.map((col) => (
+                <button
+                  key={col.id}
+                  onClick={() => handleToggleCollection(col.id)}
+                  className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors group"
+                >
+                  <div
+                    className={`
+                    w-5 h-5 rounded border flex items-center justify-center transition-colors
+                    ${
+                      selectedCollections.includes(col.id)
+                        ? 'bg-blue-600 border-blue-600 text-white'
+                        : 'border-gray-300 group-hover:border-blue-400'
+                    }
+                  `}
+                  >
+                    {selectedCollections.includes(col.id) && (
+                      <Check size={14} strokeWidth={3} />
+                    )}
+                  </div>
+                  <span className="text-gray-700 text-sm flex-1 text-left truncate">
+                    {col.name}
+                  </span>
+                  {col.isPublic ? (
+                    <Globe size={14} className="text-gray-400" />
+                  ) : (
+                    <Lock size={14} className="text-gray-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* SECTION 3: Tạo Folder Mới */}
+          {isCreating ? (
+            <div className="flex gap-2 animate-in fade-in slide-in-from-top-2">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Tên danh sách..."
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:border-blue-500"
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateCollection()}
+              />
+              <button
+                onClick={handleCreateCollection}
+                className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+              >
+                Tạo
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsCreating(true)}
+              className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:underline"
+            >
+              <Plus size={16} /> Tạo danh sách mới
+            </button>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-gray-100 bg-gray-50">
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+          >
+            Xong
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Sub-component cho nút trạng thái
+function StatusButton({ active, onClick, icon: Icon, label, color }: any) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex flex-col items-center justify-center gap-1 p-2 rounded-lg border transition-all
+        ${
+          active
+            ? color
+            : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+        }
+      `}
+    >
+      <Icon size={20} className={active ? 'fill-current opacity-20' : ''} />
+      <span className="text-xs font-medium">{label}</span>
+    </button>
+  );
+}

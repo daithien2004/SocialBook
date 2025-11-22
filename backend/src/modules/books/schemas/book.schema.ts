@@ -5,6 +5,8 @@ export type BookDocument = Book & Document;
 
 @Schema({ timestamps: true }) // tự sinh createdAt, updatedAt
 export class Book {
+  _id: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Author', required: true })
   authorId: Types.ObjectId;
 

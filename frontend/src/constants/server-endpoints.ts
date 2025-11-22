@@ -31,15 +31,21 @@ export const NESTJS_BOOKS_ENDPOINTS = {
 
 export const NESTJS_CHAPTERS_ENDPOINTS = {
   // Public endpoints
-  getChapterBySlug: (bookSlug: string, chapterSlug: string) => `/books/${bookSlug}/chapters/${chapterSlug}`,
+  getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
+    `/books/${bookSlug}/chapters/${chapterSlug}`,
   getChapters: (bookSlug: string) => `/books/${bookSlug}/chapters`,
-  getChapterById: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/id/${chapterId}`,
+  getChapterById: (bookSlug: string, chapterId: string) =>
+    `/books/${bookSlug}/chapters/id/${chapterId}`,
   createChapter: (bookSlug: string) => `/books/${bookSlug}/chapters`,
-  updateChapter: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
-  deleteChapter: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
+  updateChapter: (bookSlug: string, chapterId: string) =>
+    `/books/${bookSlug}/chapters/${chapterId}`,
+  deleteChapter: (bookSlug: string, chapterId: string) =>
+    `/books/${bookSlug}/chapters/${chapterId}`,
   // Admin-specific endpoints
-  updateChapterAdmin: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
-  deleteChapterAdmin: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}`,
+  updateChapterAdmin: (bookSlug: string, chapterId: string) =>
+    `/books/${bookSlug}/chapters/${chapterId}`,
+  deleteChapterAdmin: (bookSlug: string, chapterId: string) =>
+    `/books/${bookSlug}/chapters/${chapterId}`,
 };
 
 export const NESTJS_POSTS_ENDPOINTS = {
@@ -51,4 +57,24 @@ export const NESTJS_POSTS_ENDPOINTS = {
   deletePermanent: (id: string) => `/posts/${id}/permanent`,
   deleteHard: (id: string) => `/posts/${id}/permanent`,
   deleteImage: (id: string) => `/posts/${id}/images`,
+};
+
+export const NESTJS_REVIEWS_ENDPOINTS = {
+  create: '/reviews',
+  getByBook: (bookId: string) => `/reviews/book/${bookId}`,
+  update: (id: string) => `/reviews/${id}`,
+  delete: (id: string) => `/reviews/${id}`,
+};
+
+export const NESTJS_LIBRARY_ENDPOINTS = {
+  // Library System
+  getLibrary: '/library',
+  updateStatus: '/library/status',
+  updateProgress: '/library/progress',
+  updateBookCollections: '/library/collections',
+  removeBook: (bookId: string) => `/library/${bookId}`,
+
+  // Collections System (Folder)
+  collections: '/collections', // GET, POST
+  collectionDetail: (id: string) => `/collections/${id}`,
 };

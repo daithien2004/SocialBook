@@ -61,7 +61,6 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
 
     try {
       await createPost({
-        userId: user?.id,
         bookId,
         content,
         images,

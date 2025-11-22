@@ -26,12 +26,12 @@ import { Public } from '@/src/common/decorators/customize';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) { }
+  constructor(private readonly postsService: PostsService) {}
 
   @Post()
   @UseInterceptors(FilesInterceptor('images', 10)) // 'images' field, max 10 files
   async create(
-    @Body('userId') userId: string,
+    @Request() req: any,
     @Body('bookId') bookId: string,
     @Body('content') content: string,
     @UploadedFiles(
@@ -48,7 +48,7 @@ export class PostsController {
       throw new BadRequestException('Maximum 10 images allowed');
     }
 
-    console.log(files);
+    const userId = req.user.id;
 
     const createPostDto: CreatePostDto = {
       userId,
@@ -63,7 +63,7 @@ export class PostsController {
   @Get()
   async findAll(@Query() query: PaginationDto) {
     // Giới hạn limit để tránh query quá nhiều data
-    console.log("ssssss")
+    console.log('ssssss');
     if (query.limit > 100) {
       throw new BadRequestException('Limit cannot exceed 100');
     }

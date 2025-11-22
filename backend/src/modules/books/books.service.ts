@@ -28,7 +28,7 @@ export class BooksService {
   ) {}
 
   // PRIVATE HELPER: Lấy chi tiết book với chapters, reviews, ratings
-  private async findBookWithDetails(book: any) {
+  private async findBookWithDetails(book: Book) {
     // Lấy chapters
     const chapters = await this.chapterModel
       .find({ bookId: book._id })
@@ -108,6 +108,13 @@ export class BooksService {
 
     if (!book) {
       throw new NotFoundException(`Book with slug "${slug}" not found`);
+    }
+
+    await this.bookModel.updateOne({ _id: book._id }, { $inc: { views: 1 } });
+    if (book.views !== undefined) {
+      book.views += 1;
+    } else {
+      book.views = 1;
     }
 
     return this.findBookWithDetails(book);

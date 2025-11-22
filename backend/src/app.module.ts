@@ -23,6 +23,7 @@ import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.modu
 import { LikesModule } from '@/src/modules/likes/likes.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { GenresModule } from './modules/genres/genres.module';
+import { LibraryModule } from './modules/library/library.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { GenresModule } from './modules/genres/genres.module';
         limit: 10,
       },
     ]),
+    LibraryModule,
     RolesModule,
     ReviewsModule,
     TextToSpeechModule,
