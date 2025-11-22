@@ -11,11 +11,12 @@ import {
 
 interface CommentItemProps {
     comment: CommentItemType;
-    post: Post;
+    targetId: string
+    targetType: string
 }
 
 const CommentItemCard: React.FC<CommentItemProps> = (props) => {
-    const { comment, post } = props;
+    const { comment, targetId ,targetType} = props;
 
     const [showReplies, setShowReplies] = useState(false);
     const [isReplying, setIsReplying] = useState(false);
@@ -45,12 +46,12 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
         // chỉ gọi nếu chưa resolve lần nào
         if (!resolvedData) {
             triggerResolveParent({
-                targetId: post.id,
+                targetId: targetId,
                 parentId: comment.id,
-                targetType: "post",
+                targetType: targetType,
             });
         }
-    }, [showReplies, triggerResolveParent, post.id, comment.id, resolvedData]);
+    }, [showReplies, triggerResolveParent, targetId, comment.id, resolvedData, targetType]);
 
     // parentId chuẩn (dùng BE trả về, fallback comment.id cho chắc)
     const effectiveParentId = resolvedData?.parentId ?? comment.id;
@@ -62,8 +63,8 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
 
         try {
             await createComment({
-                targetType: "post",
-                targetId: post.id,
+                targetType: targetType,
+                targetId: targetId,
                 content,
                 parentId: effectiveParentId,
             }).unwrap();
@@ -82,7 +83,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
                 targetId: comment.id,
                 targetType: "comment",
                 parentId: comment.parentId,
-                postId: post.id,
+                postId: targetId,
             }).unwrap();
         } catch (e) {
             console.error("Like comment failed:", e);
@@ -90,17 +91,17 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
     };
 
     return (
-        <div className="flex items-start gap-3">
+        <div className="flex items-start justify-start gap-2">
             <img
-                src={comment.user?.image ?? ""}
-                alt=""
+                src={comment.user?.image ?? "Hehe"}
+                alt="HeHe"
                 className="w-7 h-7 rounded-full"
             />
 
             <div>
                 {/* Nội dung comment */}
-                <div className="bg-gray-50 rounded-xl px-3 py-2">
-                    <p className="text-sm">
+                <div className="bg-gray-100 rounded-xl px-3 py-2">
+                    <p className="text-sm text-black">
             <span className="font-semibold mr-2">
               {comment.user?.username}
             </span>
@@ -151,9 +152,10 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
               */}
                             {resolvedData && level !== 3 && (
                                 <ListComments
-                                    post={post}
+                                    targetId = {targetId}
                                     isCommentOpen={true}
                                     parentId={effectiveParentId}
+                                    targetType = {targetType}
                                 />
                             )}
 
@@ -164,7 +166,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
                                     <input
                                         type="text"
                                         placeholder="Trả lời..."
-                                        className="flex-1 border border-gray-300 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="flex-1 border text-black border-gray-300 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         value={replyText}
                                         onChange={(e) => setReplyText(e.target.value)}
                                     />

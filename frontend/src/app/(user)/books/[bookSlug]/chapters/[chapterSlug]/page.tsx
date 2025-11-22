@@ -159,21 +159,21 @@ export default function ChapterPage({ params }: ChapterPageProps) {
         bookTitle={book.title}
       />
 
-      <CommentSection
-        comments={chapterComments}
-        targetId={chapter.id}
-        targetType="chapter"
-        onSubmitComment={handleSubmitComment}
-        onLikeComment={handleLikeComment}
-        onReplyComment={handleReplyComment}
-      />
-
       <ChapterNavigation
         variant="bottom"
         hasPrevious={!!navigation?.previous}
         hasNext={!!navigation?.next}
         onPrevious={handlePrevious}
         onNext={handleNext}
+      />
+
+      <CommentSection
+          comments={chapterComments}
+          targetId={chapter.id}
+          targetType="chapter"
+          onSubmitComment={handleSubmitComment}
+          onLikeComment={handleLikeComment}
+          onReplyComment={handleReplyComment}
       />
 
       {/* Table of Contents Modal */}
