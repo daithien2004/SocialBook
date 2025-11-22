@@ -191,25 +191,24 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Email Input with Floating Label */}
+            {/* Email Input - Label luôn ở trên */}
             <div className="relative">
-              <input
-                id="email"
-                type="email"
-                {...register('email')}
-                className="peer appearance-none block w-full px-4 pt-6 pb-2 border border-gray-300 rounded-xl placeholder-transparent text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 shadow-sm"
-                placeholder="Email"
-              />
               <label
                 htmlFor="email"
-                className={`absolute left-4 transition-all duration-200 pointer-events-none
-                  ${emailValue
-                    ? '-top-2 text-xs bg-white px-1 text-indigo-600'
-                    : 'top-1/2 -translate-y-1/2 text-sm text-gray-500'}
-                  peer-focus:-top-1 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-indigo-600`}
+                className="absolute left-4 -top-2.5 bg-white px-2 text-xs font-medium text-indigo-600 pointer-events-none"
               >
                 Email
               </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="username"
+                {...register('email')}
+                className="block w-full px-4 pt-5 pb-3 border border-gray-300 rounded-xl text-gray-900 
+               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
+               transition-all duration-200 shadow-sm placeholder-gray-400"
+                placeholder="lythung10nctop95@gmail.com"
+              />
               {errors.email && (
                 <p className="text-sm text-red-500 mt-1 animate-fade-in">
                   {errors.email.message}
@@ -217,29 +216,28 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password Input with Floating Label */}
+            {/* Password Input - Label luôn ở trên */}
             <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                {...register('password')}
-                className="peer appearance-none block w-full px-4 pt-6 pb-2 pr-12 border border-gray-300 rounded-xl placeholder-transparent text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 shadow-sm"
-                placeholder="Mật khẩu"
-              />
               <label
                 htmlFor="password"
-                className={`absolute left-4 transition-all duration-200 pointer-events-none
-                  ${passwordValue
-                    ? '-top-2 text-xs bg-white px-1 text-indigo-600'
-                    : 'top-1/2 -translate-y-1/2 text-sm text-gray-500'}
-                  peer-focus:-top-1 peer-focus:text-xs peer-focus:bg-white peer-focus:px-1 peer-focus:text-indigo-600`}
+                className="absolute left-4 -top-2.5 bg-white px-2 text-xs font-medium text-indigo-600 pointer-events-none"
               >
                 Mật khẩu
               </label>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                {...register('password')}
+                className="block w-full px-4 pt-5 pb-3 pr-12 border border-gray-300 rounded-xl text-gray-900 
+               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
+               transition-all duration-200 shadow-sm"
+                placeholder="••••••••"
+              />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors z-10"
               >
                 {showPassword ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

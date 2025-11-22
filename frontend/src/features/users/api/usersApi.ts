@@ -1,0 +1,27 @@
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { axiosBaseQuery } from '@/src/lib/client-api';
+import { UserListResponse } from '../types/user.types';
+
+export const usersApi = createApi({
+    reducerPath: 'usersApi',
+    baseQuery: axiosBaseQuery(),
+    tagTypes: ['Users'],
+    endpoints: (builder) => ({
+        getUsers: builder.query<UserListResponse, string>({
+            query: (query) => ({
+                url: `/admin/users?${query}`,
+                method: 'GET',
+            }),
+            providesTags: ['Users'],
+        }),
+        banUser: builder.mutation<void, string>({
+            query: (id) => ({
+                url: `/admin/users/${id}/ban`,
+                method: 'PATCH',
+            }),
+            invalidatesTags: ['Users'],
+        }),
+    }),
+});
+
+export const { useGetUsersQuery, useBanUserMutation } = usersApi;
