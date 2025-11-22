@@ -6,9 +6,10 @@ import { booksApi } from '../features/books/api/bookApi';
 import { commentApi } from '@/src/features/comments/api/commentApi';
 import { chaptersApi } from '../features/chapters/api/chaptersApi';
 import { bookRelationApi } from '../features/admin/api/bookRelationApi';
-import {followApi} from "@/src/features/follows/api/followApi";
+import { followApi } from "@/src/features/follows/api/followApi";
 import { reviewApi } from '../features/reviews/api/reviewApi';
 import { libraryApi } from '../features/library/api/libraryApi';
+import { usersApi } from '../features/users/api/usersApi';
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     [bookRelationApi.reducerPath]: bookRelationApi.reducer,
     [reviewApi.reducerPath]: reviewApi.reducer,
     [libraryApi.reducerPath]: libraryApi.reducer,
+    [usersApi.reducerPath]: usersApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -33,7 +35,8 @@ export const store = configureStore({
       .concat(bookRelationApi.middleware)
       .concat(reviewApi.middleware)
       .concat(libraryApi.middleware)
-	  .concat(followApi.middleware),
+      .concat(followApi.middleware)
+      .concat(usersApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -135,6 +135,7 @@ export const {
   useGetChaptersQuery,
   useGetAdminChaptersQuery,
   useGetChapterByIdQuery,
+  useLazyGetChapterByIdQuery,
   useCreateChapterMutation,
   useUpdateChapterMutation,
   useDeleteChapterMutation,

@@ -12,13 +12,9 @@ import { UsersService } from '../users/users.service';
 import { ConfigService } from '@nestjs/config';
 import { OtpService } from '../otp/otp.service';
 import { SignupGoogleDto, SignupLocalDto } from './dto/auth.dto';
-
-// FORMAT CHUẨN cho mỗi method:
-// 1. Input validation
-// 2. Business rules validation
-// 3. Execute business logic
-// 4. Side effects (logging, events, etc.)
-// 5. Return formatted response
+import { Role, RoleDocument } from '../roles/schemas/role.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +23,8 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private otpService: OtpService,
-  ) {}
+    @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
+  ) { }
 
   async login(user: any) {
     // VALIDATION
@@ -77,8 +74,17 @@ export class AuthService {
     // VALIDATION
     const user = await this.usersService.findByEmail(dto.email);
     if (user) {
+      if (!user.isVerified) {
+        // If user exists but is not verified, allow resending OTP
+        // Optionally update user details here if needed
+        return await this.sendOtp(dto.email);
+      }
       throw new ConflictException('Email already exists');
     }
+
+    // Fetch default 'user' role
+    const userRole = await this.roleModel.findOne({ name: 'user' });
+    const roleId = userRole?._id;
 
     // EXECUTION
     await this.usersService.create({
@@ -86,6 +92,7 @@ export class AuthService {
       email: dto.email,
       password: dto.password,
       provider: 'local',
+      roleId: roleId as string,
     });
 
     // RETURN

@@ -20,6 +20,9 @@ export class User {
   @Prop({ default: false })
   isVerified: boolean;
 
+  @Prop({ default: false })
+  isBanned: boolean;
+
   // Thêm field để phân biệt loại đăng nhập
   @Prop({
     type: String,
