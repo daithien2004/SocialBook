@@ -1,8 +1,24 @@
 'use client';
 
-import { useGetBookBySlugQuery } from '@/src/features/books/api/bookApi';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+  useGetBookBySlugQuery,
+  useLikeBookMutation,
+} from '@/src/features/books/api/bookApi';
+import {
+  useGetReviewsByBookQuery,
+  useCreateReviewMutation,
+} from '@/src/features/reviews/api/reviewApi';
+import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
+
+// --- IMPORT MODALS ---
+import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
+import CreatePostModal, {
+  CreatePostData,
+} from '@/src/components/post/CreatePostModal';
+
 import {
   Star,
   Eye,
@@ -12,6 +28,9 @@ import {
   Share2,
   Bookmark,
   Calendar,
+  Send,
+  X,
+  Check,
 } from 'lucide-react';
 
 interface BookDetailClientProps {
@@ -19,9 +38,100 @@ interface BookDetailClientProps {
 }
 
 export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
-  const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });
+  // State cho các modal
+  const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
+  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // Modal chia sẻ
 
-  if (isLoading) {
+  const [ratingInput, setRatingInput] = useState(5);
+  const [contentInput, setContentInput] = useState('');
+
+  // Mutations
+  const [likeBook, { isLoading: isLiking }] = useLikeBookMutation();
+  const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
+
+  // Fetch Book Detail
+  const {
+    data: book,
+    isLoading: isLoadingBook,
+    error,
+  } = useGetBookBySlugQuery({ bookSlug });
+
+  // Fetch Reviews
+  const { data: reviews, isLoading: isLoadingReviews } =
+    useGetReviewsByBookQuery(book?.id as string, { skip: !book?.id });
+
+  // Mutation tạo Review
+  const [createReview, { isLoading: isCreating }] = useCreateReviewMutation();
+
+  // Handle Toggle Like
+  const handleToggleLike = async () => {
+    if (!book?.id) return;
+    try {
+      await likeBook(book.slug).unwrap();
+    } catch (error) {
+      console.error('Lỗi like sách', error);
+    }
+  };
+
+  // Handle Submit Review
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!book?.id) return;
+
+    if (!contentInput.trim()) {
+      alert('Vui lòng nhập nội dung đánh giá');
+      return;
+    }
+
+    try {
+      await createReview({
+        bookId: book.id,
+        content: contentInput,
+        rating: ratingInput,
+      }).unwrap();
+
+      setIsReviewFormOpen(false);
+      setContentInput('');
+      setRatingInput(5);
+      alert('Đánh giá thành công!');
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+      alert('Có lỗi xảy ra khi gửi đánh giá.');
+    }
+  };
+
+  // Handle Share Post
+  const handleSharePost = async (data: CreatePostData) => {
+    if (!book?.id) {
+      throw new Error('Không tìm thấy thông tin sách');
+    }
+
+    try {
+      await createPost({
+        bookId: book.id,
+        content: data.content,
+        images: data.images,
+      }).unwrap();
+    } catch (error: any) {
+      throw new Error(error?.data?.message || 'Không thể tạo bài viết');
+    }
+  };
+
+  // Nội dung mặc định cho bài chia sẻ
+  const defaultShareContent = book
+    ? `📚 ${book.title}
+✍️ Tác giả: ${book.authorId.name}
+⭐ Đánh giá: ${book.averageRating || 0}/5 (${book.totalRatings || 0} đánh giá)
+👁️ ${book.views?.toLocaleString()} lượt xem
+
+${book.description}
+
+#${book.title.replace(/\s+/g, '')} #${book.authorId.name.replace(/\s+/g, '')}`
+    : '';
+
+  // Loading Skeleton
+  if (isLoadingBook) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -40,6 +150,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     );
   }
 
+  // Error State
   if (error || !book) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -55,8 +166,9 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     );
   }
 
-  // Calculate rating from reviews
-  const rating = book.reviews.length > 0 ? 4.5 : 0;
+  // Data hiển thị
+  const displayRating = book.averageRating || 0;
+  const displayTotalRatings = book.totalRatings || reviews?.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,15 +205,15 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <div className="flex flex-wrap gap-4 mb-6 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Eye size={16} />
-                  <span>{book.views.toLocaleString()} lượt xem</span>
+                  <span>{book.views?.toLocaleString()} lượt xem</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Heart size={16} />
-                  <span>{book.likes.toLocaleString()} yêu thích</span>
+                  <span>{book.likes?.toLocaleString()} yêu thích</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <BookOpen size={16} />
-                  <span>{book.chapters.length} chương</span>
+                  <span>{book.chapters?.length || 0} chương</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar size={16} />
@@ -111,9 +223,9 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
 
               {/* Genres & Status */}
               <div className="flex flex-wrap gap-2 mb-6">
-                {book.genres.map((genre) => (
+                {book.genres?.map((genre: any) => (
                   <span
-                    key={genre.id}
+                    key={genre._id || genre.id}
                     className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
                   >
                     {genre.name}
@@ -133,7 +245,8 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3">
-                {book.chapters.length > 0 && (
+                {/* Nút Đọc Ngay */}
+                {book.chapters?.length > 0 && (
                   <Link
                     href={`/books/${bookSlug}/chapters/${book.chapters[0].slug}`}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
@@ -142,14 +255,39 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                     Đọc ngay
                   </Link>
                 )}
-                <button className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors">
-                  <Heart size={20} />
-                  Yêu thích
-                </button>
-                <button className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition-colors">
+
+                {/* Nút Thêm vào Thư Viện */}
+                <button
+                  onClick={() => setIsLibraryModalOpen(true)}
+                  className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
+                >
                   <Bookmark size={20} />
+                  Thêm vào thư viện
                 </button>
-                <button className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition-colors">
+
+                {/* Nút Yêu thích (Like) */}
+                <button
+                  onClick={handleToggleLike}
+                  disabled={isLiking}
+                  className={`flex items-center gap-2 border px-4 py-3 rounded-lg transition-colors ${
+                    book.isLiked
+                      ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+                      : 'border-gray-300 hover:bg-gray-50 text-gray-700'
+                  }`}
+                  title={book.isLiked ? 'Bỏ thích' : 'Yêu thích'}
+                >
+                  <Heart
+                    size={20}
+                    className={book.isLiked ? 'fill-current' : ''}
+                  />
+                </button>
+
+                {/* Nút Share - CẬP NHẬT */}
+                <button
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition-colors"
+                  title="Chia sẻ sách"
+                >
                   <Share2 size={20} />
                 </button>
               </div>
@@ -162,17 +300,19 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
           <div className="bg-white rounded-lg p-6 text-center shadow-sm">
             <div className="flex items-center justify-center gap-1 mb-2">
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-              <span className="text-2xl font-bold text-gray-900">{rating}</span>
+              <span className="text-2xl font-bold text-gray-900">
+                {displayRating}
+              </span>
             </div>
             <p className="text-sm text-gray-600">
-              {book.reviews.length} đánh giá
+              {displayTotalRatings} đánh giá
             </p>
           </div>
 
           <div className="bg-white rounded-lg p-6 text-center shadow-sm">
             <Eye className="w-6 h-6 text-blue-500 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">
-              {formatNumber(book.views)}
+              {book.views?.toLocaleString()}
             </p>
             <p className="text-sm text-gray-600">Lượt xem</p>
           </div>
@@ -180,7 +320,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
           <div className="bg-white rounded-lg p-6 text-center shadow-sm">
             <Heart className="w-6 h-6 text-red-500 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">
-              {formatNumber(book.likes)}
+              {book.likes?.toLocaleString()}
             </p>
             <p className="text-sm text-gray-600">Yêu thích</p>
           </div>
@@ -188,7 +328,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
           <div className="bg-white rounded-lg p-6 text-center shadow-sm">
             <BookOpen className="w-6 h-6 text-green-500 mx-auto mb-2" />
             <p className="text-2xl font-bold text-gray-900">
-              {book.chapters.length}
+              {book.chapters?.length || 0}
             </p>
             <p className="text-sm text-gray-600">Chương</p>
           </div>
@@ -208,62 +348,186 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                   Cuốn sách "{book.title}" của tác giả {book.authorId.name} mang
                   đến một câu chuyện đầy cảm xúc và ý nghĩa. Đây là một trong
                   những tác phẩm tiêu biểu thuộc thể loại{' '}
-                  {book.genres.map((g) => g.name).join(', ')}.
+                  {book.genres?.map((g: any) => g.name).join(', ')}.
                 </p>
               </div>
             </div>
 
-            {/* reviews */}
+            {/* REVIEWS SECTION */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Đánh giá ({book.reviews.length})
+                  Đánh giá ({reviews?.length})
                 </h2>
-                <button className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
-                  <MessageCircle size={18} />
-                  Viết đánh giá
-                </button>
+                {!isReviewFormOpen && (
+                  <button
+                    onClick={() => setIsReviewFormOpen(true)}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
+                  >
+                    <MessageCircle size={18} />
+                    Viết đánh giá
+                  </button>
+                )}
               </div>
 
-              <div className="space-y-6">
-                {book.reviews.slice(0, 5).map((review) => (
-                  <div
-                    key={review.id}
-                    className="border-b border-gray-100 pb-6 last:border-0"
-                  >
-                    <div className="flex gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-none">
-                        <span className="text-gray-600 font-semibold text-sm">
-                          U
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold text-gray-900">
-                            User
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {new Date(review.createdAt).toLocaleDateString(
-                              'vi-VN'
-                            )}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 mb-2">{review.content}</p>
-                        <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500">
-                          <Heart size={14} />
-                          <span>{review.likesCount}</span>
-                        </button>
+              {/* FORM VIẾT REVIEW */}
+              {isReviewFormOpen && (
+                <div className="mb-8 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-gray-800">
+                      Viết đánh giá của bạn
+                    </h3>
+                    <button
+                      onClick={() => setIsReviewFormOpen(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSubmitReview}>
+                    <div className="mb-4">
+                      <label className="block text-sm text-gray-600 mb-2">
+                        Chấm điểm:
+                      </label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRatingInput(star)}
+                            className="focus:outline-none transition-transform hover:scale-110"
+                          >
+                            <Star
+                              size={24}
+                              className={`${
+                                star <= ratingInput
+                                  ? 'text-yellow-400 fill-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          </button>
+                        ))}
                       </div>
                     </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm text-gray-600 mb-2">
+                        Nội dung:
+                      </label>
+                      <textarea
+                        value={contentInput}
+                        onChange={(e) => setContentInput(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        rows={4}
+                        placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..."
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsReviewFormOpen(false)}
+                        className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        Hủy
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isCreating}
+                        className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+                      >
+                        {isCreating ? (
+                          'Đang gửi...'
+                        ) : (
+                          <>
+                            <Send size={18} /> Gửi đánh giá
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* DANH SÁCH REVIEW */}
+              <div className="space-y-6">
+                {isLoadingReviews ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Đang tải đánh giá...
                   </div>
-                ))}
+                ) : reviews?.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 italic">
+                    Chưa có đánh giá nào. Hãy là người đầu tiên!
+                  </div>
+                ) : (
+                  reviews?.map((review: any) => (
+                    <div
+                      key={review.id || review._id}
+                      className="border-b border-gray-100 pb-6 last:border-0"
+                    >
+                      <div className="flex gap-3">
+                        <div className="flex-none">
+                          {review.userId?.image ? (
+                            <div className="w-10 h-10 relative rounded-full overflow-hidden">
+                              <Image
+                                src={review.userId.image}
+                                alt={review.userId.username}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-gray-600 font-semibold text-sm">
+                                {review.userId?.username?.[0]?.toUpperCase() ||
+                                  'U'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-semibold text-gray-900">
+                              {review.userId?.username || 'Unknown User'}
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {new Date(review.createdAt).toLocaleDateString(
+                                'vi-VN'
+                              )}
+                            </span>
+                            <div className="flex items-center ml-2">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  size={12}
+                                  className={
+                                    i < review.rating
+                                      ? 'text-yellow-400 fill-yellow-400'
+                                      : 'text-gray-300'
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mb-2">{review.content}</p>
+                          <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500">
+                            <Heart size={14} />
+                            <span>{review.likesCount || 0}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Book Info */}
+            {/* Book Info Sidebar */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="font-bold text-gray-900 mb-4">Thông tin</h3>
               <div className="space-y-3 text-sm">
@@ -278,7 +542,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Số chương:</span>
                   <span className="font-semibold text-gray-900">
-                    {book.chapters.length}
+                    {book.chapters?.length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -297,11 +561,11 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
             </div>
 
             {/* Tags */}
-            {book.tags.length > 0 && (
+            {book.tags?.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h3 className="font-bold text-gray-900 mb-4">Tags</h3>
                 <div className="flex flex-wrap gap-2">
-                  {book.tags.map((tag) => (
+                  {book.tags.map((tag: string) => (
                     <span
                       key={tag}
                       className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors cursor-pointer"
@@ -318,11 +582,11 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <h3 className="font-bold text-gray-900 mb-4">Chương mới nhất</h3>
               <div className="space-y-3">
                 {book.chapters
-                  .slice(-5)
+                  ?.slice(-5)
                   .reverse()
-                  .map((chapter) => (
+                  .map((chapter: any) => (
                     <Link
-                      key={chapter.id}
+                      key={chapter.id || chapter._id}
                       href={`/books/${bookSlug}/chapters/${chapter.slug}`}
                       className="block p-3 rounded-lg hover:bg-gray-50 transition-colors group"
                     >
@@ -343,16 +607,30 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
           </div>
         </div>
       </div>
+
+      {/* --- MODAL THƯ VIỆN --- */}
+      {book && (
+        <AddToLibraryModal
+          isOpen={isLibraryModalOpen}
+          onClose={() => setIsLibraryModalOpen(false)}
+          bookId={book.id}
+        />
+      )}
+
+      {/* --- MODAL CHIA SẺ SÁCH --- */}
+      {book && (
+        <CreatePostModal
+          isSubmitting={isCreatingPost}
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          onSubmit={handleSharePost}
+          defaultContent={defaultShareContent}
+          title={`Chia sẻ sách "${book.title}"`}
+          contentLabel="Nội dung bài viết"
+          contentPlaceholder="Chia sẻ suy nghĩ của bạn về cuốn sách này..."
+          maxImages={10}
+        />
+      )}
     </div>
   );
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
-  }
-  return num.toString();
 }

@@ -27,6 +27,7 @@ export const BFF_BOOKS_ENDPOINTS = {
   updateBook: (bookId: string) => `/admin/books/id/${bookId}`,
   deleteBook: (bookId: string) => `/admin/books/id/${bookId}`,
   getAllForAdmin: '/admin/books',
+  like: (bookSlug: string) => `/books/${bookSlug}/like`,
 };
 
 export const BFF_COMMENTS_ENDPOINTS = {
@@ -56,4 +57,24 @@ export const BFF_CHAPTERS_ENDPOINTS = {
     `/admin/books/${bookSlug}/chapters/${chapterId}`,
   deleteChapter: (bookSlug: string, chapterId: string) =>
     `/admin/books/${bookSlug}/chapters/${chapterId}`,
+};
+
+export const BFF_REVIEWS_ENDPOINTS = {
+  create: '/reviews',
+  getByBook: (bookId: string) => `/reviews/book/${bookId}`,
+  update: (id: string) => `/reviews/${id}`,
+  delete: (id: string) => `/reviews/${id}`,
+};
+
+export const BFF_LIBRARY_ENDPOINTS = {
+  // Library System
+  getLibrary: '/library', // GET ?status=...
+  updateStatus: '/library/status', // POST
+  updateProgress: '/library/progress', // PATCH
+  updateBookCollections: '/library/collections', // PATCH
+  removeBook: (bookId: string) => `/library/${bookId}`, // DELETE
+
+  // Collections System (Folder)
+  collections: '/collections', // GET, POST
+  collectionDetail: (id: string) => `/collections/${id}`, // GET, PATCH, DELETE
 };

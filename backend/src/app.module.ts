@@ -24,6 +24,7 @@ import { LikesModule } from '@/src/modules/likes/likes.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { GenresModule } from './modules/genres/genres.module';
 import { FollowsModule } from '@/src/modules/folllows/folllows.module';
+import { LibraryModule } from './modules/library/library.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { FollowsModule } from '@/src/modules/folllows/folllows.module';
         limit: 10,
       },
     ]),
+    LibraryModule,
     RolesModule,
     ReviewsModule,
     TextToSpeechModule,

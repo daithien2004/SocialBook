@@ -21,15 +21,12 @@ export class TransformInterceptor<T>
 
     return next.handle().pipe(
       map((data) => {
-        // Nếu data đã có format chuẩn (có success field), return luôn
         if (data && typeof data === 'object' && 'success' in data) {
           return data;
         }
 
-        // ✅ Transform _id → id TRƯỚC KHI wrap vào ResponseDto
         const transformedData = this.transformIds(data);
 
-        // Transform data thành format chuẩn
         return new ResponseDto({
           success: true,
           statusCode,
@@ -45,18 +42,19 @@ export class TransformInterceptor<T>
     );
   }
 
-  // ✅ Hàm transform _id → id
   private transformIds(data: any): any {
     if (!data) return data;
 
-    // Nếu là array
+    // 🔥 FIX: Kiểm tra nếu là Mongoose Document thì chuyển sang Object thường
+    if (typeof data === 'object' && typeof data.toObject === 'function') {
+      data = data.toObject();
+    }
+
     if (Array.isArray(data)) {
       return data.map((item) => this.transformIds(item));
     }
 
-    // Nếu là object
     if (typeof data === 'object' && data !== null) {
-      // Nếu là Date, ObjectId primitive, giữ nguyên
       if (data instanceof Date || data._bsontype === 'ObjectId') {
         return data;
       }
@@ -64,14 +62,16 @@ export class TransformInterceptor<T>
       const transformed: any = {};
 
       for (const key in data) {
+        // Bỏ qua các key nội bộ của Mongoose bắt đầu bằng $ hoặc _ (trừ _id)
+        if (key.startsWith('$') || (key.startsWith('_') && key !== '_id')) {
+          continue;
+        }
+
         if (key === '_id') {
-          // ✅ Đổi _id thành id
           transformed.id = data[key]?.toString() || data[key];
         } else if (key === '__v') {
-          // ❌ Bỏ qua __v
           continue;
         } else if (typeof data[key] === 'object' && data[key] !== null) {
-          // 🔄 Đệ quy cho nested objects/arrays
           transformed[key] = this.transformIds(data[key]);
         } else {
           transformed[key] = data[key];

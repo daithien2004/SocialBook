@@ -5,6 +5,8 @@ export type BookDocument = Book & Document;
 
 @Schema({ timestamps: true }) // tự sinh createdAt, updatedAt
 export class Book {
+  _id: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Author', required: true })
   authorId: Types.ObjectId;
 
@@ -40,6 +42,9 @@ export class Book {
 
   @Prop({ default: 0 })
   likes: number;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  likedBy: Types.ObjectId[];
 
   @Prop({ default: false })
   isDeleted: boolean;

@@ -49,12 +49,12 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.books.map((book) => ({
-              type: 'Book' as const,
-              id: book.slug,
-            })),
-            { type: 'Books', id: 'LIST' },
-          ]
+              ...result.books.map((book) => ({
+                type: 'Book' as const,
+                id: book.slug,
+              })),
+              { type: 'Books', id: 'LIST' },
+            ]
           : [{ type: 'Books', id: 'LIST' }],
     }),
 
@@ -67,12 +67,15 @@ export const booksApi = createApi({
       invalidatesTags: [{ type: 'Books', id: 'LIST' }],
     }),
 
-    getAdminBooks: builder.query<AdminBooksResponse, {
-      page?: number;
-      limit?: number;
-      search?: string;
-      status?: BookStatus;
-    }>({
+    getAdminBooks: builder.query<
+      AdminBooksResponse,
+      {
+        page?: number;
+        limit?: number;
+        search?: string;
+        status?: BookStatus;
+      }
+    >({
       query: (params) => ({
         url: BFF_BOOKS_ENDPOINTS.getAllForAdmin,
         method: 'GET',
@@ -81,12 +84,12 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result?.books
           ? [
-            ...result.books.map((book: BookForAdmin) => ({
-              type: 'AdminBooks' as const,
-              id: book.id,
-            })),
-            { type: 'AdminBooks', id: 'LIST' },
-          ]
+              ...result.books.map((book: BookForAdmin) => ({
+                type: 'AdminBooks' as const,
+                id: book.id,
+              })),
+              { type: 'AdminBooks', id: 'LIST' },
+            ]
           : [{ type: 'AdminBooks', id: 'LIST' }],
     }),
 
@@ -100,7 +103,10 @@ export const booksApi = createApi({
       ],
     }),
 
-    updateBook: builder.mutation<BookForAdmin, { bookId: string; formData: FormData }>({
+    updateBook: builder.mutation<
+      BookForAdmin,
+      { bookId: string; formData: FormData }
+    >({
       query: ({ bookId, formData }) => ({
         url: BFF_BOOKS_ENDPOINTS.updateBook(bookId),
         method: 'PUT',
@@ -123,10 +129,22 @@ export const booksApi = createApi({
         { type: 'Books', id: 'LIST' },
       ],
     }),
+
+    likeBook: builder.mutation<{ message: string; data: any }, string>({
+      query: (bookId) => ({
+        url: BFF_BOOKS_ENDPOINTS.like(bookId),
+        method: 'PATCH',
+      }),
+      // Invalidates cache của cuốn sách vừa like -> Trigger fetch lại getBookBySlug
+      invalidatesTags: (result, error, bookId) => [
+        // Cách 1: Nếu server trả về object sách có slug trong result.data
+        ...(result?.data?.slug
+          ? [{ type: 'Book' as const, id: result.data.slug }]
+          : []),
+      ],
+    }),
   }),
 });
-
-
 
 export const {
   useGetBooksQuery,
@@ -136,4 +154,5 @@ export const {
   useGetBookByIdQuery,
   useUpdateBookMutation,
   useDeleteBookMutation,
+  useLikeBookMutation,
 } = booksApi;

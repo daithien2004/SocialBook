@@ -1,0 +1,73 @@
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { axiosBaseQuery } from '@/src/lib/client-api';
+import { BFF_REVIEWS_ENDPOINTS } from '@/src/constants/client-endpoints';
+import {
+  Review,
+  CreateReviewRequest,
+  UpdateReviewRequest,
+} from '../types/review.interface';
+
+export const reviewApi = createApi({
+  reducerPath: 'reviewApi',
+  baseQuery: axiosBaseQuery(),
+  tagTypes: ['Review'],
+  endpoints: (builder) => ({
+    getReviewsByBook: builder.query<Review[], string>({
+      query: (bookId) => ({
+        url: BFF_REVIEWS_ENDPOINTS.getByBook(bookId),
+        method: 'GET',
+      }),
+      providesTags: (result, error, bookId) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'Review' as const, id })),
+              { type: 'Review', id: `LIST_${bookId}` },
+            ]
+          : [],
+    }),
+
+    createReview: builder.mutation<Review, CreateReviewRequest>({
+      query: (data) => ({
+        url: BFF_REVIEWS_ENDPOINTS.create,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { bookId }) => [
+        { type: 'Review', id: `LIST_${bookId}` },
+      ],
+    }),
+
+    updateReview: builder.mutation<
+      Review,
+      { id: string; data: UpdateReviewRequest; bookId: string }
+    >({
+      query: ({ id, data }) => ({
+        url: BFF_REVIEWS_ENDPOINTS.update(id),
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id, bookId }) => [
+        { type: 'Review', id },
+        { type: 'Review', id: `LIST_${bookId}` },
+      ],
+    }),
+
+    deleteReview: builder.mutation<null, { id: string; bookId: string }>({
+      query: ({ id }) => ({
+        url: BFF_REVIEWS_ENDPOINTS.delete(id),
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { id, bookId }) => [
+        { type: 'Review', id },
+        { type: 'Review', id: `LIST_${bookId}` },
+      ],
+    }),
+  }),
+});
+
+export const {
+  useGetReviewsByBookQuery,
+  useCreateReviewMutation,
+  useUpdateReviewMutation,
+  useDeleteReviewMutation,
+} = reviewApi;

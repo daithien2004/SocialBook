@@ -77,7 +77,6 @@ export function ChapterContent({
 
     try {
       await createPost({
-        userId: session?.user.id,
         bookId: bookId,
         content: data.content,
         images: data.images,

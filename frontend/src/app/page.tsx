@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Header } from '../components/header';
+import { Header } from '../components/Header';
 
 const ONE_DAY_IN_MS = 86400000; // Tính trước thay vì 1000 * 60 * 60 * 24
 const NEW_BOOK_THRESHOLD_DAYS = 30;
@@ -61,26 +61,18 @@ export const getRecommendedBooks = (books: Book[]) => {
 const BOOK_SECTIONS = [
   {
     title: 'Xem Nhiều Nhất',
-    icon: TrendingUp,
-    iconColor: 'bg-gradient-to-br from-red-500 to-orange-500',
     getBooks: getTrendingBooks,
   },
   {
     title: 'Đề Xuất Cho Bạn',
-    icon: Sparkles,
-    iconColor: 'bg-gradient-to-br from-purple-500 to-pink-500',
     getBooks: getRecommendedBooks,
   },
   {
     title: 'Sách Mới Nhất',
-    icon: Clock,
-    iconColor: 'bg-gradient-to-br from-blue-500 to-cyan-500',
     getBooks: getNewBooks,
   },
   {
     title: 'Đánh Giá Cao',
-    icon: Star,
-    iconColor: 'bg-gradient-to-br from-yellow-500 to-amber-500',
     getBooks: getTopRatedBooks,
   },
 ];
@@ -144,13 +136,11 @@ export default function HomePage() {
         <main className="container mx-auto px-4 py-8">
           <BannerSlider books={featuredBooks} />
 
-          <div className="space-y-8 mt-8">
+          <div className="space-y-2">
             {sections.map((section) => (
               <BookSection
                 key={section.title}
                 title={section.title}
-                icon={section.icon}
-                iconColor={section.iconColor}
                 books={section.books}
               />
             ))}

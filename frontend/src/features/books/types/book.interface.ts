@@ -11,6 +11,7 @@ export interface Book {
   tags: string[];
   views: number;
   likes: number;
+  isLiked: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;

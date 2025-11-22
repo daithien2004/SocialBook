@@ -11,9 +11,9 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  ValidationPipe,
-  UsePipes,
+  Request,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { Public } from '@/src/common/decorators/customize';
@@ -25,7 +25,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) { }
+  constructor(private readonly booksService: BooksService) {}
 
   @Get('/all')
   @Roles('admin')
@@ -70,8 +70,9 @@ export class BooksController {
   @Public()
   @Get(':slug')
   @HttpCode(HttpStatus.OK)
-  async getBookDetail(@Param('slug') slug: string) {
-    const result = await this.booksService.findBySlug(slug);
+  async getBookDetail(@Request() req: any, @Param('slug') slug: string) {
+    const userId = req.user?.id || null;
+    const result = await this.booksService.findBySlug(slug, userId);
 
     return {
       message: 'Get book detail successfully',
@@ -125,7 +126,11 @@ export class BooksController {
     console.log('📥 Received DTO:', updateBookDto);
     console.log('📁 File:', coverFile?.originalname);
 
-    const book = await this.booksService.updateBook(id, updateBookDto, coverFile);
+    const book = await this.booksService.updateBook(
+      id,
+      updateBookDto,
+      coverFile,
+    );
 
     return {
       message: 'Cập nhật sách thành công',
@@ -144,6 +149,18 @@ export class BooksController {
 
     return {
       message: 'Xóa sách thành công',
+    };
+  }
+
+  @Patch(':bookSlug/like')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async toggleLike(@Param('bookSlug') bookSlug: string, @Request() req: any) {
+    const result = await this.booksService.toggleLike(bookSlug, req.user.id);
+
+    return {
+      message: result.isLiked ? 'Liked book' : 'Unliked book',
+      data: result,
     };
   }
 }

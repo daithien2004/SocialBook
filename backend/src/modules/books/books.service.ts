@@ -28,7 +28,7 @@ export class BooksService {
   ) {}
 
   // PRIVATE HELPER: Lấy chi tiết book với chapters, reviews, ratings
-  private async findBookWithDetails(book: any) {
+  private async findBookWithDetails(book: Book, userId?: string) {
     // Lấy chapters
     const chapters = await this.chapterModel
       .find({ bookId: book._id })
@@ -67,6 +67,13 @@ export class BooksService {
       : 0;
     const totalRatings = ratingData.totalRatings || 0;
 
+    let isLiked = false;
+    console.log(userId);
+    if (userId && book.likedBy) {
+      // Kiểm tra xem userId có trong mảng likedBy không
+      isLiked = book.likedBy.some((id) => id.toString() === userId);
+    }
+
     // RETURN
     return {
       id: book._id,
@@ -78,6 +85,7 @@ export class BooksService {
       tags: book.tags,
       views: book.views,
       likes: book.likes,
+      isLiked: isLiked,
       publishedYear: book.publishedYear,
       authorId: book.authorId,
       genres: book.genre,
@@ -93,7 +101,7 @@ export class BooksService {
     };
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string, userId?: string) {
     // VALIDATION
     if (!slug) {
       throw new BadRequestException('Book slug is required');
@@ -110,7 +118,14 @@ export class BooksService {
       throw new NotFoundException(`Book with slug "${slug}" not found`);
     }
 
-    return this.findBookWithDetails(book);
+    await this.bookModel.updateOne({ _id: book._id }, { $inc: { views: 1 } });
+    if (book.views !== undefined) {
+      book.views += 1;
+    } else {
+      book.views = 1;
+    }
+
+    return this.findBookWithDetails(book, userId);
   }
 
   async findById(id: string) {
@@ -579,5 +594,51 @@ export class BooksService {
     await this.bookModel.findByIdAndUpdate(id, { isDeleted: true });
 
     return { success: true };
+  }
+
+  async toggleLike(slug: string, userId: string) {
+    const book = await this.bookModel.findOne({ slug, isDeleted: false });
+    if (!book) throw new NotFoundException('Book not found');
+
+    const userObjectId = new Types.ObjectId(userId);
+
+    if (book.likes === undefined) {
+      book.likes = 0;
+    }
+    if (!book.likedBy) {
+      book.likedBy = [];
+    }
+
+    // Check xem đã like chưa
+    const isLiked = book.likedBy.some((id) => id.equals(userObjectId));
+
+    let updateQuery;
+    if (isLiked) {
+      // Đã like -> UNLIKE (Xóa khỏi mảng, giảm count)
+      updateQuery = {
+        $pull: { likedBy: userObjectId },
+        $inc: { likes: -1 },
+      };
+    } else {
+      // Chưa like -> LIKE (Thêm vào mảng, tăng count)
+      updateQuery = {
+        $addToSet: { likedBy: userObjectId }, // addToSet để tránh trùng lặp
+        $inc: { likes: 1 },
+      };
+    }
+
+    // Thực hiện update
+    const updatedBook = await this.bookModel.findByIdAndUpdate(
+      book.id,
+      updateQuery,
+      { new: true },
+    );
+
+    return {
+      id: updatedBook?._id,
+      slug: updatedBook?.slug,
+      likes: updatedBook?.likes,
+      isLiked: !isLiked, // Trả về trạng thái mới
+    };
   }
 }

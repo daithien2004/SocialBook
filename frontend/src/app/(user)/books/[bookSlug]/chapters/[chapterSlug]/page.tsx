@@ -1,8 +1,13 @@
 'use client';
 
-import { use, useMemo, useCallback, useState } from 'react';
+import { use, useMemo, useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { comments } from '@/src/lib/comments';
+import { Bookmark } from 'lucide-react'; // Import Icon
+
+// --- IMPORTS LIÊN QUAN ĐẾN THƯ VIỆN ---
+import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
+
 import {
   useGetChapterQuery,
   useGetChaptersQuery,
@@ -11,6 +16,8 @@ import ChapterNavigation from '@/src/components/chapter/ChapterNavigation';
 import CommentSection from '@/src/components/chapter/CommentSection';
 import ChapterHeader from '@/src/components/chapter/ChapterHeader';
 import { ChapterContent } from '@/src/components/chapter/ChapterContent';
+import { useReadingProgress } from '@/src/hooks/useReadingProgress';
+import ResumeReadingToast from '@/src/components/chapter/ResumeReadingToast';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -22,9 +29,12 @@ interface ChapterPageProps {
 export default function ChapterPage({ params }: ChapterPageProps) {
   const { bookSlug, chapterSlug } = use(params);
   const router = useRouter();
-  const [showTableOfContents, setShowTableOfContents] = useState(false);
 
-  // Get current chapter data
+  // State UI
+  const [showTableOfContents, setShowTableOfContents] = useState(false);
+  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false); // <--- State Modal Thư viện
+
+  // API: Lấy thông tin chương hiện tại
   const {
     data: chapterData,
     isLoading,
@@ -34,40 +44,33 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     chapterSlug,
   });
 
-  // Get all chapters for table of contents
+  // API: Lấy danh sách chương (Mục lục)
   const { data: chaptersData } = useGetChaptersQuery({ bookSlug });
 
-  // Destructure data với đúng cấu trúc API
+  // Destructure data
   const book = chapterData?.book;
   const chapter = chapterData?.chapter;
   const navigation = chapterData?.navigation;
 
-  // Lấy danh sách chapters và total từ chaptersData
   const chapters = chaptersData?.chapters || [];
   const totalChapters = chaptersData?.total || 0;
   const currentChapterIndex = chapters.findIndex((c) => c.slug === chapterSlug);
 
-  // Chapter comments
+  const { savedProgress, restoreScroll } = useReadingProgress(
+    book?.id || '',
+    chapter?.id || '',
+    !isLoading && !!chapter
+  );
+
+  const [isToastClosed, setIsToastClosed] = useState(false);
+
+  // Chapter comments logic
   const chapterComments = useMemo(() => {
     if (!chapter?.id) return [];
-
     return comments
       .filter((c) => c.targetType === 'chapter' && c.targetId === chapter.id)
       .map((c) => ({ ...c, targetType: 'chapter' as const }));
   }, [chapter?.id]);
-
-  // Comment handlers
-  const handleSubmitComment = useCallback(async (content: string) => {
-    console.log('New comment:', content);
-  }, []);
-
-  const handleLikeComment = useCallback((commentId: string) => {
-    console.log('Like comment:', commentId);
-  }, []);
-
-  const handleReplyComment = useCallback((commentId: string) => {
-    console.log('Reply to:', commentId);
-  }, []);
 
   // Navigation handlers
   const handlePrevious = useCallback(() => {
@@ -90,19 +93,19 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     [bookSlug, router]
   );
 
-  // Loading state
+  // --- LOADING STATE ---
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black/90 text-white">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em]" />
           <p className="mt-4">Đang tải chương...</p>
         </div>
       </div>
     );
   }
 
-  // Error states
+  // --- ERROR STATES ---
   if (error || !chapterData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black/90 text-white">
@@ -131,7 +134,16 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-black/90 text-white">
+    <div className="min-h-screen flex flex-col bg-black/90 text-white relative">
+      <button
+        onClick={() => setIsLibraryModalOpen(true)}
+        // SỬA: đổi top-4 thành top-24 (để né header) và tăng z-index lên 50 ngang hàng header
+        className="fixed top-24 right-4 z-50 p-3 bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-blue-600 transition-colors shadow-lg border border-gray-700"
+        title="Lưu vào thư viện"
+      >
+        <Bookmark size={20} className="text-white" />
+      </button>
+
       <ChapterHeader
         bookTitle={book.title}
         bookSlug={book.slug}
@@ -168,12 +180,9 @@ export default function ChapterPage({ params }: ChapterPageProps) {
       />
 
       <CommentSection
-          comments={chapterComments}
-          targetId={chapter.id}
-          targetType="chapter"
-          onSubmitComment={handleSubmitComment}
-          onLikeComment={handleLikeComment}
-          onReplyComment={handleReplyComment}
+        comments={chapterComments}
+        targetId={chapter.id}
+        targetType="chapter"
       />
 
       {/* Table of Contents Modal */}
@@ -186,7 +195,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
             className="bg-gray-900 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
+            {/* Header Modal */}
             <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">{book.title}</h2>
@@ -264,14 +273,41 @@ export default function ChapterPage({ params }: ChapterPageProps) {
               )}
             </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-700 bg-gray-800/50">
-              <p className="text-sm text-gray-400 text-center">
+            {/* Footer Modal */}
+            <div className="px-6 py-4 border-t border-gray-700 bg-gray-800/50 flex justify-between items-center">
+              <p className="text-sm text-gray-400">
                 Tổng cộng {totalChapters} chương
               </p>
+              {/* Nút thêm vào thư viện trong modal TOC cũng tiện */}
+              <button
+                onClick={() => {
+                  setShowTableOfContents(false);
+                  setIsLibraryModalOpen(true);
+                }}
+                className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+              >
+                <Bookmark size={14} /> Lưu sách này
+              </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* --- 3. RENDER MODAL THƯ VIỆN --- */}
+      {book && (
+        <AddToLibraryModal
+          isOpen={isLibraryModalOpen}
+          onClose={() => setIsLibraryModalOpen(false)}
+          bookId={book.id}
+        />
+      )}
+
+      {!isToastClosed && (
+        <ResumeReadingToast
+          progress={savedProgress}
+          onConfirm={restoreScroll} // Gọi hàm scroll khi user đồng ý
+          onClose={() => setIsToastClosed(true)} // Ẩn toast khi user từ chối
+        />
       )}
     </div>
   );
