@@ -103,4 +103,16 @@ export class UsersService {
     const isMatch = await bcrypt.compare(rt, user.hashedRt);
     return isMatch;
   }
+
+  async toggleBan(userId: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    user.isBanned = !user.isBanned;
+    await user.save();
+
+    return user;
+  }
 }
