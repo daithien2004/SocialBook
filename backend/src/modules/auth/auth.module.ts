@@ -10,9 +10,12 @@ import { JwtStrategy } from '@/src/modules/auth/strategies/jwt.strategy';
 import { JwtRefreshStrategy } from '@/src/modules/auth/strategies/jwt-refresh.strategy';
 import { OtpModule } from '@/src/modules/otp/otp.module';
 
+import { RolesModule } from '../roles/roles.module';
+
 @Module({
   imports: [
     UsersModule,
+    RolesModule,
     PassportModule,
     OtpModule,
     JwtModule.registerAsync({
@@ -29,4 +32,4 @@ import { OtpModule } from '@/src/modules/otp/otp.module';
   providers: [AuthService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
   exports: [JwtModule, AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

@@ -9,18 +9,14 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/user.dto';
 import { Public } from '@/src/common/decorators/customize';
-import { Roles } from '@/src/common/decorators/roles.decorator';
-import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/src/common/guards/roles.guard';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -35,8 +31,7 @@ export class UsersController {
     };
   }
 
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Public()
   @Get()
   async findAll(
     @Query() query: string,
@@ -46,17 +41,6 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Users retrieved successfully',
-      data: result,
-    };
-  }
-
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Patch(':id/ban')
-  async ban(@Param('id') id: string) {
-    const result = await this.usersService.handleBan(id);
-    return {
-      message: 'User ban status updated successfully',
       data: result,
     };
   }

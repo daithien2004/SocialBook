@@ -106,14 +106,31 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Image */}
-      <div className="hidden lg:block lg:w-1/2 relative">
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        {/* Background ảnh */}
         <Image
           src="https://res.cloudinary.com/dajg703uq/image/upload/v1763780207/snapedit_1763780184287_v11fnr.jpg"
-          alt="Login illustration"
+          alt="Login background"
           fill
           className="object-cover"
           priority
         />
+        {/* Nội dung sách – đẹp như Goodreads + Wattpad */}
+        <div className="absolute bottom-0 left-0 right-0 py-10 text-white">
+            {/* Thông tin sách */}
+          <div className="max-w-2xl mx-auto">
+            <div className="ml-40">
+              <h1 className="text-5xl md:text-3xl font-bold leading-tight">
+                LES MISERABLES
+              </h1>
+              <p className="text-2xl md:text-3xl text-teal-100 px-10 py-5 font-serif">
+                Victor Hugo
+              </p>
+
+             
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Right side - Login Form */}

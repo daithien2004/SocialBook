@@ -8,9 +8,10 @@ export class CreateUserDto {
   providerId?: string;
   image?: string;
   isVerified?: boolean;
+  roleId?: string;
 }
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {}
+export class UpdateUserDto extends PartialType(CreateUserDto) { }
 
 export class UpdateRefreshTokenDto {
   hashedRt: string | null;
