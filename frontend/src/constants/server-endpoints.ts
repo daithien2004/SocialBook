@@ -27,6 +27,7 @@ export const NESTJS_BOOKS_ENDPOINTS = {
   updateBook: (bookId: string) => `/books/${bookId}`,
   deleteBook: (bookId: string) => `/books/${bookId}`,
   getAllBookForAdmin: '/books/all',
+  like: (bookSlug: string) => `/books/${bookSlug}/like`,
 };
 
 export const NESTJS_CHAPTERS_ENDPOINTS = {

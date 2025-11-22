@@ -3,14 +3,21 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useGetBookBySlugQuery } from '@/src/features/books/api/bookApi';
+import {
+  useGetBookBySlugQuery,
+  useLikeBookMutation,
+} from '@/src/features/books/api/bookApi';
 import {
   useGetReviewsByBookQuery,
   useCreateReviewMutation,
 } from '@/src/features/reviews/api/reviewApi';
+import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 
-// --- IMPORT MODAL THƯ VIỆN ---
+// --- IMPORT MODALS ---
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
+import CreatePostModal, {
+  CreatePostData,
+} from '@/src/components/post/CreatePostModal';
 
 import {
   Star,
@@ -31,26 +38,41 @@ interface BookDetailClientProps {
 }
 
 export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
-  // 1. State cho Form Review & Modal Thư viện
+  // State cho các modal
   const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
-  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false); // <--- STATE MỚI
+  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // Modal chia sẻ
 
   const [ratingInput, setRatingInput] = useState(5);
   const [contentInput, setContentInput] = useState('');
 
-  // 2. Fetch Book Detail
+  // Mutations
+  const [likeBook, { isLoading: isLiking }] = useLikeBookMutation();
+  const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
+
+  // Fetch Book Detail
   const {
     data: book,
     isLoading: isLoadingBook,
     error,
   } = useGetBookBySlugQuery({ bookSlug });
 
-  // 3. Fetch Reviews
+  // Fetch Reviews
   const { data: reviews, isLoading: isLoadingReviews } =
     useGetReviewsByBookQuery(book?.id as string, { skip: !book?.id });
 
-  // 4. Mutation tạo Review
+  // Mutation tạo Review
   const [createReview, { isLoading: isCreating }] = useCreateReviewMutation();
+
+  // Handle Toggle Like
+  const handleToggleLike = async () => {
+    if (!book?.id) return;
+    try {
+      await likeBook(book.slug).unwrap();
+    } catch (error) {
+      console.error('Lỗi like sách', error);
+    }
+  };
 
   // Handle Submit Review
   const handleSubmitReview = async (e: React.FormEvent) => {
@@ -78,6 +100,35 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
       alert('Có lỗi xảy ra khi gửi đánh giá.');
     }
   };
+
+  // Handle Share Post
+  const handleSharePost = async (data: CreatePostData) => {
+    if (!book?.id) {
+      throw new Error('Không tìm thấy thông tin sách');
+    }
+
+    try {
+      await createPost({
+        bookId: book.id,
+        content: data.content,
+        images: data.images,
+      }).unwrap();
+    } catch (error: any) {
+      throw new Error(error?.data?.message || 'Không thể tạo bài viết');
+    }
+  };
+
+  // Nội dung mặc định cho bài chia sẻ
+  const defaultShareContent = book
+    ? `📚 ${book.title}
+✍️ Tác giả: ${book.authorId.name}
+⭐ Đánh giá: ${book.averageRating || 0}/5 (${book.totalRatings || 0} đánh giá)
+👁️ ${book.views?.toLocaleString()} lượt xem
+
+${book.description}
+
+#${book.title.replace(/\s+/g, '')} #${book.authorId.name.replace(/\s+/g, '')}`
+    : '';
 
   // Loading Skeleton
   if (isLoadingBook) {
@@ -117,7 +168,6 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
 
   // Data hiển thị
   const displayRating = book.averageRating || 0;
-  // Nếu API book chưa trả về totalRatings chính xác, fallback sang độ dài mảng review
   const displayTotalRatings = book.totalRatings || reviews?.length;
 
   return (
@@ -206,7 +256,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                   </Link>
                 )}
 
-                {/* Nút Thêm vào Thư Viện (Sửa từ nút Bookmark cũ) */}
+                {/* Nút Thêm vào Thư Viện */}
                 <button
                   onClick={() => setIsLibraryModalOpen(true)}
                   className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
@@ -217,16 +267,26 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
 
                 {/* Nút Yêu thích (Like) */}
                 <button
-                  className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition-colors"
-                  title="Yêu thích"
+                  onClick={handleToggleLike}
+                  disabled={isLiking}
+                  className={`flex items-center gap-2 border px-4 py-3 rounded-lg transition-colors ${
+                    book.isLiked
+                      ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+                      : 'border-gray-300 hover:bg-gray-50 text-gray-700'
+                  }`}
+                  title={book.isLiked ? 'Bỏ thích' : 'Yêu thích'}
                 >
-                  <Heart size={20} />
+                  <Heart
+                    size={20}
+                    className={book.isLiked ? 'fill-current' : ''}
+                  />
                 </button>
 
-                {/* Nút Share */}
+                {/* Nút Share - CẬP NHẬT */}
                 <button
+                  onClick={() => setIsShareModalOpen(true)}
                   className="flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-3 rounded-lg transition-colors"
-                  title="Chia sẻ"
+                  title="Chia sẻ sách"
                 >
                   <Share2 size={20} />
                 </button>
@@ -548,15 +608,27 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
         </div>
       </div>
 
-      {/* --- RENDER MODAL THƯ VIỆN --- */}
+      {/* --- MODAL THƯ VIỆN --- */}
       {book && (
         <AddToLibraryModal
           isOpen={isLibraryModalOpen}
           onClose={() => setIsLibraryModalOpen(false)}
           bookId={book.id}
-          // Nếu muốn modal hiển thị trạng thái hiện tại của sách,
-          // bạn cần API getBook trả về `userLibraryStatus` và `userCollectionIds`.
-          // Hiện tại để mặc định, Modal sẽ tự lo logic tick/untick khi user thao tác.
+        />
+      )}
+
+      {/* --- MODAL CHIA SẺ SÁCH --- */}
+      {book && (
+        <CreatePostModal
+          isSubmitting={isCreatingPost}
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          onSubmit={handleSharePost}
+          defaultContent={defaultShareContent}
+          title={`Chia sẻ sách "${book.title}"`}
+          contentLabel="Nội dung bài viết"
+          contentPlaceholder="Chia sẻ suy nghĩ của bạn về cuốn sách này..."
+          maxImages={10}
         />
       )}
     </div>

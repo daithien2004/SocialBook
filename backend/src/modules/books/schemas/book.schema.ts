@@ -43,6 +43,9 @@ export class Book {
   @Prop({ default: 0 })
   likes: number;
 
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  likedBy: Types.ObjectId[];
+
   @Prop({ default: false })
   isDeleted: boolean;
 

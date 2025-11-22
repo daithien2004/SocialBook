@@ -94,6 +94,17 @@ export class LibraryService {
     );
   }
 
+  async getChapterProgress(userId: string, bookId: string, chapterId: string) {
+    const progress = await this.progressModel
+      .findOne({ userId, chapterId, bookId })
+      .select('progress')
+      .lean();
+
+    return {
+      progress: progress?.progress || 0,
+    };
+  }
+
   // 5. Xóa sách khỏi thư viện
   async removeFromLibrary(userId: string, bookId: string) {
     // Xóa trong reading list

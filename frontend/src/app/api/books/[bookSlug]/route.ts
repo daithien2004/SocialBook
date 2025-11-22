@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import serverApi from '@/src/lib/server-api';
 import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 
 export async function GET(
   req: NextRequest,

@@ -27,6 +27,7 @@ export const BFF_BOOKS_ENDPOINTS = {
   updateBook: (bookId: string) => `/admin/books/id/${bookId}`,
   deleteBook: (bookId: string) => `/admin/books/id/${bookId}`,
   getAllForAdmin: '/admin/books',
+  like: (bookSlug: string) => `/books/${bookSlug}/like`,
 };
 
 export const BFF_COMMENTS_ENDPOINTS = {

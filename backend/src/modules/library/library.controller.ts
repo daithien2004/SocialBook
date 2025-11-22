@@ -58,6 +58,31 @@ export class LibraryController {
     };
   }
 
+  @Get('progress')
+  @HttpCode(HttpStatus.OK)
+  async getChapterProgress(
+    @Req() req,
+    @Query('bookId') bookId: string,
+    @Query('chapterId') chapterId: string,
+  ) {
+    // Validate đơn giản nếu cần
+    if (!bookId || !chapterId) {
+      // Hoặc throw BadRequestException
+      return { message: 'Missing params', data: { progress: 0 } };
+    }
+
+    const result = await this.libraryService.getChapterProgress(
+      req.user.id,
+      bookId,
+      chapterId,
+    );
+
+    return {
+      message: 'Get reading progress successfully',
+      data: result, // { progress: 50 }
+    };
+  }
+
   // 3. Cập nhật tiến độ đọc (Scroll / Next Chapter)
   @Patch('progress')
   @HttpCode(HttpStatus.OK)

@@ -46,6 +46,19 @@ export const libraryApi = createApi({
       invalidatesTags: ['Library'],
     }),
 
+    getChapterProgress: builder.query<
+      { progress: number },
+      { bookId: string; chapterId: string }
+    >({
+      query: ({ bookId, chapterId }) => ({
+        url: BFF_LIBRARY_ENDPOINTS.updateProgress,
+        method: 'GET',
+        params: { bookId, chapterId },
+      }),
+      // Chỉ cần fetch 1 lần khi mount, không cần cache lâu
+      keepUnusedDataFor: 0,
+    }),
+
     // 3. Update tiến độ đọc (Scroll / Next Chapter)
     updateReadingProgress: builder.mutation<LibraryItem, UpdateProgressRequest>(
       {
@@ -145,6 +158,7 @@ export const {
   // Library Hooks
   useGetLibraryBooksQuery,
   useUpdateLibraryStatusMutation,
+  useGetChapterProgressQuery,
   useUpdateReadingProgressMutation,
   useAddBookToCollectionsMutation,
   useRemoveBookFromLibraryMutation,
