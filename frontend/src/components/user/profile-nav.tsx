@@ -1,24 +1,52 @@
 "use client"
 
-import { Ellipsis, Settings, UserPlus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { useSelectedLayoutSegment } from "next/navigation"
-import {useSelector} from "react-redux";
-import {RootState} from "@/src/store/store";
+import { Ellipsis, Settings, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useSelectedLayoutSegment, useRouter } from "next/navigation";
+import {useGetFollowStateQuery, useToggleFollowMutation} from "@/src/features/follows/api/followApi";
 
 interface ProfileNavProps {
-  isOwner: boolean
+  profileUserId: string;  // id user trên URL
 }
 
-export function ProfileNav({ isOwner}: ProfileNavProps) {
-  const segment = useSelectedLayoutSegment() // "posts" | "follow" | null
-  const user = useSelector((state: RootState) => state.auth.user)
+export function ProfileNav({ profileUserId }: ProfileNavProps) {
+  const segment = useSelectedLayoutSegment();
+  const router = useRouter();
+
+  const { data, error, isLoading } = useGetFollowStateQuery(profileUserId, {
+    skip: !profileUserId,
+  });
+
+  const [toggleFollow, { isLoading: isToggling }] =
+      useToggleFollowMutation();
+
+  const isAuthenticated =
+      !error || (typeof error === 'object' && 'status' in error && (error as any).status !== 401);
+
+  const isOwner = data?.isOwner === true;
+  const isFollowing = data?.isFollowing === true;
+
+  const handleFollowClick = async () => {
+    if (!isAuthenticated) {
+      // chưa đăng nhập → chuyển sang trang login (tuỳ flow của bạn)
+      router.push('/auth/login');
+      return;
+    }
+
+    try {
+      await toggleFollow(profileUserId).unwrap();
+      // RTK Query sẽ tự refetch / invalidate tag → data cập nhật lại
+    } catch (e) {
+      console.error('Toggle follow failed:', e);
+    }
+  };
+
   const tabs = [
-    { label: "Giới thiệu", href: `/user/${user?.id}`, segment: null },
-    { label: "Bài đăng", href: `/user/${user?.id}/posts`, segment: "posts" },
-    { label: "Đang theo dõi", href: `/user/${user?.id}/following`, segment: "following" },
-  ]
+    { label: "Giới thiệu",     href: `/users/${profileUserId}`,           segment: null },
+    { label: "Bài đăng",       href: `/users/${profileUserId}/posts`,     segment: "posts" },
+    { label: "Đang theo dõi",  href: `/users/${profileUserId}/following`, segment: "following" },
+  ];
 
   return (
       <div className="sticky top-0 z-10 bg-white shadow-sm">
@@ -27,7 +55,10 @@ export function ProfileNav({ isOwner}: ProfileNavProps) {
             {/* Navigation Tabs */}
             <nav className="flex w-full md:w-auto overflow-x-auto no-scrollbar">
               {tabs.map((tab) => {
-                const isActive = segment === tab.segment
+                const isActive =
+                    segment === tab.segment ||
+                    (segment === null && tab.segment === null);
+
                 return (
                     <Link
                         key={tab.href}
@@ -36,19 +67,20 @@ export function ProfileNav({ isOwner}: ProfileNavProps) {
                           "px-4 py-3 text-lg font-serif whitespace-nowrap border-b-4",
                           isActive
                               ? "border-[#ff9800] text-gray-1000"
-                              : "border-transparent text-gray-500 hover:text-gray-700 hover:font-bold"
+                              : "border-transparent text-gray-500 hover:text-gray-700 hover:font-bold",
                         ].join(" ")}
                         aria-current={isActive ? "page" : undefined}
                     >
                       {tab.label}
                     </Link>
-                )
+                );
               })}
             </nav>
 
             {/* Action Buttons */}
             <div className="py-2 md:py-0">
-              {isOwner ? (
+              {/* Nếu đã login + là chủ profile → nút Sửa hồ sơ */}
+              {isAuthenticated && isOwner ? (
                   <Button
                       variant="outline"
                       size="sm"
@@ -62,11 +94,18 @@ export function ProfileNav({ isOwner}: ProfileNavProps) {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-9 gap-2 text-gray-600 text-center text-base font-semibold bg-gray-50 border-gray-200 hover:bg-gray-100"
+                        onClick={handleFollowClick}
+                        disabled={isLoading || isToggling}
+                        className="h-9 gap-2 text-gray-600 text-center text-base font-semibold bg-gray-50 border-gray-200 hover:bg-gray-100 disabled:opacity-60"
                     >
-                      <UserPlus className="h-4 w-4" color="#e1a337" strokeWidth={3} />
-                      Theo dõi
+                      <UserPlus
+                          className="h-4 w-4"
+                          color={isFollowing ? "#4caf50" : "#e1a337"}
+                          strokeWidth={3}
+                      />
+                      {isAuthenticated && isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
                     </Button>
+
                     <Button
                         variant="outline"
                         size="sm"
@@ -80,5 +119,5 @@ export function ProfileNav({ isOwner}: ProfileNavProps) {
           </div>
         </div>
       </div>
-  )
+  );
 }

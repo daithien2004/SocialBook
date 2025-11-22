@@ -23,6 +23,7 @@ import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.modu
 import { LikesModule } from '@/src/modules/likes/likes.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { GenresModule } from './modules/genres/genres.module';
+import { FollowsModule } from '@/src/modules/folllows/folllows.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { GenresModule } from './modules/genres/genres.module';
     CommentsModule,
     CloudinaryModule,
     LikesModule,
+    FollowsModule,
   ],
   controllers: [AppController],
   providers: [
