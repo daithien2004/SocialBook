@@ -1,51 +1,56 @@
-"use client"
+"use client";
 
 import { Ellipsis, Settings, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSelectedLayoutSegment, useRouter } from "next/navigation";
-import {useGetFollowStateQuery, useToggleFollowMutation} from "@/src/features/follows/api/followApi";
+import {
+  useToggleFollowMutation,
+  type FollowStateResponse,
+} from "@/src/features/follows/api/followApi";
+import { useState } from "react";
 
 interface ProfileNavProps {
-  profileUserId: string;  // id user trên URL
+  profileUserId: string;
+  initialFollowState: FollowStateResponse | null;
 }
 
-export function ProfileNav({ profileUserId }: ProfileNavProps) {
+export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProps) {
   const segment = useSelectedLayoutSegment();
   const router = useRouter();
 
-  const { data, error, isLoading } = useGetFollowStateQuery(profileUserId, {
-    skip: !profileUserId,
-  });
+  const [followState, setFollowState] = useState<FollowStateResponse | null>(
+      initialFollowState
+  );
 
-  const [toggleFollow, { isLoading: isToggling }] =
-      useToggleFollowMutation();
+  const [toggleFollow, { isLoading: isToggling }] = useToggleFollowMutation();
 
-  const isAuthenticated =
-      !error || (typeof error === 'object' && 'status' in error && (error as any).status !== 401);
-
-  const isOwner = data?.isOwner === true;
-  const isFollowing = data?.isFollowing === true;
+  const isAuthenticated = !!followState;
+  const isOwner = followState?.isOwner === true;
+  const isFollowing = followState?.isFollowing === true;
 
   const handleFollowClick = async () => {
     if (!isAuthenticated) {
-      // chưa đăng nhập → chuyển sang trang login (tuỳ flow của bạn)
-      router.push('/auth/login');
+      router.push("/auth/login");
       return;
     }
 
     try {
-      await toggleFollow(profileUserId).unwrap();
-      // RTK Query sẽ tự refetch / invalidate tag → data cập nhật lại
-    } catch (e) {
-      console.error('Toggle follow failed:', e);
+      const updated = await toggleFollow(profileUserId).unwrap();
+      setFollowState(updated);
+    } catch (e: any) {
+      console.error("Toggle follow failed:", e);
+
+      if (e && typeof e === "object" && "status" in e && (e as any).status === 401) {
+        router.push("/auth/login");
+      }
     }
   };
 
   const tabs = [
-    { label: "Giới thiệu",     href: `/users/${profileUserId}`,           segment: null },
-    { label: "Bài đăng",       href: `/users/${profileUserId}/posts`,     segment: "posts" },
-    { label: "Đang theo dõi",  href: `/users/${profileUserId}/following`, segment: "following" },
+    { label: "Giới thiệu", href: `/users/${profileUserId}`, segment: null },
+    { label: "Bài đăng", href: `/users/${profileUserId}/posts`, segment: "posts" },
+    { label: "Đang theo dõi", href: `/users/${profileUserId}/following`, segment: "following" },
   ];
 
   return (
@@ -79,7 +84,6 @@ export function ProfileNav({ profileUserId }: ProfileNavProps) {
 
             {/* Action Buttons */}
             <div className="py-2 md:py-0">
-              {/* Nếu đã login + là chủ profile → nút Sửa hồ sơ */}
               {isAuthenticated && isOwner ? (
                   <Button
                       variant="outline"
@@ -95,7 +99,7 @@ export function ProfileNav({ profileUserId }: ProfileNavProps) {
                         variant="outline"
                         size="sm"
                         onClick={handleFollowClick}
-                        disabled={isLoading || isToggling}
+                        disabled={isToggling} // ❌ bỏ isLoading query, chỉ dùng isToggling
                         className="h-9 gap-2 text-gray-600 text-center text-base font-semibold bg-gray-50 border-gray-200 hover:bg-gray-100 disabled:opacity-60"
                     >
                       <UserPlus
@@ -103,7 +107,7 @@ export function ProfileNav({ profileUserId }: ProfileNavProps) {
                           color={isFollowing ? "#4caf50" : "#e1a337"}
                           strokeWidth={3}
                       />
-                      {isAuthenticated && isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+                      {isAuthenticated && isFollowing ? "Đang theo dõi" : "Theo dõi"}
                     </Button>
 
                     <Button

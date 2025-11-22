@@ -17,11 +17,26 @@ export function ProfileSidebar() {
           <div className="pt-4 border-t border-gray-100">
             <h4 className="mb-3 text-sm font-light font-display text-black uppercase">Đang theo dõi</h4>
             <div className="flex gap-2">
-              <SocialButton color="bg-[#3b5998]" icon={<Facebook className="h-4 w-4" />} />
-              <SocialButton color="bg-[#1da1f2]" icon={<Twitter className="h-4 w-4" />} />
-              <SocialButton color="bg-[#bd081c]" icon={<span className="font-serif font-bold text-sm">P</span>} />
-              <SocialButton color="bg-[#35465c]" icon={<span className="font-bold text-sm">t</span>} />
-              <SocialButton color="bg-[#f96a0e]" icon={<Mail className="h-4 w-4" />} />
+              <img
+                  src="https://i.pravatar.cc/40?img=1"
+                  alt="avatar-1"
+                  className="h-8 w-8 rounded-full object-cover"
+              />
+              <img
+                  src="https://i.pravatar.cc/40?img=2"
+                  alt="avatar-2"
+                  className="h-8 w-8 rounded-full object-cover"
+              />
+              <img
+                  src="https://i.pravatar.cc/40?img=3"
+                  alt="avatar-3"
+                  className="h-8 w-8 rounded-full object-cover"
+              />
+              <img
+                  src="https://i.pravatar.cc/40?img=4"
+                  alt="avatar-4"
+                  className="h-8 w-8 rounded-full object-cover"
+              />
             </div>
           </div>
           <div className="pt-4 border-t border-gray-100">

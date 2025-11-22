@@ -5,7 +5,6 @@ import {authOptions} from '../app/api/auth/[...nextauth]/route';
 export async function getAuthenticatedServerApi() {
   // 1. Lấy session. Nhờ Type Augmentation, TypeScript đã hiểu cấu trúc session
   const session = await getServerSession(authOptions);
-
   // 2. Kiểm tra xác thực
   if (!session || !session.accessToken) {
     // Luôn ném lỗi để API Route có thể bắt và trả về 401

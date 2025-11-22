@@ -1,62 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
+// src/app/api/follows/[targetUserId]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedServerApi } from "@/src/lib/auth-server-api";
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: { targetUserId: string } },
+    req: NextRequest,
+    { params }: { params: Promise<{ targetUserId: string }> }
 ) {
     try {
+        const { targetUserId } = await params;
+
         const api = await getAuthenticatedServerApi();
-        const response = await api.get(
-            `follows/${params.targetUserId}`,
-        );
-
+        const response = await api.get(`follows/${targetUserId}`);
         return NextResponse.json(response.data);
-    } catch (error: any) {
-        console.error('BFF /api/follows GET error:', error?.response?.data || error);
-
-        if (error instanceof Error && error.message.startsWith('Unauthorized')) {
-            return NextResponse.json({ message: error.message }, { status: 401 });
-        }
-
+    } catch (error) {
+        console.error("GET /api/follows/[targetUserId] error:", error);
         return NextResponse.json(
-            {
-                message:
-                    error?.response?.data?.message ||
-                    'Get follow state request failed',
-            },
-            { status: error?.response?.status || 500 },
+            { message: "Something went wrong" },
+            { status: 500 }
         );
     }
 }
 
 export async function POST(
-    request: NextRequest,
-    { params }: { params: { targetUserId: string } },
+    req: NextRequest,
+    { params }: { params: Promise<{ targetUserId: string }> }
 ) {
     try {
+        const { targetUserId } = await params;
+
         const api = await getAuthenticatedServerApi();
-
-        // toggle follow không cần body, chỉ cần user từ token + targetUserId
-        const response = await api.post(
-            `follows/${params.targetUserId}`,
-        );
-
+        const response = await api.post(`follows/${targetUserId}`);
         return NextResponse.json(response.data);
-    } catch (error: any) {
-        console.error('BFF /api/follows POST error:', error?.response?.data || error);
-
-        if (error instanceof Error && error.message.startsWith('Unauthorized')) {
-            return NextResponse.json({ message: error.message }, { status: 401 });
-        }
-
+    } catch (error) {
+        console.error("POST /api/follows/[targetUserId] error:", error);
         return NextResponse.json(
-            {
-                message:
-                    error?.response?.data?.message ||
-                    'Toggle follow request failed',
-            },
-            { status: error?.response?.status || 500 },
+            { message: "Something went wrong" },
+            { status: 500 }
         );
     }
 }
