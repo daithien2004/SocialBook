@@ -9,6 +9,11 @@ export const NESTJS_AUTH_ENDPOINTS = {
   resendOtp: '/auth/resend-otp',
 };
 
+export const NESTJS_USERS_ENDPOINTS = {
+  getUsers: '/users',
+  banUser: (id: string) => `/users/${id}/ban`,
+};
+
 export const NESTJS_COMMENTS_ENDPOINTS = {
   getCommentsByTarget: '/comments/target',
   postCreate: '/comments',

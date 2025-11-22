@@ -7,7 +7,7 @@ import * as bcrypt from 'bcrypt';
 import aqp from 'api-query-params';
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) { }
 
   async isEmailExist(email: string) {
     const user = await this.userModel.exists({ email });
@@ -15,7 +15,7 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
-    const { username, email, password, provider, providerId, image } =
+    const { username, email, password, provider, providerId, image, roleId } =
       createUserDto;
 
     const isExist = await this.isEmailExist(email);
@@ -32,6 +32,7 @@ export class UsersService {
         provider,
         providerId,
         image,
+        roleId,
       });
     }
 
@@ -41,6 +42,7 @@ export class UsersService {
       email,
       password: hashPassword,
       provider,
+      roleId,
     });
   }
 
@@ -100,5 +102,17 @@ export class UsersService {
     if (!user || !user.hashedRt) return false;
     const isMatch = await bcrypt.compare(rt, user.hashedRt);
     return isMatch;
+  }
+
+  async toggleBan(userId: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    user.isBanned = !user.isBanned;
+    await user.save();
+
+    return user;
   }
 }

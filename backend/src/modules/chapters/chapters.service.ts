@@ -130,11 +130,21 @@ export class ChaptersService {
     }
 
     // EXECUTION
-    const chapters = await this.chapterModel
-      .find({ bookId: book._id })
-      .select('title slug orderIndex viewsCount createdAt updatedAt')
-      .sort({ orderIndex: 1 })
-      .lean();
+    const chapters = await this.chapterModel.aggregate([
+      { $match: { bookId: book._id } },
+      { $sort: { orderIndex: 1 } },
+      {
+        $project: {
+          title: 1,
+          slug: 1,
+          orderIndex: 1,
+          viewsCount: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          paragraphsCount: { $size: '$paragraphs' },
+        },
+      },
+    ]);
 
     // RETURN
     return {
@@ -152,6 +162,7 @@ export class ChaptersService {
         viewsCount: chapter.viewsCount,
         createdAt: chapter.createdAt,
         updatedAt: chapter.updatedAt,
+        paragraphsCount: chapter.paragraphsCount,
       })),
     };
   }

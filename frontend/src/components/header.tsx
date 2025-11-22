@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
 export function Header() {
-  const router = useRouter();
+    const router = useRouter();
   const { data: session, status } = useSession();
 
   const isAuthenticated = status === "authenticated";
@@ -53,13 +53,13 @@ export function Header() {
                 Tìm Kiếm Sách
               </button>
 
-              <button
-                  onClick={() => router.push("/posts")}
-                  className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors duration-200"
-              >
-                <Globe className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
-                Bảng Feed
-              </button>
+                        <button
+                            onClick={() => router.push('/posts')}
+                            className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors duration-200"
+                        >
+                            <Globe className="w-4 h-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                            Bảng Feed
+                        </button>
 
               <button
                   onClick={() => router.push("/library")}
