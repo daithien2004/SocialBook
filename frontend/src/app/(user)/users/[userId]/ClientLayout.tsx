@@ -7,6 +7,7 @@ import { RootState } from "@/src/store/store";
 import { ReactNode } from "react";
 import { ProfileSidebar } from "@/src/components/user/profile-sidebar";
 import { FollowStateResponse } from "@/src/features/follows/api/followApi";
+import {useGetUserOverviewQuery} from "@/src/features/users/api/usersApi";
 
 interface ClientLayoutProps {
     children: ReactNode;
@@ -18,9 +19,19 @@ export default function ClientLayout(props : ClientLayoutProps) {
     const {children, profileUserId, initialFollowState} = props
     const auth = useSelector((state: RootState) => state.auth);
 
+    const { data: overview, isLoading: isOverviewLoading } =
+        useGetUserOverviewQuery(profileUserId, {
+            skip: !profileUserId,
+        });
+
     return (
         <div className="min-h-screen bg-gray-100">
-            <ProfileHeader username={auth?.user?.username} />
+            <ProfileHeader username={overview?.username}
+                           image={overview?.image}
+                           postCount = {overview?.postCount}
+                           readingListCount = {overview?.readingListCount}
+                           followersCount = {overview?.followersCount}
+            />
 
             <ProfileNav
                 profileUserId={profileUserId}
@@ -30,7 +41,9 @@ export default function ClientLayout(props : ClientLayoutProps) {
             <main className="container mx-auto max-w-6xl px-4 py-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                     <div className="w-full lg:w-[35%]">
-                        <ProfileSidebar />
+
+                        <ProfileSidebar profileUserId={profileUserId}
+                                        joinedAt = {overview?.joinedAt}/>
                     </div>
                     <div className="w-full lg:w-[65%]">{children}</div>
                 </div>

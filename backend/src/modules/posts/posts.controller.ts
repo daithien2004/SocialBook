@@ -63,7 +63,6 @@ export class PostsController {
   @Get()
   async findAll(@Query() query: PaginationDto) {
     // Giới hạn limit để tránh query quá nhiều data
-    console.log('ssssss');
     if (query.limit > 100) {
       throw new BadRequestException('Limit cannot exceed 100');
     }

@@ -16,10 +16,6 @@ export function ReadingListItem() {
             </div>
             <div className="flex items-center justify-start">
                 <BookItem/>
-                <BookItem/>
-                <BookItem/>
-                <BookItem/>
-                <BookItem/>
             </div>
         </>
     )
