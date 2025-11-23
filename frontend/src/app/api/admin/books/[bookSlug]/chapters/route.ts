@@ -1,9 +1,9 @@
 // api/admin/books/[bookSlug]/chapters/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import serverApi from '@/src/lib/server-api';
 import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
+import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 
 const forbiddenResponse = NextResponse.json(
     {
@@ -34,13 +34,9 @@ export async function GET(
     const { bookSlug } = await params;
 
     try {
-        const response = await serverApi.get(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.get(
             NESTJS_CHAPTERS_ENDPOINTS.getChapters(bookSlug),
-            {
-                headers: {
-                    Authorization: `Bearer ${session.accessToken}`,
-                },
-            },
         );
 
         return NextResponse.json({
@@ -85,14 +81,10 @@ export async function POST(
     try {
         const body = await request.json();
 
-        const response = await serverApi.post(
-            NESTJS_CHAPTERS_ENDPOINTS.createChapter(bookSlug),
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.post(
+            NESTJS_CHAPTERS_ENDPOINTS.createChapterByBookId(bookSlug),
             body,
-            {
-                headers: {
-                    Authorization: `Bearer ${session.accessToken}`,
-                },
-            },
         );
 
         return NextResponse.json({

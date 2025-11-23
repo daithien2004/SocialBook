@@ -1,9 +1,9 @@
 // api/admin/books/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import serverApi from '@/src/lib/server-api';
 import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
+import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 
 const forbiddenResponse = NextResponse.json(
   {
@@ -29,13 +29,11 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined;
     const search = searchParams.get('search') || undefined;
 
-    const response = await serverApi.get(
+    const authenticatedApi = await getAuthenticatedServerApi();
+    const response = await authenticatedApi.get(
       NESTJS_BOOKS_ENDPOINTS.getAllBookForAdmin,
       {
         params: { page, limit, status, search },
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
       },
     );
 
@@ -72,15 +70,10 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
 
     // Forward the FormData to NestJS backend
-    const response = await serverApi.post(
+    const authenticatedApi = await getAuthenticatedServerApi();
+    const response = await authenticatedApi.post(
       NESTJS_BOOKS_ENDPOINTS.createBook,
       formData,
-      {
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          // Don't set Content-Type, let axios handle it for FormData
-        },
-      },
     );
 
     return NextResponse.json({

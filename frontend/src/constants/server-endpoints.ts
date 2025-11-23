@@ -48,6 +48,8 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
   deleteChapter: (bookSlug: string, chapterId: string) =>
     `/books/${bookSlug}/chapters/${chapterId}`,
   // Admin-specific endpoints
+  createChapterAdmin: (bookSlug: string) => `/books/${bookSlug}/chapters`,
+  createChapterByBookId: (bookId: string) => `/books/${bookId}/chapters`,
   updateChapterAdmin: (bookSlug: string, chapterId: string) =>
     `/books/${bookSlug}/chapters/${chapterId}`,
   deleteChapterAdmin: (bookSlug: string, chapterId: string) =>
@@ -83,4 +85,12 @@ export const NESTJS_LIBRARY_ENDPOINTS = {
   // Collections System (Folder)
   collections: '/collections', // GET, POST
   collectionDetail: (id: string) => `/collections/${id}`,
+};
+
+export const NESTJS_STATISTICS_ENDPOINTS = {
+  overview: '/statistics/overview',
+  users: '/statistics/users',
+  books: '/statistics/books',
+  posts: '/statistics/posts',
+  growth: (days?: number) => `/statistics/growth${days ? `?days=${days}` : ''}`,
 };

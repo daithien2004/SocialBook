@@ -96,7 +96,6 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             googleId: user.id,
             avatar: user.image,
-
           });
           authData = response.data.data;
 
