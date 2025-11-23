@@ -202,25 +202,6 @@ export default function ChapterManagementPage() {
 
       setTimeout(() => {
         const allTextareas = Array.from(document.querySelectorAll('textarea'));
-        // We need to find the textarea that is now at index-1.
-        // Since we removed one, the indices shifted.
-        // The element that WAS at index-1 is still there (unless we removed index 0).
-        // But we can't rely on e.currentTarget anymore as it's gone from the list (conceptually).
-        // However, we can try to find the textarea that corresponds to the previous paragraph.
-
-        // Let's use the same logic as before which seemed to work:
-        // Find all textareas. We want the one at `index - 1` relative to the *new* list?
-        // No, relative to the *old* list structure, it was the one before.
-        // In the DOM, the one we removed is gone.
-        // So the one that was at `index-1` is still at `index-1` (if index > 0).
-        // Wait, if we remove index 5. Index 4 stays at 4.
-        // So we just need to target the textarea at index-1 in the new DOM list.
-
-        // But `document.querySelectorAll` returns the *current* DOM.
-        // React updates asynchronously.
-        // So inside setTimeout(0), the DOM *should* be updated.
-        // So we want the textarea at `index - 1`.
-
         const newTextareas = document.querySelectorAll('textarea');
         if (index > 0 && newTextareas[index - 1]) {
           const el = newTextareas[index - 1] as HTMLTextAreaElement;
@@ -246,23 +227,48 @@ export default function ChapterManagementPage() {
     setParagraphs(newParagraphs);
   };
 
-
   const handleCreateChapter = async () => {
-    if (!book?.slug || !newChapterTitle.trim()) return;
+    if (!bookId) {
+      console.error('Cannot create chapter: bookId is missing', { bookId, book, bookData });
+      alert('Lỗi: Không tìm thấy ID sách. Vui lòng tải lại trang.');
+      return;
+    }
+
+    if (!newChapterTitle.trim()) {
+      alert('Vui lòng nhập tiêu đề chương');
+      return;
+    }
+
+    console.log('Creating chapter with:', {
+      bookId, // Backend expects bookId (ObjectId), not slug
+      bookSlug: book?.slug,
+      title: newChapterTitle,
+      paragraphs: newChapterParagraphs
+    });
 
     try {
-      await createChapter({
-        bookSlug: book.slug,
+      // Note: The mutation parameter is named "bookSlug" but we're passing bookId
+      // because the backend route expects an ObjectId, not a slug
+      const result = await createChapter({
+        bookSlug: bookId, // This is actually bookId, not slug!
         data: {
           title: newChapterTitle,
           paragraphs: newChapterParagraphs.filter(p => p.content.trim()),
         },
       }).unwrap();
+
+      console.log('Chapter created successfully:', result);
       setShowNewChapterForm(false);
       setNewChapterTitle('');
       setNewChapterParagraphs([{ id: uuidv4(), content: '' }]);
-    } catch (error) {
-      console.error('Failed to create chapter:', error);
+    } catch (error: any) {
+      console.error('Failed to create chapter:', {
+        error,
+        errorData: error?.data,
+        errorMessage: error?.message,
+        errorStatus: error?.status,
+      });
+      alert(`Tạo chương thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
     }
   };
 

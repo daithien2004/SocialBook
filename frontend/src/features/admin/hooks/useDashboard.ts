@@ -28,6 +28,13 @@ export function useDashboardData(timeRange: string) {
             const overviewData = await overviewRes.json();
             const growthDataRes = await growthRes.json();
 
+            console.log('📊 Dashboard Statistics Debug:', {
+                overviewData,
+                overviewDataData: overviewData.data,
+                booksData: overviewData.data?.books,
+                chaptersCount: overviewData.data?.books?.chapters,
+            });
+
             setStats(overviewData.data);
             setGrowthData(growthDataRes.data || []);
         } catch (err: any) {

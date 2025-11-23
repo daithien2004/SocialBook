@@ -48,6 +48,8 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
   deleteChapter: (bookSlug: string, chapterId: string) =>
     `/books/${bookSlug}/chapters/${chapterId}`,
   // Admin-specific endpoints
+  createChapterAdmin: (bookSlug: string) => `/books/${bookSlug}/chapters`,
+  createChapterByBookId: (bookId: string) => `/books/${bookId}/chapters`,
   updateChapterAdmin: (bookSlug: string, chapterId: string) =>
     `/books/${bookSlug}/chapters/${chapterId}`,
   deleteChapterAdmin: (bookSlug: string, chapterId: string) =>

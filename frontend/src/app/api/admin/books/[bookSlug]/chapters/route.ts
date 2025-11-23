@@ -83,7 +83,7 @@ export async function POST(
 
         const authenticatedApi = await getAuthenticatedServerApi();
         const response = await authenticatedApi.post(
-            NESTJS_CHAPTERS_ENDPOINTS.createChapter(bookSlug),
+            NESTJS_CHAPTERS_ENDPOINTS.createChapterByBookId(bookSlug),
             body,
         );
 
