@@ -2,29 +2,20 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { useSession, signOut } from 'next-auth/react';
-import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut } from 'lucide-react';
-
-const navItems = [
-  { name: 'Dashboard', icon: Home, href: '/admin/dashboard' },
-  { name: 'Users', icon: Users, href: '/admin/users' },
-  { name: 'Books', icon: BookOpen, href: '/admin/books' },
-  { name: 'Posts', icon: FileText, href: '/admin/posts' },
-  { name: 'Comments', icon: MessageSquare, href: '/admin/comments' },
-  { name: 'Reports', icon: BarChart2, href: '/admin/reports' },
-];
+import { useSession } from 'next-auth/react';
+import { Users, BookOpen, FileText, MessageSquare, BarChart2, Download } from 'lucide-react';
+import { StatCard } from '@/src/components/admin/StatCard';
+import { UserGrowthChart } from '@/src/components/admin/UserGrowthChart';
+import { TimeRangeSelector } from '@/src/components/admin/TimeRangeSelector';
+import { useDashboardData, useExportStatistics } from '@/src/features/admin/hooks/useDashboard';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalBooks: 0,
-    totalPosts: 0,
-    totalComments: 0,
-  });
+  const [timeRange, setTimeRange] = useState('30');
+
+  const { stats, growthData, loading, error, refetch } = useDashboardData(timeRange);
+  const { exportCSV, exporting } = useExportStatistics();
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -34,215 +25,176 @@ export default function AdminDashboard() {
 
     if (status === 'authenticated' && session?.user?.role !== 'admin') {
       router.push('/');
+      return;
     }
   }, [status, session, router]);
 
-  const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: '/login' });
-  };
-
-  if (status === 'loading') {
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin" />
-          <p className="text-gray-600 font-medium">Loading Session...</p>
+          <p className="text-gray-600 font-medium">Loading Dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (status === 'authenticated' && session?.user?.role === 'admin') {
-    const { user } = session;
-
+  if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
-        {/* Mobile Overlay */}
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
-
-
-
-        {/* Main Content  */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="bg-white shadow-md p-4 flex items-center justify-between md:px-8">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="text-gray-500 hover:text-gray-700 md:hidden"
-            >
-              <Menu size={24} />
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <div className="flex items-center gap-4">
-              {user.image && (
-                <Image
-                  src={user.image}
-                  alt={user.username || 'Admin'}
-                  width={40}
-                  height={40}
-                  className="rounded-full ring-2 ring-indigo-100"
-                />
-              )}
-              <div className="hidden sm:block">
-                <p className="text-sm font-medium text-gray-900">{user.username || 'Admin'}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
-              </div>
-            </div>
-          </header>
-
-          {/* Main */}
-          <main className="p-4 md:p-8 flex-1">
-            {/* Welcome */}
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Xin chào, {user.username || 'Admin'}!
-              </h2>
-              <p className="text-gray-600">Quản lý hệ thống SocialBook của bạn</p>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tổng số người dùng</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalUsers}</p>
-                  </div>
-                  <div className="bg-blue-50 rounded-full p-3">
-                    <Users className="w-6 h-6 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tổng số sách</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalBooks}</p>
-                  </div>
-                  <div className="bg-green-50 rounded-full p-3">
-                    <BookOpen className="w-6 h-6 text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tổng số bài viết</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalPosts}</p>
-                  </div>
-                  <div className="bg-purple-50 rounded-full p-3">
-                    <FileText className="w-6 h-6 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tổng số bình luận</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalComments}</p>
-                  </div>
-                  <div className="bg-yellow-50 rounded-full p-3">
-                    <MessageSquare className="w-6 h-6 text-yellow-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Quản lý người dùng</h3>
-                <p className="text-gray-600 mb-4">Xem danh sách người dùng, quản lý quyền truy cập và tài khoản</p>
-                <a
-                  href="/admin/users"
-                  className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Quản lý người dùng
-                </a>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Quản lý sách</h3>
-                <p className="text-gray-600 mb-4">Thêm, sửa, xóa sách và quản lý nội dung trong hệ thống</p>
-                <a
-                  href="/admin/books"
-                  className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Quản lý sách
-                </a>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Quản lý bài viết</h3>
-                <p className="text-gray-600 mb-4">Kiểm duyệt và quản lý các bài viết của người dùng</p>
-                <a
-                  href="/admin/posts"
-                  className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Quản lý bài viết
-                </a>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Báo cáo & Thống kê</h3>
-                <p className="text-gray-600 mb-4">Xem báo cáo chi tiết và thống kê hoạt động của hệ thống</p>
-                <a
-                  href="/admin/reports"
-                  className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Xem báo cáo
-                </a>
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Hoạt động gần đây</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center">
-                    <Home className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Người dùng mới đăng ký</p>
-                    <p className="text-xs text-gray-500">2 giờ trước</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Sách mới được thêm</p>
-                    <p className="text-xs text-gray-500">5 giờ trước</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-10 h-10 bg-yellow-50 rounded-full flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Bài viết được cập nhật</p>
-                    <p className="text-xs text-gray-500">1 ngày trước</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </main>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-red-600 font-medium mb-4">{error}</p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
-  return null;
+  if (!stats) return null;
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header with Time Range and Export */}
+      <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">Welcome back, {session?.user?.username}!</p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+          <button
+            onClick={exportCSV}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard
+          title="Total Users"
+          value={stats.users.total.toLocaleString()}
+          icon={Users}
+          trend={{
+            value: stats.users.growth,
+            isPositive: stats.users.growth >= 0,
+          }}
+          iconBgColor="bg-blue-50"
+          iconColor="text-blue-600"
+        />
+        <StatCard
+          title="Total Books"
+          value={stats.books.total.toLocaleString()}
+          icon={BookOpen}
+          iconBgColor="bg-green-50"
+          iconColor="text-green-600"
+        />
+        <StatCard
+          title="Active Posts"
+          value={stats.posts.active.toLocaleString()}
+          icon={FileText}
+          iconBgColor="bg-purple-50"
+          iconColor="text-purple-600"
+        />
+        <StatCard
+          title="Total Comments"
+          value={stats.comments.toLocaleString()}
+          icon={MessageSquare}
+          iconBgColor="bg-yellow-50"
+          iconColor="text-yellow-600"
+        />
+      </div>
+
+      {/* Additional Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Users ({timeRange}d)</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.users.active.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-indigo-50 rounded-full p-3">
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Chapters</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.books.chapters.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-green-50 rounded-full p-3">
+              <BarChart2 className="w-5 h-5 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Reviews</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.reviews.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-orange-50 rounded-full p-3">
+              <MessageSquare className="w-5 h-5 text-orange-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Growth Chart */}
+      {growthData.length > 0 && <UserGrowthChart data={growthData} />}
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        <a
+          href="/admin/users"
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow block"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Manage Users</h3>
+          <p className="text-gray-600 text-sm">
+            View and manage users, ban/unban accounts
+          </p>
+        </a>
+
+        <a
+          href="/admin/books"
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow block"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Manage Books</h3>
+          <p className="text-gray-600 text-sm">
+            Add, edit, and manage books and chapters
+          </p>
+        </a>
+
+        <a
+          href="/admin/posts"
+          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow block"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Moderate Posts</h3>
+          <p className="text-gray-600 text-sm">
+            Review and moderate user posts
+          </p>
+        </a>
+      </div>
+    </div>
+  );
 }

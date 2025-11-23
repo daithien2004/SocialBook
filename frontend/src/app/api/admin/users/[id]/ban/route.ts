@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import serverApi from '@/src/lib/server-api';
 import { NESTJS_USERS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
+import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 
 const forbiddenResponse = NextResponse.json(
     {
@@ -27,14 +27,10 @@ export async function PATCH(
     const { id } = await params;
 
     try {
-        const response = await serverApi.patch(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.patch(
             NESTJS_USERS_ENDPOINTS.banUser(id),
             {},
-            {
-                headers: {
-                    Authorization: `Bearer ${session.accessToken}`,
-                },
-            },
         );
 
         return NextResponse.json({

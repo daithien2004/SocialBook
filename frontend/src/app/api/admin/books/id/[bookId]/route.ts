@@ -1,9 +1,9 @@
 // api/admin/books/id/[bookId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import serverApi from '@/src/lib/server-api';
 import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
+import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 
 // GET single book by ID for editing
 export async function GET(
@@ -22,13 +22,9 @@ export async function GET(
     try {
         const { bookId } = await params;
 
-        const response = await serverApi.get(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.get(
             NESTJS_BOOKS_ENDPOINTS.getBookById(bookId),
-            {
-                headers: {
-                    Authorization: `Bearer ${session.accessToken}`,
-                },
-            }
         );
 
         return NextResponse.json(response.data);
@@ -61,15 +57,10 @@ export async function PUT(
         // Get FormData from request (supports file upload)
         const formData = await request.formData();
 
-        const response = await serverApi.put(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.put(
             NESTJS_BOOKS_ENDPOINTS.updateBook(bookId),
             formData,
-            {
-                headers: {
-                    Authorization: `Bearer ${session.accessToken}`,
-                    // Don't set Content-Type, let axios handle it for FormData
-                },
-            }
         );
 
         return NextResponse.json(response.data);
@@ -99,13 +90,9 @@ export async function DELETE(
     try {
         const { bookId } = await params;
 
-        const response = await serverApi.delete(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.delete(
             NESTJS_BOOKS_ENDPOINTS.deleteBook(bookId),
-            {
-                headers: {
-                    Authorization: `Bearer ${session.accessToken}`,
-                },
-            }
         );
 
         return NextResponse.json(response.data);

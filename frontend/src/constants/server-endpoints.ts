@@ -84,3 +84,11 @@ export const NESTJS_LIBRARY_ENDPOINTS = {
   collections: '/collections', // GET, POST
   collectionDetail: (id: string) => `/collections/${id}`,
 };
+
+export const NESTJS_STATISTICS_ENDPOINTS = {
+  overview: '/statistics/overview',
+  users: '/statistics/users',
+  books: '/statistics/books',
+  posts: '/statistics/posts',
+  growth: (days?: number) => `/statistics/growth${days ? `?days=${days}` : ''}`,
+};
