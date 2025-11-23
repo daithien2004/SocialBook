@@ -10,7 +10,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { Header } from '@/src/components/Header';
+import { Header } from '@/src/components/header';
 
 const ONE_DAY_IN_MS = 86400000; // Tính trước thay vì 1000 * 60 * 60 * 24
 const NEW_BOOK_THRESHOLD_DAYS = 30;

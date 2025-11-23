@@ -24,7 +24,7 @@ export class AuthService {
     private configService: ConfigService,
     private otpService: OtpService,
     @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
-  ) { }
+  ) {}
 
   async login(user: any) {
     // VALIDATION
@@ -39,7 +39,11 @@ export class AuthService {
     // Populate role để lấy role name
     const userWithRole = await this.usersService.findById(user.id.toString());
     let roleName = 'user'; // default
-    if (userWithRole?.roleId && typeof userWithRole.roleId === 'object' && 'name' in userWithRole.roleId) {
+    if (
+      userWithRole?.roleId &&
+      typeof userWithRole.roleId === 'object' &&
+      'name' in userWithRole.roleId
+    ) {
       roleName = (userWithRole.roleId as any).name || 'user';
     }
 
@@ -84,7 +88,9 @@ export class AuthService {
 
     // Fetch default 'user' role
     const userRole = await this.roleModel.findOne({ name: 'user' });
-    const roleId = userRole?._id;
+    if (!userRole) {
+      throw new InternalServerErrorException('Default user role not found');
+    }
 
     // EXECUTION
     await this.usersService.create({
@@ -92,7 +98,7 @@ export class AuthService {
       email: dto.email,
       password: dto.password,
       provider: 'local',
-      roleId: roleId as string,
+      roleId: userRole._id.toString(),
     });
 
     // RETURN
@@ -106,6 +112,12 @@ export class AuthService {
 
     // EXECUTION
     if (!user) {
+      const userRole = await this.roleModel.findOne({ name: 'user' });
+      console.log(userRole);
+      if (!userRole) {
+        throw new InternalServerErrorException('Default user role not found');
+      }
+
       // Chưa có account → TỰ ĐỘNG TẠO MỚI
       user = await this.usersService.create({
         username: dto.username || dto.email.split('@')[0],
@@ -114,6 +126,7 @@ export class AuthService {
         providerId: dto.googleId,
         image: dto.image,
         isVerified: true, // Google đã verify rồi
+        roleId: userRole._id.toString(),
       });
     } else {
       // Đã có account → KIỂM TRA PROVIDER
@@ -130,7 +143,11 @@ export class AuthService {
     // Populate role để lấy role name
     const userWithRole = await this.usersService.findById(user.id.toString());
     let roleName = 'user'; // default
-    if (userWithRole?.roleId && typeof userWithRole.roleId === 'object' && 'name' in userWithRole.roleId) {
+    if (
+      userWithRole?.roleId &&
+      typeof userWithRole.roleId === 'object' &&
+      'name' in userWithRole.roleId
+    ) {
       roleName = (userWithRole.roleId as any).name || 'user';
     }
 
