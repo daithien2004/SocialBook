@@ -1,13 +1,21 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto, UpdateRefreshTokenDto } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
 import aqp from 'api-query-params';
+import { Follow, FollowDocument } from '@/src/modules/folllows/schemas/folllow.schema';
+import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
+import { ReadingList, ReadingListDocument } from '@/src/modules/library/schemas/reading-list.schema';
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) { }
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    @InjectModel(ReadingList.name) private readingListModel: Model<ReadingListDocument>,
+  ) { }
 
   async isEmailExist(email: string) {
     const user = await this.userModel.exists({ email });
@@ -114,5 +122,36 @@ export class UsersService {
     await user.save();
 
     return user;
+  }
+
+  async getUserProfileOverview(userId: string) {
+    const objectId = new Types.ObjectId(userId);
+
+    // 1. Lấy thông tin cơ bản của user
+    const user = await this.userModel
+      .findById(objectId)
+      .select('_id username image createdAt')
+      .lean();
+
+    if (!user) {
+      throw new NotFoundException('User không tồn tại');
+    }
+
+    // 2. Chạy song song các count bằng Promise.all cho nhanh
+    const [postCount, readingListCount, followersCount] = await Promise.all([
+      this.postModel.countDocuments({ userId: objectId, isDelete: false }),
+      this.readingListModel.countDocuments({ userId: objectId }),
+      this.followModel.countDocuments({ targetId: objectId }),
+    ]);
+
+    return {
+      id: user._id.toString(),
+      username: user.username,
+      image: user.image ?? null,
+      joinedAt: user.createdAt,
+      postCount,
+      readingListCount,
+      followersCount,
+    };
   }
 }

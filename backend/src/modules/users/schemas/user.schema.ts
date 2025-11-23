@@ -40,6 +40,11 @@ export class User {
 
   @Prop()
   hashedRt?: string; // lưu refresh token hash
+
+  @Prop({ type: Date, default: Date.now })
+  createdAt: Date;
+  @Prop({ type: Date, default: Date.now })
+  updatedAt: Date;
 }
 
 export type UserDocument = HydratedDocument<User>;

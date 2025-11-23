@@ -36,10 +36,6 @@ export const BFF_COMMENTS_ENDPOINTS = {
   getResolveParent: '/comments/resolve-parent',
 };
 
-export const BFF_FOLLOWS_ENDPOINTS = {
-  getFollowState: '/follows',
-  toggleFollow: '/follows',
-};
 
 export const BFF_LIKES_ENDPOINTS = {
   postToggleLike: '/likes/toggle',

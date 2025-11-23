@@ -1,10 +1,14 @@
 import {createApi} from "@reduxjs/toolkit/query/react";
 import {axiosBaseQuery} from "@/src/lib/client-api";
-import { BFF_FOLLOWS_ENDPOINTS} from "@/src/constants/client-endpoints";
 
 export interface FollowStateResponse {
     isOwner: boolean;
     isFollowing: boolean;
+}
+
+export interface FollowingUser {
+    id: string;
+    image?: string;
 }
 
 export const followApi = createApi({
@@ -12,20 +16,18 @@ export const followApi = createApi({
     baseQuery: axiosBaseQuery(),
     tagTypes: ['Follow'],
     endpoints: (builder) => ({
-        getFollowState: builder.query<FollowStateResponse, string>({
-            query: (targetUserId) => ({
-                url: `${BFF_FOLLOWS_ENDPOINTS.getFollowState}/${targetUserId}`,
-                method: 'GET',
+        getFollowingList: builder.query<FollowingUser[], string>({
+            query: (currentUserId) => ({
+                url: `/follows?currentUserId=${currentUserId}`,
+                method: "GET",
             }),
-            providesTags: (result, error, targetUserId) =>
-                result
-                    ? [{ type: 'Follow', id: targetUserId }]
-                    : [{ type: 'Follow', id: 'LIST' }],
+            transformResponse: (response: FollowingUser[]) => response ?? [],
+            providesTags: (result) => [{ type: "Follow", id: "FOLLOWING_LIST" }],
         }),
 
         toggleFollow: builder.mutation<FollowStateResponse, string>({
             query: (targetUserId) => ({
-                url: `${BFF_FOLLOWS_ENDPOINTS.toggleFollow}/${targetUserId}`,
+                url: `/follows/${targetUserId}`,
                 method: "POST",
             }),
             invalidatesTags: (result, error, targetUserId) => [
@@ -36,6 +38,6 @@ export const followApi = createApi({
 });
 
 export const {
-    useGetFollowStateQuery,
-    useToggleFollowMutation
+    useToggleFollowMutation,
+    useGetFollowingListQuery
 } = followApi

@@ -1,14 +1,13 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -19,7 +18,7 @@ import { RolesGuard } from '@/src/common/guards/roles.guard';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -63,5 +62,11 @@ export class UsersController {
         isBanned: user.isBanned,
       },
     };
+  }
+
+  @Public()
+  @Get(':id/overview')
+  async getUserProfileOverview(@Param('id') id: string) {
+    return await this.usersService.getUserProfileOverview(id);
   }
 }

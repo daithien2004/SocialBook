@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { FollowsService } from './folllows.service';
+import { Public } from '@/src/common/decorators/customize';
 
 @Controller('follows')
 export class FollowsController {
@@ -12,7 +13,7 @@ export class FollowsController {
     @Param('targetUserId') targetUserId: string,
   ) {
     return this.followsService.getFollowState(
-      req.user.id,
+      new Types.ObjectId(req.user.id),
       new Types.ObjectId(targetUserId),
     );
   }
@@ -23,8 +24,16 @@ export class FollowsController {
     @Param('targetUserId') targetUserId: string,
   ) {
     return this.followsService.toggleFollowUser(
-      req.user.id,
+      new Types.ObjectId(req.user.id,),
       new Types.ObjectId(targetUserId),
+    );
+  }
+
+  @Public()
+  @Get()
+  async getFollowingList(@Query('currentUserId') currentUserId: string) {
+    return this.followsService.getFollowingList(
+      new Types.ObjectId(currentUserId),
     );
   }
 }

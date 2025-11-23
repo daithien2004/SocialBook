@@ -32,7 +32,7 @@ export class FollowsService {
         targetId: targetUserId,
       })
       .lean();
-
+    console.log(follow);
     return {
       data:{
         isOwner: false,
@@ -65,7 +65,6 @@ export class FollowsService {
       };
     }
 
-    // Chưa follow → tạo follow mới
     await this.followModel.create({
       userId: currentUserId,
       targetId: targetUserId,
@@ -78,4 +77,31 @@ export class FollowsService {
       message: 'Theo dõi thành công',
     };
   }
+
+  async getFollowingList(currentUserId: Types.ObjectId) {
+    const follows = await this.followModel
+      .find({ userId: currentUserId })
+      .select("targetId")
+      .lean();
+
+    if (follows.length === 0) {
+      return {
+        data: [],
+        message: "Bạn chưa theo dõi ai",
+      };
+    }
+
+    const targetIds = follows.map((f) => f.targetId);
+
+    const users = await this.userModel
+      .find({ _id: { $in: targetIds } })
+      .select("_id image")
+      .lean();
+
+    return {
+      data: users,
+      message: "Lấy danh sách đang theo dõi thành công",
+    };
+  }
+
 }

@@ -31,7 +31,7 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
 
   const handleFollowClick = async () => {
     if (!isAuthenticated) {
-      router.push("/auth/login");
+      router.push("/login");
       return;
     }
 

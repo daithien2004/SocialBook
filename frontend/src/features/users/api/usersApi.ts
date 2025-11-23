@@ -2,6 +2,15 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
 import { UserListResponse } from '../types/user.types';
 
+export interface UserOverviewReponse {
+    id: string;
+    username: string;
+    image: string | null;
+    joinedAt: Date;
+    postCount: number;
+    readingListCount: number;
+    followersCount: number;
+}
 export const usersApi = createApi({
     reducerPath: 'usersApi',
     baseQuery: axiosBaseQuery(),
@@ -21,7 +30,17 @@ export const usersApi = createApi({
             }),
             invalidatesTags: ['Users'],
         }),
+
+        getUserOverview: builder.query<UserOverviewReponse, string>({
+            query: (userId) => ({
+                url: `/users/${userId}/overview`,
+                method: "GET",
+            }),
+            providesTags: (result, error, userId) => [
+                { type: "Users", id: `OVERVIEW_${userId}` },
+            ],
+        }),
     }),
 });
 
-export const { useGetUsersQuery, useBanUserMutation } = usersApi;
+export const { useGetUsersQuery, useBanUserMutation , useGetUserOverviewQuery} = usersApi;

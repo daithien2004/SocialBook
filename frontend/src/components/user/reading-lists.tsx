@@ -18,7 +18,6 @@ export function ReadingLists() {
         </div>
         <hr className="mt-4 mb-6 border-gray-300" />
         <ReadingListItem/>
-        <ReadingListItem/>
       </div>
     </div>
   );

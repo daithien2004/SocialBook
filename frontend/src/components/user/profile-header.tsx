@@ -1,7 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface PropsProfileHeader {
-  username: string | undefined
+  username: string | undefined,
+  image: string | null | undefined,
+  postCount: number | undefined,
+  readingListCount: number | undefined,
+  followersCount: number | undefined,
 }
 
 export function ProfileHeader(props : PropsProfileHeader) {
@@ -16,22 +20,21 @@ export function ProfileHeader(props : PropsProfileHeader) {
             <AvatarFallback className="bg-[#4a332a] text-4xl text-white">V</AvatarFallback>
           </Avatar>
         </div>
-        <h1 className="text-2xl font-bold">Vinh</h1>
-        <p className="text-white/70 text-sm mt-1">{`@${props.username}`}</p>
+        <h1 className="text-2xl font-bold">{props.username}</h1>
       </div>
       <div className="mt-2 flex justify-center text-center text-sm">
         <div className="w-1/12 flex flex-col items-center cursor-pointer hover:text-white/80">
-          <span className="font-bold text-lg">0</span>
-          <span className="text-xs text-white/70 uppercase">Tác phẩm</span>
+          <span className="font-bold text-lg">{props.postCount}</span>
+          <span className="text-xs text-white/70 uppercase">Bài đăng</span>
         </div>
 
         <div className="w-1/12 flex flex-col items-center cursor-pointer hover:text-white/80">
-          <span className="font-bold text-lg">2</span>
+          <span className="font-bold text-lg">{props.readingListCount}</span>
           <span className="text-xs text-white/70 uppercase">Danh Sách Đọc</span>
         </div>
 
         <div className="w-1/12 flex flex-col items-center cursor-pointer hover:text-white/80">
-          <span className="font-bold text-lg">0</span>
+          <span className="font-bold text-lg">{props.followersCount}</span>
           <span className="text-xs text-white/70 uppercase">Người Theo Dõi</span>
         </div>
       </div>
