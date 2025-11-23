@@ -16,7 +16,7 @@ export function ProfileHeader(props : PropsProfileHeader) {
         {/* Avatar */}
         <div className="rounded-full border-4 border-[#5d4037] bg-[#5d4037] p-1">
           <Avatar className="h-28 w-28 border-2 border-white/20">
-            <AvatarImage src="/placeholder.svg?height=112&width=112" alt="Vinh" />
+            <AvatarImage src={props.image} alt="Vinh" />
             <AvatarFallback className="bg-[#4a332a] text-4xl text-white">V</AvatarFallback>
           </Avatar>
         </div>
