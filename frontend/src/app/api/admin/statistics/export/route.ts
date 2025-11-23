@@ -14,7 +14,7 @@ const forbiddenResponse = NextResponse.json(
     { status: 403 },
 );
 
-export async function GET() {
+export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'admin') {
@@ -24,10 +24,14 @@ export async function GET() {
     try {
         const authenticatedApi = await getAuthenticatedServerApi();
 
+        // Get days from query params, default to 30
+        const { searchParams } = new URL(request.url);
+        const days = parseInt(searchParams.get('days') || '30', 10);
+
         // Fetch statistics from backend
         const [overviewRes, growthRes] = await Promise.all([
             authenticatedApi.get(NESTJS_STATISTICS_ENDPOINTS.overview),
-            authenticatedApi.get(NESTJS_STATISTICS_ENDPOINTS.growth(30)),
+            authenticatedApi.get(NESTJS_STATISTICS_ENDPOINTS.growth(days)),
         ]);
 
         const overviewData = overviewRes.data.data;
@@ -40,7 +44,7 @@ export async function GET() {
         csvRows.push('OVERVIEW STATISTICS');
         csvRows.push('Metric,Value');
         csvRows.push(`Total Users,${overviewData.users.total}`);
-        csvRows.push(`Active Users (30d),${overviewData.users.active}`);
+        csvRows.push(`Active Users (${days}d),${overviewData.users.active}`);
         csvRows.push(`Banned Users,${overviewData.users.banned}`);
         csvRows.push(`User Growth %,${overviewData.users.growth}`);
         csvRows.push(`Total Books,${overviewData.books.total}`);
@@ -52,7 +56,7 @@ export async function GET() {
         csvRows.push('');
 
         // Growth section
-        csvRows.push('GROWTH METRICS (Last 30 Days)');
+        csvRows.push(`GROWTH METRICS (Last ${days} Days)`);
         csvRows.push('Date,Users,Books,Posts');
 
         if (growthData && growthData.length > 0) {

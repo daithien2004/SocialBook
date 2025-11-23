@@ -69,7 +69,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
           <button
-            onClick={exportCSV}
+            onClick={() => exportCSV(timeRange)}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >

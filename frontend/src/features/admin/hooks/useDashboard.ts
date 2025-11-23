@@ -50,10 +50,10 @@ export function useDashboardData(timeRange: string) {
 export function useExportStatistics() {
     const [exporting, setExporting] = useState(false);
 
-    const exportCSV = async () => {
+    const exportCSV = async (days: string = '30') => {
         try {
             setExporting(true);
-            const response = await fetch('/api/admin/statistics/export');
+            const response = await fetch(`/api/admin/statistics/export?days=${days}`);
 
             if (!response.ok) {
                 throw new Error('Export failed');
@@ -63,7 +63,7 @@ export function useExportStatistics() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `dashboard-statistics-${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `dashboard-statistics-${days}days-${new Date().toISOString().split('T')[0]}.csv`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
