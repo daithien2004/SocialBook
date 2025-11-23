@@ -45,3 +45,8 @@ export class User {
 export type UserDocument = HydratedDocument<User>;
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Add indexes for performance optimization
+UserSchema.index({ createdAt: -1 }); // For date-based queries (growth metrics)
+UserSchema.index({ email: 1 }); // For email lookups
+UserSchema.index({ provider: 1 }); // For filtering by provider

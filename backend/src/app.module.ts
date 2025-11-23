@@ -25,6 +25,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { GenresModule } from './modules/genres/genres.module';
 import { FollowsModule } from '@/src/modules/folllows/folllows.module';
 import { LibraryModule } from './modules/library/library.module';
+import { StatisticsModule } from './modules/statistics/statistics.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import { LibraryModule } from './modules/library/library.module';
     CloudinaryModule,
     LikesModule,
     FollowsModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -100,4 +102,4 @@ import { LibraryModule } from './modules/library/library.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

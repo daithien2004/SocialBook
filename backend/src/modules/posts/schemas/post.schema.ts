@@ -27,3 +27,6 @@ export class Post {
 export type PostDocument = HydratedDocument<Post>;
 
 export const PostSchema = SchemaFactory.createForClass(Post);
+
+// Add index for performance
+PostSchema.index({ createdAt: -1 }); // For growth and recent posts queries

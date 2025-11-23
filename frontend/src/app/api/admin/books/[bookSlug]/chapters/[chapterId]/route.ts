@@ -1,9 +1,9 @@
 // api/admin/books/[bookSlug]/chapters/[chapterId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import serverApi from '@/src/lib/server-api';
 import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
+import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 
 const forbiddenResponse = NextResponse.json(
     {
@@ -24,9 +24,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const { bookSlug, chapterId } = await params;
     try {
-        const response = await serverApi.get(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.get(
             NESTJS_CHAPTERS_ENDPOINTS.getChapterById(bookSlug, chapterId),
-            { headers: { Authorization: `Bearer ${session.accessToken}` } },
         );
         return NextResponse.json({
             success: true,
@@ -58,10 +58,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { bookSlug, chapterId } = await params;
     try {
         const body = await request.json();
-        const response = await serverApi.put(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.put(
             NESTJS_CHAPTERS_ENDPOINTS.updateChapterAdmin(bookSlug, chapterId),
             body,
-            { headers: { Authorization: `Bearer ${session.accessToken}` } },
         );
         return NextResponse.json({
             success: true,
@@ -92,9 +92,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     const { bookSlug, chapterId } = await params;
     try {
-        const response = await serverApi.delete(
+        const authenticatedApi = await getAuthenticatedServerApi();
+        const response = await authenticatedApi.delete(
             NESTJS_CHAPTERS_ENDPOINTS.deleteChapterAdmin(bookSlug, chapterId),
-            { headers: { Authorization: `Bearer ${session.accessToken}` } },
         );
         return NextResponse.json({
             success: true,
