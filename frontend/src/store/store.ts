@@ -10,6 +10,7 @@ import { followApi } from "@/src/features/follows/api/followApi";
 import { reviewApi } from '../features/reviews/api/reviewApi';
 import { libraryApi } from '../features/library/api/libraryApi';
 import { usersApi } from '../features/users/api/usersApi';
+import { ttsApi } from '../features/tts/api/ttsApi';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     [reviewApi.reducerPath]: reviewApi.reducer,
     [libraryApi.reducerPath]: libraryApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
+    [ttsApi.reducerPath]: ttsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -36,7 +38,8 @@ export const store = configureStore({
       .concat(reviewApi.middleware)
       .concat(libraryApi.middleware)
       .concat(followApi.middleware)
-      .concat(usersApi.middleware),
+      .concat(usersApi.middleware)
+      .concat(ttsApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
