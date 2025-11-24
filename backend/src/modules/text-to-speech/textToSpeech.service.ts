@@ -45,9 +45,10 @@ export class TextToSpeechService {
 
     if (hasVietnamese) {
       console.log(`🇻🇳 Detected Vietnamese (diacritics present)`);
+      // Try different voice codes - VoiceRSS may be case-sensitive or require specific format
       return {
         code: 'vi-VN',
-        voice: 'vi-vn',
+        voice: 'vi-VN', // Changed from 'vi-vn' to 'vi-VN' (capitalized)
         name: 'Vietnamese',
       };
     }
@@ -55,7 +56,7 @@ export class TextToSpeechService {
     console.log(`🇺🇸 Detected English (no Vietnamese diacritics)`);
     return {
       code: 'en-US',
-      voice: 'en-us',
+      voice: 'en-US', // Also capitalize for consistency
       name: 'English',
     };
   }
@@ -372,17 +373,43 @@ export class TextToSpeechService {
       throw new InternalServerErrorException('VoiceRSS API key not found');
     }
 
-    // VoiceRSS URL
-    const url = `https://api.voicerss.org/?key=${apiKey}&src=${encodeURIComponent(
-      text,
-    )}&hl=${voice}&c=${format}&f=44khz_16bit_stereo`;
+    // VoiceRSS URL (base only)
+    const url = 'https://api.voicerss.org/';
 
-    // Call VoiceRSS API
-    const response = await fetch(url);
+    console.log(`🎤 VoiceRSS API Call (POST):`, {
+      voice,
+      format,
+      textLength: text.length,
+      textPreview: text.substring(0, 100) + '...',
+    });
+
+    // Prepare form data
+    const formData = new URLSearchParams();
+    formData.append('key', apiKey);
+    formData.append('src', text);
+    formData.append('hl', voice);
+    formData.append('c', format);
+    formData.append('f', '44khz_16bit_stereo');
+
+    // Call VoiceRSS API via POST
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+
+    console.log(`📡 VoiceRSS Response:`, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+    });
 
     if (!response.ok) {
       const err = await response.text();
-      throw new InternalServerErrorException(`VoiceRSS error: ${err}`);
+      console.error(`❌ VoiceRSS Error Response:`, err);
+      throw new InternalServerErrorException(`VoiceRSS error (${voice}): ${err}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();
