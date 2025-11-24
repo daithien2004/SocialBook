@@ -22,7 +22,7 @@ export default function AdminAuthorsPage() {
     });
 
     const [deleteAuthor, { isLoading: isDeleting }] = useDeleteAuthorMutation();
-    const authors: Author[] = data?.result || [];
+    const authors: Author[] = data?.data || [];
     const meta = data?.meta;
 
     const handleDelete = async (id: string, name: string) => {
@@ -162,7 +162,7 @@ export default function AdminAuthorsPage() {
                         </div>
 
                         {/* Pagination */}
-                        {meta && meta.pages > 1 && (
+                        {meta && meta.totalPages > 1 && (
                             <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between text-sm">
                                 <div className="text-gray-600">
                                     Hiển thị {(page - 1) * 15 + 1} - {Math.min(page * 15, meta.total)} trong {meta.total.toLocaleString()} tác giả
@@ -175,10 +175,10 @@ export default function AdminAuthorsPage() {
                                     >
                                         <ChevronLeft className="w-5 h-5" />
                                     </button>
-                                    <span className="font-medium">Trang {page} / {meta.pages}</span>
+                                    <span className="font-medium">Trang {page} / {meta.totalPages}</span>
                                     <button
-                                        onClick={() => setPage(p => Math.min(meta.pages, p + 1))}
-                                        disabled={page === meta.pages}
+                                        onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                                        disabled={page === meta.totalPages}
                                         className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <ChevronRight className="w-5 h-5" />

@@ -26,8 +26,8 @@ export interface AuthorsListResponse {
     meta: {
         current: number;
         pageSize: number;
-        pages: number;
+        totalPages: number;
         total: number;
     };
-    result: Author[];
+    data: Author[];
 }

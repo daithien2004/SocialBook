@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       success: true,
       statusCode: 200,
       message: 'Get admin books successfully',
-      data: response.data?.data ?? response.data,
+      ...(response.data?.books ? response.data : { books: response.data || [], pagination: response.data?.pagination || {} }),
     });
   } catch (error: any) {
     console.error('GET /api/admin/books error:', error.response?.data || error.message);
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       success: true,
       statusCode: response.status,
       message: 'Create book successfully',
-      data: response.data?.data ?? response.data,
+      ...(response.data?.data ? response.data : { data: response.data }),
     });
   } catch (error: any) {
     console.error('POST /api/admin/books error:', error.response?.data || error.message);

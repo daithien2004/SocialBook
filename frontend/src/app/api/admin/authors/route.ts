@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
             success: true,
             statusCode: 200,
             message: 'Get authors successfully',
-            data: response.data?.data ?? response.data,
+            ...(response.data?.data ? response.data : { data: response.data }),
         });
     } catch (error: any) {
         console.error('GET /api/admin/authors error:', error.response?.data || error.message);
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
             success: true,
             statusCode: response.status,
             message: 'Create author successfully',
-            data: response.data?.data ?? response.data,
+            ...(response.data?.data ? response.data : { data: response.data }),
         });
     } catch (error: any) {
         console.error('POST /api/admin/authors error:', error.response?.data || error.message);

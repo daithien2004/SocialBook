@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             success: true,
             statusCode: 200,
             message: 'Get author successfully',
-            data: response.data?.data ?? response.data,
+            ...(response.data?.data ? response.data : { data: response.data }),
         });
     } catch (error: any) {
         console.error('GET /api/admin/authors/[id] error:', error.response?.data || error.message);
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             success: true,
             statusCode: response.status,
             message: 'Update author successfully',
-            data: response.data?.data ?? response.data,
+            ...(response.data?.data ? response.data : { data: response.data }),
         });
     } catch (error: any) {
         console.error('PUT /api/admin/authors/[id] error:', error.response?.data || error.message);
@@ -113,7 +113,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
             success: true,
             statusCode: response.status,
             message: 'Delete author successfully',
-            data: response.data?.data ?? response.data,
+            ...(response.data?.data ? response.data : { data: response.data }),
         });
     } catch (error: any) {
         console.error('DELETE /api/admin/authors/[id] error:', error.response?.data || error.message);

@@ -82,7 +82,7 @@ export function BannerSlider({ books }: BannerSliderProps) {
                 {/* Cột nội dung bên trái */}
                 <div className="w-1/2 p-4 md:p-8 flex flex-col justify-center z-10">
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                    {book.genres[0]?.name || 'Featured'}
+                    {book.genres?.[0]?.name || 'Featured'}
                   </span>
 
                   <h3 className="font-serif text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-2 line-clamp-2">
@@ -135,11 +135,10 @@ export function BannerSlider({ books }: BannerSliderProps) {
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              index === currentSlide
+            className={`h-1.5 rounded-full transition-all duration-300 ${index === currentSlide
                 ? 'bg-white w-8'
                 : 'bg-gray-600 w-1.5 hover:bg-gray-400'
-            }`}
+              }`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}

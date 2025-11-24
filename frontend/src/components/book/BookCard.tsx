@@ -94,7 +94,7 @@ export function BookCard({ book }: { book: Book }) {
             </p>
 
             <div className="flex flex-wrap gap-2 mb-3 opacity-60 text-[10px] uppercase tracking-wide text-gray-500">
-              {book.genres
+              {(book.genres || [])
                 .slice(0, 2)
                 .map((g) => g.name)
                 .join(' • ')}
