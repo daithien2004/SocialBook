@@ -18,6 +18,7 @@ import ChapterHeader from '@/src/components/chapter/ChapterHeader';
 import { ChapterContent } from '@/src/components/chapter/ChapterContent';
 import { useReadingProgress } from '@/src/hooks/useReadingProgress';
 import ResumeReadingToast from '@/src/components/chapter/ResumeReadingToast';
+import AudiobookView from '@/src/components/chapter/AudiobookView';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -32,7 +33,8 @@ export default function ChapterPage({ params }: ChapterPageProps) {
 
   // State UI
   const [showTableOfContents, setShowTableOfContents] = useState(false);
-  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false); // <--- State Modal Thư viện
+  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'read' | 'listen'>('read'); // New View Mode State
 
   // API: Lấy thông tin chương hiện tại
   const {
@@ -59,7 +61,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const { savedProgress, restoreScroll } = useReadingProgress(
     book?.id || '',
     chapter?.id || '',
-    !isLoading && !!chapter
+    !isLoading && !!chapter && viewMode === 'read' // Only track progress in read mode
   );
 
   const [isToastClosed, setIsToastClosed] = useState(false);
@@ -133,11 +135,75 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     );
   }
 
+  // --- AUDIOBOOK VIEW ---
+  if (viewMode === 'listen') {
+    return (
+      <div className="h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
+        {/* Header with Back & Mode Switch */}
+        <div className="h-16 px-4 flex items-center justify-between border-b border-white/10 bg-[#1a1a1a] shrink-0 z-50">
+          <button
+            onClick={() => router.push(`/books/${bookSlug}`)}
+            className="text-slate-400 hover:text-white transition-colors"
+          >
+            ← Quay lại
+          </button>
+
+          {/* Mode Switcher */}
+          <div className="flex bg-black/40 p-1 rounded-lg border border-white/10">
+            <button
+              onClick={() => setViewMode('read')}
+              className="px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-all"
+            >
+              Đọc sách
+            </button>
+            <button
+              onClick={() => setViewMode('listen')}
+              className="px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white shadow-lg transition-all"
+            >
+              Nghe sách
+            </button>
+          </div>
+
+          <div className="w-20" /> {/* Spacer */}
+        </div>
+
+        {/* Audiobook Component */}
+        <div className="flex-1 overflow-hidden relative">
+          <AudiobookView
+            chapterId={chapter.id}
+            chapterTitle={chapter.title}
+            paragraphs={chapter.paragraphs}
+            bookTitle={book.title}
+            bookCoverImage={book.coverUrl}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // --- READ MODE (Standard View) ---
   return (
     <div className="min-h-screen flex flex-col bg-black/90 text-white relative">
+      {/* Mode Switcher Overlay for Read Mode */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex bg-black/60 backdrop-blur-md p-1 rounded-lg border border-white/10 shadow-xl">
+          <button
+            onClick={() => setViewMode('read')}
+            className="px-4 py-1.5 rounded-md text-sm font-medium bg-white/10 text-white shadow-sm transition-all"
+          >
+            Đọc sách
+          </button>
+          <button
+            onClick={() => setViewMode('listen')}
+            className="px-4 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+          >
+            Nghe sách
+          </button>
+        </div>
+      </div>
+
       <button
         onClick={() => setIsLibraryModalOpen(true)}
-        // SỬA: đổi top-4 thành top-24 (để né header) và tăng z-index lên 50 ngang hàng header
         className="fixed top-24 right-4 z-50 p-3 bg-gray-800/80 backdrop-blur-sm rounded-full hover:bg-blue-600 transition-colors shadow-lg border border-gray-700"
         title="Lưu vào thư viện"
       >
@@ -151,6 +217,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
         chapterOrder={chapter.orderIndex}
         viewsCount={chapter.viewsCount}
       />
+
 
       <ChapterNavigation
         variant="top"
@@ -238,11 +305,10 @@ export default function ChapterPage({ params }: ChapterPageProps) {
                       <button
                         key={chap.id}
                         onClick={() => handleChapterSelect(chap.slug)}
-                        className={`w-full text-left p-4 rounded-lg transition-all ${
-                          isCurrentChapter
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
-                        }`}
+                        className={`w-full text-left p-4 rounded-lg transition-all ${isCurrentChapter
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">

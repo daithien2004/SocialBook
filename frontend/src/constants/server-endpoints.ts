@@ -49,7 +49,6 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
   deleteChapter: (bookSlug: string, chapterId: string) =>
     `/books/${bookSlug}/chapters/${chapterId}`,
   // Admin-specific endpoints
-  createChapterAdmin: (bookSlug: string) => `/books/${bookSlug}/chapters`,
   createChapterByBookId: (bookId: string) => `/books/${bookId}/chapters`,
   updateChapterAdmin: (bookSlug: string, chapterId: string) =>
     `/books/${bookSlug}/chapters/${chapterId}`,
@@ -94,4 +93,12 @@ export const NESTJS_STATISTICS_ENDPOINTS = {
   books: '/statistics/books',
   posts: '/statistics/posts',
   growth: (days?: number) => `/statistics/growth${days ? `?days=${days}` : ''}`,
+};
+
+export const NESTJS_TTS_ENDPOINTS = {
+  generateChapter: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
+  generateBook: (bookId: string) => `/text-to-speech/book/${bookId}/all`,
+  getByChapter: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
+  delete: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
+  incrementPlay: (chapterId: string) => `/text-to-speech/chapter/${chapterId}/play`,
 };

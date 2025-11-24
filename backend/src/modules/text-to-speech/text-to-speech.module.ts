@@ -7,10 +7,12 @@ import {
   TextToSpeechSchema,
 } from './schemas/textToSpeech.schema';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { ChaptersModule } from '../chapters/chapters.module';
 
 @Module({
   imports: [
     CloudinaryModule,
+    ChaptersModule,
     MongooseModule.forFeature([
       { name: TextToSpeech.name, schema: TextToSpeechSchema },
     ]),
@@ -19,4 +21,5 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
   providers: [TextToSpeechService],
   exports: [TextToSpeechService],
 })
-export class TextToSpeechModule {}
+export class TextToSpeechModule { }
+

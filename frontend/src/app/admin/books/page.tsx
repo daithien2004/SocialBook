@@ -32,7 +32,6 @@ export default function AdminBooksPage() {
 
   const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
 
-  console.log('AdminBooksPage data:', data);
   // Dữ liệu đúng cấu trúc từ API
   const books: BookForAdmin[] = data?.books || [];
   const pagination: BackendPagination | undefined = data?.pagination;
