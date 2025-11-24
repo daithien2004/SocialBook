@@ -163,8 +163,8 @@ export default function AudiobookView({
 
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin mb-4 text-blue-500" />
+            <div className="flex flex-col items-center justify-center h-full text-[#666666] bg-[#F9F6F0]">
+                <Loader2 className="w-8 h-8 animate-spin mb-4 text-[#2D2D2D]" />
                 <p>Đang tải audio...</p>
             </div>
         );
@@ -172,11 +172,11 @@ export default function AudiobookView({
 
     if (!ttsData || ttsData.status !== 'completed') {
         return (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                <div className="bg-slate-800/50 p-8 rounded-2xl text-center max-w-md">
-                    <Volume2 className="w-12 h-12 mx-auto mb-4 text-slate-600" />
-                    <h3 className="text-xl font-semibold text-slate-200 mb-2">Chưa có Audio</h3>
-                    <p className="text-slate-400">
+            <div className="flex flex-col items-center justify-center h-full text-[#666666] bg-[#F9F6F0]">
+                <div className="bg-[#EAE5DC]/50 p-8 rounded-2xl text-center max-w-md">
+                    <Volume2 className="w-12 h-12 mx-auto mb-4 text-[#4A4A4A]" />
+                    <h3 className="text-xl font-semibold text-[#2D2D2D] mb-2">Chưa có Audio</h3>
+                    <p className="text-[#666666]">
                         Audio cho chương này chưa được tạo hoặc đang trong quá trình xử lý.
                         Vui lòng quay lại sau hoặc sử dụng chế độ đọc.
                     </p>
@@ -186,9 +186,9 @@ export default function AudiobookView({
     }
 
     return (
-        <div className="flex flex-col h-full bg-[#1a1a1a] text-[#e5e5e5]" style={{ overflow: 'hidden' }}>
+        <div className="flex flex-col h-full bg-[#F9F6F0] text-[#2D2D2D]" style={{ overflow: 'hidden' }}>
             {/* Main Content Area - Scrollable */}
-            <div 
+            <div
                 className="flex-1 overflow-y-auto px-4 py-8 md:px-8 lg:px-16 scroll-smooth audiobook-scroll"
                 style={{
                     scrollbarWidth: 'none',
@@ -202,10 +202,10 @@ export default function AudiobookView({
                 <div className="max-w-3xl mx-auto space-y-8 pb-32">
                     {/* Header Info */}
                     <div className="text-center space-y-2 mb-12">
-                        <h2 className="text-sm font-medium text-blue-400 tracking-wider uppercase">
+                        <h2 className="text-sm font-medium text-[#666666] tracking-wider uppercase">
                             {bookTitle}
                         </h2>
-                        <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                        <h1 className="text-3xl md:text-4xl font-bold text-[#1A1A1A] leading-tight font-serif">
                             {chapterTitle}
                         </h1>
                     </div>
@@ -218,10 +218,10 @@ export default function AudiobookView({
                                 ref={(el) => { paragraphRefs.current[index] = el; }}
                                 onClick={() => handleParagraphClick(index)}
                                 className={`
-                                    text-lg md:text-xl leading-relaxed transition-all duration-500 cursor-pointer p-4 rounded-xl border-l-4
+                                    text-lg md:text-xl leading-relaxed transition-all duration-500 cursor-pointer p-6 rounded-xl border-l-4 font-serif
                                     ${activeParagraphIndex === index
-                                        ? 'bg-slate-800/80 text-white shadow-lg scale-[1.02] border-blue-500'
-                                        : 'border-transparent text-slate-400 hover:text-slate-300 hover:bg-slate-800/30'}
+                                        ? 'bg-[#EAE5DC] text-[#1A1A1A] shadow-sm border-[#2D2D2D]'
+                                        : 'border-transparent text-[#555555] hover:text-[#2D2D2D] hover:bg-[#EAE5DC]/30'}
                                 `}
                             >
                                 {para.content}
@@ -232,7 +232,7 @@ export default function AudiobookView({
             </div>
 
             {/* Fixed Player Control Bar */}
-            <div className="h-auto py-4 bg-[#0f0f0f] border-t border-slate-800 px-4 md:px-8 flex flex-col gap-2 z-50 shrink-0">
+            <div className="h-auto py-6 bg-[#F9F6F0] border-t border-[#E5E0D8] px-4 md:px-8 flex flex-col gap-4 z-50 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
                 <audio
                     ref={audioRef}
                     src={ttsData.audioUrl}
@@ -243,19 +243,38 @@ export default function AudiobookView({
                 />
 
                 {/* Progress Bar (Slider) */}
+                {/* Progress Bar - Đã nâng cấp siêu đẹp */}
                 <div className="w-full flex items-center gap-3">
-                    <span className="text-xs font-mono text-slate-500 w-10 text-right">
+                    <span className="text-xs font-mono text-[#666666] w-10 text-right">
                         {formatTime(currentTime)}
                     </span>
-                    <input
-                        type="range"
-                        min={0}
-                        max={duration || 0}
-                        value={currentTime}
-                        onChange={handleSeek}
-                        className="flex-1 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
-                    />
-                    <span className="text-xs font-mono text-slate-500 w-10">
+
+                    {/* Custom thanh tiến độ 2 màu */}
+                    <div className="relative flex-1 h-2 group">
+                        <div className="absolute inset-0 bg-[#E5E0D8] rounded-full" />
+                        <div
+                            className="absolute inset-0 bg-[#2D2D2D] rounded-full transition-all duration-300"
+                            style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                        />
+                        <input
+                            type="range"
+                            min="0"
+                            max={duration || 0}
+                            step="0.1"
+                            value={currentTime}
+                            onChange={handleSeek}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div
+                            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#2D2D2D] rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                            style={{
+                                left: duration ? `${(currentTime / duration) * 100}%` : '0%',
+                                transform: 'translate(-50%, -50%)',
+                            }}
+                        />
+                    </div>
+
+                    <span className="text-xs font-mono text-[#666666] w-10">
                         {formatTime(duration)}
                     </span>
                 </div>
@@ -266,10 +285,10 @@ export default function AudiobookView({
                     <div className="w-24"></div>
 
                     {/* Main Controls */}
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-8">
                         <button
                             onClick={() => skip(-10)}
-                            className="p-2 text-slate-400 hover:text-white transition-colors"
+                            className="p-2 text-[#666666] hover:text-[#1A1A1A] transition-colors"
                             title="Lùi 10s"
                         >
                             <SkipBack className="w-6 h-6" />
@@ -277,18 +296,18 @@ export default function AudiobookView({
 
                         <button
                             onClick={togglePlay}
-                            className="w-12 h-12 flex items-center justify-center bg-white rounded-full hover:scale-105 transition-transform shadow-lg shadow-white/10"
+                            className="w-14 h-14 flex items-center justify-center bg-[#2D2D2D] text-[#F9F6F0] rounded-full hover:scale-105 transition-transform shadow-lg shadow-black/10"
                         >
                             {isPlaying ? (
-                                <Pause className="w-5 h-5 text-black fill-current" />
+                                <Pause className="w-6 h-6 fill-current" />
                             ) : (
-                                <Play className="w-5 h-5 text-black fill-current ml-1" />
+                                <Play className="w-6 h-6 fill-current ml-1" />
                             )}
                         </button>
 
                         <button
                             onClick={() => skip(10)}
-                            className="p-2 text-slate-400 hover:text-white transition-colors"
+                            className="p-2 text-[#666666] hover:text-[#1A1A1A] transition-colors"
                             title="Tua 10s"
                         >
                             <SkipForward className="w-6 h-6" />
@@ -299,7 +318,7 @@ export default function AudiobookView({
                     <div className="w-24 flex justify-end">
                         <button
                             onClick={changeSpeed}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#EAE5DC] text-xs font-medium text-[#2D2D2D] hover:bg-[#DCD6CC] transition-colors"
                         >
                             <span>{playbackRate}x</span>
                         </button>
