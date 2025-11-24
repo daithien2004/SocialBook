@@ -5,9 +5,9 @@ import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto, UpdateRefreshTokenDto } from './dto/user.dto';
 import * as bcrypt from 'bcrypt';
 import aqp from 'api-query-params';
-import { Follow, FollowDocument } from '@/src/modules/folllows/schemas/folllow.schema';
 import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
 import { ReadingList, ReadingListDocument } from '@/src/modules/library/schemas/reading-list.schema';
+import { Follow, FollowDocument } from '@/src/modules/follows/schemas/follow.schema';
 @Injectable()
 export class UsersService {
   constructor(

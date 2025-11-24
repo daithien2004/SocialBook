@@ -5,15 +5,12 @@ import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
 export function Header() {
-    const router = useRouter();
+  const router = useRouter();
   const { data: session, status } = useSession();
-
+  console.log(session);
   const isAuthenticated = status === "authenticated";
-  const userId = session?.user && "id" in session.user ? (session.user as any).id : null;
-  const avatarUrl =
-      (session?.user as any)?.avatar ||
-      (session?.user as any)?.image ||
-      "https://i.pravatar.cc/40?img=5"; // fallback
+  const userId = session?.user.id;
+  const avatarUrl = session?.user.image;
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -76,14 +73,14 @@ export function Header() {
                   <>
                     <button
                         onClick={handleLogout}
-                        className="group flex items-center gap-2 px-4 py-2 rounded-sm border border-gray-200 text-sm font-medium text-gray-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-all duration-300"
+                        className="group  flex items-center gap-2 px-4 py-2 rounded-sm border border-gray-200 text-sm font-medium text-gray-600 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-all duration-300"
                     >
                       <span className="hidden sm:inline">Đăng xuất</span>
                       <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                     <button
                         onClick={handleAvatarClick}
-                        className="relative inline-flex items-center justify-center"
+                        className="relative inline-flex items-center justify-center cursor-pointer"
                     >
                       <img
                           src={avatarUrl}

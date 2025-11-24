@@ -62,6 +62,7 @@ export class AuthService {
         id: user.id.toString(),
         email: user.email,
         username: user.username,
+        image: user.image,
         role: roleName,
       },
     };

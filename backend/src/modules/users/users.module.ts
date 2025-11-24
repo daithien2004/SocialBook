@@ -5,7 +5,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { Post, PostSchema } from '@/src/modules/posts/schemas/post.schema';
 import { ReadingList, ReadingListSchema } from '@/src/modules/library/schemas/reading-list.schema';
-import { Follow, FollowSchema } from '@/src/modules/folllows/schemas/folllow.schema';
+import { Follow, FollowSchema } from '@/src/modules/follows/schemas/follow.schema';
 
 @Module({
   imports: [

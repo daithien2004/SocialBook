@@ -14,6 +14,7 @@ import { CollectionsService } from './collections.service';
 import { ReadingList, ReadingListSchema } from './schemas/reading-list.schema';
 import { Collection, CollectionSchema } from './schemas/collection.schema';
 import { Progress, ProgressSchema } from '../progress/schemas/progress.schema';
+import { Author, AuthorSchema } from '@/src/modules/authors/schemas/author.schema';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { Progress, ProgressSchema } from '../progress/schemas/progress.schema';
       { name: ReadingList.name, schema: ReadingListSchema },
       { name: Collection.name, schema: CollectionSchema },
       { name: Progress.name, schema: ProgressSchema },
+      { name: Author.name, schema: AuthorSchema },
     ]),
   ],
   controllers: [LibraryController, CollectionsController],

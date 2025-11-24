@@ -13,6 +13,7 @@ import {
   ReadingListDocument,
 } from './schemas/reading-list.schema';
 import { CreateCollectionDto, UpdateCollectionDto } from './dto/collection.dto';
+import { Author, AuthorDocument } from '@/src/modules/authors/schemas/author.schema';
 
 @Injectable()
 export class CollectionsService {
@@ -21,6 +22,8 @@ export class CollectionsService {
     private collectionModel: Model<CollectionDocument>,
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
+    @InjectModel(Author.name)
+    private authorModel: Model<AuthorDocument>,
   ) {}
 
   // 1. Tạo Folder mới
@@ -57,11 +60,18 @@ export class CollectionsService {
     const books = await this.readingListModel
       .find({
         userId,
-        collectionIds: collectionId, // Query mảng
+        collectionIds: collectionId,
       })
-      .populate('bookId', 'title coverUrl authorId slug status')
+      .populate({
+        path: 'bookId',
+        select: 'title coverUrl authorId slug status',
+        populate: {
+          path: 'authorId',
+          select: 'name',
+        },
+      })
       .populate('lastReadChapterId', 'title slug orderIndex')
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 }).lean();
 
     return {
       folder: collection,

@@ -25,6 +25,12 @@ export interface AdminBooksResponse {
   pagination: BackendPagination;
 }
 
+export interface BookStatsResponse {
+  views: number,
+  likes: number,
+  chapters: number,
+}
+
 export const booksApi = createApi({
   reducerPath: 'booksApi',
   baseQuery: axiosBaseQuery(),
@@ -103,6 +109,16 @@ export const booksApi = createApi({
       ],
     }),
 
+    getBookStats: builder.query<BookStatsResponse, string>({
+      query: (bookId) => ({
+        url: BFF_BOOKS_ENDPOINTS.getBookStats(bookId),
+        method: 'GET',
+      }),
+      providesTags: (result, error, bookId) => [
+        { type: 'AdminBooks', id: bookId },
+      ],
+    }),
+
     updateBook: builder.mutation<
       BookForAdmin,
       { bookId: string; formData: FormData }
@@ -152,6 +168,7 @@ export const {
   useCreateBookMutation,
   useGetAdminBooksQuery,
   useGetBookByIdQuery,
+  useGetBookStatsQuery,
   useUpdateBookMutation,
   useDeleteBookMutation,
   useLikeBookMutation,

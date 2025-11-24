@@ -163,4 +163,16 @@ export class BooksController {
       data: result,
     };
   }
+
+  @Public()
+  @Get('id/:id/stats')
+  @HttpCode(HttpStatus.OK)
+  async getBookStats(@Param('id') id: string) {
+    const result = await this.booksService.getBookStats(id);
+
+    return {
+      message: 'Get book stats successfully',
+      data: result,
+    };
+  }
 }
