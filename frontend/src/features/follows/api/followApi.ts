@@ -17,8 +17,8 @@ export const followApi = createApi({
     tagTypes: ['Follow'],
     endpoints: (builder) => ({
         getFollowingList: builder.query<FollowingUser[], string>({
-            query: (currentUserId) => ({
-                url: `/follows?currentUserId=${currentUserId}`,
+            query: (userId) => ({
+                url: `/follows/following?userId=${userId}`,
                 method: "GET",
             }),
             transformResponse: (response: FollowingUser[]) => response ?? [],

@@ -21,14 +21,12 @@ export interface PaginationParams {
 }
 
 export interface PaginatedPostsResponse {
-  data: Post[];
-  pagination: {
+  items: Post[];
+  meta: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
   };
 }
 
@@ -51,7 +49,7 @@ export const postApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.data.map(({ id }) => ({
+              ...result.items.map(({ id }) => ({
                 type: 'Post' as const,
                 id: id,
               })),

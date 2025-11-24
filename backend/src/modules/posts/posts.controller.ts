@@ -37,10 +37,9 @@ export class PostsController {
   async findAll(@Query() query: PaginationDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
     const result = await this.postsService.findAll(query.page, limit);
-
     return {
+      data: {...result},
       message: 'Get posts successfully',
-      ...result,
     };
   }
 
