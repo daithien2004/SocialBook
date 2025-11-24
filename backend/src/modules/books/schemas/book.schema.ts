@@ -14,7 +14,7 @@ export class Book {
     type: [{ type: Types.ObjectId, ref: 'Genre' }],
     default: [],
   })
-  genre: Types.ObjectId[];
+  genres: Types.ObjectId[];
 
   @Prop({ required: true })
   title: string;

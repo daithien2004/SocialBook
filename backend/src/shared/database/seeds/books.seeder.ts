@@ -42,16 +42,23 @@ export class BooksSeed {
         return;
       }
 
-      const fantasyGenre = genres.find((g) => g.name === 'Fantasy')?._id;
-      const mysteryGenre = genres.find((g) => g.name === 'Mystery')?._id;
-      const horrorGenre = genres.find((g) => g.name === 'Horror')?._id;
-      const sciFiGenre = genres.find((g) => g.name === 'Science Fiction')?._id;
-      const thrillerGenre = genres.find((g) => g.name === 'Thriller')?._id;
+      // Helper để lấy ID an toàn (tránh crash nếu không tìm thấy genre)
+      const getGenreId = (name: string) =>
+        genres.find((g) => g.name === name)?._id;
+
+      const fantasyGenre = getGenreId('Fantasy');
+      const mysteryGenre = getGenreId('Mystery');
+      const horrorGenre = getGenreId('Horror');
+      const sciFiGenre = getGenreId('Science Fiction');
+      const thrillerGenre = getGenreId('Thriller');
+
+      // Lọc bỏ các giá trị undefined trong mảng genres nếu seed genre chưa đủ
+      const cleanGenres = (ids: any[]) => ids.filter((id) => !!id);
 
       const books = [
         {
           authorId: authors[0]._id, // J.K. Rowling
-          genre: [fantasyGenre],
+          genres: cleanGenres([fantasyGenre]), // Đã sửa: genre -> genres
           title: 'Harry Potter and the Sorcerers Stone',
           slug: 'harry-potter-and-the-sorcerers-stone',
           publishedYear: '1997',
@@ -66,7 +73,7 @@ export class BooksSeed {
         },
         {
           authorId: authors[1]._id, // George R.R. Martin
-          genre: [fantasyGenre],
+          genres: cleanGenres([fantasyGenre]), // Đã sửa: genre -> genres
           title: 'A Game of Thrones',
           slug: 'a-game-of-thrones',
           publishedYear: '1996',
@@ -81,7 +88,7 @@ export class BooksSeed {
         },
         {
           authorId: authors[2]._id, // Stephen King
-          genre: [horrorGenre, thrillerGenre],
+          genres: cleanGenres([horrorGenre, thrillerGenre]), // Đã sửa: genre -> genres
           title: 'The Shining',
           slug: 'the-shining',
           publishedYear: '1977',
@@ -96,7 +103,7 @@ export class BooksSeed {
         },
         {
           authorId: authors[3]._id, // Agatha Christie
-          genre: [mysteryGenre],
+          genres: cleanGenres([mysteryGenre]), // Đã sửa: genre -> genres
           title: 'Murder on the Orient Express',
           slug: 'murder-on-the-orient-express',
           publishedYear: '1934',
@@ -111,7 +118,7 @@ export class BooksSeed {
         },
         {
           authorId: authors[4]._id, // J.R.R. Tolkien
-          genre: [fantasyGenre],
+          genres: cleanGenres([fantasyGenre]), // Đã sửa: genre -> genres
           title: 'The Lord of the Rings',
           slug: 'the-lord-of-the-rings',
           publishedYear: '1954',
@@ -126,7 +133,7 @@ export class BooksSeed {
         },
         {
           authorId: authors[5]._id, // Dan Brown
-          genre: [thrillerGenre, mysteryGenre],
+          genres: cleanGenres([thrillerGenre, mysteryGenre]), // Đã sửa: genre -> genres
           title: 'The Da Vinci Code',
           slug: 'the-da-vinci-code',
           publishedYear: '2003',
@@ -141,7 +148,7 @@ export class BooksSeed {
         },
         {
           authorId: authors[6]._id, // Haruki Murakami
-          genre: [sciFiGenre],
+          genres: cleanGenres([sciFiGenre]), // Đã sửa: genre -> genres
           title: '1Q84',
           slug: '1q84',
           publishedYear: '2009',
@@ -156,7 +163,7 @@ export class BooksSeed {
         },
         {
           authorId: authors[2]._id, // Stephen King
-          genre: [horrorGenre],
+          genres: cleanGenres([horrorGenre]), // Đã sửa: genre -> genres
           title: 'IT',
           slug: 'it',
           publishedYear: '1986',

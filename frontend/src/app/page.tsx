@@ -79,11 +79,9 @@ const BOOK_SECTIONS = [
 ];
 
 export default function HomePage() {
-  const { data, isLoading } = useGetBooksQuery();
+  const { data: books = [], isLoading } = useGetBooksQuery();
   const { data: session, status } = useSession();
   const router = useRouter();
-
-  const books = data?.books ?? [];
 
   // Memoize các phép tính nặng để tránh tính lại mỗi lần render
   const sections = useMemo(() => {

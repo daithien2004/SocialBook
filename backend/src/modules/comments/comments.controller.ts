@@ -1,50 +1,72 @@
-import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
-import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dto/create-comment.dto';
 import {
-  GetCommentsDto,
-  ResolveParentQueryDto,
-} from '@/src/modules/comments/dto/get-comment.dto';
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { CommentsService } from './comments.service';
 import { Types } from 'mongoose';
+
 import { Public } from '@/src/common/decorators/customize';
+import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
+
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { GetCommentsDto, ResolveParentQueryDto } from './dto/get-comment.dto';
 
 @Controller('comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
-  async postCreate(
-    @Req() req: any,
-    @Body() createCommentDto: CreateCommentDto,
-  ) {
-    return await this.commentsService.createForTarget(
-      req.user.id,
-      createCommentDto,
-    );
-  }
-
-  @Public()
-  @Get('resolve-parent')
-  async getResolveParent(@Query() query: ResolveParentQueryDto) {
-    const { targetId, targetType, parentId } = query;
-    const targetObjectId = new Types.ObjectId(targetId);
-
-    return await this.commentsService.resolveParentId(
-      targetObjectId,
-      targetType,
-      parentId,
-    );
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Request() req: any, @Body() dto: CreateCommentDto) {
+    const data = await this.commentsService.create(req.user.id, dto);
+    return {
+      message: 'Comment created successfully',
+      data,
+    };
   }
 
   @Public()
   @Get('target')
-  async getCommentByTarget(@Query() query: GetCommentsDto) {
+  @HttpCode(HttpStatus.OK)
+  async getByTarget(@Query() query: GetCommentsDto) {
     const { targetId, parentId, cursor, limit } = query;
-    return await this.commentsService.getCommentByTarget(
+
+    const result = await this.commentsService.findByTarget(
       targetId,
       parentId ?? null,
       cursor,
-      limit,
+      limit ? +limit : 10,
     );
+
+    return {
+      message: 'Get comments successfully',
+      ...result,
+    };
+  }
+
+  @Public()
+  @Get('resolve-parent')
+  @HttpCode(HttpStatus.OK)
+  async resolveParent(@Query() query: ResolveParentQueryDto) {
+    const { targetId, targetType, parentId } = query;
+
+    const result = await this.commentsService.resolveParentId(
+      new Types.ObjectId(targetId),
+      targetType,
+      parentId,
+    );
+
+    return {
+      message: 'Resolve parent successfully',
+      data: result,
+    };
   }
 }

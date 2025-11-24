@@ -23,7 +23,7 @@ import { TextToSpeechModule } from './modules/text-to-speech/text-to-speech.modu
 import { LikesModule } from '@/src/modules/likes/likes.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { GenresModule } from './modules/genres/genres.module';
-import { FollowsModule } from '@/src/modules/folllows/folllows.module';
+import { FollowsModule } from '@/src/modules/follows/follows.module';
 import { LibraryModule } from './modules/library/library.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 

@@ -182,8 +182,8 @@ export default function AdminBooksPage() {
                         <td className="px-6 py-4 font-medium">{book.authorId?.name || '—'}</td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
-                            {book.genre?.length > 0 ? (
-                              book.genre.map((g) => (
+                            {book.genres?.length > 0 ? (
+                              book.genres.map((g) => (
                                 <span
                                   key={`${book.id}-${g.id || (g as any)._id || g.name}`}
                                   className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"

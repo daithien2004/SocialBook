@@ -36,14 +36,14 @@ export function BookCarousel({ title, books }: BookCarouselProps) {
 
                     <div className="flex flex-col space-y-2 p-6">
                       <div className="p-2 rounded-lg bg-amber-600 font-medium text-white text-xs self-start">
-                        {book.genre}
+                        {book.genres}
                       </div>
 
                       <h3 className="font-bold text-lg line-clamp-2">
                         {book.title}
                       </h3>
 
-                      <p className="text-gray-500 text-sm">bởi {book.author}</p>
+                      <p className="text-gray-500 text-sm">bởi {book.authorId}</p>
 
                       <p className="text-sm text-gray-600">
                         {book.description}

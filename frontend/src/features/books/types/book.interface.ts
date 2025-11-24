@@ -61,7 +61,7 @@ export interface BookForAdmin {
     id: string;
     name: string;
   };
-  genre: {
+  genres: {
     id: string;
     name: string;
   }[];

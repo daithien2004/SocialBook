@@ -8,6 +8,7 @@ import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
 import { Author, AuthorSchema } from '../authors/schemas/author.schema';
 import { Review, ReviewSchema } from '../reviews/schemas/review.schema';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { ReadingList, ReadingListSchema } from '@/src/modules/library/schemas/reading-list.schema';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
       { name: Genre.name, schema: GenreSchema },
       { name: Author.name, schema: AuthorSchema },
       { name: Review.name, schema: ReviewSchema },
+      { name: ReadingList.name, schema: ReadingListSchema },
     ]),
   ],
   providers: [BooksService],

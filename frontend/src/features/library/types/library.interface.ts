@@ -12,7 +12,7 @@ export enum LibraryStatus {
 export interface LibraryItem {
   id: string; // ID của ReadingList record
   userId: string;
-  bookId: Book; // Đã populate thông tin sách
+  bookId: Book;// Đã populate thông tin sách
   status: LibraryStatus;
   lastReadChapterId?: {
     id: string;

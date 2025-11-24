@@ -1,21 +1,88 @@
 import {
-    BadRequestException,
-    ConflictException,
     Injectable,
-    InternalServerErrorException,
     NotFoundException,
+    ConflictException,
+    InternalServerErrorException,
+    BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Author, AuthorDocument } from './schemas/author.schema';
 import { Model, Types } from 'mongoose';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
+import { AuthorSelectDto } from './dto/author-select.dto';
 
 @Injectable()
 export class AuthorsService {
     constructor(
-        @InjectModel(Author.name) private authorModel: Model<AuthorDocument>,
+        @InjectModel(Author.name)
+        private readonly authorModel: Model<AuthorDocument>,
     ) { }
+
+    async getForSelect(): Promise<AuthorSelectDto[]> {
+        const authors = await this.findAllForSelect();
+        return this.mapToSelectDto(authors);
+    }
+
+    private async findAllForSelect(): Promise<AuthorDocument[]> {
+        return this.authorModel
+            .find()
+            .select('name bio')
+            .sort({ name: 1 })
+            .lean()
+            .exec();
+    }
+
+    async findAll(query: any, current: number = 1, pageSize: number = 10) {
+        // Build filter
+        const filter: any = {};
+        if (query.name) {
+            filter.name = { $regex: query.name, $options: 'i' };
+        }
+
+        // Calculate pagination
+        const skip = (current - 1) * pageSize;
+
+        // Execute queries
+        const [authors, total] = await Promise.all([
+            this.authorModel
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(pageSize)
+                .lean()
+                .exec(),
+            this.authorModel.countDocuments(filter),
+        ]);
+
+        // Map to response format
+        const data = authors.map((author: any) => ({
+            id: author._id.toString(),
+            name: author.name,
+            bio: author.bio,
+            photoUrl: author.photoUrl,
+            createdAt: author.createdAt,
+            updatedAt: author.updatedAt,
+        }));
+
+        return {
+            data,
+            meta: {
+                current,
+                pageSize,
+                total,
+                totalPages: Math.ceil(total / pageSize),
+            },
+        };
+    }
+
+    private mapToSelectDto(authors: AuthorDocument[]): AuthorSelectDto[] {
+        return authors.map((author) => ({
+            id: author._id.toString(),
+            name: author.name,
+            bio: author.bio,
+        }));
+    }
 
     async create(createAuthorDto: CreateAuthorDto) {
         // Validation
@@ -51,45 +118,7 @@ export class AuthorsService {
         };
     }
 
-    async findAll(query: any, current: number, pageSize: number) {
-        const { name } = query;
-        const filter: any = {};
 
-        // Search by name
-        if (name) {
-            filter.name = { $regex: name, $options: 'i' };
-        }
-
-        const skip = (current - 1) * pageSize;
-
-        const [authors, total] = await Promise.all([
-            this.authorModel
-                .find(filter)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(pageSize)
-                .lean()
-                .exec(),
-            this.authorModel.countDocuments(filter),
-        ]);
-
-        return {
-            meta: {
-                current,
-                pageSize,
-                total,
-                pages: Math.ceil(total / pageSize),
-            },
-            result: authors.map((author: any) => ({
-                id: author._id.toString(),
-                name: author.name,
-                bio: author.bio,
-                photoUrl: author.photoUrl,
-                createdAt: author.createdAt,
-                updatedAt: author.updatedAt,
-            })),
-        };
-    }
 
     async findOne(id: string) {
         // Validation
@@ -193,17 +222,5 @@ export class AuthorsService {
 
         return { success: true };
     }
-
-    async getForSelect() {
-        const authors = await this.authorModel
-            .find({}, 'name')
-            .sort({ name: 1 })
-            .lean()
-            .exec();
-
-        return authors.map((a: any) => ({
-            id: a._id.toString(),
-            name: a.name,
-        }));
-    }
 }
+

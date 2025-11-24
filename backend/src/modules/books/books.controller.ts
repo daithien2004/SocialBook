@@ -6,51 +6,89 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
+  Query,
+  Request,
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  Request,
-  Query,
-  Patch,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { BooksService } from './books.service';
+
 import { Public } from '@/src/common/decorators/customize';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/src/common/guards/roles.guard';
+
 import { CreateBookDto } from './dto/create-book.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('books')
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
-  @Get('/all')
+  @Public()
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async getPublicBooks(
+    @Query('page') page = 1,
+    @Query('limit') limit = 12,
+    @Query('search') search?: string,
+    @Query('genres') genres?: string,
+  ) {
+    const result = await this.booksService.findAll({
+      page: +page,
+      limit: +limit,
+      status: 'published',
+      search,
+      genres,
+    });
+
+    return {
+      message: 'Get published books successfully',
+      ...result,
+    };
+  }
+
+  @Public()
+  @Get(':slug')
+  @HttpCode(HttpStatus.OK)
+  async getBookBySlug(@Request() req: any, @Param('slug') slug: string) {
+    const userId = req.user?.id || null;
+    const data = await this.booksService.findBySlug(slug, userId);
+
+    return {
+      message: 'Get book detail successfully',
+      data,
+    };
+  }
+
+  @Get('admin/all')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
   async getAllForAdmin(
     @Query('page') page = 1,
     @Query('limit') limit = 10,
-    @Query('status') status?: 'draft' | 'published' | 'completed',
+    @Query('status') status?: string,
     @Query('search') search?: string,
-    @Query('genre') genre?: string,
+    @Query('genres') genres?: string,
     @Query('author') author?: string,
   ) {
-    const data = await this.booksService.getAllBook({
+    const result = await this.booksService.findAll({
       page: +page,
       limit: +limit,
       status,
       search,
-      genre,
+      genres,
       author,
     });
 
     return {
-      success: true,
-      message: 'Lấy danh sách sách thành công',
-      data,
+      message: 'Admin: Get all books successfully',
+      ...result,
     };
   }
 
@@ -59,36 +97,10 @@ export class BooksController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
   async getBookById(@Param('id') id: string) {
-    const result = await this.booksService.findById(id);
-
+    const data = await this.booksService.findById(id);
     return {
       message: 'Get book by ID successfully',
-      data: result,
-    };
-  }
-
-  @Public()
-  @Get(':slug')
-  @HttpCode(HttpStatus.OK)
-  async getBookDetail(@Request() req: any, @Param('slug') slug: string) {
-    const userId = req.user?.id || null;
-    const result = await this.booksService.findBySlug(slug, userId);
-
-    return {
-      message: 'Get book detail successfully',
-      data: result,
-    };
-  }
-
-  @Public()
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  async getBooks() {
-    const result = await this.booksService.getBooks();
-
-    return {
-      message: 'Get books successfully',
-      data: result,
+      data,
     };
   }
 
@@ -97,18 +109,14 @@ export class BooksController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('coverUrl'))
   @HttpCode(HttpStatus.CREATED)
-  async createBook(
+  async create(
     @Body() createBookDto: CreateBookDto,
     @UploadedFile() coverFile?: Express.Multer.File,
   ) {
-    console.log('📥 Received DTO:', createBookDto);
-    console.log('📁 File:', coverFile?.originalname);
-
-    const book = await this.booksService.createBook(createBookDto, coverFile);
-
+    const data = await this.booksService.create(createBookDto, coverFile);
     return {
-      message: 'Thêm sách thành công',
-      data: book,
+      message: 'Create book successfully',
+      data,
     };
   }
 
@@ -117,24 +125,15 @@ export class BooksController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('coverUrl'))
   @HttpCode(HttpStatus.OK)
-  async updateBook(
+  async update(
     @Param('id') id: string,
     @Body() updateBookDto: CreateBookDto,
     @UploadedFile() coverFile?: Express.Multer.File,
   ) {
-    console.log('📝 Updating book:', id);
-    console.log('📥 Received DTO:', updateBookDto);
-    console.log('📁 File:', coverFile?.originalname);
-
-    const book = await this.booksService.updateBook(
-      id,
-      updateBookDto,
-      coverFile,
-    );
-
+    const data = await this.booksService.update(id, updateBookDto, coverFile);
     return {
-      message: 'Cập nhật sách thành công',
-      data: book,
+      message: 'Update book successfully',
+      data,
     };
   }
 
@@ -142,24 +141,32 @@ export class BooksController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async deleteBook(@Param('id') id: string) {
-    console.log('🗑️ Deleting book:', id);
-
-    await this.booksService.deleteBook(id);
-
+  async delete(@Param('id') id: string) {
+    const result = await this.booksService.delete(id);
     return {
-      message: 'Xóa sách thành công',
+      message: result.message,
     };
   }
 
-  @Patch(':bookSlug/like')
+  @Patch(':slug/like')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async toggleLike(@Param('bookSlug') bookSlug: string, @Request() req: any) {
-    const result = await this.booksService.toggleLike(bookSlug, req.user.id);
-
+  async toggleLike(@Param('slug') slug: string, @Request() req: any) {
+    const result = await this.booksService.toggleLike(slug, req.user.id);
     return {
       message: result.isLiked ? 'Liked book' : 'Unliked book',
+      data: result,
+    };
+  }
+
+  @Public()
+  @Get('id/:id/stats')
+  @HttpCode(HttpStatus.OK)
+  async getBookStats(@Param('id') id: string) {
+    const result = await this.booksService.getBookStats(id);
+
+    return {
+      message: 'Get book stats successfully',
       data: result,
     };
   }

@@ -6,12 +6,13 @@ import { booksApi } from '../features/books/api/bookApi';
 import { commentApi } from '@/src/features/comments/api/commentApi';
 import { chaptersApi } from '../features/chapters/api/chaptersApi';
 import { bookRelationApi } from '../features/admin/api/bookRelationApi';
-import { followApi } from "@/src/features/follows/api/followApi";
+import { followApi } from '@/src/features/follows/api/followApi';
 import { reviewApi } from '../features/reviews/api/reviewApi';
 import { libraryApi } from '../features/library/api/libraryApi';
 import { usersApi } from '../features/users/api/usersApi';
 import { ttsApi } from '../features/tts/api/ttsApi';
 import { authorApi } from '../features/authors/api/authorApi';
+import { setupListeners } from '@reduxjs/toolkit/query';
 
 export const store = configureStore({
   reducer: {
@@ -44,6 +45,8 @@ export const store = configureStore({
       .concat(ttsApi.middleware)
       .concat(authorApi.middleware),
 });
+
+setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
