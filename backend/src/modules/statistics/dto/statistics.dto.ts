@@ -36,7 +36,7 @@ export interface BookStats {
     total: number;
     totalChapters: number;
     byGenre: Array<{
-        genre: string;
+        genres: string;
         count: number;
     }>;
     popularBooks: Array<{

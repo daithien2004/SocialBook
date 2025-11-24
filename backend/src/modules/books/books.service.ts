@@ -6,12 +6,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
+
+// Schemas
 import { Book, BookDocument } from './schemas/book.schema';
 import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
 import { Review, ReviewDocument } from '../reviews/schemas/review.schema';
 import { Author, AuthorDocument } from '../authors/schemas/author.schema';
 import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
+
+// Utils & DTOs
 import { slugify } from '@/src/utils/slugify';
 import { CreateBookDto } from './dto/create-book.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -27,31 +31,283 @@ export class BooksService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  // PRIVATE HELPER: Lấy chi tiết book với chapters, reviews, ratings
-  private async findBookWithDetails(book: Book, userId?: string) {
-    // Lấy chapters
-    const chapters = await this.chapterModel
-      .find({ bookId: book._id })
-      .sort({ orderIndex: 1 })
-      .lean();
+  async findAll(query: {
+    page: number;
+    limit: number;
+    status?: string;
+    search?: string;
+    genres?: string;
+    author?: string;
+  }) {
+    const { page, limit, status, search, genres, author } = query;
+    const skip = (page - 1) * limit;
 
-    // Lấy reviews với populate user
-    const reviews = await this.reviewModel
-      .find({ bookId: book._id })
-      .populate({
-        path: 'userId',
-        select: 'username image',
-      })
-      .sort({ createdAt: -1 })
-      .lean();
+    // Build Query
+    const filter: FilterQuery<BookDocument> = { isDeleted: false };
 
-    // TÍNH AVERAGE RATING & TOTAL RATINGS từ reviews
-    const ratingStats = await this.reviewModel.aggregate([
-      {
-        $match: {
-          bookId: new Types.ObjectId(book._id as Types.ObjectId),
-        },
+    if (status) filter.status = status;
+    if (genres) filter.genres = new Types.ObjectId(genres);
+    if (author) filter.authorId = new Types.ObjectId(author);
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { slug: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    // Parallel Execution: Get Data & Count
+    const [books, total] = await Promise.all([
+      this.bookModel
+        .find(filter)
+        .populate('authorId', 'name avatar')
+        .populate('genres', 'name slug')
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.bookModel.countDocuments(filter),
+    ]);
+
+    const booksWithStats = await Promise.all(
+      books.map(async (book) => {
+        const chapterCount = await this.chapterModel.countDocuments({
+          bookId: book._id,
+        });
+        return {
+          ...book,
+          stats: {
+            chapters: chapterCount,
+            views: book.views || 0,
+            likes: book.likes || 0,
+          },
+        };
+      }),
+    );
+
+    return {
+      data: booksWithStats,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async findBySlug(slug: string, userId?: string) {
+    const book = await this.bookModel
+      .findOne({ slug, isDeleted: false })
+      .populate('authorId', 'name avatar')
+      .populate('genres', 'name slug')
+      .lean();
+
+    if (!book) throw new NotFoundException(`Book not found`);
+
+    this.bookModel.updateOne({ _id: book._id }, { $inc: { views: 1 } }).exec();
+    book.views = (book.views || 0) + 1;
+
+    return this.enrichBookDetails(book, userId);
+  }
+
+  async findById(id: string) {
+    if (!Types.ObjectId.isValid(id))
+      throw new BadRequestException('Invalid ID');
+
+    const book = await this.bookModel
+      .findOne({ _id: id, isDeleted: false })
+      .populate('authorId', 'name avatar')
+      .populate('genres', 'name slug')
+      .lean();
+
+    if (!book) throw new NotFoundException(`Book not found`);
+
+    return this.enrichBookDetails(book);
+  }
+
+  async create(dto: CreateBookDto, coverFile?: Express.Multer.File) {
+    // 1. Validate Author & Genres
+    await this.validateReferences(dto.authorId, dto.genres);
+
+    // 2. Upload Image
+    const coverUrl = coverFile
+      ? await this.cloudinaryService.uploadImage(coverFile)
+      : null;
+
+    // 3. Generate Slug
+    const baseSlug = dto.slug?.trim() || slugify(dto.title);
+    const uniqueSlug = await this.generateUniqueSlug(baseSlug);
+
+    // 4. Create Book
+    const newBook = await this.bookModel.create({
+      ...dto,
+      title: dto.title.trim(),
+      description: dto.description?.trim(),
+      slug: uniqueSlug,
+      coverUrl,
+      views: 0,
+      likes: 0,
+      likedBy: [],
+    });
+
+    return await this.bookModel
+      .findById(newBook._id)
+      .populate('authorId', 'name avatar')
+      .populate('genres', 'name slug');
+  }
+
+  async update(
+    id: string,
+    dto: CreateBookDto,
+    coverFile?: Express.Multer.File,
+  ) {
+    if (!Types.ObjectId.isValid(id))
+      throw new BadRequestException('Invalid ID');
+
+    const book = await this.bookModel.findById(id);
+    if (!book) throw new NotFoundException('Book not found');
+
+    // 1. Validate References if changed
+    if (dto.authorId || dto.genres) {
+      await this.validateReferences(
+        dto.authorId || book.authorId.toString(),
+        dto.genres || (book.genres as any),
+      );
+    }
+
+    // 2. Handle Slug Update
+    let slug = book.slug;
+    if (dto.title && dto.title !== book.title) {
+      const baseSlug = dto.slug?.trim() || slugify(dto.title);
+      slug = await this.generateUniqueSlug(baseSlug, id);
+    }
+
+    // 3. Handle Cover Update
+    let coverUrl = book.coverUrl;
+    if (coverFile) {
+      if (book.coverUrl)
+        await this.cloudinaryService.deleteImage(book.coverUrl);
+      coverUrl = await this.cloudinaryService.uploadImage(coverFile);
+    }
+
+    // 4. Update
+    const updatedBook = await this.bookModel
+      .findByIdAndUpdate(id, { ...dto, slug, coverUrl }, { new: true })
+      .populate('authorId', 'name avatar')
+      .populate('genres', 'name slug');
+
+    return updatedBook;
+  }
+
+  async delete(id: string) {
+    if (!Types.ObjectId.isValid(id))
+      throw new BadRequestException('Invalid ID');
+
+    const book = await this.bookModel.findById(id);
+    if (!book || book.isDeleted) throw new NotFoundException('Book not found');
+
+    await this.bookModel.findByIdAndUpdate(id, { isDeleted: true });
+
+    return { message: 'Book deleted successfully' };
+  }
+
+  async toggleLike(slug: string, userId: string) {
+    const book = await this.bookModel.findOne({ slug, isDeleted: false });
+    if (!book) throw new NotFoundException('Book not found');
+
+    const uid = new Types.ObjectId(userId);
+    const isLiked = book.likedBy?.some((id) => id.equals(uid));
+
+    const update = isLiked
+      ? { $pull: { likedBy: uid }, $inc: { likes: -1 } }
+      : { $addToSet: { likedBy: uid }, $inc: { likes: 1 } };
+
+    const updatedBook = await this.bookModel
+      .findByIdAndUpdate(book._id, update, { new: true })
+      .select('slug likes likedBy');
+
+    return {
+      slug: updatedBook?.slug,
+      likes: updatedBook?.likes,
+      isLiked: !isLiked,
+    };
+  }
+
+  private async enrichBookDetails(book: any, userId?: string) {
+    const bookId = book._id;
+
+    const [chapters, reviews, ratingStats, distribution] = await Promise.all([
+      this.chapterModel.find({ bookId }).sort({ orderIndex: 1 }).lean(),
+      this.reviewModel
+        .find({ bookId })
+        .populate('userId', 'username image')
+        .sort({ createdAt: -1 })
+        .lean(),
+      this.getReviewAggregates(bookId),
+      this.getRatingDistribution(bookId),
+    ]);
+
+    const isLiked =
+      userId && book.likedBy
+        ? book.likedBy.some((id) => id.toString() === userId)
+        : false;
+
+    return {
+      ...book,
+      isLiked,
+      chapters,
+      reviews,
+      stats: {
+        averageRating: ratingStats.averageRating,
+        totalRatings: ratingStats.totalRatings,
+        ratingDistribution: distribution,
+      },
+    };
+  }
+
+  private async validateReferences(
+    authorId: Types.ObjectId,
+    genresId: Types.ObjectId[],
+  ) {
+    if (authorId && !Types.ObjectId.isValid(authorId))
+      throw new BadRequestException('Invalid Author ID');
+
+    if (genresId && genresId.some((id) => !Types.ObjectId.isValid(id)))
+      throw new BadRequestException('Invalid Genre ID');
+
+    const [author, countGenres] = await Promise.all([
+      this.authorModel.findById(authorId),
+      this.genreModel.countDocuments({ _id: { $in: genresId } }),
+    ]);
+
+    if (!author) throw new BadRequestException('Author not found');
+    if (countGenres !== genresId.length)
+      throw new BadRequestException('One or more genres not found');
+  }
+
+  private async generateUniqueSlug(
+    baseSlug: string,
+    excludeId?: string,
+  ): Promise<string> {
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (true) {
+      const query: any = { slug };
+      if (excludeId) query._id = { $ne: excludeId };
+
+      const exists = await this.bookModel.exists(query);
+      if (!exists) break;
+
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    return slug;
+  }
+
+  private async getReviewAggregates(bookId: Types.ObjectId) {
+    const stats = await this.reviewModel.aggregate([
+      { $match: { bookId: new Types.ObjectId(bookId) } },
       {
         $group: {
           _id: null,
@@ -61,584 +317,23 @@ export class BooksService {
       },
     ]);
 
-    const ratingData = ratingStats[0] || {};
-    const averageRating = ratingData.averageRating
-      ? Math.round(ratingData.averageRating * 10) / 10
-      : 0;
-    const totalRatings = ratingData.totalRatings || 0;
-
-    let isLiked = false;
-    console.log(userId);
-    if (userId && book.likedBy) {
-      // Kiểm tra xem userId có trong mảng likedBy không
-      isLiked = book.likedBy.some((id) => id.toString() === userId);
-    }
-
-    // RETURN
+    const data = stats[0] || {};
     return {
-      id: book._id,
-      title: book.title,
-      slug: book.slug,
-      description: book.description,
-      coverUrl: book.coverUrl,
-      status: book.status,
-      tags: book.tags,
-      views: book.views,
-      likes: book.likes,
-      isLiked: isLiked,
-      publishedYear: book.publishedYear,
-      authorId: book.authorId,
-      genres: book.genre,
-      createdAt: book.createdAt,
-      updatedAt: book.updatedAt,
-      chapters,
-      reviews,
-      averageRating,
-      totalRatings,
-      ratingDistribution: await this.getRatingDistribution(
-        book._id as Types.ObjectId,
-      ),
+      averageRating: data.averageRating
+        ? Math.round(data.averageRating * 10) / 10
+        : 0,
+      totalRatings: data.totalRatings || 0,
     };
   }
 
-  async findBySlug(slug: string, userId?: string) {
-    // VALIDATION
-    if (!slug) {
-      throw new BadRequestException('Book slug is required');
-    }
-
-    // EXECUTION
-    const book = await this.bookModel
-      .findOne({ slug: slug, isDeleted: false })
-      .populate('authorId', 'name avatar')
-      .populate('genre', 'name slug')
-      .lean();
-
-    if (!book) {
-      throw new NotFoundException(`Book with slug "${slug}" not found`);
-    }
-
-    await this.bookModel.updateOne({ _id: book._id }, { $inc: { views: 1 } });
-    if (book.views !== undefined) {
-      book.views += 1;
-    } else {
-      book.views = 1;
-    }
-
-    return this.findBookWithDetails(book, userId);
-  }
-
-  async findById(id: string) {
-    // VALIDATION
-    if (!id) {
-      throw new BadRequestException('Book ID is required');
-    }
-
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid book ID format');
-    }
-
-    // EXECUTION
-    const book = await this.bookModel
-      .findOne({ _id: id, isDeleted: false })
-      .populate('authorId', 'name avatar')
-      .populate('genre', 'name slug')
-      .lean();
-
-    if (!book) {
-      throw new NotFoundException(`Book with ID "${id}" not found`);
-    }
-
-    return this.findBookWithDetails(book);
-  }
-
-  async getBooks() {
-    // EXECUTION
-    const books = await this.bookModel
-      .find({ isDeleted: false })
-      .populate('authorId', 'name')
-      .populate('genre', 'name slug')
-      .select(
-        'title slug description coverUrl status tags views likes publishedYear createdAt updatedAt',
-      )
-      .sort({ createdAt: -1 })
-      .lean();
-
-    // RETURN
-    return {
-      total: books.length,
-      books: books.map((book) => ({
-        id: book._id,
-        title: book.title,
-        slug: book.slug,
-        description: book.description,
-        coverUrl: book.coverUrl,
-        status: book.status,
-        tags: book.tags,
-        views: book.views,
-        likes: book.likes,
-        publishedYear: book.publishedYear,
-        authorId: book.authorId,
-        genres: book.genre,
-        createdAt: book.createdAt,
-        updatedAt: book.updatedAt,
-      })),
-    };
-  }
-
-  // thống kê của các rating (1-5 sao) từ reviews
   private async getRatingDistribution(bookId: Types.ObjectId) {
     const distribution = await this.reviewModel.aggregate([
-      {
-        $match: {
-          bookId: bookId,
-        },
-      },
-      {
-        $group: {
-          _id: '$rating',
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $sort: { _id: 1 },
-      },
+      { $match: { bookId: new Types.ObjectId(bookId) } },
+      { $group: { _id: '$rating', count: { $sum: 1 } } },
     ]);
 
-    // Chuyển đổi thành object {1: count, 2: count, ...}
     const result = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    distribution.forEach((item) => {
-      result[item._id] = item.count;
-    });
-
+    distribution.forEach((item) => (result[item._id] = item.count));
     return result;
-  }
-
-  // Thêm method mới để lấy thống kê review chi tiết
-  async getReviewStats(bookId: Types.ObjectId) {
-    const stats = await this.reviewModel.aggregate([
-      {
-        $match: {
-          bookId: bookId,
-        },
-      },
-      {
-        $group: {
-          _id: '$bookId',
-          averageRating: { $avg: '$rating' },
-          totalReviews: { $sum: 1 },
-          verifiedPurchases: {
-            $sum: { $cond: ['$verifiedPurchase', 1, 0] },
-          },
-          totalLikes: { $sum: '$likesCount' },
-        },
-      },
-    ]);
-
-    return (
-      stats[0] || {
-        averageRating: 0,
-        totalReviews: 0,
-        verifiedPurchases: 0,
-        totalLikes: 0,
-      }
-    );
-  }
-
-  async createBook(dto: CreateBookDto, coverFile?: Express.Multer.File) {
-    // 1. VALIDATION
-    if (!dto.title?.trim()) {
-      throw new BadRequestException('Book title is required');
-    }
-
-    if (!dto.authorId || !Types.ObjectId.isValid(dto.authorId)) {
-      throw new BadRequestException('Valid authorId is required');
-    }
-
-    if (!Array.isArray(dto.genre) || dto.genre.length === 0) {
-      throw new BadRequestException('At least one genre is required');
-    }
-
-    const invalidGenreId = dto.genre.find((id) => !Types.ObjectId.isValid(id));
-    if (invalidGenreId) {
-      throw new BadRequestException(`Invalid genre ID: ${invalidGenreId}`);
-    }
-
-    // Kiểm tra author tồn tại
-    const author = await this.authorModel.findById(dto.authorId);
-    if (!author) {
-      throw new BadRequestException(`Author with ID ${dto.authorId} not found`);
-    }
-
-    // Kiểm tra tất cả genre tồn tại
-    const genres = await this.genreModel.find({
-      _id: { $in: dto.genre.map((id) => new Types.ObjectId(id)) },
-    });
-
-    if (genres.length !== dto.genre.length) {
-      const existingIds = genres.map((g) => g._id);
-      const missing = dto.genre.filter((id) => !existingIds.includes(id));
-      throw new BadRequestException(`Genres not found: ${missing.join(', ')}`);
-    }
-
-    // 2. XỬ LÝ ẢNH BÌA
-    let coverUrl: string | null = null;
-
-    if (coverFile) {
-      coverUrl = await this.cloudinaryService.uploadImage(coverFile);
-    }
-
-    // 3. TẠO SLUG ĐẸP – DÙNG HÀM slugify TỰ VIẾT CỦA BẠN (xử lý tiếng Việt cực đỉnh)
-    const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
-    const finalSlug = await this.generateUniqueSlug(baseSlug);
-
-    // 4. TẠO BOOK
-    const newBook = await this.bookModel.create({
-      title: dto.title.trim(),
-      slug: finalSlug,
-      authorId: dto.authorId,
-      genre: dto.genre,
-      description: dto.description?.trim() || '',
-      coverUrl,
-      publishedYear: dto.publishedYear,
-      status: dto.status || 'draft',
-      tags: dto.tags || [],
-      views: 0,
-      likes: 0,
-    });
-
-    // 5. POPULATE & TRẢ VỀ
-    const populatedBook = await this.bookModel
-      .findById(newBook._id)
-      .populate('authorId', 'name avatar')
-      .populate('genre', 'name slug')
-      .lean()
-      .exec();
-
-    if (!populatedBook) {
-      throw new InternalServerErrorException(
-        'Failed to create book after saving',
-      );
-    }
-
-    return {
-      id: populatedBook._id.toString(),
-      title: populatedBook.title,
-      slug: populatedBook.slug,
-      description: populatedBook.description,
-      coverUrl: populatedBook.coverUrl,
-      status: populatedBook.status,
-      tags: populatedBook.tags,
-      views: populatedBook.views,
-      likes: populatedBook.likes,
-      publishedYear: populatedBook.publishedYear,
-      author: populatedBook.authorId,
-      genres: populatedBook.genre,
-      createdAt: populatedBook.createdAt,
-      updatedAt: populatedBook.updatedAt,
-    };
-  }
-
-  // Helper: Đảm bảo slug là duy nhất (ví dụ: truyen-ngan → truyen-ngan-2)
-  private async generateUniqueSlug(baseSlug: string): Promise<string> {
-    let slug = baseSlug;
-    let counter = 1;
-
-    while (await this.bookModel.exists({ slug })) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
-
-    return slug;
-  }
-
-  // src/modules/books/books.service.ts
-  async getAllBook(filters: {
-    page: number;
-    limit: number;
-    status?: string;
-    search?: string;
-    genre?: string;
-    author?: string;
-  }) {
-    const { page, limit, status, search, genre, author } = filters;
-    const skip = (page - 1) * limit;
-
-    const query: any = { isDeleted: false };
-
-    if (status) query.status = status;
-
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { slug: { $regex: search, $options: 'i' } },
-      ];
-    }
-
-    if (genre) query.genre = genre;
-    if (author) query.authorId = author;
-
-    const [books, total] = await Promise.all([
-      this.bookModel
-        .find(query)
-        .populate('authorId', 'name avatar')
-        .populate('genre', 'name slug')
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-
-      this.bookModel.countDocuments(query),
-    ]);
-
-    const booksWithStats = await Promise.all(
-      books.map(async (book) => {
-        const chapterCount = await this.chapterModel.countDocuments({
-          bookId: book._id,
-        });
-
-        return {
-          id: book._id,
-          title: book.title,
-          slug: book.slug,
-          description: book.description,
-          coverUrl: book.coverUrl,
-          status: book.status,
-          tags: book.tags,
-          views: book.views,
-          likes: book.likes,
-          publishedYear: book.publishedYear,
-          authorId: book.authorId,
-          genre: book.genre,
-          createdAt: book.createdAt,
-          updatedAt: book.updatedAt,
-          isDeleted: book.isDeleted,
-          stats: {
-            chapters: chapterCount,
-            views: book.views || 0,
-            likes: book.likes?.toString() || 0,
-          },
-        };
-      }),
-    );
-
-    return {
-      books: booksWithStats,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  async updateBook(
-    id: string,
-    dto: CreateBookDto,
-    coverFile?: Express.Multer.File,
-  ) {
-    // 1. VALIDATION
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid book ID');
-    }
-
-    const existingBook = await this.bookModel.findById(id);
-    if (!existingBook) {
-      throw new NotFoundException(`Book with ID ${id} not found`);
-    }
-
-    if (dto.title?.trim()) {
-      // Check if title is being changed and if new title already exists
-      if (dto.title.trim() !== existingBook.title) {
-        const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
-        const existingWithSlug = await this.bookModel.findOne({
-          slug: baseSlug,
-          _id: { $ne: id },
-        });
-        if (existingWithSlug) {
-          throw new ConflictException('A book with this title already exists');
-        }
-      }
-    }
-
-    if (dto.authorId && !Types.ObjectId.isValid(dto.authorId)) {
-      throw new BadRequestException('Valid authorId is required');
-    }
-
-    if (dto.authorId) {
-      const author = await this.authorModel.findById(dto.authorId);
-      if (!author) {
-        throw new BadRequestException(
-          `Author with ID ${dto.authorId} not found`,
-        );
-      }
-    }
-
-    if (dto.genre && Array.isArray(dto.genre)) {
-      const invalidGenreId = dto.genre.find(
-        (genreId) => !Types.ObjectId.isValid(genreId),
-      );
-      if (invalidGenreId) {
-        throw new BadRequestException(`Invalid genre ID: ${invalidGenreId}`);
-      }
-
-      const genres = await this.genreModel.find({
-        _id: { $in: dto.genre.map((genreId) => new Types.ObjectId(genreId)) },
-      });
-
-      if (genres.length !== dto.genre.length) {
-        const existingIds = genres.map((g) => g._id);
-        const missing = dto.genre.filter(
-          (genreId) => !existingIds.includes(genreId),
-        );
-        throw new BadRequestException(
-          `Genres not found: ${missing.join(', ')}`,
-        );
-      }
-    }
-
-    // 2. XỬ LÝ ẢNH BÌA MỚI (nếu có)
-    let coverUrl = existingBook.coverUrl;
-
-    if (coverFile) {
-      // Xóa ảnh cũ trên Cloudinary nếu có
-      if (existingBook.coverUrl) {
-        try {
-          await this.cloudinaryService.deleteImage(existingBook.coverUrl);
-        } catch (error) {
-          console.warn('Failed to delete old cover image:', error);
-        }
-      }
-
-      // Upload ảnh mới
-      coverUrl = await this.cloudinaryService.uploadImage(coverFile);
-    }
-
-    // 3. CẬP NHẬT SLUG NẾU TITLE THAY ĐỔI
-    let finalSlug = existingBook.slug;
-    if (dto.title?.trim() && dto.title.trim() !== existingBook.title) {
-      const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
-      finalSlug = await this.generateUniqueSlug(baseSlug);
-    }
-
-    // 4. CẬP NHẬT BOOK
-    const updateData: any = {};
-
-    if (dto.title?.trim()) updateData.title = dto.title.trim();
-    if (finalSlug !== existingBook.slug) updateData.slug = finalSlug;
-    if (dto.authorId) updateData.authorId = dto.authorId;
-    if (dto.genre) updateData.genre = dto.genre;
-    if (dto.description !== undefined)
-      updateData.description = dto.description.trim();
-    if (coverUrl !== existingBook.coverUrl) updateData.coverUrl = coverUrl;
-    if (dto.publishedYear) updateData.publishedYear = dto.publishedYear;
-    if (dto.status) updateData.status = dto.status;
-    if (dto.tags) updateData.tags = dto.tags;
-
-    const updatedBook = await this.bookModel
-      .findByIdAndUpdate(id, updateData, { new: true })
-      .populate('authorId', 'name avatar')
-      .populate('genre', 'name slug')
-      .lean()
-      .exec();
-
-    if (!updatedBook) {
-      throw new InternalServerErrorException('Failed to update book');
-    }
-
-    return {
-      id: updatedBook._id.toString(),
-      title: updatedBook.title,
-      slug: updatedBook.slug,
-      description: updatedBook.description,
-      coverUrl: updatedBook.coverUrl,
-      status: updatedBook.status,
-      tags: updatedBook.tags,
-      views: updatedBook.views,
-      likes: updatedBook.likes,
-      publishedYear: updatedBook.publishedYear,
-      author: updatedBook.authorId,
-      genres: updatedBook.genre,
-      createdAt: updatedBook.createdAt,
-      updatedAt: updatedBook.updatedAt,
-    };
-  }
-
-  async deleteBook(id: string) {
-    // 1. VALIDATION
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid book ID');
-    }
-
-    const book = await this.bookModel.findById(id);
-    if (!book) {
-      throw new NotFoundException(`Book with ID ${id} not found`);
-    }
-
-    if (book.isDeleted) {
-      throw new BadRequestException('Book is already deleted');
-    }
-
-    // 2. XÓA ẢNH BÌA TRÊN CLOUDINARY (nếu có)
-    if (book.coverUrl) {
-      try {
-        await this.cloudinaryService.deleteImage(book.coverUrl);
-      } catch (error) {
-        console.warn('Failed to delete cover image:', error);
-      }
-    }
-
-    // 3. XÓA SÁCH (soft delete hoặc hard delete)
-    // Soft delete: đánh dấu isDeleted = true
-    await this.bookModel.findByIdAndUpdate(id, { isDeleted: true });
-
-    return { success: true };
-  }
-
-  async toggleLike(slug: string, userId: string) {
-    const book = await this.bookModel.findOne({ slug, isDeleted: false });
-    if (!book) throw new NotFoundException('Book not found');
-
-    const userObjectId = new Types.ObjectId(userId);
-
-    if (book.likes === undefined) {
-      book.likes = 0;
-    }
-    if (!book.likedBy) {
-      book.likedBy = [];
-    }
-
-    // Check xem đã like chưa
-    const isLiked = book.likedBy.some((id) => id.equals(userObjectId));
-
-    let updateQuery;
-    if (isLiked) {
-      // Đã like -> UNLIKE (Xóa khỏi mảng, giảm count)
-      updateQuery = {
-        $pull: { likedBy: userObjectId },
-        $inc: { likes: -1 },
-      };
-    } else {
-      // Chưa like -> LIKE (Thêm vào mảng, tăng count)
-      updateQuery = {
-        $addToSet: { likedBy: userObjectId }, // addToSet để tránh trùng lặp
-        $inc: { likes: 1 },
-      };
-    }
-
-    // Thực hiện update
-    const updatedBook = await this.bookModel.findByIdAndUpdate(
-      book.id,
-      updateQuery,
-      { new: true },
-    );
-
-    return {
-      id: updatedBook?._id,
-      slug: updatedBook?.slug,
-      likes: updatedBook?.likes,
-      isLiked: !isLiked, // Trả về trạng thái mới
-    };
   }
 }

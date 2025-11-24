@@ -207,7 +207,7 @@ export class StatisticsService {
             total,
             totalChapters,
             byGenre: byGenre.map((item) => ({
-                genre: item._id,
+                genres: item._id,
                 count: item.count,
             })),
             popularBooks: popularBooks.map((book: any) => ({

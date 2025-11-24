@@ -15,11 +15,6 @@ interface GetBookRequest {
   bookSlug: string;
 }
 
-interface GetBooksResponse {
-  total: string;
-  books: Book[];
-}
-
 export interface AdminBooksResponse {
   books: BookForAdmin[];
   pagination: BackendPagination;
@@ -41,7 +36,7 @@ export const booksApi = createApi({
         { type: 'Book', id: arg.bookSlug },
       ],
     }),
-    getBooks: builder.query<GetBooksResponse, void>({
+    getBooks: builder.query<Book[], void>({
       query: () => ({
         url: BFF_BOOKS_ENDPOINTS.getAll,
         method: 'GET',
@@ -49,7 +44,7 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.books.map((book) => ({
+              ...result.map((book) => ({
                 type: 'Book' as const,
                 id: book.slug,
               })),

@@ -24,7 +24,7 @@ type Status = 'draft' | 'published' | 'completed';
 interface FormData {
   title: string;
   authorId: string;
-  genre: string[];
+  genres: string[];
   description: string;
   publishedYear: string;
   status: Status;
@@ -34,7 +34,7 @@ interface FormData {
 const initialForm: FormData = {
   title: '',
   authorId: '',
-  genre: [],
+  genres: [],
   description: '',
   publishedYear: new Date().getFullYear().toString(),
   status: 'draft',
@@ -70,18 +70,18 @@ export default function CreateBook() {
 
   const handleAddGenre = () => {
     if (!selectedGenreId) return;
-    if (formData.genre.includes(selectedGenreId)) {
+    if (formData.genres.includes(selectedGenreId)) {
       setSelectedGenreId('');
       return;
     }
-    setFormData((prev) => ({ ...prev, genre: [...prev.genre, selectedGenreId] }));
+    setFormData((prev) => ({ ...prev, genre: [...prev.genres, selectedGenreId] }));
     setSelectedGenreId('');
   };
 
   const handleRemoveGenre = (id: string) => {
     setFormData((prev) => ({
       ...prev,
-      genre: prev.genre.filter((g) => g !== id),
+      genre: prev.genres.filter((g) => g !== id),
     }));
   };
 
@@ -109,7 +109,7 @@ export default function CreateBook() {
       return;
     }
 
-    if (formData.genre.length === 0) {
+    if (formData.genres.length === 0) {
       setMessage({ type: 'error', text: 'Vui lòng chọn ít nhất 1 thể loại' });
       return;
     }
@@ -128,7 +128,7 @@ export default function CreateBook() {
       formPayload.append('status', formData.status);
       formPayload.append('publishedYear', formData.publishedYear);
 
-      formData.genre.forEach((genreId) => {
+      formData.genres.forEach((genreId) => {
         formPayload.append('genre', genreId);
       });
 
@@ -408,7 +408,7 @@ export default function CreateBook() {
                           <option 
                             key={genre.id} 
                             value={genre.id}
-                            disabled={formData.genre.includes(genre.id)}
+                            disabled={formData.genres.includes(genre.id)}
                           >
                             {genre.name}
                           </option>
@@ -430,9 +430,9 @@ export default function CreateBook() {
                     </button>
                   </div>
 
-                  {formData.genre.length > 0 && (
+                  {formData.genres.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {formData.genre.map((genreId) => (
+                      {formData.genres.map((genreId) => (
                         <span
                           key={genreId}
                           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
@@ -498,7 +498,7 @@ export default function CreateBook() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Thể loại:</span>
                     <span className="font-semibold text-gray-900">
-                      {formData.genre.length} thể loại
+                      {formData.genres.length} thể loại
                     </span>
                   </div>
                   <div className="flex justify-between">

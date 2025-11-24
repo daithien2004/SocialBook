@@ -1,9 +1,6 @@
-// api/books/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import serverApi from '@/src/lib/server-api';
 import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
 
 export async function GET() {
   try {

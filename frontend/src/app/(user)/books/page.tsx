@@ -11,18 +11,14 @@ export default function BooksPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { data, isLoading } = useGetBooksQuery();
-
-  const books = data?.books ?? [];
-
-  console.log(books);
+  const { data: books, isLoading } = useGetBooksQuery();
 
   // State cho search input
   const [searchInput, setSearchInput] = useState('');
 
   // Lấy danh sách genre từ query (có thể nhiều: ?genre=Fantasy,Romance)
   const selectedGenres =
-    searchParams.get('genre')?.split(',')?.filter(Boolean) || [];
+    searchParams.get('genres')?.split(',')?.filter(Boolean) || [];
   const sortBy = searchParams.get('sort') || 'newest';
   const searchQuery = searchParams.get('search') || '';
 
@@ -45,13 +41,13 @@ export default function BooksPage() {
   );
 
   // Toggle genre (thêm/xóa)
-  const toggleGenre = (genre: string) => {
-    const newGenres = selectedGenres.includes(genre)
-      ? selectedGenres.filter((g) => g !== genre)
-      : [...selectedGenres, genre];
+  const toggleGenre = (genres: string) => {
+    const newGenres = selectedGenres.includes(genres)
+      ? selectedGenres.filter((g) => g !== genres)
+      : [...selectedGenres, genres];
 
     const query = createQueryString({
-      genre: newGenres.join(','),
+      genres: newGenres.join(','),
       sort: sortBy,
     });
 
@@ -61,7 +57,7 @@ export default function BooksPage() {
   // Thay đổi sort
   const handleSortChange = (value: string) => {
     const query = createQueryString({
-      genre: selectedGenres.join(','),
+      genres: selectedGenres.join(','),
       sort: value,
       search: searchQuery,
     });
@@ -73,7 +69,7 @@ export default function BooksPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const query = createQueryString({
-      genre: selectedGenres.join(','),
+      genres: selectedGenres.join(','),
       sort: sortBy,
       search: searchInput.trim(),
     });
@@ -85,7 +81,7 @@ export default function BooksPage() {
   const clearSearch = () => {
     setSearchInput('');
     const query = createQueryString({
-      genre: selectedGenres.join(','),
+      genres: selectedGenres.join(','),
       sort: sortBy,
       search: '',
     });
@@ -95,14 +91,16 @@ export default function BooksPage() {
 
   // Lọc + Sắp xếp
   const filteredAndSortedBooks = useMemo(() => {
-    let filtered = books;
+    let filtered = books || [];
 
     // Lọc theo search query
     if (searchQuery) {
       filtered = filtered.filter(
         (book) =>
           book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          book.authorId.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          book.authorId.name
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
           book.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -138,21 +136,21 @@ export default function BooksPage() {
 
   // Lấy tất cả genres từ books
   const allGenres = useMemo(() => {
-    const genreSet = new Set<string>();
+    const genresSet = new Set<string>();
 
-    books.forEach((book) => {
+    (books || []).forEach((book) => {
       // Kiểm tra book.genres tồn tại và là array
       if (book.genres && Array.isArray(book.genres)) {
         book.genres.forEach((genre) => {
           // Kiểm tra genre.name khác null/undefined
           if (genre?.name) {
-            genreSet.add(genre.name);
+            genresSet.add(genre.name);
           }
         });
       }
     });
 
-    return Array.from(genreSet);
+    return Array.from(genresSet);
   }, [books]);
 
   if (isLoading) {

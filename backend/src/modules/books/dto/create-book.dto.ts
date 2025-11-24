@@ -35,8 +35,8 @@ export class CreateBookDto {
   @IsArray()
   @ArrayMinSize(1, { message: 'Phải chọn ít nhất 1 thể loại' })
   @ArrayMaxSize(5, { message: 'Tối đa 5 thể loại' })
-  @IsMongoId({ each: true, message: 'Mỗi genre ID phải là MongoId hợp lệ' })
-  genre: Types.ObjectId[];
+  @IsMongoId({ each: true, message: 'Mỗi genres ID phải là MongoId hợp lệ' })
+  genres: Types.ObjectId[];
 
   @IsOptional()
   @IsString()
