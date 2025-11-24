@@ -21,15 +21,15 @@ export interface AdminBooksResponse {
 }
 
 export interface BookStatsResponse {
-  views: number,
-  likes: number,
-  chapters: number,
+  views: number;
+  likes: number;
+  chapters: number;
 }
 
 export const booksApi = createApi({
   reducerPath: 'booksApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Books', 'Book', 'AdminBooks'],
+  tagTypes: ['Books', 'BookDetail', 'AdminBooks', 'BookStats'],
   endpoints: (builder) => ({
     getBookBySlug: builder.query<Book, GetBookRequest>({
       query: (data) => {
@@ -39,7 +39,7 @@ export const booksApi = createApi({
         };
       },
       providesTags: (result, error, arg) => [
-        { type: 'Book', id: arg.bookSlug },
+        { type: 'BookDetail', id: arg.bookSlug },
       ],
     }),
     getBooks: builder.query<Book[], void>({
@@ -51,7 +51,7 @@ export const booksApi = createApi({
         result
           ? [
               ...result.map((book) => ({
-                type: 'Book' as const,
+                type: 'Books' as const,
                 id: book.slug,
               })),
               { type: 'Books', id: 'LIST' },
@@ -65,7 +65,10 @@ export const booksApi = createApi({
         method: 'POST',
         body: formData,
       }),
-      invalidatesTags: [{ type: 'Books', id: 'LIST' }],
+      invalidatesTags: [
+        { type: 'Books', id: 'LIST' },
+        { type: 'AdminBooks', id: 'LIST' },
+      ],
     }),
 
     getAdminBooks: builder.query<
@@ -85,7 +88,7 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result?.books
           ? [
-              ...result.books.map((book: BookForAdmin) => ({
+              ...result.books.map((book) => ({
                 type: 'AdminBooks' as const,
                 id: book.id,
               })),
@@ -110,7 +113,7 @@ export const booksApi = createApi({
         method: 'GET',
       }),
       providesTags: (result, error, bookId) => [
-        { type: 'AdminBooks', id: bookId },
+        { type: 'BookStats', id: bookId },
       ],
     }),
 
@@ -123,11 +126,22 @@ export const booksApi = createApi({
         method: 'PUT',
         body: formData,
       }),
-      invalidatesTags: (result, error, { bookId }) => [
-        { type: 'AdminBooks', id: bookId },
-        { type: 'AdminBooks', id: 'LIST' },
-        { type: 'Books', id: 'LIST' },
-      ],
+      invalidatesTags: (result, error, { bookId }) => {
+        const tags: {
+          type: 'AdminBooks' | 'Books' | 'BookDetail';
+          id: string;
+        }[] = [
+          { type: 'AdminBooks', id: bookId },
+          { type: 'AdminBooks', id: 'LIST' },
+          { type: 'Books', id: 'LIST' },
+        ];
+
+        if (result && (result as any).slug) {
+          tags.push({ type: 'BookDetail', id: (result as any).slug });
+        }
+
+        return tags;
+      },
     }),
 
     deleteBook: builder.mutation<void, string>({
@@ -141,18 +155,24 @@ export const booksApi = createApi({
       ],
     }),
 
-    likeBook: builder.mutation<{ message: string; data: any }, string>({
+    likeBook: builder.mutation<
+      { slug: string; isLiked: boolean; likes: number },
+      string
+    >({
       query: (bookId) => ({
         url: BFF_BOOKS_ENDPOINTS.like(bookId),
         method: 'PATCH',
       }),
-      // Invalidates cache của cuốn sách vừa like -> Trigger fetch lại getBookBySlug
-      invalidatesTags: (result, error, bookId) => [
-        // Cách 1: Nếu server trả về object sách có slug trong result.data
-        ...(result?.data?.slug
-          ? [{ type: 'Book' as const, id: result.data.slug }]
-          : []),
-      ],
+      invalidatesTags: (result, error, bookId) => {
+        const tags: { type: 'BookStats' | 'BookDetail'; id: string }[] = [
+          { type: 'BookStats', id: bookId },
+        ];
+
+        if (result?.slug) {
+          tags.push({ type: 'BookDetail', id: result.slug });
+        }
+        return tags;
+      },
     }),
   }),
 });
