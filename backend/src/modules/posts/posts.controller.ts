@@ -1,90 +1,67 @@
 import {
-  Controller,
-  Post,
-  Body,
-  UseInterceptors,
-  UploadedFiles,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   BadRequestException,
-  Get,
-  Request,
-  Patch,
-  Param,
+  Body,
+  Controller,
   Delete,
+  FileTypeValidator,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseFilePipe,
+  Patch,
+  Post,
   Query,
+  Req,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-
-import { FilesInterceptor } from '@nestjs/platform-express';
 import { PaginationDto } from './dto/pagination.dto';
+
 import { Public } from '@/src/common/decorators/customize';
+import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Post()
-  @UseInterceptors(FilesInterceptor('images', 10)) // 'images' field, max 10 files
-  async create(
-    @Request() req: any,
-    @Body('bookId') bookId: string,
-    @Body('content') content: string,
-    @UploadedFiles(
-      new ParseFilePipe({
-        validators: [
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp)$/ }),
-        ],
-        fileIsRequired: false,
-      }),
-    )
-    files?: Express.Multer.File[],
-  ) {
-    if (files && files.length > 10) {
-      throw new BadRequestException('Maximum 10 images allowed');
-    }
+  @Public()
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async findAll(@Query() query: PaginationDto) {
+    const limit = query.limit > 100 ? 100 : query.limit;
+    const result = await this.postsService.findAll(query.page, limit);
 
-    const userId = req.user.id;
-
-    const createPostDto: CreatePostDto = {
-      userId,
-      bookId,
-      content,
+    return {
+      message: 'Get posts successfully',
+      ...result,
     };
-
-    return this.postsService.create(createPostDto, files);
   }
 
   @Public()
-  @Get()
-  async findAll(@Query() query: PaginationDto) {
-    // Giới hạn limit để tránh query quá nhiều data
-    if (query.limit > 100) {
-      throw new BadRequestException('Limit cannot exceed 100');
-    }
-
-    const result = await this.postsService.findAll(query.page, query.limit);
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Param('id') id: string) {
+    const data = await this.postsService.findOne(id);
     return {
-      data: result,
+      message: 'Get post detail successfully',
+      data,
     };
   }
 
-  // Lấy chi tiết 1 post
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.postsService.findOne(id);
-  }
-
-  // Cập nhật post
-  @Patch(':id')
+  @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
-  async update(
-    @Param('id') id: string,
-    @Body() updatePostDto: UpdatePostDto,
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Req() req: any,
+    @Body() dto: CreatePostDto,
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
@@ -99,31 +76,74 @@ export class PostsController {
       throw new BadRequestException('Maximum 10 images allowed');
     }
 
-    return this.postsService.update(id, updatePostDto, files);
+    const data = await this.postsService.create(req.user.id, dto, files);
+    return {
+      message: 'Create post successfully',
+      data,
+    };
   }
 
-  // Soft delete post
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('images', 10))
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePostDto,
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp)$/ }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    if (files && files.length > 10) {
+      throw new BadRequestException('Maximum 10 images allowed');
+    }
+
+    const data = await this.postsService.update(id, dto, files);
+    return {
+      message: 'Update post successfully',
+      data,
+    };
+  }
+
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
-    return this.postsService.remove(id);
+    await this.postsService.remove(id);
+    return {
+      message: 'Delete post successfully',
+    };
   }
 
-  // Hard delete (xóa hẳn) - optional
   @Delete(':id/permanent')
+  @UseGuards(JwtAuthGuard) // Nên thêm Role Admin guard ở đây
+  @HttpCode(HttpStatus.OK)
   async removeHard(@Param('id') id: string) {
-    return this.postsService.removeHard(id);
+    await this.postsService.removeHard(id);
+    return {
+      message: 'Permanently deleted post',
+    };
   }
 
-  // Xóa một ảnh cụ thể trong post
   @Delete(':id/images')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   async removeImage(
     @Param('id') id: string,
     @Body('imageUrl') imageUrl: string,
   ) {
-    if (!imageUrl) {
-      throw new BadRequestException('imageUrl is required');
-    }
+    if (!imageUrl) throw new BadRequestException('imageUrl is required');
 
-    return this.postsService.removeImage(id, imageUrl);
+    const data = await this.postsService.removeImage(id, imageUrl);
+    return {
+      message: 'Image removed successfully',
+      data,
+    };
   }
 }

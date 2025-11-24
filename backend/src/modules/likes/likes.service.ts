@@ -1,59 +1,78 @@
-import { Injectable } from '@nestjs/common';
-import {ToggleLikeDto } from './dto/create-like.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Like, LikeDocument } from '@/src/modules/likes/schemas/like.schema';
+
+// Schemas
+import { Like, LikeDocument } from './schemas/like.schema';
+
+// DTOs
+import { ToggleLikeDto } from './dto/create-like.dto';
 
 @Injectable()
 export class LikesService {
-
   constructor(@InjectModel(Like.name) private likeModel: Model<LikeDocument>) {}
 
-  async toggleLike(userId: string, dto: ToggleLikeDto) {
+  async toggle(userId: string, dto: ToggleLikeDto) {
+    const { targetId, targetType } = dto;
+
+    if (!Types.ObjectId.isValid(targetId)) {
+      throw new BadRequestException('Invalid Target ID');
+    }
+
     const filter = {
       userId: new Types.ObjectId(userId),
-      targetType: dto.targetType.trim().toLowerCase(),
-      targetId: new Types.ObjectId(dto.targetId), // ép kiểu rõ ràng
+      targetType: targetType.toLowerCase(), // Normalize
+      targetId: new Types.ObjectId(targetId),
     };
 
-    const existing = await this.likeModel.exists(filter).lean();
+    // Sử dụng exists() nhẹ hơn findOne() nếu chỉ cần check tồn tại
+    const existing = await this.likeModel.exists(filter);
 
     if (existing) {
       await this.likeModel.deleteOne(filter);
-      return { liked: false };
+      return { isLiked: false };
     } else {
-      await this.likeModel.updateOne(
-        filter,
-        { $setOnInsert: { createdAt: new Date() } },
-        { upsert: true }
-      );
-      return { liked: true };
+      await this.likeModel.create({
+        ...filter,
+        createdAt: new Date(),
+      });
+      return { isLiked: true };
     }
   }
 
-  async countByTarget(dto: ToggleLikeDto) {
+  async getCount(dto: ToggleLikeDto) {
+    const { targetId, targetType } = dto;
+
+    if (!Types.ObjectId.isValid(targetId)) return { count: 0 };
+
     const count = await this.likeModel.countDocuments({
-      targetType: dto.targetType,
-      targetId: dto.targetId,
+      targetType: targetType.toLowerCase(),
+      targetId: new Types.ObjectId(targetId),
     });
+
     return { count };
   }
 
+  async checkStatus(userId: string, dto: ToggleLikeDto) {
+    const { targetId, targetType } = dto;
+    if (!Types.ObjectId.isValid(targetId)) return { isLiked: false };
+
+    const exists = await this.likeModel.exists({
+      userId: new Types.ObjectId(userId),
+      targetType: targetType.toLowerCase(),
+      targetId: new Types.ObjectId(targetId),
+    });
+
+    return { isLiked: !!exists };
+  }
+
+  // Internal Helper (Used by Comments Service)
   async aggregateLikeCounts(targetIds: Types.ObjectId[], targetType: string) {
+    if (!targetIds.length) return [];
+
     return this.likeModel.aggregate([
       { $match: { targetType, targetId: { $in: targetIds } } },
       { $group: { _id: '$targetId', count: { $sum: 1 } } },
     ]);
-  }
-
-  async isLiked(userId: string, dto: ToggleLikeDto) {
-    const exists = await this.likeModel
-      .exists({
-        userId,
-        targetType: dto.targetType,
-        targetId: dto.targetId,
-      })
-      .lean();
-    return { liked: Boolean(exists) };
   }
 }

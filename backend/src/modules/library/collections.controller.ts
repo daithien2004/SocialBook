@@ -1,16 +1,15 @@
-// src/modules/library/collections.controller.ts
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
   Body,
-  Param,
-  Req,
-  UseGuards,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { CollectionsService } from './collections.service';
 import { CreateCollectionDto, UpdateCollectionDto } from './dto/collection.dto';
@@ -21,65 +20,59 @@ import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 export class CollectionsController {
   constructor(private readonly collectionsService: CollectionsService) {}
 
-  // 1. Tạo Folder mới
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Req() req, @Body() dto: CreateCollectionDto) {
-    const result = await this.collectionsService.create(req.user.id, dto);
+  async create(@Req() req: any, @Body() dto: CreateCollectionDto) {
+    const data = await this.collectionsService.create(req.user.id, dto);
     return {
       message: 'Create collection successfully',
-      data: result,
+      data,
     };
   }
 
-  // 2. Lấy danh sách các folder (Chỉ tên)
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(@Req() req) {
-    const result = await this.collectionsService.findAll(req.user.id);
+  async findAll(@Req() req: any) {
+    const data = await this.collectionsService.findAll(req.user.id);
     return {
       message: 'Get all collections successfully',
-      data: result,
+      data,
     };
   }
 
-  // 3. Lấy chi tiết folder + Sách bên trong
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Req() req, @Param('id') id: string) {
-    const result = await this.collectionsService.findOneWithBooks(
+  async findOne(@Req() req: any, @Param('id') id: string) {
+    const data = await this.collectionsService.findOneWithBooks(
       req.user.id,
       id,
     );
     return {
       message: 'Get collection detail successfully',
-      data: result, // Trả về { folder: ..., books: [...] }
+      data,
     };
   }
 
-  // 4. Sửa tên folder
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
-    @Req() req,
+    @Req() req: any,
     @Param('id') id: string,
     @Body() dto: UpdateCollectionDto,
   ) {
-    const result = await this.collectionsService.update(req.user.id, id, dto);
+    const data = await this.collectionsService.update(req.user.id, id, dto);
     return {
       message: 'Update collection successfully',
-      data: result,
+      data,
     };
   }
 
-  // 5. Xóa folder
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async remove(@Req() req, @Param('id') id: string) {
+  async remove(@Req() req: any, @Param('id') id: string) {
     await this.collectionsService.remove(req.user.id, id);
     return {
       message: 'Delete collection successfully',
-      data: null,
     };
   }
 }

@@ -1,42 +1,39 @@
-import { Controller, Get, Param, HttpStatus, HttpCode, Post, Body, Request, UseGuards, Put, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ChaptersService } from './chapters.service';
+
+// Guards & Decorators
 import { Public } from '@/src/common/decorators/customize';
-import { CreateChapterDto } from './dto/create-chapter.dto';
-import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/src/common/guards/roles.guard';
 
+// DTOs
+import { CreateChapterDto } from './dto/create-chapter.dto';
+import { UpdateChapterDto } from './dto/update-chapter.dto';
+
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
-  constructor(private readonly chaptersService: ChaptersService) { }
+  constructor(private readonly chaptersService: ChaptersService) {}
 
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getChaptersByBookId(@Param('bookSlug') bookSlug: string) {
-    const result = await this.chaptersService.getChaptersByBookSlug(bookSlug);
-
+  async getChapters(@Param('bookSlug') bookSlug: string) {
+    const result = await this.chaptersService.findByBookSlug(bookSlug);
     return {
-      message: 'Get chapters successfully',
-      data: result,
-    };
-  }
-
-  @Public()
-  @Get(':chapterSlug')
-  @HttpCode(HttpStatus.OK)
-  async getChapterById(
-    @Param('bookSlug') bookSlug: string,
-    @Param('chapterSlug') chapterSlug: string,
-  ) {
-    const result = await this.chaptersService.getChapterBySlug(
-      bookSlug,
-      chapterSlug,
-    );
-
-    return {
-      message: 'Get chapter successfully',
+      message: 'Get list chapters successfully',
       data: result,
     };
   }
@@ -45,20 +42,15 @@ export class ChaptersController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createChapter(
+  async create(
     @Param('bookSlug') bookSlug: string,
     @Body() dto: CreateChapterDto,
     @Request() req: any,
   ) {
-    const chapter = await this.chaptersService.createChapter(
-      bookSlug,
-      dto,
-      req.user,
-    );
-
+    const data = await this.chaptersService.create(bookSlug, dto, req.user.id);
     return {
-      message: 'Tạo chương thành công',
-      data: chapter,
+      message: 'Create chapter successfully',
+      data,
     };
   }
 
@@ -66,12 +58,11 @@ export class ChaptersController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async getChapterByIdForAdmin(@Param('id') id: string) {
-    const result = await this.chaptersService.findById(id);
-
+  async getById(@Param('id') id: string) {
+    const data = await this.chaptersService.findById(id);
     return {
       message: 'Get chapter by ID successfully',
-      data: result,
+      data,
     };
   }
 
@@ -79,18 +70,11 @@ export class ChaptersController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async updateChapter(
-    @Param('id') id: string,
-    @Body() dto: UpdateChapterDto,
-  ) {
-    console.log('📝 Updating chapter:', id);
-    console.log('📥 Received DTO:', dto);
-
-    const chapter = await this.chaptersService.updateChapter(id, dto);
-
+  async update(@Param('id') id: string, @Body() dto: UpdateChapterDto) {
+    const data = await this.chaptersService.update(id, dto);
     return {
-      message: 'Cập nhật chương thành công',
-      data: chapter,
+      message: 'Update chapter successfully',
+      data,
     };
   }
 
@@ -98,13 +82,24 @@ export class ChaptersController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.OK)
-  async deleteChapter(@Param('id') id: string) {
-    console.log('🗑️ Deleting chapter:', id);
-
-    await this.chaptersService.deleteChapter(id);
-
+  async delete(@Param('id') id: string) {
+    const result = await this.chaptersService.delete(id);
     return {
-      message: 'Xóa chương thành công',
+      message: result.message,
+    };
+  }
+
+  @Public()
+  @Get(':chapterSlug')
+  @HttpCode(HttpStatus.OK)
+  async getDetail(
+    @Param('bookSlug') bookSlug: string,
+    @Param('chapterSlug') chapterSlug: string,
+  ) {
+    const result = await this.chaptersService.findBySlug(bookSlug, chapterSlug);
+    return {
+      message: 'Get chapter detail successfully',
+      data: result,
     };
   }
 }

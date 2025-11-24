@@ -1,78 +1,71 @@
-// src/modules/reviews/reviews.controller.ts
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  HttpStatus,
+  Get,
   HttpCode,
-  Request,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+
 import { Public } from '@/src/common/decorators/customize';
+import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
 @Controller('reviews')
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req: any, @Body() createReviewDto: CreateReviewDto) {
-    const result = await this.reviewsService.create(
-      createReviewDto,
-      req.user.id,
-    );
-
-    return {
-      message: 'Đánh giá sách thành công',
-      data: result,
-    };
-  }
-
   @Public()
   @Get('book/:bookId')
   @HttpCode(HttpStatus.OK)
   async findAllByBook(@Param('bookId') bookId: string) {
-    const reviews = await this.reviewsService.findAllByBook(bookId);
-
+    const data = await this.reviewsService.findAllByBook(bookId);
     return {
-      message: 'Lấy danh sách đánh giá thành công',
-      data: reviews,
+      message: 'Get reviews successfully',
+      data,
+    };
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Req() req: any, @Body() dto: CreateReviewDto) {
+    const data = await this.reviewsService.create(req.user.id, dto);
+    return {
+      message: 'Review created successfully',
+      data,
     };
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async update(
+    @Req() req: any,
     @Param('id') id: string,
-    @Body() body: UpdateReviewDto & { userId: string },
+    @Body() dto: UpdateReviewDto,
   ) {
-    const { userId, ...updateData } = body;
-    const updatedReview = await this.reviewsService.update(
-      id,
-      userId,
-      updateData,
-    );
-
+    const data = await this.reviewsService.update(id, req.user.id, dto);
     return {
-      message: 'Cập nhật đánh giá thành công',
-      data: updatedReview,
+      message: 'Review updated successfully',
+      data,
     };
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string, @Body('userId') userId: string) {
-    await this.reviewsService.remove(id, userId);
-
+  async remove(@Req() req: any, @Param('id') id: string) {
+    await this.reviewsService.remove(id, req.user.id);
     return {
-      message: 'Xóa đánh giá thành công',
-      data: null,
+      message: 'Review deleted successfully',
     };
   }
 }

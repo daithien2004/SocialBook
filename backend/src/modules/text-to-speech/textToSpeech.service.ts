@@ -31,14 +31,19 @@ export class TextToSpeechService {
     private readonly ttsModel: Model<TextToSpeechDocument>,
     private cloudinaryService: CloudinaryService,
     private chaptersService: ChaptersService,
-  ) { }
+  ) {}
 
   /**
    * Detect language from text content based on Vietnamese diacritics
    */
-  private detectLanguage(text: string): { code: string; voice: string; name: string } {
+  private detectLanguage(text: string): {
+    code: string;
+    voice: string;
+    name: string;
+  } {
     // Vietnamese specific characters with diacritics
-    const vietnamesePattern = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+    const vietnamesePattern =
+      /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
 
     // Check for any Vietnamese diacritic characters
     const hasVietnamese = vietnamesePattern.test(text);
@@ -93,7 +98,9 @@ export class TextToSpeechService {
       forceRegenerate = false,
     } = options;
 
-    console.log(`📝 Generating audio with: language=${language}, voice=${voice}`);
+    console.log(
+      `📝 Generating audio with: language=${language}, voice=${voice}`,
+    );
 
     // Check if TTS already exists (caching)
     if (!forceRegenerate) {
@@ -133,13 +140,15 @@ export class TextToSpeechService {
     }
 
     // Get bookId safely - book can be either populated (object) or unpopulated (ObjectId)
-    const bookId = chapter.book?.id || (chapter.book as any);
+    const bookId = chapter.bookId?.id || (chapter.bookId as any);
     if (!bookId) {
       console.error('Cannot get bookId from chapter:', { chapter });
       throw new BadRequestException('Chapter is missing book reference');
     }
 
-    console.log(`📚 Creating TTS record for chapter ${chapterId}, book ${bookId}`);
+    console.log(
+      `📚 Creating TTS record for chapter ${chapterId}, book ${bookId}`,
+    );
 
     // Create pending record
     const ttsRecord = await this.ttsModel.create({
@@ -231,7 +240,7 @@ export class TextToSpeechService {
 
     // Get all chapters for the book
     const chapters = await this.chaptersService
-      .getChaptersByBookSlug(bookId)
+      .findByBookSlug(bookId)
       .catch(async () => {
         // If getChaptersByBookSlug fails (expects slug), try finding by ID
         const chapterModel = this.ttsModel.db.model('Chapter');
@@ -409,7 +418,9 @@ export class TextToSpeechService {
     if (!response.ok) {
       const err = await response.text();
       console.error(`❌ VoiceRSS Error Response:`, err);
-      throw new InternalServerErrorException(`VoiceRSS error (${voice}): ${err}`);
+      throw new InternalServerErrorException(
+        `VoiceRSS error (${voice}): ${err}`,
+      );
     }
 
     const arrayBuffer = await response.arrayBuffer();
@@ -433,4 +444,3 @@ export class TextToSpeechService {
     return audioUrl;
   }
 }
-

@@ -1,107 +1,105 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+
+// Schemas
 import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
-import { Follow, FollowDocument } from '@/src/modules/follows/schemas/follow.schema';
+import {
+  Follow,
+  FollowDocument,
+} from '@/src/modules/follows/schemas/follow.schema';
 
 @Injectable()
 export class FollowsService {
   constructor(
     @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {
-  }
+  ) {}
 
-  private async ensureTargetUserExists(targetUserId: Types.ObjectId) {
-    const user = await this.userModel.findById(targetUserId).select('_id').lean();
-    if (!user) {
-      throw new NotFoundException('Người dùng không tồn tại');
+  async getStatus(currentUserId: string, targetUserId: string) {
+    if (!Types.ObjectId.isValid(targetUserId)) {
+      throw new BadRequestException('Invalid Target User ID');
     }
-  }
 
-  async getFollowState(currentUserId: Types.ObjectId, targetUserId: Types.ObjectId) {
-    if (String(currentUserId) === String(targetUserId)) {
+    if (currentUserId === targetUserId) {
       return { isOwner: true, isFollowing: false };
     }
 
-    await this.ensureTargetUserExists(targetUserId);
+    await this.ensureUserExists(targetUserId);
 
-    const follow = await this.followModel
-      .findOne({
-        userId: currentUserId,
-        targetId: targetUserId,
-      })
-      .lean();
-    console.log(follow);
-    return {
-      data:{
-        isOwner: false,
-        isFollowing: !!follow,
-      },
-      message: "Kiểm tra thành công"
-    };
-  }
-
-  async toggleFollowUser(currentUserId: Types.ObjectId, targetUserId: Types.ObjectId) {
-    if (String(currentUserId) === String(targetUserId)) {
-      throw new BadRequestException('Không thể theo dõi chính mình');
-    }
-
-    await this.ensureTargetUserExists(targetUserId);
-
-    const existing = await this.followModel.findOne({
-      userId: currentUserId,
-      targetId: targetUserId,
-    });
-
-    if (existing) {
-      await this.followModel.deleteOne({ _id: existing._id });
-
-      return {
-        data: {
-          isFollowing: false,
-        },
-        message: 'Bỏ theo dõi thành công',
-      };
-    }
-
-    await this.followModel.create({
-      userId: currentUserId,
-      targetId: targetUserId,
+    const follow = await this.followModel.exists({
+      userId: new Types.ObjectId(currentUserId),
+      targetId: new Types.ObjectId(targetUserId),
     });
 
     return {
-      data: {
-        isFollowing: true,
-      },
-      message: 'Theo dõi thành công',
+      isOwner: false,
+      isFollowing: !!follow,
     };
   }
 
-  async getFollowingList(currentUserId: Types.ObjectId) {
+  async getFollowingList(userId: string) {
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('User ID is required');
+    }
+
     const follows = await this.followModel
-      .find({ userId: currentUserId })
-      .select("targetId")
+      .find({ userId: new Types.ObjectId(userId) })
+      .select('targetId')
       .lean();
 
-    if (follows.length === 0) {
-      return {
-        data: [],
-        message: "Bạn chưa theo dõi ai",
-      };
-    }
+    if (!follows.length) return [];
 
     const targetIds = follows.map((f) => f.targetId);
 
     const users = await this.userModel
       .find({ _id: { $in: targetIds } })
-      .select("_id image")
+      .select('username image bio') // Select field cần thiết
       .lean();
 
-    return {
-      data: users,
-      message: "Lấy danh sách đang theo dõi thành công",
-    };
+    return users;
   }
 
+  async toggle(currentUserId: string, targetUserId: string) {
+    // 1. Validation
+    if (!Types.ObjectId.isValid(targetUserId)) {
+      throw new BadRequestException('Invalid Target User ID');
+    }
+
+    if (currentUserId === targetUserId) {
+      throw new BadRequestException('Cannot follow yourself');
+    }
+
+    await this.ensureUserExists(targetUserId);
+
+    const userObjectId = new Types.ObjectId(currentUserId);
+    const targetObjectId = new Types.ObjectId(targetUserId);
+
+    const existingFollow = await this.followModel.findOne({
+      userId: userObjectId,
+      targetId: targetObjectId,
+    });
+
+    if (existingFollow) {
+      await this.followModel.deleteOne({ _id: existingFollow._id });
+      return { isFollowing: false };
+    } else {
+      await this.followModel.create({
+        userId: userObjectId,
+        targetId: targetObjectId,
+      });
+      return { isFollowing: true };
+    }
+  }
+
+  private async ensureUserExists(userId: string) {
+    const exists = await this.userModel.exists({ _id: userId });
+    if (!exists) {
+      throw new NotFoundException('User not found');
+    }
+  }
 }
