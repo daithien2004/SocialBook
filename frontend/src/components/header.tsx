@@ -83,7 +83,7 @@ export function Header() {
                         className="relative inline-flex items-center justify-center cursor-pointer"
                     >
                       <img
-                          src={avatarUrl}
+                          src={avatarUrl || "/user.png"}
                           alt="User avatar"
                           className="h-9 w-9 rounded-full object-cover border border-gray-200 hover:scale-105 transition-transform"
                       />

@@ -5,13 +5,13 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
 
-        const currentUserId = searchParams.get('currentUserId');
+        const userId = searchParams.get('userId');
 
         const response = await serverApi.get(
-            "/follows",
+            "/follows/following",
             {
                 params: {
-                    currentUserId,
+                    userId,
                 },
             }
         );

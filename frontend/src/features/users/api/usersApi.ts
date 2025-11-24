@@ -6,7 +6,7 @@ export interface UserOverviewReponse {
     id: string;
     username: string;
     image: string | null;
-    joinedAt: Date;
+    createdAt: Date;
     postCount: number;
     readingListCount: number;
     followersCount: number;

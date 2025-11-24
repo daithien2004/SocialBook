@@ -8,6 +8,7 @@ import { ReactNode, useState } from "react";
 import { ProfileSidebar } from "@/src/components/user/profile-sidebar";
 import { FollowStateResponse } from "@/src/features/follows/api/followApi";
 import {useGetUserOverviewQuery} from "@/src/features/users/api/usersApi";
+import {useRouter} from "next/navigation";
 
 interface ClientLayoutProps {
     children: ReactNode;
@@ -17,13 +18,24 @@ interface ClientLayoutProps {
 
 export default function ClientLayout(props : ClientLayoutProps) {
     const {children, profileUserId, initialFollowState} = props
-
+    const router = useRouter();
     const { data: overview, isLoading: isOverviewLoading } =
         useGetUserOverviewQuery(profileUserId, {
             skip: !profileUserId,
         });
-
-
+    if (!overview) return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy người dùng</h2>
+                <button
+                    onClick={() => router.push('/')}
+                    className="text-blue-600 hover:underline"
+                >
+                    Quay lại trang chủ
+                </button>
+            </div>
+        </div>
+    )
     return (
         <div className="min-h-screen bg-gray-100">
             <ProfileHeader username={overview?.username}
@@ -44,7 +56,7 @@ export default function ClientLayout(props : ClientLayoutProps) {
                     <div className="w-full lg:w-2/6">
                         <ProfileSidebar
                             profileUserId={profileUserId}
-                            joinedAt={overview?.joinedAt}
+                            joinedAt={overview?.createdAt}
                         />
                     </div>
                     <div className="w-full lg:w-4/6">
@@ -52,7 +64,6 @@ export default function ClientLayout(props : ClientLayoutProps) {
                     </div>
                 </div>
             </main>
-
         </div>
     );
 }
