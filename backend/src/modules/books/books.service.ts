@@ -19,6 +19,10 @@ import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
 import { slugify } from '@/src/utils/slugify';
 import { CreateBookDto } from './dto/create-book.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import {
+  ReadingList,
+  ReadingListDocument,
+} from '@/src/modules/library/schemas/reading-list.schema';
 
 @Injectable()
 export class BooksService {
@@ -28,6 +32,8 @@ export class BooksService {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Author.name) private authorModel: Model<AuthorDocument>,
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
+    @InjectModel(ReadingList.name)
+    private readingListModel: Model<ReadingListDocument>,
     private cloudinaryService: CloudinaryService,
   ) {}
 
@@ -335,5 +341,35 @@ export class BooksService {
     const result = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     distribution.forEach((item) => (result[item._id] = item.count));
     return result;
+  }
+
+  async getBookStats(id: string) {
+    if (!id) {
+      throw new BadRequestException('Book ID is required');
+    }
+
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid book ID format');
+    }
+
+    const book = await this.bookModel
+      .findOne({ _id: id, isDeleted: false })
+      .select('views likes')
+      .lean();
+
+    if (!book) {
+      throw new NotFoundException(`Book with ID "${id}" not found`);
+    }
+
+    const chaptersCount = await this.chapterModel.countDocuments({
+      bookId: new Types.ObjectId(id),
+    });
+
+    return {
+      id,
+      views: book.views || 0,
+      likes: book.likes || 0,
+      chapters: chaptersCount || 0,
+    };
   }
 }

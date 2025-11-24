@@ -86,12 +86,13 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
             <div className="py-2 md:py-0">
               {isAuthenticated && isOwner ? (
                   <Button
+                      onClick={()=>{router.push(`/users/${profileUserId}/profile`)}}
                       variant="outline"
                       size="sm"
-                      className="h-9 gap-2 text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100"
+                      className="h-9 gap-2 text-gray-600 font-serif font-bold text-base border-gray-200 hover:bg-gray-100"
                   >
-                    <Settings className="h-4 w-4" />
-                    Sửa Hồ Sơ
+                    <Settings className="h-6 w-6" strokeWidth={2.5}/>
+                    Sửa hồ sơ
                   </Button>
               ) : (
                   <div className="flex gap-2">

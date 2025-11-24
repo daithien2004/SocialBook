@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LikesModule } from '../likes/likes.module';
-import { Follow, FollowSchema } from './schemas/folllow.schema';
+import { Follow, FollowSchema } from './schemas/follow.schema';
 import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
-import { FollowsService } from '@/src/modules/folllows/folllows.service';
-import { FollowsController } from '@/src/modules/folllows/folllows.controller';
+import { FollowsService } from '@/src/modules/follows/follows.service';
+import { FollowsController } from '@/src/modules/follows/follows.controller';
 
 
 @Module({

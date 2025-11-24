@@ -47,7 +47,7 @@ export function ProfileSidebar(props : ProfileNavProps) {
                             onClick={() => router.push(`/users/${user.id}`)}
                             key={user.id}
                             src={user.image || "https://i.pravatar.cc/40?img=15"}
-                            className="h-8 w-8 rounded-full object-cover border-1 border-gray-400"
+                            className="h-8 w-8 rounded-full object-cover border-1 border-gray-400 cursor-pointer"
                         />
                     ))}
                   </div>

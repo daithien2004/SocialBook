@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { FollowsService } from './folllows.service';
+import { FollowsService } from './follows.service';
 import { Public } from '@/src/common/decorators/customize';
 
 @Controller('follows')

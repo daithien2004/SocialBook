@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Follow, FollowDocument } from '@/src/modules/folllows/schemas/folllow.schema';
 import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
+import { Follow, FollowDocument } from '@/src/modules/follows/schemas/follow.schema';
 
 @Injectable()
 export class FollowsService {
