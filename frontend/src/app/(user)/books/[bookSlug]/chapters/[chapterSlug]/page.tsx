@@ -18,6 +18,7 @@ import ChapterHeader from '@/src/components/chapter/ChapterHeader';
 import { ChapterContent } from '@/src/components/chapter/ChapterContent';
 import { useReadingProgress } from '@/src/hooks/useReadingProgress';
 import ResumeReadingToast from '@/src/components/chapter/ResumeReadingToast';
+import ChapterAudioPlayer from '@/src/components/chapter/ChapterAudioPlayer';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -152,6 +153,12 @@ export default function ChapterPage({ params }: ChapterPageProps) {
         viewsCount={chapter.viewsCount}
       />
 
+      {/* Audio Player - sticky below header */}
+      <ChapterAudioPlayer
+        chapterId={chapter.id}
+        chapterTitle={chapter.title}
+      />
+
       <ChapterNavigation
         variant="top"
         hasPrevious={!!navigation?.previous}
@@ -238,11 +245,10 @@ export default function ChapterPage({ params }: ChapterPageProps) {
                       <button
                         key={chap.id}
                         onClick={() => handleChapterSelect(chap.slug)}
-                        className={`w-full text-left p-4 rounded-lg transition-all ${
-                          isCurrentChapter
+                        className={`w-full text-left p-4 rounded-lg transition-all ${isCurrentChapter
                             ? 'bg-blue-600 text-white'
                             : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">

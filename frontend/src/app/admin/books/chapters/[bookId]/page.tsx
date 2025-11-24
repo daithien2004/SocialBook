@@ -11,8 +11,13 @@ import {
   useGetChapterByIdQuery,
   useLazyGetChapterByIdQuery,
 } from '@/src/features/chapters/api/chaptersApi';
+import {
+  useGenerateChapterAudioMutation,
+  useGenerateBookAudioMutation,
+  useGetChapterAudioQuery,
+} from '@/src/features/tts/api/ttsApi';
 import { Chapter, Paragraph } from '@/src/features/chapters/types/chapter.interface';
-import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2 } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function ChapterManagementPage() {
@@ -30,6 +35,10 @@ export default function ChapterManagementPage() {
   const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
   const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
   const [deleteChapter] = useDeleteChapterMutation();
+
+  // TTS mutations
+  const [generateChapterAudio, { isLoading: isGeneratingAudio }] = useGenerateChapterAudioMutation();
+  const [generateBookAudio, { isLoading: isGeneratingAllAudio }] = useGenerateBookAudioMutation();
 
   const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
@@ -272,6 +281,39 @@ export default function ChapterManagementPage() {
     }
   };
 
+  // TTS handlers - NO hardcoded options to allow backend auto-detection
+  const handleGenerateAudio = async (chapterId: string) => {
+    try {
+      await generateChapterAudio({
+        chapterId,
+      }).unwrap();
+      alert('Tạo audio thành công!');
+    } catch (error: any) {
+      console.error('Failed to generate audio:', error);
+      alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
+    }
+  };
+
+  const handleGenerateAllAudio = async () => {
+    if (!bookId) return;
+    if (!confirm(`Bạn có chắc muốn tạo audio cho tất cả ${chapters.length} chương?`)) return;
+
+    try {
+      const result = await generateBookAudio({
+        bookId,
+      }).unwrap();
+
+      alert(
+        `Hoàn thành tạo audio!\n` +
+        `Thành công: ${result.successful}/${result.total}\n` +
+        `Thất bại: ${result.failed}`
+      );
+    } catch (error: any) {
+      console.error('Failed to generate all audio:', error);
+      alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
+    }
+  };
+
   if (isLoadingBook || isLoadingChapters) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -292,13 +334,27 @@ export default function ChapterManagementPage() {
                 Sách: <span className="font-semibold">{book?.title}</span> • {chapters.length} chương
               </p>
             </div>
-            <button
-              onClick={() => setShowNewChapterForm(!showNewChapterForm)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
-            >
-              <Plus className="w-5 h-5" />
-              Thêm chương mới
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleGenerateAllAudio}
+                disabled={isGeneratingAllAudio || chapters.length === 0}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              >
+                {isGeneratingAllAudio ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Volume2 className="w-5 h-5" />
+                )}
+                Tạo Audio Toàn Bộ
+              </button>
+              <button
+                onClick={() => setShowNewChapterForm(!showNewChapterForm)}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              >
+                <Plus className="w-5 h-5" />
+                Thêm chương mới
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -387,12 +443,17 @@ export default function ChapterManagementPage() {
                         <div className="font-semibold text-gray-900">
                           Chương {chapter.orderIndex}: {chapter.title}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {chapter.paragraphsCount || 0} đoạn • {chapter.viewsCount} lượt xem
+                        <div className="text-sm text-gray-500 flex items-center gap-3">
+                          <span>{chapter.paragraphsCount || 0} đoạn</span>
+                          <span>•</span>
+                          <span>{chapter.viewsCount} lượt xem</span>
+                          <span>•</span>
+                          <TTSStatusBadge chapterId={chapter.id} />
                         </div>
                       </div>
                     </div>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                      <TTSButton chapterId={chapter.id} onGenerate={handleGenerateAudio} />
                       <button
                         onClick={() => {
                           if (expandedChapterId !== chapter.id) {
@@ -514,5 +575,113 @@ function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterI
         </p>
       ))}
     </div>
+  );
+}
+
+// Status Badge Component
+function TTSStatusBadge({ chapterId }: { chapterId: string }) {
+  const { data: ttsData, isLoading } = useGetChapterAudioQuery(chapterId);
+
+  if (isLoading) {
+    return <span className="text-xs text-gray-400">⏳ Đang kiểm tra...</span>;
+  }
+
+  if (!ttsData) {
+    return <span className="text-xs text-gray-400">🔇 Chưa có audio</span>;
+  }
+
+  const status = ttsData.status;
+
+  if (status === 'completed') {
+    return <span className="text-xs text-green-600 font-medium">✓ Có audio</span>;
+  } else if (status === 'processing' || status === 'pending') {
+    return <span className="text-xs text-yellow-600 font-medium">⏳ Đang tạo...</span>;
+  } else if (status === 'failed') {
+    return <span className="text-xs text-red-600 font-medium">✗ Lỗi</span>;
+  }
+
+  return null;
+}
+
+// TTS Button Component
+function TTSButton({ chapterId, onGenerate }: { chapterId: string; onGenerate: (id: string) => void }) {
+  const { data: ttsData, isLoading } = useGetChapterAudioQuery(chapterId);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      await onGenerate(chapterId);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <button className="p-2 bg-gray-100 rounded-lg cursor-wait" title="Đang kiểm tra...">
+        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+      </button>
+    );
+  }
+
+  if (ttsData) {
+    const status = ttsData.status;
+
+    if (status === 'completed') {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (ttsData.audioUrl) {
+              window.open(ttsData.audioUrl, '_blank');
+            }
+          }}
+          className="p-2 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
+          title="Audio đã tạo - Click để nghe"
+        >
+          <CheckCircle className="w-5 h-5 text-green-600" />
+        </button>
+      );
+    } else if (status === 'processing' || status === 'pending') {
+      return (
+        <button className="p-2 bg-yellow-100 rounded-lg" title="Đang tạo audio...">
+          <Clock className="w-5 h-5 text-yellow-600" />
+        </button>
+      );
+    } else if (status === 'failed') {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleGenerate();
+          }}
+          disabled={isGenerating}
+          className="p-2 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
+          title="Lỗi - Click để thử lại"
+        >
+          <XCircle className="w-5 h-5 text-red-600" />
+        </button>
+      );
+    }
+  }
+
+  // No audio yet
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        handleGenerate();
+      }}
+      disabled={isGenerating}
+      className="p-2 bg-purple-100 hover:bg-purple-200 disabled:opacity-50 rounded-lg transition-colors"
+      title="Tạo audio"
+    >
+      {isGenerating ? (
+        <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+      ) : (
+        <Volume2 className="w-5 h-5 text-purple-600" />
+      )}
+    </button>
   );
 }
