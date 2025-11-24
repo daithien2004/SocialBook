@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useState } from 'react';
-import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut } from 'lucide-react';
+import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut, PenLine } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', icon: Home, href: '/admin/dashboard' },
@@ -11,6 +11,7 @@ const navItems = [
   { name: 'Posts', icon: FileText, href: '/admin/posts' },
   { name: 'Comments', icon: MessageSquare, href: '/admin/comments' },
   { name: 'Reports', icon: BarChart2, href: '/admin/reports' },
+  { name: 'Authors', icon: PenLine , href: '/admin/authors' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

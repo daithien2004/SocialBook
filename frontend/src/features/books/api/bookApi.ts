@@ -64,7 +64,7 @@ export const booksApi = createApi({
         method: 'POST',
         body: formData,
       }),
-      invalidatesTags: [{ type: 'Books', id: 'LIST' }],
+      invalidatesTags: [{ type: 'Books', id: 'LIST' }, { type: 'AdminBooks', id: 'LIST' }],
     }),
 
     getAdminBooks: builder.query<

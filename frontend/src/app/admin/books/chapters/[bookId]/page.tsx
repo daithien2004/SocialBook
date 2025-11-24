@@ -53,15 +53,7 @@ export default function ChapterManagementPage() {
   const book = bookData;
   const chapters = chaptersData?.chapters || [];
 
-  // Debug logging
-  console.log('📚 Chapter Management Debug:', {
-    bookId,
-    bookData,
-    bookSlug: bookData?.slug,
-    chaptersData,
-    isLoadingBook,
-    isLoadingChapters,
-  });
+
 
   const handleToggleExpand = (chapterId: string) => {
     if (expandedChapterId === chapterId) {
@@ -448,12 +440,17 @@ export default function ChapterManagementPage() {
                           <span>•</span>
                           <span>{chapter.viewsCount} lượt xem</span>
                           <span>•</span>
-                          <TTSStatusBadge chapterId={chapter.id} />
+                          <TTSStatusBadge status={chapter.ttsStatus} />
                         </div>
                       </div>
                     </div>
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                      <TTSButton chapterId={chapter.id} onGenerate={handleGenerateAudio} />
+                      <TTSButton
+                        chapterId={chapter.id}
+                        status={chapter.ttsStatus}
+                        audioUrl={chapter.audioUrl}
+                        onGenerate={handleGenerateAudio}
+                      />
                       <button
                         onClick={() => {
                           if (expandedChapterId !== chapter.id) {
@@ -579,18 +576,10 @@ function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterI
 }
 
 // Status Badge Component
-function TTSStatusBadge({ chapterId }: { chapterId: string }) {
-  const { data: ttsData, isLoading } = useGetChapterAudioQuery(chapterId);
-
-  if (isLoading) {
-    return <span className="text-xs text-gray-400">⏳ Đang kiểm tra...</span>;
-  }
-
-  if (!ttsData) {
+function TTSStatusBadge({ status }: { status?: 'pending' | 'processing' | 'completed' | 'failed' }) {
+  if (!status) {
     return <span className="text-xs text-gray-400">🔇 Chưa có audio</span>;
   }
-
-  const status = ttsData.status;
 
   if (status === 'completed') {
     return <span className="text-xs text-green-600 font-medium">✓ Có audio</span>;
@@ -604,8 +593,17 @@ function TTSStatusBadge({ chapterId }: { chapterId: string }) {
 }
 
 // TTS Button Component
-function TTSButton({ chapterId, onGenerate }: { chapterId: string; onGenerate: (id: string) => void }) {
-  const { data: ttsData, isLoading } = useGetChapterAudioQuery(chapterId);
+function TTSButton({
+  chapterId,
+  status,
+  audioUrl,
+  onGenerate
+}: {
+  chapterId: string;
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  audioUrl?: string;
+  onGenerate: (id: string) => void
+}) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -617,24 +615,14 @@ function TTSButton({ chapterId, onGenerate }: { chapterId: string; onGenerate: (
     }
   };
 
-  if (isLoading) {
-    return (
-      <button className="p-2 bg-gray-100 rounded-lg cursor-wait" title="Đang kiểm tra...">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-      </button>
-    );
-  }
-
-  if (ttsData) {
-    const status = ttsData.status;
-
+  if (status) {
     if (status === 'completed') {
       return (
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (ttsData.audioUrl) {
-              window.open(ttsData.audioUrl, '_blank');
+            if (audioUrl) {
+              window.open(audioUrl, '_blank');
             }
           }}
           className="p-2 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"

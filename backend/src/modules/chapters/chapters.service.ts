@@ -134,6 +134,30 @@ export class ChaptersService {
       { $match: { bookId: book._id } },
       { $sort: { orderIndex: 1 } },
       {
+        $lookup: {
+          from: 'texttospeeches',
+          localField: '_id',
+          foreignField: 'chapterId',
+          as: 'ttsData',
+        },
+      },
+      {
+        $addFields: {
+          latestTTS: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: '$ttsData',
+                  as: 'tts',
+                  cond: { $ne: ['$$tts.status', 'failed'] } // Prefer non-failed
+                }
+              },
+              0
+            ]
+          }
+        }
+      },
+      {
         $project: {
           title: 1,
           slug: 1,
@@ -142,6 +166,8 @@ export class ChaptersService {
           createdAt: 1,
           updatedAt: 1,
           paragraphsCount: { $size: '$paragraphs' },
+          ttsStatus: { $ifNull: ['$latestTTS.status', null] },
+          audioUrl: { $ifNull: ['$latestTTS.audioUrl', null] },
         },
       },
     ]);
@@ -163,6 +189,8 @@ export class ChaptersService {
         createdAt: chapter.createdAt,
         updatedAt: chapter.updatedAt,
         paragraphsCount: chapter.paragraphsCount,
+        ttsStatus: chapter.ttsStatus,
+        audioUrl: chapter.audioUrl,
       })),
     };
   }

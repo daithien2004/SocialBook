@@ -1,9 +1,85 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Put,
+    Param,
+    Delete,
+    Query,
+    UseGuards,
+    HttpCode,
+    HttpStatus,
+} from '@nestjs/common';
 import { AuthorsService } from './authors.service';
 import { Public } from '@/src/common/decorators/customize';
+import { CreateAuthorDto } from './dto/create-author.dto';
+import { UpdateAuthorDto } from './dto/update-author.dto';
+import { Roles } from '@/src/common/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
+import { RolesGuard } from '@/src/common/guards/roles.guard';
+
 @Controller('authors')
 export class AuthorsController {
     constructor(private readonly authorsService: AuthorsService) { }
+
+    @Post()
+    @Roles('admin')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @HttpCode(HttpStatus.CREATED)
+    async create(@Body() createAuthorDto: CreateAuthorDto) {
+        const data = await this.authorsService.create(createAuthorDto);
+        return {
+            message: 'Tạo tác giả thành công',
+            data,
+        };
+    }
+
+    @Get('admin')
+    @Roles('admin')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    async findAll(
+        @Query('current') current: string = '1',
+        @Query('pageSize') pageSize: string = '10',
+        @Query() query: any,
+    ) {
+        const data = await this.authorsService.findAll(query, +current, +pageSize);
+        return {
+            message: 'Lấy danh sách tác giả thành công',
+            data,
+        };
+    }
+
+    @Get(':id')
+    @Public()
+    async findOne(@Param('id') id: string) {
+        const data = await this.authorsService.findOne(id);
+        return {
+            message: 'Lấy thông tin tác giả thành công',
+            data,
+        };
+    }
+
+    @Put(':id')
+    @Roles('admin')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    async update(@Param('id') id: string, @Body() updateAuthorDto: UpdateAuthorDto) {
+        const data = await this.authorsService.update(id, updateAuthorDto);
+        return {
+            message: 'Cập nhật tác giả thành công',
+            data,
+        };
+    }
+
+    @Delete(':id')
+    @Roles('admin')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    async remove(@Param('id') id: string) {
+        await this.authorsService.remove(id);
+        return {
+            message: 'Xóa tác giả thành công',
+        };
+    }
 
     @Get()
     @Public()

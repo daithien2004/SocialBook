@@ -94,6 +94,14 @@ export const NESTJS_STATISTICS_ENDPOINTS = {
   growth: (days?: number) => `/statistics/growth${days ? `?days=${days}` : ''}`,
 };
 
+export const NESTJS_AUTHORS_ENDPOINTS = {
+  getAll: '/authors/admin',
+  getById: (id: string) => `/authors/${id}`,
+  create: '/authors',
+  update: (id: string) => `/authors/${id}`,
+  delete: (id: string) => `/authors/${id}`,
+};
+
 export const NESTJS_TTS_ENDPOINTS = {
   generateChapter: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
   generateBook: (bookId: string) => `/text-to-speech/book/${bookId}/all`,

@@ -14,4 +14,6 @@ export interface Chapter {
   updatedAt: string;
   paragraphs: Paragraph[];
   paragraphsCount?: number;
+  ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  audioUrl?: string;
 }
