@@ -32,25 +32,26 @@ export async function GET(request: NextRequest) {
     const authenticatedApi = await getAuthenticatedServerApi();
     const response = await authenticatedApi.get(
       NESTJS_BOOKS_ENDPOINTS.getAllBookForAdmin,
-      {
-        params: { page, limit, status, search },
-      },
+      { params: { page, limit, status, search } },
     );
+
+    // Backend may return { data: { books: [], pagination: {} } } or { data: { data: [], meta: {} } }
+    const books = response.data?.books || response.data?.data || [];
+    const pagination = response.data?.pagination || response.data?.meta || {};
 
     return NextResponse.json({
       success: true,
       statusCode: 200,
       message: 'Get admin books successfully',
-      ...(response.data?.books ? response.data : { books: response.data || [], pagination: response.data?.pagination || {} }),
+      data: { books, pagination },
     });
   } catch (error: any) {
     console.error('GET /api/admin/books error:', error.response?.data || error.message);
-
     return NextResponse.json(
       {
         success: false,
         statusCode: error.response?.status || 500,
-        message: error.response?.data?.message || 'Lấy danh sách sách thất bại',
+        message: error.response?.data?.message || 'Failed to fetch admin books',
         error: error.response?.data?.error || 'Server Error',
       },
       { status: error.response?.status || 500 },
@@ -66,10 +67,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Get FormData from request (not JSON)
     const formData = await request.formData();
-
-    // Forward the FormData to NestJS backend
     const authenticatedApi = await getAuthenticatedServerApi();
     const response = await authenticatedApi.post(
       NESTJS_BOOKS_ENDPOINTS.createBook,
@@ -80,11 +78,10 @@ export async function POST(request: NextRequest) {
       success: true,
       statusCode: response.status,
       message: 'Create book successfully',
-      ...(response.data?.data ? response.data : { data: response.data }),
+      data: response.data?.data ? response.data : { data: response.data },
     });
   } catch (error: any) {
     console.error('POST /api/admin/books error:', error.response?.data || error.message);
-
     return NextResponse.json(
       {
         success: false,
