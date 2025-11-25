@@ -56,6 +56,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     isLoading: isLoadingBook,
     error,
   } = useGetBookBySlugQuery({ bookSlug });
+  console.log(book);
 
   // Fetch Reviews
   const { data: reviews, isLoading: isLoadingReviews } =
@@ -167,8 +168,8 @@ ${book.description}
   }
 
   // Data hiển thị
-  const displayRating = book.averageRating || 0;
-  const displayTotalRatings = book.totalRatings || reviews?.length;
+  const displayRating = book.stats.averageRating || 0;
+  const displayTotalRatings = book.stats.totalRatings || reviews?.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
