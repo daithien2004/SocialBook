@@ -19,7 +19,7 @@ export const authorApi = createApi({
                 },
             }),
             transformResponse: (response: any) => {
-               
+
                 return {
                     data: response.data,
                     meta: response.meta
@@ -38,7 +38,9 @@ export const authorApi = createApi({
                 url: BFF_AUTHORS_ENDPOINTS.getById(id),
                 method: 'GET',
             }),
-            transformResponse: (response: any) => response.data,
+            transformResponse: (response: any) => {
+                return response;
+            },
             providesTags: (result, error, id) => [{ type: 'Author', id }],
         }),
         createAuthor: builder.mutation<Author, CreateAuthorRequest>({
@@ -51,10 +53,10 @@ export const authorApi = createApi({
             invalidatesTags: [{ type: 'Authors', id: 'LIST' }],
         }),
         updateAuthor: builder.mutation<Author, UpdateAuthorRequest>({
-            query: ({ id, ...body }) => ({
+            query: ({ id, data }) => ({
                 url: BFF_AUTHORS_ENDPOINTS.update(id),
                 method: 'PUT',
-                body,
+                body: data,
             }),
             transformResponse: (response: any) => response.data,
             invalidatesTags: (result, error, { id }) => [

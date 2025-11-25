@@ -10,8 +10,10 @@ import {
     UseGuards,
     HttpCode,
     HttpStatus,
+    UseInterceptors,
+    UploadedFile,
 } from '@nestjs/common';
-
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthorsService } from './authors.service';
 import { Public } from '@/src/common/decorators/customize';
 import { CreateAuthorDto } from './dto/create-author.dto';
@@ -28,9 +30,13 @@ export class AuthorsController {
     @Post()
     @Roles('admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
+    @UseInterceptors(FileInterceptor('photoUrl'))
     @HttpCode(HttpStatus.CREATED)
-    async create(@Body() createAuthorDto: CreateAuthorDto) {
-        const data = await this.authorsService.create(createAuthorDto);
+    async create(
+        @Body() createAuthorDto: CreateAuthorDto,
+        @UploadedFile() file?: Express.Multer.File,
+    ) {
+        const data = await this.authorsService.create(createAuthorDto, file);
         return {
             message: 'Tạo tác giả thành công',
             data,
@@ -65,8 +71,13 @@ export class AuthorsController {
     @Put(':id')
     @Roles('admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    async update(@Param('id') id: string, @Body() updateAuthorDto: UpdateAuthorDto) {
-        const data = await this.authorsService.update(id, updateAuthorDto);
+    @UseInterceptors(FileInterceptor('photoUrl'))
+    async update(
+        @Param('id') id: string,
+        @Body() updateAuthorDto: UpdateAuthorDto,
+        @UploadedFile() file?: Express.Multer.File,
+    ) {
+        const data = await this.authorsService.update(id, updateAuthorDto, file);
         return {
             message: 'Cập nhật tác giả thành công',
             data,

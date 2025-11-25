@@ -35,7 +35,7 @@ export class BooksService {
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async findAll(query: {
     page: number;
@@ -65,11 +65,11 @@ export class BooksService {
     const [books, total] = await Promise.all([
       this.bookModel
         .find(filter)
-        .populate('authorId', 'name avatar')
-        .populate('genres', 'name slug')
         .sort({ updatedAt: -1 })
         .skip(skip)
         .limit(limit)
+        .populate('authorId', 'name')
+        .populate('genres', 'name')
         .lean(),
       this.bookModel.countDocuments(filter),
     ]);
@@ -105,7 +105,7 @@ export class BooksService {
     const book = await this.bookModel
       .findOne({ slug, isDeleted: false })
       .populate('authorId', 'name avatar')
-      .populate('genres', 'name slug')
+      .populate('genres', 'name')
       .lean();
 
     if (!book) throw new NotFoundException(`Book not found`);
@@ -123,7 +123,7 @@ export class BooksService {
     const book = await this.bookModel
       .findOne({ _id: id, isDeleted: false })
       .populate('authorId', 'name avatar')
-      .populate('genres', 'name slug')
+      .populate('genres', 'name')
       .lean();
 
     if (!book) throw new NotFoundException(`Book not found`);
@@ -159,7 +159,7 @@ export class BooksService {
     return await this.bookModel
       .findById(newBook._id)
       .populate('authorId', 'name avatar')
-      .populate('genres', 'name slug');
+      .populate('genres', 'name');
   }
 
   async update(
@@ -200,7 +200,7 @@ export class BooksService {
     const updatedBook = await this.bookModel
       .findByIdAndUpdate(id, { ...dto, slug, coverUrl }, { new: true })
       .populate('authorId', 'name avatar')
-      .populate('genres', 'name slug');
+      .populate('genres', 'name');
 
     return updatedBook;
   }

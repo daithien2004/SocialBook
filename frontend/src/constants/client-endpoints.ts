@@ -84,6 +84,14 @@ export const BFF_AUTHORS_ENDPOINTS = {
   delete: (id: string) => `/admin/authors/${id}`,
 };
 
+export const BFF_GENRES_ENDPOINTS = {
+  getAll: '/admin/genres',
+  getById: (id: string) => `/admin/genres/${id}`,
+  create: '/admin/genres',
+  update: (id: string) => `/admin/genres/${id}`,
+  delete: (id: string) => `/admin/genres/${id}`,
+};
+
 export const BFF_TTS_ENDPOINTS = {
   generateChapter: (chapterId: string) => `/tts/chapter/${chapterId}`,
   generateBook: (bookId: string) => `/tts/book/${bookId}/all`,
@@ -91,3 +99,4 @@ export const BFF_TTS_ENDPOINTS = {
   delete: (chapterId: string) => `/tts/chapter/${chapterId}`,
   incrementPlay: (chapterId: string) => `/tts/chapter/${chapterId}/play`,
 };
+

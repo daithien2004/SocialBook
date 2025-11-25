@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { OverviewStats, GrowthMetric } from '../types/dashboard.types';
+import { toast } from 'sonner';
 
 export function useDashboardData(timeRange: string) {
     const [stats, setStats] = useState<OverviewStats | null>(null);
@@ -77,7 +78,7 @@ export function useExportStatistics() {
             document.body.removeChild(a);
         } catch (err: any) {
             console.error('Export error:', err);
-            alert('Failed to export statistics');
+            toast.error('Failed to export statistics');
         } finally {
             setExporting(false);
         }

@@ -11,12 +11,14 @@ import { Model, Types } from 'mongoose';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { AuthorSelectDto } from './dto/author-select.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class AuthorsService {
     constructor(
         @InjectModel(Author.name)
         private readonly authorModel: Model<AuthorDocument>,
+        private readonly cloudinaryService: CloudinaryService,
     ) { }
 
     async getForSelect(): Promise<AuthorSelectDto[]> {
@@ -84,7 +86,7 @@ export class AuthorsService {
         }));
     }
 
-    async create(createAuthorDto: CreateAuthorDto) {
+    async create(createAuthorDto: CreateAuthorDto, file?: Express.Multer.File) {
         // Validation
         if (!createAuthorDto.name?.trim()) {
             throw new BadRequestException('Author name is required');
@@ -99,11 +101,17 @@ export class AuthorsService {
             throw new ConflictException('Author with this name already exists');
         }
 
+        // Upload photo if provided
+        let photoUrl = createAuthorDto.photoUrl || '';
+        if (file) {
+            photoUrl = await this.cloudinaryService.uploadImage(file);
+        }
+
         // Create author
         const newAuthor = await this.authorModel.create({
             name: createAuthorDto.name.trim(),
             bio: createAuthorDto.bio?.trim() || '',
-            photoUrl: createAuthorDto.photoUrl || '',
+            photoUrl,
         });
 
         const saved = newAuthor.toObject();
@@ -147,7 +155,7 @@ export class AuthorsService {
         };
     }
 
-    async update(id: string, updateAuthorDto: UpdateAuthorDto) {
+    async update(id: string, updateAuthorDto: UpdateAuthorDto, file?: Express.Multer.File) {
         // Validation
         if (!id) {
             throw new BadRequestException('Author ID is required');
@@ -180,6 +188,11 @@ export class AuthorsService {
         if (updateAuthorDto.name?.trim()) updateData.name = updateAuthorDto.name.trim();
         if (updateAuthorDto.bio !== undefined) updateData.bio = updateAuthorDto.bio.trim();
         if (updateAuthorDto.photoUrl !== undefined) updateData.photoUrl = updateAuthorDto.photoUrl;
+
+        // Upload new photo if provided
+        if (file) {
+            updateData.photoUrl = await this.cloudinaryService.uploadImage(file);
+        }
 
         // Update author
         const updatedAuthor: any = await this.authorModel

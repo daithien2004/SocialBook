@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback, ChangeEvent } from 'react';
 import { useGetAuthorQuery, useUpdateAuthorMutation } from '@/src/features/authors/api/authorApi';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, User } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+
+const DEFAULT_AVATAR = '/default-avatar.png';
 
 interface EditAuthorPageProps {
     params: Promise<{
@@ -16,46 +19,82 @@ export default function EditAuthorPage({ params }: EditAuthorPageProps) {
     const { id } = use(params);
     const router = useRouter();
 
-    const { data: authorData, isLoading: isLoadingAuthor } = useGetAuthorQuery(id);
+    const { data: authorData, isLoading: isLoadingAuthor, error, isError } = useGetAuthorQuery(id, {
+        refetchOnMountOrArgChange: true, // Force refresh
+    });
     const [updateAuthor, { isLoading: isUpdating }] = useUpdateAuthorMutation();
 
     const [formData, setFormData] = useState({
         name: '',
         bio: '',
-        photoUrl: '',
     });
+    const [photoPreview, setPhotoPreview] = useState<string>(DEFAULT_AVATAR);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
 
     useEffect(() => {
+
         if (authorData) {
             setFormData({
                 name: authorData.name || '',
                 bio: authorData.bio || '',
-                photoUrl: authorData.photoUrl || '',
             });
+            if (authorData.photoUrl) {
+                setPhotoPreview(authorData.photoUrl);
+            }
         }
-    }, [authorData]);
+    }, [authorData, isLoadingAuthor, id]);
+    const handleImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Vui lòng chọn file ảnh');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Kích thước ảnh không được vượt quá 5MB');
+            return;
+        }
+
+        setPhotoFile(file);
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            setPhotoPreview(event.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!formData.name.trim()) {
-            alert('Tên tác giả không được để trống!');
+            toast.info('Tên tác giả không được để trống!');
             return;
         }
 
         try {
+            const formPayload = new FormData();
+            formPayload.append('name', formData.name.trim());
+            formPayload.append('bio', formData.bio.trim() || '');
+
+            if (photoFile) {
+                formPayload.append('photoUrl', photoFile);
+            }
+
             await updateAuthor({
                 id,
-                name: formData.name.trim(),
-                bio: formData.bio.trim() || undefined,
-                photoUrl: formData.photoUrl.trim() || undefined,
+                data: formPayload,
             }).unwrap();
 
-            alert('Cập nhật tác giả thành công!');
+            toast.success('Cập nhật tác giả thành công!');
             router.push('/admin/authors');
         } catch (error: any) {
             console.error('Failed to update author:', error);
-            alert(error?.data?.message || 'Cập nhật tác giả thất bại!');
+            toast.error(error?.data?.message || 'Cập nhật tác giả thất bại!');
         }
     };
 
@@ -66,7 +105,6 @@ export default function EditAuthorPage({ params }: EditAuthorPageProps) {
             </div>
         );
     }
-
     if (!authorData) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -102,50 +140,89 @@ export default function EditAuthorPage({ params }: EditAuthorPageProps) {
 
             {/* Form */}
             <div className="px-6 py-6">
-                <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+                <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <div className="space-y-6">
-                            {/* Name */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Tên tác giả <span className="text-red-500">*</span>
+                        <div className="flex flex-col md:flex-row gap-8">
+                            {/* Photo Section */}
+                            <div className="flex-none">
+                                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                    Ảnh đại diện
                                 </label>
-                                <input
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="Nguyễn Nhật Ánh"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    required
-                                />
+                                <div className="w-48 h-48 relative rounded-full overflow-hidden shadow-lg border-4 border-gray-200 group">
+                                    <img
+                                        src={photoPreview}
+                                        alt="Author photo"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="text-center text-white">
+                                            <Upload size={28} className="mx-auto mb-1" />
+                                            <p className="text-xs font-medium">Thay đổi ảnh</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <label className="block mt-4">
+                                    <div className="flex flex-col items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                        <Upload size={18} className="text-gray-500" />
+                                        <span className="text-sm font-medium text-gray-700">
+                                            Tải ảnh lên
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            JPG, PNG • &lt; 5MB
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+                                </label>
+
+                                {photoFile && (
+                                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                                        <p className="text-xs text-blue-800 font-medium truncate">
+                                            📎 {photoFile.name}
+                                        </p>
+                                        <p className="text-xs text-blue-600 mt-1">
+                                            {(photoFile.size / 1024).toFixed(2)} KB
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Photo URL */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    URL ảnh đại diện
-                                </label>
-                                <input
-                                    type="url"
-                                    value={formData.photoUrl}
-                                    onChange={(e) => setFormData({ ...formData, photoUrl: e.target.value })}
-                                    placeholder="https://example.com/avatar.jpg"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                />
-                            </div>
+                            {/* Form Fields */}
+                            <div className="flex-1 space-y-6">
+                                {/* Name */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <User className="inline w-4 h-4 mr-1" />
+                                        Tên tác giả <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        placeholder="Nguyễn Nhật Ánh"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        required
+                                    />
+                                </div>
 
-                            {/* Bio */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Tiểu sử
-                                </label>
-                                <textarea
-                                    value={formData.bio}
-                                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                    placeholder="Nhà văn nổi tiếng Việt Nam..."
-                                    rows={5}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                                />
+                                {/* Bio */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Tiểu sử
+                                    </label>
+                                    <textarea
+                                        value={formData.bio}
+                                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                        placeholder="Nhà văn nổi tiếng Việt Nam..."
+                                        rows={8}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                                    />
+                                </div>
                             </div>
                         </div>
 

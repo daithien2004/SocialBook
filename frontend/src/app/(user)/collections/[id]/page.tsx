@@ -22,6 +22,7 @@ import {
   useAddBookToCollectionsMutation, // Dùng cái này để update lại mảng collectionIds của sách
 } from '@/src/features/library/api/libraryApi';
 import { LibraryItem } from '@/src/features/library/types/library.interface';
+import { toast } from 'sonner';
 
 export default function CollectionDetailPage() {
   const router = useRouter();
@@ -65,7 +66,7 @@ export default function CollectionDetailPage() {
       setIsEditModalOpen(false);
       setIsMenuOpen(false);
     } catch (error) {
-      alert('Lỗi khi cập nhật tên bộ sưu tập');
+      toast.error('Lỗi khi cập nhật tên bộ sưu tập');
     }
   };
 
@@ -82,7 +83,7 @@ export default function CollectionDetailPage() {
       await deleteCollection(collectionId).unwrap();
       router.push('/library'); // Quay về trang thư viện
     } catch (error) {
-      alert('Lỗi khi xóa bộ sưu tập');
+      toast.error('Lỗi khi xóa bộ sưu tập');
     }
   };
 
@@ -106,7 +107,7 @@ export default function CollectionDetailPage() {
       }).unwrap();
     } catch (error) {
       console.error('Failed to remove book', error);
-      alert('Không thể gỡ sách khỏi danh sách');
+      toast.error('Không thể gỡ sách khỏi danh sách');
     }
   };
 

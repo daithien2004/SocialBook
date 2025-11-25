@@ -8,6 +8,7 @@ import { vi } from 'date-fns/locale';
 import { Search, Plus, Loader2, Edit, Trash2, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Author } from '@/src/features/authors/types/author.interface';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export default function AdminAuthorsPage() {
     const [page, setPage] = useState(1);
@@ -33,7 +34,7 @@ export default function AdminAuthorsPage() {
             refetch();
         } catch (error) {
             console.error('Failed to delete author:', error);
-            alert('Xóa tác giả thất bại!');
+            toast.error('Xóa tác giả thất bại!');
         }
     };
 

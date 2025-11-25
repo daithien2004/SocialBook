@@ -19,13 +19,14 @@ import {
 import { Chapter, Paragraph } from '@/src/features/chapters/types/chapter.interface';
 import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
 
 export default function ChapterManagementPage() {
   const params = useParams();
   const bookId = params.bookId as string;
 
   const { data: bookData, isLoading: isLoadingBook } = useGetBookByIdQuery(bookId);
-  const { data: chaptersData, isLoading: isLoadingChapters } = useGetAdminChaptersQuery({
+  const { data: chaptersData, isLoading: isLoadingChapters, refetch: refetchChapters } = useGetAdminChaptersQuery({
     bookSlug: bookData?.slug || '',
   }, {
     skip: !bookData?.slug,
@@ -231,12 +232,12 @@ export default function ChapterManagementPage() {
   const handleCreateChapter = async () => {
     if (!bookId) {
       console.error('Cannot create chapter: bookId is missing', { bookId, book, bookData });
-      alert('Lỗi: Không tìm thấy ID sách. Vui lòng tải lại trang.');
+      toast.error('Không tìm thấy ID sách. Vui lòng tải lại trang.');
       return;
     }
 
     if (!newChapterTitle.trim()) {
-      alert('Vui lòng nhập tiêu đề chương');
+      toast.info('Vui lòng nhập tiêu đề chương');
       return;
     }
 
@@ -269,7 +270,7 @@ export default function ChapterManagementPage() {
         errorMessage: error?.message,
         errorStatus: error?.status,
       });
-      alert(`Tạo chương thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
+      toast.error(`Tạo chương thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
     }
   };
 
@@ -279,10 +280,12 @@ export default function ChapterManagementPage() {
       await generateChapterAudio({
         chapterId,
       }).unwrap();
-      alert('Tạo audio thành công!');
+      toast.success('Tạo audio thành công!');
+      // Refetch chapters to update TTS status and audio URL
+      await refetchChapters();
     } catch (error: any) {
       console.error('Failed to generate audio:', error);
-      alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
+      toast.error(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
     }
   };
 
@@ -300,6 +303,8 @@ export default function ChapterManagementPage() {
         `Thành công: ${result.successful}/${result.total}\n` +
         `Thất bại: ${result.failed}`
       );
+      // Refetch chapters to update TTS status and audio URLs for all chapters
+      await refetchChapters();
     } catch (error: any) {
       console.error('Failed to generate all audio:', error);
       alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);

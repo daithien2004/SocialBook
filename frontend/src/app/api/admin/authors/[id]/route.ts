@@ -35,12 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             NESTJS_AUTHORS_ENDPOINTS.getById(id),
         );
 
-        return NextResponse.json({
-            success: true,
-            statusCode: 200,
-            message: 'Get author successfully',
-            ...(response.data?.data ? response.data : { data: response.data }),
-        });
+        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('GET /api/admin/authors/[id] error:', error.response?.data || error.message);
 
@@ -65,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     try {
         const { id } = await params;
-        const body = await request.json();
+        const body = await request.formData();
 
         const authenticatedApi = await getAuthenticatedServerApi();
         const response = await authenticatedApi.put(
@@ -73,12 +68,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             body,
         );
 
-        return NextResponse.json({
-            success: true,
-            statusCode: response.status,
-            message: 'Update author successfully',
-            ...(response.data?.data ? response.data : { data: response.data }),
-        });
+        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('PUT /api/admin/authors/[id] error:', error.response?.data || error.message);
 
@@ -109,12 +99,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
             NESTJS_AUTHORS_ENDPOINTS.delete(id),
         );
 
-        return NextResponse.json({
-            success: true,
-            statusCode: response.status,
-            message: 'Delete author successfully',
-            ...(response.data?.data ? response.data : { data: response.data }),
-        });
+        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('DELETE /api/admin/authors/[id] error:', error.response?.data || error.message);
 

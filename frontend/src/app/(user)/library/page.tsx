@@ -21,6 +21,7 @@ import {
   useCreateCollectionMutation,
 } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
+import { toast } from 'sonner';
 
 export default function LibraryPage() {
   // --- STATE ---
@@ -60,7 +61,7 @@ export default function LibraryPage() {
       setNewCollectionName('');
       setIsCreateModalOpen(false);
     } catch (error) {
-      alert('Không thể tạo bộ sưu tập. Vui lòng thử lại.');
+      toast.error('Không thể tạo bộ sưu tập. Vui lòng thử lại.');
     }
   };
 

@@ -31,7 +31,7 @@ export class TextToSpeechService {
     private readonly ttsModel: Model<TextToSpeechDocument>,
     private cloudinaryService: CloudinaryService,
     private chaptersService: ChaptersService,
-  ) {}
+  ) { }
 
   /**
    * Detect language from text content based on Vietnamese diacritics
@@ -140,7 +140,15 @@ export class TextToSpeechService {
     }
 
     // Get bookId safely - book can be either populated (object) or unpopulated (ObjectId)
-    const bookId = chapter.bookId?.id || (chapter.bookId as any);
+    let bookId: any;
+    if (typeof chapter.bookId === 'object' && chapter.bookId !== null) {
+      // Populated case: could be { _id: ..., title: ..., slug: ... }
+      bookId = (chapter.bookId as any)._id || (chapter.bookId as any).id;
+    } else {
+      // Unpopulated case: is already an ObjectId
+      bookId = chapter.bookId;
+    }
+
     if (!bookId) {
       console.error('Cannot get bookId from chapter:', { chapter });
       throw new BadRequestException('Chapter is missing book reference');

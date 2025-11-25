@@ -17,6 +17,7 @@ import {
 } from '@/src/modules/chapters/schemas/chapter.schema';
 import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
 import { Role, RoleSchema } from '@/src/modules/roles/schemas/role.schema';
+import { TextToSpeech, TextToSpeechSchema } from '@/src/modules/text-to-speech/schemas/textToSpeech.schema';
 
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
@@ -31,6 +32,7 @@ import {
   CommentSchema,
 } from '@/src/modules/comments/schemas/comment.schema';
 import { RolesSeed } from './roles.seed';
+import { TextToSpeechSeed } from './textToSpeech.seeder';
 
 @Module({
   imports: [
@@ -61,6 +63,7 @@ import { RolesSeed } from './roles.seed';
       { name: Chapter.name, schema: ChapterSchema },
       { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
+      { name: TextToSpeech.name, schema: TextToSpeechSchema },
     ]),
   ],
   providers: [
@@ -73,6 +76,7 @@ import { RolesSeed } from './roles.seed';
     ReviewsSeed,
     ChaptersSeed,
     CommentsSeed,
+    TextToSpeechSeed,
     SeederService,
   ],
   exports: [
@@ -84,7 +88,8 @@ import { RolesSeed } from './roles.seed';
     ReviewsSeed,
     ChaptersSeed,
     CommentsSeed,
+    TextToSpeechSeed,
     SeederService,
   ],
 })
-export class DatabaseSeedModule {}
+export class DatabaseSeedModule { }

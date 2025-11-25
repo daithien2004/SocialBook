@@ -7,6 +7,7 @@ import { ChaptersSeed } from './chapters.seeder';
 import { UsersSeed } from './users.seeder';
 import { CommentsSeed } from './comments.seeder';
 import { RolesSeed } from './roles.seed';
+import { TextToSpeechSeed } from './textToSpeech.seeder';
 @Injectable()
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
@@ -20,7 +21,8 @@ export class SeederService {
     private readonly usersSeed: UsersSeed,
     private readonly commentsSeed: CommentsSeed,
     private readonly rolesSeed: RolesSeed,
-  ) {}
+    private readonly textToSpeechSeed: TextToSpeechSeed,
+  ) { }
 
   async seed() {
     try {
@@ -35,6 +37,7 @@ export class SeederService {
       await this.chaptersSeed.run();
       await this.reviewsSeed.run();
       await this.commentsSeed.run();
+      await this.textToSpeechSeed.run();
 
       this.logger.log('✅ All seeding completed successfully!');
     } catch (error) {
@@ -56,6 +59,7 @@ export class SeederService {
       await this.authorsSeed['authorModel'].deleteMany({});
       await this.genresSeed['genreModel'].deleteMany({});
       await this.commentsSeed['commentModel'].deleteMany({});
+      await this.textToSpeechSeed['textToSpeechModel'].deleteMany({});
 
       this.logger.log('✅ All seed data cleared!');
     } catch (error) {

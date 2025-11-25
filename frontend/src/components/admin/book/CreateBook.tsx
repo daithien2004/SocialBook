@@ -74,14 +74,14 @@ export default function CreateBook() {
       setSelectedGenreId('');
       return;
     }
-    setFormData((prev) => ({ ...prev, genre: [...prev.genres, selectedGenreId] }));
+    setFormData((prev) => ({ ...prev, genres: [...prev.genres, selectedGenreId] }));
     setSelectedGenreId('');
   };
 
   const handleRemoveGenre = (id: string) => {
     setFormData((prev) => ({
       ...prev,
-      genre: prev.genres.filter((g) => g !== id),
+      genres: prev.genres.filter((g) => g !== id),
     }));
   };
 
@@ -129,7 +129,7 @@ export default function CreateBook() {
       formPayload.append('publishedYear', formData.publishedYear);
 
       formData.genres.forEach((genreId) => {
-        formPayload.append('genre', genreId);
+        formPayload.append('genres', genreId);
       });
 
       tags.forEach((tag) => {
@@ -194,8 +194,8 @@ export default function CreateBook() {
         {message && (
           <div
             className={`mb-6 p-4 rounded-xl border shadow-sm ${message.type === 'success'
-                ? 'bg-green-50 border-green-200 text-green-800'
-                : 'bg-red-50 border-red-200 text-red-800'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-800'
               }`}
           >
             <p className="font-medium">{message.text}</p>
@@ -302,8 +302,8 @@ export default function CreateBook() {
                           </option>
                         ))}
                       </select>
-                      <ChevronDown 
-                        size={20} 
+                      <ChevronDown
+                        size={20}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                       />
                     </div>
@@ -369,8 +369,8 @@ export default function CreateBook() {
                       <option value="published">Đang xuất bản</option>
                       <option value="completed">Hoàn thành</option>
                     </select>
-                    <ChevronDown 
-                      size={20} 
+                    <ChevronDown
+                      size={20}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                     />
                   </div>
@@ -405,8 +405,8 @@ export default function CreateBook() {
                           {loadingGenres ? 'Đang tải...' : 'Chọn thể loại'}
                         </option>
                         {genres.map((genre: any) => (
-                          <option 
-                            key={genre.id} 
+                          <option
+                            key={genre.id}
                             value={genre.id}
                             disabled={formData.genres.includes(genre.id)}
                           >
@@ -414,8 +414,8 @@ export default function CreateBook() {
                           </option>
                         ))}
                       </select>
-                      <ChevronDown 
-                        size={20} 
+                      <ChevronDown
+                        size={20}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
                       />
                     </div>

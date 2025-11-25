@@ -25,7 +25,7 @@ import { UpdateChapterDto } from './dto/update-chapter.dto';
 
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
-  constructor(private readonly chaptersService: ChaptersService) {}
+  constructor(private readonly chaptersService: ChaptersService) { }
 
   @Public()
   @Get()
@@ -43,11 +43,11 @@ export class ChaptersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Param('bookSlug') bookSlug: string,
+    @Param('bookSlug') bookId: string, // This is actually bookId, not bookSlug!
     @Body() dto: CreateChapterDto,
     @Request() req: any,
   ) {
-    const data = await this.chaptersService.create(bookSlug, dto, req.user.id);
+    const data = await this.chaptersService.createChapter(bookId, dto, req.user);
     return {
       message: 'Create chapter successfully',
       data,

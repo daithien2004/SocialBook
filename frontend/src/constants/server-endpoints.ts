@@ -103,6 +103,14 @@ export const NESTJS_AUTHORS_ENDPOINTS = {
   delete: (id: string) => `/authors/${id}`,
 };
 
+export const NESTJS_GENRES_ENDPOINTS = {
+  getAll: '/genres/admin',
+  getById: (id: string) => `/genres/${id}`,
+  create: '/genres',
+  update: (id: string) => `/genres/${id}`,
+  delete: (id: string) => `/genres/${id}`,
+};
+
 export const NESTJS_TTS_ENDPOINTS = {
   generateChapter: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
   generateBook: (bookId: string) => `/text-to-speech/book/${bookId}/all`,

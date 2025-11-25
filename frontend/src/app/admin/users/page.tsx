@@ -5,6 +5,7 @@ import { Table, Button, Tag, Space, Popconfirm, message } from 'antd';
 import { useGetUsersQuery, useBanUserMutation } from '@/src/features/users/api/usersApi';
 import { User } from '@/src/features/users/types/user.types';
 import { ColumnsType } from 'antd/es/table';
+import { toast } from 'sonner';
 
 const UsersPage = () => {
     const [current, setCurrent] = useState(1);
@@ -22,9 +23,9 @@ const UsersPage = () => {
     const handleBan = async (id: string) => {
         try {
             await banUser(id).unwrap();
-            message.success('Cập nhật trạng thái người dùng thành công');
+            toast.success('Cập nhật trạng thái người dùng thành công');
         } catch (error) {
-            message.error('Có lỗi xảy ra');
+            toast.error('Có lỗi xảy ra');
         }
     };
 
@@ -87,7 +88,7 @@ const UsersPage = () => {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Quản lý người dùng</h1>
+            <h1 className="text-2xl font-bold mb-4 ">Quản lý người dùng</h1>
             <Table
                 columns={columns}
                 dataSource={data?.items}

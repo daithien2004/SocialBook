@@ -7,15 +7,20 @@ export interface Author {
     updatedAt: string;
 }
 
-export interface CreateAuthorRequest {
+export type CreateAuthorRequest = FormData | {
     name: string;
     bio?: string;
     photoUrl?: string;
-}
+};
 
-export interface UpdateAuthorRequest extends Partial<CreateAuthorRequest> {
+export type UpdateAuthorRequest = {
     id: string;
-}
+    data: FormData | Partial<{
+        name: string;
+        bio: string;
+        photoUrl: string;
+    }>;
+};
 
 export interface AuthorResponse {
     message: string;

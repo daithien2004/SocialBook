@@ -101,14 +101,14 @@ export default function EditBook({ bookId }: EditBookProps) {
             setSelectedGenreId('');
             return;
         }
-        setFormData((prev) => ({ ...prev, genre: [...prev.genres, selectedGenreId] }));
+        setFormData((prev) => ({ ...prev, genres: [...prev.genres, selectedGenreId] }));
         setSelectedGenreId('');
     };
 
     const handleRemoveGenre = (id: string) => {
         setFormData((prev) => ({
             ...prev,
-            genre: prev.genres.filter((g) => g !== id),
+            genres: prev.genres.filter((g) => g !== id),
         }));
     };
 
@@ -156,7 +156,7 @@ export default function EditBook({ bookId }: EditBookProps) {
             formPayload.append('publishedYear', formData.publishedYear);
 
             formData.genres.forEach((genreId) => {
-                formPayload.append('genre', genreId);
+                formPayload.append('genres', genreId);
             });
 
             tags.forEach((tag) => {

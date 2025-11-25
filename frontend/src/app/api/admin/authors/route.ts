@@ -35,12 +35,7 @@ export async function GET(request: NextRequest) {
             },
         );
 
-        return NextResponse.json({
-            success: true,
-            statusCode: 200,
-            message: 'Get authors successfully',
-            ...(response.data?.data ? response.data : { data: response.data }),
-        });
+        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('GET /api/admin/authors error:', error.response?.data || error.message);
 
@@ -64,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const body = await request.json();
+        const body = await request.formData();
 
         const authenticatedApi = await getAuthenticatedServerApi();
         const response = await authenticatedApi.post(
@@ -72,12 +67,7 @@ export async function POST(request: NextRequest) {
             body,
         );
 
-        return NextResponse.json({
-            success: true,
-            statusCode: response.status,
-            message: 'Create author successfully',
-            ...(response.data?.data ? response.data : { data: response.data }),
-        });
+        return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('POST /api/admin/authors error:', error.response?.data || error.message);
 

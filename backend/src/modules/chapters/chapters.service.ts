@@ -31,22 +31,53 @@ export class ChaptersService {
 
     if (!book) throw new NotFoundException(`Book not found`);
 
-    const chapters = await this.chapterModel
-      .find({ bookId: book._id })
-      .sort({ orderIndex: 1 })
-      .select('title slug orderIndex viewsCount createdAt updatedAt paragraphs') // Chọn fields cần thiết
-      .lean();
-
-    const chaptersWithMeta = chapters.map((c) => ({
-      ...c,
-      paragraphsCount: c.paragraphs?.length || 0,
-      paragraphs: undefined,
-    }));
+    // Use aggregation to join TTS data (same pattern as getChaptersByBookSlug)
+    const chaptersWithTTS = await this.chapterModel.aggregate([
+      { $match: { bookId: book._id } },
+      { $sort: { orderIndex: 1 } },
+      {
+        $lookup: {
+          from: 'texttospeeches',
+          localField: '_id',
+          foreignField: 'chapterId',
+          as: 'ttsData',
+        },
+      },
+      {
+        $addFields: {
+          latestTTS: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: '$ttsData',
+                  as: 'tts',
+                  cond: { $ne: ['$$tts.status', 'failed'] },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          slug: 1,
+          orderIndex: 1,
+          viewsCount: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          paragraphsCount: { $size: { $ifNull: ['$paragraphs', []] } },
+          ttsStatus: { $ifNull: ['$latestTTS.status', null] },
+          audioUrl: { $ifNull: ['$latestTTS.audioUrl', null] },
+        },
+      },
+    ]);
 
     return {
       book,
-      total: chapters.length,
-      chapters: chaptersWithMeta,
+      total: chaptersWithTTS.length,
+      chapters: chaptersWithTTS,
     };
   }
 
