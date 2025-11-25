@@ -21,14 +21,14 @@ const PostList: React.FC<PostListProps> = ({ currentUserId }) => {
     limit,
   });
 
-  const pagination = data?.pagination;
+  const pagination = data?.meta;
 
   // Thêm posts mới vào danh sách
   useEffect(() => {
-    if (data?.data) {
+    if (data?.items) {
       setAllPosts((prev) => {
         // Tránh duplicate khi refetch
-        const newPosts = data.data.filter(
+        const newPosts = data.items.filter(
           (post) => !prev.some((p) => p.id === post.id)
         );
         return [...prev, ...newPosts];
@@ -40,7 +40,12 @@ const PostList: React.FC<PostListProps> = ({ currentUserId }) => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && pagination?.hasNext && !isFetching) {
+        if (
+          entries[0].isIntersecting &&
+          pagination &&
+          pagination.page < pagination.totalPages &&
+          !isFetching
+        ) {
           setPage((prev) => prev + 1);
         }
       },
@@ -57,7 +62,7 @@ const PostList: React.FC<PostListProps> = ({ currentUserId }) => {
         observer.unobserve(currentTarget);
       }
     };
-  }, [pagination?.hasNext, isFetching]);
+  }, [pagination, isFetching]);
 
   if (isLoading && page === 1) {
     return (
@@ -104,14 +109,18 @@ const PostList: React.FC<PostListProps> = ({ currentUserId }) => {
       )}
 
       {/* Trigger element cho infinite scroll */}
-      {pagination?.hasNext && <div ref={observerTarget} className="h-10" />}
+      {pagination && pagination.page < pagination.totalPages && (
+        <div ref={observerTarget} className="h-10" />
+      )}
 
       {/* Thông báo hết bài viết */}
-      {!pagination?.hasNext && allPosts.length > 0 && (
-        <div className="text-center py-4 text-gray-500">
-          Đã hiển thị tất cả {allPosts.length} bài viết
-        </div>
-      )}
+      {pagination &&
+        pagination.page >= pagination.totalPages &&
+        allPosts.length > 0 && (
+          <div className="text-center py-4 text-gray-500">
+            Đã hiển thị tất cả {allPosts.length} bài viết
+          </div>
+        )}
 
       {/* Nút scroll to top */}
       {allPosts.length > 5 && (

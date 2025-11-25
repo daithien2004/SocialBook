@@ -24,3 +24,26 @@ export async function DELETE(
     );
   }
 }
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { bookId: string } }
+) {
+  try {
+    const api = await getAuthenticatedServerApi();
+    const response = await api.get(
+      NESTJS_LIBRARY_ENDPOINTS.getBookLibraryInfo(params.bookId)
+    );
+
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error.response?.data?.message || 'Lỗi khi lấy thông tin thư viện',
+      },
+      { status: error.response?.status || 500 }
+    );
+  }
+}

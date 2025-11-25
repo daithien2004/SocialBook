@@ -70,6 +70,7 @@ export const BFF_LIBRARY_ENDPOINTS = {
   updateProgress: '/library/progress', // PATCH
   updateBookCollections: '/library/collections', // PATCH
   removeBook: (bookId: string) => `/library/${bookId}`, // DELETE
+  getBookLibraryInfo: (bookId: string) => `/library/${bookId}`, // GET
 
   // Collections System (Folder)
   collections: '/collections', // GET, POST

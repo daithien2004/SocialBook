@@ -97,6 +97,20 @@ export const libraryApi = createApi({
       invalidatesTags: ['Library', 'Collection'],
     }),
 
+    // 6. Lấy thông tin thư viện của 1 sách (Status + Collections)
+    getBookLibraryInfo: builder.query<
+      { status: LibraryStatus | null; collections: Collection[] },
+      string
+    >({
+      query: (bookId) => ({
+        url: BFF_LIBRARY_ENDPOINTS.getBookLibraryInfo(bookId),
+        method: 'GET',
+      }),
+      providesTags: (result, error, bookId) => [
+        { type: 'Library', id: `BOOK_${bookId}` },
+      ],
+    }),
+
     // --- COLLECTIONS ENDPOINTS (FOLDER) ---
 
     // 6. Lấy danh sách Folder
@@ -164,6 +178,7 @@ export const {
   useUpdateReadingProgressMutation,
   useAddBookToCollectionsMutation,
   useRemoveBookFromLibraryMutation,
+  useGetBookLibraryInfoQuery,
 
   // Collection Hooks
   useGetCollectionsQuery,

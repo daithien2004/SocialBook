@@ -19,6 +19,10 @@ export interface Book {
   chapters: Chapter[];
   totalRatings: number;
   averageRating: number;
+  stats: {
+    averageRating: number;
+    totalRatings: number;
+  };
 }
 
 export interface Author {
@@ -53,7 +57,6 @@ export interface Review {
   likesCount: number;
   createdAt: string;
 }
-
 
 export interface BookForAdmin {
   id: string;

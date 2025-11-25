@@ -81,6 +81,7 @@ export const NESTJS_LIBRARY_ENDPOINTS = {
   updateProgress: '/library/progress',
   updateBookCollections: '/library/collections',
   removeBook: (bookId: string) => `/library/${bookId}`,
+  getBookLibraryInfo: (bookId: string) => `/library/book/${bookId}`,
 
   // Collections System (Folder)
   collections: '/collections', // GET, POST
