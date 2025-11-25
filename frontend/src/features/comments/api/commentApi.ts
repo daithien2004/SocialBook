@@ -49,7 +49,7 @@ export interface CommentItem {
     likesCount: number;
     repliesCount: number;
     parentId: string | null,
-    user: {
+    userId: {
         id: string;
         username: string;
         image?: string;

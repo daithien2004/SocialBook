@@ -8,6 +8,7 @@ import {formatDate} from "@/src/lib/utils";
 
 interface ProfileNavProps {
   profileUserId: string;
+  bio: string | undefined
   joinedAt: Date | undefined;
 }
 
@@ -25,8 +26,8 @@ export function ProfileSidebar(props : ProfileNavProps) {
   return (
       <>
         <div className="rounded-lg bg-white p-5 shadow-sm border border-gray-100">
-          <h3 className="mb-4 text-sm font-semibold text-gray-500 uppercase tracking-wider">
-            Cuộc đời tôi
+          <h3 className="mb-4 text-sm font-normal text-gray-500 tracking-wider">
+            {props.bio}
           </h3>
 
           <div className="space-y-4">

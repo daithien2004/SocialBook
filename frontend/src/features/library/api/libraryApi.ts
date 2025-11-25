@@ -100,9 +100,11 @@ export const libraryApi = createApi({
     // --- COLLECTIONS ENDPOINTS (FOLDER) ---
 
     // 6. Lấy danh sách Folder
-    getCollections: builder.query<Collection[], void>({
-      query: () => ({
-        url: BFF_LIBRARY_ENDPOINTS.collections,
+    getCollections: builder.query<Collection[], string | void>({
+      query: (userId) => ({
+        url: userId
+            ? `${BFF_LIBRARY_ENDPOINTS.collections}?userId=${userId}`
+            : BFF_LIBRARY_ENDPOINTS.collections,
         method: 'GET',
       }),
       providesTags: [{ type: 'Collection', id: 'LIST' }],

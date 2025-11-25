@@ -93,7 +93,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
     return (
         <div className="flex items-start justify-start gap-2">
             <img
-                src={comment.user?.image ?? "Hehe"}
+                src={comment.userId?.image || "/user.png"}
                 alt="HeHe"
                 className="w-7 h-7 rounded-full"
             />
@@ -103,7 +103,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
                 <div className="bg-gray-100 rounded-xl px-3 py-2">
                     <p className="text-sm text-black">
             <span className="font-semibold mr-2">
-              {comment.user?.username}
+              {comment.userId?.username}
             </span>
                         {comment.content}
                     </p>

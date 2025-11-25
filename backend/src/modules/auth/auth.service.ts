@@ -300,7 +300,6 @@ export class AuthService {
   }
 
   async signTokens(userId: string, email: string, role: string) {
-    // VALIDATION
     const payload = { sub: userId, email, role };
 
     const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
@@ -335,7 +334,6 @@ export class AuthService {
     if (!user || !user.hashedRt) {
       throw new ForbiddenException('Access denied');
     }
-
     // EXECUTION
     const rtMatches = await bcrypt.compare(refreshToken, user.hashedRt);
     if (!rtMatches) {
@@ -351,8 +349,7 @@ export class AuthService {
     ) {
       roleName = ((user.roleId as any).name as string) || 'user';
     }
-
-    return this.signTokens(user.id.toString(), user.email, roleName);
+    return this.signTokens(user._id.toString(), user.email, roleName);
   }
 
   async validateRefreshToken(token: string) {
