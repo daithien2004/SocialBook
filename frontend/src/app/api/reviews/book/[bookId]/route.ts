@@ -4,11 +4,12 @@ import serverApi from '@/src/lib/server-api';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { bookId: string } }
+  { params }: { params: Promise<{ bookId: string }> }
 ) {
   try {
+      const { bookId } = await params;
     const response = await serverApi.get(
-      NESTJS_REVIEWS_ENDPOINTS.getByBook(params.bookId)
+      NESTJS_REVIEWS_ENDPOINTS.getByBook(bookId)
     );
 
     return NextResponse.json(response.data);

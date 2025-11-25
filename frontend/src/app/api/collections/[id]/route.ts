@@ -5,12 +5,13 @@ import { NESTJS_LIBRARY_ENDPOINTS } from '@/src/constants/server-endpoints';
 // GET: Lấy chi tiết folder + sách bên trong
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const api = await getAuthenticatedServerApi();
     const response = await api.get(
-      NESTJS_LIBRARY_ENDPOINTS.collectionDetail(params.id)
+      NESTJS_LIBRARY_ENDPOINTS.collectionDetail(id)
     );
     return NextResponse.json(response.data);
   } catch (error: any) {

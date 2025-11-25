@@ -7,7 +7,6 @@ import { signOut, useSession } from "next-auth/react";
 export function Header() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  console.log(session);
   const isAuthenticated = status === "authenticated";
   const userId = session?.user.id;
   const avatarUrl = session?.user.image;

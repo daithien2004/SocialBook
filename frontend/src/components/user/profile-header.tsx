@@ -24,7 +24,8 @@ export function ProfileHeader(props: PropsProfileHeader) {
         <div className="relative z-10 container mx-auto flex flex-col items-center justify-center text-center">
           <div className="rounded-full p-1">
             <Avatar className="h-28 w-28 border-2 border-white/20">
-              <AvatarImage src={props.image ?? "/user.png"} alt={props.username ?? "user"} />
+              <AvatarImage src={props.image ?? "/user.png"} alt={props.username ?? "user"}
+                           className="w-full h-full object-cover"  />
               <AvatarFallback className="bg-[#4a332a] text-4xl text-white">V</AvatarFallback>
             </Avatar>
           </div>

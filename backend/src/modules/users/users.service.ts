@@ -19,7 +19,8 @@ import {
   FollowDocument,
 } from '@/src/modules/follows/schemas/follow.schema';
 
-import { CreateUserDto, UpdateRefreshTokenDto } from './dto/user.dto';
+import { CreateUserDto, UpdateRefreshTokenDto, UpdateUserOverviewDto } from './dto/user.dto';
+import { CloudinaryService } from '@/src/modules/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UsersService {
@@ -29,6 +30,7 @@ export class UsersService {
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async isEmailExist(email: string) {
@@ -142,7 +144,7 @@ export class UsersService {
 
     const user = await this.userModel
       .findById(objectId)
-      .select('username image createdAt')
+      .select('username image createdAt bio location website')
       .lean();
 
     if (!user) throw new NotFoundException('User not found');
@@ -158,6 +160,74 @@ export class UsersService {
       postCount,
       readingListCount,
       followersCount,
+    };
+  }
+
+  async updateUserProfileOverview(
+    userId: string,
+    dto: UpdateUserOverviewDto,
+  ) {
+    if (!Types.ObjectId.isValid(userId))
+      throw new BadRequestException('Invalid User ID');
+
+    const objectId = new Types.ObjectId(userId);
+
+    const user = await this.userModel.findById(objectId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (dto.username !== undefined && dto.username !== user.username) {
+      const existed = await this.userModel.exists({
+        username: dto.username,
+        _id: { $ne: objectId },
+      });
+      if (existed) {
+        throw new BadRequestException('Username is already taken');
+      }
+      user.username = dto.username;
+    }
+
+    user.bio = dto.bio ?? user.bio;
+    user.website = dto.website ?? user.website;
+    user.location = dto.location ?? user.location;
+
+    await user.save();
+
+    return {
+      data: {
+        username: user.username,
+        image: user.image,
+        bio: user.bio,
+        location: user.location,
+        website: user.website,
+        updatedAt: user.updatedAt,
+      },
+    };
+  }
+
+  async updateUserImage(userId: string, file: Express.Multer.File) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid User ID');
+    }
+    if (!file || !file.buffer) {
+      throw new BadRequestException('Image file is required');
+    }
+    if (!file.mimetype?.startsWith('image/')) {
+      throw new BadRequestException('File must be an image');
+    }
+    if (file.size > 5 * 1024 * 1024) throw new BadRequestException('Image is too large (max 5MB)');
+
+    const objectId = new Types.ObjectId(userId);
+
+    const user = await this.userModel.findById(objectId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const secureUrl = await this.cloudinaryService.uploadImage(file);
+
+    user.image = secureUrl;
+    await user.save();
+
+    return {
+      message: 'Avatar updated successfully.',
     };
   }
 }

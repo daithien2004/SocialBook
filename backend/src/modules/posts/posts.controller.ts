@@ -74,7 +74,6 @@ export class PostsController {
     if (files && files.length > 10) {
       throw new BadRequestException('Maximum 10 images allowed');
     }
-
     const data = await this.postsService.create(req.user.id, dto, files);
     return {
       message: 'Create post successfully',
