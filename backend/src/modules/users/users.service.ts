@@ -106,8 +106,8 @@ export class UsersService {
     return this.userModel
       .findById(id)
       .populate('roleId')
-      .select('-password -hashedRt')
-      .lean();
+      .select('-password')
+      .lean()
   }
 
   async updateRefreshToken(userId: string, updateDto: UpdateRefreshTokenDto) {
