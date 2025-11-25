@@ -76,6 +76,14 @@ export const BFF_LIBRARY_ENDPOINTS = {
   collectionDetail: (id: string) => `/collections/${id}`, // GET, PATCH, DELETE
 };
 
+export const BFF_AUTHORS_ENDPOINTS = {
+  getAll: '/admin/authors',
+  getById: (id: string) => `/admin/authors/${id}`,
+  create: '/admin/authors',
+  update: (id: string) => `/admin/authors/${id}`,
+  delete: (id: string) => `/admin/authors/${id}`,
+};
+
 export const BFF_TTS_ENDPOINTS = {
   generateChapter: (chapterId: string) => `/tts/chapter/${chapterId}`,
   generateBook: (bookId: string) => `/tts/book/${bookId}/all`,

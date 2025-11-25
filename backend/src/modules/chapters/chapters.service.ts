@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,7 +19,7 @@ export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-  ) {}
+  ) { }
 
   async findByBookSlug(bookSlug: string) {
     if (!bookSlug) throw new BadRequestException('Book slug is required');
@@ -98,7 +99,171 @@ export class ChaptersService {
         ...chapter,
         viewsCount: (chapter.viewsCount || 0) + 1,
       },
-      navigation,
+      navigation: {
+        previous: prevChapter
+          ? {
+            id: prevChapter._id.toString(),
+            title: prevChapter.title,
+            slug: prevChapter.slug,
+            orderIndex: prevChapter.orderIndex,
+          }
+          : null,
+        next: nextChapter
+          ? {
+            id: nextChapter._id.toString(),
+            title: nextChapter.title,
+            slug: nextChapter.slug,
+            orderIndex: nextChapter.orderIndex,
+          }
+          : null,
+      },
+    };
+  }
+
+  async getChaptersByBookSlug(bookSlug: string) {
+    // VALIDATION
+    if (!bookSlug?.trim()) {
+      throw new BadRequestException('Book slug là bắt buộc');
+    }
+
+    const book = await this.bookModel
+      .findOne({ slug: bookSlug, isDeleted: false })
+      .lean();
+
+    if (!book) {
+      throw new NotFoundException(`Không tìm thấy sách với slug: ${bookSlug}`);
+    }
+
+    // EXECUTION - Lấy danh sách chương + TTS mới nhất
+    const chapters = await this.chapterModel.aggregate([
+      { $match: { bookId: book._id } },
+      { $sort: { orderIndex: 1 } },
+      {
+        $lookup: {
+          from: 'texttospeeches',
+          localField: '_id',
+          foreignField: 'chapterId',
+          as: 'ttsData',
+        },
+      },
+      {
+        $addFields: {
+          latestTTS: {
+            $arrayElemAt: [
+              {
+                $filter: {
+                  input: '$ttsData',
+                  as: 'tts',
+                  cond: { $ne: ['$$tts.status', 'failed'] },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          slug: 1,
+          orderIndex: 1,
+          viewsCount: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          paragraphsCount: { $size: { $ifNull: ['$paragraphs', []] } },
+          ttsStatus: { $ifNull: ['$latestTTS.status', null] },
+          audioUrl: { $ifNull: ['$latestTTS.audioUrl', null] },
+        },
+      },
+    ]);
+
+    // RETURN
+    return {
+      book: {
+        id: book._id.toString(),
+        title: book.title,
+        slug: book.slug,
+      },
+      total: chapters.length,
+      chapters: chapters.map((chapter: any) => ({
+        id: chapter._id.toString(),
+        title: chapter.title,
+        slug: chapter.slug,
+        orderIndex: chapter.orderIndex,
+        viewsCount: chapter.viewsCount || 0,
+        createdAt: chapter.createdAt,
+        updatedAt: chapter.updatedAt,
+        paragraphsCount: chapter.paragraphsCount,
+        ttsStatus: chapter.ttsStatus,
+        audioUrl: chapter.audioUrl,
+      })),
+    };
+  }
+
+  async createChapter(bookId: string, dto: CreateChapterDto, user: any) {
+    // 1. Kiểm tra sách tồn tại
+    const book = await this.bookModel.findById(bookId).lean();
+    if (!book) throw new NotFoundException('Sách không tồn tại');
+
+    // 2. Tính orderIndex tự động
+    const lastChapter = await this.chapterModel
+      .findOne({ bookId: new Types.ObjectId(bookId) })
+      .sort({ orderIndex: -1 })
+      .select('orderIndex')
+      .lean();
+
+    const orderIndex = lastChapter ? lastChapter.orderIndex + 1 : 1;
+
+    // 3. Tạo slug duy nhất trong sách
+    const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (
+      await this.chapterModel.exists({
+        bookId: new Types.ObjectId(bookId),
+        slug,
+      })
+    ) {
+      slug = `${baseSlug}-${counter++}`;
+    }
+
+    // 4. Tạo chapter
+    const createdChapter = await this.chapterModel.create({
+      bookId: new Types.ObjectId(bookId),
+      title: dto.title.trim(),
+      slug,
+      paragraphs: dto.paragraphs || [],
+      orderIndex,
+      viewsCount: 0,
+    });
+
+    // 5. Lấy lại dữ liệu đầy đủ (populate book)
+    const populated = await this.chapterModel
+      .findById(createdChapter._id)
+      .populate('bookId', 'title slug')
+      .lean();
+
+    if (!populated) {
+      throw new InternalServerErrorException('Tạo chương thất bại');
+    }
+
+    // 6. Trả về response đẹp, chuẩn frontend
+    const bookData = populated.bookId as any;
+    return {
+      id: populated._id.toString(),
+      title: populated.title,
+      slug: populated.slug,
+      orderIndex: populated.orderIndex,
+      viewsCount: populated.viewsCount,
+      paragraphs: populated.paragraphs,
+      book: {
+        id: bookData._id.toString(),
+        title: bookData.title,
+        slug: bookData.slug,
+      },
+      createdAt: populated.createdAt,
+      updatedAt: populated.updatedAt,
     };
   }
 

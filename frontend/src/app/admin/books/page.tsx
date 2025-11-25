@@ -23,16 +23,16 @@ export default function AdminBooksPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<BookForAdmin | null>(null);
 
-  const { data, isLoading, isFetching } = useGetAdminBooksQuery({
+  const { data, isLoading, isFetching, refetch } = useGetAdminBooksQuery({
     page,
     limit: 15,
     search: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
+  }, {
+    refetchOnMountOrArgChange: true,
   });
 
   const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
-
-  // Dữ liệu đúng cấu trúc từ API
   const books: BookForAdmin[] = data?.books || [];
   const pagination: BackendPagination | undefined = data?.pagination;
 
@@ -45,8 +45,8 @@ export default function AdminBooksPage() {
   const handleDeleteConfirm = async () => {
     if (!bookToDelete) return;
     try {
-      // Use id field from interface
       await deleteBook(bookToDelete.id).unwrap();
+      refetch();
       setDeleteModalOpen(false);
       setBookToDelete(null);
     } catch (error) {

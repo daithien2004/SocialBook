@@ -108,7 +108,7 @@ export default function BooksPage() {
     // Lọc theo genres
     if (selectedGenres.length > 0) {
       filtered = filtered.filter((book) =>
-        book.genres.some((g) => selectedGenres.includes(g.name))
+        book.genres?.some((g) => selectedGenres.includes(g.name))
       );
     }
 
@@ -209,11 +209,10 @@ export default function BooksPage() {
             onClick={() =>
               router.push(pathname + `?${createQueryString({ sort: sortBy })}`)
             }
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              selectedGenres.length === 0
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${selectedGenres.length === 0
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 hover:bg-gray-300'
-            }`}
+              }`}
           >
             Tất cả
           </button>
@@ -221,11 +220,10 @@ export default function BooksPage() {
             <button
               key={genre}
               onClick={() => toggleGenre(genre)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                selectedGenres.includes(genre)
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${selectedGenres.includes(genre)
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 hover:bg-gray-300'
-              }`}
+                }`}
             >
               {genre}
               {selectedGenres.includes(genre) && (

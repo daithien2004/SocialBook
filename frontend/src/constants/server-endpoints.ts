@@ -32,7 +32,7 @@ export const NESTJS_BOOKS_ENDPOINTS = {
   createBook: '/books',
   updateBook: (bookId: string) => `/books/${bookId}`,
   deleteBook: (bookId: string) => `/books/${bookId}`,
-  getAllBookForAdmin: '/books/all',
+  getAllBookForAdmin: '/books/admin/all',
   like: (bookSlug: string) => `/books/${bookSlug}/like`,
 };
 
@@ -93,6 +93,14 @@ export const NESTJS_STATISTICS_ENDPOINTS = {
   books: '/statistics/books',
   posts: '/statistics/posts',
   growth: (days?: number) => `/statistics/growth${days ? `?days=${days}` : ''}`,
+};
+
+export const NESTJS_AUTHORS_ENDPOINTS = {
+  getAll: '/authors/admin',
+  getById: (id: string) => `/authors/${id}`,
+  create: '/authors',
+  update: (id: string) => `/authors/${id}`,
+  delete: (id: string) => `/authors/${id}`,
 };
 
 export const NESTJS_TTS_ENDPOINTS = {

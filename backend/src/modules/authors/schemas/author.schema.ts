@@ -12,6 +12,9 @@ export class Author {
 
   @Prop()
   bio: string;
+
+  @Prop()
+  photoUrl: string;
 }
 
 export const AuthorSchema = SchemaFactory.createForClass(Author);

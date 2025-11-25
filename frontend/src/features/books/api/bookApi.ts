@@ -50,12 +50,12 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.map((book) => ({
-                type: 'Books' as const,
-                id: book.slug,
-              })),
-              { type: 'Books', id: 'LIST' },
-            ]
+            ...result.map((book) => ({
+              type: 'Books' as const,
+              id: book.slug,
+            })),
+            { type: 'Books', id: 'LIST' },
+          ]
           : [{ type: 'Books', id: 'LIST' }],
     }),
 
@@ -65,6 +65,7 @@ export const booksApi = createApi({
         method: 'POST',
         body: formData,
       }),
+
       invalidatesTags: [
         { type: 'Books', id: 'LIST' },
         { type: 'AdminBooks', id: 'LIST' },
@@ -88,12 +89,12 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result?.books
           ? [
-              ...result.books.map((book) => ({
-                type: 'AdminBooks' as const,
-                id: book.id,
-              })),
-              { type: 'AdminBooks', id: 'LIST' },
-            ]
+            ...result.books.map((book) => ({
+              type: 'AdminBooks' as const,
+              id: book.id,
+            })),
+            { type: 'AdminBooks', id: 'LIST' },
+          ]
           : [{ type: 'AdminBooks', id: 'LIST' }],
     }),
 
@@ -131,10 +132,10 @@ export const booksApi = createApi({
           type: 'AdminBooks' | 'Books' | 'BookDetail';
           id: string;
         }[] = [
-          { type: 'AdminBooks', id: bookId },
-          { type: 'AdminBooks', id: 'LIST' },
-          { type: 'Books', id: 'LIST' },
-        ];
+            { type: 'AdminBooks', id: bookId },
+            { type: 'AdminBooks', id: 'LIST' },
+            { type: 'Books', id: 'LIST' },
+          ];
 
         if (result && (result as any).slug) {
           tags.push({ type: 'BookDetail', id: (result as any).slug });

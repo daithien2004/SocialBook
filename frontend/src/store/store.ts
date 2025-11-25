@@ -11,6 +11,7 @@ import { reviewApi } from '../features/reviews/api/reviewApi';
 import { libraryApi } from '../features/library/api/libraryApi';
 import { usersApi } from '../features/users/api/usersApi';
 import { ttsApi } from '../features/tts/api/ttsApi';
+import { authorApi } from '../features/authors/api/authorApi';
 import { setupListeners } from '@reduxjs/toolkit/query';
 
 export const store = configureStore({
@@ -27,6 +28,7 @@ export const store = configureStore({
     [libraryApi.reducerPath]: libraryApi.reducer,
     [usersApi.reducerPath]: usersApi.reducer,
     [ttsApi.reducerPath]: ttsApi.reducer,
+    [authorApi.reducerPath]: authorApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -40,7 +42,8 @@ export const store = configureStore({
       .concat(libraryApi.middleware)
       .concat(followApi.middleware)
       .concat(usersApi.middleware)
-      .concat(ttsApi.middleware),
+      .concat(ttsApi.middleware)
+      .concat(authorApi.middleware),
 });
 
 setupListeners(store.dispatch);
