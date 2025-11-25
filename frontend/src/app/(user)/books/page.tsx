@@ -19,6 +19,8 @@ export default function BooksPage() {
   // Lấy danh sách genre từ query (có thể nhiều: ?genre=Fantasy,Romance)
   const selectedGenres =
     searchParams.get('genres')?.split(',')?.filter(Boolean) || [];
+  const selectedTags =
+    searchParams.get('tags')?.split(',')?.filter(Boolean) || [];
   const sortBy = searchParams.get('sort') || 'newest';
   const searchQuery = searchParams.get('search') || '';
 
@@ -54,6 +56,19 @@ export default function BooksPage() {
     router.push(`${pathname}?${query}`);
   };
 
+  // Toggle tag
+  const toggleTag = (tag: string) => {
+    const newTags = selectedTags.includes(tag)
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag];
+
+    const query = createQueryString({
+      tags: newTags.join(','),
+    });
+
+    router.push(`${pathname}?${query}`);
+  };
+
   // Thay đổi sort
   const handleSortChange = (value: string) => {
     const query = createQueryString({
@@ -82,6 +97,7 @@ export default function BooksPage() {
     setSearchInput('');
     const query = createQueryString({
       genres: selectedGenres.join(','),
+      tags: selectedTags.join(','),
       sort: sortBy,
       search: '',
     });
@@ -109,6 +125,13 @@ export default function BooksPage() {
     if (selectedGenres.length > 0) {
       filtered = filtered.filter((book) =>
         book.genres.some((g) => selectedGenres.includes(g.name))
+      );
+    }
+
+    // Lọc theo tags
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((book) =>
+        book.tags?.some((tag) => selectedTags.includes(tag))
       );
     }
 
@@ -151,6 +174,17 @@ export default function BooksPage() {
     });
 
     return Array.from(genresSet);
+  }, [books]);
+
+  // Lấy tất cả tags từ books
+  const allTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    (books || []).forEach((book) => {
+      book.tags?.forEach((tag) => {
+        if (tag) tagsSet.add(tag);
+      });
+    });
+    return Array.from(tagsSet);
   }, [books]);
 
   if (isLoading) {
@@ -236,8 +270,30 @@ export default function BooksPage() {
         </div>
       </div>
 
+      {/* Bộ lọc Tags */}
+      {allTags.length > 0 && (
+        <div className="mb-6">
+          <p className="text-sm font-medium text-gray-700 mb-2">Tags:</p>
+          <div className="flex flex-wrap gap-2">
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition border ${
+                  selectedTags.includes(tag)
+                    ? 'bg-green-100 text-green-800 border-green-200'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Hiển thị filter đang chọn */}
-      {selectedGenres.length > 0 && (
+      {(selectedGenres.length > 0 || selectedTags.length > 0) && (
         <div className="mb-4 flex items-center gap-2 flex-wrap">
           <span className="text-sm text-gray-600">Đang lọc:</span>
           {selectedGenres.map((g) => (
@@ -254,9 +310,30 @@ export default function BooksPage() {
               </button>
             </span>
           ))}
+          {selectedTags.map((t) => (
+            <span
+              key={t}
+              className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full"
+            >
+              #{t}
+              <button
+                onClick={() => toggleTag(t)}
+                className="ml-1 hover:text-green-900"
+              >
+                ×
+              </button>
+            </span>
+          ))}
           <button
             onClick={() =>
-              router.push(pathname + `?${createQueryString({ sort: sortBy })}`)
+              router.push(
+                pathname +
+                  `?${createQueryString({
+                    sort: sortBy,
+                    genres: '',
+                    tags: '',
+                  })}`
+              )
             }
             className="text-xs text-blue-600 hover:underline"
           >

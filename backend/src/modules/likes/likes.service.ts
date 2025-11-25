@@ -75,4 +75,23 @@ export class LikesService {
       { $group: { _id: '$targetId', count: { $sum: 1 } } },
     ]);
   }
+
+  async getLikedTargets(
+    userId: string,
+    targetIds: Types.ObjectId[],
+    targetType: string,
+  ): Promise<Set<string>> {
+    if (!userId || targetIds.length === 0) return new Set();
+
+    const likes = await this.likeModel
+      .find({
+        userId: new Types.ObjectId(userId),
+        targetType,
+        targetId: { $in: targetIds },
+      })
+      .select('targetId')
+      .lean();
+
+    return new Set(likes.map((like) => like.targetId.toString()));
+  }
 }

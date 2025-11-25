@@ -25,8 +25,9 @@ export class ReviewsController {
   @Public()
   @Get('book/:bookId')
   @HttpCode(HttpStatus.OK)
-  async findAllByBook(@Param('bookId') bookId: string) {
-    const data = await this.reviewsService.findAllByBook(bookId);
+  async findAllByBook(@Req() req: any, @Param('bookId') bookId: string) {
+    const userId = req.user?.id;
+    const data = await this.reviewsService.findAllByBook(bookId, userId);
     return {
       message: 'Get reviews successfully',
       data,
@@ -55,6 +56,17 @@ export class ReviewsController {
     const data = await this.reviewsService.update(id, req.user.id, dto);
     return {
       message: 'Review updated successfully',
+      data,
+    };
+  }
+
+  @Patch(':id/like')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async toggleLike(@Req() req: any, @Param('id') id: string) {
+    const data = await this.reviewsService.toggleLike(id, req.user.id);
+    return {
+      message: 'Toggle like review successfully',
       data,
     };
   }
