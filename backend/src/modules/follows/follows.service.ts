@@ -12,12 +12,14 @@ import {
   Follow,
   FollowDocument,
 } from '@/src/modules/follows/schemas/follow.schema';
+import { UsersService } from '@/src/modules/users/users.service';
 
 @Injectable()
 export class FollowsService {
   constructor(
     @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private userService: UsersService,
   ) {}
 
   async getStatus(currentUserId: string, targetUserId: string) {
@@ -58,11 +60,29 @@ export class FollowsService {
 
     const users = await this.userModel
       .find({ _id: { $in: targetIds } })
-      .select('username image bio') // Select field cần thiết
+      .select('username image bio') // các field cơ bản
       .lean();
 
-    return users;
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const overview = await this.userService.getUserProfileOverview(
+          user._id.toString(),
+        );
+
+        return {
+          _id: user._id,
+          username: user.username,
+          image: user.image,
+          postCount: overview.postCount,
+          readingListCount: overview.readingListCount,
+          followersCount: overview.followersCount,
+        };
+      }),
+    );
+
+    return usersWithStats;
   }
+
 
   async toggle(currentUserId: string, targetUserId: string) {
     if (!Types.ObjectId.isValid(targetUserId)) {
