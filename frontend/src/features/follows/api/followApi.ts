@@ -31,6 +31,17 @@ export const followApi = createApi({
             ],
         }),
 
+        getFollowersList: builder.query<FollowingUser[], string>({
+            query: (targetUserId) => ({
+                url: `/follows/followers?targetUserId=${targetUserId}`,
+                method: "GET",
+            }),
+            transformResponse: (response: FollowingUser[]) => response ?? [],
+            providesTags: () => [
+                { type: "Follow", id: `FOLLOWERS_LIST` },
+            ],
+        }),
+
         toggleFollow: builder.mutation<FollowStateResponse, string>({
             query: (targetUserId) => ({
                 url: `/follows/${targetUserId}`,
@@ -45,5 +56,6 @@ export const followApi = createApi({
 
 export const {
     useToggleFollowMutation,
-    useGetFollowingListQuery
+    useGetFollowingListQuery,
+    useGetFollowersListQuery
 } = followApi
