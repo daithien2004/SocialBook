@@ -105,4 +105,17 @@ export class LibraryController {
       message: 'Remove book from library successfully',
     };
   }
+
+  @Get('book/:bookId')
+  @HttpCode(HttpStatus.OK)
+  async getBookLibraryInfo(@Req() req: any, @Param('bookId') bookId: string) {
+    const data = await this.libraryService.getBookLibraryInfo(
+      req.user.id,
+      bookId,
+    );
+    return {
+      message: 'Get book library info successfully',
+      data,
+    };
+  }
 }

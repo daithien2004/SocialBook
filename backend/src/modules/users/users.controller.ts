@@ -7,16 +7,17 @@ import {
   Param,
   Patch,
   Post,
-  Query,
-  UseGuards,
+  Query, Req, UnauthorizedException, UploadedFile,
+  UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/user.dto';
+import { CreateUserDto, UpdateUserOverviewDto } from './dto/user.dto';
 
 import { Public } from '@/src/common/decorators/customize';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/src/common/guards/roles.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UsersController {
@@ -68,5 +69,29 @@ export class UsersController {
       message: 'Get user profile overview successfully',
       data,
     };
+  }
+
+  @Patch('me/overview')
+  @HttpCode(HttpStatus.OK)
+  async updateMyProfileOverview(
+    @Req() req: any,
+    @Body() dto: UpdateUserOverviewDto,
+  ) {
+    const data = await this.usersService.updateUserProfileOverview(req.user.id, dto);
+    return {
+      message: 'Profile overview updated successfully',
+      data,
+    };
+  }
+
+  @Patch('me/avatar')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file')) // field name = "file"
+  async updateMyAvatar(
+    @Req() req: any,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const result = await this.usersService.updateUserImage(req.user.id, file);
+    return { result };
   }
 }

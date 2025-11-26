@@ -7,7 +7,7 @@ import {
   HttpStatus,
   Param,
   Patch,
-  Post,
+  Post, Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -32,8 +32,10 @@ export class CollectionsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(@Req() req: any) {
-    const data = await this.collectionsService.findAll(req.user.id);
+  async findAll(@Req() req: any, @Query('userId') userId?: string) {
+    const finalUserId = userId || req.user.id;
+
+    const data = await this.collectionsService.findAll(finalUserId);
     return {
       message: 'Get all collections successfully',
       data,

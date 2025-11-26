@@ -26,6 +26,7 @@ export class CommentsService {
     parentId: string | null,
     cursor?: string,
     limit: number = 10,
+    userId?: string,
   ) {
     if (!targetId) throw new BadRequestException('Target ID is required');
 
@@ -49,9 +50,12 @@ export class CommentsService {
     const comments = hasMore ? commentsRaw.slice(0, limit) : commentsRaw;
     const commentIds = comments.map((c) => c._id);
 
-    const [repliesGroup, likesGroup] = await Promise.all([
+    const [repliesGroup, likesGroup, likedTargets] = await Promise.all([
       this.aggregateReplyCounts(commentIds),
       this.likesService.aggregateLikeCounts(commentIds, 'comment'),
+      userId
+        ? this.likesService.getLikedTargets(userId, commentIds, 'comment')
+        : Promise.resolve(new Set<string>()),
     ]);
 
     const replyMap = this.createCountMap(repliesGroup);
@@ -61,6 +65,7 @@ export class CommentsService {
       ...c,
       repliesCount: replyMap[c._id.toString()] || 0,
       likesCount: likeMap[c._id.toString()] || 0,
+      isLiked: likedTargets.has(c._id.toString()),
     }));
 
     return {

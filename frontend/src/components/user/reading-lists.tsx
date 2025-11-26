@@ -1,9 +1,10 @@
 import { Plus, Settings } from "lucide-react"
 import {ReadingListItem} from "@/src/components/user/reading-list-item";
 import {useGetCollectionsQuery} from "@/src/features/library/api/libraryApi";
-import {useRouter} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 export function ReadingLists() {
-  const { data: collectionsData = [] } = useGetCollectionsQuery();
+  const { userId } = useParams<{ userId: string }>();
+  const { data: collectionsData = [] } = useGetCollectionsQuery(userId);
   const route = useRouter();
   return (
     <div className="rounded-lg bg-white shadow-sm border border-gray-100">

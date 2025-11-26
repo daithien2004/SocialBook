@@ -1,71 +1,216 @@
 'use client';
 
-import { useState } from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera } from 'lucide-react';
+import {
+    useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
+    usePatchUpdateUserProfileOverviewMutation,
+} from '@/src/features/users/api/usersApi';
+import { useParams } from 'next/navigation';
+import {getErrorMessage} from "@/src/lib/utils";
 
 const UserProfilePage = () => {
-    // Sau này bạn có thể map form này từ API overview
+    const { userId } = useParams<{ userId: string }>();
+
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [savingAvatar, setSavingAvatar] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const onPickAvatar = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""; // reset để chọn lại cùng 1 file vẫn fire onChange
+        }
+        fileInputRef.current?.click();
+    };
+
+    const onAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setSelectedFile(file);
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+    };
+
+// dọn URL tránh leak bộ nhớ
+    useEffect(() => {
+        return () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        };
+    }, [previewUrl]);
+
+    const handleCancelAvatar = () => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        if (fileInputRef.current) fileInputRef.current.value = ''; // quan trọng
+    };
+
+    const { data: overview, isLoading: isOverviewLoading } =
+        useGetUserOverviewQuery(userId, { skip: !userId });
+
+    const [updateOverview, { isLoading: isSaving }] =
+        usePatchUpdateUserProfileOverviewMutation();
+
+    const [updateAvatar, { isLoading: isSavingAvatarApi }] =
+        usePatchUpdateUserAvatarMutation();
+
+    // form state
     const [form, setForm] = useState({
-        displayName: 'Vinh',
-        bio: '',
+        displayName: '',
         website: '',
         location: '',
-        job: '',
-        social: '',
+        bio: '',
     });
 
+    const handleSaveAvatar = async () => {
+        if (!selectedFile || !userId) return;
+        try {
+            setSavingAvatar(true);
+
+            // Gọi RTK Query mutation upload avatar
+            const res = await updateAvatar({
+                userId,
+                file: selectedFile,
+            }).unwrap();
+
+            console.log("Avatar updated:", res);
+
+            // Reset UI
+            handleCancelAvatar();
+            // TODO: nếu có toast:
+            // toast.success("Cập nhật ảnh đại diện thành công");
+        } catch (err: any) {
+            console.error(getErrorMessage(err));
+            // toast.error(getErrorMessage(err));
+        } finally {
+            setSavingAvatar(false);
+        }
+    };
+
+
+    // 1) đồng bộ form khi overview đổi
+    useEffect(() => {
+        if (!overview) return;
+        setForm({
+            displayName: overview.username ?? '',
+            website: overview.website ?? '',
+            location: overview.location ?? '',
+            bio: overview.bio ?? '',
+        });
+    }, [overview]);
+
+    // 2) isDirty: chỉ so sánh 3 field bạn update
+    const isDirty = useMemo(() => {
+        if (!overview) return false;
+        return (
+            (form.website ?? '') !== (overview.website ?? '') ||
+            (form.location ?? '') !== (overview.location ?? '') ||
+            (form.bio ?? '') !== (overview.bio ?? '') ||
+            (form.displayName ?? '') !== (overview.username ?? '')
+        );
+    }, [overview, form.website, form.location, form.bio, form.displayName]);
+
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = () => {
-        console.log('Saving profile...', form);
-    };
-
-    const handleCancel = () => {
-        console.log('Cancel edit profile');
+    const handleSave = async () => {
+        try {
+            const res = await updateOverview({
+                userId,
+                body: {
+                    username: form.displayName,
+                    bio: form.bio,
+                    location: form.location,
+                    website: form.website,
+                },
+            }).unwrap();
+            console.log(res);
+        } catch (err: any) {
+            console.log(getErrorMessage(err));
+        }
     };
 
     return (
         <div className="rounded-lg bg-white shadow-sm border border-gray-100">
             <div className="relative rounded-t-lg bg-gradient-to-b from-teal-700 via-teal-600 to-teal-500 px-6 py-10 md:py-12">
-                {/* Pattern background */}
                 <div className="pointer-events-none absolute inset-0 opacity-10">
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJub25lIi8+PHBhdHRlcm4gaWQ9InBhdHRlcm4iIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48L3BhdHRlcm4+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIi8+PC9zdmc+')] bg-repeat"></div>
                 </div>
 
-                {/* Nội dung profile trong banner */}
+                {/* avatar + tên */}
                 <div className="relative flex flex-col items-center text-center">
-                    <div className="relative mb-6">
-                        <div className="h-24 w-24 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 p-1">
-                            <div className="flex h-full w-full items-center justify-center rounded-full bg-white/40 backdrop-blur">
-                                <Camera className="h-10 w-10 text-white opacity-90" />
-                            </div>
-                        </div>
-                        <button className="absolute bottom-0 right-0 rounded-full bg-white p-2 shadow-lg hover:bg-gray-100">
-                            <Camera className="h-4 w-4 text-teal-600" />
-                        </button>
-                    </div>
+                    <div className="relative mb-4">
+                        {/* input file ẩn */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={onAvatarFileChange}
+                        />
 
-                    {/* Tên hiển thị */}
+                        {/* Khung avatar */}
+                        <button
+                            onClick={onPickAvatar}
+                            className="relative group rounded-full ring-4 ring-white shadow-lg disabled:opacity-60"
+                            disabled={savingAvatar}
+                        >
+                            <div className="relative h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden">
+                                <img
+                                    src={
+                                        previewUrl
+                                        ?? overview?.image
+                                        ?? "https://placehold.co/200x200?text=Avatar"
+                                    }
+                                    alt="User avatar"
+                                    className="h-full w-full object-cover rounded-full"
+                                />
+                            </div>
+
+                            <span className="absolute inset-0 hidden group-hover:flex items-center justify-center rounded-full bg-black/35 text-white text-xs font-medium">
+                                Đổi ảnh
+                            </span>
+                        </button>
+
+                        {selectedFile && (
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                                <button
+                                    onClick={handleCancelAvatar}
+                                    className="px-2 py-1 rounded-full border border-white text-[10px] bg-white hover:bg-gray-50"
+                                    disabled={savingAvatar}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={handleSaveAvatar}
+                                    className="px-3 py-1 rounded-full text-[10px] bg-gray-900 text-white hover:bg-black disabled:opacity-60"
+                                    disabled={savingAvatar}
+                                >
+                                    {savingAvatar ? "Đang lưu..." : "Lưu"}
+                                </button>
+                            </div>
+                        )}
+
+                    </div>
                     <input
                         type="text"
                         name="displayName"
                         value={form.displayName}
                         onChange={handleChange}
-                        className="mb-2 w-full max-w-xs rounded-lg border-0 bg-white/90 px-6 py-3 text-center text-base font-semibold text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="mb-2 rounded-lg border-0 bg-white/90 px-6 py-3 text-center text-base font-semibold text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
                     />
                 </div>
             </div>
 
-            {/* Các ô nhập thuộc tính bên dưới giống Wattpad */}
-                <div className="bg-white rounded-b-lg px-6 py-6">
+            {/* form */}
+            <div className="bg-white rounded-b-lg px-6 py-6">
                 <div className="grid gap-6 md:grid-cols-2">
-                    {/* Giới thiệu */}
                     <div className="md:col-span-2">
                         <label className="mb-1 block text-sm font-medium text-gray-700">
                             Giới thiệu về bạn / hồ sơ
@@ -75,12 +220,11 @@ const UserProfilePage = () => {
                             rows={3}
                             value={form.bio}
                             onChange={handleChange}
-                            placeholder="Viết đôi lời giới thiệu về bản thân, nội dung bạn sáng tác, phong cách, sở thích..."
+                            placeholder="Viết đôi lời giới thiệu…"
                             className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
                         />
                     </div>
 
-                    {/* Website */}
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
                             Website / Trang cá nhân
@@ -95,7 +239,6 @@ const UserProfilePage = () => {
                         />
                     </div>
 
-                    {/* Địa điểm */}
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
                             Địa điểm
@@ -110,43 +253,31 @@ const UserProfilePage = () => {
                         />
                     </div>
 
-                    {/* Nghề nghiệp */}
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Nghề nghiệp / Vai trò
-                        </label>
-                        <input
-                            type="text"
-                            name="job"
-                            value={form.job}
-                            onChange={handleChange}
-                            placeholder="Tác giả, Designer, Developer..."
-                            className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-                        />
-                    </div>
-
-                    {/* Mạng xã hội */}
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Mạng xã hội
-                        </label>
-                        <input
-                            type="text"
-                            name="social"
-                            value={form.social}
-                            onChange={handleChange}
-                            placeholder="@username trên TikTok, Instagram, X..."
-                            className="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-                        />
-                    </div>
-                    <div className="md:col-span-2 flex justify-end">
-                        <Button
-                            className="bg-orange-500 text-white hover:bg-orange-600"
-                            onClick={handleSave}
-                        >
-                            Lưu thay đổi
-                        </Button>
-                    </div>
+                    {isDirty && (
+                        <div className="md:col-span-2 flex justify-end gap-2">
+                            <Button
+                                variant="secondary"
+                                onClick={() =>
+                                    setForm({
+                                        displayName: overview?.username ?? '',
+                                        website: overview?.website ?? '',
+                                        location: overview?.location ?? '',
+                                        bio: overview?.bio ?? '',
+                                    })
+                                }
+                                disabled={isSaving}
+                            >
+                                Hoàn tác
+                            </Button>
+                            <Button
+                                className="bg-orange-500 text-white hover:bg-orange-600"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                            >
+                                {isSaving ? 'Đang lưu…' : 'Lưu thay đổi'}
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

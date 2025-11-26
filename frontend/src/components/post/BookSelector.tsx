@@ -22,8 +22,7 @@ export default function BookSelector({
   const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, error } = useGetBooksQuery();
-  const books = data?.books || [];
+  const { data: books = [], isLoading, error } = useGetBooksQuery();
 
   // Find selected book
   const selectedBook = books.find((book) => book.id === value);

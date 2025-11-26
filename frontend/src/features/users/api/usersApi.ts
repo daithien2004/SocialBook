@@ -2,14 +2,24 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
 import { UserListResponse } from '../types/user.types';
 
-export interface UserOverviewReponse {
+export interface UserOverviewResponse {
     id: string;
     username: string;
     image: string | null;
     createdAt: Date;
     postCount: number;
+    bio: string;
+    location: string;
+    website: string;
     readingListCount: number;
     followersCount: number;
+}
+
+export interface  UpdateUserOverviewRequest {
+    bio: string;
+    location: string;
+    website: string;
+    username: string;
 }
 export const usersApi = createApi({
     reducerPath: 'usersApi',
@@ -31,7 +41,40 @@ export const usersApi = createApi({
             invalidatesTags: ['Users'],
         }),
 
-        getUserOverview: builder.query<UserOverviewReponse, string>({
+        patchUpdateUserProfileOverview: builder.mutation<
+            UserOverviewResponse,
+            { body: UpdateUserOverviewRequest; userId: string }
+        >({
+            query: ({ body }) => ({
+                url: `/users/me/overview`,
+                method: 'PATCH',
+                body,
+            }),
+            invalidatesTags: (result, error, { userId }) => [
+                { type: 'Users', id: `OVERVIEW_${userId}` },
+            ],
+        }),
+
+        patchUpdateUserAvatar: builder.mutation<
+            UserOverviewResponse,
+            { file: File; userId: string }
+        >({
+            query: ({ file }) => {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                return {
+                    url: `/users/me/avatar`,
+                    method: "PATCH",
+                    body: formData,
+                };
+            },
+            invalidatesTags: (result, error, { userId }) => [
+                { type: "Users", id: `OVERVIEW_${userId}` },
+            ],
+        }),
+
+        getUserOverview: builder.query<UserOverviewResponse, string>({
             query: (userId) => ({
                 url: `/users/${userId}/overview`,
                 method: "GET",
@@ -43,4 +86,6 @@ export const usersApi = createApi({
     }),
 });
 
-export const { useGetUsersQuery, useBanUserMutation , useGetUserOverviewQuery} = usersApi;
+export const {
+    useGetUsersQuery, useBanUserMutation , useGetUserOverviewQuery,
+    usePatchUpdateUserProfileOverviewMutation, usePatchUpdateUserAvatarMutation} = usersApi;

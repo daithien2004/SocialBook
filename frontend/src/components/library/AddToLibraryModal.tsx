@@ -18,6 +18,7 @@ import {
   useCreateCollectionMutation,
   useUpdateLibraryStatusMutation,
   useAddBookToCollectionsMutation,
+  useGetBookLibraryInfoQuery,
 } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
 
@@ -25,43 +26,47 @@ interface AddToLibraryModalProps {
   isOpen: boolean;
   onClose: () => void;
   bookId: string;
-  // Dữ liệu ban đầu (nếu có) để hiển thị trạng thái hiện tại của sách
-  initialStatus?: LibraryStatus;
-  initialCollectionIds?: string[];
 }
 
 export default function AddToLibraryModal({
   isOpen,
   onClose,
   bookId,
-  initialStatus,
-  initialCollectionIds = [],
 }: AddToLibraryModalProps) {
   // --- STATE ---
   // Trạng thái chính (Đọc/Muốn đọc/Lưu trữ)
   const [selectedStatus, setSelectedStatus] = useState<LibraryStatus | null>(
-    initialStatus || null
+    null
   );
   // Danh sách folder đã chọn
-  const [selectedCollections, setSelectedCollections] =
-    useState<string[]>(initialCollectionIds);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   // Tạo folder mới
   const [isCreating, setIsCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
 
   // --- API HOOKS ---
   const { data: collectionsData } = useGetCollectionsQuery();
+  const { data: libraryInfo, isFetching } = useGetBookLibraryInfoQuery(bookId, {
+    skip: !isOpen, // Chỉ fetch khi mở modal
+  });
+
   const [updateStatus] = useUpdateLibraryStatusMutation();
   const [updateCollections] = useAddBookToCollectionsMutation();
   const [createCollection] = useCreateCollectionMutation();
 
   const collections = collectionsData || [];
 
+  // Sync state khi có data từ API
+  useEffect(() => {
+    if (libraryInfo) {
+      setSelectedStatus(libraryInfo.status);
+      setSelectedCollections(libraryInfo.collections.map((c) => c.id));
+    }
+  }, [libraryInfo]);
+
   // Reset state khi mở modal
   useEffect(() => {
     if (isOpen) {
-      setSelectedStatus(initialStatus || null);
-      setSelectedCollections(initialCollectionIds);
       setIsCreating(false);
       setNewCollectionName('');
     }

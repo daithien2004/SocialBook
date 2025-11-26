@@ -148,4 +148,29 @@ export class LibraryService {
 
     return { success: true };
   }
+
+  async getBookLibraryInfo(userId: string, bookId: string) {
+    if (!Types.ObjectId.isValid(bookId))
+      throw new BadRequestException('Invalid Book ID');
+
+    const readingListEntry = await this.readingListModel
+      .findOne({
+        userId: new Types.ObjectId(userId),
+        bookId: new Types.ObjectId(bookId),
+      })
+      .populate('collectionIds', 'name')
+      .lean();
+
+    if (!readingListEntry) {
+      return {
+        status: null,
+        collections: [],
+      };
+    }
+
+    return {
+      status: readingListEntry.status,
+      collections: readingListEntry.collectionIds,
+    };
+  }
 }

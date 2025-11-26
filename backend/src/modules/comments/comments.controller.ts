@@ -34,9 +34,10 @@ export class CommentsController {
   }
 
   @Public()
+  @UseGuards(JwtAuthGuard)
   @Get('target')
   @HttpCode(HttpStatus.OK)
-  async getByTarget(@Query() query: GetCommentsDto) {
+  async getByTarget(@Request() req: any, @Query() query: GetCommentsDto) {
     const { targetId, parentId, cursor, limit } = query;
 
     const result = await this.commentsService.findByTarget(
@@ -44,6 +45,7 @@ export class CommentsController {
       parentId ?? null,
       cursor,
       limit ? +limit : 10,
+      req.user?.id,
     );
 
     return {

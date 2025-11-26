@@ -72,6 +72,7 @@ export const NESTJS_REVIEWS_ENDPOINTS = {
   getByBook: (bookId: string) => `/reviews/book/${bookId}`,
   update: (id: string) => `/reviews/${id}`,
   delete: (id: string) => `/reviews/${id}`,
+  toggleLike: (id: string) => `/reviews/${id}/like`,
 };
 
 export const NESTJS_LIBRARY_ENDPOINTS = {
@@ -81,6 +82,7 @@ export const NESTJS_LIBRARY_ENDPOINTS = {
   updateProgress: '/library/progress',
   updateBookCollections: '/library/collections',
   removeBook: (bookId: string) => `/library/${bookId}`,
+  getBookLibraryInfo: (bookId: string) => `/library/book/${bookId}`,
 
   // Collections System (Folder)
   collections: '/collections', // GET, POST

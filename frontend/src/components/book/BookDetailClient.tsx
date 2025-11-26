@@ -10,6 +10,7 @@ import {
 import {
   useGetReviewsByBookQuery,
   useCreateReviewMutation,
+  useToggleLikeReviewMutation,
 } from '@/src/features/reviews/api/reviewApi';
 import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 
@@ -49,6 +50,17 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
   // Mutations
   const [likeBook, { isLoading: isLiking }] = useLikeBookMutation();
   const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
+  const [toggleLikeReview] = useToggleLikeReviewMutation();
+
+  // Handle Like Review
+  const handleLikeReview = async (reviewId: string) => {
+    if (!book?.id) return;
+    try {
+      await toggleLikeReview({ id: reviewId, bookId: book.id }).unwrap();
+    } catch (error) {
+      console.error('Lỗi like review', error);
+    }
+  };
 
   // Fetch Book Detail
   const {
@@ -56,6 +68,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     isLoading: isLoadingBook,
     error,
   } = useGetBookBySlugQuery({ bookSlug });
+  console.log(book);
 
   // Fetch Reviews
   const { data: reviews, isLoading: isLoadingReviews } =
@@ -167,8 +180,8 @@ ${book.description}
   }
 
   // Data hiển thị
-  const displayRating = book.averageRating || 0;
-  const displayTotalRatings = book.totalRatings || reviews?.length;
+  const displayRating = book.stats.averageRating || 0;
+  const displayTotalRatings = book.stats.totalRatings || reviews?.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -512,8 +525,20 @@ ${book.description}
                             </div>
                           </div>
                           <p className="text-gray-700 mb-2">{review.content}</p>
-                          <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500">
-                            <Heart size={14} />
+                          <button
+                            onClick={() =>
+                              handleLikeReview(review.id || review._id)
+                            }
+                            className={`flex items-center gap-1 text-sm transition-colors ${
+                              review.isLiked
+                                ? 'text-red-500'
+                                : 'text-gray-500 hover:text-red-500'
+                            }`}
+                          >
+                            <Heart
+                              size={14}
+                              className={review.isLiked ? 'fill-current' : ''}
+                            />
                             <span>{review.likesCount || 0}</span>
                           </button>
                         </div>

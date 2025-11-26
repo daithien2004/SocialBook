@@ -65,7 +65,6 @@ export class FollowsService {
   }
 
   async toggle(currentUserId: string, targetUserId: string) {
-    // 1. Validation
     if (!Types.ObjectId.isValid(targetUserId)) {
       throw new BadRequestException('Invalid Target User ID');
     }

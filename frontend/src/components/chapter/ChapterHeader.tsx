@@ -1,6 +1,5 @@
-// components/ChapterHeader.tsx
 import Link from 'next/link';
-import { Eye } from 'lucide-react';
+import { Eye, BookOpen, Clock } from 'lucide-react';
 
 interface ChapterHeaderProps {
   bookTitle: string;
@@ -22,36 +21,36 @@ export default function ChapterHeader({
   className = '',
 }: ChapterHeaderProps) {
   return (
-    <header className={`p-4 bg-white text-gray-900 shadow-md ${className}`}>
-      <div className="max-w-3xl">
-        {/* Breadcrumb - Link về truyện */}
-        {showBookLink && (
-          <Link
-            href={`/books/${bookSlug}`}
-            className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1 transition-colors"
-          >
-            <span>←</span>
-            <span>{bookTitle}</span>
-          </Link>
-        )}
+    <header className={`py-8 text-center space-y-4 ${className}`}>
+      {showBookLink && (
+        <Link
+          href={`/books/${bookSlug}`}
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider"
+        >
+          <BookOpen size={14} />
+          <span>{bookTitle}</span>
+        </Link>
+      )}
 
-        {/* Tiêu đề chương */}
-        <h1 className="text-xl font-bold mt-1 text-gray-900">{chapterTitle}</h1>
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-100 leading-tight">
+        <span className="block text-lg sm:text-xl text-neutral-500 font-normal mb-1">
+          Chương {chapterOrder}
+        </span>
+        {chapterTitle}
+      </h1>
 
-        {/* Metadata */}
-        <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
-          {/* Số thứ tự chương */}
-          <span className="font-medium">Chương {chapterOrder}</span>
-
-          <span className="text-gray-400">•</span>
-
-          {/* Lượt xem */}
-          <div className="flex items-center gap-1">
-            <Eye className="w-4 h-4" />
-            <span>{viewsCount.toLocaleString('vi-VN')} lượt xem</span>
-          </div>
+      <div className="flex items-center justify-center gap-6 text-sm text-neutral-500">
+        <div className="flex items-center gap-1.5">
+          <Eye size={16} />
+          <span>{viewsCount.toLocaleString('vi-VN')} lượt xem</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Clock size={16} />
+          <span>~5 phút đọc</span>
         </div>
       </div>
+
+      <div className="w-24 h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent mx-auto mt-6 rounded-full" />
     </header>
   );
 }

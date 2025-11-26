@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
@@ -6,6 +8,7 @@ import CreatePostModal, {
   CreatePostData,
 } from '@/src/components/post/CreatePostModal';
 import { useSession } from 'next-auth/react';
+import { MessageSquarePlus, Share2, Send, X, Loader2 } from 'lucide-react';
 
 interface Paragraph {
   id: string;
@@ -38,8 +41,7 @@ export function ChapterContent({
 
   const [createComment, { isLoading: isPostingComment }] =
     usePostCreateMutation();
-
-  const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation(); // ← Thêm hook
+  const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
 
   const handleToggleComments = (paragraphId: string) => {
     setActiveParagraphId((prev) => (prev === paragraphId ? null : paragraphId));
@@ -74,7 +76,6 @@ export function ChapterContent({
       alert('Không tìm thấy thông tin sách');
       return;
     }
-
     try {
       await createPost({
         bookId: bookId,
@@ -88,74 +89,79 @@ export function ChapterContent({
 
   return (
     <>
-      <main className="flex-1 max-w-5xl mx-auto w-full p-6 bg-white text-gray-800 rounded-t">
-        <article className="prose prose-lg max-w-none space-y-6">
-          {paragraphs.map((para, idx) => (
+      <main className="flex-1 w-full text-neutral-300 antialiased relative">
+        <article className="space-y-8">
+          {paragraphs.map((para) => (
             <div key={para.id} className="relative group">
-              <div className="flex items-start gap-3">
-                <p className="flex-1 text-lg leading-8 text-justify">
+              <div className="relative">
+                <p
+                  className={`text-lg sm:text-xl leading-8 sm:leading-9 text-justify transition-colors duration-300 ${
+                    activeParagraphId === para.id
+                      ? 'text-blue-100'
+                      : 'text-neutral-300'
+                  }`}
+                >
                   {para.content}
                 </p>
 
-                <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div
+                  className={`
+                    flex items-center gap-1 transition-all duration-300
+                    
+                    /* Mobile layout: Nằm dưới, hiện khi active hoặc group-hover */
+                    mt-2 justify-end opacity-100 sm:opacity-0 sm:group-hover:opacity-100
+
+                    /* Desktop layout: Trôi nổi bên phải */
+                    md:absolute md:top-0 md:-right-4 md:translate-x-full md:mt-0 md:flex-col md:justify-start md:pl-2
+                  `}
+                >
                   <button
                     onClick={() => handleToggleComments(para.id)}
-                    className={`p-2 rounded-lg transition-all ${
+                    className={`p-2 rounded-full transition-all ${
                       activeParagraphId === para.id
-                        ? 'bg-indigo-100 text-indigo-600'
-                        : 'hover:bg-gray-100 text-gray-500 hover:text-indigo-600'
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-110'
+                        : 'bg-neutral-800/50 text-neutral-400 hover:bg-blue-600 hover:text-white hover:scale-110'
                     }`}
                     title="Bình luận đoạn này"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                      />
-                    </svg>
+                    <MessageSquarePlus size={18} />
                   </button>
 
                   <button
                     onClick={() => handleOpenPostModal(para)}
-                    className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-green-600 transition-all"
-                    title="Đăng bài từ đoạn này"
+                    className="p-2 rounded-full bg-neutral-800/50 text-neutral-400 hover:bg-green-600 hover:text-white hover:scale-110 transition-all"
+                    title="Chia sẻ đoạn này"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                      />
-                    </svg>
+                    <Share2 size={18} />
                   </button>
                 </div>
               </div>
 
               {activeParagraphId === para.id && (
-                <div className="mt-4 ml-4 border-l-2 border-indigo-200 pl-4 animate-slideDown">
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Bình luận về đoạn này
+                <div className="mt-6 md:ml-8 relative z-20 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="absolute -left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-transparent opacity-50 hidden md:block" />
+
+                  <div className="bg-neutral-900 border border-white/10 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+
+                    <div className="flex justify-between items-start mb-4">
+                      <label className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                        Thảo luận
                       </label>
-                      <div className="flex items-start gap-2">
+                      <button
+                        onClick={() => setActiveParagraphId(null)}
+                        className="text-neutral-500 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <div className="relative">
                         <textarea
-                          placeholder="Viết bình luận của bạn..."
-                          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                          rows={2}
+                          placeholder="Viết suy nghĩ của bạn về đoạn này..."
+                          className="w-full bg-neutral-950/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 resize-none placeholder:text-neutral-600 min-h-[80px]"
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
                           onKeyDown={(e) => {
@@ -165,40 +171,35 @@ export function ChapterContent({
                             }
                           }}
                         />
-                        <button
-                          type="button"
-                          disabled={isPostingComment || !commentText.trim()}
-                          onClick={() => handleSubmitComment(para.id)}
-                          className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {isPostingComment ? 'Đang gửi...' : 'Gửi'}
-                        </button>
+                        <div className="absolute bottom-2 right-2">
+                          <button
+                            type="button"
+                            disabled={isPostingComment || !commentText.trim()}
+                            onClick={() => handleSubmitComment(para.id)}
+                            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-0 disabled:pointer-events-none transition-all shadow-lg"
+                          >
+                            {isPostingComment ? (
+                              <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                              <Send size={16} />
+                            )}
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">
-                        Nhấn Enter để gửi, Shift+Enter để xuống dòng
+                      <p className="text-[10px] text-neutral-500 pl-1">
+                        Shift + Enter để xuống dòng
                       </p>
                     </div>
 
-                    {/* Comments list */}
-                    <div className="border-t border-gray-200 pt-3">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                        Tất cả bình luận
-                      </h4>
+                    <div className="mt-6 pt-4 border-t border-white/5">
                       <ListComments
                         targetId={para.id}
                         isCommentOpen={true}
                         parentId={null}
-                        targetType={"paragraph"}
+                        targetType={'paragraph'}
+                        theme="dark"
                       />
                     </div>
-
-                    {/* Close button */}
-                    <button
-                      onClick={() => setActiveParagraphId(null)}
-                      className="w-full text-sm text-gray-500 hover:text-gray-700 py-2 hover:bg-gray-100 rounded transition-colors"
-                    >
-                      Đóng bình luận
-                    </button>
                   </div>
                 </div>
               )}
@@ -214,8 +215,8 @@ export function ChapterContent({
         onClose={() => setPostModalOpen(false)}
         onSubmit={handleSubmitPost}
         defaultContent={selectedParagraph?.content || ''}
-        title={`Chia sẻ đoạn văn${bookTitle ? ` từ "${bookTitle}"` : ''}`}
-        contentLabel="Nội dung đoạn văn"
+        title={`Chia sẻ trích dẫn${bookTitle ? ` từ "${bookTitle}"` : ''}`}
+        contentLabel="Nội dung trích dẫn"
         maxImages={10}
       />
     </>

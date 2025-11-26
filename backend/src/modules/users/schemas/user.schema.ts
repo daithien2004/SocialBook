@@ -38,6 +38,15 @@ export class User {
   @Prop()
   image?: string;
 
+  @Prop({ type: String, trim: true })
+  bio?: string;
+
+  @Prop({ type: String, trim: true })
+  location?: string;
+
+  @Prop({ type: String, trim: true })
+  website?: string;
+
   @Prop()
   hashedRt?: string; // lưu refresh token hash
 

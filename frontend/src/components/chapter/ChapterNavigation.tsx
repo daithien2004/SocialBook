@@ -1,6 +1,5 @@
-// components/ChapterNavigation.tsx
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, List } from 'lucide-react';
 
 interface ChapterNavigationProps {
   hasPrevious: boolean;
@@ -9,9 +8,7 @@ interface ChapterNavigationProps {
   onNext: () => void;
   showTableOfContents?: boolean;
   tableOfContentsHref?: string;
-  onTableOfContentsClick?: () => void; // ← Thêm prop này
-  tableOfContentsText?: string;
-  variant?: 'top' | 'bottom';
+  onTableOfContentsClick?: () => void;
 }
 
 export default function ChapterNavigation({
@@ -22,65 +19,64 @@ export default function ChapterNavigation({
   showTableOfContents = false,
   tableOfContentsHref,
   onTableOfContentsClick,
-  tableOfContentsText = 'Mục lục',
-  variant = 'top',
 }: ChapterNavigationProps) {
-  const buttonBaseClass =
-    'flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition';
-  const buttonActiveClass = 'bg-blue-600 text-white hover:bg-blue-700';
-  const buttonDisabledClass = 'bg-gray-700 text-gray-400 cursor-not-allowed';
+  const buttonClass = (disabled: boolean) => `
+    flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
+    ${
+      disabled
+        ? 'border-transparent text-neutral-700 cursor-not-allowed'
+        : 'border-white/10 text-neutral-400 hover:text-white hover:border-white/30 hover:bg-white/5 active:scale-95'
+    }
+  `;
 
-  const previousButtonText = variant === 'top' ? 'Chương trước' : 'Trước';
-  const nextButtonText = variant === 'top' ? 'Chương sau' : 'Sau';
+  const primaryButtonClass = (disabled: boolean) => `
+    flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 shadow-lg
+    ${
+      disabled
+        ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
+        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20 active:scale-95'
+    }
+  `;
 
   return (
-    <nav className="p-4 flex justify-between items-center max-w-3xl mx-auto w-full">
-      {/* Nút Chương trước */}
+    <nav className="flex justify-between items-center w-full">
+      {/* Nút Previous */}
       <button
         onClick={onPrevious}
         disabled={!hasPrevious}
-        className={`${buttonBaseClass} ${
-          !hasPrevious ? buttonDisabledClass : buttonActiveClass
-        }`}
+        className={buttonClass(!hasPrevious)}
         aria-label="Chương trước"
       >
-        <ChevronLeft className="w-5 h-5" />
-        {previousButtonText}
+        <ChevronLeft className="w-4 h-4" />
+        <span className="hidden sm:inline">Chương trước</span>
       </button>
 
-      {/* Hiển thị nút Mục lục hoặc khoảng trống */}
-      {showTableOfContents ? (
-        // Nếu có onTableOfContentsClick thì dùng button, không thì dùng Link
-        onTableOfContentsClick ? (
+      {showTableOfContents &&
+        (onTableOfContentsClick ? (
           <button
             onClick={onTableOfContentsClick}
-            className="px-5 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm font-medium"
+            className="text-neutral-500 hover:text-white transition-colors p-2"
           >
-            {tableOfContentsText}
+            <List size={20} />
           </button>
         ) : (
           <Link
             href={tableOfContentsHref || '#'}
-            className="px-5 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm font-medium"
+            className="text-neutral-500 hover:text-white transition-colors p-2"
           >
-            {tableOfContentsText}
+            <List size={20} />
           </Link>
-        )
-      ) : (
-        <div className="w-20" /> // Spacer để giữ layout cân đối
-      )}
+        ))}
 
-      {/* Nút Chương sau */}
       <button
         onClick={onNext}
         disabled={!hasNext}
-        className={`${buttonBaseClass} ${
-          !hasNext ? buttonDisabledClass : buttonActiveClass
-        }`}
+        className={primaryButtonClass(!hasNext)}
         aria-label="Chương sau"
       >
-        {nextButtonText}
-        <ChevronRight className="w-5 h-5" />
+        <span className="hidden sm:inline">Chương sau</span>
+        <span className="sm:hidden">Tiếp</span>
+        <ChevronRight className="w-4 h-4" />
       </button>
     </nav>
   );
