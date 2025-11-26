@@ -42,7 +42,7 @@ export function ProfileSidebar(props : ProfileNavProps) {
                     Đang theo dõi
                   </h4>
 
-                  <div className="flex -space-x-2">
+                  <div className="flex -space-x-2 gap-3">
                     {topFollowing.map((user) => (
                         <img
                             onClick={() => router.push(`/users/${user.id}`)}

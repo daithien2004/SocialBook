@@ -9,6 +9,10 @@ export interface FollowStateResponse {
 export interface FollowingUser {
     id: string;
     image?: string;
+    username: string;
+    postCount: number,
+    readingListCount: number,
+    followersCount: number,
 }
 
 export const followApi = createApi({
@@ -22,7 +26,20 @@ export const followApi = createApi({
                 method: "GET",
             }),
             transformResponse: (response: FollowingUser[]) => response ?? [],
-            providesTags: (result) => [{ type: "Follow", id: "FOLLOWING_LIST" }],
+            providesTags: () => [
+                { type: "Follow", id: `FOLLOWING_LIST` },
+            ],
+        }),
+
+        getFollowersList: builder.query<FollowingUser[], string>({
+            query: (targetUserId) => ({
+                url: `/follows/followers?targetUserId=${targetUserId}`,
+                method: "GET",
+            }),
+            transformResponse: (response: FollowingUser[]) => response ?? [],
+            providesTags: () => [
+                { type: "Follow", id: `FOLLOWERS_LIST` },
+            ],
         }),
 
         toggleFollow: builder.mutation<FollowStateResponse, string>({
@@ -30,8 +47,8 @@ export const followApi = createApi({
                 url: `/follows/${targetUserId}`,
                 method: "POST",
             }),
-            invalidatesTags: (result, error, targetUserId) => [
-                { type: "Follow", id: targetUserId },
+            invalidatesTags: () => [
+                { type: "Follow", id: `FOLLOWING_LIST` },
             ],
         }),
     }),
@@ -39,5 +56,6 @@ export const followApi = createApi({
 
 export const {
     useToggleFollowMutation,
-    useGetFollowingListQuery
+    useGetFollowingListQuery,
+    useGetFollowersListQuery
 } = followApi

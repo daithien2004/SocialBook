@@ -12,12 +12,14 @@ import {
   Follow,
   FollowDocument,
 } from '@/src/modules/follows/schemas/follow.schema';
+import { UsersService } from '@/src/modules/users/users.service';
 
 @Injectable()
 export class FollowsService {
   constructor(
     @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private userService: UsersService,
   ) {}
 
   async getStatus(currentUserId: string, targetUserId: string) {
@@ -58,11 +60,29 @@ export class FollowsService {
 
     const users = await this.userModel
       .find({ _id: { $in: targetIds } })
-      .select('username image bio') // Select field cần thiết
+      .select('username image bio') // các field cơ bản
       .lean();
 
-    return users;
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const overview = await this.userService.getUserProfileOverview(
+          user._id.toString(),
+        );
+
+        return {
+          _id: user._id,
+          username: user.username,
+          image: user.image,
+          postCount: overview.postCount,
+          readingListCount: overview.readingListCount,
+          followersCount: overview.followersCount,
+        };
+      }),
+    );
+
+    return usersWithStats;
   }
+
 
   async toggle(currentUserId: string, targetUserId: string) {
     if (!Types.ObjectId.isValid(targetUserId)) {
@@ -100,5 +120,66 @@ export class FollowsService {
     if (!exists) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  async getFollowersList(targetUserId: string, currentUserId: string) {
+    if (!targetUserId || !Types.ObjectId.isValid(targetUserId)) {
+      throw new BadRequestException('Target user ID is required');
+    }
+
+    // Lấy tất cả follow mà target là userTarget
+    const follows = await this.followModel
+      .find({ targetId: new Types.ObjectId(targetUserId) })
+      .select('userId')
+      .lean();
+
+    if (!follows.length) return [];
+
+    const followerIds = follows.map((f) => f.userId as Types.ObjectId);
+
+    const users = await this.userModel
+      .find({ _id: { $in: followerIds } })
+      .select('username image bio')
+      .lean();
+
+    let currentUserFollowingSet = new Set<string>();
+
+    if (currentUserId && Types.ObjectId.isValid(currentUserId)) {
+      const currentUserFollows = await this.followModel
+        .find({
+          userId: new Types.ObjectId(currentUserId),
+          targetId: { $in: followerIds },
+        })
+        .select('targetId')
+        .lean();
+
+      currentUserFollowingSet = new Set(
+        currentUserFollows.map((f) => f.targetId.toString()),
+      );
+    }
+
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const overview = await this.userService.getUserProfileOverview(
+          user._id.toString(),
+        );
+
+        const isFollowedByCurrentUser = currentUserFollowingSet.has(
+          user._id.toString(),
+        );
+
+        return {
+          _id: user._id,
+          username: user.username,
+          image: user.image,
+          postCount: overview.postCount,
+          readingListCount: overview.readingListCount,
+          followersCount: overview.followersCount,
+          isFollowedByCurrentUser, // 👈 trạng thái follow của currentUser
+        };
+      }),
+    );
+
+    return usersWithStats;
   }
 }

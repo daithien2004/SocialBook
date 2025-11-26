@@ -29,6 +29,26 @@ export class FollowsController {
     };
   }
 
+  @Get('followers')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getFollowersList(
+    @Req() req: any,
+    @Query('targetUserId') targetUserId: string,
+  ) {
+    const currentUserId = req.user.id;
+
+    const data = await this.followsService.getFollowersList(
+      targetUserId,
+      currentUserId,
+    );
+
+    return {
+      message: 'Get followers list successfully',
+      data,
+    };
+  }
+
   @Get(':targetUserId')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
