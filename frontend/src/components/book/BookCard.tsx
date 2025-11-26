@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Book } from '@/src/features/books/types/book.interface';
-import { Eye, Bookmark, Heart } from 'lucide-react';
+import {Star, ThumbsUp, Bookmark, Eye} from 'lucide-react';
 import Link from 'next/link';
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
 
@@ -20,11 +20,9 @@ export function BookCard({ book }: { book: Book }) {
   const isTrending = book.views > 2000;
 
   const rating =
-    book.views > 0 ? ((book.likes / book.views) * 5).toFixed(1) : '0.0';
+      book.views > 0 ? ((book.likes / book.views) * 5).toFixed(1) : '0.0';
 
   const ratingNum = parseFloat(rating);
-
-  const publishYear = new Date(book.createdAt).getFullYear();
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -38,124 +36,108 @@ export function BookCard({ book }: { book: Book }) {
     setIsModalOpen(true);
   };
 
+  const isPremium = book.status === 'completed';
+
   return (
-    <>
-      <Link href={`/books/${book.slug}`} className="group block h-full">
-        <div className="flex flex-col h-full bg-white overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300">
-          {/* TOP SECTION: IMAGE & RIBBONS */}
-          <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden">
-            {/* Ribbon - Publish Year */}
-            <div className="absolute top-[12px] -left-[28px] w-[100px] transform -rotate-45 bg-[#6A4E5A] text-white text-xs font-bold py-1 text-center shadow-md z-20 pointer-events-none">
-              {publishYear}
-            </div>
+      <>
+        <Link href={`/books/${book.slug}`} className="group block">
+          <div className="flex flex-col min-w-[180px] max-w-[180px] pt-8">
+            <div className="relative">
+              {/* Book Cover - positioned to overlap the background card */}
+              <div className="absolute -top-8 left-3 right-3 z-10">
+                <div className="
+                      relative aspect-[3/4] overflow-hidden
+                      shadow-[0_4px_15px_rgba(0,0,0,0.18),0_0_10px_rgba(0,0,0,0.05)]
+                      ring-1 ring-black/5
+                      transition-all duration-300
+                      group-hover:scale-[1.03] group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.25)]
+                    ">
+                  <img
+                      src={book.coverUrl}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                  />
 
-            {/* Add to Library Button - Top Left */}
-            <button
-              onClick={handleAddToLibrary}
-              title="Thêm vào thư viện"
-              className="absolute top-3 left-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-gray-600 hover:text-blue-600 hover:bg-white transition-all opacity-0 translate-y-[-10px] group-hover:opacity-100 group-hover:translate-y-0 duration-300 z-10"
-            >
-              <Bookmark size={18} />
-            </button>
+                  {/* Badges - Top Right */}
+                  <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                    {isPremium && (
+                        <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                                fill="currentColor"
+                            />
+                          </svg>
+                          Full
+                        </div>
+                    )}
+                    {isNew() && (
+                        <span className="bg-[#0f5132] text-white text-xs font-medium px-2 py-1 rounded-md shadow-sm">
+                      New
+                    </span>
+                    )}
+                    {isTrending && (
+                        <span className="bg-red-600 text-white text-xs font-medium px-2 py-1 rounded-md shadow-sm">
+                      Hot
+                    </span>
+                    )}
+                  </div>
 
-            {/* Book Cover Image */}
-            <div className="w-full h-full transition-transform duration-700 group-hover:scale-105">
-              <img
-                src={book.coverUrl}
-                alt={book.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            {/* Dark overlay on hover */}
-            <div className="absolute inset-0 bg-black opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
-
-            {/* Badges - Top Right */}
-            <div className="absolute top-4 right-0 flex flex-col items-end gap-1 z-10">
-              {isNew() && (
-                <span className="bg-[#0f5132] text-white text-xs font-medium px-3 py-1 shadow-sm">
-                  New
-                </span>
-              )}
-              {isTrending && (
-                <span className="bg-red-600 text-white text-xs font-medium px-3 py-1 shadow-sm">
-                  Hot
-                </span>
-              )}
-              {book.status === 'completed' && (
-                <span className="bg-blue-600 text-white text-xs font-medium px-3 py-1 shadow-sm">
-                  Full
-                </span>
-              )}
-            </div>
-
-            {/* Add to Library Button - Bottom Right */}
-            <button
-              onClick={handleAddToLibrary}
-              title="Thêm vào thư viện"
-              className="absolute bottom-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-gray-600 hover:text-[#6A4E5A] hover:bg-white transition-all opacity-0 translate-y-[10px] group-hover:opacity-100 group-hover:translate-y-0 duration-300 z-20"
-            >
-              <Bookmark size={18} />
-            </button>
-          </div>
-
-          {/* BOTTOM SECTION: INFO */}
-          <div className="flex flex-col p-5 flex-grow border-t border-gray-50">
-            {/* Genre Tag */}
-            <div className="mb-3">
-              <span className="inline-block bg-[#FAE3C6] text-[#5A3A2A] text-[11px] font-bold px-2 py-1 rounded-sm uppercase tracking-wider">
-                {book.genres.length > 0 ? book.genres[0].name : 'Book'}
-              </span>
-            </div>
-
-            {/* Title */}
-            <h3 className="text-lg font-bold text-[#6A4E5A] leading-tight mb-1 group-hover:text-[#8a6575] transition-colors line-clamp-2">
-              {book.title}
-            </h3>
-
-            {/* Author */}
-            <p className="text-[15px] text-gray-900 font-normal mb-4 line-clamp-1">
-              {book.authorId.name}
-            </p>
-
-            {/* Genres List */}
-            <div className="flex flex-wrap gap-2 mb-3 opacity-60 text-[10px] uppercase tracking-wide text-gray-500">
-              {book.genres
-                .slice(0, 2)
-                .map((g) => g.name)
-                .join(' • ')}
-            </div>
-
-            {/* Bottom Row: Rating & Stats */}
-            <div className="flex items-center justify-between mt-auto">
-              <div className="flex flex-col">
-                <span className="text-orange-600 font-bold text-lg">
-                  {ratingNum > 0 ? rating : 'N/A'}
-                </span>
-                <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
-                  <span className="flex items-center gap-0.5">
-                    <Eye size={10} /> {formatNumber(book.views)}
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Heart size={10} /> {formatNumber(book.likes)}
-                  </span>
+                  {/* Add to Library Button - appears on hover */}
+                  <button
+                      onClick={handleAddToLibrary}
+                      title="Thêm vào thư viện"
+                      className="absolute bottom-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md text-gray-600 hover:text-[#6A4E5A] transition-all opacity-0 group-hover:opacity-100 z-20"
+                  >
+                    <Bookmark size={16} />
+                  </button>
                 </div>
               </div>
 
-              <button className="px-6 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-700 hover:border-gray-900 hover:text-gray-900 transition-all">
-                Read
-              </button>
+              {/* Background Card */}
+              <div className="bg-[#f5efe6] rounded-t-xl pt-[50px] mt-32 pb-4 px-3 transition-shadow duration-300 group-hover:shadow-md">
+                {/* Book Info */}
+                <div className="mt-3">
+                  {/* Genre Tag */}
+                  <div className="mb-2">
+                  <span className="inline-block bg-[#FAE3C6] text-[#5A3A2A] text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">
+                    {book.genres.length > 0 ? book.genres[0].name : 'Book'}
+                  </span>
+                  </div>
+
+                  {/* Author */}
+                  <p className="text-[#888888] font-sans text-xs mb-1 truncate">{book.authorId.name}</p>
+
+                  {/* Title */}
+                  <h3 className="text-[#333333] font-sans text-sm font-semibold leading-tight mb-2 line-clamp-2 min-h-[40px] group-hover:text-[#6A4E5A] transition-colors">
+                    {book.title}
+                  </h3>
+
+                  {/* Views and Likes */}
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-4 h-4" />
+                      <span className="text-[#555555] font-medium">
+                      {formatNumber(book.views)}
+                    </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ThumbsUp className="w-4 h-4 text-[#888888]" />
+                      <span className="text-[#555555]">{formatNumber(book.likes)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </Link>
+        </Link>
 
-      {/* Modal - Outside Link to avoid nesting issues */}
-      <AddToLibraryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        bookId={book.id}
-      />
-    </>
+        {/* Modal - Outside Link to avoid nesting issues */}
+        <AddToLibraryModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            bookId={book.id}
+        />
+      </>
   );
 }

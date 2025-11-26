@@ -6,10 +6,11 @@ import { BookCard } from './BookCard';
 interface BookSectionProps {
   title: string;
   books: Book[];
-  // Loại bỏ icon và iconColor để đúng style tối giản của ảnh
+  description?: string;
+  icon?: React.ReactNode;
 }
 
-export function BookSection({ title, books }: BookSectionProps) {
+export function BookSection({ title, books, description, icon }: BookSectionProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -20,9 +21,8 @@ export function BookSection({ title, books }: BookSectionProps) {
       // Cho phép sai số 10px để tránh lỗi làm tròn số trên một số màn hình
       setCanScrollLeft(container.scrollLeft > 0);
       setCanScrollRight(
-        container.scrollLeft <
-          container.scrollWidth - container.clientWidth - 10
-      );
+          container.scrollLeft < container.scrollWidth - container.clientWidth - 10
+    );
     }
   };
 
@@ -45,70 +45,97 @@ export function BookSection({ title, books }: BookSectionProps) {
   const scroll = (direction: 'left' | 'right') => {
     const container = containerRef.current;
     if (container) {
-      // Scroll khoảng 1/2 chiều rộng màn hình hoặc cố định
-      const scrollAmount =
-        direction === 'left'
-          ? -(container.clientWidth / 2)
-          : container.clientWidth / 2;
-
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      const scrollAmount = 400;
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
     }
   };
 
   if (!books || books.length === 0) return null;
 
+  // Default icon nếu không được truyền vào
+  const defaultIcon = (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+            d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path d="M12 6v7" stroke="white" strokeWidth="2" strokeLinecap="round" />
+        <path d="M9 9l3-3 3 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+  );
+
   return (
-    <section className="py-2  border-b border-gray-100/50">
-      {/* 1. Header Section: Minimal & Centered */}
-      <div className="text-center mb-10">
-        <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#1a1a1a] relative inline-block">
-          {title}
-          {/* Đường gạch chân trang trí nhỏ (optional) */}
-          {/* <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-12 h-1 bg-gray-200 rounded-full"></span> */}
-        </h2>
-      </div>
+      <section className="w-full max-w-6xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start gap-3">
+            {/* Icon */}
+            <div className="w-12 h-12 bg-[#2d8653] rounded-lg flex items-center justify-center flex-shrink-0">
+              {icon || defaultIcon}
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-[#333333]">{title}</h2>
+              {description && (
+                  <p className="text-[#888888] text-sm mt-1">
+                    {description}
+                  </p>
+              )}
+            </div>
+          </div>
 
-      {/* 2. Books Container Wrapper */}
-      <div className="relative group px-4 md:px-8">
-        {/* Left Navigation Button - Floating */}
-        {canScrollLeft && (
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm border border-gray-200 p-3 rounded-full shadow-lg text-gray-800 hover:bg-gray-50 hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 translate-x-[-50%] md:translate-x-0"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft size={24} strokeWidth={1.5} />
-          </button>
-        )}
+          {/* Navigation Arrows */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+                onClick={() => scroll('left')}
+                disabled={!canScrollLeft}
+                className={`w-10 h-10 rounded-full border border-[#e0e0e0] flex items-center justify-center hover:bg-[#f5f5f5] transition-colors ${
+                    !canScrollLeft ? 'opacity-40 cursor-not-allowed' : ''
+                }`}
+                aria-label="Scroll left"
+            >
+              <ChevronLeft className="w-5 h-5 text-[#666666]" />
+            </button>
+            <button
+                onClick={() => scroll('right')}
+                disabled={!canScrollRight}
+                className={`w-10 h-10 rounded-full border border-[#e0e0e0] flex items-center justify-center hover:bg-[#f5f5f5] transition-colors ${
+                    !canScrollRight ? 'opacity-40 cursor-not-allowed' : ''
+                }`}
+                aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-[#666666]" />
+            </button>
+          </div>
+        </div>
 
-        {/* Right Navigation Button - Floating */}
-        {canScrollRight && (
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm border border-gray-200 p-3 rounded-full shadow-lg text-gray-800 hover:bg-gray-50 hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 focus:opacity-100 translate-x-[50%] md:translate-x-0"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={24} strokeWidth={1.5} />
-          </button>
-        )}
-
-        {/* Scrollable Area */}
+        {/* Books Carousel */}
         <div
-          ref={containerRef}
-          className="flex gap-6 md:gap-8 overflow-x-auto pb-8 pt-2 px-2 scrollbar-hide scroll-smooth"
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
+            ref={containerRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
         >
           {books.map((book) => (
-            // Định chiều rộng cố định cho card để đảm bảo đều nhau
-            <div key={book.id} className="flex-none w-[200px] md:w-[240px]">
-              <BookCard book={book} />
-            </div>
+              <div key={book.id} className="flex-none">
+                <BookCard book={book} />
+              </div>
           ))}
         </div>
-      </div>
-    </section>
+      </section>
   );
 }
