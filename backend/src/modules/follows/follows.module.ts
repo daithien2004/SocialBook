@@ -5,10 +5,12 @@ import { Follow, FollowSchema } from './schemas/follow.schema';
 import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
 import { FollowsService } from '@/src/modules/follows/follows.service';
 import { FollowsController } from '@/src/modules/follows/follows.controller';
+import { UsersModule } from '@/src/modules/users/users.module';
 
 
 @Module({
   imports: [
+    UsersModule,
     MongooseModule.forFeature([
       { name: Follow.name, schema: FollowSchema },
       { name: User.name, schema: UserSchema },

@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
       params: { page, limit },
     });
 
-    console.log(response.data);
-
     return NextResponse.json(response.data);
   } catch (error: any) {
     return NextResponse.json(

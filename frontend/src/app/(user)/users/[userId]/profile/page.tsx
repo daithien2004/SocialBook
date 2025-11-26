@@ -77,10 +77,7 @@ const UserProfilePage = () => {
 
             console.log("Avatar updated:", res);
 
-            // Reset UI
             handleCancelAvatar();
-            // TODO: nếu có toast:
-            // toast.success("Cập nhật ảnh đại diện thành công");
         } catch (err: any) {
             console.error(getErrorMessage(err));
             // toast.error(getErrorMessage(err));
@@ -90,7 +87,6 @@ const UserProfilePage = () => {
     };
 
 
-    // 1) đồng bộ form khi overview đổi
     useEffect(() => {
         if (!overview) return;
         setForm({
@@ -101,7 +97,6 @@ const UserProfilePage = () => {
         });
     }, [overview]);
 
-    // 2) isDirty: chỉ so sánh 3 field bạn update
     const isDirty = useMemo(() => {
         if (!overview) return false;
         return (

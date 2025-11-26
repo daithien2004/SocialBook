@@ -148,10 +148,12 @@
   --font-gelasio: "Gelasio", serif;
   --font-inter: "Inter", sans-serif;
   --font-montserrat: "Montserrat", sans-serif;
+  --font-notosans: "Noto Sans", sans-serif;  /* 👈 NEW */
 }
 
 @theme {
   --font-serif: var(--font-gelasio);
   --font-sans: var(--font-inter);
   --font-display: var(--font-montserrat);
+  --font-notosans: var(--font-notosans);  /* 👈 override */
 }
