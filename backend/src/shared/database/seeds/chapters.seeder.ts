@@ -20,11 +20,9 @@ export class ChaptersSeed {
     try {
       this.logger.log('🌱 Seeding chapters...');
 
-      const existingChapters = await this.chapterModel.countDocuments();
-      if (existingChapters > 0) {
-        this.logger.log('⏭️  Chapters already exist, skipping...');
-        return;
-      }
+      // Xóa chapters cũ để seed mới
+      await this.chapterModel.deleteMany({});
+      this.logger.log('🗑️  Cleared existing chapters');
 
       const books = await this.bookModel.find().limit(3);
       if (books.length === 0) {
@@ -34,73 +32,57 @@ export class ChaptersSeed {
 
       const chapters: any[] = []; // 👈 Đổi sang any[] để tránh type error khi seed
 
+      // Helper để tạo nội dung dài
+      const generateParagraphs = (count: number) => {
+        const baseParagraphs = [
+          "The morning sun filtered through the dense canopy of the ancient forest, casting dappled shadows on the mossy ground. Birds sang their melodious songs, unaware of the looming danger that threatened their peaceful existence.",
+          "In the distance, the sound of a rushing river could be heard, its waters cold and clear as they flowed from the snow-capped mountains. Ideally, one would stop to admire such beauty, but time was of the essence.",
+          "She tightened her grip on the worn leather strap of her satchel. Inside lay the map that had been passed down through generations, a map that promised to lead them to the lost city of Aethelgard.",
+          "He looked at her with concern in his eyes. 'Are you sure about this?' he asked, his voice barely a whisper. 'There's no turning back once we cross the bridge.'",
+          "The wind howled as they ascended the steep path. The air grew thinner, and every breath became a struggle. Yet, they pressed on, driven by a purpose greater than themselves.",
+          "Suddenly, a rustle in the bushes made them freeze. Hands instinctively went to hilts of swords and daggers. Silence descended upon the clearing, heavy and expectant.",
+          "It was just a rabbit, scurrying away in fear. They let out a collective sigh of relief, though the tension remained. The forest had eyes, and they knew they were being watched.",
+          "Night fell rapidly, wrapping the world in a blanket of stars. They set up camp in a small cave, the fire crackling and popping as it provided much-needed warmth and light.",
+          "Dreams that night were filled with visions of fire and shadow. A prophecy spoken long ago was beginning to unfold, and they were the key to its fulfillment or its prevention.",
+          "As dawn broke, painting the sky in hues of orange and pink, they packed their meager belongings. The journey ahead was long, but hope burned bright in their hearts."
+        ];
+        
+        return Array.from({ length: count }, (_, index) => ({
+          content: `${baseParagraphs[index % baseParagraphs.length]} (Paragraph ${index + 1})`
+        }));
+      };
+
       // Chapters cho book đầu tiên
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= 10; i++) {
         chapters.push({
           bookId: books[0]._id,
           title: `Chapter ${i}: The Beginning of Adventure`,
           slug: `chapter-${i}-the-beginning-of-adventure`,
-          paragraphs: [
-            {
-              content: `This is the first paragraph of chapter ${i}. The story begins with our hero embarking on an unexpected journey that will change their life forever.`,
-            },
-            {
-              content: `As they ventured deeper into the unknown, mysteries began to unfold. Each step brought new challenges and discoveries that tested their courage and determination.`,
-            },
-            {
-              content: `The landscape transformed around them, revealing ancient secrets and hidden powers. What started as a simple quest was becoming something far greater than anyone could have imagined.`,
-            },
-            {
-              content: `With newfound allies and growing wisdom, our hero pressed onward. The path ahead was uncertain, but their resolve had never been stronger.`,
-            },
-          ],
+          paragraphs: generateParagraphs(50), // 50 đoạn văn
           viewsCount: Math.floor(Math.random() * 10000) + 5000,
           orderIndex: i,
         });
       }
 
       // Chapters cho book thứ hai
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= 10; i++) {
         chapters.push({
           bookId: books[1]._id,
           title: `Chapter ${i}: Shadows and Intrigue`,
           slug: `chapter-${i}-shadows-and-intrigue`,
-          paragraphs: [
-            {
-              content: `In the halls of power, plots were being woven like intricate tapestries. Every word spoken carried weight, every glance held meaning.`,
-            },
-            {
-              content: `Whispers of betrayal echoed through the stone corridors. Trust was a rare commodity in this world where alliances shifted like sand in the wind.`,
-            },
-            {
-              content: `As winter approached, the game of thrones intensified. Noble houses maneuvered for position, each seeking advantage over their rivals.`,
-            },
-          ],
+          paragraphs: generateParagraphs(40), // 40 đoạn văn
           viewsCount: Math.floor(Math.random() * 10000) + 5000,
           orderIndex: i,
         });
       }
 
       // Chapters cho book thứ ba
-      for (let i = 1; i <= 3; i++) {
+      for (let i = 1; i <= 10; i++) {
         chapters.push({
           bookId: books[2]._id,
           title: `Chapter ${i}: Descent into Darkness`,
           slug: `chapter-${i}-descent-into-darkness`,
-          paragraphs: [
-            {
-              content: `The isolation was complete. Outside, snow fell in heavy sheets, cutting them off from the world. Inside, something ancient stirred.`,
-            },
-            {
-              content: `Strange sounds echoed through empty corridors at night. Shadows moved where no shadows should be. The building itself seemed alive with malevolent intent.`,
-            },
-            {
-              content: `Reality began to blur at the edges. What was real and what was imagination? The line between sanity and madness grew thinner with each passing day.`,
-            },
-            {
-              content: `Fear took root and grew. There was no escape from this place, no refuge from the darkness that hunted them. They could only endure and hope to survive.`,
-            },
-          ],
+          paragraphs: generateParagraphs(60), // 60 đoạn văn
           viewsCount: Math.floor(Math.random() * 10000) + 5000,
           orderIndex: i,
         });

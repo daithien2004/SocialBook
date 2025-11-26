@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-@Schema({ timestamps: true }) 
+export type ReviewDocument = HydratedDocument<Review>;
+
+@Schema({ timestamps: true })
 export class Review {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
@@ -23,12 +25,13 @@ export class Review {
   @Prop({ type: Number, default: 0 })
   likesCount: number;
 
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  likedBy: Types.ObjectId[];
+
   @Prop({ type: Boolean, default: false })
   verifiedPurchase: boolean;
-
 }
 
-export type ReviewDocument = HydratedDocument<Review>;
 export const ReviewSchema = SchemaFactory.createForClass(Review);
 
 ReviewSchema.virtual('id').get(function () {

@@ -1,4 +1,3 @@
-// components/CommentSection.tsx
 'use client';
 
 import { useState } from 'react';
@@ -39,9 +38,8 @@ export default function CommentSection({
 
     setIsSubmitting(true);
     try {
-      // Ưu tiên gọi API tạo comment như ModalPostComment
       await createComment({
-        targetType: 'chapter', // 🔴 logic chapter
+        targetType: 'chapter',
         targetId,
         content: trimmed,
         parentId: null,
@@ -54,31 +52,31 @@ export default function CommentSection({
   };
 
   return (
-    <section
-      className={`max-w-3xl mx-auto w-full p-6 bg-white border-t border-gray-200 rounded-b ${className}`}
-    >
-      {/* Header */}
-      <h2 className="text-lg font-semibold mb-4 text-gray-900 flex items-center gap-2">
-        <MessageCircle className="w-5 h-5 text-blue-600" />
-        Bình luận ({comments.length})
-      </h2>
+    <section className={`w-full pt-10 border-t border-white/5 ${className}`}>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-2 bg-blue-500/10 rounded-lg">
+          <MessageCircle className="w-5 h-5 text-blue-400" />
+        </div>
+        <h2 className="text-xl font-bold text-neutral-200">
+          Thảo luận chương ({comments.length})
+        </h2>
+      </div>
 
-      {/* Danh sách bình luận */}
-      <div className="space-y-4">
+      <div className="mb-10 bg-neutral-900/50 p-4 rounded-xl border border-white/5">
+        <CommentInput
+          placeholder="Bạn nghĩ gì về chương này?..."
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
+      </div>
+
+      <div className="space-y-6">
         <ListComments
           targetId={targetId}
           isCommentOpen={true}
           parentId={null}
           targetType={'chapter'}
-        />
-      </div>
-
-      {/* Form nhập bình luận */}
-      <div className="mt-6">
-        <CommentInput
-          placeholder="Viết bình luận của bạn..."
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
+          theme="dark"
         />
       </div>
     </section>

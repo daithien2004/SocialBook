@@ -72,6 +72,7 @@ export const NESTJS_REVIEWS_ENDPOINTS = {
   getByBook: (bookId: string) => `/reviews/book/${bookId}`,
   update: (id: string) => `/reviews/${id}`,
   delete: (id: string) => `/reviews/${id}`,
+  toggleLike: (id: string) => `/reviews/${id}/like`,
 };
 
 export const NESTJS_LIBRARY_ENDPOINTS = {

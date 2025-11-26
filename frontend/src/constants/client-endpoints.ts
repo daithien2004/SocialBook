@@ -61,6 +61,7 @@ export const BFF_REVIEWS_ENDPOINTS = {
   getByBook: (bookId: string) => `/reviews/book/${bookId}`,
   update: (id: string) => `/reviews/${id}`,
   delete: (id: string) => `/reviews/${id}`,
+  toggleLike: (id: string) => `/reviews/${id}/like`,
 };
 
 export const BFF_LIBRARY_ENDPOINTS = {

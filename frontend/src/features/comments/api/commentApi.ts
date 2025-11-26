@@ -47,6 +47,7 @@ export interface CommentItem {
     content: string;
     createdAt: string;
     likesCount: number;
+    isLiked: boolean;
     repliesCount: number;
     parentId: string | null,
     userId: {

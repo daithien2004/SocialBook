@@ -62,6 +62,20 @@ export const reviewApi = createApi({
         { type: 'Review', id: `LIST_${bookId}` },
       ],
     }),
+
+    toggleLikeReview: builder.mutation<
+      { likesCount: number; isLiked: boolean },
+      { id: string; bookId: string }
+    >({
+      query: ({ id }) => ({
+        url: BFF_REVIEWS_ENDPOINTS.toggleLike(id),
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, { id, bookId }) => [
+        { type: 'Review', id },
+        { type: 'Review', id: `LIST_${bookId}` },
+      ],
+    }),
   }),
 });
 
@@ -70,4 +84,5 @@ export const {
   useCreateReviewMutation,
   useUpdateReviewMutation,
   useDeleteReviewMutation,
+  useToggleLikeReviewMutation,
 } = reviewApi;

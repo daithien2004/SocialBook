@@ -7,6 +7,7 @@ export interface Review {
   content: string;
   rating: number;
   likesCount: number;
+  isLiked?: boolean;
   verifiedPurchase: boolean;
   createdAt: string;
   updatedAt: string;

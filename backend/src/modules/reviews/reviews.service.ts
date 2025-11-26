@@ -19,7 +19,7 @@ export class ReviewsService {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
   ) {}
 
-  async findAllByBook(bookId: string) {
+  async findAllByBook(bookId: string, userId?: string) {
     if (!Types.ObjectId.isValid(bookId)) {
       throw new BadRequestException('Invalid Book ID');
     }
@@ -29,6 +29,13 @@ export class ReviewsService {
       .populate('userId', 'username image email')
       .sort({ createdAt: -1 })
       .lean();
+
+    if (userId) {
+      return reviews.map((review) => ({
+        ...review,
+        isLiked: review.likedBy?.some((id) => id.toString() === userId),
+      }));
+    }
 
     return reviews;
   }
@@ -114,5 +121,29 @@ export class ReviewsService {
     await this.reviewModel.findByIdAndDelete(id);
 
     return { success: true };
+  }
+
+  async toggleLike(reviewId: string, userId: string) {
+    if (!Types.ObjectId.isValid(reviewId))
+      throw new BadRequestException('Invalid Review ID');
+
+    const review = await this.reviewModel.findById(reviewId);
+    if (!review) throw new NotFoundException('Review not found');
+
+    const uid = new Types.ObjectId(userId);
+    const isLiked = review.likedBy?.some((id) => id.equals(uid));
+
+    const update = isLiked
+      ? { $pull: { likedBy: uid }, $inc: { likesCount: -1 } }
+      : { $addToSet: { likedBy: uid }, $inc: { likesCount: 1 } };
+
+    const updatedReview = await this.reviewModel
+      .findByIdAndUpdate(reviewId, update, { new: true })
+      .select('likesCount likedBy');
+
+    return {
+      likesCount: updatedReview?.likesCount,
+      isLiked: !isLiked,
+    };
   }
 }
