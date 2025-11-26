@@ -61,3 +61,34 @@ export interface GrowthMetric {
     books: number;
     posts: number;
 }
+
+// ============ Advanced Analytics DTOs ============
+
+export interface ReadingHeatmapData {
+    hour: number; // 0-23
+    count: number; // Number of reading activities
+}
+
+export interface ChapterEngagementData {
+    chapterId: string;
+    chapterTitle: string;
+    bookTitle: string;
+    viewCount: number;
+    completionRate: number; // Percentage
+    averageTimeSpent: number; // in seconds
+}
+
+export interface ReadingSpeedData {
+    date: string;
+    averageSpeed: number; // words per minute
+}
+
+export interface GeographicData {
+    country: string;
+    userCount: number;
+}
+
+export interface ActiveUsersData {
+    count: number;
+    timestamp: string;
+}

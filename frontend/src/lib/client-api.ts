@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
+import { toast } from 'sonner';
 
 // Client chỉ gọi Next.js API routes (BFF)
 const clientApi = axios.create({
@@ -32,43 +33,53 @@ export const axiosBaseQuery =
     unknown,
     { status: number; data: ErrorResponseDto }
   > =>
-  async ({ url, method = 'GET', body, headers, params }) => {
-    try {
-      const result = await clientApi({
-        url,
-        method,
-        data: body,
-        headers,
-        params,
-      });
+    async ({ url, method = 'GET', body, headers, params }) => {
+      try {
+        const result = await clientApi({
+          url,
+          method,
+          data: body,
+          headers,
+          params,
+        });
 
-      const responseData = result.data as ResponseDto<unknown>;
-      if (!responseData.success) {
+        const responseData = result.data as ResponseDto<unknown>;
+        if (!responseData.success) {
+          return {
+            error: {
+              status: responseData.statusCode,
+              data: responseData as any,
+            },
+          };
+        }
+
+        return { data: responseData.data };
+      } catch (axiosError) {
+        const err = axiosError as AxiosError<ErrorResponseDto>;
+        const status = err.response?.status || 500;
+
+        // Xử lý lỗi 401 (Unauthorized)
+        if (status === 401) {
+          toast.error('Vui lòng đăng nhập để tiếp tục');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 1500);
+        }
+
         return {
           error: {
-            status: responseData.statusCode,
-            data: responseData as any,
+            status,
+            data: err.response?.data || {
+              success: false,
+              statusCode: status,
+              message: err.message,
+              error: 'Client Error',
+              timestamp: new Date().toISOString(),
+              path: url,
+            },
           },
         };
       }
-
-      return { data: responseData.data };
-    } catch (axiosError) {
-      const err = axiosError as AxiosError<ErrorResponseDto>;
-      return {
-        error: {
-          status: err.response?.status || 500,
-          data: err.response?.data || {
-            success: false,
-            statusCode: err.response?.status || 500,
-            message: err.message,
-            error: 'Client Error',
-            timestamp: new Date().toISOString(),
-            path: url,
-          },
-        },
-      };
-    }
-  };
+    };
 
 export default clientApi;

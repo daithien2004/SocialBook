@@ -6,6 +6,7 @@ import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, Log
 
 const navItems = [
   { name: 'Dashboard', icon: Home, href: '/admin/dashboard' },
+  { name: 'Analytics', icon: BarChart2, href: '/admin/analytics' },
   { name: 'Users', icon: Users, href: '/admin/users' },
   { name: 'Books', icon: BookOpen, href: '/admin/books' },
   { name: 'Posts', icon: FileText, href: '/admin/posts' },

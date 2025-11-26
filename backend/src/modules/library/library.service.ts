@@ -20,7 +20,7 @@ export class LibraryService {
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
-  ) {}
+  ) { }
 
   async getSystemLibrary(userId: string, status: ReadingStatus) {
     return this.readingListModel
@@ -62,6 +62,10 @@ export class LibraryService {
     const bookObjectId = new Types.ObjectId(bookId);
     const chapterObjectId = new Types.ObjectId(chapterId);
 
+    // Consider chapter completed if progress >= 20%
+    const progressValue = progress || 0;
+    const status = progressValue >= 60 ? 'completed' : 'reading';
+
     const [updatedProgress, updatedReadingList] = await Promise.all([
       this.progressModel
         .findOneAndUpdate(
@@ -70,7 +74,8 @@ export class LibraryService {
             userId: userObjectId,
             bookId: bookObjectId,
             chapterId: chapterObjectId,
-            progress: progress || 0,
+            progress: progressValue,
+            status, // Auto-set based on progress
             lastReadAt: new Date(),
           },
           { upsert: true, new: true },

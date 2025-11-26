@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { OverviewStats, GrowthMetric } from '../types/dashboard.types';
 import { toast } from 'sonner';
+import { ViewType } from '@/src/components/admin/ViewTypeSelector';
 
-export function useDashboardData(timeRange: string) {
+export function useDashboardData(timeRange: string, viewType: ViewType = 'day') {
     const [stats, setStats] = useState<OverviewStats | null>(null);
     const [growthData, setGrowthData] = useState<GrowthMetric[]>([]);
     const [loading, setLoading] = useState(true);
@@ -10,7 +11,7 @@ export function useDashboardData(timeRange: string) {
 
     useEffect(() => {
         fetchDashboardData();
-    }, [timeRange]);
+    }, [timeRange, viewType]);
 
     const fetchDashboardData = async () => {
         try {
@@ -19,7 +20,7 @@ export function useDashboardData(timeRange: string) {
 
             const [overviewRes, growthRes] = await Promise.all([
                 fetch('/api/admin/statistics/overview'),
-                fetch(`/api/admin/statistics/growth?days=${timeRange}`),
+                fetch(`/api/admin/statistics/growth?days=${timeRange}&groupBy=${viewType}`),
             ]);
 
             if (!overviewRes.ok || !growthRes.ok) {

@@ -7,15 +7,34 @@ import { Users, BookOpen, FileText, MessageSquare, BarChart2, Download } from 'l
 import { StatCard } from '@/src/components/admin/StatCard';
 import { UserGrowthChart } from '@/src/components/admin/UserGrowthChart';
 import { TimeRangeSelector } from '@/src/components/admin/TimeRangeSelector';
+import { ViewTypeSelector, ViewType } from '@/src/components/admin/ViewTypeSelector';
 import { useDashboardData, useExportStatistics } from '@/src/features/admin/hooks/useDashboard';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [viewType, setViewType] = useState<ViewType>('day');
   const [timeRange, setTimeRange] = useState('30');
 
-  const { stats, growthData, loading, error, refetch } = useDashboardData(timeRange);
+  const { stats, growthData, loading, error, refetch } = useDashboardData(timeRange, viewType);
   const { exportCSV, exporting } = useExportStatistics();
+
+  // Reset time range when view type changes
+  const handleViewTypeChange = (newViewType: ViewType) => {
+    setViewType(newViewType);
+    // Set appropriate default time range for new view type
+    switch (newViewType) {
+      case 'day':
+        setTimeRange('30');
+        break;
+      case 'month':
+        setTimeRange('180'); // 6 months
+        break;
+      case 'year':
+        setTimeRange('1095'); // 3 years
+        break;
+    }
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -67,7 +86,8 @@ export default function AdminDashboard() {
           <p className="text-gray-600">Welcome back, {session?.user?.username}!</p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+          <ViewTypeSelector value={viewType} onChange={handleViewTypeChange} />
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} viewType={viewType} />
           <button
             onClick={() => exportCSV(timeRange)}
             disabled={exporting}
@@ -161,7 +181,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Growth Chart */}
-      {growthData.length > 0 && <UserGrowthChart data={growthData} />}
+      {growthData.length > 0 && <UserGrowthChart data={growthData} viewType={viewType} timeRange={timeRange} />}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">

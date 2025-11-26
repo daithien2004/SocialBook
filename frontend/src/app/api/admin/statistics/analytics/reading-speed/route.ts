@@ -1,0 +1,26 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
+
+export async function GET(request: NextRequest) {
+    try {
+        const searchParams = request.nextUrl.searchParams;
+        const days = searchParams.get('days') || '30';
+
+        const api = await getAuthenticatedServerApi();
+        const response = await api.get('/statistics/analytics/reading-speed', {
+            params: { days },
+        });
+
+        return NextResponse.json(response.data);
+    } catch (error: any) {
+        console.error('GET /api/admin/statistics/analytics/reading-speed error:', error.response?.data || error);
+        return NextResponse.json(
+            error.response?.data || {
+                success: false,
+                statusCode: error.response?.status || 500,
+                message: error.message || 'Internal server error',
+            },
+            { status: error.response?.status || 500 }
+        );
+    }
+}

@@ -37,6 +37,11 @@ export const ProgressSchema = SchemaFactory.createForClass(Progress);
 // INDEX: Mỗi User chỉ có 1 record progress cho 1 Chapter
 ProgressSchema.index({ userId: 1, chapterId: 1 }, { unique: true });
 
+// INDEX: Phân tích thời gian đọc sách
+ProgressSchema.index({ lastReadAt: 1 });
+ProgressSchema.index({ userId: 1, lastReadAt: -1 });
+ProgressSchema.index({ bookId: 1, lastReadAt: -1 });
+
 // Virtual id
 ProgressSchema.virtual('id').get(function () {
   return this._id.toString();
