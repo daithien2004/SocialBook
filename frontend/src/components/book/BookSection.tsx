@@ -1,16 +1,19 @@
 import { Book } from '@/src/features/books/types/book.interface';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Hash } from 'lucide-react';
+import { useRef, useState, useEffect, ElementType } from 'react';
 import { BookCard } from './BookCard';
 
 interface BookSectionProps {
-  title: string;
   books: Book[];
   description?: string;
-  icon?: React.ReactNode;
+  icon?: ElementType;
 }
 
-export function BookSection({ title, books, description, icon }: BookSectionProps) {
+export function BookSection({
+  books,
+  description,
+  icon,
+}: BookSectionProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -18,11 +21,11 @@ export function BookSection({ title, books, description, icon }: BookSectionProp
   const checkScroll = () => {
     const container = containerRef.current;
     if (container) {
-      // Cho phép sai số 10px để tránh lỗi làm tròn số trên một số màn hình
       setCanScrollLeft(container.scrollLeft > 0);
       setCanScrollRight(
-          container.scrollLeft < container.scrollWidth - container.clientWidth - 10
-    );
+        container.scrollLeft <
+          container.scrollWidth - container.clientWidth - 10
+      );
     }
   };
 
@@ -30,9 +33,7 @@ export function BookSection({ title, books, description, icon }: BookSectionProp
     const container = containerRef.current;
     if (container) {
       container.addEventListener('scroll', checkScroll);
-      // Check ngay lần đầu mount
       checkScroll();
-      // Check lại khi window resize
       window.addEventListener('resize', checkScroll);
 
       return () => {
@@ -55,87 +56,80 @@ export function BookSection({ title, books, description, icon }: BookSectionProp
 
   if (!books || books.length === 0) return null;
 
-  // Default icon nếu không được truyền vào
-  const defaultIcon = (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-            d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-        <path
-            d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        />
-        <path d="M12 6v7" stroke="white" strokeWidth="2" strokeLinecap="round" />
-        <path d="M9 9l3-3 3 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-  );
+  // Icon mặc định nếu không truyền vào
+  const SectionIcon = icon || Hash;
 
   return (
-      <section className="w-full max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-start gap-3">
-            {/* Icon */}
-            <div className="w-12 h-12 bg-[#2d8653] rounded-lg flex items-center justify-center flex-shrink-0">
-              {icon || defaultIcon}
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-[#333333]">{title}</h2>
-              {description && (
-                  <p className="text-[#888888] text-sm mt-1">
-                    {description}
-                  </p>
-              )}
+    <section className="w-full mx-auto px-4 py-8 border-t border-gray-100 first:border-t-0">
+      {/* Header Area - Editorial Style */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+        <div className="flex-1">
+          {/* Decorative Top Label - Mono font giống BookCard */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-gray-400">
+              <SectionIcon className="w-3 h-3" />
+              <span>Collection</span>
             </div>
           </div>
 
-          {/* Navigation Arrows */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-                onClick={() => scroll('left')}
-                disabled={!canScrollLeft}
-                className={`w-10 h-10 rounded-full border border-[#e0e0e0] flex items-center justify-center hover:bg-[#f5f5f5] transition-colors ${
-                    !canScrollLeft ? 'opacity-40 cursor-not-allowed' : ''
-                }`}
-                aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-5 h-5 text-[#666666]" />
-            </button>
-            <button
-                onClick={() => scroll('right')}
-                disabled={!canScrollRight}
-                className={`w-10 h-10 rounded-full border border-[#e0e0e0] flex items-center justify-center hover:bg-[#f5f5f5] transition-colors ${
-                    !canScrollRight ? 'opacity-40 cursor-not-allowed' : ''
-                }`}
-                aria-label="Scroll right"
-            >
-              <ChevronRight className="w-5 h-5 text-[#666666]" />
-            </button>
-          </div>
+          {description && (
+            <p className="text-gray-500 text-sm mt-2 max-w-2xl font-light leading-relaxed border-l-2 border-gray-200 pl-3 ml-1">
+              {description}
+            </p>
+          )}
         </div>
 
-        {/* Books Carousel */}
+        {/* Navigation Arrows - Square & Sharp */}
+        <div className="flex items-center gap-0 border border-gray-200 bg-white">
+          <button
+            onClick={() => scroll('left')}
+            disabled={!canScrollLeft}
+            className={`w-10 h-10 flex items-center justify-center transition-all duration-200 border-r border-gray-200
+              ${
+                !canScrollLeft
+                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
+                  : 'text-gray-600 hover:bg-black hover:text-white'
+              }`}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => scroll('right')}
+            disabled={!canScrollRight}
+            className={`w-10 h-10 flex items-center justify-center transition-all duration-200
+              ${
+                !canScrollRight
+                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
+                  : 'text-gray-600 hover:bg-black hover:text-white'
+              }`}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Books Carousel */}
+      <div className="relative">
         <div
-            ref={containerRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-            }}
+          ref={containerRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-1" // pb-1 để tránh shadow bị cắt nếu có
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
         >
           {books.map((book) => (
-              <div key={book.id} className="flex-none">
-                <BookCard book={book} />
-              </div>
+            <div key={book.id} className="flex-none">
+              <BookCard book={book} />
+            </div>
           ))}
+
+          {/* Padding right ảo để card cuối không bị dính lề màn hình */}
+          <div className="w-1 flex-none" />
         </div>
-      </section>
+      </div>
+    </section>
   );
 }

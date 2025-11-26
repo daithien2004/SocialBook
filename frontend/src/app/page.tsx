@@ -2,7 +2,7 @@
 
 import { BannerSlider } from '../components/book/BannerSlider';
 import { BookSection } from '../components/book/BookSection';
-import { Clock, Sparkles, Star, TrendingUp } from 'lucide-react';
+import { Flame, Sparkles, BookPlus, Star } from 'lucide-react';
 import { useGetBooksQuery } from '../features/books/api/bookApi';
 import { Book } from '../features/books/types/book.interface';
 import { useMemo } from 'react';
@@ -61,19 +61,23 @@ export const getRecommendedBooks = (books: Book[]) => {
 
 const BOOK_SECTIONS = [
   {
-    title: 'Xem Nhiều Nhất',
+    description: 'Sách hot nhất hiện nay',
+    icon: Flame,
     getBooks: getTrendingBooks,
   },
   {
-    title: 'Đề Xuất Cho Bạn',
+    description: 'Gợi ý dành riêng cho bạn',
+    icon: Sparkles,
     getBooks: getRecommendedBooks,
   },
   {
-    title: 'Sách Mới Nhất',
+    description: 'Mới cập nhật gần đây',
+    icon: BookPlus,
     getBooks: getNewBooks,
   },
   {
-    title: 'Đánh Giá Cao',
+    description: 'Được đánh giá tốt nhất',
+    icon: Star,
     getBooks: getTopRatedBooks,
   },
 ];
@@ -131,16 +135,17 @@ export default function HomePage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen max-w-[1200px] mt-0 mb-0 mx-auto bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen mt-0 mb-0 mx-auto ">
         <main className="container mx-auto py-8">
           <BannerSlider books={featuredBooks} />
 
           <div className="space-y-2">
             {sections.map((section) => (
               <BookSection
-                key={section.title}
-                title={section.title}
+                key={section.description}
                 books={section.books}
+                icon={section.icon}
+                description={section.description}
               />
             ))}
           </div>

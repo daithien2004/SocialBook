@@ -22,6 +22,9 @@ export interface Book {
   stats: {
     averageRating: number;
     totalRatings: number;
+    chapters: number;
+    views: number;
+    likes: number;
   };
 }
 
