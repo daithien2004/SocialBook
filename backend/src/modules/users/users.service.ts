@@ -38,8 +38,13 @@ export class UsersService {
     return !!user;
   }
 
+  async isUserExist(userId: string) {
+    const user = await this.userModel.exists({ _id: userId });
+    return !!user;
+  }
+
   async create(createUserDto: CreateUserDto) {
-    const { username, email, password, provider, providerId, image, roleId } =
+    const { username, email, password, isVerified, provider, providerId, image, roleId } =
       createUserDto;
 
     const isExist = await this.isEmailExist(email);
@@ -53,6 +58,7 @@ export class UsersService {
       provider,
       providerId,
       image,
+      isVerified,
       roleId,
     };
 

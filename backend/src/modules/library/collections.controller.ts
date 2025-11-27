@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -14,6 +15,7 @@ import {
 import { CollectionsService } from './collections.service';
 import { CreateCollectionDto, UpdateCollectionDto } from './dto/collection.dto';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
+import { Public } from '@/src/common/decorators/customize';
 
 @Controller('collections')
 @UseGuards(JwtAuthGuard)
@@ -30,14 +32,28 @@ export class CollectionsController {
     };
   }
 
+  @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(@Req() req: any, @Query('userId') userId?: string) {
-    const finalUserId = userId || req.user.id;
-
-    const data = await this.collectionsService.findAll(finalUserId);
+  async findAll(@Query('userId') userId: string) {
+    const data = await this.collectionsService.findAll(userId);
     return {
       message: 'Get all collections successfully',
+      data,
+    };
+  }
+
+  @Public()
+  @Get('detail')
+  @HttpCode(HttpStatus.OK)
+  async findOneByQuery(
+    @Query('userId') userId: string,
+    @Query('id') id: string,
+  ) {
+    const data = await this.collectionsService.findOneWithBooks(userId, id);
+
+    return {
+      message: 'Get collection detail successfully',
       data,
     };
   }

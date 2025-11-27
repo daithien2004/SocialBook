@@ -1,5 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class CreateUserDto {
   username: string;
@@ -9,7 +10,7 @@ export class CreateUserDto {
   providerId?: string;
   image?: string;
   isVerified?: boolean;
-  roleId?: string;
+  roleId?: Types.ObjectId;
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) { }

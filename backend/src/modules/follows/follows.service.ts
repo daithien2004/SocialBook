@@ -83,6 +83,69 @@ export class FollowsService {
     return usersWithStats;
   }
 
+  async getFollowingStatsList(targetUserId: string, currentUserId: string) {
+    if (!targetUserId || !Types.ObjectId.isValid(targetUserId)) {
+      throw new BadRequestException('User ID is required');
+    }
+
+    // Lấy tất cả follow mà userId là targetUser (những người mà targetUser đang follow)
+    const follows = await this.followModel
+      .find({ userId: new Types.ObjectId(targetUserId) })
+      .select('targetId')
+      .lean();
+
+    if (!follows.length) return [];
+
+    const targetIds = follows.map((f) => f.targetId as Types.ObjectId);
+
+    // Lấy thông tin user của những người được follow
+    const users = await this.userModel
+      .find({ _id: { $in: targetIds } })
+      .select('username image bio')
+      .lean();
+
+    // Set chứa những user mà currentUser đang follow trong nhóm này
+    let currentUserFollowingSet = new Set<string>();
+
+    if (currentUserId && Types.ObjectId.isValid(currentUserId)) {
+      const currentUserFollows = await this.followModel
+        .find({
+          userId: new Types.ObjectId(currentUserId),
+          targetId: { $in: targetIds },
+        })
+        .select('targetId')
+        .lean();
+
+      currentUserFollowingSet = new Set(
+        currentUserFollows.map((f) => f.targetId.toString()),
+      );
+    }
+
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        const overview = await this.userService.getUserProfileOverview(
+          user._id.toString(),
+        );
+
+        const isFollowedByCurrentUser = currentUserFollowingSet.has(
+          user._id.toString(),
+        );
+
+        return {
+          _id: user._id,
+          username: user.username,
+          image: user.image,
+          postCount: overview.postCount,
+          readingListCount: overview.readingListCount,
+          followersCount: overview.followersCount,
+          isFollowedByCurrentUser,
+        };
+      }),
+    );
+
+    return usersWithStats;
+  }
+
 
   async toggle(currentUserId: string, targetUserId: string) {
     if (!Types.ObjectId.isValid(targetUserId)) {
@@ -175,7 +238,7 @@ export class FollowsService {
           postCount: overview.postCount,
           readingListCount: overview.readingListCount,
           followersCount: overview.followersCount,
-          isFollowedByCurrentUser, // 👈 trạng thái follow của currentUser
+          isFollowedByCurrentUser,
         };
       }),
     );

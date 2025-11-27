@@ -14,7 +14,7 @@ import { OtpService } from '../otp/otp.service';
 import { SignupGoogleDto, SignupLocalDto } from './dto/auth.dto';
 import { Role, RoleDocument } from '../roles/schemas/role.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -99,7 +99,7 @@ export class AuthService {
       email: dto.email,
       password: dto.password,
       provider: 'local',
-      roleId: userRole._id.toString(),
+      roleId: userRole._id,
     });
 
     // RETURN
@@ -126,8 +126,8 @@ export class AuthService {
         provider: 'google',
         providerId: dto.googleId,
         image: dto.image,
-        isVerified: true, // Google đã verify rồi
-        roleId: userRole._id.toString(),
+        isVerified: true,
+        roleId: userRole._id,
       });
     } else {
       // Đã có account → KIỂM TRA PROVIDER
@@ -158,7 +158,7 @@ export class AuthService {
       user.email,
       roleName,
     );
-
+    console.log(user);
     // RESPONSE
     return {
       accessToken: tokens.accessToken,

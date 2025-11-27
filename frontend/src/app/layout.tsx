@@ -20,7 +20,7 @@ export default function RootLayout({
           <AuthSync />
           {children}
         </Providers>
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="bottom-left" />
       </body>
     </html>
   );

@@ -6,7 +6,7 @@ import {FollowingUser, useToggleFollowMutation} from "@/src/features/follows/api
 import {useState} from "react";
 
 const FollowingItem = (props: FollowingUser) => {
-    const [isFollowing, setIsFollowing] = useState(true);
+    const [isFollowing, setIsFollowing] = useState(props.isFollowedByCurrentUser);
 
     const [toggleFollow, { isLoading: isToggling }] = useToggleFollowMutation();
 

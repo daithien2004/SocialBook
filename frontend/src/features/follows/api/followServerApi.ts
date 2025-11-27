@@ -14,9 +14,5 @@ export async function followServerApi() {
                 return null;
             }
         },
-        async toggleFollow(targetUserId: string): Promise<FollowStateResponse | null> {
-            const res = await api.post(`/follows/${targetUserId}`);
-            return (res.data?.data ?? null) as FollowStateResponse | null;
-        },
     };
 }

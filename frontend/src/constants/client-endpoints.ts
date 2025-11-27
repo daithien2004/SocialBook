@@ -76,6 +76,8 @@ export const BFF_LIBRARY_ENDPOINTS = {
   // Collections System (Folder)
   collections: '/collections', // GET, POST
   collectionDetail: (id: string) => `/collections/${id}`, // GET, PATCH, DELETE
+  collectionDetailNoUser: (id: string, userId?: string) =>
+     `/collections/detail?id=${id}&userId=${userId}`,
 };
 
 export const BFF_AUTHORS_ENDPOINTS = {

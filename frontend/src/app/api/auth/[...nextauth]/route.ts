@@ -95,10 +95,10 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             googleId: user.id,
-            avatar: user.image,
+            image: user.image,
           });
           authData = response.data.data;
-
+          user.id = authData.user.id;
           user.accessToken = authData.accessToken;
           user.refreshToken = authData.refreshToken;
           // Lưu role từ backend response
