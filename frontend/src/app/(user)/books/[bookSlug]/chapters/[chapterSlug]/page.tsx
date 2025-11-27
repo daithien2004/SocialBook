@@ -390,7 +390,7 @@ ${book.description?.slice(0, 100)}...
           <DockButton
             icon={<Settings size={20} />}
             label="Cài đặt"
-            onClick={() => toast.info('Tính năng đang phát triển')} // Placeholder cho tính năng Font size sau này
+            onClick={() => setShowSettings(true)}
           />
         </div>
       </div>
