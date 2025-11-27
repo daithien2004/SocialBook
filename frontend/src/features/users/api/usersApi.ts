@@ -15,12 +15,13 @@ export interface UserOverviewResponse {
     followersCount: number;
 }
 
-export interface  UpdateUserOverviewRequest {
+export interface UpdateUserOverviewRequest {
     bio: string;
     location: string;
     website: string;
     username: string;
 }
+
 export const usersApi = createApi({
     reducerPath: 'usersApi',
     baseQuery: axiosBaseQuery(),
@@ -83,9 +84,33 @@ export const usersApi = createApi({
                 { type: "Users", id: `OVERVIEW_${userId}` },
             ],
         }),
+        
+        // cá nhân hóa trải nghiệm đọc
+        getReadingPreferences: builder.query<any, void>({
+            query: () => ({
+                url: '/users/reading-preferences',
+                method: 'GET',
+            }),
+            providesTags: ['Users'],
+        }),
+
+        updateReadingPreferences: builder.mutation<any, any>({
+            query: (body) => ({
+                url: '/users/reading-preferences',
+                method: 'PUT',
+                body,
+            }),
+            invalidatesTags: ['Users'],
+        }),
     }),
 });
 
 export const {
-    useGetUsersQuery, useBanUserMutation , useGetUserOverviewQuery,
-    usePatchUpdateUserProfileOverviewMutation, usePatchUpdateUserAvatarMutation} = usersApi;
+    useGetUsersQuery,
+    useBanUserMutation,
+    useGetUserOverviewQuery,
+    usePatchUpdateUserProfileOverviewMutation,
+    usePatchUpdateUserAvatarMutation,
+    useGetReadingPreferencesQuery,
+    useUpdateReadingPreferencesMutation,
+} = usersApi;

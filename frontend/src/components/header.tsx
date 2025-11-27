@@ -9,6 +9,7 @@ export function Header() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const isAuthenticated = status === 'authenticated';
+
   const userId = session?.user.id;
   const avatarUrl = session?.user.image;
 

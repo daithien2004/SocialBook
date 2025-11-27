@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import {X, UserPlus} from "lucide-react";
 import {useGetFollowersListQuery} from "@/src/features/follows/api/followApi";
 import {useParams} from "next/navigation";
+import FollowerItem from "@/src/components/user/follower-item";
 
 type FollowersModalProps = {
     isOpen: boolean;
@@ -20,7 +21,7 @@ export function FollowersModal({
         isLoading,
         isError,
     } = useGetFollowersListQuery(userId, {
-        skip: !userId,
+        skip: !userId || !isOpen,
     });
     return (
         <Transition appear show={isOpen} as={Fragment}>
@@ -66,36 +67,9 @@ export function FollowersModal({
 
                                 {/* danh sách người theo dõi */}
                                 <div className="mt-5 max-h-[65vh] space-y-3 overflow-y-auto pr-1">
-                                    {followersList.map((follower) => (
-                                        <div
-                                            key={follower.id}
-                                            className="flex items-center justify-between gap-3 rounded-lg"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <img
-                                                    src={follower.image}
-                                                    alt={follower.username}
-                                                    className="h-10 w-10 rounded-full object-cover"
-                                                />
-                                                <div className="flex flex-col">
-                                                    <div className="flex flex-wrap items-center gap-x-1 text-sm">
-                                                        <span className="font-normal text-gray-800">
-                                                          {follower.username}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-xs text-gray-500">
-                                                        {follower.readingListCount > 0 && (`Danh sách đọc ${follower.readingListCount} • `)}
-                                                        {follower.followersCount > 0 && (`Danh sách đọc ${follower.followersCount}`)}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <button className="inline-flex items-center gap-1 rounded-full border border-emerald-600 px-3 py-1 text-sm font-medium text-emerald-700 hover:bg-emerald-50">
-                                                <UserPlus className="h-4 w-4" />
-                                                <span>Theo dõi</span>
-                                            </button>
-                                        </div>
-                                    ))}
+                                {followersList.map((follower) => (
+                                        <FollowerItem key={follower.id} {...follower}/>
+                                ))}
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>

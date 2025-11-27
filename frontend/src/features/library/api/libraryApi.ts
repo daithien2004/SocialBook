@@ -117,6 +117,20 @@ export const libraryApi = createApi({
       providesTags: (result, error, id) => [{ type: 'Collection', id }],
     }),
 
+    getCollectionDetailNoAuth: builder.query<
+      CollectionDetailResponse,
+      { id: string; userId: string }
+    >({
+      query: ({ id, userId }) => ({
+        url: BFF_LIBRARY_ENDPOINTS.collectionDetailNoUser(id, userId),
+        method: 'GET',
+      }),
+      providesTags: (result, error, { id }) => [
+        { type: 'Collection' as const, id },
+      ],
+    }),
+
+    // 8. Tạo Folder mới
     createCollection: builder.mutation<Collection, CreateCollectionRequest>({
       query: (data) => ({
         url: BFF_LIBRARY_ENDPOINTS.collections,
@@ -159,6 +173,7 @@ export const {
   useUpdateReadingProgressMutation,
   useAddBookToCollectionsMutation,
   useRemoveBookFromLibraryMutation,
+  useGetCollectionDetailNoAuthQuery,
   useGetBookLibraryInfoQuery,
 
   // Collection Hooks

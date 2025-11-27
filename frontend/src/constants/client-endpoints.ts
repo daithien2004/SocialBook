@@ -76,6 +76,8 @@ export const BFF_LIBRARY_ENDPOINTS = {
   // Collections System (Folder)
   collections: '/collections', // GET, POST
   collectionDetail: (id: string) => `/collections/${id}`, // GET, PATCH, DELETE
+  collectionDetailNoUser: (id: string, userId?: string) =>
+     `/collections/detail?id=${id}&userId=${userId}`,
 };
 
 export const BFF_AUTHORS_ENDPOINTS = {
@@ -100,5 +102,9 @@ export const BFF_TTS_ENDPOINTS = {
   getByChapter: (chapterId: string) => `/tts/chapter/${chapterId}`,
   delete: (chapterId: string) => `/tts/chapter/${chapterId}`,
   incrementPlay: (chapterId: string) => `/tts/chapter/${chapterId}/play`,
+};
+
+export const BFF_USERS_ENDPOINTS = {
+  readingPreferences: '/users/reading-preferences',
 };
 

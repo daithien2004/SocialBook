@@ -1,7 +1,7 @@
 'use client';
 
 import { Book } from '../features/books/types/book.interface';
-import {Card, CardContent} from "@/src/components/ui/card";
+import { Card, CardContent } from "@/src/components/ui/card";
 interface BookCarouselProps {
   title: string;
   books: Book[];
@@ -28,7 +28,7 @@ export function BookCarousel({ title, books }: BookCarouselProps) {
                   <CardContent>
                     <div className="relative overflow-hidden rounded-t-lg">
                       <img
-                        src={book.cover || '/placeholder.svg'}
+                        src={book.coverUrl || '/placeholder.svg'}
                         alt={book.title}
                         className="w-full h-64 object-cover"
                       />
@@ -36,14 +36,14 @@ export function BookCarousel({ title, books }: BookCarouselProps) {
 
                     <div className="flex flex-col space-y-2 p-6">
                       <div className="p-2 rounded-lg bg-amber-600 font-medium text-white text-xs self-start">
-                        {book.genres}
+                        {book.genres[0]?.name}
                       </div>
 
                       <h3 className="font-bold text-lg line-clamp-2">
                         {book.title}
                       </h3>
 
-                      <p className="text-gray-500 text-sm">bởi {book.authorId}</p>
+                      <p className="text-gray-500 text-sm">bởi {book.authorId.name}</p>
 
                       <p className="text-sm text-gray-600">
                         {book.description}

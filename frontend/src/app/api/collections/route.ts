@@ -1,23 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 import { NESTJS_LIBRARY_ENDPOINTS } from '@/src/constants/server-endpoints';
+import serverApi from "@/src/lib/server-api";
 
 // GET: Lấy danh sách Folder
 export async function GET(request: NextRequest) {
   try {
-    const api = await getAuthenticatedServerApi();
-
-    // Lấy query params
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('userId');
+    const url = `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId}`
 
-    // Tạo URL động
-    const url = userId
-        ? `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId}`
-        : NESTJS_LIBRARY_ENDPOINTS.collections;
-
-    const response = await api.get(url);
-
+    const response = await serverApi.get(url);
     return NextResponse.json(response.data);
   } catch (error: any) {
     return NextResponse.json(

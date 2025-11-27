@@ -9,6 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    console.log(id);
     const api = await getAuthenticatedServerApi();
     const response = await api.get(
       NESTJS_LIBRARY_ENDPOINTS.collectionDetail(id)

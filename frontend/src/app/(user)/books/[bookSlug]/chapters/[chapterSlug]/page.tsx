@@ -31,6 +31,7 @@ import ChapterHeader from '@/src/components/chapter/ChapterHeader';
 import { ChapterContent } from '@/src/components/chapter/ChapterContent';
 import { useReadingProgress } from '@/src/hooks/useReadingProgress';
 import AudiobookView from '@/src/components/chapter/AudiobookView';
+import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -48,6 +49,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
+  const [showSettings, setShowSettings] = useState(false); // Reading Settings Panel
 
   // State cho hiệu ứng cuộn (Immersive Mode)
   const [isControlsVisible, setIsControlsVisible] = useState(true);
@@ -77,7 +79,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     chapter?.id || '',
     !isLoading && !!chapter && viewMode === 'read'
   );
-  
+
   // Ref để đảm bảo chỉ hiện toast 1 lần
   const hasShownResumeToast = useRef(false);
 
@@ -153,14 +155,15 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   };
 
   // Nội dung mặc định cho bài chia sẻ
-  const defaultShareContent = book && chapter
-    ? `📖 Đang đọc: ${book.title} - ${chapter.title}
+  const defaultShareContent =
+    book && chapter
+      ? `📖 Đang đọc: ${book.title} - ${chapter.title}
 ✍️ Tác giả: ${book.authorId.name}
 
 ${book.description?.slice(0, 100)}...
 
 #${book.title.replace(/\s+/g, '')} #${chapter.title.replace(/\s+/g, '')}`
-    : '';
+      : '';
 
   // --- RENDER LOADING ---
   if (isLoading) {
@@ -480,6 +483,12 @@ ${book.description?.slice(0, 100)}...
           maxImages={10}
         />
       )}
+
+      {/*  Settings Panel (Cá nhân hóa trải nghiệm đọc) */}
+      <ReadingSettingsPanel
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </div>
   );
 }
