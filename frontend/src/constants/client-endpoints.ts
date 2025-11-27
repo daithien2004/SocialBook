@@ -104,3 +104,7 @@ export const BFF_TTS_ENDPOINTS = {
   incrementPlay: (chapterId: string) => `/tts/chapter/${chapterId}/play`,
 };
 
+export const BFF_USERS_ENDPOINTS = {
+  readingPreferences: '/users/reading-preferences',
+};
+

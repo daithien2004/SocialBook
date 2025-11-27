@@ -26,6 +26,7 @@ import { ChapterContent } from '@/src/components/chapter/ChapterContent';
 import { useReadingProgress } from '@/src/hooks/useReadingProgress';
 import ResumeReadingToast from '@/src/components/chapter/ResumeReadingToast';
 import AudiobookView from '@/src/components/chapter/AudiobookView';
+import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -42,6 +43,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const [showTOC, setShowTOC] = useState(false); // Drawer Mục lục
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
+  const [showSettings, setShowSettings] = useState(false); // Reading Settings Panel
 
   // State cho hiệu ứng cuộn (Immersive Mode)
   const [isControlsVisible, setIsControlsVisible] = useState(true);
@@ -275,11 +277,10 @@ export default function ChapterPage({ params }: ChapterPageProps) {
 
       {/* 4. FLOATING DOCK (Thanh công cụ nổi) */}
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
-          isControlsVisible
-            ? 'translate-y-0 opacity-100'
-            : 'translate-y-24 opacity-0'
-        }`}
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isControlsVisible
+          ? 'translate-y-0 opacity-100'
+          : 'translate-y-24 opacity-0'
+          }`}
       >
         <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-neutral-900/90 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50">
           {/* Nút Mục Lục */}
@@ -326,7 +327,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
           <DockButton
             icon={<Settings size={20} />}
             label="Cài đặt"
-            onClick={() => {}} // Placeholder cho tính năng Font size sau này
+            onClick={() => setShowSettings(true)}
           />
         </div>
       </div>
@@ -334,17 +335,15 @@ export default function ChapterPage({ params }: ChapterPageProps) {
       {/* 5. DRAWER MỤC LỤC (Slide-over) */}
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
-          showTOC ? 'opacity-100 visible' : 'opacity-0 invisible'
-        }`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${showTOC ? 'opacity-100 visible' : 'opacity-0 invisible'
+          }`}
         onClick={() => setShowTOC(false)}
       />
 
       {/* Drawer Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-neutral-900 border-l border-white/10 z-[61] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${
-          showTOC ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-neutral-900 border-l border-white/10 z-[61] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${showTOC ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         <div className="p-5 border-b border-white/5 flex justify-between items-center bg-neutral-900">
           <div>
@@ -368,19 +367,17 @@ export default function ChapterPage({ params }: ChapterPageProps) {
               <button
                 key={chap.id}
                 onClick={() => handleChapterSelect(chap.slug)}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 border flex items-center justify-between group ${
-                  isActive
-                    ? 'bg-blue-900/20 border-blue-500/30 text-blue-100'
-                    : 'border-transparent text-neutral-400 hover:bg-white/5 hover:text-neutral-200'
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 border flex items-center justify-between group ${isActive
+                  ? 'bg-blue-900/20 border-blue-500/30 text-blue-100'
+                  : 'border-transparent text-neutral-400 hover:bg-white/5 hover:text-neutral-200'
+                  }`}
               >
                 <div className="flex flex-col gap-0.5">
                   <span
-                    className={`text-xs font-bold uppercase tracking-wider ${
-                      isActive
-                        ? 'text-blue-400'
-                        : 'text-neutral-500 group-hover:text-neutral-400'
-                    }`}
+                    className={`text-xs font-bold uppercase tracking-wider ${isActive
+                      ? 'text-blue-400'
+                      : 'text-neutral-500 group-hover:text-neutral-400'
+                      }`}
                   >
                     Chương {chap.orderIndex}
                   </span>
@@ -413,6 +410,12 @@ export default function ChapterPage({ params }: ChapterPageProps) {
           onClose={() => setIsToastClosed(true)}
         />
       )}
+
+      {/*  Settings Panel (Cá nhân hóa trải nghiệm đọc) */}
+      <ReadingSettingsPanel
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </div>
   );
 }
