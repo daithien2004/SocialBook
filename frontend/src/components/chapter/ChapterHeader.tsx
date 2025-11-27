@@ -44,10 +44,6 @@ export default function ChapterHeader({
           <Eye size={16} />
           <span>{viewsCount.toLocaleString('vi-VN')} lượt xem</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Clock size={16} />
-          <span>~5 phút đọc</span>
-        </div>
       </div>
 
       <div className="w-24 h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent mx-auto mt-6 rounded-full" />

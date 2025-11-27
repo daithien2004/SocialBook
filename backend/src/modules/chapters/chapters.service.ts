@@ -19,7 +19,7 @@ export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-  ) { }
+  ) {}
 
   async findByBookSlug(bookSlug: string) {
     if (!bookSlug) throw new BadRequestException('Book slug is required');
@@ -84,7 +84,11 @@ export class ChaptersService {
   async findBySlug(bookSlug: string, chapterSlug: string) {
     const book = await this.bookModel
       .findOne({ slug: bookSlug, isDeleted: false })
-      .select('_id title slug')
+      .select('_id title slug description authorId')
+      .populate({
+        path: 'authorId',
+        select: 'name',
+      })
       .lean();
 
     if (!book) throw new NotFoundException(`Book "${bookSlug}" not found`);
@@ -133,19 +137,19 @@ export class ChaptersService {
       navigation: {
         previous: prevChapter
           ? {
-            id: prevChapter._id.toString(),
-            title: prevChapter.title,
-            slug: prevChapter.slug,
-            orderIndex: prevChapter.orderIndex,
-          }
+              id: prevChapter._id.toString(),
+              title: prevChapter.title,
+              slug: prevChapter.slug,
+              orderIndex: prevChapter.orderIndex,
+            }
           : null,
         next: nextChapter
           ? {
-            id: nextChapter._id.toString(),
-            title: nextChapter.title,
-            slug: nextChapter.slug,
-            orderIndex: nextChapter.orderIndex,
-          }
+              id: nextChapter._id.toString(),
+              title: nextChapter.title,
+              slug: nextChapter.slug,
+              orderIndex: nextChapter.orderIndex,
+            }
           : null,
       },
     };

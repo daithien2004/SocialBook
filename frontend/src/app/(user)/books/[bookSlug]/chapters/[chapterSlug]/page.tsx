@@ -1,7 +1,8 @@
 'use client';
 
-import { use, useMemo, useCallback, useState, useEffect } from 'react';
+import { use, useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   Bookmark,
   ChevronLeft,
@@ -9,6 +10,7 @@ import {
   Headphones,
   BookOpen,
   Settings,
+  Share2,
   X,
 } from 'lucide-react';
 
@@ -19,12 +21,15 @@ import {
   useGetChapterQuery,
   useGetChaptersQuery,
 } from '@/src/features/chapters/api/chaptersApi';
+import CreatePostModal, {
+  CreatePostData,
+} from '@/src/components/post/CreatePostModal';
+import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 import ChapterNavigation from '@/src/components/chapter/ChapterNavigation';
 import CommentSection from '@/src/components/chapter/CommentSection';
 import ChapterHeader from '@/src/components/chapter/ChapterHeader';
 import { ChapterContent } from '@/src/components/chapter/ChapterContent';
 import { useReadingProgress } from '@/src/hooks/useReadingProgress';
-import ResumeReadingToast from '@/src/components/chapter/ResumeReadingToast';
 import AudiobookView from '@/src/components/chapter/AudiobookView';
 
 interface ChapterPageProps {
@@ -41,6 +46,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   // --- STATE QUẢN LÝ UI ---
   const [showTOC, setShowTOC] = useState(false); // Drawer Mục lục
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
 
   // State cho hiệu ứng cuộn (Immersive Mode)
@@ -55,6 +61,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   } = useGetChapterQuery({ bookSlug, chapterSlug });
 
   const { data: chaptersData } = useGetChaptersQuery({ bookSlug });
+  const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
 
   // Destructure Data
   const book = chapterData?.book;
@@ -70,7 +77,25 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     chapter?.id || '',
     !isLoading && !!chapter && viewMode === 'read'
   );
-  const [isToastClosed, setIsToastClosed] = useState(false);
+  
+  // Ref để đảm bảo chỉ hiện toast 1 lần
+  const hasShownResumeToast = useRef(false);
+
+  useEffect(() => {
+    if (savedProgress > 5 && !hasShownResumeToast.current) {
+      hasShownResumeToast.current = true;
+      setTimeout(() => {
+        toast('Bạn đang đọc dở chương này', {
+          description: `Tiếp tục tại vị trí ${Math.floor(savedProgress)}%?`,
+          action: {
+            label: 'Đọc tiếp',
+            onClick: restoreScroll,
+          },
+          duration: 8000,
+        });
+      }, 1000);
+    }
+  }, [savedProgress, restoreScroll]);
 
   // Logic Comments
   const chapterComments = useMemo(() => {
@@ -106,6 +131,36 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     },
     [bookSlug, router]
   );
+
+  // Handle Share Post
+  const handleSharePost = async (data: CreatePostData) => {
+    if (!book?.id) {
+      toast.error('Không tìm thấy thông tin sách');
+      return;
+    }
+
+    try {
+      await createPost({
+        bookId: book.id,
+        content: data.content,
+        images: data.images,
+      }).unwrap();
+      toast.success('Chia sẻ thành công!');
+      setIsShareModalOpen(false);
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Không thể tạo bài viết');
+    }
+  };
+
+  // Nội dung mặc định cho bài chia sẻ
+  const defaultShareContent = book && chapter
+    ? `📖 Đang đọc: ${book.title} - ${chapter.title}
+✍️ Tác giả: ${book.authorId.name}
+
+${book.description?.slice(0, 100)}...
+
+#${book.title.replace(/\s+/g, '')} #${chapter.title.replace(/\s+/g, '')}`
+    : '';
 
   // --- RENDER LOADING ---
   if (isLoading) {
@@ -324,9 +379,15 @@ export default function ChapterPage({ params }: ChapterPageProps) {
           />
 
           <DockButton
+            icon={<Share2 size={20} />}
+            label="Chia sẻ"
+            onClick={() => setIsShareModalOpen(true)}
+          />
+
+          <DockButton
             icon={<Settings size={20} />}
             label="Cài đặt"
-            onClick={() => {}} // Placeholder cho tính năng Font size sau này
+            onClick={() => toast.info('Tính năng đang phát triển')} // Placeholder cho tính năng Font size sau này
           />
         </div>
       </div>
@@ -406,11 +467,17 @@ export default function ChapterPage({ params }: ChapterPageProps) {
         />
       )}
 
-      {!isToastClosed && (
-        <ResumeReadingToast
-          progress={savedProgress}
-          onConfirm={restoreScroll}
-          onClose={() => setIsToastClosed(true)}
+      {book && (
+        <CreatePostModal
+          isSubmitting={isCreatingPost}
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          onSubmit={handleSharePost}
+          defaultContent={defaultShareContent}
+          title={`Chia sẻ "${chapter.title}"`}
+          contentLabel="Nội dung bài viết"
+          contentPlaceholder="Chia sẻ cảm nghĩ của bạn về chương này..."
+          maxImages={10}
         />
       )}
     </div>
