@@ -7,11 +7,16 @@ import {
   Param,
   Patch,
   Post,
-  Query, Req, UnauthorizedException, UploadedFile,
-  UseGuards, UseInterceptors,
+  Put,
+  Query,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserOverviewDto } from './dto/user.dto';
+import { UpdateReadingPreferencesDto } from './dto/update-reading-preferences.dto';
 
 import { Public } from '@/src/common/decorators/customize';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -21,7 +26,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -77,7 +82,10 @@ export class UsersController {
     @Req() req: any,
     @Body() dto: UpdateUserOverviewDto,
   ) {
-    const data = await this.usersService.updateUserProfileOverview(req.user.id, dto);
+    const data = await this.usersService.updateUserProfileOverview(
+      req.user.id,
+      dto,
+    );
     return {
       message: 'Profile overview updated successfully',
       data,
@@ -93,5 +101,32 @@ export class UsersController {
   ) {
     const result = await this.usersService.updateUserImage(req.user.id, file);
     return { result };
+  }
+
+  // Cá nhân hóa trải nghiệm đọc
+  @Get('me/reading-preferences')
+  @HttpCode(HttpStatus.OK)
+  async getMyReadingPreferences(@Req() req: any) {
+    const data = await this.usersService.getReadingPreferences(req.user.id);
+    return {
+      message: 'Get reading preferences successfully',
+      data,
+    };
+  }
+
+  @Put('me/reading-preferences')
+  @HttpCode(HttpStatus.OK)
+  async updateMyReadingPreferences(
+    @Req() req: any,
+    @Body() dto: UpdateReadingPreferencesDto,
+  ) {
+    const data = await this.usersService.updateReadingPreferences(
+      req.user.id,
+      dto,
+    );
+    return {
+      message: 'Reading preferences updated successfully',
+      data,
+    };
   }
 }

@@ -31,7 +31,7 @@ export class UsersService {
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async isEmailExist(email: string) {
     const user = await this.userModel.exists({ email });
@@ -229,5 +229,53 @@ export class UsersService {
     return {
       message: 'Avatar updated successfully.',
     };
+  }
+
+  // Reading Preferences Methods
+  async getReadingPreferences(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid User ID');
+    }
+
+    const user = await this.userModel
+      .findById(userId)
+      .select('readingPreferences')
+      .lean();
+
+    if (!user) throw new NotFoundException('User not found');
+
+    // Return default preferences if not set
+    return (
+      user.readingPreferences || {
+        theme: 'dark',
+        fontSize: 18,
+        fontFamily: 'Georgia, serif',
+        lineHeight: 1.8,
+        letterSpacing: 0.5,
+        backgroundColor: '#1a1a1a',
+        textColor: '#e5e5e5',
+        textAlign: 'justify',
+        marginWidth: 0,
+      }
+    );
+  }
+
+  async updateReadingPreferences(userId: string, preferences: any) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid User ID');
+    }
+
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    // Merge with existing preferences
+    user.readingPreferences = {
+      ...user.readingPreferences,
+      ...preferences,
+    } as any;
+
+    await user.save();
+
+    return user.readingPreferences;
   }
 }

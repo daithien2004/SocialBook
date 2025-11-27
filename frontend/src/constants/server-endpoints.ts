@@ -12,6 +12,7 @@ export const NESTJS_AUTH_ENDPOINTS = {
 export const NESTJS_USERS_ENDPOINTS = {
   getUsers: '/users',
   banUser: (id: string) => `/users/${id}/ban`,
+  readingPreferences: '/users/me/reading-preferences',
 };
 
 export const NESTJS_COMMENTS_ENDPOINTS = {

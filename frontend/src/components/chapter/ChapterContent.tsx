@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useReadingSettings } from '@/src/store/useReadingSettings';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
 import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
@@ -29,6 +30,7 @@ export function ChapterContent({
   bookTitle,
 }: ChapterContentProps) {
   const { data: session } = useSession();
+  const { settings } = useReadingSettings();
 
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
     null
@@ -89,17 +91,29 @@ export function ChapterContent({
 
   return (
     <>
-      <main className="flex-1 w-full text-neutral-300 antialiased relative">
+      <main
+        className="flex-1 w-full antialiased relative transition-all duration-300 rounded-2xl p-4"
+        style={{
+          backgroundColor: settings.backgroundColor,
+          color: settings.textColor,
+          paddingLeft: `${settings.marginWidth}px`,
+          paddingRight: `${settings.marginWidth}px`,
+        }}
+      >
         <article className="space-y-8">
           {paragraphs.map((para) => (
             <div key={para.id} className="relative group">
               <div className="relative">
                 <p
-                  className={`text-lg sm:text-xl leading-8 sm:leading-9 text-justify transition-colors duration-300 ${
-                    activeParagraphId === para.id
-                      ? 'text-blue-100'
-                      : 'text-neutral-300'
-                  }`}
+                  className={`transition-colors duration-300 ${activeParagraphId === para.id ? 'text-blue-100' : ''}`}
+                  style={{
+                    fontSize: `${settings.fontSize}px`,
+                    fontFamily: settings.fontFamily,
+                    lineHeight: settings.lineHeight,
+                    letterSpacing: `${settings.letterSpacing}px`,
+                    textAlign: settings.textAlign as any,
+                    color: activeParagraphId === para.id ? '#DBEAFE' : settings.textColor,
+                  }}
                 >
                   {para.content}
                 </p>
@@ -117,11 +131,10 @@ export function ChapterContent({
                 >
                   <button
                     onClick={() => handleToggleComments(para.id)}
-                    className={`p-2 rounded-full transition-all ${
-                      activeParagraphId === para.id
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-110'
-                        : 'bg-neutral-800/50 text-neutral-400 hover:bg-blue-600 hover:text-white hover:scale-110'
-                    }`}
+                    className={`p-2 rounded-full transition-all ${activeParagraphId === para.id
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-110'
+                      : 'bg-neutral-800/50 text-neutral-400 hover:bg-blue-600 hover:text-white hover:scale-110'
+                      }`}
                     title="Bình luận đoạn này"
                   >
                     <MessageSquarePlus size={18} />
