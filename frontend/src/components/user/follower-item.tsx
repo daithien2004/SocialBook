@@ -36,9 +36,9 @@ const FollowerItem = (props: FollowingUser) => {
                                                         </span>
                     </div>
                     <span className="text-xs text-gray-500">
-                        {props.readingListCount > 0 && (`${props.readingListCount} Danh sách đọc`)}
-                        {(props.readingListCount && props.followersCount > 0) && ` • `}
-                        {props.followersCount > 0 && (`Danh sách đọc ${props.followersCount}`)}
+                        {props.readingListCount > 0 && `${props.readingListCount} Danh sách đọc`}
+                        {props.readingListCount > 0 && props.followersCount > 0 && ' • '}
+                        {props.followersCount > 0 && `Người theo dõi ${props.followersCount}`}
                     </span>
                 </div>
             </div>

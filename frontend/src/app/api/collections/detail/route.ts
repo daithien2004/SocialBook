@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
                 },
             }
         );
-        console.log(response.data);
         return NextResponse.json(response.data);
     } catch (error: any) {
         console.error('BFF /api/collections/detail error:', error?.response?.data || error);
