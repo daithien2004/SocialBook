@@ -76,6 +76,17 @@ export class UsersController {
     };
   }
 
+  @Public()
+  @Get(':id/exist')
+  @HttpCode(HttpStatus.OK)
+  async isUserExist(@Param('id') id: string) {
+    const data = await this.usersService.isUserExist(id);
+    return {
+      message: 'Check user exist successfully',
+      data,
+    };
+  }
+
   @Patch('me/overview')
   @HttpCode(HttpStatus.OK)
   async updateMyProfileOverview(

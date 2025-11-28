@@ -1,5 +1,5 @@
 "use client"
-import {useGetFollowingListQuery} from "@/src/features/follows/api/followApi";
+import {useGetFollowingStatsListQuery} from "@/src/features/follows/api/followApi";
 import {useParams} from "next/navigation";
 import FollowingItem from "@/src/components/user/following-item";
 
@@ -7,7 +7,7 @@ const FollowingPage = () => {
     const { userId } = useParams<{ userId: string }>();
     const {
         data: following = [],
-    } = useGetFollowingListQuery(userId, {
+    } = useGetFollowingStatsListQuery(userId, {
         skip: !userId,
     });
     return (

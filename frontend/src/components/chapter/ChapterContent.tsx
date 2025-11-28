@@ -66,7 +66,6 @@ export function ChapterContent({
       setCommentText('');
       toast.success('Bình luận đã được gửi!');
     } catch (e: any) {
-      console.error('Create comment failed:', e);
       // Display the error message from backend
       const errorMessage = e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
       toast.error(errorMessage);
@@ -80,7 +79,7 @@ export function ChapterContent({
 
   const handleSubmitPost = async (data: CreatePostData) => {
     if (!bookId) {
-      alert('Không tìm thấy thông tin sách');
+      toast.error('Không tìm thấy thông tin sách');
       return;
     }
     try {
@@ -89,8 +88,10 @@ export function ChapterContent({
         content: data.content,
         images: data.images,
       }).unwrap();
+      toast.success('Chia sẻ thành công!');
+      setPostModalOpen(false);
     } catch (error: any) {
-      throw new Error(error?.data?.message || 'Không thể tạo bài viết');
+      toast.error(error?.data?.message || 'Không thể tạo bài viết');
     }
   };
 

@@ -13,9 +13,16 @@ export async function POST(
         const response = await api.post(`follows/${targetUserId}`);
         return NextResponse.json(response.data);
     } catch (error) {
-        console.error("POST /api/follows/[targetUserId] error:", error);
+        if (error instanceof Error && error.message.startsWith('Unauthorized')) {
+            return NextResponse.json(
+                { error: error.message },
+                { status: 401 }
+            );
+        }
+
+        console.error('Unexpected error in /api/follows/[targetUserId]', error);
         return NextResponse.json(
-            { message: "Something went wrong" },
+            { error: 'Internal Server Error' },
             { status: 500 }
         );
     }

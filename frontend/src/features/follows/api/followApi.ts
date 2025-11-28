@@ -13,6 +13,7 @@ export interface FollowingUser {
     postCount: number,
     readingListCount: number,
     followersCount: number,
+    isFollowedByCurrentUser: boolean
 }
 
 export const followApi = createApi({
@@ -28,6 +29,17 @@ export const followApi = createApi({
             transformResponse: (response: FollowingUser[]) => response ?? [],
             providesTags: () => [
                 { type: "Follow", id: `FOLLOWING_LIST` },
+            ],
+        }),
+
+        getFollowingStatsList: builder.query<FollowingUser[], string>({
+            query: (targetUserId) => ({
+                url: `/follows/following-stats?targetUserId=${targetUserId}`,
+                method: "GET",
+            }),
+            transformResponse: (response: FollowingUser[]) => response ?? [],
+            providesTags: () => [
+                { type: "Follow", id: `FOLLOWING_STATS_LIST` },
             ],
         }),
 
@@ -56,6 +68,7 @@ export const followApi = createApi({
 
 export const {
     useToggleFollowMutation,
+    useGetFollowingStatsListQuery,
     useGetFollowingListQuery,
     useGetFollowersListQuery
 } = followApi

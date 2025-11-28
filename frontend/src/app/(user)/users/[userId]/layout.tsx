@@ -2,24 +2,22 @@ import ClientLayout from "./ClientLayout";
 import { ReactNode } from "react";
 import type { FollowStateResponse } from "@/src/features/follows/api/followApi";
 import {followServerApi} from "@/src/features/follows/api/followServerApi";
-import Link from "next/link";
+import {getServerSession} from "next-auth";
+import {authOptions} from "@/src/app/api/auth/[...nextauth]/route";
+import {userServerApi} from "@/src/features/users/api/usersServerApi";
 
 
-export default async function UserLayout(
-    {children, params,}:
-    { children: ReactNode; params: Promise<{ userId: string }>;
+
+export default async function UserLayout({ children, params }: {
+    children: ReactNode;
+    params: Promise<{ userId: string }>;
 }) {
     const { userId } = await params;
 
-    let initialFollowState: FollowStateResponse | null = null;
+    const userApi = await userServerApi();
+    const user = await userApi.getIsUserExist(userId);
 
-    try {
-        const followApi = await followServerApi();
-        initialFollowState = await followApi.getFollowState(userId);
-    } catch (error) {
-        console.error("SSR follow state error:", error);
-    }
-    if (!initialFollowState) {
+    if (!user) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
@@ -27,17 +25,36 @@ export default async function UserLayout(
                         Không tìm thấy người dùng
                     </h1>
                     <p className="text-gray-600">
-                        Người dùng không tồn tại hoặc đã bị xóa.
+                        Người dùng không tồn tại.
                     </p>
                 </div>
             </div>
         );
     }
+
+    const session = await getServerSession(authOptions);
+
+    let initialFollowState: FollowStateResponse | null = {
+        isOwner: false,
+        isFollowing: false
+    };
+
+    if (session?.user) {
+        try {
+            const followApi = await followServerApi();
+            initialFollowState = await followApi.getFollowState(userId);
+        } catch (error) {
+            console.error("SSR follow state error:", error);
+        }
+    }
+
     return (
         <ClientLayout
             profileUserId={userId}
-            initialFollowState={initialFollowState}>
+            initialFollowState={initialFollowState}
+        >
             {children}
         </ClientLayout>
     );
 }
+

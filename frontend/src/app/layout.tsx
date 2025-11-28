@@ -3,6 +3,7 @@ import { Providers } from '../context/Providers';
 
 import { Toaster } from 'sonner';
 import AuthSync from '../components/AuthSync';
+import { ThemeProvider } from '../context/ThemeProvider';
 
 export const metadata = {
   title: 'SocialBook',
@@ -14,13 +15,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className="mdl-js">
+    <html lang="vi" className="mdl-js" suppressHydrationWarning>
       <body>
         <Providers>
           <AuthSync />
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
         </Providers>
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="bottom-left" />
       </body>
     </html>
   );

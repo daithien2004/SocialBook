@@ -1,7 +1,7 @@
 import {BookItem} from "@/src/components/user/book-item";
 import {ChevronRight} from "lucide-react";
-import {useRouter} from "next/navigation";
-import {useGetCollectionDetailQuery} from "@/src/features/library/api/libraryApi";
+import {useParams, useRouter} from "next/navigation";
+import {useGetCollectionDetailNoAuthQuery, useGetCollectionDetailQuery} from "@/src/features/library/api/libraryApi";
 
 interface ReadingListItemProps
 {
@@ -9,13 +9,11 @@ interface ReadingListItemProps
     name: string,
 }
 export function ReadingListItem(props: ReadingListItemProps) {
+    const { userId } = useParams<{ userId: string }>();
     const router = useRouter();
     const {id, name} = props;
-    const {
-        data: response,
-    } = useGetCollectionDetailQuery(id);
 
-    // const collection = response?.folder;
+    const { data: response } = useGetCollectionDetailNoAuthQuery({ id, userId });
     const books = response?.books || [];
     if (books.length === 0)  return;
     return (
