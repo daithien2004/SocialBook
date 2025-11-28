@@ -54,7 +54,6 @@ export const store = configureStore({
       .concat(authorApi.middleware)
       .concat(genreApi.middleware)
       .concat(analyticsApi.middleware)
-	  .concat(analyticsApi.middleware)
       .concat(likeApi.middleware),
 });
 
