@@ -22,6 +22,7 @@ import {
 } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 export default function LibraryPage() {
   // --- STATE ---
@@ -38,8 +39,13 @@ export default function LibraryPage() {
     isFetching: isFetchingLibrary,
   } = useGetLibraryBooksQuery({ status: activeTab });
 
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+
   const { data: collections, isLoading: isLoadingCollections } =
-    useGetCollectionsQuery();
+    useGetCollectionsQuery(currentUserId, {
+      skip: !currentUserId,
+    });
 
   const [createCollection, { isLoading: isCreatingCollection }] =
     useCreateCollectionMutation();

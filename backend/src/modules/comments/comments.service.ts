@@ -15,12 +15,15 @@ import { LikesService } from '@/src/modules/likes/likes.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentCountDto } from '@/src/modules/comments/dto/create-comment.dto';
 
+import { ContentModerationService } from '../content-moderation/content-moderation.service';
+
 @Injectable()
 export class CommentsService {
   constructor(
     private readonly likesService: LikesService,
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-  ) {}
+    private readonly contentModerationService: ContentModerationService,
+  ) { }
 
   async findByTarget(
     targetId: string,
@@ -91,7 +94,7 @@ export class CommentsService {
     const parent = await this.commentModel
       .findById(parentId)
       .select('_id targetId targetType parentId')
-      .lean();
+      .lean() as any;
 
     if (!parent) throw new NotFoundException('Parent comment not found');
 
@@ -130,6 +133,21 @@ export class CommentsService {
     if (!content?.trim()) throw new BadRequestException('Content is required');
     if (!Types.ObjectId.isValid(targetId))
       throw new BadRequestException('Invalid Target ID');
+
+    // 2. Content Moderation
+    const moderationResult = await this.contentModerationService.checkContent(content);
+
+    // Reject toxic/unsafe content immediately
+    if (!moderationResult.isSafe) {
+      const reason = moderationResult.reason ||
+        (moderationResult.isSpoiler ? 'Nội dung chứa thông tin spoiler' :
+          moderationResult.isToxic ? 'Nội dung độc hại hoặc không phù hợp' :
+            'Nội dung không phù hợp');
+
+      throw new BadRequestException(
+        `Bình luận của bạn đã bị từ chối: ${reason}. Đảm bảo bình luận của bạn tuân theo các quy tắc cộng đồng.`
+      );
+    }
 
     const userObjectId = new Types.ObjectId(userId);
     const targetObjectId = new Types.ObjectId(targetId);

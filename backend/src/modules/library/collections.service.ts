@@ -40,6 +40,10 @@ export class CollectionsService {
   }
 
   async findAll(userId: string) {
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid User ID');
+    }
+
     const collections = await this.collectionModel
       .find({ userId: new Types.ObjectId(userId) })
       .sort({ createdAt: -1 })
@@ -51,6 +55,10 @@ export class CollectionsService {
   async findOneWithBooks(userId: string, collectionId: string) {
     if (!Types.ObjectId.isValid(collectionId)) {
       throw new BadRequestException('Invalid Collection ID');
+    }
+
+    if (!userId || !Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid User ID');
     }
 
     const userObjectId = new Types.ObjectId(userId);

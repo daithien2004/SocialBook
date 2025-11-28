@@ -124,3 +124,7 @@ export const NESTJS_TTS_ENDPOINTS = {
   delete: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
   incrementPlay: (chapterId: string) => `/text-to-speech/chapter/${chapterId}/play`,
 };
+
+export const NESTJS_GEMINI_ENDPOINTS = {
+  summarizeChapter: (chapterId: string) => `/gemini/summarize-chapter/${chapterId}`,
+};

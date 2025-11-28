@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
@@ -44,8 +45,13 @@ export default function CommentSection({
         content: trimmed,
         parentId: null,
       }).unwrap();
-    } catch (error) {
+
+      toast.success('Bình luận đã được gửi!');
+    } catch (error: any) {
       console.error('Failed to submit comment:', error);
+      // Display the error message from backend
+      const errorMessage = error?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
