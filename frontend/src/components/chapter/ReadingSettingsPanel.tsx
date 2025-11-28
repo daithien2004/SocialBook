@@ -1,7 +1,7 @@
 'use client';
 // Cá nhân hóa trải nghiệm đọc
 import { useEffect, useState } from 'react';
-import { X, RotateCcw, Type, Palette, Layout } from 'lucide-react';
+import { X, RotateCcw, Type, Palette, Layout, AlertTriangle } from 'lucide-react';
 import { useReadingSettings } from '@/src/store/useReadingSettings';
 import {
     useGetReadingPreferencesQuery,
@@ -33,6 +33,8 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
     const { data: userPrefs } = useGetReadingPreferencesQuery(undefined, { skip: !session });
     const [updatePrefs] = useUpdateReadingPreferencesMutation();
     const [isInitialized, setIsInitialized] = useState(false);
+    const [showResetDialog, setShowResetDialog] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
 
     // Load user preferences từ backend khi có
     useEffect(() => {
@@ -53,9 +55,17 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
         return () => clearTimeout(timer);
     }, [settings, updatePrefs, session, isInitialized]);
 
-    const handleReset = () => {
-        if (confirm('Bạn có chắc muốn đặt lại cài đặt mặc định?')) {
+    const handleReset = async () => {
+        setIsResetting(true);
+        try {
             resetToDefaults();
+            // Thêm delay nhỏ để có thể thấy loading state
+            await new Promise(resolve => setTimeout(resolve, 300));
+            setShowResetDialog(false);
+        } catch (error) {
+            console.error('Reset failed:', error);
+        } finally {
+            setIsResetting(false);
         }
     };
 
@@ -226,7 +236,7 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
                             </div>
                             <input
                                 type="range"
-                                min="0"
+                                min="20"
                                 max="100"
                                 value={settings.marginWidth}
                                 onChange={(e) => updateSettings({ marginWidth: Number(e.target.value) })}
@@ -239,12 +249,84 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
                 {/* Footer - Reset Button */}
                 <div className="p-5 border-t border-white/5 bg-neutral-900/50">
                     <button
-                        onClick={handleReset}
+                        onClick={() => setShowResetDialog(true)}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition-colors border border-white/10"
                     >
                         <RotateCcw size={16} />
                         <span className="font-medium">Đặt lại mặc định</span>
                     </button>
+                </div>
+            </div>
+
+            {/* Reset Dialog Overlay */}
+            <div
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] transition-opacity duration-300 ${
+                    showResetDialog ? 'opacity-100 visible' : 'opacity-0 invisible'
+                }`}
+                onClick={() => !isResetting && setShowResetDialog(false)}
+            />
+
+            {/* Reset Confirmation Dialog */}
+            <div
+                className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-full max-w-sm transition-all duration-300 ${
+                    showResetDialog ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+                }`}
+            >
+                <div className="bg-gradient-to-br from-neutral-850 to-neutral-950 rounded-xl shadow-2xl border border-white/10 overflow-hidden">
+                    {/* Header */}
+                    <div className="p-6 border-b border-white/5 bg-gradient-to-r from-red-900/10 to-orange-900/10 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-red-500/20 rounded-lg">
+                                <AlertTriangle className="w-5 h-5 text-red-400" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Đặt lại cài đặt?</h3>
+                                <p className="text-xs text-neutral-400 mt-0.5">Thao tác này không thể hoàn tác</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => !isResetting && setShowResetDialog(false)}
+                            className="p-1 hover:bg-white/10 rounded-lg transition-colors text-neutral-400 hover:text-white disabled:opacity-50"
+                            disabled={isResetting}
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                        <p className="text-sm text-neutral-300 leading-relaxed">
+                            Tất cả các cài đặt đọc của bạn sẽ được khôi phục về giá trị mặc định. Font chữ, cỡ chữ, chủ đề và các tùy chọn khác sẽ bị đặt lại.
+                        </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="p-6 border-t border-white/5 flex gap-3 bg-neutral-900/50">
+                        <button
+                            onClick={() => setShowResetDialog(false)}
+                            disabled={isResetting}
+                            className="flex-1 px-4 py-2.5 rounded-lg border border-white/10 text-white hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            onClick={handleReset}
+                            disabled={isResetting}
+                            className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                        >
+                            {isResetting ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>Đang xử lý...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <RotateCcw size={16} />
+                                    <span>Xác nhận</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </>

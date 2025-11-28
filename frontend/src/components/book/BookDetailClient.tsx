@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   useGetBookBySlugQuery,
   useLikeBookMutation,
@@ -93,7 +94,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     if (!book?.id) return;
 
     if (!contentInput.trim()) {
-      alert('Vui lòng nhập nội dung đánh giá');
+      toast.error('Vui lòng nhập nội dung đánh giá');
       return;
     }
 
@@ -107,10 +108,12 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
       setIsReviewFormOpen(false);
       setContentInput('');
       setRatingInput(5);
-      alert('Đánh giá thành công!');
-    } catch (err) {
+      toast.success('Đánh giá thành công!');
+    } catch (err: any) {
       console.error('Failed to submit review:', err);
-      alert('Có lỗi xảy ra khi gửi đánh giá.');
+      // Display the error message from backend
+      const errorMessage = err?.data?.message || 'Có lỗi xảy ra khi gửi đánh giá.';
+      toast.error(errorMessage);
     }
   };
 
@@ -282,11 +285,10 @@ ${book.description}
                 <button
                   onClick={handleToggleLike}
                   disabled={isLiking}
-                  className={`flex items-center gap-2 border px-4 py-3 rounded-lg transition-colors ${
-                    book.isLiked
+                  className={`flex items-center gap-2 border px-4 py-3 rounded-lg transition-colors ${book.isLiked
                       ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
                       : 'border-gray-300 hover:bg-gray-50 text-gray-700'
-                  }`}
+                    }`}
                   title={book.isLiked ? 'Bỏ thích' : 'Yêu thích'}
                 >
                   <Heart
@@ -413,11 +415,10 @@ ${book.description}
                           >
                             <Star
                               size={24}
-                              className={`${
-                                star <= ratingInput
+                              className={`${star <= ratingInput
                                   ? 'text-yellow-400 fill-yellow-400'
                                   : 'text-gray-300'
-                              }`}
+                                }`}
                             />
                           </button>
                         ))}
@@ -533,7 +534,7 @@ ${book.description}
                               review.isLiked
                                 ? 'text-red-500'
                                 : 'text-gray-500 hover:text-red-500'
-                            }`}
+                              }`}
                           >
                             <Heart
                               size={14}

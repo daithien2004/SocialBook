@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useReadingSettings } from '@/src/store/useReadingSettings';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
@@ -63,8 +64,12 @@ export function ChapterContent({
       }).unwrap();
 
       setCommentText('');
-    } catch (e) {
+      toast.success('Bình luận đã được gửi!');
+    } catch (e: any) {
       console.error('Create comment failed:', e);
+      // Display the error message from backend
+      const errorMessage = e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+      toast.error(errorMessage);
     }
   };
 
@@ -92,7 +97,7 @@ export function ChapterContent({
   return (
     <>
       <main
-        className="flex-1 w-full antialiased relative transition-all duration-300 rounded-2xl p-4"
+        className="flex-1 w-full antialiased relative transition-all duration-300 rounded-2xl p-10"
         style={{
           backgroundColor: settings.backgroundColor,
           color: settings.textColor,
