@@ -1,18 +1,21 @@
+'use client';
+
 import { Book } from '@/src/features/books/types/book.interface';
-import { ChevronLeft, ChevronRight, Hash } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef, useState, useEffect, ElementType } from 'react';
 import { BookCard } from './BookCard';
 
 interface BookSectionProps {
+  title?: string;
   books: Book[];
   description?: string;
   icon?: ElementType;
 }
 
 export function BookSection({
+  title,
   books,
-  description,
-  icon,
+  icon: IconComponent,
 }: BookSectionProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -21,10 +24,9 @@ export function BookSection({
   const checkScroll = () => {
     const container = containerRef.current;
     if (container) {
-      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollLeft(container.scrollLeft > 2);
       setCanScrollRight(
-        container.scrollLeft <
-          container.scrollWidth - container.clientWidth - 10
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 2
       );
     }
   };
@@ -35,7 +37,6 @@ export function BookSection({
       container.addEventListener('scroll', checkScroll);
       checkScroll();
       window.addEventListener('resize', checkScroll);
-
       return () => {
         container.removeEventListener('scroll', checkScroll);
         window.removeEventListener('resize', checkScroll);
@@ -46,7 +47,7 @@ export function BookSection({
   const scroll = (direction: 'left' | 'right') => {
     const container = containerRef.current;
     if (container) {
-      const scrollAmount = 400;
+      const scrollAmount = container.clientWidth * 0.8;
       container.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
@@ -56,78 +57,57 @@ export function BookSection({
 
   if (!books || books.length === 0) return null;
 
-  // Icon mặc định nếu không truyền vào
-  const SectionIcon = icon || Hash;
-
   return (
-    <section className="w-full mx-auto px-4 py-8 border-t border-gray-100 first:border-t-0">
-      {/* Header Area - Editorial Style */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
-        <div className="flex-1">
-          {/* Decorative Top Label - Mono font giống BookCard */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-gray-400">
-              <SectionIcon className="w-3 h-3" />
-              <span>Collection</span>
-            </div>
-          </div>
+    <section className="w-full group/section py-4">
+      <div className="flex items-center justify-between px-4 md:px-12 mb-4">
+        {title && (
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-wide flex items-center gap-2 transition-colors duration-300">
+            {IconComponent && (
+              <IconComponent
+                size={24}
+                className="text-red-600 dark:text-red-500"
+              />
+            )}
+            {title}
+          </h2>
+        )}
 
-          {description && (
-            <p className="text-gray-500 text-sm mt-2 max-w-2xl font-light leading-relaxed border-l-2 border-gray-200 pl-3 ml-1">
-              {description}
-            </p>
-          )}
-        </div>
-
-        {/* Navigation Arrows - Square & Sharp */}
-        <div className="flex items-center gap-0 border border-gray-200 bg-white">
+        <div className="flex gap-2">
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className={`w-10 h-10 flex items-center justify-center transition-all duration-200 border-r border-gray-200
-              ${
-                !canScrollLeft
-                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
-                  : 'text-gray-600 hover:bg-black hover:text-white'
-              }`}
+            className={`p-1.5 rounded-full border border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300 ${
+              !canScrollLeft ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
+            }`}
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft size={20} />
           </button>
+
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className={`w-10 h-10 flex items-center justify-center transition-all duration-200
-              ${
-                !canScrollRight
-                  ? 'text-gray-300 cursor-not-allowed bg-gray-50'
-                  : 'text-gray-600 hover:bg-black hover:text-white'
-              }`}
+            className={`p-1.5 rounded-full border border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300 ${
+              !canScrollRight ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
+            }`}
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      {/* Books Carousel */}
-      <div className="relative">
+      <div className="relative group">
         <div
           ref={containerRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-1" // pb-1 để tránh shadow bị cắt nếu có
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
+          className="flex gap-4 overflow-x-auto scrollbar-hide px-4 md:px-12 pb-4 pt-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {books.map((book) => (
-            <div key={book.id} className="flex-none">
+            <div key={book.id} className="flex-none w-[160px] md:w-[200px]">
               <BookCard book={book} />
             </div>
           ))}
-
-          {/* Padding right ảo để card cuối không bị dính lề màn hình */}
-          <div className="w-1 flex-none" />
         </div>
       </div>
     </section>

@@ -2,20 +2,15 @@
 
 import { useState } from 'react';
 import { Book } from '@/src/features/books/types/book.interface';
-import { Bookmark, Eye, BookOpenCheck } from 'lucide-react'; // Dùng ít icon hơn
+import { Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRef, useEffect, ElementType } from 'react';
 import Link from 'next/link';
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
+import { formatCompact } from '@/lib/utils';
 
+// BookCard Component with Dark Mode Support
 export function BookCard({ book }: { book: Book }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Formatter số cực gọn (12k)
-  const formatCompact = (num: number) => {
-    return new Intl.NumberFormat('en-US', {
-      notation: 'compact',
-      compactDisplay: 'short',
-    }).format(num);
-  };
 
   const handleAddToLibrary = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,58 +22,58 @@ export function BookCard({ book }: { book: Book }) {
     <>
       <Link
         href={`/books/${book.slug}`}
-        className="group block w-full max-w-[200px]"
+        className="group relative block w-full max-w-[220px]"
       >
-        {/* Khung viền mỏng, sắc nét, không bo góc tròn ủm (Sharp & Clean) */}
-        <div className="flex flex-col border border-gray-200 bg-white transition-colors duration-300 hover:border-gray-900">
-          {/* 1. IMAGE AREA - Tỉ lệ chuẩn, Padding đều như khung tranh */}
-          <div className="relative aspect-[3/4] w-full overflow-hidden border-b border-gray-100 p-2">
-            <div className="relative h-full w-full overflow-hidden bg-gray-100">
-              <img
-                src={book.coverUrl}
-                alt={book.title}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 saturate-[0.8] group-hover:saturate-100"
-              />
-              {/* Status Label - Nhỏ, gọn, chuyên nghiệp ở góc */}
-              <div className="absolute top-0 right-0 bg-white/90 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-black border-l border-b border-gray-200">
-                {book.status === 'published' ? 'PUB' : 'WIP'}
-              </div>
+        <div className="relative flex flex-col overflow-hidden rounded-md bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 transition-all duration-500 hover:border-gray-400 dark:hover:border-white/30 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+          <div className="relative aspect-[2/3] w-full overflow-hidden">
+            <img
+              src={book.coverUrl}
+              alt={book.title}
+              className="h-full w-full object-cover opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-hover:contrast-125"
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0a0a0a] via-transparent to-transparent opacity-80" />
+
+            <div className="absolute top-3 w-full text-center">
+              <span className="text-[9px] font-bold tracking-[0.3em] uppercase text-gray-600 dark:text-white/60 drop-shadow-md">
+                {book.status === 'published' ? 'COMING SOON' : 'IN PRODUCTION'}
+              </span>
             </div>
           </div>
 
-          {/* 2. INFO AREA - Typography focused */}
-          <div className="flex flex-col p-3">
-            {/* Meta Row (Genre | Author) - Dùng đường kẻ dọc | để ngăn cách */}
-            <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-wide text-gray-400 font-medium">
-              <span className="text-black">{book.genres?.[0]?.name}</span>
-              <span className="h-2 w-[1px] bg-gray-300"></span>
-              <span className="truncate">{book.authorId.name}</span>
+          <div className="flex flex-col p-4 pt-2">
+            <div className="mb-1 text-center">
+              <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                {book.authorId.name}
+              </p>
             </div>
 
-            {/* Title - Font Serif cho cảm giác báo chí/văn học */}
-            <h3 className="mb-3 line-clamp-2 font-serif text-base font-bold leading-tight text-gray-900 group-hover:underline decoration-1 underline-offset-2">
+            <h3 className="mb-4 text-center font-sans text-lg font-black uppercase leading-none tracking-wider text-gray-900 dark:text-gray-100 bg-clip-text group-hover:text-red-600 dark:group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all">
               {book.title}
             </h3>
 
-            {/* Tech Specs Footer - Grid thông số kỹ thuật */}
-            <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-2.5">
-              {/* Left: Stats (Text only, no flashy icons) */}
-              <div className="flex gap-3 text-[10px] font-mono text-gray-500">
-                <span className="flex items-center gap-1">
-                  VOL.{book.stats?.chapters || 1}
+            <div className="mt-auto flex items-center justify-between border-t border-gray-200 dark:border-white/10 pt-3">
+              <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-gray-600 dark:text-gray-400">
+                <span>VOL {book.stats?.chapters || 1}</span>
+
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
                 </span>
-                <span className="flex items-center gap-1">
-                  {formatCompact(book.views)} READS
-                </span>
+
+                <span>{formatCompact(book.views)}</span>
               </div>
 
-              {/* Right: Action Button (Minimal) */}
               <button
                 onClick={handleAddToLibrary}
-                className="text-gray-400 transition-colors hover:text-black"
+                className="group/btn text-gray-500 dark:text-gray-500 transition-colors hover:text-red-600 dark:hover:text-white"
                 title="Save to Library"
               >
-                <Bookmark size={16} fill={isModalOpen ? 'black' : 'none'} />
+                <Bookmark
+                  size={16}
+                  className="transition-transform group-hover/btn:scale-110"
+                  fill={isModalOpen ? 'currentColor' : 'none'}
+                />
               </button>
             </div>
           </div>
@@ -91,5 +86,115 @@ export function BookCard({ book }: { book: Book }) {
         bookId={book.id}
       />
     </>
+  );
+}
+
+// BookSection Component with Dark Mode Support
+interface BookSectionProps {
+  title?: string;
+  books: Book[];
+  description?: string;
+  icon?: ElementType;
+}
+
+export function BookSection({
+  title,
+  books,
+  icon: IconComponent,
+}: BookSectionProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    const container = containerRef.current;
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 2);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 2
+      );
+    }
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScroll);
+      checkScroll();
+      window.addEventListener('resize', checkScroll);
+      return () => {
+        container.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('resize', checkScroll);
+      };
+    }
+  }, [books]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    const container = containerRef.current;
+    if (container) {
+      const scrollAmount = container.clientWidth * 0.8;
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  if (!books || books.length === 0) return null;
+
+  return (
+    <section className="w-full group/section py-4">
+      <div className="flex items-center justify-between px-4 md:px-12 mb-4">
+        {title && (
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-wide flex items-center gap-2 transition-colors duration-300">
+            {IconComponent && (
+              <IconComponent
+                size={24}
+                className="text-red-600 dark:text-red-500"
+              />
+            )}
+            {title}
+          </h2>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => scroll('left')}
+            disabled={!canScrollLeft}
+            className={`p-1.5 rounded-full border border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300 ${
+              !canScrollLeft ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
+            }`}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <button
+            onClick={() => scroll('right')}
+            disabled={!canScrollRight}
+            className={`p-1.5 rounded-full border border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300 ${
+              !canScrollRight ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
+            }`}
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="relative group">
+        <div
+          ref={containerRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide px-4 md:px-12 pb-4 pt-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {books.map((book) => (
+            <div key={book.id} className="flex-none w-[160px] md:w-[200px]">
+              <BookCard book={book} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useReadingSettings } from '@/src/store/useReadingSettings';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
@@ -63,8 +64,8 @@ export function ChapterContent({
       }).unwrap();
 
       setCommentText('');
-    } catch (e) {
-      console.error('Create comment failed:', e);
+    } catch (_e) {
+      toast.error('Không thể gửi bình luận');
     }
   };
 
@@ -75,7 +76,7 @@ export function ChapterContent({
 
   const handleSubmitPost = async (data: CreatePostData) => {
     if (!bookId) {
-      alert('Không tìm thấy thông tin sách');
+      toast.error('Không tìm thấy thông tin sách');
       return;
     }
     try {
@@ -84,8 +85,10 @@ export function ChapterContent({
         content: data.content,
         images: data.images,
       }).unwrap();
+      toast.success('Chia sẻ thành công!');
+      setPostModalOpen(false);
     } catch (error: any) {
-      throw new Error(error?.data?.message || 'Không thể tạo bài viết');
+      toast.error(error?.data?.message || 'Không thể tạo bài viết');
     }
   };
 
