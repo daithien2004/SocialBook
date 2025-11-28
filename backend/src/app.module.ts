@@ -26,6 +26,7 @@ import { GenresModule } from './modules/genres/genres.module';
 import { FollowsModule } from '@/src/modules/follows/follows.module';
 import { LibraryModule } from './modules/library/library.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
+import { GeminiModule } from './modules/gemini/gemini.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
     LikesModule,
     FollowsModule,
     StatisticsModule,
+    GeminiModule,
   ],
   controllers: [AppController],
   providers: [
@@ -102,4 +104,4 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

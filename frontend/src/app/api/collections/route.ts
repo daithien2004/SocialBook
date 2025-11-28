@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedServerApi } from '@/src/lib/auth-server-api';
 import { NESTJS_LIBRARY_ENDPOINTS } from '@/src/constants/server-endpoints';
-import serverApi from "@/src/lib/server-api";
+import serverApi from '@/src/lib/server-api';
 
 // GET: Lấy danh sách Folder
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('userId');
-    const url = `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId}`
+    const url = `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId}`;
 
     const response = await serverApi.get(url);
     return NextResponse.json(response.data);
   } catch (error: any) {
+    console.log(error);
     return NextResponse.json(
-        {success: false, message: 'Lỗi khi lấy danh sách folder'},
-        {status: 500}
+      { success: false, message: 'Lỗi khi lấy danh sách folder' },
+      { status: 500 }
     );
   }
 }

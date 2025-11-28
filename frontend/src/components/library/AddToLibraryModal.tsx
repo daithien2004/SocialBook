@@ -21,6 +21,7 @@ import {
   useGetBookLibraryInfoQuery,
 } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
+import { useSession } from 'next-auth/react';
 
 interface AddToLibraryModalProps {
   isOpen: boolean;
@@ -44,8 +45,11 @@ export default function AddToLibraryModal({
   const [isCreating, setIsCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
 
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+
   // --- API HOOKS ---
-  const { data: collectionsData } = useGetCollectionsQuery();
+  const { data: collectionsData } = useGetCollectionsQuery(currentUserId);
   const { data: libraryInfo, isFetching } = useGetBookLibraryInfoQuery(bookId, {
     skip: !isOpen, // Chỉ fetch khi mở modal
   });

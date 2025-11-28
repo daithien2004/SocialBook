@@ -15,6 +15,7 @@ import { authorApi } from '../features/authors/api/authorApi';
 import { genreApi } from '../features/genres/api/genreApi';
 import { analyticsApi } from '../features/admin/api/analyticsApi';
 import { setupListeners } from '@reduxjs/toolkit/query';
+import { geminiApi } from '../features/gemini/api/geminiApi';
 
 export const store = configureStore({
   reducer: {
@@ -33,6 +34,7 @@ export const store = configureStore({
     [authorApi.reducerPath]: authorApi.reducer,
     [genreApi.reducerPath]: genreApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
+    [geminiApi.reducerPath]: geminiApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -49,7 +51,8 @@ export const store = configureStore({
       .concat(ttsApi.middleware)
       .concat(authorApi.middleware)
       .concat(genreApi.middleware)
-      .concat(analyticsApi.middleware),
+      .concat(analyticsApi.middleware)
+      .concat(geminiApi.middleware),
 });
 
 setupListeners(store.dispatch);

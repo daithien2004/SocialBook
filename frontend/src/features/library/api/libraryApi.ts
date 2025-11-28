@@ -101,9 +101,7 @@ export const libraryApi = createApi({
 
     getCollections: builder.query<Collection[], string | void>({
       query: (userId) => ({
-        url: userId
-          ? `${BFF_LIBRARY_ENDPOINTS.collections}?userId=${userId}`
-          : BFF_LIBRARY_ENDPOINTS.collections,
+        url: `${BFF_LIBRARY_ENDPOINTS.collections}?userId=${userId}`,
         method: 'GET',
       }),
       providesTags: [{ type: 'Collection', id: 'LIST' }],

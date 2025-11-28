@@ -108,3 +108,7 @@ export const BFF_USERS_ENDPOINTS = {
   readingPreferences: '/users/reading-preferences',
 };
 
+export const BFF_GEMINI_ENDPOINTS = {
+  summarizeChapter: (chapterId: string) => `/gemini/summarize-chapter/${chapterId}`,
+};
+

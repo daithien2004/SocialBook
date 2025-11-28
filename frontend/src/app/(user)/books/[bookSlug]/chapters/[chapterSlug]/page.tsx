@@ -11,6 +11,7 @@ import {
   BookOpen,
   Settings,
   Share2,
+  Sparkles,
   X,
 } from 'lucide-react';
 
@@ -31,6 +32,7 @@ import ChapterHeader from '@/src/components/chapter/ChapterHeader';
 import { ChapterContent } from '@/src/components/chapter/ChapterContent';
 import { useReadingProgress } from '@/src/hooks/useReadingProgress';
 import AudiobookView from '@/src/components/chapter/AudiobookView';
+import ChapterSummaryModal from '@/src/components/chapter/ChapterSummaryModal';
 import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
 
 interface ChapterPageProps {
@@ -48,6 +50,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const [showTOC, setShowTOC] = useState(false); // Drawer Mục lục
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
   const [showSettings, setShowSettings] = useState(false); // Reading Settings Panel
 
@@ -388,6 +391,12 @@ ${book.description?.slice(0, 100)}...
           />
 
           <DockButton
+            icon={<Sparkles size={20} />}
+            label="Tóm tắt AI"
+            onClick={() => setIsSummaryModalOpen(true)}
+          />
+
+          <DockButton
             icon={<Settings size={20} />}
             label="Cài đặt"
             onClick={() => setShowSettings(true)}
@@ -481,6 +490,15 @@ ${book.description?.slice(0, 100)}...
           contentLabel="Nội dung bài viết"
           contentPlaceholder="Chia sẻ cảm nghĩ của bạn về chương này..."
           maxImages={10}
+        />
+      )}
+
+      {book && chapter && (
+        <ChapterSummaryModal
+          isOpen={isSummaryModalOpen}
+          onClose={() => setIsSummaryModalOpen(false)}
+          chapterId={chapter.id}
+          chapterTitle={chapter.title}
         />
       )}
 
