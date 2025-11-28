@@ -4,6 +4,7 @@
 import React, { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Heart, MessageCircle, Send, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { Post } from '@/src/features/posts/types/post.interface';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
@@ -33,8 +34,12 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
       }).unwrap();
 
       setCommentText('');
-    } catch (e) {
+      toast.success('Bình luận đã được gửi!');
+    } catch (e: any) {
       console.error('Create comment failed:', e);
+      // Display the error message from backend
+      const errorMessage = e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+      toast.error(errorMessage);
     }
   };
 
@@ -115,10 +120,10 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
 
                   {/* Danh sách comment */}
                   <ListComments
-                      targetId={post.id}
-                      isCommentOpen={isCommentOpen}
-                      parentId={null}
-                      targetType={"post"}
+                    targetId={post.id}
+                    isCommentOpen={isCommentOpen}
+                    parentId={null}
+                    targetType={"post"}
                   />
 
                   {/* 🔻 ĐOẠN BẠN MUỐN ĐỂ NGOÀI LISTCOMMENTS */}

@@ -109,9 +109,13 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
       setIsReviewFormOpen(false);
       setContentInput('');
       setRatingInput(5);
+
       toast.success('Đánh giá thành công!');
-    } catch (_err) {
-      toast.error('Có lỗi xảy ra khi gửi đánh giá.');
+    } catch (err: any) {
+      console.error('Failed to submit review:', err);
+      // Display the error message from backend
+      const errorMessage = err?.data?.message || 'Có lỗi xảy ra khi gửi đánh giá.';
+      toast.error(errorMessage);
     }
   };
 
@@ -278,17 +282,6 @@ ${book.description}
                   </div>
                 </div>
 
-                {/* Genres */}
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {book.genres?.map((genre: any) => (
-                    <span
-                      key={genre._id || genre.id}
-                      className="px-3 py-1 bg-gray-100 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-600/20 border border-gray-200 dark:border-white/10 hover:border-red-200 dark:hover:border-red-500/50 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 rounded-full text-sm transition-all duration-300 cursor-default"
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-4">
@@ -314,11 +307,10 @@ ${book.description}
                     <button
                       onClick={handleToggleLike}
                       disabled={isLiking}
-                      className={`p-3 rounded-full border transition-all ${
-                        book.isLiked
+                      className={`p-3 rounded-full border transition-all ${book.isLiked
                           ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-500/20 dark:border-red-500 dark:text-red-500'
                           : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/20 text-gray-400 hover:text-red-500 hover:border-red-200 dark:hover:border-white dark:hover:text-white'
-                      }`}
+                        }`}
                       title={book.isLiked ? 'Bỏ thích' : 'Yêu thích'}
                     >
                       <Heart
@@ -404,21 +396,8 @@ ${book.description}
                   )}
                 </div>
 
-                {/* FORM VIẾT REVIEW */}
                 {isReviewFormOpen && (
-                  <div className="mb-8 bg-gray-50 dark:bg-[#1a1a1a]/50 p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-inner">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="font-bold text-gray-900 dark:text-white text-lg">
-                        Viết đánh giá của bạn
-                      </h3>
-                      <button
-                        onClick={() => setIsReviewFormOpen(false)}
-                        className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-
+                  <div className="mb-8 bg-gray-50 dark:bg-[#1a1a1a]/70 p-6 rounded-lg border border-gray-200 dark:border-white/5">
                     <form onSubmit={handleSubmitReview}>
                       <div className="mb-6">
                         <label className="block text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">
@@ -434,11 +413,10 @@ ${book.description}
                             >
                               <Star
                                 size={28}
-                                className={`${
-                                  star <= ratingInput
+                                className={`${star <= ratingInput
                                     ? 'text-yellow-500 fill-yellow-500 drop-shadow-sm'
                                     : 'text-gray-300 dark:text-gray-600'
-                                }`}
+                                  }`}
                               />
                             </button>
                           ))}
@@ -562,11 +540,10 @@ ${book.description}
                               onClick={() =>
                                 handleLikeReview(review.id || review._id)
                               }
-                              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors w-fit ${
-                                review.isLiked
+                              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors w-fit ${review.isLiked
                                   ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20'
                                   : 'bg-white dark:bg-white/5 text-gray-500 border border-gray-200 dark:border-transparent hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
-                              }`}
+                                }`}
                             >
                               <Heart
                                 size={14}
@@ -594,11 +571,10 @@ ${book.description}
                   <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-white/5 last:border-0">
                     <span className="text-gray-500">Tình trạng</span>
                     <span
-                      className={`font-semibold ${
-                        book.status === 'completed'
+                      className={`font-semibold ${book.status === 'completed'
                           ? 'text-green-600 dark:text-green-400'
                           : 'text-yellow-600 dark:text-yellow-400'
-                      }`}
+                        }`}
                     >
                       {book.status === 'completed'
                         ? 'Hoàn thành'

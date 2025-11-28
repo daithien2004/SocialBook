@@ -158,7 +158,6 @@ export class AuthService {
       user.email,
       roleName,
     );
-    console.log(user);
     // RESPONSE
     return {
       accessToken: tokens.accessToken,

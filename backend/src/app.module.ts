@@ -27,6 +27,7 @@ import { FollowsModule } from '@/src/modules/follows/follows.module';
 import { LibraryModule } from './modules/library/library.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { GeminiModule } from './modules/gemini/gemini.module';
+import { ContentModerationModule } from './modules/content-moderation/content-moderation.module';
 
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { GeminiModule } from './modules/gemini/gemini.module';
     FollowsModule,
     StatisticsModule,
     GeminiModule,
+    ContentModerationModule,
   ],
   controllers: [AppController],
   providers: [

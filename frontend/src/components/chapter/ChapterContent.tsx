@@ -64,8 +64,11 @@ export function ChapterContent({
       }).unwrap();
 
       setCommentText('');
-    } catch (_e) {
-      toast.error('Không thể gửi bình luận');
+      toast.success('Bình luận đã được gửi!');
+    } catch (e: any) {
+      // Display the error message from backend
+      const errorMessage = e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+      toast.error(errorMessage);
     }
   };
 
@@ -95,7 +98,7 @@ export function ChapterContent({
   return (
     <>
       <main
-        className="flex-1 w-full antialiased relative transition-all duration-300 rounded-2xl p-4"
+        className="flex-1 w-full antialiased relative transition-all duration-300 rounded-2xl p-10"
         style={{
           backgroundColor: settings.backgroundColor,
           color: settings.textColor,

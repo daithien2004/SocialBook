@@ -30,20 +30,11 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
   const isFollowing = followState?.isFollowing === true;
 
   const handleFollowClick = async () => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
     try {
       const updated = await toggleFollow(profileUserId).unwrap();
       setFollowState(updated);
     } catch (e: any) {
-      console.error("Toggle follow failed:", e);
-
-      if (e && typeof e === "object" && "status" in e && (e as any).status === 401) {
-        router.push("/auth/login");
-      }
+      console.log("Toggle follow failed:", e);
     }
   };
 

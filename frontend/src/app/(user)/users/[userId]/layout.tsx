@@ -16,7 +16,6 @@ export default async function UserLayout({ children, params }: {
 
     const userApi = await userServerApi();
     const user = await userApi.getIsUserExist(userId);
-    console.log(user);
 
     if (!user) {
         return (

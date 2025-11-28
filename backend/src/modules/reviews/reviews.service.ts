@@ -13,11 +13,14 @@ import { Review, ReviewDocument } from './schemas/review.schema';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 
+import { ContentModerationService } from '../content-moderation/content-moderation.service';
+
 @Injectable()
 export class ReviewsService {
   constructor(
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
-  ) {}
+    private readonly contentModerationService: ContentModerationService,
+  ) { }
 
   async findAllByBook(bookId: string, userId?: string) {
     if (!Types.ObjectId.isValid(bookId)) {
@@ -28,7 +31,7 @@ export class ReviewsService {
       .find({ bookId: new Types.ObjectId(bookId) })
       .populate('userId', 'username image email')
       .sort({ createdAt: -1 })
-      .lean();
+      .lean() as any[];
 
     if (userId) {
       return reviews.map((review) => ({
@@ -47,7 +50,7 @@ export class ReviewsService {
     const review = await this.reviewModel
       .findById(id)
       .populate('userId', 'username image')
-      .lean();
+      .lean() as any;
 
     if (!review) throw new NotFoundException('Review not found');
     return review;
@@ -70,6 +73,21 @@ export class ReviewsService {
       throw new ConflictException('Bạn đã đánh giá cuốn sách này rồi.');
     }
 
+    // Content Moderation
+    const moderationResult = await this.contentModerationService.checkContent(dto.content);
+
+    // Reject toxic/unsafe content immediately
+    if (!moderationResult.isSafe) {
+      const reason = moderationResult.reason ||
+        (moderationResult.isSpoiler ? 'Phát hiện nội dung spoiler' :
+          moderationResult.isToxic ? 'Phát hiện nội dung độc hại hoặc không phù hợp' :
+            'Phát hiện nội dung không phù hợp');
+
+      throw new BadRequestException(
+        `Đánh giá của bạn bị từ chối: ${reason}. Vui lòng đảm bảo đánh giá tuân thủ nguyên tắc cộng đồng.`
+      );
+    }
+
     try {
       const newReview = await this.reviewModel.create({
         ...dto,
@@ -80,7 +98,7 @@ export class ReviewsService {
       return await this.reviewModel
         .findById(newReview._id)
         .populate('userId', 'username image')
-        .lean();
+        .lean() as any;
     } catch (error) {
       throw new BadRequestException('Không thể tạo đánh giá.');
     }
@@ -101,7 +119,7 @@ export class ReviewsService {
     const updatedReview = await this.reviewModel
       .findByIdAndUpdate(id, dto, { new: true })
       .populate('userId', 'username image')
-      .lean();
+      .lean() as any;
 
     return updatedReview;
   }
