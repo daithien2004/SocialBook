@@ -247,45 +247,6 @@ ${book.description?.slice(0, 100)}...
         }}
       />
 
-      {/* 2. HEADER (Auto Hide) */}
-      <header
-        className={`
-          fixed top-0 left-0 w-full h-16 px-4 
-          bg-white/80 dark:bg-black backdrop-blur-xl border-b border-gray-200 dark:border-white/5 z-50 
-          flex items-center 
-          transition-all duration-300
-          ${!isControlsVisible ? '-translate-y-full' : 'translate-y-0'}
-        `}
-      >
-        {/* LEFT: Back Button */}
-        <div className="flex-1 flex justify-start z-10">
-          <button
-            onClick={() => router.push(`/books/${bookSlug}`)}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors group max-w-full"
-          >
-            <ChevronLeft
-              size={20}
-              className="group-hover:-translate-x-1 transition-transform shrink-0"
-            />
-            <span className="text-sm font-medium hidden sm:block truncate opacity-80 group-hover:opacity-100">
-              {book.title}
-            </span>
-          </button>
-        </div>
-
-        {/* CENTER: Title */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none px-12 sm:px-0">
-          <span className="text-sm font-bold text-gray-900 dark:text-white block truncate max-w-[200px] sm:max-w-md mx-auto drop-shadow-md transition-colors duration-300">
-            {chapter.title}
-          </span>
-        </div>
-
-        {/* RIGHT: Spacer */}
-        <div className="flex-1 flex justify-end z-10">
-          <div className="w-8" />
-        </div>
-      </header>
-
       {/* 3. MAIN CONTENT */}
       <main className="relative z-10 pt-20 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl transition-opacity duration-500">
         <ChapterHeader
