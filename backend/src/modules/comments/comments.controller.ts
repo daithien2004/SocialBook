@@ -15,7 +15,7 @@ import { Types } from 'mongoose';
 import { Public } from '@/src/common/decorators/customize';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
-import { CreateCommentDto } from './dto/create-comment.dto';
+import { CommentCountDto, CreateCommentDto } from './dto/create-comment.dto';
 import { GetCommentsDto, ResolveParentQueryDto } from './dto/get-comment.dto';
 
 @Controller('comments')
@@ -69,6 +69,17 @@ export class CommentsController {
     return {
       message: 'Resolve parent successfully',
       data: result,
+    };
+  }
+
+  @Public()
+  @Get('count')
+  @HttpCode(HttpStatus.OK)
+  async getCount(@Query() dto: CommentCountDto) {
+    const data = await this.commentsService.getCommentCount(dto);
+    return {
+      message: 'Get like count successfully',
+      data,
     };
   }
 }

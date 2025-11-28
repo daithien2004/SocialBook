@@ -15,6 +15,7 @@ import { authorApi } from '../features/authors/api/authorApi';
 import { genreApi } from '../features/genres/api/genreApi';
 import { analyticsApi } from '../features/admin/api/analyticsApi';
 import { setupListeners } from '@reduxjs/toolkit/query';
+import {likeApi} from "@/src/features/likes/api/likeApi";
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     [booksApi.reducerPath]: booksApi.reducer,
     [chaptersApi.reducerPath]: chaptersApi.reducer,
     [commentApi.reducerPath]: commentApi.reducer,
+    [likeApi.reducerPath]: likeApi.reducer,
     [followApi.reducerPath]: followApi.reducer,
     [bookRelationApi.reducerPath]: bookRelationApi.reducer,
     [reviewApi.reducerPath]: reviewApi.reducer,
@@ -49,7 +51,8 @@ export const store = configureStore({
       .concat(ttsApi.middleware)
       .concat(authorApi.middleware)
       .concat(genreApi.middleware)
-      .concat(analyticsApi.middleware),
+      .concat(analyticsApi.middleware)
+        .concat(likeApi.middleware),
 });
 
 setupListeners(store.dispatch);

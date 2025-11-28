@@ -19,10 +19,13 @@ export const NESTJS_COMMENTS_ENDPOINTS = {
   getCommentsByTarget: '/comments/target',
   postCreate: '/comments',
   getResolveParent: '/comments/resolve-parent',
+  getCount: '/comments/count',
 };
 
 export const NESTJS_LIKES_ENDPOINTS = {
   postToggleLike: '/likes/toggle',
+  getCount: 'likes/count',
+  getStatus: 'likes/status'
 };
 
 export const NESTJS_BOOKS_ENDPOINTS = {

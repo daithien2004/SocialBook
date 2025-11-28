@@ -13,6 +13,7 @@ import { TARGET_TYPES } from './constants/targetType.constant';
 import { LikesService } from '@/src/modules/likes/likes.service';
 
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { CommentCountDto } from '@/src/modules/comments/dto/create-comment.dto';
 
 @Injectable()
 export class CommentsService {
@@ -167,4 +168,18 @@ export class CommentsService {
       return acc;
     }, {});
   }
+
+  async getCommentCount(dto: CommentCountDto) {
+    if (!Types.ObjectId.isValid(dto.targetId)) {
+      return { count: 0 };
+    }
+
+    const count = await this.commentModel.countDocuments({
+      targetId: new Types.ObjectId(dto.targetId),
+      targetType: dto.targetType.toLowerCase(),
+    });
+
+    return { count };
+  }
+
 }
