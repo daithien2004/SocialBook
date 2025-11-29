@@ -2,22 +2,24 @@ import Image from "next/image";
 import {Eye, Heart, List} from "lucide-react";
 import { useGetBookStatsQuery } from "@/src/features/books/api/bookApi";
 import {formatNumber} from "@/src/lib/utils";
+import {useRouter} from "next/navigation";
 
 interface BookItemProps {
     bookId: string;
     bookName: string;
     authorName: string;
     bookImage: string;
+    slug:string;
 }
 
 export function BookItem(props: BookItemProps) {
     const { data: stats, isLoading, error } = useGetBookStatsQuery(props.bookId);
-
+    const router = useRouter();
     return (
         <div className="flex gap-2 mt-1 mb-3">
             <div className="group relative w-[140px]">
-
-                <div className="relative aspect-[4/6] w-[140px] overflow-hidden shadow-md transition-transform cursor-pointer">
+                <div onClick={()=>{router.push(`/books/${props.slug}`)}}
+                    className="relative aspect-[4/6] w-[140px] overflow-hidden shadow-md transition-transform cursor-pointer">
                     <Image
                         src={props.bookImage}
                         alt={props.bookName}

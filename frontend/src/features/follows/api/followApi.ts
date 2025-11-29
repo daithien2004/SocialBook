@@ -61,6 +61,7 @@ export const followApi = createApi({
             }),
             invalidatesTags: () => [
                 { type: "Follow", id: `FOLLOWING_LIST` },
+                { type: "Follow", id: `FOLLOWING_STATS_LIST` },
             ],
         }),
     }),

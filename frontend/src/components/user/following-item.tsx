@@ -4,11 +4,14 @@ import {Button} from "@/components/ui/button";
 import {UserCheck, UserPlus} from "lucide-react";
 import {FollowingUser, useToggleFollowMutation} from "@/src/features/follows/api/followApi";
 import {useState} from "react";
+import {useRouter} from "next/navigation";
 
 const FollowingItem = (props: FollowingUser) => {
     const [isFollowing, setIsFollowing] = useState(props.isFollowedByCurrentUser);
 
     const [toggleFollow, { isLoading: isToggling }] = useToggleFollowMutation();
+
+    const router = useRouter();
 
     const handleToggleFollow = async  () => {
 
@@ -24,21 +27,22 @@ const FollowingItem = (props: FollowingUser) => {
             className="group relative bg-white rounded-md border border-neutral-200 shadow-md transition-all duration-500 overflow-hidden flex flex-col"
         >
             {/* Cover Image */}
-            <div className="h-24 w-full relative bg-neutral-100 overflow-hidden">
+            <div
+                className="h-24 w-full relative bg-neutral-100 overflow-hidden">
                 <Image
                     src="/img_1.png"
                     alt={`${props.username} cover`}
                     fill
                     className="object-cover transition-transform duration-700 rou grayscale-[20%] group-hover:grayscale-0"
                 />
-                <div className="absolute inset-0 bg-black/5 transition-colors" />
             </div>
 
             {/* Content */}
             <div className="px-3 pb-1 pt-12 relative flex-1 flex flex-col items-center text-center">
                 {/* Avatar - Floating */}
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2">
-                    <div className="h-20 w-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-neutral-50">
+                    <div className="cursor-pointer h-20 w-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-neutral-50"
+                         onClick={()=>{router.push(`/users/${props.id}`)}}>
                         <Image
                             src={props.image || "/user.png"}
                             alt={props.username}
