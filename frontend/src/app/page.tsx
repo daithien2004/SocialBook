@@ -8,7 +8,7 @@ import { Book } from '../features/books/types/book.interface';
 import { useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/src/components/header';
+import { Header } from '../components/header';
 // import { ThemeToggle } from '@/src/components/ThemeToggle'; // Nếu bạn muốn test nút ở đây
 
 const ONE_DAY_IN_MS = 86400000;
@@ -94,7 +94,7 @@ export default function HomePage() {
 
       <div className="relative z-10">
         {/* Đảm bảo Header của bạn cũng hỗ trợ dark mode hoặc truyền props */}
-        <Header /> 
+        <Header session={session} />
 
         <main>
           <div className="pb-8">

@@ -53,7 +53,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     targetType: "post",
   });
 
-  console.log(commentCount);
 
   const openCommentModal = () => setIsCommentOpen(true);
   const closeCommentModal = () => setIsCommentOpen(false);
@@ -310,7 +309,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 />
               </button>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
               {/* Likes Summary */}
               <div className="flex items-center gap-2 text-gray-600 group">
                     <span className="text-sm font-medium">
