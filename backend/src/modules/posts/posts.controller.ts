@@ -22,7 +22,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PaginationDto } from './dto/pagination.dto';
+import { PaginationDto, PaginationUserDto } from './dto/pagination.dto';
 
 import { Public } from '@/src/common/decorators/customize';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
@@ -37,6 +37,17 @@ export class PostsController {
   async findAll(@Query() query: PaginationDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
     const result = await this.postsService.findAll(query.page, limit);
+    return {
+      data: {...result},
+      message: 'Get posts successfully',
+    };
+  }
+
+  @Get('user')
+  @HttpCode(HttpStatus.OK)
+  async findAllByUser(@Req() req: any,@Query() query: PaginationDto) {
+    const limit = query.limit > 100 ? 100 : query.limit;
+    const result = await this.postsService.findAllByUser(req.user.id ,query.page, limit);
     return {
       data: {...result},
       message: 'Get posts successfully',

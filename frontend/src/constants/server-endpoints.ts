@@ -61,6 +61,7 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
 };
 
 export const NESTJS_POSTS_ENDPOINTS = {
+  getAllByUsers: '/posts/user',
   getAll: '/posts',
   create: '/posts',
   update: (id: string) => `/posts/${id}`,

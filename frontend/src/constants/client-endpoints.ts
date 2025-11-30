@@ -11,6 +11,7 @@ export const BFF_AUTH_ENDPOINTS = {
 
 export const BFF_POSTS_ENDPOINTS = {
   getAll: '/posts',
+  getAllByUser: '/posts/user',
   create: '/posts',
   getOne: (id: string) => `/posts/${id}`,
   update: (id: string) => `/posts/${id}`,

@@ -2,22 +2,22 @@
 
 import { useState, useEffect, useRef } from 'react';
 import PostCard from '@/src/components/post/PostCard';
-import { useGetPostsQuery } from '@/src/features/posts/api/postApi';
+import {useGetPostsByUserQuery} from '@/src/features/posts/api/postApi';
 import { Post } from '@/src/features/posts/types/post.interface';
 
 interface PostListProps {
-  currentUserId?: string;
+  userId: string;
 }
 
-const PostList: React.FC<PostListProps> = ({ currentUserId }) => {
+const PostListUser: React.FC<PostListProps> = ({userId}) => {
   const [page, setPage] = useState(1);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const limit = 10; // để debug cho dễ nhìn
 
   const observerTarget = useRef<HTMLDivElement | null>(null);
 
-  const { data, isLoading, error, isFetching } = useGetPostsQuery(
-      { page, limit },
+  const { data, isLoading, error, isFetching } = useGetPostsByUserQuery(
+      { page, limit, userId},
       {
         // cho chắc: khi page thay đổi sẽ refetch
         refetchOnMountOrArgChange: true,
@@ -164,4 +164,4 @@ const PostList: React.FC<PostListProps> = ({ currentUserId }) => {
   );
 };
 
-export default PostList;
+export default PostListUser;

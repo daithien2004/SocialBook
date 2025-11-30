@@ -30,6 +30,7 @@ export function ReadingListItem(props: ReadingListItemProps) {
             <div className="flex items-center justify-start gap-4">
                 {books.map((c) => (
                     <BookItem
+                        slug={c.bookId.slug}
                         bookImage = {c.bookId.coverUrl}
                         bookId={c.bookId.id}
                         bookName={c.bookId.title}
