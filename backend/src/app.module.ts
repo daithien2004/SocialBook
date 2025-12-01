@@ -28,6 +28,7 @@ import { LibraryModule } from './modules/library/library.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { GeminiModule } from './modules/gemini/gemini.module';
 import { ContentModerationModule } from './modules/content-moderation/content-moderation.module';
+import { SearchModule } from './modules/search/search.module';
 import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
 
 @Module({
@@ -94,6 +95,7 @@ import { NotificationsModule } from '@/src/modules/notifications/notifications.m
     GeminiModule,
     ContentModerationModule,
     NotificationsModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
@@ -108,4 +110,4 @@ import { NotificationsModule } from '@/src/modules/notifications/notifications.m
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

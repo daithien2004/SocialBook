@@ -87,7 +87,7 @@ export default function AdminAuthorsPage() {
 
             {/* Table */}
             {!(isLoading || isFetching) && (
-                <div className="px-6 py-6">
+                <div className="py-6">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">

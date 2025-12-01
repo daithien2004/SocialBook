@@ -139,7 +139,7 @@ export default function EditAuthorPage({ params }: EditAuthorPageProps) {
             </div>
 
             {/* Form */}
-            <div className="px-6 py-6">
+            <div className="py-6">
                 <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="flex flex-col md:flex-row gap-8">

@@ -357,7 +357,7 @@ export default function ChapterManagementPage() {
       </div>
 
       {/* Content */}
-      <div className="px-6 py-6">
+      <div className="py-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           {/* New Chapter Form */}
           {showNewChapterForm && (
