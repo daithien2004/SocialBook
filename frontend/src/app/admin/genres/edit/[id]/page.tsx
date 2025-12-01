@@ -94,7 +94,7 @@ export default function EditGenrePage() {
             </div>
 
             {/* Form */}
-            <div className="px-6 py-6">
+            <div className="py-6">
                 <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div className="space-y-6">
