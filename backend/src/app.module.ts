@@ -28,6 +28,7 @@ import { LibraryModule } from './modules/library/library.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { GeminiModule } from './modules/gemini/gemini.module';
 import { ContentModerationModule } from './modules/content-moderation/content-moderation.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { ContentModerationModule } from './modules/content-moderation/content-mo
     StatisticsModule,
     GeminiModule,
     ContentModerationModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
@@ -106,4 +108,4 @@ import { ContentModerationModule } from './modules/content-moderation/content-mo
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
