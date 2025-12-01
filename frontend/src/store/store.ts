@@ -36,7 +36,6 @@ export const store = configureStore({
     [authorApi.reducerPath]: authorApi.reducer,
     [genreApi.reducerPath]: genreApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
-    [geminiApi.reducerPath]: geminiApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()

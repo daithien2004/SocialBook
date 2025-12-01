@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid'; // Thêm uuid để tạo messageId
 class MessageDto {
   @IsString()
   @IsNotEmpty()
+
   room?: string; // For group messages
 
   @IsString()

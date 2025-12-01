@@ -36,8 +36,9 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
     { data: resolvedData, isLoading: isResolvingParent },
   ] = useLazyGetResolveParentQuery();
 
+  console.log(theme);
   const isDark = theme === 'dark';
-
+  console.log(isDark);
   const handleShowReplies = () => {
     setShowReplies(true);
   };

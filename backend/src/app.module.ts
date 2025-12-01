@@ -28,6 +28,7 @@ import { LibraryModule } from './modules/library/library.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { GeminiModule } from './modules/gemini/gemini.module';
 import { ContentModerationModule } from './modules/content-moderation/content-moderation.module';
+import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { ContentModerationModule } from './modules/content-moderation/content-mo
     StatisticsModule,
     GeminiModule,
     ContentModerationModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
