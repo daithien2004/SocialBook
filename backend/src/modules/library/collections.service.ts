@@ -25,18 +25,11 @@ export class CollectionsService {
   ) {}
 
   async create(userId: string, dto: CreateCollectionDto) {
-    try {
-      const newCollection = await this.collectionModel.create({
-        ...dto,
-        userId: new Types.ObjectId(userId),
-      });
-      return newCollection.toObject();
-    } catch (error) {
-      if (error.code === 11000) {
-        throw new ConflictException('Tên thư mục đã tồn tại');
-      }
-      throw error;
-    }
+    const newCollection = await this.collectionModel.create({
+      ...dto,
+      userId: new Types.ObjectId(userId),
+    });
+    return newCollection.toObject();
   }
 
   async findAll(userId: string) {
@@ -102,23 +95,16 @@ export class CollectionsService {
       throw new BadRequestException('Invalid Collection ID');
     }
 
-    try {
-      const updated = await this.collectionModel
-        .findOneAndUpdate(
-          { _id: collectionId, userId: new Types.ObjectId(userId) },
-          dto,
-          { new: true },
-        )
-        .lean();
+    const updated = await this.collectionModel
+      .findOneAndUpdate(
+        { _id: collectionId, userId: new Types.ObjectId(userId) },
+        dto,
+        { new: true },
+      )
+      .lean();
 
-      if (!updated) throw new NotFoundException('Collection not found');
-      return updated;
-    } catch (error) {
-      if (error.code === 11000) {
-        throw new ConflictException('Tên thư mục đã tồn tại');
-      }
-      throw error;
-    }
+    if (!updated) throw new NotFoundException('Collection not found');
+    return updated;
   }
 
   async remove(userId: string, collectionId: string) {

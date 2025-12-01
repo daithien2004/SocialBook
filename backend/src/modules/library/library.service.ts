@@ -13,14 +13,17 @@ import {
 } from '../progress/schemas/progress.schema';
 
 import { AddToCollectionsDto, UpdateProgressDto } from './dto/library.dto';
+import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
 
 @Injectable()
 export class LibraryService {
   constructor(
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
+    @InjectModel(Chapter.name)
+    private chapterModel: Model<ChapterDocument>,
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
-  ) { }
+  ) {}
 
   async getSystemLibrary(userId: string, status: ReadingStatus) {
     return this.readingListModel
@@ -62,9 +65,38 @@ export class LibraryService {
     const bookObjectId = new Types.ObjectId(bookId);
     const chapterObjectId = new Types.ObjectId(chapterId);
 
-    // Consider chapter completed if progress >= 20%
     const progressValue = progress || 0;
-    const status = progressValue >= 60 ? 'completed' : 'reading';
+
+    const currentReadingList = await this.readingListModel
+      .findOne({ userId: userObjectId, bookId: bookObjectId })
+      .select('status')
+      .lean();
+
+    const isAlreadyCompleted =
+      currentReadingList?.status === ReadingStatus.COMPLETED;
+
+    const lastChapter = await this.chapterModel
+      .findOne({ bookId: bookObjectId })
+      .sort({ orderIndex: -1 })
+      .select('_id');
+
+    const isLastChapter =
+      lastChapter && lastChapter._id.toString() === chapterId;
+
+    const chapterStatus =
+      progressValue >= 80 ? ReadingStatus.COMPLETED : ReadingStatus.READING;
+
+    let bookStatus = ReadingStatus.READING;
+
+    if (isAlreadyCompleted) {
+      bookStatus = ReadingStatus.COMPLETED;
+    } else {
+      if (isLastChapter && progressValue >= 80) {
+        bookStatus = ReadingStatus.COMPLETED;
+      } else {
+        bookStatus = ReadingStatus.READING;
+      }
+    }
 
     const [updatedProgress, updatedReadingList] = await Promise.all([
       this.progressModel
@@ -75,7 +107,7 @@ export class LibraryService {
             bookId: bookObjectId,
             chapterId: chapterObjectId,
             progress: progressValue,
-            status, // Auto-set based on progress
+            status: chapterStatus,
             lastReadAt: new Date(),
           },
           { upsert: true, new: true },
@@ -86,7 +118,7 @@ export class LibraryService {
         .findOneAndUpdate(
           { userId: userObjectId, bookId: bookObjectId },
           {
-            status: ReadingStatus.READING,
+            status: bookStatus,
             lastReadChapterId: chapterObjectId,
           },
           { upsert: true, new: true },
@@ -141,7 +173,6 @@ export class LibraryService {
     };
   }
 
-  // 5. Xóa sách khỏi thư viện
   async removeFromLibrary(userId: string, bookId: string) {
     if (!Types.ObjectId.isValid(bookId))
       throw new BadRequestException('Invalid Book ID');

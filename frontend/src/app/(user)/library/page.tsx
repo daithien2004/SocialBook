@@ -72,7 +72,7 @@ export default function LibraryPage() {
   // --- RENDER HELPERS ---
   const tabs = [
     { id: LibraryStatus.READING, label: 'Đọc hiện tại', icon: Clock },
-    { id: LibraryStatus.PLAN_TO_READ, label: 'Danh sách đọc', icon: Bookmark },
+    { id: LibraryStatus.COMPLETED, label: 'Đã hoàn thành', icon: Bookmark },
     { id: LibraryStatus.ARCHIVED, label: 'Kho lưu trữ', icon: Archive },
   ];
 
@@ -275,8 +275,8 @@ export default function LibraryPage() {
                 <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6">
                   {activeTab === LibraryStatus.READING
                     ? 'Bạn chưa đọc cuốn sách nào gần đây.'
-                    : activeTab === LibraryStatus.PLAN_TO_READ
-                    ? 'Danh sách đọc của bạn đang trống.'
+                    : activeTab === LibraryStatus.COMPLETED
+                    ? 'Bạn chưa đọc xong cuốn sách nào.'
                     : 'Bạn chưa lưu trữ cuốn sách nào.'}
                 </p>
                 <Link

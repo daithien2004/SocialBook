@@ -1,6 +1,6 @@
-import {getServerSession} from 'next-auth/next';
+import { getServerSession } from 'next-auth/next';
 import serverApi from '@/src/lib/server-api'; // Base axios instance KHÔNG có token
-import {authOptions} from '../app/api/auth/[...nextauth]/route';
+import { authOptions } from '../app/api/auth/[...nextauth]/route';
 
 export async function getAuthenticatedServerApi() {
   // 1. Lấy session. Nhờ Type Augmentation, TypeScript đã hiểu cấu trúc session
@@ -12,6 +12,8 @@ export async function getAuthenticatedServerApi() {
   }
 
   const accessToken = session.accessToken;
+
+  console.log(accessToken);
 
   // 3. Tạo một instance mới (hoặc clone) từ serverApi để thêm Authorization Header
   // Việc tạo instance mới là cách an toàn nhất để đảm bảo header không bị dính vào các request khác

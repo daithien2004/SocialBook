@@ -1,18 +1,15 @@
-// src/features/library/types/library.interface.ts
 import { Book } from '../../books/types/book.interface';
 
-// Enum trạng thái (khớp với Backend)
 export enum LibraryStatus {
   READING = 'READING',
-  PLAN_TO_READ = 'PLAN_TO_READ',
   ARCHIVED = 'ARCHIVED',
+  COMPLETED = 'COMPLETED',
 }
 
-// 1. Đối tượng Sách trong Thư viện (Item trong danh sách)
 export interface LibraryItem {
-  id: string; // ID của ReadingList record
+  id: string;
   userId: string;
-  bookId: Book;// Đã populate thông tin sách
+  bookId: Book;
   status: LibraryStatus;
   lastReadChapterId?: {
     id: string;
@@ -24,7 +21,6 @@ export interface LibraryItem {
   updatedAt: string;
 }
 
-// 2. Đối tượng Folder (Collection)
 export interface Collection {
   id: string;
   name: string;
@@ -33,13 +29,10 @@ export interface Collection {
   createdAt: string;
 }
 
-// 3. Response chi tiết Folder (bao gồm sách)
 export interface CollectionDetailResponse {
   folder: Collection;
   books: LibraryItem[];
 }
-
-// --- REQUEST DTOs ---
 
 export interface UpdateProgressRequest {
   bookId: string;
