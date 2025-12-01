@@ -21,6 +21,8 @@ const ParagraphSchema = SchemaFactory.createForClass(Paragraph);
 
 @Schema({ timestamps: true })
 export class Chapter {
+  _id: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, required: true, ref: 'Book' })
   bookId: Types.ObjectId;
 

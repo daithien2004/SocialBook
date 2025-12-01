@@ -15,20 +15,6 @@ export class GeminiController {
   constructor(private readonly geminiService: GeminiService) {}
 
   @Public()
-  @Post('analyze')
-  @UseInterceptors(FileInterceptor('file'))
-  async analyzePdf(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new BadRequestException('Vui lòng upload một file PDF.');
-    }
-    if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Chỉ chấp nhận file định dạng PDF.');
-    }
-
-    return await this.geminiService.extractInsights(file);
-  }
-
-  @Public()
   @Post('summarize-chapter/:chapterId')
   async summarizeChapter(@Param('chapterId') chapterId: string) {
     if (!chapterId) {

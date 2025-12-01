@@ -32,9 +32,10 @@ export class BooksService {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Author.name) private authorModel: Model<AuthorDocument>,
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
-    @InjectModel(ReadingList.name) private readingListModel: Model<ReadingListDocument>,
+    @InjectModel(ReadingList.name)
+    private readingListModel: Model<ReadingListDocument>,
     private cloudinaryService: CloudinaryService,
-  ) { }
+  ) {}
 
   async findAll(query: {
     page: number;

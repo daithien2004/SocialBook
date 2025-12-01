@@ -162,8 +162,8 @@ export default function AddToLibraryModal({
               color="text-blue-600 bg-blue-50 border-blue-200"
             />
             <StatusButton
-              active={selectedStatus === LibraryStatus.PLAN_TO_READ}
-              onClick={() => handleStatusChange(LibraryStatus.PLAN_TO_READ)}
+              active={selectedStatus === LibraryStatus.COMPLETED}
+              onClick={() => handleStatusChange(LibraryStatus.COMPLETED)}
               icon={Bookmark}
               label="Muốn đọc"
               color="text-yellow-600 bg-yellow-50 border-yellow-200"
