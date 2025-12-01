@@ -20,6 +20,8 @@ import {
   useDeletePostImageMutation,
 } from '@/src/features/posts/api/postApi';
 import { useSession } from 'next-auth/react';
+import {useGetCountQuery, useGetStatusQuery, usePostToggleLikeMutation} from "@/src/features/likes/api/likeApi";
+import {useGetCommentCountQuery} from "@/src/features/comments/api/commentApi";
 
 interface PostCardProps {
   post: Post;
@@ -37,6 +39,20 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
   const [deleteImage] = useDeletePostImageMutation();
+  const [toggleLike] = usePostToggleLikeMutation();
+  const { data: likeCount, isLoading: isLikeLoading } = useGetCountQuery({
+    targetId: post.id,
+    targetType: "post",
+  });
+  const { data: likeStatus, isLoading: isLikeStatusLoading } = useGetStatusQuery({
+    targetId: post.id,
+    targetType: "post",
+  });
+  const { data: commentCount, isLoading: isCommentLoading } = useGetCommentCountQuery({
+    targetId: post.id,
+    targetType: "post",
+  });
+
 
   const openCommentModal = () => setIsCommentOpen(true);
   const closeCommentModal = () => setIsCommentOpen(false);
@@ -90,6 +106,16 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     }
   };
 
+  const handleLike = async () => {
+    try {
+      const res = await toggleLike({
+        targetId: post.id,
+        targetType: "post",
+      }).unwrap();
+    } catch (error) {
+      console.error("Toggle like failed:", error);
+    }
+  };
   return (
     <>
       <div className="w-full bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 mb-6">
@@ -260,12 +286,10 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 <Heart
                   size={22}
                   className={`transition-transform duration-200 group-hover:scale-110 ${
-                    post.likedByCurrentUser ? 'fill-red-500 text-red-500' : ''
+                      likeStatus?.isLiked ? 'fill-red-500 text-red-500' : ''
                   }`}
+                  onClick={()=>{handleLike()}}
                 />
-                <span className="text-sm font-medium">
-                  {post.totalLikes ?? 0}
-                </span>
               </button>
 
               <button
@@ -276,9 +300,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                   size={22}
                   className="transition-transform duration-200 group-hover:scale-110"
                 />
-                <span className="text-sm font-medium">
-                  {post.totalComments ?? 0}
-                </span>
               </button>
 
               <button className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors group">
@@ -287,6 +308,21 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                   className="transition-transform duration-200 group-hover:scale-110 -rotate-45 mt-1"
                 />
               </button>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Likes Summary */}
+              <div className="flex items-center gap-2 text-gray-600 group">
+                    <span className="text-sm font-medium">
+                  {likeCount?.count ?? 0} lượt thích
+                  </span>
+                  </div>
+
+                  {/* Comments Summary */}
+                  <div className="flex items-center gap-2 text-gray-600 group">
+                    <span className="text-sm font-medium">
+                      {commentCount?.count ?? 0} bình luận
+                     </span>
+              </div>
             </div>
           </div>
         </div>

@@ -4,12 +4,17 @@ import {
   BFF_COMMENTS_ENDPOINTS,
   BFF_LIKES_ENDPOINTS,
 } from '@/src/constants/client-endpoints';
+import {LikeRequest} from "@/src/features/likes/api/likeApi";
 
 export interface GetCommentsRequest {
   targetId: string;
   parentId: string | null;
   cursor?: string;
   limit: number;
+}
+export interface CommentRequest {
+  targetId: string;
+  targetType: string;
 }
 
 export interface PostToggleLikeRequest {
@@ -124,6 +129,10 @@ export const commentApi = createApi({
           type: 'Comment',
           id: `THREAD-${arg.targetId}-${arg.parentId ?? 'root'}`,
         },
+        {
+          type: 'Comment',
+          id: `COUNT-${arg.targetType}-${arg.targetId}`,
+        },
       ],
     }),
 
@@ -143,6 +152,20 @@ export const commentApi = createApi({
         },
       ],
     }),
+
+    getCommentCount: builder.query<{ count: number }, CommentRequest>({
+      query: ({ targetId, targetType }) => ({
+        url: BFF_COMMENTS_ENDPOINTS.getCount,
+        method: "GET",
+        params: { targetId, targetType },
+      }),
+      providesTags: (result, error, arg) => [
+        {
+          type: 'Comment' as const,
+          id: `COUNT-${arg.targetType}-${arg.targetId}`,
+        },
+      ],
+    }),
   }),
 });
 
@@ -150,5 +173,6 @@ export const {
   useLazyGetCommentsByTargetQuery,
   usePostCreateMutation,
   useLazyGetResolveParentQuery,
+  useGetCommentCountQuery,
   usePostToggleLikeMutation,
 } = commentApi;

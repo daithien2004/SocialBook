@@ -12,7 +12,7 @@ interface PostListProps {
 const PostList: React.FC<PostListProps> = ({ currentUserId }) => {
   const [page, setPage] = useState(1);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
-  const limit = 2; // để debug cho dễ nhìn
+  const limit = 10; // để debug cho dễ nhìn
 
   const observerTarget = useRef<HTMLDivElement | null>(null);
 

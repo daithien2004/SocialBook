@@ -55,6 +55,50 @@ export class PostsService {
     };
   }
 
+  async findAllByUser(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid User ID');
+    }
+
+    const skip = (page - 1) * limit;
+    const userObjectId = new Types.ObjectId(userId);
+
+    const query = { isDelete: false, userId: userObjectId }; // luôn có userId
+
+    const [posts, total] = await Promise.all([
+      this.postModel
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate('userId', 'name email image')
+        .populate({
+          path: 'bookId',
+          select: 'title coverUrl',
+          populate: {
+            path: 'authorId',
+            select: 'name bio',
+          },
+        })
+        .lean(),
+      this.postModel.countDocuments(query),
+    ]);
+
+    return {
+      items: posts,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async findOne(id: string) {
     if (!Types.ObjectId.isValid(id))
       throw new BadRequestException('Invalid Post ID');

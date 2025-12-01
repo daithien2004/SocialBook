@@ -11,6 +11,7 @@ export const BFF_AUTH_ENDPOINTS = {
 
 export const BFF_POSTS_ENDPOINTS = {
   getAll: '/posts',
+  getAllByUser: '/posts/user',
   create: '/posts',
   getOne: (id: string) => `/posts/${id}`,
   update: (id: string) => `/posts/${id}`,
@@ -35,11 +36,14 @@ export const BFF_COMMENTS_ENDPOINTS = {
   getCommentsByTarget: '/comments/target',
   postCreateComment: '/comments',
   getResolveParent: '/comments/resolve-parent',
+  getCount: '/comments/count',
 };
 
 
 export const BFF_LIKES_ENDPOINTS = {
   postToggleLike: '/likes/toggle',
+  getCount: '/likes/count',
+  getStatus: '/likes/status',
 };
 
 export const BFF_CHAPTERS_ENDPOINTS = {

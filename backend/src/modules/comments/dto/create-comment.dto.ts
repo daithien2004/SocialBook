@@ -16,3 +16,11 @@ export class CreateCommentDto {
   @IsMongoId()
   parentId: string | null;
 }
+
+export class CommentCountDto {
+  @IsMongoId()
+  targetId: string;
+
+  @IsEnum(TARGET_TYPES)
+  targetType: string;
+}

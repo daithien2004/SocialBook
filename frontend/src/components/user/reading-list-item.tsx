@@ -18,9 +18,8 @@ export function ReadingListItem(props: ReadingListItemProps) {
     if (books.length === 0)  return;
     return (
         <>
-            <div onClick={()=>{router.push(`/collections/${id}`)}}
-                 className="flex items-center">
-                <span className="text-xl font-semibold font-serif text-gray-800 cursor-pointer">{name}</span>
+            <div className="flex items-center">
+                <span className="text-xl font-semibold font-serif text-gray-800">{name}</span>
                 <ChevronRight
                     strokeWidth={1.5}
                     className="w-5 h-5 text-gray-500 relative top-[1px] -ml-[1px]" />
@@ -31,6 +30,7 @@ export function ReadingListItem(props: ReadingListItemProps) {
             <div className="flex items-center justify-start gap-4">
                 {books.map((c) => (
                     <BookItem
+                        slug={c.bookId.slug}
                         bookImage = {c.bookId.coverUrl}
                         bookId={c.bookId.id}
                         bookName={c.bookId.title}

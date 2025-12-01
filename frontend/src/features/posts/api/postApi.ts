@@ -67,6 +67,24 @@ export const postApi = createApi({
       providesTags: (result, error, id) => [{ type: 'PostDetail', id }],
     }),
 
+    getPostsByUser: builder.query<PaginatedPostsResponse, PaginationParams>({
+      query: ({ page = 1, limit = 10 }) => ({
+        url: BFF_POSTS_ENDPOINTS.getAllByUser,
+        method: 'GET',
+        params: { page, limit },
+      }),
+      providesTags: (result) =>
+          result
+              ? [
+                ...result.items.map(({ id }) => ({
+                  type: 'Post' as const,
+                  id,
+                })),
+                { type: 'Post', id: 'LIST' },
+              ]
+              : [{ type: 'Post', id: 'LIST' }],
+    }),
+
     // Tạo post mới
     createPost: builder.mutation<Post, CreatePostRequest>({
       query: (data) => {
@@ -170,6 +188,7 @@ export const {
   useCreatePostMutation,
   useUpdatePostMutation,
   useDeletePostMutation,
+  useGetPostsByUserQuery,
   useDeletePostPermanentMutation,
   useDeletePostImageMutation,
 } = postApi;

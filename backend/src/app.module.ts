@@ -30,6 +30,8 @@ import { GeminiModule } from './modules/gemini/gemini.module';
 import { ContentModerationModule } from './modules/content-moderation/content-moderation.module';
 import { RecommendationsModule } from './modules/recommendations/recommendations.module';
 import { ScraperModule } from './modules/scraper/scraper.module';
+import { SearchModule } from './modules/search/search.module';
+import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -96,6 +98,8 @@ import { ScraperModule } from './modules/scraper/scraper.module';
     ContentModerationModule,
     RecommendationsModule,
     ScraperModule,
+    NotificationsModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
@@ -110,4 +114,4 @@ import { ScraperModule } from './modules/scraper/scraper.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
