@@ -10,8 +10,13 @@ import {
   Put,
   Request,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ChaptersService } from './chapters.service';
+import { FileImportService } from './file-import.service';
 
 // Guards & Decorators
 import { Public } from '@/src/common/decorators/customize';
@@ -25,7 +30,10 @@ import { UpdateChapterDto } from './dto/update-chapter.dto';
 
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
-  constructor(private readonly chaptersService: ChaptersService) { }
+  constructor(
+    private readonly chaptersService: ChaptersService,
+    private readonly fileImportService: FileImportService,
+  ) { }
 
   @Public()
   @Get()
@@ -52,6 +60,42 @@ export class ChaptersController {
       message: 'Create chapter successfully',
       data,
     };
+  }
+
+  @Post('import/preview')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @UseInterceptors(FileInterceptor('file', {
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB
+    },
+    fileFilter: (req, file, callback) => {
+      const allowedMimes = ['application/pdf', 'application/epub+zip', 'application/epub'];
+      if (allowedMimes.includes(file.mimetype)) {
+        callback(null, true);
+      } else {
+        console.warn(`[FileImport] Rejected file. Mime: ${file.mimetype}, Name: ${file.originalname}`);
+        callback(
+          new BadRequestException(`Invalid file type: ${file.mimetype}. Only PDF and EPUB are allowed`),
+          false
+        );
+      }
+    }
+  }))
+  async importPreview(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    try {
+      const chapters = await this.fileImportService.parseFile(file);
+      return {
+        message: 'File parsed successfully',
+        data: chapters,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get('id/:id')
