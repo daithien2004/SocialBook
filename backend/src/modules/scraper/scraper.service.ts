@@ -349,7 +349,7 @@ export class ScraperService {
     if (statusLower.includes('full') || statusLower.includes('hoàn'))
       return 'completed';
     if (statusLower.includes('đang')) return 'published';
-    return 'draft';
+    return 'published';
   }
 
   private extractSlugFromUrl(url: string): string {
@@ -399,7 +399,7 @@ export class ScraperService {
         if (genre) genres.push(genre);
       });
 
-      let status = 'draft';
+      let status = 'published';
       if ($('.text-success').text().includes('Full')) {
         status = 'completed';
       } else if ($('.label-full').length > 0) {
