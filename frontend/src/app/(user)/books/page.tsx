@@ -182,7 +182,6 @@ export default function BooksPage() {
       </div>
 
       <div className="relative z-10">
-        <Header />
 
         <main className="container mx-auto px-4 md:px-12 py-8">
           {/* Header Section */}

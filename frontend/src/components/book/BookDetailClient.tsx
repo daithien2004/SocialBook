@@ -197,7 +197,6 @@ ${book.description}
       </div>
 
       <div className="relative z-10">
-        <Header />
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
           {/* Header Section */}
