@@ -17,5 +17,9 @@ import { Book, BookSchema } from '../books/schemas/book.schema';
   ],
   controllers: [PostsController],
   providers: [PostsService],
+  exports: [
+    MongooseModule,
+    PostsService,
+  ],
 })
 export class PostsModule {}

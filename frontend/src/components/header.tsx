@@ -14,6 +14,7 @@ import { signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import {NotificationBell} from "@/src/components/notification/NotificationBell";
 
 type HeaderClientProps = {
   session: Session | null;
@@ -101,6 +102,7 @@ export function Header({ session }: HeaderClientProps) {
             <div className="flex items-center gap-3">
               {isAuthenticated && userId ? (
                   <>
+                    <NotificationBell session={session} />
                     {/* Avatar + Dropdown */}
                     <div className="relative inline-flex items-center">
                       <button

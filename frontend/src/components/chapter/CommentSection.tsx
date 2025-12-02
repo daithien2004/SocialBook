@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
+import {useTheme} from "next-themes";
 
 export interface Comment {
   id: string;
@@ -32,7 +33,7 @@ export default function CommentSection({
 }: CommentSectionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createComment] = usePostCreateMutation();
-
+  const { theme, setTheme } = useTheme();
   const handleSubmit = async (content: string) => {
     const trimmed = content.trim();
     if (!trimmed) return;
@@ -82,7 +83,7 @@ export default function CommentSection({
           isCommentOpen={true}
           parentId={null}
           targetType={'chapter'}
-          theme="dark"
+          theme={theme}
         />
       </div>
     </section>
