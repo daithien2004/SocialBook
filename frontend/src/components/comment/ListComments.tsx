@@ -72,7 +72,7 @@ const ListComments: React.FC<ListCommentsProps> = (props) => {
   };
 
   return (
-    <div className={`flex-1 overflow-y-auto px-3 py-3 space-y-3 ${className}`}>
+    <div className={`flex-1 overflow-y-auto px-2 space-y-1 ${className}`}>
       {isFirstLoading && (
         <p className={`text-sm ${textClass} animate-pulse`}>
           Đang tải bình luận...

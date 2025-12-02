@@ -1,7 +1,7 @@
 // ModalPostComment.tsx
 'use client';
 
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useLayoutEffect, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Heart, MessageCircle, Send, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -37,141 +37,168 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
       toast.success('Bình luận đã được gửi!');
     } catch (e: any) {
       console.error('Create comment failed:', e);
-      // Display the error message from backend
       const errorMessage = e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
       toast.error(errorMessage);
     }
   };
 
-  return (
-    <Transition appear show={isCommentOpen} as={Fragment}>
-      <Dialog
-        as="div"
-        className="relative z-[9999]"
-        onClose={closeCommentModal}
-      >
-        {/* Backdrop */}
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/70" />
-        </Transition.Child>
+  // (Optional) khoá scroll body khi mở modal – thuần UI, không ảnh hưởng logic
+  useLayoutEffect(() => {
+    if (!isCommentOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isCommentOpen]);
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
+  const rightColRef = useRef<HTMLDivElement>(null);
+
+  return (
+      <Transition appear show={isCommentOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-[9999]" onClose={closeCommentModal}>
+          {/* Overlay mờ nhẹ, không đen đặc */}
+          <Transition.Child
               as={Fragment}
               enter="ease-out duration-200"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
               leave="ease-in duration-150"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              {/* Panel */}
-              <Dialog.Panel className="bg-white w-[min(95vw,1000px)] h-[80vh] rounded-2xl overflow-hidden shadow-2xl flex">
-                {/* Nút đóng */}
-                <button
-                  onClick={closeCommentModal}
-                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-600"
-                  aria-label="Close"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-slate-900/15 backdrop-blur-[2px]" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-200"
+                  enterFrom="opacity-0 scale-95"
+                  enterTo="opacity-100 scale-100"
+                  leave="ease-in duration-150"
+                  leaveFrom="opacity-100 scale-100"
+                  leaveTo="opacity-0 scale-95"
+              >
+                {/* Panel */}
+                <Dialog.Panel
+                    className="
+                      bg-white
+                      w-[min(96vw,1000px)]
+                      h-[82vh]          /* ⬅️ ép modal cao hơn rõ rệt */
+                      rounded-3xl
+                      overflow-hidden
+                      shadow-2xl
+                      border border-slate-100
+                      flex
+                      relative
+                    "
                 >
-                  <X size={20} />
-                </button>
+                  {/* Nút đóng */}
+                  <button
+                      onClick={closeCommentModal}
+                      className="absolute top-3 right-3 p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors"
+                      aria-label="Close"
+                  >
+                    <X size={18} />
+                  </button>
 
-                {/* Trái: ảnh lớn */}
-                <div className="hidden md:block md:w-[50%] bg-black">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {/*<img*/}
-                  {/*  src={post?.imageUrls[0]}*/}
-                  {/*  alt="Post"*/}
-                  {/*  className="w-full h-full object-contain bg-black"*/}
-                  {/*/>*/}
-                </div>
-
-                {/* Phải: comment column */}
-                <div className="w-full md:w-[50%] flex flex-col">
-                  {/* Header */}
-                  <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
+                  {/* Trái: ảnh lớn (ẩn trên mobile) */}
+                  <div className="hidden md:flex md:w-1/2 bg-slate-900/90 items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={post.userAvatar}
-                      alt=""
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <Dialog.Title className="text-sm font-semibold">
-                        {post.userName}
-                      </Dialog.Title>
-                      <p className="text-xs text-gray-500">{post.bookTitle}</p>
-                    </div>
+                    {post?.imageUrls?.[0] ? (
+                        <img
+                            src={post.imageUrls[0]}
+                            alt="Post"
+                            className="w-full h-full object-contain"
+                        />
+                    ) : (
+                        <div className="text-slate-300 text-sm">Không có ảnh</div>
+                    )}
                   </div>
 
-                  {/* Nội dung ngắn */}
-                  <div className="px-4 py-3 text-sm text-gray-800 border-b border-gray-200">
-                    {post.content}
-                  </div>
-
-                  {/* Danh sách comment */}
-                  <ListComments
-                    targetId={post.id}
-                    isCommentOpen={isCommentOpen}
-                    parentId={null}
-                    targetType={"post"}
-                  />
-
-                  {/* 🔻 ĐOẠN BẠN MUỐN ĐỂ NGOÀI LISTCOMMENTS */}
-                  <div className="px-4 py-3 border-t border-gray-100">
-                    {/* Nút like, comment, send */}
-                    <div className="flex items-center gap-4 mb-3">
-                      <Heart
-                        size={22}
-                        className="cursor-pointer hover:scale-110 transition"
+                  {/* Phải: comment column */}
+                  <div
+                      ref={rightColRef}
+                      className="w-full md:w-1/2 flex flex-col"
+                  >
+                    {/* Header (sticky) */}
+                    <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-white sticky top-0 z-10">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                          src={post.userId?.image}
+                          alt=""
+                          className="w-9 h-9 rounded-full border border-slate-200 object-cover"
                       />
-                      <MessageCircle
-                        size={20}
-                        className="cursor-pointer hover:scale-110 transition"
-                      />
-                      <Send
-                        size={20}
-                        className="cursor-pointer hover:scale-110 transition"
+                      <div className="flex-1 min-w-0">
+                        <Dialog.Title className="text-sm font-semibold text-slate-900 truncate">
+                          {post.userId?.username}
+                        </Dialog.Title>
+                        <p className="text-xs text-slate-500 truncate">{post.bookId.title}</p>
+                      </div>
+                    </div>
+
+                    {/* Nội dung ngắn (snippet) */}
+                    <div className="px-4 py-3 text-sm text-slate-800 border-b border-slate-100">
+                      {post.content}
+                    </div>
+
+                    {/* Danh sách comment (scroll trong cột phải) */}
+                    <div
+                        data-modal-body
+                        className="flex-1 overflow-y-auto thin-scrollbar px-4 py-3"
+                    >
+                      <ListComments
+                          targetId={post.id}
+                          isCommentOpen={isCommentOpen}
+                          parentId={null}
+                          targetType={'post'}
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mb-2">
-                      {post.totalLikes ?? 0} lượt thích •{' '}
-                      {post.totalComments ?? 0} bình luận
-                    </p>
 
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="text"
-                        placeholder="Thêm bình luận..."
-                        className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                      />
-                      <button
-                        disabled={isPosting || !commentText.trim()}
-                        onClick={onSubmitComment}
-                        className="text-indigo-600 font-semibold cursor-pointer hover:text-indigo-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isPosting ? 'Đang đăng...' : 'Đăng'}
-                      </button>
+                    {/* Footer actions (sticky bottom) */}
+                    <div className="px-4 py-3 border-t border-slate-100 bg-white sticky bottom-0">
+                      <div className="flex items-center gap-4 mb-2">
+                        <button className="p-1.5 rounded-full hover:bg-slate-100 transition">
+                          <Heart size={20} className="text-slate-700 hover:scale-110 transition-transform" />
+                        </button>
+                        <button className="p-1.5 rounded-full hover:bg-slate-100 transition">
+                          <MessageCircle size={19} className="text-slate-700 hover:scale-110 transition-transform" />
+                        </button>
+                        <button className="p-1.5 rounded-full hover:bg-slate-100 transition">
+                          <Send size={19} className="text-slate-700 hover:scale-110 transition-transform" />
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-slate-500 mb-2">
+                        {post.totalLikes ?? 0} lượt thích • {post.totalComments ?? 0} bình luận
+                      </p>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                            type="text"
+                            placeholder="Thêm bình luận..."
+                            className="flex-1 border border-slate-200 bg-slate-50 rounded-xl px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                        />
+                        <button
+                            disabled={isPosting || !commentText.trim()}
+                            onClick={onSubmitComment}
+                            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {isPosting ? 'Đang đăng...' : 'Đăng'}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
           </div>
-        </div>
-      </Dialog>
-    </Transition>
+        </Dialog>
+      </Transition>
   );
 };
 

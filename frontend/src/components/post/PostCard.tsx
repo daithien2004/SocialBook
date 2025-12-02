@@ -20,8 +20,12 @@ import {
   useDeletePostImageMutation,
 } from '@/src/features/posts/api/postApi';
 import { useSession } from 'next-auth/react';
-import {useGetCountQuery, useGetStatusQuery, usePostToggleLikeMutation} from "@/src/features/likes/api/likeApi";
-import {useGetCommentCountQuery} from "@/src/features/comments/api/commentApi";
+import {
+  useGetCountQuery,
+  useGetStatusQuery,
+  usePostToggleLikeMutation,
+} from '@/src/features/likes/api/likeApi';
+import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
 
 interface PostCardProps {
   post: Post;
@@ -40,17 +44,20 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
   const [deleteImage] = useDeletePostImageMutation();
   const [toggleLike] = usePostToggleLikeMutation();
+
   const { data: likeCount, isLoading: isLikeLoading } = useGetCountQuery({
     targetId: post.id,
-    targetType: "post",
+    targetType: 'post',
   });
+
   const { data: likeStatus, isLoading: isLikeStatusLoading } = useGetStatusQuery({
     targetId: post.id,
-    targetType: "post",
+    targetType: 'post',
   });
-  const { data: commentCount, isLoading: isCommentLoading } = useGetCommentCountQuery({
+
+  const { data: commentCount } = useGetCommentCountQuery({
     targetId: post.id,
-    targetType: "post",
+    targetType: 'post',
   });
 
   const openCommentModal = () => setIsCommentOpen(true);
@@ -79,9 +86,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         data: { imageUrl },
       }).unwrap();
 
-      // Reset index if needed to avoid out of bounds
       if (currentImageIndex >= (post.imageUrls?.length || 1) - 1) {
-        setCurrentImageIndex(Math.max(0, currentImageIndex - 1));
+        setCurrentImageIndex((prev) => Math.max(0, prev - 1));
       }
 
       alert('Xóa ảnh thành công!');
@@ -94,280 +100,291 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (post.imageUrls && currentImageIndex < post.imageUrls.length - 1) {
-      setCurrentImageIndex(currentImageIndex + 1);
+      setCurrentImageIndex((prev) => prev + 1);
     }
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (currentImageIndex > 0) {
-      setCurrentImageIndex(currentImageIndex - 1);
+      setCurrentImageIndex((prev) => prev - 1);
     }
   };
 
   const handleLike = async () => {
     try {
-      const res = await toggleLike({
+      await toggleLike({
         targetId: post.id,
-        targetType: "post",
+        targetType: 'post',
       }).unwrap();
     } catch (error) {
-      console.error("Toggle like failed:", error);
+      console.error('Toggle like failed:', error);
     }
   };
+
+  const createdDate = new Date(post.createdAt).toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
   return (
-    <>
-      <div className="w-full bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 mb-6">
-        {/* 1. HEADER: User Info & Menu */}
-        <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src={
-                post.userId?.image ||
-                post.userAvatar ||
-                '/abstract-book-pattern.png'
-              }
-              alt={post.userId?.username || 'User'}
-              className="w-10 h-10 rounded-full object-cover border border-gray-200"
-            />
-            <div>
-              <h2 className="text-sm font-bold text-gray-900">
-                {post.userId?.username || post.userId?.email || 'Unknown User'}
-              </h2>
-              <p className="text-xs text-gray-500">
-                {new Date(post.createdAt).toLocaleDateString('vi-VN')}
-              </p>
+      <>
+        <article className="w-full bg-white/95 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 mb-5 overflow-hidden">
+          {/* HEADER */}
+          <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <img
+                    src={
+                        post.userId?.image ||
+                        post.userAvatar ||
+                        '/abstract-book-pattern.png'
+                    }
+                    alt={post.userId?.username || 'User'}
+                    className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                />
+                {/* Chấm trạng thái online (optional) */}
+                <span className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+              </div>
+              <div className="space-y-0.5">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  {post.userId?.username || post.userId?.email || 'Người dùng ẩn danh'}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {createdDate}
+                </p>
+              </div>
             </div>
+
+            {isOwner && (
+                <div className="relative">
+                  <button
+                      onClick={() => setShowMenu((prev) => !prev)}
+                      className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  >
+                    <MoreVertical className="w-5 h-5 text-slate-500" />
+                  </button>
+
+                  {showMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-20">
+                        <button
+                            onClick={() => {
+                              setShowEditForm(true);
+                              setShowMenu(false);
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          <span>Chỉnh sửa bài viết</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                              setShowDeleteConfirm(true);
+                              setShowMenu(false);
+                            }}
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span>Xóa bài viết</span>
+                        </button>
+                      </div>
+                  )}
+                </div>
+            )}
           </div>
 
-          {isOwner && (
-            <div className="relative">
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="p-2 hover:bg-gray-100 rounded-full transition"
-              >
-                <MoreVertical className="w-5 h-5 text-gray-500" />
-              </button>
+          {/* CONTENT */}
+          <div className="px-4 pb-3">
+            <p className="text-[15px] leading-relaxed text-slate-800 whitespace-pre-wrap">
+              {post.content}
+            </p>
+          </div>
 
-              {showMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                  <button
-                    onClick={() => {
-                      setShowEditForm(true);
-                      setShowMenu(false);
-                    }}
-                    className="w-full flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 transition text-left text-sm"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    <span>Chỉnh sửa</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(true);
-                      setShowMenu(false);
-                    }}
-                    className="w-full flex items-center space-x-2 px-4 py-2 hover:bg-red-50 text-red-600 transition text-left text-sm"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Xóa bài viết</span>
-                  </button>
+          {/* BOOK SECTION */}
+          {post.bookId && (
+              <div className="mx-4 mb-3 mt-1 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
+                <div className="shrink-0 w-16 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+                  <img
+                      src={post.bookId.coverUrl || '/abstract-book-pattern.png'}
+                      alt={post.bookId.title}
+                      className="w-full h-full object-cover"
+                  />
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* 2. BODY: Content Text */}
-        <div className="px-4 pb-2">
-          <p className="text-gray-800 whitespace-pre-wrap text-base leading-relaxed">
-            {post.content}
-          </p>
-        </div>
-
-        {/* 3. BOOK SECTION: Hiển thị sách riêng biệt */}
-        {post.bookId && (
-          <div className="mx-4 mt-3 mb-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-start gap-4 transition hover:bg-blue-50">
-            <div className="shrink-0 w-16 h-24 rounded-md overflow-hidden shadow-sm">
-              <img
-                src={post.bookId.coverUrl || '/abstract-book-pattern.png'}
-                alt={post.bookId.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1 min-w-0 py-1">
-              <div className="flex items-center gap-2 text-blue-600 mb-1">
-                <BookOpen size={14} />
-                <span className="text-xs font-medium uppercase tracking-wide">
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="inline-flex items-center gap-1.5 text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">
+                    <BookOpen size={13} />
+                    <span className="text-[10px] font-medium uppercase tracking-wide">
                   Đang đọc
                 </span>
-              </div>
-              <h3
-                className="font-bold text-gray-900 text-base truncate"
-                title={post.bookId.title}
-              >
-                {post.bookId.title}
-              </h3>
-              <p className="text-sm text-gray-600 truncate">
-                {post.bookId.authorId?.name || 'Tác giả ẩn danh'}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* 4. POST IMAGES: Carousel hiển thị ảnh người dùng upload */}
-        {hasPostImages && (
-          <div className="relative w-full bg-gray-100 group">
-            {/* Tỷ lệ khung hình: Có thể chỉnh h-64, h-96 hoặc aspect-square tùy ý */}
-            <div className="relative h-80 w-full overflow-hidden">
-              <img
-                src={post.imageUrls![currentImageIndex]}
-                alt={`Post image ${currentImageIndex + 1}`}
-                className="w-full h-full object-contain bg-black/5"
-                /* Dùng object-contain để thấy toàn bộ ảnh, hoặc object-cover để lấp đầy */
-              />
-            </div>
-
-            {/* Delete Image Button (Only for Owner) */}
-            {isOwner && (
-              <button
-                onClick={() =>
-                  handleDeleteImage(post.imageUrls![currentImageIndex])
-                }
-                className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
-                title="Xóa ảnh này"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Navigation Buttons */}
-            {post.imageUrls!.length > 1 && (
-              <>
-                <button
-                  onClick={prevImage}
-                  disabled={currentImageIndex === 0}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white text-gray-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
-                >
-                  ‹
-                </button>
-                <button
-                  onClick={nextImage}
-                  disabled={currentImageIndex === post.imageUrls!.length - 1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white text-gray-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
-                >
-                  ›
-                </button>
-
-                {/* Dots Indicators */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {post.imageUrls!.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`h-1.5 rounded-full transition-all shadow-sm ${
-                        index === currentImageIndex
-                          ? 'bg-white w-6'
-                          : 'bg-white/60 w-1.5'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* 5. ACTIONS FOOTER */}
-        <div className="p-4">
-          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-6">
-              <button className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">
-                <Heart
-                  size={22}
-                  className={`transition-transform duration-200 group-hover:scale-110 ${
-                      likeStatus?.isLiked ? 'fill-red-500 text-red-500' : ''
-                  }`}
-                  onClick={()=>{handleLike()}}
-                />
-              </button>
-
-              <button
-                onClick={openCommentModal}
-                className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors group"
-              >
-                <MessageCircle
-                  size={22}
-                  className="transition-transform duration-200 group-hover:scale-110"
-                />
-              </button>
-
-              <button className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors group">
-                <Send
-                  size={22}
-                  className="transition-transform duration-200 group-hover:scale-110 -rotate-45 mt-1"
-                />
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* Likes Summary */}
-              <div className="flex items-center gap-2 text-gray-600 group">
-                    <span className="text-sm font-medium">
-                  {likeCount?.count ?? 0} lượt thích
-                  </span>
                   </div>
+                  <h3
+                      className="font-semibold text-sm text-slate-900 truncate"
+                      title={post.bookId.title}
+                  >
+                    {post.bookId.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 truncate">
+                    {post.bookId.authorId?.name || 'Tác giả ẩn danh'}
+                  </p>
+                </div>
+              </div>
+          )}
 
-                  {/* Comments Summary */}
-                  <div className="flex items-center gap-2 text-gray-600 group">
-                    <span className="text-sm font-medium">
-                      {commentCount?.count ?? 0} bình luận
-                     </span>
+          {/* IMAGES */}
+          {hasPostImages && (
+              <div className="relative w-full bg-slate-50 group">
+                <div className="relative h-80 w-full overflow-hidden">
+                  <img
+                      src={post.imageUrls![currentImageIndex]}
+                      alt={`Post image ${currentImageIndex + 1}`}
+                      className="w-full h-full object-contain bg-slate-900/5"
+                  />
+                </div>
+
+                {isOwner && (
+                    <button
+                        onClick={() =>
+                            handleDeleteImage(post.imageUrls![currentImageIndex])
+                        }
+                        className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                        title="Xóa ảnh này"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                )}
+
+                {post.imageUrls!.length > 1 && (
+                    <>
+                      <button
+                          onClick={prevImage}
+                          disabled={currentImageIndex === 0}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
+                      >
+                        ‹
+                      </button>
+                      <button
+                          onClick={nextImage}
+                          disabled={currentImageIndex === post.imageUrls!.length - 1}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
+                      >
+                        ›
+                      </button>
+
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {post.imageUrls!.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setCurrentImageIndex(index)}
+                                className={`h-1.5 rounded-full transition-all shadow-sm ${
+                                    index === currentImageIndex
+                                        ? 'bg-white w-6'
+                                        : 'bg-white/60 w-1.5'
+                                }`}
+                            />
+                        ))}
+                      </div>
+                    </>
+                )}
+              </div>
+          )}
+
+          {/* FOOTER ACTIONS */}
+          <div className="px-4 pb-3 pt-2">
+            <div className="flex justify-between items-center border-t border-slate-100 pt-3">
+              <div className="flex items-center gap-5">
+                <button
+                    onClick={handleLike}
+                    disabled={isLikeLoading || isLikeStatusLoading}
+                    className="flex items-center gap-1.5 text-slate-600 hover:text-rose-500 transition-colors group text-sm"
+                >
+                  <Heart
+                      size={20}
+                      className={`transition-transform duration-150 group-hover:scale-110 ${
+                          likeStatus?.isLiked ? 'fill-rose-500 text-rose-500' : ''
+                      }`}
+                  />
+                  <span className="hidden sm:inline">
+                  {likeStatus?.isLiked ? 'Đã thích' : 'Thích'}
+                </span>
+                </button>
+
+                <button
+                    onClick={openCommentModal}
+                    className="flex items-center gap-1.5 text-slate-600 hover:text-sky-600 transition-colors group text-sm"
+                >
+                  <MessageCircle
+                      size={20}
+                      className="transition-transform duration-150 group-hover:scale-110"
+                  />
+                  <span className="hidden sm:inline">Bình luận</span>
+                </button>
+
+                <button className="flex items-center gap-1.5 text-slate-600 hover:text-emerald-600 transition-colors group text-sm">
+                  <Send
+                      size={20}
+                      className="transition-transform duration-150 group-hover:scale-110 -rotate-45 mt-0.5"
+                  />
+                  <span className="hidden sm:inline">Chia sẻ</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3 text-xs text-slate-500">
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                <span>{likeCount?.count ?? 0} lượt thích</span>
+              </span>
+                <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+                <span>{commentCount?.count ?? 0} bình luận</span>
+              </span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Modals */}
-        <ModalPostComment
-          post={post}
-          isCommentOpen={isCommentOpen}
-          closeCommentModal={closeCommentModal}
-        />
+          {/* MODALS */}
+          <ModalPostComment
+              post={post}
+              isCommentOpen={isCommentOpen}
+              closeCommentModal={closeCommentModal}
+          />
 
-        {showEditForm && (
-          <EditPostForm post={post} onClose={() => setShowEditForm(false)} />
-        )}
+          {showEditForm && (
+              <EditPostForm post={post} onClose={() => setShowEditForm(false)} />
+          )}
 
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Xóa bài viết?
-              </h3>
-              <p className="text-gray-600 mb-6 text-sm">
-                Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa?
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition"
-                  disabled={isDeleting}
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition flex items-center justify-center gap-2"
-                >
-                  {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Xóa
-                </button>
+          {showDeleteConfirm && (
+              <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                    Xóa bài viết?
+                  </h3>
+                  <p className="text-sm text-slate-600 mb-5">
+                    Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa bài
+                    viết này chứ?
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl transition-colors"
+                        disabled={isDeleting}
+                    >
+                      Hủy
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                    >
+                      {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Xóa
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+          )}
+        </article>
+      </>
   );
 };
 

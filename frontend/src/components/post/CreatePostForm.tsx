@@ -31,7 +31,6 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
 
     setImages((prev) => [...prev, ...files]);
 
-    // Tạo preview
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -74,114 +73,137 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
     }
   };
 
+  const currentUserName = user?.name || 'Người đọc';
+  const currentUserImage =
+      (user as any)?.image || '/abstract-book-pattern.png';
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
-          <h2 className="text-xl font-semibold">Tạo bài viết</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition"
-            disabled={isLoading}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        {/* Overlay mờ, không đen đặc */}
+        <div className="absolute inset-0 bg-slate-900/15 backdrop-blur-[2px]" />
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* User info */}
-          <div className="flex items-center space-x-3">
-            <img
-              src="/abstract-book-pattern.png"
-              alt="Avatar"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <div>
-              <p className="font-semibold">Vinh</p>
-              <p className="text-xs text-gray-500">Công khai</p>
-            </div>
+        {/* MODAL: flex-col + max-h + KHÔNG overflow-hidden */}
+        <div className="relative bg-white rounded-3xl shadow-xl w-full max-w-xl md:max-w-2xl max-h-[90vh] flex flex-col border border-slate-100">
+          {/* Header (không scroll) */}
+          <div className="flex items-center justify-between px-5 py-3 border-b rounded-3xl border-slate-100 bg-white/90 backdrop-blur sticky top-0 z-10">
+            <h2 className="text-base md:text-lg font-semibold text-slate-900">
+              Tạo bài viết
+            </h2>
+            <button
+                onClick={onClose}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                disabled={isLoading}
+            >
+              <X className="w-4 h-4 text-slate-500" />
+            </button>
           </div>
 
-          {/* Content */}
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Chia sẻ cảm nhận của bạn về một cuốn sách..."
-            className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            rows={6}
-            disabled={isLoading}
-          />
-
-          {/* Book Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Chọn sách <span className="text-red-500">*</span>
-            </label>
-            <BookSelector
-              value={bookId}
-              onChange={(id) => setBookId(id)}
-              disabled={isLoading}
-              placeholder="Chọn một cuốn sách bạn đang đọc..."
-            />
-          </div>
-
-          {/* Image Previews */}
-          {imagePreviews.length > 0 && (
-            <div className="grid grid-cols-3 gap-2">
-              {imagePreviews.map((preview, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
-                    disabled={isLoading}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+          {/* BODY: phần này mới được scroll */}
+          <div className="flex-1 overflow-y-auto thin-scrollbar">
+            <form onSubmit={handleSubmit} className="p-5 space-y-5">
+              {/* User info */}
+              <div className="flex items-center gap-3">
+                <img
+                    src={currentUserImage}
+                    alt={currentUserName}
+                    className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                />
+                <div className="space-y-0.5">
+                  <p className="font-semibold text-sm text-slate-900">
+                    {currentUserName}
+                  </p>
+                  <p className="text-xs text-slate-500">Chia sẻ công khai</p>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between border-t pt-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
-              disabled={isLoading || images.length >= 10}
-            >
-              <ImageIcon className="w-5 h-5" />
-              <span className="text-sm">Thêm ảnh ({images.length}/10)</span>
-            </button>
+              {/* Content */}
+              <div>
+              <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Chia sẻ cảm nhận của bạn về một cuốn sách, một trích dẫn, hay một khoảnh khắc đọc thú vị..."
+                  className="w-full rounded-2xl bg-slate-50 border border-slate-200 px-3.5 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 resize-none min-h-[140px]"
+                  rows={6}
+                  disabled={isLoading}
+              />
+              </div>
 
-            <button
-              type="submit"
-              disabled={isLoading || !content.trim() || !bookId.trim()}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center space-x-2"
-            >
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{isLoading ? 'Đang đăng...' : 'Đăng bài'}</span>
-            </button>
+              {/* Book Selection */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  Chọn sách <span className="text-red-500">*</span>
+                </label>
+                <BookSelector
+                    value={bookId}
+                    onChange={(id) => setBookId(id)}
+                    disabled={isLoading}
+                    placeholder="Chọn một cuốn sách bạn đang đọc..."
+                />
+              </div>
+
+              {/* Image Previews */}
+              {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {imagePreviews.map((preview, index) => (
+                        <div
+                            key={index}
+                            className="relative group rounded-xl overflow-hidden border border-slate-100 bg-slate-50"
+                        >
+                          <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-28 md:h-32 object-cover"
+                          />
+                          <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-2 right-2 p-1.5 bg-slate-900/70 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
+                              disabled={isLoading}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                    ))}
+                  </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-sky-600 transition-colors"
+                    disabled={isLoading || images.length >= 10}
+                >
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                  <ImageIcon className="w-4 h-4" />
+                </span>
+                  <span className="whitespace-nowrap">
+                  Thêm ảnh ({images.length}/10)
+                </span>
+                </button>
+
+                <button
+                    type="submit"
+                    disabled={isLoading || !content.trim() || !bookId.trim()}
+                    className="inline-flex items-center gap-2 bg-sky-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-sky-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>{isLoading ? 'Đang đăng...' : 'Đăng bài'}</span>
+                </button>
+              </div>
+
+              <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="hidden"
+              />
+            </form>
           </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageChange}
-            className="hidden"
-          />
-        </form>
+        </div>
       </div>
-    </div>
   );
 }
