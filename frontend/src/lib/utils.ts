@@ -32,3 +32,16 @@ export const getErrorMessage = (err: any) => {
   const raw = err?.data?.message ?? err?.message;
   return Array.isArray(raw) ? raw.join('\n') : (raw || 'Update failed');
 };
+
+/* Format: "3 phút trước / 2 giờ / Hôm nay" */
+export function timeAgo(dateString: string) {
+  const date = new Date(dateString);
+  const now = Date.now();
+  const diff = (now - date.getTime()) / 1000;
+
+  if (diff < 60) return "Vừa xong";
+  if (diff < 3600) return Math.floor(diff / 60) + " phút trước";
+  if (diff < 86400) return Math.floor(diff / 3600) + " giờ trước";
+
+  return Math.floor(diff / 86400) + " ngày trước";
+}

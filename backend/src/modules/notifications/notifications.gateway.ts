@@ -35,7 +35,6 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
         token = token[0];
       }
 
-      console.log('WS TOKEN =', token);
 
       if (!token || typeof token !== 'string') {
         console.log('No token, disconnect');
@@ -45,10 +44,8 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
       const payload: any = this.jwt.verify(token);
       const userId = payload.sub || payload.id;
-
       (socket.data as any).userId = userId;
       socket.join(`user:${userId}`);
-      console.log('WS connected', socket.id, 'user', userId);
     } catch (e) {
       console.error('WS error in handleConnection:', e);
       socket.disconnect(true);
@@ -65,6 +62,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   async list(@ConnectedSocket() socket: Socket) {
     const userId = (socket.data as any).userId;
     return this.notificationsService.findAllByUser(userId);
+
   }
 
   @SubscribeMessage('notification:markRead')

@@ -52,7 +52,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     targetId: post.id,
     targetType: "post",
   });
-
+  console.log(likeStatus);
 
   const openCommentModal = () => setIsCommentOpen(true);
   const closeCommentModal = () => setIsCommentOpen(false);
