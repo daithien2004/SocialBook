@@ -41,6 +41,7 @@ export class BooksController {
     const result = await this.booksService.findAll({
       page: +page,
       limit: +limit,
+      status: 'published',
       search,
       genres,
     });
