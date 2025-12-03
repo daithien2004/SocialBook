@@ -5,7 +5,6 @@ import { BookCard } from '@/src/components/book/BookCard';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useMemo, useCallback, useState } from 'react';
 import { Search, X, Filter, ChevronDown } from 'lucide-react';
-import { Header } from '@/src/components/header';
 
 export default function BooksPage() {
   const searchParams = useSearchParams();
@@ -182,8 +181,6 @@ export default function BooksPage() {
       </div>
 
       <div className="relative z-10">
-        <Header />
-
         <main className="container mx-auto px-4 md:px-12 py-8">
           {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-200 dark:border-white/10 pb-6 transition-colors duration-300">
