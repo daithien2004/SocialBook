@@ -5,6 +5,7 @@ import PostList from '@/src/components/post/PostList';
 import CreatePostForm from '@/src/components/post/CreatePostForm';
 import { useSession } from 'next-auth/react';
 import { BookOpen, Users, Library, Quote, ImageIcon, PenSquare } from 'lucide-react';
+import RecommendedBooks from "@/src/components/post/RecommendedBooks";
 
 export default function Post() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -20,7 +21,7 @@ export default function Post() {
         </header>
 
         {/* MAIN LAYOUT */}
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 mt-4 flex justify-center gap-4">
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 mt-4 flex justify-center gap-4 pb-4">
           {/* LEFT SIDEBAR */}
           <aside className="hidden lg:block w-[22%]">
             <div className="sticky top-20 space-y-4">
@@ -173,6 +174,8 @@ export default function Post() {
                   </div>
                 </div>
               </div>
+
+              <RecommendedBooks/>
             </div>
           </aside>
         </main>

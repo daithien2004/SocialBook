@@ -11,9 +11,13 @@ import {
   X,
   Loader2,
   BookOpen,
+  Twitter,
+  Facebook,
+  Mail,
 } from 'lucide-react';
 import { Post } from '@/src/features/posts/types/post.interface';
 import ModalPostComment from '@/src/components/post/ModalPostComment';
+import SharePostModal from '@/src/components/post/SharePostModal';
 import EditPostForm from '@/src/components/post/EditPostForm';
 import {
   useDeletePostMutation,
@@ -26,6 +30,7 @@ import {
   usePostToggleLikeMutation,
 } from '@/src/features/likes/api/likeApi';
 import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
+import {EmailShareButton, FacebookShareButton, PinterestShareButton, TumblrShareButton, TwitterShareButton } from 'next-share';
 
 interface PostCardProps {
   post: Post;
@@ -37,6 +42,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showShare, setShowShare] = useState(false);
 
   const { data: session } = useSession();
   const user = session?.user;
@@ -59,6 +65,16 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     targetId: post.id,
     targetType: 'post',
   });
+
+  const origin =
+      typeof window !== 'undefined' ? window.location.origin : '';
+  const postUrl = `${origin}/posts/${post.id}`;
+  const shareTitle =
+      post.content?.slice(0, 100) || 'Xem bài viết này';
+  const shareMedia =
+      post.imageUrls && post.imageUrls.length > 0
+          ? post.imageUrls[0]
+          : postUrl;
 
   const openCommentModal = () => setIsCommentOpen(true);
   const closeCommentModal = () => setIsCommentOpen(false);
@@ -320,12 +336,17 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                   <span className="hidden sm:inline">Bình luận</span>
                 </button>
 
-                <button className="flex items-center gap-1.5 text-slate-600 hover:text-emerald-600 transition-colors group text-sm">
+                <button
+                    onClick={() => setShowShare((prev) => !prev)}
+                    className="flex items-center gap-1.5 text-slate-600 hover:text-emerald-600 transition-colors group text-sm"
+                >
                   <Send
                       size={20}
                       className="transition-transform duration-150 group-hover:scale-110 -rotate-45 mt-0.5"
                   />
-                  <span className="hidden sm:inline">Chia sẻ</span>
+                  <span className="hidden sm:inline">
+                  Chia sẻ
+                </span>
                 </button>
               </div>
 
@@ -342,11 +363,23 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             </div>
           </div>
 
+          <SharePostModal
+              isOpen={showShare}
+              onClose={() => setShowShare(false)}
+              postUrl={postUrl}
+              shareTitle={shareTitle}
+              shareMedia={shareMedia}
+          />
+
           {/* MODALS */}
           <ModalPostComment
               post={post}
+              handleLike = {handleLike}
               isCommentOpen={isCommentOpen}
               closeCommentModal={closeCommentModal}
+              commentCount={commentCount?.count}
+              likeStatus={likeStatus?.isLiked}
+              likeCount={likeCount?.count}
           />
 
           {showEditForm && (
