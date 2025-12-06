@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import ListComments from './ListComments';
 // import { Post } from '@/src/features/posts/types/post.interface'; // Có thể bỏ nếu không dùng
 import {
-  type CommentItem as CommentItemType,
+  type CommentItem as CommentItemType, useGetCommentCountQuery,
   useLazyGetResolveParentQuery,
   usePostCreateMutation,
-  usePostToggleLikeMutation,
 } from '@/src/features/comments/api/commentApi';
-import { Heart, MessageCircle, CornerDownRight, Loader2 } from 'lucide-react'; // Cần cài lucide-react
+import { Heart, MessageCircle, CornerDownRight, Loader2 } from 'lucide-react';
+import {useGetCountQuery, useGetStatusQuery, usePostToggleLikeMutation} from "@/src/features/likes/api/likeApi"; // Cần cài lucide-react
 
 interface CommentItemProps {
   comment: CommentItemType;
@@ -31,14 +31,23 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
   const [createComment, { isLoading: isPostingReply }] =
     usePostCreateMutation();
 
+  const { data: likeCount, isLoading: isLikeLoading } = useGetCountQuery({
+    targetId: comment.id,
+    targetType: 'comment',
+  });
+
+  const { data: likeStatus, isLoading: isLikeStatusLoading } = useGetStatusQuery({
+    targetId: comment.id,
+    targetType: 'comment',
+  });
   const [
     triggerResolveParent,
     { data: resolvedData, isLoading: isResolvingParent },
   ] = useLazyGetResolveParentQuery();
 
-  console.log(theme);
+
   const isDark = theme === 'dark';
-  console.log(isDark);
+
   const handleShowReplies = () => {
     setShowReplies(true);
   };
@@ -95,8 +104,6 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
       await postToggleLike({
         targetId: comment.id,
         targetType: 'comment',
-        parentId: comment.parentId,
-        postId: targetId,
       }).unwrap();
     } catch (e) {
       console.error('Like comment failed:', e);
@@ -155,7 +162,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
           <button
             onClick={handleLikeComment}
             className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
-              comment.isLiked
+              likeStatus?.isLiked
                 ? 'text-red-500'
                 : `${textSecondary} hover:text-red-500`
             }`}
@@ -164,7 +171,9 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
               size={12}
               className={comment.isLiked ? 'fill-current' : ''}
             />
-            {comment.likesCount > 0 && <span>{comment.likesCount}</span>}
+            {(likeCount?.count ?? 0) > 0 && (
+                <span>{likeCount?.count}</span>
+            )}
             <span className="hidden sm:inline">Thích</span>
           </button>
 

@@ -54,7 +54,7 @@ export class CommentsService {
     const comments = hasMore ? commentsRaw.slice(0, limit) : commentsRaw;
     const commentIds = comments.map((c) => c._id);
 
-    const [repliesGroup, likesGroup, likedTargets] = await Promise.all([
+    const [repliesGroup] = await Promise.all([
       this.aggregateReplyCounts(commentIds),
       this.likesService.aggregateLikeCounts(commentIds, 'comment'),
       userId
@@ -63,13 +63,10 @@ export class CommentsService {
     ]);
 
     const replyMap = this.createCountMap(repliesGroup);
-    const likeMap = this.createCountMap(likesGroup);
 
     const items = comments.map((c) => ({
       ...c,
       repliesCount: replyMap[c._id.toString()] || 0,
-      likesCount: likeMap[c._id.toString()] || 0,
-      isLiked: likedTargets.has(c._id.toString()),
     }));
 
     return {
