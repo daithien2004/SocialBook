@@ -1,99 +1,156 @@
 'use client';
 
 import { BannerSlider } from '../components/book/BannerSlider';
-import { BookSection } from '../components/book/BookSection';
 import { Flame, Sparkles, BookPlus, Star } from 'lucide-react';
 import { useGetBooksQuery } from '../features/books/api/bookApi';
 import { Book } from '../features/books/types/book.interface';
-import { useMemo, useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Header } from '../components/header';
 import { ReadingSidebar } from '../components/book/ReadingSidebar';
 import { MobileReadingSection } from '../components/book/MobileReadingSection';
 import { GenresSection } from '../components/book/GenresSection';
+import { BookCard } from '../components/book/BookCard';
+import { BookOrderField } from '../features/books/api/bookApi';
 
-const ONE_DAY_IN_MS = 86400000;
-const NEW_BOOK_THRESHOLD_DAYS = 30;
+type TabType = 'trending' | 'new' | 'topRated' | 'recommended';
 
-export const getTrendingBooks = (books: Book[]) => {
-  return books
-    .filter((book) => book.views > 2000)
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 20);
-};
-
-export const getNewBooks = (books: Book[]) => {
-  const now = Date.now();
-  const threshold = now - NEW_BOOK_THRESHOLD_DAYS * ONE_DAY_IN_MS;
-  return books
-    .filter((book) => new Date(book.createdAt).getTime() >= threshold)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .slice(0, 20);
-};
-
-export const getTopRatedBooks = (books: Book[]) => {
-  return books
-    .map((book) => ({
-      ...book,
-      rating: book.views > 0 ? book.likes / book.views : 0,
-    }))
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 20);
-};
-
-export const getRecommendedBooks = (books: Book[]) => {
-  const shuffled = [...books];
-  const limit = Math.min(20, shuffled.length);
-  for (let i = 0; i < limit; i++) {
-    const j = Math.floor(Math.random() * (shuffled.length - i)) + i;
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled.slice(0, limit);
-};
-
-const BOOK_SECTIONS = [
+const TABS = [
   {
-    title: 'Sách hot nhất hiện nay',
+    id: 'trending' as TabType,
+    label: 'Hot nhất',
     icon: Flame,
-    getBooks: getTrendingBooks,
+    sortBy: 'views',
   },
   {
-    title: 'Gợi ý dành riêng cho bạn',
-    icon: Sparkles,
-    getBooks: getRecommendedBooks,
-  },
-  {
-    title: 'Mới cập nhật gần đây',
+    id: 'new' as TabType,
+    label: 'Mới nhất',
     icon: BookPlus,
-    getBooks: getNewBooks,
+    sortBy: 'createdAt',
   },
   {
-    title: 'Được đánh giá tốt nhất',
+    id: 'topRated' as TabType,
+    label: 'Đánh giá cao',
     icon: Star,
-    getBooks: getTopRatedBooks,
+    sortBy: 'likes',
+  },
+  {
+    id: 'recommended' as TabType,
+    label: 'Gợi ý cho bạn',
+    icon: Sparkles,
+    sortBy: 'updatedAt',
   },
 ];
 
+interface TabState {
+  books: Book[];
+  page: number;
+  hasMore: boolean;
+  isInitialized: boolean;
+}
+
+const initialTabState: TabState = {
+  books: [],
+  page: 1,
+  hasMore: true,
+  isInitialized: false,
+};
+
 export default function HomePage() {
-  const { data: books = [], isLoading } = useGetBooksQuery();
+  const [activeTab, setActiveTab] = useState<TabType>('trending');
+
+  const [tabStates, setTabStates] = useState<Record<TabType, TabState>>({
+    trending: { ...initialTabState },
+    new: { ...initialTabState },
+    topRated: { ...initialTabState },
+    recommended: { ...initialTabState },
+  });
+
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const sections = useMemo(() => {
-    if (!books.length) return [];
-    return BOOK_SECTIONS.map((section) => ({
-      ...section,
-      books: section.getBooks(books),
-    }));
-  }, [books]);
+  const currentTab = TABS.find((t) => t.id === activeTab);
+  const currentState = tabStates[activeTab];
 
-  const featuredBooks = useMemo(() => {
-    return getNewBooks(books).slice(0, 5);
-  }, [books]);
+  const { data, isLoading, isFetching } = useGetBooksQuery({
+    page: currentState.page,
+    limit: 20,
+    sortBy: currentTab?.sortBy as BookOrderField,
+  });
+
+  const newBooks = data?.data || [];
+  const metaData = data?.metaData;
+
+  useEffect(() => {
+    if (newBooks.length > 0 && metaData) {
+      setTabStates((prev) => {
+        const current = prev[activeTab];
+
+        if (current.page === 1) {
+          return {
+            ...prev,
+            [activeTab]: {
+              books: newBooks,
+              page: 1,
+              hasMore: metaData.page < metaData.totalPages,
+              isInitialized: true,
+            },
+          };
+        }
+
+        const uniqueBooks = newBooks.filter(
+          (book) => !current.books.some((b) => b.id === book.id)
+        );
+
+        return {
+          ...prev,
+          [activeTab]: {
+            ...current,
+            books: [...current.books, ...uniqueBooks],
+            hasMore: metaData.page < metaData.totalPages,
+            isInitialized: true,
+          },
+        };
+      });
+    } else if (!isLoading && !isFetching && currentState.page > 1) {
+      setTabStates((prev) => ({
+        ...prev,
+        [activeTab]: {
+          ...prev[activeTab],
+          hasMore: false,
+        },
+      }));
+    }
+  }, [newBooks, activeTab, isLoading, isFetching, currentState.page, metaData]);
+
+  const lastBookRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isFetching || !currentState.hasMore) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            setTabStates((prev) => ({
+              ...prev,
+              [activeTab]: {
+                ...prev[activeTab],
+                page: prev[activeTab].page + 1,
+              },
+            }));
+          }
+        },
+        { rootMargin: '200px' }
+      );
+
+      if (node) observer.observe(node);
+
+      return () => observer.disconnect();
+    },
+    [isFetching, currentState.hasMore, activeTab]
+  );
+
+  const featuredBooks = currentState.books.slice(0, 5);
 
   useEffect(() => {
     if (
@@ -105,7 +162,11 @@ export default function HomePage() {
     }
   }, [status, session, router]);
 
-  if (isLoading) {
+  const handleTabChange = (tabId: TabType) => {
+    setActiveTab(tabId);
+  };
+
+  if (isLoading && !currentState.isInitialized) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#141414] flex items-center justify-center transition-colors duration-300">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
@@ -114,8 +175,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
-      {/* Background Image */}
+    <div className="min-h-screen mt-10 bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
       <div className="fixed inset-0 z-0">
         <img
           src="/main-background.jpg"
@@ -129,36 +189,76 @@ export default function HomePage() {
         <Header session={session} />
 
         <main>
-          {/* Banner Section */}
           <div className="pb-8">
             <BannerSlider books={featuredBooks} />
           </div>
 
-          {/* Mobile Reading Section - Hiển thị trên tablet/mobile */}
           <MobileReadingSection />
 
-          {/* Main Content with Sidebar Layout */}
           <div className="max-w-[1920px] mx-auto px-4 xl:px-8 flex gap-8">
-            {/* Left: Book Sections */}
             <div className="flex-1 min-w-0">
-              <div className="flex flex-col gap-8 pb-20 mt-4">
-                {sections.map((section) => (
-                  <BookSection
-                    key={section.title}
-                    title={section.title}
-                    books={section.books}
-                    icon={section.icon}
-                  />
-                ))}
+              {/* Tabs */}
+              <div className="flex gap-2 overflow-x-auto mb-8 mt-4 border-b border-gray-200 dark:border-gray-700 scrollbar-hide">
+                {TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => handleTabChange(tab.id)}
+                      className={`flex items-center gap-2 px-6 py-3 font-medium whitespace-nowrap transition-all duration-300 ${
+                        activeTab === tab.id
+                          ? 'text-red-600 dark:text-red-500 border-b-2 border-red-600 dark:border-red-500'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-20">
+                {currentState.books.map((book, index) => {
+                  if (index === currentState.books.length - 1) {
+                    return (
+                      <div key={book.id} ref={lastBookRef}>
+                        <BookCard book={book} />
+                      </div>
+                    );
+                  }
+                  return <BookCard key={book.id} book={book} />;
+                })}
+              </div>
+
+              {isFetching && currentState.isInitialized && (
+                <div className="flex justify-center py-8">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-red-600 border-t-transparent"></div>
+                    <span>Đang tải thêm sách...</span>
+                  </div>
+                </div>
+              )}
+
+              {!currentState.hasMore && currentState.books.length > 0 && (
+                <div className="flex justify-center py-8 text-gray-500 dark:text-gray-400">
+                  <p>Đã hiển thị tất cả sách</p>
+                </div>
+              )}
+
+              {!isLoading &&
+                currentState.isInitialized &&
+                currentState.books.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-gray-400">
+                    <p className="text-lg">Không tìm thấy sách nào</p>
+                  </div>
+                )}
             </div>
 
             <div className="hidden xl:block xl:w-80 flex-shrink-0">
               <div className="sticky top-8 space-y-6">
                 <ReadingSidebar />
-
-                {/* Section Thể loại */}
-                <GenresSection books={books} />
+                <GenresSection books={currentState.books} />
               </div>
             </div>
           </div>

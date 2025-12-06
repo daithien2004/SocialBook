@@ -26,6 +26,45 @@ export interface BookStatsResponse {
   chapters: number;
 }
 
+export interface GetBooksRequest {
+  page: number;
+  limit?: number;
+  search?: string;
+  genres?: string[];
+  tags?: string[];
+  sortBy?: BookOrderField;
+  order?: 'asc' | 'desc';
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  metaData: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface FiltersResponse {
+  genres: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
+  tags: Array<{
+    name: string;
+    count: number;
+  }>;
+}
+
+export type BookOrderField =
+  | 'views'
+  | 'likes'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'rating';
+
 export const booksApi = createApi({
   reducerPath: 'booksApi',
   baseQuery: axiosBaseQuery(),
@@ -42,21 +81,29 @@ export const booksApi = createApi({
         { type: 'BookDetail', id: arg.bookSlug },
       ],
     }),
-    getBooks: builder.query<Book[], void>({
-      query: () => ({
+    getBooks: builder.query<PaginatedResponse<Book>, GetBooksRequest>({
+      query: (params) => ({
         url: BFF_BOOKS_ENDPOINTS.getAll,
         method: 'GET',
+        params: params,
       }),
       providesTags: (result) =>
-        result
+        result && result.data
           ? [
-            ...result.map((book) => ({
-              type: 'Books' as const,
-              id: book.slug,
-            })),
-            { type: 'Books', id: 'LIST' },
-          ]
+              ...result.data.map((book) => ({
+                type: 'Books' as const,
+                id: book.slug,
+              })),
+              { type: 'Books', id: 'LIST' },
+            ]
           : [{ type: 'Books', id: 'LIST' }],
+    }),
+
+    getFilters: builder.query<FiltersResponse, void>({
+      query: () => ({
+        url: BFF_BOOKS_ENDPOINTS.getFilters,
+        method: 'GET',
+      }),
     }),
 
     createBook: builder.mutation<Book, FormData>({
@@ -89,12 +136,12 @@ export const booksApi = createApi({
       providesTags: (result) =>
         result?.books
           ? [
-            ...result.books.map((book) => ({
-              type: 'AdminBooks' as const,
-              id: book.id,
-            })),
-            { type: 'AdminBooks', id: 'LIST' },
-          ]
+              ...result.books.map((book) => ({
+                type: 'AdminBooks' as const,
+                id: book.id,
+              })),
+              { type: 'AdminBooks', id: 'LIST' },
+            ]
           : [{ type: 'AdminBooks', id: 'LIST' }],
     }),
 
@@ -132,10 +179,10 @@ export const booksApi = createApi({
           type: 'AdminBooks' | 'Books' | 'BookDetail';
           id: string;
         }[] = [
-            { type: 'AdminBooks', id: bookId },
-            { type: 'AdminBooks', id: 'LIST' },
-            { type: 'Books', id: 'LIST' },
-          ];
+          { type: 'AdminBooks', id: bookId },
+          { type: 'AdminBooks', id: 'LIST' },
+          { type: 'Books', id: 'LIST' },
+        ];
 
         if (result && (result as any).slug) {
           tags.push({ type: 'BookDetail', id: (result as any).slug });
@@ -188,4 +235,5 @@ export const {
   useUpdateBookMutation,
   useDeleteBookMutation,
   useLikeBookMutation,
+  useGetFiltersQuery,
 } = booksApi;

@@ -44,47 +44,140 @@ export class BooksService {
     search?: string;
     genres?: string;
     author?: string;
+    tags?: string;
+    sortBy?: string;
+    order?: string;
   }) {
-    const { page, limit, status, search, genres, author } = query;
+    const {
+      page,
+      limit,
+      status,
+      search,
+      genres,
+      author,
+      tags,
+      sortBy = 'updatedAt',
+      order = 'desc',
+    } = query;
+
     const skip = (page - 1) * limit;
 
-    // Build Query
-    const filter: FilterQuery<BookDocument> = { isDeleted: false };
+    const matchStage: any = { isDeleted: false };
 
-    if (status) filter.status = status;
-    if (genres) filter.genres = new Types.ObjectId(genres);
-    if (author) filter.authorId = new Types.ObjectId(author);
+    if (status) matchStage.status = status;
+    if (genres) matchStage.genres = new Types.ObjectId(genres);
+    if (author) matchStage.authorId = new Types.ObjectId(author);
+
+    if (tags) {
+      const tagsList = tags.split(',').map((tag) => tag.trim());
+
+      matchStage.tags = { $in: tagsList };
+    }
+
     if (search) {
-      filter.$or = [
+      matchStage.$or = [
         { title: { $regex: search, $options: 'i' } },
         { slug: { $regex: search, $options: 'i' } },
       ];
     }
 
-    // Parallel Execution: Get Data & Count
-    const [books, total] = await Promise.all([
-      this.bookModel
-        .find(filter)
-        .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('authorId', 'name')
-        .populate('genres', 'name')
-        .lean(),
-      this.bookModel.countDocuments(filter),
+    const sortOrder = order === 'asc' ? 1 : -1;
+    let sortStage: any = {};
+
+    switch (sortBy) {
+      case 'views':
+        sortStage = { views: sortOrder, _id: 1 };
+        break;
+      case 'likes':
+        sortStage = { likes: sortOrder, _id: 1 };
+        break;
+      case 'rating':
+        sortStage = { computedRating: sortOrder, _id: 1 };
+        break;
+      case 'popular':
+        sortStage = { reviewsCount: sortOrder, _id: 1 };
+        break;
+      case 'createdAt':
+        sortStage = { createdAt: sortOrder, _id: 1 };
+        break;
+      case 'updatedAt':
+      default:
+        sortStage = { updatedAt: sortOrder, _id: 1 };
+        break;
+    }
+
+    const [result] = await this.bookModel.aggregate([
+      { $match: matchStage },
+
+      ...(sortBy === 'rating' || sortBy === 'popular'
+        ? [
+            {
+              $lookup: {
+                from: 'reviews',
+                localField: '_id',
+                foreignField: 'bookId',
+                as: 'reviewsData',
+              },
+            },
+            {
+              $addFields: {
+                computedRating: { $avg: '$reviewsData.rating' },
+                reviewsCount: { $size: '$reviewsData' },
+              },
+            },
+          ]
+        : []),
+
+      { $sort: sortStage },
+
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: 'authors',
+                localField: 'authorId',
+                foreignField: '_id',
+                as: 'authorId',
+              },
+            },
+            {
+              $unwind: { path: '$authorId', preserveNullAndEmptyArrays: true },
+            },
+            {
+              $lookup: {
+                from: 'genres',
+                localField: 'genres',
+                foreignField: '_id',
+                as: 'genres',
+              },
+            },
+            { $project: { reviewsData: 0, password: 0 } },
+          ],
+          totalCount: [{ $count: 'count' }],
+        },
+      },
     ]);
+
+    const books = result.data;
+    const total = result.totalCount[0]?.count || 0;
 
     const booksWithStats = await Promise.all(
       books.map(async (book) => {
         const chapterCount = await this.chapterModel.countDocuments({
           bookId: book._id,
         });
+
         return {
           ...book,
           stats: {
             chapters: chapterCount,
             views: book.views || 0,
             likes: book.likes || 0,
+            rating: book.computedRating || 0,
+            reviews: book.reviewsCount || 0,
           },
         };
       }),
@@ -92,12 +185,40 @@ export class BooksService {
 
     return {
       data: booksWithStats,
-      meta: {
+      metaData: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async getFilters() {
+    const genres = await this.genreModel
+      .find()
+      .select('name slug')
+      .sort({ name: 1 })
+      .lean();
+
+    const tagsAggregation = await this.bookModel.aggregate([
+      { $match: { isDeleted: false, status: 'published' } },
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $project: { _id: 0, name: '$_id', count: 1 } },
+    ]);
+
+    return {
+      genres: genres.map((g) => ({
+        id: g._id.toString(),
+        name: g.name,
+        slug: g.slug,
+      })),
+      tags: tagsAggregation.map((t) => ({
+        name: t.name,
+        count: t.count,
+      })),
     };
   }
 

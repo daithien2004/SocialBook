@@ -1,4 +1,5 @@
 import { id } from 'date-fns/locale';
+import { get } from 'lodash';
 
 export const NESTJS_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
@@ -25,7 +26,7 @@ export const NESTJS_COMMENTS_ENDPOINTS = {
 export const NESTJS_LIKES_ENDPOINTS = {
   postToggleLike: '/likes/toggle',
   getCount: 'likes/count',
-  getStatus: 'likes/status'
+  getStatus: 'likes/status',
 };
 
 export const NESTJS_BOOKS_ENDPOINTS = {
@@ -38,6 +39,7 @@ export const NESTJS_BOOKS_ENDPOINTS = {
   deleteBook: (bookId: string) => `/books/${bookId}`,
   getAllBookForAdmin: '/books/admin/all',
   like: (bookSlug: string) => `/books/${bookSlug}/like`,
+  getFilters: '/books/filters/all',
 };
 
 export const NESTJS_CHAPTERS_ENDPOINTS = {
@@ -119,13 +121,16 @@ export const NESTJS_GENRES_ENDPOINTS = {
 };
 
 export const NESTJS_TTS_ENDPOINTS = {
-  generateChapter: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
+  generateChapter: (chapterId: string) =>
+    `/text-to-speech/chapter/${chapterId}`,
   generateBook: (bookId: string) => `/text-to-speech/book/${bookId}/all`,
   getByChapter: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
   delete: (chapterId: string) => `/text-to-speech/chapter/${chapterId}`,
-  incrementPlay: (chapterId: string) => `/text-to-speech/chapter/${chapterId}/play`,
+  incrementPlay: (chapterId: string) =>
+    `/text-to-speech/chapter/${chapterId}/play`,
 };
 
 export const NESTJS_GEMINI_ENDPOINTS = {
-  summarizeChapter: (chapterId: string) => `/gemini/summarize-chapter/${chapterId}`,
+  summarizeChapter: (chapterId: string) =>
+    `/gemini/summarize-chapter/${chapterId}`,
 };

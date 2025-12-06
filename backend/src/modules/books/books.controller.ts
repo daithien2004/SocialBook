@@ -24,6 +24,9 @@ import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/src/common/guards/roles.guard';
 
 import { CreateBookDto } from './dto/create-book.dto';
+import { Model } from 'mongoose';
+import { BookDocument } from './schemas/book.schema';
+import { GenreDocument } from '../genres/schemas/genre.schema';
 
 @Controller('books')
 export class BooksController {
@@ -37,18 +40,35 @@ export class BooksController {
     @Query('limit') limit = 12,
     @Query('search') search?: string,
     @Query('genres') genres?: string,
+    @Query('tags') tags?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
   ) {
     const result = await this.booksService.findAll({
       page: +page,
       limit: +limit,
       status: 'published',
       search,
+      tags,
       genres,
+      sortBy,
+      order,
     });
 
     return {
       message: 'Get published books successfully',
-      ...result,
+      data: result,
+    };
+  }
+
+  @Public()
+  @Get('filters/all')
+  @HttpCode(HttpStatus.OK)
+  async getFilters() {
+    const data = await this.booksService.getFilters();
+    return {
+      message: 'Get filters successfully',
+      data,
     };
   }
 

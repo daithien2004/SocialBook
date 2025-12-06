@@ -59,3 +59,4 @@ export const BookSchema = SchemaFactory.createForClass(Book);
 BookSchema.index({ createdAt: -1 }); // For growth queries
 BookSchema.index({ views: -1 }); // For popular books queries
 BookSchema.index({ slug: 1 }); // For book lookups
+BookSchema.index({ tags: 1 });

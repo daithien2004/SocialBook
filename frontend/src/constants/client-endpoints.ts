@@ -30,6 +30,7 @@ export const BFF_BOOKS_ENDPOINTS = {
   deleteBook: (bookId: string) => `/admin/books/id/${bookId}`,
   getAllForAdmin: '/admin/books',
   like: (bookSlug: string) => `/books/${bookSlug}/like`,
+  getFilters: '/books/filters/all',
 };
 
 export const BFF_COMMENTS_ENDPOINTS = {
@@ -38,7 +39,6 @@ export const BFF_COMMENTS_ENDPOINTS = {
   getResolveParent: '/comments/resolve-parent',
   getCount: '/comments/count',
 };
-
 
 export const BFF_LIKES_ENDPOINTS = {
   postToggleLike: '/likes/toggle',
@@ -81,7 +81,7 @@ export const BFF_LIBRARY_ENDPOINTS = {
   collections: '/collections', // GET, POST
   collectionDetail: (id: string) => `/collections/${id}`, // GET, PATCH, DELETE
   collectionDetailNoUser: (id: string, userId?: string) =>
-     `/collections/detail?id=${id}&userId=${userId}`,
+    `/collections/detail?id=${id}&userId=${userId}`,
 };
 
 export const BFF_AUTHORS_ENDPOINTS = {
@@ -113,6 +113,6 @@ export const BFF_USERS_ENDPOINTS = {
 };
 
 export const BFF_GEMINI_ENDPOINTS = {
-  summarizeChapter: (chapterId: string) => `/gemini/summarize-chapter/${chapterId}`,
+  summarizeChapter: (chapterId: string) =>
+    `/gemini/summarize-chapter/${chapterId}`,
 };
-
