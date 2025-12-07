@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
-import {useTheme} from "next-themes";
+import { useTheme } from "next-themes";
 
 export interface Comment {
   id: string;
@@ -83,7 +83,7 @@ export default function CommentSection({
           isCommentOpen={true}
           parentId={null}
           targetType={'chapter'}
-          theme={theme}
+          theme={theme as "light" | "dark" | undefined}
         />
       </div>
     </section>

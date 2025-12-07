@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useGetBookByIdQuery } from '@/src/features/books/api/bookApi';
 import {
@@ -17,9 +17,10 @@ import {
   useGetChapterAudioQuery,
 } from '@/src/features/tts/api/ttsApi';
 import { Chapter, Paragraph } from '@/src/features/chapters/types/chapter.interface';
-import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
+import { FileImportModal } from '@/src/components/chapter/FileImportModal';
 
 export default function ChapterManagementPage() {
   const params = useParams();
@@ -50,6 +51,10 @@ export default function ChapterManagementPage() {
   const [newChapterParagraphs, setNewChapterParagraphs] = useState<Paragraph[]>([
     { id: uuidv4(), content: '' },
   ]);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  const newChapterBottomRef = useRef<HTMLDivElement>(null);
+  const editChapterBottomRef = useRef<HTMLDivElement>(null);
 
   const book = bookData;
   const chapters = chaptersData?.chapters || [];
@@ -135,7 +140,8 @@ export default function ChapterManagementPage() {
     index: number,
     content: string,
     paragraphs: Paragraph[],
-    setParagraphs: (p: Paragraph[]) => void
+    setParagraphs: (p: Paragraph[]) => void,
+    onPaste?: () => void
   ) => {
     if (content.includes('\n')) {
       const lines = content.split('\n');
@@ -152,6 +158,11 @@ export default function ChapterManagementPage() {
 
       newParagraphs.splice(index + 1, 0, ...newItems);
       setParagraphs(newParagraphs);
+
+      // Scroll to bottom if pasting multiple lines
+      if (lines.length > 1 && onPaste) {
+        setTimeout(onPaste, 100);
+      }
     } else {
       const newParagraphs = paragraphs.map(p => ({ ...p }));
       newParagraphs[index].content = content;
@@ -311,6 +322,48 @@ export default function ChapterManagementPage() {
     }
   };
 
+  const handleImportChapters = async (importedChapters: { title: string; content: string }[]) => {
+    setIsImportModalOpen(false);
+    let successCount = 0;
+    let failCount = 0;
+
+    const toastId = toast.loading(`Importing ${importedChapters.length} chapters...`);
+
+    for (const chapter of importedChapters) {
+      try {
+        // Split content into paragraphs
+        const paragraphs = chapter.content.split('\n').filter(p => p.trim()).map(p => ({
+          id: uuidv4(),
+          content: p.trim()
+        }));
+
+        if (!book?.slug) {
+          toast.error('Book information missing');
+          return;
+        }
+
+        await createChapter({
+          bookSlug: book.slug,
+          data: {
+            title: chapter.title,
+            paragraphs: paragraphs,
+          },
+        }).unwrap();
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to import chapter ${chapter.title}:`, error);
+        failCount++;
+      }
+    }
+
+    toast.dismiss(toastId);
+    if (failCount === 0) {
+      toast.success(`Successfully imported all ${successCount} chapters!`);
+    } else {
+      toast.warning(`Imported ${successCount} chapters. Failed: ${failCount}`);
+    }
+  };
+
   if (isLoadingBook || isLoadingChapters) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -351,6 +404,13 @@ export default function ChapterManagementPage() {
                 <Plus className="w-5 h-5" />
                 Thêm chương mới
               </button>
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
+              >
+                <Upload className="w-5 h-5" />
+                Import File
+              </button>
             </div>
           </div>
         </div>
@@ -375,7 +435,13 @@ export default function ChapterManagementPage() {
                   <div key={para.id} className="flex gap-2">
                     <textarea
                       value={para.content}
-                      onChange={(e) => handleParagraphChange(index, e.target.value, newChapterParagraphs, setNewChapterParagraphs)}
+                      onChange={(e) => handleParagraphChange(
+                        index,
+                        e.target.value,
+                        newChapterParagraphs,
+                        setNewChapterParagraphs,
+                        () => newChapterBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+                      )}
                       onKeyDown={(e) => handleParagraphKeyDown(e, index, newChapterParagraphs, setNewChapterParagraphs)}
                       placeholder={`Đoạn ${index + 1} (Nhấn Enter để tạo đoạn mới)...`}
                       className="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 outline-none"
@@ -391,6 +457,7 @@ export default function ChapterManagementPage() {
                     )}
                   </div>
                 ))}
+                <div ref={newChapterBottomRef} />
               </div>
               <div className="flex gap-2 mt-4">
                 <button
@@ -427,7 +494,7 @@ export default function ChapterManagementPage() {
                 <div key={chapter.id} className="hover:bg-gray-50 transition-colors">
                   {/* Chapter Header */}
                   <div
-                    className="flex items-center justify-between p-4 cursor-pointer"
+                    className="flex items-center justify-between p-4 cursor-pointer sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm"
                     onClick={() => handleToggleExpand(chapter.id)}
                   >
                     <div className="flex items-center gap-3 flex-1">
@@ -438,7 +505,7 @@ export default function ChapterManagementPage() {
                       )}
                       <div className="flex-1">
                         <div className="font-semibold text-gray-900">
-                          Chương {chapter.orderIndex}: {chapter.title}
+                          CHƯƠNG {chapter.orderIndex}: {chapter.title}
                         </div>
                         <div className="text-sm text-gray-500 flex items-center gap-3">
                           <span>{chapter.paragraphsCount || 0} đoạn</span>
@@ -501,7 +568,13 @@ export default function ChapterManagementPage() {
                                   <div key={para.id} className="flex gap-2">
                                     <textarea
                                       value={para.content}
-                                      onChange={(e) => handleParagraphChange(index, e.target.value, editingParagraphs, setEditingParagraphs)}
+                                      onChange={(e) => handleParagraphChange(
+                                        index,
+                                        e.target.value,
+                                        editingParagraphs,
+                                        setEditingParagraphs,
+                                        () => editChapterBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+                                      )}
                                       onKeyDown={(e) => handleParagraphKeyDown(e, index, editingParagraphs, setEditingParagraphs)}
                                       placeholder={`Đoạn ${index + 1} (Nhấn Enter để tạo đoạn mới)...`}
                                       className="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 outline-none"
@@ -517,6 +590,7 @@ export default function ChapterManagementPage() {
                                     )}
                                   </div>
                                 ))}
+                                <div ref={editChapterBottomRef} />
                               </div>
                               <div className="flex gap-2">
                                 <button
@@ -550,6 +624,14 @@ export default function ChapterManagementPage() {
           </div>
         </div>
       </div>
+
+      <FileImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportChapters}
+        isLoading={isCreating}
+        bookSlug={book?.slug || ''}
+      />
     </div>
   );
 }

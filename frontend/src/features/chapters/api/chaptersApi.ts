@@ -127,6 +127,14 @@ export const chaptersApi = createApi({
       }),
       invalidatesTags: ['Chapters'],
     }),
+
+    importChaptersPreview: builder.mutation<{ title: string; content: string }[], { bookSlug: string; formData: FormData }>({
+      query: ({ bookSlug, formData }) => ({
+        url: BFF_CHAPTERS_ENDPOINTS.importChapter(bookSlug),
+        method: 'POST',
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -139,4 +147,5 @@ export const {
   useCreateChapterMutation,
   useUpdateChapterMutation,
   useDeleteChapterMutation,
+  useImportChaptersPreviewMutation,
 } = chaptersApi;
