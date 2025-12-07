@@ -43,6 +43,8 @@ export async function POST(
             formData,
         );
 
+        console.log('Next.js API backend response data:', response.data);
+
         return NextResponse.json({
             success: true,
             statusCode: response.status,

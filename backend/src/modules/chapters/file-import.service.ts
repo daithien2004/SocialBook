@@ -88,11 +88,8 @@ export class FileImportService {
      */
     private async parseEpub(buffer: Buffer): Promise<ParsedChapter[]> {
         return new Promise((resolve, reject) => {
-            const EPubImport = require('epub2');
-            console.log('EPubImport type:', typeof EPubImport);
-            console.log('EPubImport keys:', Object.keys(EPubImport));
-
             // Handle different export styles (CommonJS vs ESM interop)
+            const EPubImport = require('epub2');
             const EPub = EPubImport.EPub || EPubImport.default || EPubImport;
 
             const tempFilePath = path.join(os.tmpdir(), `upload-${uuidv4()}.epub`);
@@ -114,16 +111,19 @@ export class FileImportService {
 
                             // Get chapter title
                             let title = chapterRef.title || chapterRef.id;
-                            const tocItem = epub.toc.find(t => t.href === chapterRef.href);
+                            const tocItem = epub.toc.find((t: any) => t.href === chapterRef.href);
                             if (tocItem?.title) {
                                 title = tocItem.title;
                             }
 
                             // Only add chapters with content
                             if (plainText.trim().length > 0) {
+                                const metadataTitle = title || `Chapter ${chapters.length + 1}`;
+                                const processed = this.processChapterContent(metadataTitle, plainText);
+
                                 chapters.push({
-                                    title: title || `Chapter ${chapters.length + 1}`,
-                                    content: plainText
+                                    title: processed.title,
+                                    content: processed.content
                                 });
                             }
                         }
@@ -142,13 +142,13 @@ export class FileImportService {
                     }
                 });
 
-                epub.on('error', (err) => {
+                epub.on('error', (err: any) => {
                     this.cleanupTempFile(tempFilePath);
                     reject(new BadRequestException(`EPUB parsing error: ${err.message}`));
                 });
 
                 epub.parse();
-            } catch (error) {
+            } catch (error: any) {
                 this.cleanupTempFile(tempFilePath);
                 reject(new BadRequestException(`Failed to read EPUB file: ${error.message}`));
             }
@@ -160,7 +160,7 @@ export class FileImportService {
      */
     private getEpubChapter(epub: any, chapterId: string): Promise<string> {
         return new Promise((resolve, reject) => {
-            epub.getChapter(chapterId, (err, text) => {
+            epub.getChapter(chapterId, (err: any, text: string) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -186,7 +186,7 @@ export class FileImportService {
             const chapters = this.splitPdfIntoChapters(fullText);
 
             return chapters;
-        } catch (error) {
+        } catch (error: any) {
             if (error instanceof BadRequestException) {
                 throw error;
             }
@@ -271,6 +271,59 @@ export class FileImportService {
     }
 
     /**
+     * Process chapter content to extract title and clean body
+     */
+    private processChapterContent(metadataTitle: string, content: string): { title: string; content: string } {
+        let cleanedContent = content.trim();
+        let finalTitle = metadataTitle;
+
+        // Regex to detect chapter headers at the start of content
+        // Matches: "Chapter 1", "Chương 1", "Hồi 1", "Phần 1" followed by optional title
+        // Case insensitive, handles various separators like ":", ".", or just space
+        const headerRegex = /^(?:Chương|Chapter|Hồi|Phần)\s+\d+(?:[:.-]?\s*.*)?$/im;
+
+        // Get the first few lines to check for header
+        const lines = cleanedContent.split('\n');
+        const firstLine = lines[0]?.trim();
+
+        if (firstLine && headerRegex.test(firstLine)) {
+            // Found a better title in content!
+            // Remove the prefix "Chương X[:.-]" to get the clean title
+            const prefixRegex = /^(?:Chương|Chapter|Hồi|Phần)\s+\d+(?:[:.-])?\s*/i;
+            finalTitle = firstLine.replace(prefixRegex, '').trim();
+
+            // Remove the title line from content
+            cleanedContent = lines.slice(1).join('\n').trim();
+        } else {
+            // Fallback: Try to remove metadata title if it appears at start
+            const normalizedTitle = metadataTitle.trim().toLowerCase();
+            const prefixesToCheck = [
+                metadataTitle,
+                `Table of ${metadataTitle}`,
+                `Mục lục ${metadataTitle}`,
+                `Chapter ${metadataTitle}`,
+                `Chương ${metadataTitle}`
+            ];
+
+            for (const prefix of prefixesToCheck) {
+                if (cleanedContent.toLowerCase().startsWith(prefix.toLowerCase())) {
+                    cleanedContent = cleanedContent.substring(prefix.length).trim();
+                }
+            }
+        }
+
+        // Remove "Table of Contents" markers if they appear alone
+        const tocMarkers = ['Table of Contents', 'Mục lục', 'Nội dung'];
+        for (const marker of tocMarkers) {
+            if (cleanedContent.toLowerCase().startsWith(marker.toLowerCase())) {
+                cleanedContent = cleanedContent.substring(marker.length).trim();
+            }
+        }
+
+        return { title: finalTitle, content: cleanedContent };
+    }
+
+    /**
      * Cleanup temporary file
      */
     private cleanupTempFile(filePath: string): void {
@@ -295,7 +348,3 @@ export class FileImportService {
         };
     }
 }
-
-
-
-

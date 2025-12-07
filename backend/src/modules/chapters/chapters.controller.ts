@@ -51,11 +51,11 @@ export class ChaptersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Param('bookSlug') bookId: string, // This is actually bookId, not bookSlug!
+    @Param('bookSlug') bookSlug: string,
     @Body() dto: CreateChapterDto,
     @Request() req: any,
   ) {
-    const data = await this.chaptersService.createChapter(bookId, dto, req.user);
+    const data = await this.chaptersService.createChapter(bookSlug, dto, req.user);
     return {
       message: 'Create chapter successfully',
       data,

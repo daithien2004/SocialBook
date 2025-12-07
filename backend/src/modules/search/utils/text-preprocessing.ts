@@ -11,9 +11,14 @@ export function preprocessText(text: string): string {
 }
 
 export function createBookDocument(book: any): string {
+    const authorName = book.authorId?.name;
+
     const parts = [
         book.title ? `Tiêu đề: ${book.title}` : '',
-        book.authorId?.name ? `Tác giả: ${book.authorId.name}` : '',
+        // Repeat author name multiple times to increase semantic weight
+        authorName ? `Tác giả: ${authorName}` : '',
+        authorName ? `Người viết: ${authorName}` : '',
+        authorName ? `Tên tác giả: ${authorName}` : '',
         book.genres?.length
             ? `Thể loại: ${book.genres.map((g: any) => g.name).join(', ')}`
             : '',

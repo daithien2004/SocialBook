@@ -128,7 +128,7 @@ export const chaptersApi = createApi({
       invalidatesTags: ['Chapters'],
     }),
 
-    importChaptersPreview: builder.mutation<{ message: string; data: { title: string; content: string }[] }, { bookSlug: string; formData: FormData }>({
+    importChaptersPreview: builder.mutation<{ title: string; content: string }[], { bookSlug: string; formData: FormData }>({
       query: ({ bookSlug, formData }) => ({
         url: BFF_CHAPTERS_ENDPOINTS.importChapter(bookSlug),
         method: 'POST',

@@ -505,7 +505,7 @@ export default function ChapterManagementPage() {
                       )}
                       <div className="flex-1">
                         <div className="font-semibold text-gray-900">
-                          Chương {chapter.orderIndex}: {chapter.title}
+                          CHƯƠNG {chapter.orderIndex}: {chapter.title}
                         </div>
                         <div className="text-sm text-gray-500 flex items-center gap-3">
                           <span>{chapter.paragraphsCount || 0} đoạn</span>
