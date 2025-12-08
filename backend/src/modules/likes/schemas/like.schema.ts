@@ -13,6 +13,9 @@ export class Like {
   @Prop({ type: Types.ObjectId, required: true })
   targetId: Types.ObjectId;
 
+  @Prop({required: true })
+  status: boolean;
+
   @Prop({ type: Date, default: Date.now })
   createdAt: Date;
 

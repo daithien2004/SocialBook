@@ -13,7 +13,6 @@ export async function getAuthenticatedServerApi() {
 
   const accessToken = session.accessToken;
 
-  console.log(accessToken);
 
   // 3. Tạo một instance mới (hoặc clone) từ serverApi để thêm Authorization Header
   // Việc tạo instance mới là cách an toàn nhất để đảm bảo header không bị dính vào các request khác

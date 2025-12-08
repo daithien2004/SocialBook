@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TextToSpeechController } from './textToSpeech.controller';
 import { TextToSpeechService } from './textToSpeech.service';
@@ -12,7 +12,7 @@ import { ChaptersModule } from '../chapters/chapters.module';
 @Module({
   imports: [
     CloudinaryModule,
-    ChaptersModule,
+    forwardRef(() => ChaptersModule),
     MongooseModule.forFeature([
       { name: TextToSpeech.name, schema: TextToSpeechSchema },
     ]),

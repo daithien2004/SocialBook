@@ -3,6 +3,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { TextToSpeechDto } from './dto/textToSpeech.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -30,6 +32,7 @@ export class TextToSpeechService {
     @InjectModel(TextToSpeech.name)
     private readonly ttsModel: Model<TextToSpeechDocument>,
     private cloudinaryService: CloudinaryService,
+    @Inject(forwardRef(() => ChaptersService))
     private chaptersService: ChaptersService,
   ) { }
 

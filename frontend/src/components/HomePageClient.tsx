@@ -7,7 +7,6 @@ import { Book } from '../features/books/types/book.interface';
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Header } from '../components/header';
 import { ReadingSidebar } from '../components/book/ReadingSidebar';
 import { MobileReadingSection } from '../components/book/MobileReadingSection';
 import { GenresSection } from '../components/book/GenresSection';
@@ -176,7 +175,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen mt-10 bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
+    <div className="min-h-screen  bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
       <div className="fixed inset-0 z-0">
         <img
           src="/main-background.jpg"
@@ -187,8 +186,6 @@ export default function HomePage() {
       </div>
 
       <div className="relative z-10">
-        <Header session={session} />
-
         <main>
           <div className="pb-8">
             <BannerSlider books={featuredBooks} />

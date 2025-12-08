@@ -57,6 +57,26 @@ export class ChromaService implements OnModuleInit {
         return this.vectorStore;
     }
 
+    /**
+     * Helper to run tasks with concurrency limit
+     */
+    private async runWithConcurrency<T>(items: T[], concurrency: number, fn: (item: T) => Promise<void>) {
+        const queue = [...items];
+        const workers = Array(Math.min(concurrency, items.length)).fill(null).map(async () => {
+            while (queue.length > 0) {
+                const item = queue.shift();
+                if (item !== undefined) {
+                    try {
+                        await fn(item);
+                    } catch (error) {
+                        this.logger.error(`Error in concurrent task: ${error.message}`);
+                    }
+                }
+            }
+        });
+        await Promise.all(workers);
+    }
+
     // ========== BOOK INDEXING ========== //
 
     /**
@@ -95,43 +115,60 @@ export class ChromaService implements OnModuleInit {
     }
 
     /**
-     * Bulk reindex all books
+     * Bulk reindex all books with concurrency
      */
     async reindexAllBooks() {
-        const books = await this.bookModel
-            .find({ status: 'published' })
-            .populate('authorId', 'name')
-            .populate('genres', 'name')
-            .lean();
+        const BATCH_SIZE = 200;
+        const CONCURRENCY = 5;
+        const totalBooks = await this.bookModel.countDocuments({ status: 'published' });
 
-        this.logger.log(`📚 Starting bulk indexing for ${books.length} books...`);
+        this.logger.log(`📚 Found ${totalBooks} books. Starting parallel indexing (Concurrency: ${CONCURRENCY})...`);
 
-        const documents = books.map((book) => {
-            const documentText = createBookDocument(book);
-
-            return new Document({
-                pageContent: documentText,
-                metadata: {
-                    type: 'book',
-                    bookId: book._id.toString(),
-                    title: book.title,
-                    slug: book.slug,
-                    author: (book.authorId as any)?.name || 'Unknown',
-                    genres: book.genres?.map((g: any) => g.name).join(', ') || '',
-                    createdAt: book.createdAt ? new Date(book.createdAt as any).toISOString() : new Date().toISOString(),
-                },
-            });
-        });
-
-        if (documents.length > 0) {
-            await this.vectorStore.addDocuments(documents);
+        const batches: number[] = [];
+        for (let i = 0; i < totalBooks; i += BATCH_SIZE) {
+            batches.push(i);
         }
 
-        this.logger.log(`✅ Successfully indexed ${books.length} books`);
+        let processedCount = 0;
+
+        await this.runWithConcurrency(batches, CONCURRENCY, async (skip) => {
+            const books = await this.bookModel
+                .find({ status: 'published' })
+                .populate('authorId', 'name')
+                .populate('genres', 'name')
+                .skip(skip)
+                .limit(BATCH_SIZE)
+                .lean();
+
+            const documents = books.map((book) => {
+                const documentText = createBookDocument(book);
+                return new Document({
+                    pageContent: documentText,
+                    metadata: {
+                        type: 'book',
+                        bookId: book._id.toString(),
+                        title: book.title,
+                        slug: book.slug,
+                        author: (book.authorId as any)?.name || 'Unknown',
+                        genres: book.genres?.map((g: any) => g.name).join(', ') || '',
+                        createdAt: book.createdAt ? new Date(book.createdAt as any).toISOString() : new Date().toISOString(),
+                    },
+                });
+            });
+
+            if (documents.length > 0) {
+                await this.vectorStore.addDocuments(documents);
+            }
+
+            processedCount += books.length;
+            this.logger.log(`⏳ Indexed ${processedCount}/${totalBooks} books...`);
+        });
+
+        this.logger.log(`✅ Successfully indexed ${totalBooks} books`);
 
         return {
             success: true,
-            totalIndexed: books.length,
+            totalIndexed: totalBooks,
         };
     }
 
@@ -175,49 +212,75 @@ export class ChromaService implements OnModuleInit {
     }
 
     /**
-     * Bulk index all chapters
+     * Bulk index all chapters with batch processing and concurrency
+     * Optimized for high-performance execution using parallel processing to maximize CPU and Network utilization.
      */
     async reindexAllChapters() {
-        const chapters = await this.chapterModel
-            .find()
-            .populate('bookId', 'title slug')
-            .lean();
+        const BATCH_SIZE = 50; // Smaller batch size per worker to prevent timeouts
+        const CONCURRENCY = 10; // Higher concurrency to utilize bandwidth
+        const totalChapters = await this.chapterModel.countDocuments();
 
-        this.logger.log(`📚 Indexing ${chapters.length} chapters...`);
+        this.logger.log(`📚 Found ${totalChapters} chapters. Starting parallel indexing (Concurrency: ${CONCURRENCY})...`);
 
-        const documents: Document[] = [];
-
-        for (const chapter of chapters) {
-            const chunks = createChapterDocument(chapter);
-
-            chunks.forEach((chunk, index) => {
-                documents.push(new Document({
-                    pageContent: chunk,
-                    metadata: {
-                        type: 'chapter',
-                        chapterId: chapter._id.toString(),
-                        chapterTitle: chapter.title,
-                        chapterSlug: chapter.slug,
-                        bookId: (chapter.bookId as any)._id.toString(),
-                        bookTitle: (chapter.bookId as any).title,
-                        bookSlug: (chapter.bookId as any).slug,
-                        orderIndex: chapter.orderIndex,
-                        chunkIndex: index,
-                        createdAt: chapter.createdAt ? new Date(chapter.createdAt).toISOString() : new Date().toISOString(),
-                    },
-                }));
-            });
+        const batches: number[] = [];
+        for (let i = 0; i < totalChapters; i += BATCH_SIZE) {
+            batches.push(i);
         }
 
-        if (documents.length > 0) {
-            await this.vectorStore.addDocuments(documents);
-        }
+        let processedCount = 0;
 
-        this.logger.log(`✅ Indexed ${chapters.length} chapters`);
+        await this.runWithConcurrency(batches, CONCURRENCY, async (skip) => {
+            const chapters = await this.chapterModel
+                .find()
+                .populate('bookId', 'title slug')
+                .skip(skip)
+                .limit(BATCH_SIZE)
+                .lean();
+
+            const documents: Document[] = [];
+
+            for (const chapter of chapters) {
+                try {
+                    // Skip if bookId is missing or invalid (populated field)
+                    if (!chapter.bookId || !(chapter.bookId as any)._id) continue;
+
+                    const chunks = createChapterDocument(chapter);
+
+                    chunks.forEach((chunk, index) => {
+                        documents.push(new Document({
+                            pageContent: chunk,
+                            metadata: {
+                                type: 'chapter',
+                                chapterId: chapter._id.toString(),
+                                chapterTitle: chapter.title,
+                                chapterSlug: chapter.slug,
+                                bookId: (chapter.bookId as any)._id.toString(),
+                                bookTitle: (chapter.bookId as any).title,
+                                bookSlug: (chapter.bookId as any).slug,
+                                orderIndex: chapter.orderIndex,
+                                chunkIndex: index,
+                                createdAt: chapter.createdAt ? new Date(chapter.createdAt).toISOString() : new Date().toISOString(),
+                            },
+                        }));
+                    });
+                } catch (err) {
+                    this.logger.warn(`Skipping chapter ${chapter._id} due to error: ${err.message}`);
+                }
+            }
+
+            if (documents.length > 0) {
+                await this.vectorStore.addDocuments(documents);
+            }
+
+            processedCount += chapters.length;
+            this.logger.log(`⏳ Indexed ${processedCount}/${totalChapters} chapters...`);
+        });
+
+        this.logger.log(`✅ Successfully indexed ${totalChapters} chapters`);
 
         return {
             success: true,
-            totalIndexed: chapters.length,
+            totalIndexed: totalChapters,
         };
     }
 
@@ -251,37 +314,56 @@ export class ChromaService implements OnModuleInit {
     }
 
     /**
-     * Bulk index all authors
+     * Bulk index all authors with concurrency
      */
     async reindexAllAuthors() {
-        const authors = await this.authorModel.find().lean();
+        const BATCH_SIZE = 100;
+        const CONCURRENCY = 5;
+        const totalAuthors = await this.authorModel.countDocuments();
 
-        this.logger.log(`👤 Indexing ${authors.length} authors...`);
+        this.logger.log(`👤 Found ${totalAuthors} authors. Starting parallel indexing (Concurrency: ${CONCURRENCY})...`);
 
-        const documents = authors.map(author => {
-            const documentText = createAuthorDocument(author);
-
-            return new Document({
-                pageContent: documentText,
-                metadata: {
-                    type: 'author',
-                    authorId: author._id.toString(),
-                    authorName: author.name,
-                    photoUrl: author.photoUrl || '',
-                    createdAt: new Date().toISOString(),
-                },
-            });
-        });
-
-        if (documents.length > 0) {
-            await this.vectorStore.addDocuments(documents);
+        const batches: number[] = [];
+        for (let i = 0; i < totalAuthors; i += BATCH_SIZE) {
+            batches.push(i);
         }
 
-        this.logger.log(`✅ Indexed ${authors.length} authors`);
+        let processedCount = 0;
+
+        await this.runWithConcurrency(batches, CONCURRENCY, async (skip) => {
+            const authors = await this.authorModel
+                .find()
+                .skip(skip)
+                .limit(BATCH_SIZE)
+                .lean();
+
+            const documents = authors.map(author => {
+                const documentText = createAuthorDocument(author);
+                return new Document({
+                    pageContent: documentText,
+                    metadata: {
+                        type: 'author',
+                        authorId: author._id.toString(),
+                        authorName: author.name,
+                        photoUrl: author.photoUrl || '',
+                        createdAt: new Date().toISOString(),
+                    },
+                });
+            });
+
+            if (documents.length > 0) {
+                await this.vectorStore.addDocuments(documents);
+            }
+
+            processedCount += authors.length;
+            this.logger.log(`⏳ Indexed ${processedCount}/${totalAuthors} authors...`);
+        });
+
+        this.logger.log(`✅ Indexed ${totalAuthors} authors`);
 
         return {
             success: true,
-            totalIndexed: authors.length,
+            totalIndexed: totalAuthors,
         };
     }
 

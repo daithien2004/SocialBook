@@ -58,6 +58,7 @@ export const BFF_CHAPTERS_ENDPOINTS = {
     `/admin/books/${bookSlug}/chapters/${chapterId}`,
   deleteChapter: (bookSlug: string, chapterId: string) =>
     `/admin/books/${bookSlug}/chapters/${chapterId}`,
+  importChapter: (bookSlug: string) => `/admin/books/${bookSlug}/chapters/import`,
 };
 
 export const BFF_REVIEWS_ENDPOINTS = {

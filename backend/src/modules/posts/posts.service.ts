@@ -31,7 +31,7 @@ export class PostsService {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('userId', 'name email image')
+        .populate('userId', 'username email image')
         .populate({
           path: 'bookId',
           select: 'title coverUrl',

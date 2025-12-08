@@ -60,6 +60,7 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
     `/books/${bookSlug}/chapters/${chapterId}`,
   deleteChapterAdmin: (bookSlug: string, chapterId: string) =>
     `/books/${bookSlug}/chapters/${chapterId}`,
+  importPreview: (bookSlug: string) => `/books/${bookSlug}/chapters/import/preview`,
 };
 
 export const NESTJS_POSTS_ENDPOINTS = {

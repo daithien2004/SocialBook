@@ -12,8 +12,8 @@ const navItems = [
   { name: 'Posts', icon: FileText, href: '/admin/posts' },
   { name: 'Comments', icon: MessageSquare, href: '/admin/comments' },
   { name: 'Reports', icon: BarChart2, href: '/admin/reports' },
-  { name: 'Authors', icon: PenLine , href: '/admin/authors' },
-  { name: 'Genres', icon: Shapes , href: '/admin/genres' },
+  { name: 'Authors', icon: PenLine, href: '/admin/authors' },
+  { name: 'Genres', icon: Shapes, href: '/admin/genres' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const user = session?.user;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+    <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
 
       {/* Overlay mobile */}
       {isSidebarOpen && (
@@ -35,11 +35,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:shadow-md ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:shadow-md flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
           <h2 className="text-xl font-bold">SocialBook</h2>
           <button
             onClick={() => setIsSidebarOpen(false)}
@@ -49,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
 
-        <nav className="p-4">
+        <nav className="p-4 flex-1 overflow-y-auto">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.name}>
@@ -65,7 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </ul>
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 border-t">
+        <div className="p-4 border-t flex-shrink-0">
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
             className="flex items-center px-4 py-3 w-full text-gray-700 rounded-lg hover:bg-red-50 hover:text-red-600"
@@ -77,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Content */}
-      <main className="flex-1 ml-0 p-6">
+      <main className="flex-1 ml-0 p-6 overflow-y-auto">
         {children}
       </main>
     </div>

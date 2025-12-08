@@ -27,6 +27,7 @@ export class LikesService {
     const count = await this.likeModel.countDocuments({
       targetType: targetType.toLowerCase(),
       targetId: new Types.ObjectId(targetId),
+      status: true,
     });
 
     return { count };
@@ -34,16 +35,27 @@ export class LikesService {
 
   async checkStatus(userId: string, dto: ToggleLikeDto) {
     const { targetId, targetType } = dto;
-    if (!Types.ObjectId.isValid(targetId)) return { isLiked: false };
 
-    const exists = await this.likeModel.exists({
-      userId: new Types.ObjectId(userId),
-      targetType: targetType.toLowerCase(),
-      targetId: new Types.ObjectId(targetId),
-    });
+    if (!Types.ObjectId.isValid(targetId) || !Types.ObjectId.isValid(userId)) {
+      return { isLiked: false };
+    }
 
-    return { isLiked: !!exists };
+    const normalizedType = targetType.toLowerCase();
+
+    const like = await this.likeModel
+      .findOne(
+        {
+          userId: new Types.ObjectId(userId),
+          targetType: normalizedType,
+          targetId: new Types.ObjectId(targetId),
+        },
+        { _id: 0, status: 1 }
+      )
+      .lean();
+
+    return { isLiked: like?.status };
   }
+
 
   // Internal Helper (Used by Comments Service)
   async aggregateLikeCounts(targetIds: Types.ObjectId[], targetType: string) {
@@ -85,34 +97,34 @@ export class LikesService {
 
     const filter = {
       userId: new Types.ObjectId(userId),
-      targetType: normalizedType, // 'post' | 'chapter' | 'comment' | 'paragraph'
+      targetType: normalizedType,
       targetId: new Types.ObjectId(targetId),
     };
 
-    const existing = await this.likeModel.exists(filter);
+    // Tìm like hiện tại (nếu có)
+    const existing = await this.likeModel.findOne(filter);
 
-    if (existing) {
-      // Đã like rồi -> toggle thành unlike
-      await this.likeModel.deleteOne(filter);
-      return { isLiked: false };
+    if (!existing) {
+      await this.likeModel.create({
+        ...filter,
+        status: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await this.createLikeNotification(userId, normalizedType, targetId);
+
+      return { isLiked: true };
     }
 
-    // Chưa like -> tạo like mới
-    await this.likeModel.create({
-      ...filter,
-      createdAt: new Date(),
-    });
+    const updatedStatus = !existing.status;
 
-    // 🎯 Sau khi like thành công, gửi notification (nếu cần)
-    await this.createLikeNotification(userId, normalizedType, targetId);
-
-    return { isLiked: true };
+    existing.status = updatedStatus;
+    existing.updatedAt = new Date();
+    await existing.save();
+    return { isLiked: updatedStatus };
   }
 
-  /**
-   * Gửi notification khi userId like một target nào đó
-   */
-  // likes.service.ts
   private async createLikeNotification(
     actorId: string,
     targetType: CommentTargetType,

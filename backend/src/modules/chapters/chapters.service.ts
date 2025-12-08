@@ -19,7 +19,7 @@ export class ChaptersService {
   constructor(
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-  ) {}
+  ) { }
 
   async findByBookSlug(bookSlug: string) {
     if (!bookSlug) throw new BadRequestException('Book slug is required');
@@ -127,19 +127,19 @@ export class ChaptersService {
       navigation: {
         previous: prevChapter
           ? {
-              id: prevChapter._id.toString(),
-              title: prevChapter.title,
-              slug: prevChapter.slug,
-              orderIndex: prevChapter.orderIndex,
-            }
+            id: prevChapter._id.toString(),
+            title: prevChapter.title,
+            slug: prevChapter.slug,
+            orderIndex: prevChapter.orderIndex,
+          }
           : null,
         next: nextChapter
           ? {
-              id: nextChapter._id.toString(),
-              title: nextChapter.title,
-              slug: nextChapter.slug,
-              orderIndex: nextChapter.orderIndex,
-            }
+            id: nextChapter._id.toString(),
+            title: nextChapter.title,
+            slug: nextChapter.slug,
+            orderIndex: nextChapter.orderIndex,
+          }
           : null,
       },
     };
@@ -225,10 +225,17 @@ export class ChaptersService {
     };
   }
 
-  async createChapter(bookId: string, dto: CreateChapterDto, user: any) {
-    // 1. Kiểm tra sách tồn tại
-    const book = await this.bookModel.findById(bookId).lean();
+  async createChapter(bookIdOrSlug: string, dto: CreateChapterDto, user: any) {
+    // 1. Kiểm tra sách tồn tại (support both ID and Slug)
+    let book;
+    if (Types.ObjectId.isValid(bookIdOrSlug)) {
+      book = await this.bookModel.findById(bookIdOrSlug).lean();
+    } else {
+      book = await this.bookModel.findOne({ slug: bookIdOrSlug, isDeleted: false }).lean();
+    }
+
     if (!book) throw new NotFoundException('Sách không tồn tại');
+    const bookId = book._id;
 
     // 2. Tính orderIndex tự động
     const lastChapter = await this.chapterModel
