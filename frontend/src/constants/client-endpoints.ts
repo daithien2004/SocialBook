@@ -116,3 +116,7 @@ export const BFF_GEMINI_ENDPOINTS = {
   summarizeChapter: (chapterId: string) =>
     `/gemini/summarize-chapter/${chapterId}`,
 };
+
+export const BFF_RECOMMENDATIONS_ENDPOINTS = {
+  getPersonalized: '/recommendations/personalized',
+};

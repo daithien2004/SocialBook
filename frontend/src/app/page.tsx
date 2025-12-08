@@ -13,8 +13,9 @@ import { MobileReadingSection } from '../components/book/MobileReadingSection';
 import { GenresSection } from '../components/book/GenresSection';
 import { BookCard } from '../components/book/BookCard';
 import { BookOrderField } from '../features/books/api/bookApi';
+import { RecommendedForYouSection } from '../components/book/RecommendedForYouSection';
 
-type TabType = 'trending' | 'new' | 'topRated' | 'recommended';
+type TabType = 'trending' | 'new' | 'topRated' | 'updated';
 
 const TABS = [
   {
@@ -36,8 +37,8 @@ const TABS = [
     sortBy: 'likes',
   },
   {
-    id: 'recommended' as TabType,
-    label: 'Gợi ý cho bạn',
+    id: 'updated' as TabType,
+    label: 'Mới cập nhật',
     icon: Sparkles,
     sortBy: 'updatedAt',
   },
@@ -64,7 +65,7 @@ export default function HomePage() {
     trending: { ...initialTabState },
     new: { ...initialTabState },
     topRated: { ...initialTabState },
-    recommended: { ...initialTabState },
+    updated: { ...initialTabState },
   });
 
   const { data: session, status } = useSession();
@@ -194,6 +195,10 @@ export default function HomePage() {
           </div>
 
           <MobileReadingSection />
+
+          <div className="max-w-[1920px] mx-auto px-4 xl:px-8">
+            <RecommendedForYouSection />
+          </div>
 
           <div className="max-w-[1920px] mx-auto px-4 xl:px-8 flex gap-8">
             <div className="flex-1 min-w-0">

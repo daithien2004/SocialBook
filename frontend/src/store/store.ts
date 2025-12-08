@@ -15,8 +15,31 @@ import { authorApi } from '../features/authors/api/authorApi';
 import { genreApi } from '../features/genres/api/genreApi';
 import { analyticsApi } from '../features/admin/api/analyticsApi';
 import { setupListeners } from '@reduxjs/toolkit/query';
-import {likeApi} from "@/src/features/likes/api/likeApi";
+import { likeApi } from '@/src/features/likes/api/likeApi';
 import { geminiApi } from '../features/gemini/api/geminiApi';
+import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+
+const recommendationsPersistConfig = {
+  key: 'recommendations',
+  storage,
+  whitelist: ['queries'], // chỉ persist queries, không persist mutations
+};
+
+const persistedRecommendationsReducer = persistReducer(
+  recommendationsPersistConfig,
+  recommendationsApi.reducer
+);
 
 export const store = configureStore({
   reducer: {
@@ -36,9 +59,16 @@ export const store = configureStore({
     [authorApi.reducerPath]: authorApi.reducer,
     [genreApi.reducerPath]: genreApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
+    [geminiApi.reducerPath]: geminiApi.reducer,
+    [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Bỏ qua các action của redux-persist
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    })
       .concat(authApi.middleware)
       .concat(postApi.middleware)
       .concat(booksApi.middleware)
@@ -53,10 +83,14 @@ export const store = configureStore({
       .concat(authorApi.middleware)
       .concat(genreApi.middleware)
       .concat(analyticsApi.middleware)
-      .concat(likeApi.middleware),
+      .concat(likeApi.middleware)
+      .concat(geminiApi.middleware)
+      .concat(recommendationsApi.middleware),
 });
 
 setupListeners(store.dispatch);
+
+export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

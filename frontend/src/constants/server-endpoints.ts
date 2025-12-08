@@ -134,3 +134,7 @@ export const NESTJS_GEMINI_ENDPOINTS = {
   summarizeChapter: (chapterId: string) =>
     `/gemini/summarize-chapter/${chapterId}`,
 };
+
+export const NESTJS_RECOMMENDATIONS_ENDPOINTS = {
+  getPersonalized: '/recommendations/personalized',
+};

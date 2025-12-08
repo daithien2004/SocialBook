@@ -118,16 +118,6 @@ export class ChaptersService {
       ),
     ]);
 
-    // Format Navigation data
-    const navigation = {
-      previous: prevChapter
-        ? { title: prevChapter.title, slug: prevChapter.slug }
-        : null,
-      next: nextChapter
-        ? { title: nextChapter.title, slug: nextChapter.slug }
-        : null,
-    };
-
     return {
       book,
       chapter: {
