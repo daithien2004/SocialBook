@@ -8,6 +8,7 @@ interface FileImportModalProps {
     onImport: (chapters: { title: string; content: string }[]) => void;
     isLoading?: boolean;
     bookSlug: string;
+    currentChapterCount?: number;
 }
 
 interface ParsedChapter {
@@ -22,6 +23,7 @@ export function FileImportModal({
     onImport,
     isLoading: isImporting,
     bookSlug,
+    currentChapterCount = 0,
 }: FileImportModalProps) {
     const [file, setFile] = useState<File | null>(null);
     const [parsedChapters, setParsedChapters] = useState<ParsedChapter[]>([]);
@@ -30,6 +32,20 @@ export function FileImportModal({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [importPreview, { isLoading: isPreviewLoading }] = useImportChaptersPreviewMutation();
+
+    /**
+     * Calculate the chapter number for display
+     * Takes into account existing chapters and deselected chapters
+     */
+    const getChapterDisplayNumber = (index: number): number => {
+        // Count how many chapters before this index are selected
+        const selectedBeforeCount = parsedChapters
+            .slice(0, index)
+            .filter(c => c.selected)
+            .length;
+
+        return currentChapterCount + selectedBeforeCount + 1;
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -140,7 +156,7 @@ export function FileImportModal({
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept=".epub,.pdf"
+                                    accept=".epub,.mobi,.azw,.azw3"
                                     className="hidden"
                                     onChange={handleFileChange}
                                     id="file-upload"
@@ -151,10 +167,10 @@ export function FileImportModal({
                                 >
                                     <Upload className="h-16 w-16 text-gray-400 mb-4" />
                                     <span className="text-xl font-medium text-gray-900 dark:text-gray-100">
-                                        {file ? file.name : 'Click to upload EPUB or PDF'}
+                                        {file ? file.name : 'Click to upload EPUB or MOBI'}
                                     </span>
                                     <span className="text-sm text-gray-500 mt-2">
-                                        Supported formats: .epub, .pdf
+                                        Supported formats: .epub, .mobi, .azw, .azw3
                                     </span>
                                 </label>
                             </div>
@@ -191,19 +207,17 @@ export function FileImportModal({
                                         <div
                                             key={index}
                                             onClick={() => setSelectedChapterIndex(index)}
-                                            className={`p-4 border-b border-gray-200 dark:border-gray-800 cursor-pointer transition-colors ${
-                                                selectedChapterIndex === index
-                                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-600'
-                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 border-l-4 border-l-transparent'
-                                            }`}
+                                            className={`p-4 border-b border-gray-200 dark:border-gray-800 cursor-pointer transition-colors ${selectedChapterIndex === index
+                                                ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-600'
+                                                : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 border-l-4 border-l-transparent'
+                                                }`}
                                         >
                                             <div className="flex items-start gap-3">
                                                 <div
-                                                    className={`mt-0.5 h-5 w-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                                                        chapter.selected
-                                                            ? 'bg-blue-600 border-blue-600 text-white'
-                                                            : 'border-gray-300 dark:border-gray-600'
-                                                    }`}
+                                                    className={`mt-0.5 h-5 w-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${chapter.selected
+                                                        ? 'bg-blue-600 border-blue-600 text-white'
+                                                        : 'border-gray-300 dark:border-gray-600'
+                                                        }`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleToggleChapter(index);
@@ -212,12 +226,11 @@ export function FileImportModal({
                                                     {chapter.selected && <Check className="h-3.5 w-3.5" />}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className={`text-sm font-medium truncate ${
-                                                        chapter.selected
-                                                            ? 'text-gray-900 dark:text-gray-100'
-                                                            : 'text-gray-500 dark:text-gray-400'
-                                                    }`}>
-                                                        {chapter.title || `Chapter ${index + 1}`}
+                                                    <div className={`text-sm font-medium truncate ${chapter.selected
+                                                        ? 'text-gray-900 dark:text-gray-100'
+                                                        : 'text-gray-500 dark:text-gray-400'
+                                                        }`}>
+                                                        Chương {getChapterDisplayNumber(index)}: {chapter.title || 'Chưa có tiêu đề'}
                                                     </div>
                                                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                         {chapter.content.length.toLocaleString()} characters
@@ -237,7 +250,7 @@ export function FileImportModal({
                                         <span className="text-xs font-medium uppercase tracking-wide">Preview & Edit</span>
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                        Chapter {selectedChapterIndex + 1}
+                                        Chương {getChapterDisplayNumber(selectedChapterIndex)}
                                     </h3>
                                 </div>
 

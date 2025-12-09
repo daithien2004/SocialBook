@@ -70,13 +70,24 @@ export class ChaptersController {
       fileSize: 50 * 1024 * 1024, // 50MB
     },
     fileFilter: (req, file, callback) => {
-      const allowedMimes = ['application/pdf', 'application/epub+zip', 'application/epub'];
-      if (allowedMimes.includes(file.mimetype)) {
+      const allowedMimes = [
+        'application/epub+zip',
+        'application/epub',
+        'application/x-mobipocket-ebook', // MOBI
+        'application/vnd.amazon.mobi8-ebook', // AZW3
+        'application/mobi', // Some browsers send this
+      ];
+
+      // Also check file extension for MOBI files (sometimes MIME type is generic)
+      const fileName = file.originalname.toLowerCase();
+      const isMobiFile = fileName.endsWith('.mobi') || fileName.endsWith('.azw') || fileName.endsWith('.azw3');
+
+      if (allowedMimes.includes(file.mimetype) || isMobiFile) {
         callback(null, true);
       } else {
         console.warn(`[FileImport] Rejected file. Mime: ${file.mimetype}, Name: ${file.originalname}`);
         callback(
-          new BadRequestException(`Invalid file type: ${file.mimetype}. Only PDF and EPUB are allowed`),
+          new BadRequestException(`Invalid file type: ${file.mimetype}. Only EPUB and MOBI formats are allowed`),
           false
         );
       }
