@@ -8,8 +8,8 @@ export const NOTIFICATION_TYPES = [
   'error',
   'system',
   'message',
-
   'comment',
+  'reply',
   'like',
   'follow',
 ] as const;

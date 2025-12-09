@@ -199,7 +199,8 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
             >
               <div
                 className={`w-6 h-[1px] ${
-                  isDark ? 'bg-white/20' : 'bg-gray-300'
+                  isDark ? 'bg-white/20' : 'bg-gray-300' 
+                  
                 }`}
               ></div>
               Xem {comment.repliesCount} phản hồi
@@ -208,7 +209,7 @@ const CommentItemCard: React.FC<CommentItemProps> = (props) => {
 
           {showReplies && (
             <div
-              className={`ml-2 pl-3 border-l-2 ${borderLeft} space-y-3 mt-2`}
+              className={`ml-2 pl-3 border-l-2 ${borderLeft} space-y-3 mt-2 mb-2`}
             >
               {/* Loading State */}
               {isResolvingParent && !resolvedData && (

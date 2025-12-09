@@ -40,8 +40,6 @@ export class NotificationsService {
       createdAt: doc.createdAt,
       meta: doc['meta'],
     };
-    // emit real-time
-    // emit real-time
     if (this.server) {
       this.server.to(this.userRoom(dto.userId)).emit('notification:new', payload);
     }

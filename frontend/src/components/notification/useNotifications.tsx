@@ -100,5 +100,14 @@ export function useNotifications(userToken: string | undefined) {
         });
     };
 
-    return { notifications, unreadCount, markAsRead, refetch };
+    const createNotification = (dto: NotificationItem) => {
+        const socket = socketRef.current;
+        if (!socket) return;
+
+        socket.emit("createNotification", dto, (res: any) => {
+            console.log("Notification created:", res);
+        });
+    };
+
+    return { notifications, unreadCount, markAsRead, refetch, createNotification };
 }

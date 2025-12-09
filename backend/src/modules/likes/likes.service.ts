@@ -127,7 +127,7 @@ export class LikesService {
 
   private async createLikeNotification(
     actorId: string,
-    targetType: CommentTargetType,
+    targetType: string,
     targetId: string,
   ) {
     let ownerId: string | null = null;
@@ -136,11 +136,11 @@ export class LikesService {
     if (targetType === 'post') {
       const post = await this.postModel
         .findById(targetId)
-        .select('_id userId title content')   // ✔ chỉ dùng userId, không còn authorId
+        .select('_id userId title content')
         .lean();
       if (!post) return;
 
-      ownerId = post.userId.toString();       // ✔ đổi hoàn toàn sang userId
+      ownerId = post.userId.toString();
       title = 'Ai đó đã thích bài viết của bạn';
       message = `Bài viết "${post.content}" vừa nhận được một lượt thích.`;
 
@@ -148,32 +148,30 @@ export class LikesService {
 
       const comment = await this.commentModel
         .findById(targetId)
-        .select('id userId content postId')  // ✔ comment cũng dùng userId
+        .select('id userId content postId')
         .lean();
       if (!comment) return;
 
-      ownerId = comment.userId.toString();    // ✔ đổi sang userId
+      ownerId = comment.userId.toString();
       title = 'Ai đó đã thích bình luận của bạn';
       message = `Bình luận "${comment.content}" vừa được thích.`;
 
     } else {
-      // Những loại khác như chapter, paragraph nếu sau này bạn cần
       return;
     }
 
-    // ❗ Không gửi thông báo nếu tự like chính mình
     if (!ownerId || ownerId === actorId) {
       return;
     }
     await this.notifications.create({
-      userId: ownerId, // người nhận thông báo
+      userId: ownerId,
       title,
       message,
       type: 'like',
       meta: {
         targetType,
         targetId,
-        actorId, // ai là người like
+        actorId,
       },
     });
   }
