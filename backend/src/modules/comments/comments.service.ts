@@ -8,7 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 
 import { Comment, CommentDocument } from './schemas/comment.schema';
-import { TARGET_TYPES } from './constants/targetType.constant';
+import { CommentTargetType, TARGET_TYPES } from './constants/targetType.constant';
 
 import { LikesService } from '@/src/modules/likes/likes.service';
 
@@ -16,6 +16,9 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentCountDto } from '@/src/modules/comments/dto/create-comment.dto';
 
 import { ContentModerationService } from '../content-moderation/content-moderation.service';
+import { NotificationsService } from '@/src/modules/notifications/notifications.service';
+import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
+import { Chapter, ChapterDocument } from '@/src/modules/chapters/schemas/chapter.schema';
 
 @Injectable()
 export class CommentsService {
@@ -23,6 +26,9 @@ export class CommentsService {
     private readonly likesService: LikesService,
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     private readonly contentModerationService: ContentModerationService,
+    @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
+    @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
+    private readonly notifications: NotificationsService,
   ) { }
 
   async findByTarget(
@@ -123,7 +129,6 @@ export class CommentsService {
   async create(userId: string, dto: CreateCommentDto) {
     const { targetType, targetId, content, parentId } = dto;
 
-    // 1. Validation
     if (!Object.values(TARGET_TYPES).includes(targetType as any)) {
       throw new BadRequestException('Invalid target type');
     }
@@ -131,10 +136,8 @@ export class CommentsService {
     if (!Types.ObjectId.isValid(targetId))
       throw new BadRequestException('Invalid Target ID');
 
-    // 2. Content Moderation
     const moderationResult = await this.contentModerationService.checkContent(content);
 
-    // Reject toxic/unsafe content immediately
     if (!moderationResult.isSafe) {
       const reason = moderationResult.reason ||
         (moderationResult.isSpoiler ? 'Nội dung chứa thông tin spoiler' :
@@ -163,7 +166,20 @@ export class CommentsService {
       content: content.trim(),
     });
 
-    return await this.commentModel
+    try {
+      await this.createCommentNotification(
+        userId,
+        targetType,
+        targetId,
+        finalParentId ?? null,
+        content.trim(),
+        newComment._id.toString(),
+      );
+    } catch (e) {
+      console.log('createCommentNotification failed', e);
+    }
+
+    return this.commentModel
       .findById(newComment._id)
       .populate('userId', 'username image')
       .lean();
@@ -197,4 +213,90 @@ export class CommentsService {
     return { count };
   }
 
+  private async createCommentNotification(
+    actorId: string,
+    targetType: string,
+    targetId: string,
+    parentId: string | null,
+    commentContent: string,
+    commentId?: string,
+  ) {
+    let ownerId: string | null = null;
+    let title = 'Ai đó đã bình luận nội dung của bạn';
+    let message = `Bạn có một bình luận mới: "${commentContent}"`;
+    if (parentId) {
+      const parent = await this.commentModel
+        .findById(parentId)
+        .select('_id userId content')
+        .lean();
+      if (!parent) return;
+
+      ownerId = parent.userId?.toString();
+      title = 'Ai đó đã trả lời bình luận của bạn';
+      message = `Bình luận của bạn vừa có phản hồi: "${commentContent}"`;
+    } else {
+      if (targetType === 'post') {
+        const post = await this.postModel
+          .findById(targetId)
+          .select('_id userId title content')
+          .lean();
+        if (!post) return;
+
+        ownerId = post.userId?.toString();
+        title = 'Ai đó đã bình luận bài viết của bạn';
+        message = `Bài viết "${post.content}" vừa có bình luận: "${commentContent}"`;
+
+      } else if (targetType === 'chapter') {
+        const chapter = await this.chapterModel
+          .findById(targetId)
+          .populate('bookId', 'userId title') // 👈 cần Book.userId
+          .select('_id bookId title')
+          .exec();
+        if (!chapter) return;
+
+        const bookUserId = (chapter as any)?.bookId?.userId;
+        if (!bookUserId) return;
+
+        ownerId = bookUserId.toString();
+        title = 'Ai đó đã bình luận chương của bạn';
+        message = `Chương "${chapter.title}" vừa có bình luận: "${commentContent}"`;
+
+      } else if (targetType === 'paragraph') {
+        const chapter = await this.chapterModel
+          .findOne({ 'paragraphs._id': new Types.ObjectId(targetId) })
+          .populate('bookId', 'userId title') // 👈 cần Book.userId
+          .select('_id bookId title paragraphs')
+          .exec();
+        if (!chapter) return;
+
+        const paragraphSubdoc = chapter.paragraphs.id(new Types.ObjectId(targetId));
+        const paragraphText = (paragraphSubdoc as any)?.content ?? '';
+
+        const bookUserId = (chapter as any)?.bookId?.userId;
+        if (!bookUserId) return;
+
+        ownerId = bookUserId.toString();
+        title = 'Ai đó đã bình luận đoạn của bạn';
+        message = `Đoạn trong chương "${chapter.title}" vừa có bình luận: "${commentContent}"`;
+      } else {
+        return;
+      }
+    }
+
+    if (!ownerId || ownerId === actorId) return;
+
+    await this.notifications.create({
+      userId: ownerId,
+      title,
+      message,
+      type: parentId ? 'reply' : 'comment',
+      meta: {
+        targetType,
+        targetId,
+        parentId: parentId ?? null,
+        commentId: commentId ?? null,
+        actorId,
+      },
+    });
+  }
 }
