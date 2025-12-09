@@ -65,12 +65,17 @@ export class BooksService {
     const matchStage: any = { isDeleted: false };
 
     if (status) matchStage.status = status;
-    if (genres) matchStage.genres = new Types.ObjectId(genres);
+
+    // Sửa phần genres để xử lý giống tags
+    if (genres) {
+      const genresList = genres.split(',').map((genre) => genre.trim());
+      matchStage.genres = { $in: genresList };
+    }
+
     if (author) matchStage.authorId = new Types.ObjectId(author);
 
     if (tags) {
       const tagsList = tags.split(',').map((tag) => tag.trim());
-
       matchStage.tags = { $in: tagsList };
     }
 

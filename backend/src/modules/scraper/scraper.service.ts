@@ -24,13 +24,6 @@ export class ScraperService {
     private readonly httpService: HttpService,
   ) {}
 
-  // ==========================================
-  // PHẦN 1: LOGIC CÀO SÁCH KẾT HỢP CHƯƠNG
-  // ==========================================
-
-  /**
-   * Cào danh sách sách, và tùy chọn cào luôn chapter của từng sách
-   */
   async scrapeAndSaveAllBooks(
     listUrl: string,
     maxPages: number | null = null,
@@ -48,7 +41,6 @@ export class ScraperService {
         this.logger.log(`[${i + 1}/${bookUrls.length}] Đang xử lý: ${url}`);
 
         try {
-          // 1. Xử lý thông tin sách
           const slug = this.extractSlugFromUrl(url);
           let book: BookDocument | null = await this.bookModel.findOne({
             slug,
@@ -59,18 +51,17 @@ export class ScraperService {
             stats.skipped++;
           } else {
             const bookData = await this.scrapeBookData(url);
-            book = await this.saveBookToDatabase(bookData); // Lưu và lấy về document
+            book = await this.saveBookToDatabase(bookData);
             stats.success++;
             this.logger.log(`✅ Lưu sách thành công: ${bookData.title}`);
           }
 
-          // 2. [MỚI] Nếu bật cờ scrapeChapters, cào luôn chương cho sách này
           if (scrapeChapters && book) {
             this.logger.log(`➡️ Bắt đầu cào chapters cho: ${book.title}`);
             await this.scrapeAndSaveChapters(book._id.toString(), chapterLimit);
           }
 
-          await this.delay(1500); // Delay tránh spam
+          await this.delay(1500);
         } catch (error) {
           stats.failed++;
           this.logger.error(`❌ Lỗi khi xử lý ${url}: ${error.message}`);
@@ -83,9 +74,6 @@ export class ScraperService {
     }
   }
 
-  /**
-   * [MỚI] Cào 1 cuốn sách cụ thể (bao gồm cả chapters) từ URL
-   */
   async scrapeBookAndChapters(
     bookUrl: string,
     chapterLimit: number = 0,
@@ -93,7 +81,6 @@ export class ScraperService {
     try {
       this.logger.log(`Đang xử lý toàn bộ sách từ URL: ${bookUrl}`);
 
-      // 1. Lưu thông tin sách
       const slug = this.extractSlugFromUrl(bookUrl);
       let book: BookDocument | null = await this.bookModel.findOne({ slug });
 
@@ -107,7 +94,6 @@ export class ScraperService {
         );
       }
 
-      // 2. Cào chapters
       const chapterStats = await this.scrapeAndSaveChapters(
         book._id.toString(),
         chapterLimit,
@@ -124,10 +110,6 @@ export class ScraperService {
     }
   }
 
-  // ==========================================
-  // PHẦN 2: LOGIC CÀO CHAPTER
-  // ==========================================
-
   async scrapeAndSaveChapters(
     bookId: string,
     limit: number = 0,
@@ -143,7 +125,6 @@ export class ScraperService {
 
     const allChapterUrls = await this.getAllChapterUrls(bookUrl);
 
-    // [MỚI] Xử lý logic giới hạn
     const urlsToProcess =
       limit > 0 ? allChapterUrls.slice(0, limit) : allChapterUrls;
     this.logger.log(
@@ -153,13 +134,11 @@ export class ScraperService {
     let success = 0;
     let failed = 0;
 
-    // Duyệt qua danh sách đã được cắt gọn (urlsToProcess)
     for (let i = 0; i < urlsToProcess.length; i++) {
       const chapterUrl = urlsToProcess[i];
       const orderIndex = i + 1;
 
       try {
-        // ... (Giữ nguyên logic xử lý từng chương như cũ) ...
         const chapterSlug = this.extractSlugFromUrl(chapterUrl);
         const existingChapter = await this.chapterModel.findOne({
           bookId: new Types.ObjectId(bookId),
@@ -272,17 +251,12 @@ export class ScraperService {
     return { title, paragraphs };
   }
 
-  // ==========================================
-  // PHẦN 3: HELPER & DATABASE
-  // ==========================================
-
   private async saveBookToDatabase(
     bookData: ScrapedBookData,
   ): Promise<BookDocument> {
     const author = await this.findOrCreateAuthor(bookData.author);
     const genreIds = await this.findOrCreateGenres(bookData.genres);
 
-    // Sử dụng slug từ URL để đảm bảo khớp với ID truyện gốc
     const slug = bookData.slug;
     const status = this.mapStatus(bookData.status);
 
@@ -300,7 +274,6 @@ export class ScraperService {
       isDeleted: false,
     });
 
-    // Check lại lần nữa để chắc chắn không duplicate lúc save (concurrent)
     const existing = await this.bookModel.findOne({ slug });
     if (existing) return existing;
 
@@ -334,7 +307,12 @@ export class ScraperService {
       if (!genre) {
         genre = new this.genreModel({
           name: trimmedName,
-          slug: slugify(trimmedName, { lower: true, strict: true }),
+          slug: slugify(trimmedName, {
+            lower: true,
+            strict: true,
+            locale: 'vi',
+            remove: /[*+~.()'"!:@]/g,
+          }),
           description: '',
         });
         await genre.save();
@@ -354,14 +332,12 @@ export class ScraperService {
 
   private extractSlugFromUrl(url: string): string {
     if (!url) return '';
-    // Sử dụng URL object để parse chuẩn, bỏ qua query params
     try {
       const urlObj = new URL(url);
       const path = urlObj.pathname;
       const segments = path.split('/').filter((segment) => segment.length > 0);
       return segments.length > 0 ? segments[segments.length - 1] : '';
     } catch (e) {
-      // Fallback regex cũ nếu url không có http
       const match = url.match(/\/([^\/]+)\/?$/);
       return match ? match[1] : '';
     }

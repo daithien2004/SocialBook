@@ -21,9 +21,12 @@ export default function BooksPage() {
   const [allBooks, setAllBooks] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
-  // Get params from URL
-  const selectedGenres = searchParams.get('genres') || undefined;
-  const selectedTags = searchParams.get('tags') || undefined;
+  // Get params from URL - Support multiple values
+  const genresParam = searchParams.get('genres') || '';
+  const tagsParam = searchParams.get('tags') || '';
+  const selectedGenres = genresParam ? genresParam.split(',') : [];
+  const selectedTags = tagsParam ? tagsParam.split(',') : [];
+
   const sortByParam = searchParams.get('sortBy') || 'createdAt';
   const orderParam = searchParams.get('order') || 'desc';
   const searchQuery = searchParams.get('search') || undefined;
@@ -52,8 +55,8 @@ export default function BooksPage() {
     page,
     limit: 20,
     search: searchQuery,
-    genres: selectedGenres ? [selectedGenres] : undefined,
-    tags: selectedTags ? [selectedTags] : undefined,
+    genres: genresParam || undefined,
+    tags: tagsParam || undefined,
     sortBy: currentSortBy,
     order: currentOrder,
   });
@@ -66,7 +69,7 @@ export default function BooksPage() {
     setPage(1);
     setAllBooks([]);
     setHasMore(true);
-  }, [searchQuery, selectedGenres, selectedTags, sortByParam, orderParam]);
+  }, [searchQuery, genresParam, tagsParam, sortByParam, orderParam]);
 
   // Append new books
   useEffect(() => {
@@ -154,16 +157,56 @@ export default function BooksPage() {
     router.push(`${pathname}?${query}`);
   };
 
+  // Toggle genre - support multiple selection
   const toggleGenre = (genreSlug: string) => {
+    let newGenres: string[];
+
+    if (selectedGenres.includes(genreSlug)) {
+      // Remove if already selected
+      newGenres = selectedGenres.filter((g) => g !== genreSlug);
+    } else {
+      // Add to selection
+      newGenres = [...selectedGenres, genreSlug];
+    }
+
     const query = createQueryString({
-      genres: selectedGenres === genreSlug ? '' : genreSlug,
+      genres: newGenres.join(','),
     });
     router.push(`${pathname}?${query}`);
   };
 
+  // Toggle tag - support multiple selection
   const toggleTag = (tag: string) => {
+    let newTags: string[];
+
+    if (selectedTags.includes(tag)) {
+      // Remove if already selected
+      newTags = selectedTags.filter((t) => t !== tag);
+    } else {
+      // Add to selection
+      newTags = [...selectedTags, tag];
+    }
+
     const query = createQueryString({
-      tags: selectedTags === tag ? '' : tag,
+      tags: newTags.join(','),
+    });
+    router.push(`${pathname}?${query}`);
+  };
+
+  // Remove single genre
+  const removeGenre = (genreSlug: string) => {
+    const newGenres = selectedGenres.filter((g) => g !== genreSlug);
+    const query = createQueryString({
+      genres: newGenres.join(','),
+    });
+    router.push(`${pathname}?${query}`);
+  };
+
+  // Remove single tag
+  const removeTag = (tag: string) => {
+    const newTags = selectedTags.filter((t) => t !== tag);
+    const query = createQueryString({
+      tags: newTags.join(','),
     });
     router.push(`${pathname}?${query}`);
   };
@@ -248,6 +291,11 @@ export default function BooksPage() {
                   <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 transition-colors duration-300">
                     Thể loại
                   </h3>
+                  {selectedGenres.length > 0 && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      ({selectedGenres.length} đã chọn)
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -257,7 +305,7 @@ export default function BooksPage() {
                       )
                     }
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 border ${
-                      !selectedGenres
+                      selectedGenres.length === 0
                         ? 'bg-red-600 border-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
                         : 'bg-white dark:bg-white/5 border-gray-300 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-red-400 dark:hover:border-white/30 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
                     }`}
@@ -269,7 +317,7 @@ export default function BooksPage() {
                       key={genre.id}
                       onClick={() => toggleGenre(genre.slug)}
                       className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 border ${
-                        selectedGenres === genre.slug
+                        selectedGenres.includes(genre.slug)
                           ? 'bg-red-600 border-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
                           : 'bg-white dark:bg-white/5 border-gray-300 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-red-400 dark:hover:border-white/30 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
                       }`}
@@ -285,6 +333,11 @@ export default function BooksPage() {
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-500 mb-3 mt-4 transition-colors duration-300">
                     Tags phổ biến
+                    {selectedTags.length > 0 && (
+                      <span className="ml-2">
+                        ({selectedTags.length} đã chọn)
+                      </span>
+                    )}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {allTags.map((tag) => (
@@ -292,7 +345,7 @@ export default function BooksPage() {
                         key={tag.name}
                         onClick={() => toggleTag(tag.name)}
                         className={`px-3 py-1 rounded-full text-xs transition-colors border ${
-                          selectedTags === tag.name
+                          selectedTags.includes(tag.name)
                             ? 'bg-gray-900 dark:bg-white text-white dark:text-black border-gray-900 dark:border-white font-bold'
                             : 'bg-transparent border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-500 hover:border-gray-500 dark:hover:border-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                         }`}
@@ -410,28 +463,36 @@ export default function BooksPage() {
           </div>
 
           {/* Active Filters Display */}
-          {(selectedGenres || selectedTags) && (
+          {(selectedGenres.length > 0 || selectedTags.length > 0) && (
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-white/5 overflow-x-auto scrollbar-hide transition-colors duration-300">
               <span className="text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                 Đang lọc:
               </span>
-              {selectedGenres && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs rounded hover:bg-red-500/20 transition-colors">
-                  {allGenres.find((g) => g.slug === selectedGenres)?.name ||
-                    selectedGenres}
-                  <button onClick={() => toggleGenre(selectedGenres)}>
+              {selectedGenres.map((genreSlug) => {
+                const genre = allGenres.find((g) => g.slug === genreSlug);
+                return (
+                  <div
+                    key={genreSlug}
+                    className="flex items-center gap-1 px-2 py-1 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs rounded hover:bg-red-500/20 transition-colors"
+                  >
+                    {genre?.name || genreSlug}
+                    <button onClick={() => removeGenre(genreSlug)}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                );
+              })}
+              {selectedTags.map((tag) => (
+                <div
+                  key={tag}
+                  className="flex items-center gap-1 px-2 py-1 bg-gray-200 dark:bg-white/10 border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 text-xs rounded hover:bg-gray-300 dark:hover:bg-white/20 transition-colors"
+                >
+                  #{tag}
+                  <button onClick={() => removeTag(tag)}>
                     <X size={12} />
                   </button>
                 </div>
-              )}
-              {selectedTags && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-gray-200 dark:bg-white/10 border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 text-xs rounded hover:bg-gray-300 dark:hover:bg-white/20 transition-colors">
-                  #{selectedTags}
-                  <button onClick={() => toggleTag(selectedTags)}>
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
+              ))}
               <button
                 onClick={() =>
                   router.push(

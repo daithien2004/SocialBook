@@ -30,8 +30,8 @@ export interface GetBooksRequest {
   page: number;
   limit?: number;
   search?: string;
-  genres?: string[];
-  tags?: string[];
+  genres?: string;
+  tags?: string;
   sortBy?: BookOrderField;
   order?: 'asc' | 'desc';
 }
