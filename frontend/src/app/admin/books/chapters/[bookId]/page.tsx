@@ -631,6 +631,7 @@ export default function ChapterManagementPage() {
         onImport={handleImportChapters}
         isLoading={isCreating}
         bookSlug={book?.slug || ''}
+        currentChapterCount={chapters.length}
       />
     </div>
   );

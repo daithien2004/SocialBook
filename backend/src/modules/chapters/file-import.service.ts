@@ -1,6 +1,5 @@
 // file-import.service.ts
 import { Injectable, BadRequestException } from '@nestjs/common';
-import * as pdf from 'pdf-parse';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -20,11 +19,16 @@ export interface FileValidation {
 export class FileImportService {
     private readonly defaultValidation: FileValidation = {
         maxSize: 50 * 1024 * 1024, // 50MB
-        allowedTypes: ['application/epub+zip', 'application/pdf', 'application/epub']
+        allowedTypes: [
+            'application/epub+zip',
+            'application/epub',
+            'application/x-mobipocket-ebook', // MOBI
+            'application/vnd.amazon.mobi8-ebook' // AZW3
+        ]
     };
 
     /**
-     * Parse uploaded file (PDF or EPUB) into chapters
+     * Parse uploaded file (EPUB or MOBI) into chapters
      */
     async parseFile(
         file: Express.Multer.File,
@@ -36,15 +40,26 @@ export class FileImportService {
         this.validateFile(file, config);
 
         const mimeType = file.mimetype;
+        const fileName = file.originalname.toLowerCase();
 
         try {
+            // Check EPUB
             if (mimeType === 'application/epub+zip' || mimeType === 'application/epub') {
                 return await this.parseEpub(file.buffer);
-            } else if (mimeType === 'application/pdf') {
-                return await this.parsePdf(file.buffer);
-            } else {
+            }
+            // Check MOBI/AZW3 by mime type or file extension
+            else if (
+                mimeType === 'application/x-mobipocket-ebook' ||
+                mimeType === 'application/vnd.amazon.mobi8-ebook' ||
+                fileName.endsWith('.mobi') ||
+                fileName.endsWith('.azw3') ||
+                fileName.endsWith('.azw')
+            ) {
+                return await this.parseMobi(file.buffer);
+            }
+            else {
                 throw new BadRequestException(
-                    `Unsupported file type: ${mimeType}. Only EPUB and PDF are supported.`
+                    `Unsupported file type: ${mimeType}. Only EPUB and MOBI formats are supported.`
                 );
             }
         } catch (error) {
@@ -76,9 +91,12 @@ export class FileImportService {
             );
         }
 
-        if (!config.allowedTypes.includes(file.mimetype)) {
+        const fileName = file.originalname.toLowerCase();
+        const isMobi = fileName.endsWith('.mobi') || fileName.endsWith('.azw3') || fileName.endsWith('.azw');
+
+        if (!config.allowedTypes.includes(file.mimetype) && !isMobi) {
             throw new BadRequestException(
-                `Invalid file type. Allowed types: ${config.allowedTypes.join(', ')}`
+                `Invalid file type. Allowed types: EPUB, MOBI, AZW3`
             );
         }
     }
@@ -171,74 +189,81 @@ export class FileImportService {
     }
 
     /**
-     * Parse PDF file
+     * Parse MOBI file
      */
-    private async parsePdf(buffer: Buffer): Promise<ParsedChapter[]> {
+    private async parseMobi(buffer: Buffer): Promise<ParsedChapter[]> {
         try {
-            const data = await pdf(buffer);
-            const fullText = data.text;
+            // Import @lingo-reader/mobi-parser library (ES module)
+            const { initMobiFile } = await import('@lingo-reader/mobi-parser');
 
-            if (!fullText || fullText.trim().length === 0) {
-                throw new BadRequestException('PDF file contains no readable text');
+            // Convert Buffer to Uint8Array
+            const uint8Array = new Uint8Array(buffer);
+
+            // Initialize and parse the MOBI file
+            const mobi = await initMobiFile(uint8Array);
+
+            const chapters: ParsedChapter[] = [];
+
+            // Get the spine (array of chapters with id fields)
+            const spine = await mobi.getSpine();
+
+            // Process each chapter in the spine
+            for (let i = 0; i < spine.length; i++) {
+                const spineItem = spine[i];
+
+                // Load chapter content using the id
+                const processedChapter = await mobi.loadChapter(spineItem.id);
+
+                if (!processedChapter) {
+                    continue;
+                }
+
+                // Extract title from HTML content
+                let title = this.extractTitleFromHtml(processedChapter.html) || `Chapter ${i + 1}`;
+
+                // Extract plain text from HTML content
+                const plainText = this.stripHtml(processedChapter.html);
+
+                // Only add chapters with substantial content
+                if (plainText.trim().length > 100) {
+                    const processed = this.processChapterContent(title, plainText);
+
+                    chapters.push({
+                        title: processed.title,
+                        content: processed.content
+                    });
+                }
             }
 
-            // Try to split by chapter markers
-            const chapters = this.splitPdfIntoChapters(fullText);
+            // Fallback: If no chapters were extracted, try metadata
+            if (chapters.length === 0) {
+                const metadata = await mobi.getMetadata();
+
+                // Try to get some content from the first spine item
+                if (spine.length > 0) {
+                    const firstChapter = await mobi.loadChapter(spine[0].id);
+                    if (firstChapter) {
+                        const plainText = this.stripHtml(firstChapter.html);
+
+                        chapters.push({
+                            title: metadata?.title || 'Imported Content',
+                            content: plainText
+                        });
+                    }
+                }
+            }
+
+            if (chapters.length === 0) {
+                throw new BadRequestException('No content found in MOBI file');
+            }
 
             return chapters;
         } catch (error: any) {
             if (error instanceof BadRequestException) {
                 throw error;
             }
-            throw new BadRequestException(`PDF parsing error: ${error.message}`);
+            throw new BadRequestException(`MOBI parsing error: ${error.message}`);
         }
-    }
-
-    /**
-     * Split PDF text into chapters using heuristics
-     */
-    private splitPdfIntoChapters(fullText: string): ParsedChapter[] {
-        // Pattern to detect chapter headings
-        // Matches: "Chapter 1", "Chương 1", "Phần 1", "CHAPTER I", etc.
-        const chapterRegex = /(?:^|\n)((?:Chapter|Chương|Phần|CHAPTER|CHƯƠNG|PHẦN)\s+(?:\d+|[IVXLCDM]+)[^\n]*)(?:\n|$)/gi;
-
-        const parts = fullText.split(chapterRegex);
-
-        // If no chapters detected, return entire content
-        if (parts.length < 3) {
-            return [{
-                title: 'Imported Content',
-                content: fullText.trim()
-            }];
-        }
-
-        const chapters: ParsedChapter[] = [];
-
-        // Add preamble if exists
-        if (parts[0]?.trim()) {
-            chapters.push({
-                title: 'Introduction',
-                content: parts[0].trim()
-            });
-        }
-
-        // Process chapter pairs (title, content)
-        for (let i = 1; i < parts.length; i += 2) {
-            const title = parts[i]?.trim();
-            const content = parts[i + 1]?.trim();
-
-            if (title && content) {
-                chapters.push({
-                    title: title,
-                    content: content
-                });
-            }
-        }
-
-        return chapters.length > 0 ? chapters : [{
-            title: 'Imported Content',
-            content: fullText.trim()
-        }];
     }
 
     /**
@@ -268,6 +293,51 @@ export class FileImportService {
             .map(line => line.replace(/\s+/g, ' ').trim())
             .filter(line => line.length > 0)
             .join('\n');
+    }
+
+    /**
+     * Extract title from HTML content
+     * Looks for h1, h2, h3 tags or first meaningful line of text
+     */
+    private extractTitleFromHtml(html: string): string | null {
+        if (!html) return null;
+
+        // Try to find heading tags (h1, h2, h3)
+        const headingMatch = html.match(/<h[123][^>]*>(.*?)<\/h[123]>/i);
+        if (headingMatch) {
+            const title = this.stripHtml(headingMatch[1]).trim();
+            if (title.length > 0 && title.length < 200) {
+                return title;
+            }
+        }
+
+        // Try to find title in <title> tag
+        const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
+        if (titleMatch) {
+            const title = this.stripHtml(titleMatch[1]).trim();
+            if (title.length > 0 && title.length < 200) {
+                return title;
+            }
+        }
+
+        // Fallback: Get first paragraph or div content
+        const firstContentMatch = html.match(/<(?:p|div)[^>]*>(.*?)<\/(?:p|div)>/i);
+        if (firstContentMatch) {
+            const title = this.stripHtml(firstContentMatch[1]).trim();
+            // Only use if it's a reasonable title length
+            if (title.length > 0 && title.length < 200) {
+                return title;
+            }
+        }
+
+        // Last fallback: Get first line of plain text
+        const plainText = this.stripHtml(html);
+        const firstLine = plainText.split('\n')[0]?.trim();
+        if (firstLine && firstLine.length > 0 && firstLine.length < 200) {
+            return firstLine;
+        }
+
+        return null;
     }
 
     /**

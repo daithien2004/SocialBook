@@ -14,7 +14,7 @@ import {
   useToggleLikeReviewMutation,
 } from '@/src/features/reviews/api/reviewApi';
 import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
-import { Header } from '@/src/components/header';
+import { HeaderClient } from '@/src/components/HeaderClient';
 
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
 import CreatePostModal, {
@@ -197,6 +197,8 @@ ${book.description}
       </div>
 
       <div className="relative z-10">
+        <HeaderClient session={null} />
+
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
           {/* Header Section */}
           <div className="bg-white/60 dark:bg-transparent border border-gray-200 dark:border-white/10 rounded-xl p-6 md:p-8 mb-8 shadow-sm dark:shadow-2xl backdrop-blur-sm transition-all">
@@ -306,8 +308,8 @@ ${book.description}
                       disabled={isLiking}
                       className={`p-3 rounded-full border transition-all ${
                         book.isLiked
-                          ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-500/20 dark:border-red-500 dark:text-red-500'
-                          : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/20 text-gray-400 hover:text-red-500 hover:border-red-200 dark:hover:border-white dark:hover:text-white'
+                        ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-500/20 dark:border-red-500 dark:text-red-500'
+                        : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/20 text-gray-400 hover:text-red-500 hover:border-red-200 dark:hover:border-white dark:hover:text-white'
                       }`}
                       title={book.isLiked ? 'Bỏ thích' : 'Yêu thích'}
                     >
@@ -413,8 +415,8 @@ ${book.description}
                                 size={28}
                                 className={`${
                                   star <= ratingInput
-                                    ? 'text-yellow-500 fill-yellow-500 drop-shadow-sm'
-                                    : 'text-gray-300 dark:text-gray-600'
+                                  ? 'text-yellow-500 fill-yellow-500 drop-shadow-sm'
+                                  : 'text-gray-300 dark:text-gray-600'
                                 }`}
                               />
                             </button>
@@ -541,8 +543,8 @@ ${book.description}
                               }
                               className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors w-fit ${
                                 review.isLiked
-                                  ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20'
-                                  : 'bg-white dark:bg-white/5 text-gray-500 border border-gray-200 dark:border-transparent hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
+                                ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-500 dark:border-red-500/20'
+                                : 'bg-white dark:bg-white/5 text-gray-500 border border-gray-200 dark:border-transparent hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
                               }`}
                             >
                               <Heart
@@ -573,8 +575,8 @@ ${book.description}
                     <span
                       className={`font-semibold ${
                         book.status === 'completed'
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-yellow-600 dark:text-yellow-400'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-yellow-600 dark:text-yellow-400'
                       }`}
                     >
                       {book.status === 'completed'
