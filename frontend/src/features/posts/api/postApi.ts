@@ -20,6 +20,12 @@ export interface PaginationParams {
   limit?: number;
 }
 
+export interface PaginationParamsByUser {
+  page?: number;
+  limit?: number;
+  userId: string;
+}
+
 export interface PaginatedPostsResponse {
   items: Post[];
   meta: {
@@ -67,11 +73,11 @@ export const postApi = createApi({
       providesTags: (result, error, id) => [{ type: 'PostDetail', id }],
     }),
 
-    getPostsByUser: builder.query<PaginatedPostsResponse, PaginationParams>({
-      query: ({ page = 1, limit = 10 }) => ({
+    getPostsByUser: builder.query<PaginatedPostsResponse, PaginationParamsByUser>({
+      query: ({ page = 1, limit = 10, userId }) => ({
         url: BFF_POSTS_ENDPOINTS.getAllByUser,
         method: 'GET',
-        params: { page, limit },
+        params: { page, limit, userId },
       }),
       providesTags: (result) =>
           result

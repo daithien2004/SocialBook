@@ -158,7 +158,7 @@ export class UsersService {
     const [postCount, readingListCount, followersCount] = await Promise.all([
       this.postModel.countDocuments({ userId: objectId, isDelete: false }),
       this.readingListModel.countDocuments({ userId: objectId }),
-      this.followModel.countDocuments({ targetId: objectId }),
+      this.followModel.countDocuments({ targetId: objectId , status: true}),
     ]);
 
     return {

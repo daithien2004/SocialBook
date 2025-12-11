@@ -105,7 +105,7 @@ export class PostsService {
 
     const post = await this.postModel
       .findOne({ _id: id, isDelete: false })
-      .populate('userId', 'name email image')
+      .populate('userId', 'username email image')
       .populate({
         path: 'bookId',
         select: 'title coverUrl',

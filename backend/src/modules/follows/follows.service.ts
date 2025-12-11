@@ -13,6 +13,7 @@ import {
   FollowDocument,
 } from '@/src/modules/follows/schemas/follow.schema';
 import { UsersService } from '@/src/modules/users/users.service';
+import { NotificationsService } from '@/src/modules/notifications/notifications.service';
 
 @Injectable()
 export class FollowsService {
@@ -20,6 +21,7 @@ export class FollowsService {
     @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private userService: UsersService,
+    private readonly notifications: NotificationsService
   ) {}
 
   async getStatus(currentUserId: string, targetUserId: string) {
@@ -36,6 +38,7 @@ export class FollowsService {
     const follow = await this.followModel.exists({
       userId: new Types.ObjectId(currentUserId),
       targetId: new Types.ObjectId(targetUserId),
+      status: true
     });
 
     return {
@@ -50,7 +53,9 @@ export class FollowsService {
     }
 
     const follows = await this.followModel
-      .find({ userId: new Types.ObjectId(userId) })
+      .find({
+          userId: new Types.ObjectId(userId),
+          status: true,})
       .select('targetId')
       .lean();
 
@@ -90,7 +95,7 @@ export class FollowsService {
 
     // Lấy tất cả follow mà userId là targetUser (những người mà targetUser đang follow)
     const follows = await this.followModel
-      .find({ userId: new Types.ObjectId(targetUserId) })
+      .find({ userId: new Types.ObjectId(targetUserId), status: true })
       .select('targetId')
       .lean();
 
@@ -151,7 +156,6 @@ export class FollowsService {
     if (!Types.ObjectId.isValid(targetUserId)) {
       throw new BadRequestException('Invalid Target User ID');
     }
-
     if (currentUserId === targetUserId) {
       throw new BadRequestException('Cannot follow yourself');
     }
@@ -161,22 +165,41 @@ export class FollowsService {
     const userObjectId = new Types.ObjectId(currentUserId);
     const targetObjectId = new Types.ObjectId(targetUserId);
 
-    const existingFollow = await this.followModel.findOne({
+    const existing = await this.followModel.findOne({
       userId: userObjectId,
       targetId: targetObjectId,
     });
 
-    if (existingFollow) {
-      await this.followModel.deleteOne({ _id: existingFollow._id });
-      return { isFollowing: false };
-    } else {
-      await this.followModel.create({
-        userId: userObjectId,
-        targetId: targetObjectId,
-      });
-      return { isFollowing: true };
+    if (existing) {
+      const nextStatus = !existing.status;
+      await this.followModel.updateOne(
+        { _id: existing._id },
+        { $set: { status: nextStatus, updatedAt: new Date() } },
+      );
+
+      return { isFollowing: nextStatus };
     }
+
+    await this.followModel.create({
+      userId: userObjectId,
+      targetId: targetObjectId,
+      status: true,
+    });
+
+    await this.notifications.create({
+      userId: targetObjectId.toString(),
+      title: 'Bạn có người theo dõi mới',
+      message: 'Ai đó vừa theo dõi bạn.',
+      type: 'follow',
+      meta: {
+        actorId: currentUserId,
+        targetUserId,
+      },
+    });
+
+    return { isFollowing: true };
   }
+
 
   private async ensureUserExists(userId: string) {
     const exists = await this.userModel.exists({ _id: userId });
@@ -192,7 +215,7 @@ export class FollowsService {
 
     // Lấy tất cả follow mà target là userTarget
     const follows = await this.followModel
-      .find({ targetId: new Types.ObjectId(targetUserId) })
+      .find({ targetId: new Types.ObjectId(targetUserId), status: true })
       .select('userId')
       .lean();
 

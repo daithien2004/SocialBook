@@ -80,21 +80,21 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
   return (
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         {/* Overlay mờ, không đen đặc */}
-        <div className="absolute inset-0 bg-slate-900/15 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-slate-900/15 dark:bg-slate-900/40 backdrop-blur-[2px]" />
 
         {/* MODAL: flex-col + max-h + KHÔNG overflow-hidden */}
-        <div className="relative bg-white rounded-3xl shadow-xl w-full max-w-xl md:max-w-2xl max-h-[90vh] flex flex-col border border-slate-100">
+        <div className="relative bg-white dark:bg-[#1a1a1a] rounded-3xl shadow-xl w-full max-w-xl md:max-w-2xl max-h-[90vh] flex flex-col border border-slate-100 dark:border-gray-700">
           {/* Header (không scroll) */}
-          <div className="flex items-center justify-between px-5 py-3 border-b rounded-3xl border-slate-100 bg-white/90 backdrop-blur sticky top-0 z-10">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">
+          <div className="flex items-center justify-between px-5 py-3 border-b rounded-3xl border-slate-100 dark:border-gray-800 bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur sticky top-0 z-10">
+            <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-gray-100">
               Tạo bài viết
             </h2>
             <button
                 onClick={onClose}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                 disabled={isLoading}
             >
-              <X className="w-4 h-4 text-slate-500" />
+              <X className="w-4 h-4 text-slate-500 dark:text-gray-400" />
             </button>
           </div>
 
@@ -106,13 +106,15 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
                 <img
                     src={currentUserImage}
                     alt={currentUserName}
-                    className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                    className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
                 />
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-sm text-slate-900">
+                  <p className="font-semibold text-sm text-slate-900 dark:text-gray-100">
                     {currentUserName}
                   </p>
-                  <p className="text-xs text-slate-500">Chia sẻ công khai</p>
+                  <p className="text-xs text-slate-500 dark:text-gray-400">
+                    Chia sẻ công khai
+                  </p>
                 </div>
               </div>
 
@@ -122,7 +124,7 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Chia sẻ cảm nhận của bạn về một cuốn sách, một trích dẫn, hay một khoảnh khắc đọc thú vị..."
-                  className="w-full rounded-2xl bg-slate-50 border border-slate-200 px-3.5 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 resize-none min-h-[140px]"
+                  className="w-full rounded-2xl bg-slate-50 dark:bg-gray-900/40 border border-slate-200 dark:border-gray-700 px-3.5 py-3 text-sm text-slate-800 dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 resize-none min-h-[140px]"
                   rows={6}
                   disabled={isLoading}
               />
@@ -130,7 +132,7 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
 
               {/* Book Selection */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-200">
                   Chọn sách <span className="text-red-500">*</span>
                 </label>
                 <BookSelector
@@ -147,7 +149,7 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
                     {imagePreviews.map((preview, index) => (
                         <div
                             key={index}
-                            className="relative group rounded-xl overflow-hidden border border-slate-100 bg-slate-50"
+                            className="relative group rounded-xl overflow-hidden border border-slate-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/40"
                         >
                           <img
                               src={preview}
@@ -157,7 +159,7 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
                           <button
                               type="button"
                               onClick={() => removeImage(index)}
-                              className="absolute top-2 right-2 p-1.5 bg-slate-900/70 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
+                              className="absolute top-2 right-2 p-1.5 bg-slate-900/70 dark:bg-black/70 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
                               disabled={isLoading}
                           >
                             <X className="w-3.5 h-3.5" />
@@ -168,14 +170,14 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
               )}
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-gray-800">
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-sky-600 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                     disabled={isLoading || images.length >= 10}
                 >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-gray-800">
                   <ImageIcon className="w-4 h-4" />
                 </span>
                   <span className="whitespace-nowrap">

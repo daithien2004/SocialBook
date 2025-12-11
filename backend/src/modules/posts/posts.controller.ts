@@ -45,9 +45,9 @@ export class PostsController {
 
   @Get('user')
   @HttpCode(HttpStatus.OK)
-  async findAllByUser(@Req() req: any,@Query() query: PaginationDto) {
+  async findAllByUser(@Req() req: any,@Query() query: PaginationUserDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
-    const result = await this.postsService.findAllByUser(req.user.id ,query.page, limit);
+    const result = await this.postsService.findAllByUser(query.userId ,query.page, limit);
     return {
       data: {...result},
       message: 'Get posts successfully',

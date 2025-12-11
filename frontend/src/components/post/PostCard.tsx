@@ -11,9 +11,6 @@ import {
   X,
   Loader2,
   BookOpen,
-  Twitter,
-  Facebook,
-  Mail,
 } from 'lucide-react';
 import { Post } from '@/src/features/posts/types/post.interface';
 import ModalPostComment from '@/src/components/post/ModalPostComment';
@@ -30,7 +27,6 @@ import {
   usePostToggleLikeMutation,
 } from '@/src/features/likes/api/likeApi';
 import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
-import {EmailShareButton, FacebookShareButton, PinterestShareButton, TumblrShareButton, TwitterShareButton } from 'next-share';
 
 interface PostCardProps {
   post: Post;
@@ -146,7 +142,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
   return (
       <>
-        <article className="w-full bg-white/95 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 mb-5 overflow-hidden">
+        <article className="w-full bg-white/95 dark:bg-[#1a1a1a] rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200 mb-5 overflow-hidden">
           {/* HEADER */}
           <div className="px-4 pt-4 pb-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -158,16 +154,16 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                         '/abstract-book-pattern.png'
                     }
                     alt={post.userId?.username || 'User'}
-                    className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                    className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
                 />
                 {/* Chấm trạng thái online (optional) */}
-                <span className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                <span className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
               </div>
               <div className="space-y-0.5">
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
                   {post.userId?.username || post.userId?.email || 'Người dùng ẩn danh'}
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-gray-400">
                   {createdDate}
                 </p>
               </div>
@@ -177,19 +173,19 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 <div className="relative">
                   <button
                       onClick={() => setShowMenu((prev) => !prev)}
-                      className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                   >
-                    <MoreVertical className="w-5 h-5 text-slate-500" />
+                    <MoreVertical className="w-5 h-5 text-slate-500 dark:text-gray-400" />
                   </button>
 
                   {showMenu && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-20">
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-lg border border-slate-100 dark:border-gray-800 py-1 z-20">
                         <button
                             onClick={() => {
                               setShowEditForm(true);
                               setShowMenu(false);
                             }}
-                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-800 transition"
                         >
                           <Edit2 className="w-4 h-4" />
                           <span>Chỉnh sửa bài viết</span>
@@ -199,7 +195,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                               setShowDeleteConfirm(true);
                               setShowMenu(false);
                             }}
-                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                         >
                           <Trash2 className="w-4 h-4" />
                           <span>Xóa bài viết</span>
@@ -212,15 +208,15 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
           {/* CONTENT */}
           <div className="px-4 pb-3">
-            <p className="text-[15px] leading-relaxed text-slate-800 whitespace-pre-wrap">
+            <p className="text-[15px] leading-relaxed text-slate-800 dark:text-gray-200 whitespace-pre-wrap">
               {post.content}
             </p>
           </div>
 
           {/* BOOK SECTION */}
           {post.bookId && (
-              <div className="mx-4 mb-3 mt-1 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-3">
-                <div className="shrink-0 w-16 h-24 rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+              <div className="mx-4 mb-3 mt-1 p-3 bg-slate-50 dark:bg-gray-900/40 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-start gap-3">
+                <div className="shrink-0 w-16 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800">
                   <img
                       src={post.bookId.coverUrl || '/abstract-book-pattern.png'}
                       alt={post.bookId.title}
@@ -228,19 +224,19 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                   />
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
-                  <div className="inline-flex items-center gap-1.5 text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">
+                  <div className="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded-full">
                     <BookOpen size={13} />
                     <span className="text-[10px] font-medium uppercase tracking-wide">
                   Đang đọc
                 </span>
                   </div>
                   <h3
-                      className="font-semibold text-sm text-slate-900 truncate"
+                      className="font-semibold text-sm text-slate-900 dark:text-gray-100 truncate"
                       title={post.bookId.title}
                   >
                     {post.bookId.title}
                   </h3>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
                     {post.bookId.authorId?.name || 'Tác giả ẩn danh'}
                   </p>
                 </div>
@@ -249,12 +245,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
           {/* IMAGES */}
           {hasPostImages && (
-              <div className="relative w-full bg-slate-50 group">
+              <div className="relative w-full bg-slate-50 dark:bg-gray-900/30 group">
                 <div className="relative h-80 w-full overflow-hidden">
                   <img
                       src={post.imageUrls![currentImageIndex]}
                       alt={`Post image ${currentImageIndex + 1}`}
-                      className="w-full h-full object-contain bg-slate-900/5"
+                      className="w-full h-full object-contain bg-slate-900/5 dark:bg-white/5"
                   />
                 </div>
 
@@ -263,7 +259,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                         onClick={() =>
                             handleDeleteImage(post.imageUrls![currentImageIndex])
                         }
-                        className="absolute top-3 right-3 p-2 bg-slate-900/60 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                        className="absolute top-3 right-3 p-2 bg-slate-900/60 dark:bg-black/60 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                         title="Xóa ảnh này"
                     >
                       <X className="w-4 h-4" />
@@ -275,14 +271,14 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                       <button
                           onClick={prevImage}
                           disabled={currentImageIndex === 0}
-                          className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 dark:bg-gray-900/80 dark:hover:bg-gray-900 dark:text-gray-100 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
                       >
                         ‹
                       </button>
                       <button
                           onClick={nextImage}
                           disabled={currentImageIndex === post.imageUrls!.length - 1}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 dark:bg-gray-900/80 dark:hover:bg-gray-900 dark:text-gray-100 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
                       >
                         ›
                       </button>
@@ -307,12 +303,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
           {/* FOOTER ACTIONS */}
           <div className="px-4 pb-3 pt-2">
-            <div className="flex justify-between items-center border-t border-slate-100 pt-3">
+            <div className="flex justify-between items-center border-t border-slate-100 dark:border-gray-800 pt-3">
               <div className="flex items-center gap-5">
                 <button
                     onClick={handleLike}
                     disabled={isLikeLoading || isLikeStatusLoading}
-                    className="flex items-center gap-1.5 text-slate-600 hover:text-rose-500 transition-colors group text-sm"
+                    className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-500 transition-colors group text-sm"
                 >
                   <Heart
                       size={20}
@@ -327,7 +323,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
                 <button
                     onClick={openCommentModal}
-                    className="flex items-center gap-1.5 text-slate-600 hover:text-sky-600 transition-colors group text-sm"
+                    className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors group text-sm"
                 >
                   <MessageCircle
                       size={20}
@@ -338,19 +334,17 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
                 <button
                     onClick={() => setShowShare((prev) => !prev)}
-                    className="flex items-center gap-1.5 text-slate-600 hover:text-emerald-600 transition-colors group text-sm"
+                    className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group text-sm"
                 >
                   <Send
                       size={20}
                       className="transition-transform duration-150 group-hover:scale-110 -rotate-45 mt-0.5"
                   />
-                  <span className="hidden sm:inline">
-                  Chia sẻ
-                </span>
+                  <span className="hidden sm:inline">Chia sẻ</span>
                 </button>
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-slate-500">
+              <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-gray-400">
               <span className="inline-flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
                 <span>{likeCount?.count ?? 0} lượt thích</span>
@@ -374,7 +368,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
           {/* MODALS */}
           <ModalPostComment
               post={post}
-              handleLike = {handleLike}
+              handleLike={handleLike}
               isCommentOpen={isCommentOpen}
               closeCommentModal={closeCommentModal}
               commentCount={commentCount?.count}
@@ -388,18 +382,18 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
           {showDeleteConfirm && (
               <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl p-6 w-full max-w-sm border border-transparent dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-1">
                     Xóa bài viết?
                   </h3>
-                  <p className="text-sm text-slate-600 mb-5">
+                  <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
                     Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa bài
                     viết này chứ?
                   </p>
                   <div className="flex gap-3">
                     <button
                         onClick={() => setShowDeleteConfirm(false)}
-                        className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl transition-colors"
+                        className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 text-sm font-medium rounded-xl transition-colors"
                         disabled={isDeleting}
                     >
                       Hủy

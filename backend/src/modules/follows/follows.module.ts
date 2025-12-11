@@ -6,6 +6,7 @@ import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
 import { FollowsService } from '@/src/modules/follows/follows.service';
 import { FollowsController } from '@/src/modules/follows/follows.controller';
 import { UsersModule } from '@/src/modules/users/users.module';
+import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
 
 
 @Module({
@@ -15,6 +16,7 @@ import { UsersModule } from '@/src/modules/users/users.module';
       { name: Follow.name, schema: FollowSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    NotificationsModule,
     LikesModule,
   ],
   controllers: [FollowsController],
