@@ -56,7 +56,7 @@ export const GenresSection = ({ books }: GenresSectionProps) => {
             className="group relative px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-red-500 dark:hover:border-red-500 transition-all duration-200 text-left"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors truncate">
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors truncate">
                 {genre.name}
               </span>
               <span className="text-xs text-gray-400 dark:text-gray-500 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors flex-shrink-0">

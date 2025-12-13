@@ -124,7 +124,7 @@ export class RecommendationsService {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Like.name) private likeModel: Model<LikeDocument>,
     private geminiService: GeminiService,
-  ) {}
+  ) { }
 
   async getPersonalizedRecommendations(
     userId: string,
@@ -134,7 +134,7 @@ export class RecommendationsService {
     const userProfile = await this.buildUserProfile(userId);
     const availableBooks = await this.getAvailableBooks(userId);
 
-    const totalRecommendationsToGenerate = 50;
+    const totalRecommendationsToGenerate = 15;
     const aiRecommendations = await this.generateAIRecommendations(
       userProfile,
       availableBooks,

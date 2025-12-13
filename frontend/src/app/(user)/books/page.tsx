@@ -1,568 +1,163 @@
 'use client';
 
-import {
-  useGetBooksQuery,
-  useGetFiltersQuery,
-} from '@/src/features/books/api/bookApi';
+import { useGetFiltersQuery } from '@/src/features/books/api/bookApi';
 import { BookCard } from '@/src/components/book/BookCard';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useCallback, useState, useEffect } from 'react';
-import { Search, X, Filter, ChevronDown } from 'lucide-react';
-import { BookOrderField } from '@/src/features/books/api/bookApi';
+import { Search } from 'lucide-react';
+
+import { useBookParams } from '@/src/features/books/hooks/useBookParams';
+import { useBookPagination } from '@/src/features/books/hooks/useBookPagination';
+
+import { SearchBar } from '@/src/components/book/SearchBar';
+import { FilterSection } from '@/src/components/book/FilterSection';
+import { SortDropdown } from '@/src/components/book/SortDropdown';
+import { ActiveFilters } from '@/src/components/book/ActiveFilters';
 
 export default function BooksPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  const {
+    genres,
+    tags,
+    searchQuery,
+    sortBy,
+    order,
+    toggleFilter,
+    setSort,
+    setSearch,
+    clearSearch,
+    clearFilters,
+    clearAll,
+  } = useBookParams();
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState('');
-  const [page, setPage] = useState(1);
-  const [allBooks, setAllBooks] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
+  const { data: filtersData, isLoading: isFiltersLoading } =
+    useGetFiltersQuery();
 
-  // Get params from URL - Support multiple values
-  const genresParam = searchParams.get('genres') || '';
-  const tagsParam = searchParams.get('tags') || '';
-  const selectedGenres = genresParam ? genresParam.split(',') : [];
-  const selectedTags = tagsParam ? tagsParam.split(',') : [];
-
-  const sortByParam = searchParams.get('sortBy') || 'createdAt';
-  const orderParam = searchParams.get('order') || 'desc';
-  const searchQuery = searchParams.get('search') || undefined;
-
-  // Map sortBy values
-  const sortByMap: Record<string, BookOrderField> = {
-    newest: 'createdAt',
-    oldest: 'createdAt',
-    'most-read': 'views',
-    'highest-rating': 'rating',
-    'most-liked': 'likes',
-  };
-
-  const currentSortBy =
-    sortByMap[sortByParam] || (sortByParam as BookOrderField);
-  const currentOrder =
-    sortByParam === 'createdAt' && orderParam === 'asc'
-      ? 'asc'
-      : (orderParam as 'asc' | 'desc');
-
-  // Fetch filters (genres & tags)
-  const { data: filters, isLoading: filtersLoading } = useGetFiltersQuery();
-
-  // Fetch books with API filters
-  const { data, isLoading, isFetching } = useGetBooksQuery({
-    page,
-    limit: 20,
+  const {
+    books,
+    isLoading: isBooksLoading,
+    isFetchingMore,
+    hasMore,
+    lastBookRef,
+    metaData,
+  } = useBookPagination({
     search: searchQuery,
-    genres: genresParam || undefined,
-    tags: tagsParam || undefined,
-    sortBy: currentSortBy,
-    order: currentOrder,
+    genres,
+    tags,
+    sortBy,
+    order,
   });
 
-  const newBooks = data?.data || [];
-  const metaData = data?.metaData;
-
-  // Reset when filters change
-  useEffect(() => {
-    setPage(1);
-    setAllBooks([]);
-    setHasMore(true);
-  }, [searchQuery, genresParam, tagsParam, sortByParam, orderParam]);
-
-  // Append new books
-  useEffect(() => {
-    if (newBooks.length > 0 && metaData) {
-      if (page === 1) {
-        setAllBooks(newBooks);
-      } else {
-        setAllBooks((prev) => {
-          const uniqueBooks = newBooks.filter(
-            (book: any) => !prev.some((b) => b.id === book.id)
-          );
-          return [...prev, ...uniqueBooks];
-        });
-      }
-      setHasMore(metaData.page < metaData.totalPages);
-    } else if (!isLoading && !isFetching && page > 1) {
-      setHasMore(false);
-    }
-  }, [newBooks, metaData, page, isLoading, isFetching]);
-
-  // Infinite scroll observer
-  const lastBookRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isFetching || !hasMore) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            setPage((prev) => prev + 1);
-          }
-        },
-        { rootMargin: '200px' }
-      );
-
-      if (node) observer.observe(node);
-      return () => observer.disconnect();
-    },
-    [isFetching, hasMore]
-  );
-
-  const createQueryString = useCallback(
-    (updates: Record<string, string>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value) {
-          params.set(key, value);
-        } else {
-          params.delete(key);
-        }
-      });
-      return params.toString();
-    },
-    [searchParams]
-  );
-
-  const handleSortChange = (value: string) => {
-    let sortBy = value;
-    let order = 'desc';
-
-    if (value === 'oldest') {
-      sortBy = 'createdAt';
-      order = 'asc';
-    }
-
-    const query = createQueryString({
-      sortBy,
-      order,
-    });
-    router.push(`${pathname}?${query}`);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const query = createQueryString({
-      search: searchInput.trim(),
-    });
-    router.push(`${pathname}?${query}`);
-  };
-
-  const clearSearch = () => {
-    setSearchInput('');
-    const query = createQueryString({
-      search: '',
-    });
-    router.push(`${pathname}?${query}`);
-  };
-
-  // Toggle genre - support multiple selection
-  const toggleGenre = (genreSlug: string) => {
-    let newGenres: string[];
-
-    if (selectedGenres.includes(genreSlug)) {
-      // Remove if already selected
-      newGenres = selectedGenres.filter((g) => g !== genreSlug);
-    } else {
-      // Add to selection
-      newGenres = [...selectedGenres, genreSlug];
-    }
-
-    const query = createQueryString({
-      genres: newGenres.join(','),
-    });
-    router.push(`${pathname}?${query}`);
-  };
-
-  // Toggle tag - support multiple selection
-  const toggleTag = (tag: string) => {
-    let newTags: string[];
-
-    if (selectedTags.includes(tag)) {
-      // Remove if already selected
-      newTags = selectedTags.filter((t) => t !== tag);
-    } else {
-      // Add to selection
-      newTags = [...selectedTags, tag];
-    }
-
-    const query = createQueryString({
-      tags: newTags.join(','),
-    });
-    router.push(`${pathname}?${query}`);
-  };
-
-  // Remove single genre
-  const removeGenre = (genreSlug: string) => {
-    const newGenres = selectedGenres.filter((g) => g !== genreSlug);
-    const query = createQueryString({
-      genres: newGenres.join(','),
-    });
-    router.push(`${pathname}?${query}`);
-  };
-
-  // Remove single tag
-  const removeTag = (tag: string) => {
-    const newTags = selectedTags.filter((t) => t !== tag);
-    const query = createQueryString({
-      tags: newTags.join(','),
-    });
-    router.push(`${pathname}?${query}`);
-  };
-
-  // Get genres and tags from filters API
-  const allGenres = filters?.genres || [];
-  const allTags = filters?.tags || [];
-
-  if ((isLoading && page === 1) || filtersLoading) {
+  if (isBooksLoading || isFiltersLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#141414] flex items-center justify-center transition-colors duration-300">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#141414]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
-      {/* GLOBAL BACKGROUND FIXED */}
+    <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 relative transition-colors duration-300">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
           src="/main-background.jpg"
-          alt="Background Texture"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
+          alt="Background"
+          className="w-full h-full object-cover opacity-10 dark:opacity-40"
         />
-        <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
+        <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70"></div>
       </div>
 
       <div className="relative z-10">
         <main className="container mx-auto px-4 md:px-12 py-8">
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-200 dark:border-white/10 pb-6 transition-colors duration-300">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gray-200 dark:border-white/10 pb-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-wide mb-2 transition-colors duration-300">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-wide mb-2">
                 Thư Viện
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 transition-colors duration-300">
+              <p className="text-gray-600 dark:text-gray-400">
                 Khám phá hàng ngàn đầu sách hấp dẫn
               </p>
             </div>
           </div>
 
-          {/* Search Bar - Glassmorphism Style */}
-          <form onSubmit={handleSearch} className="mb-10 max-w-3xl mx-auto">
-            <div className="relative group">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Tìm kiếm tên truyện, tác giả..."
-                className="block w-full pl-5 pr-12 py-4 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:border-red-600/50 backdrop-blur-sm transition-all shadow-lg"
-              />
-              {(searchInput || searchQuery) && (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              )}
-            </div>
-            {searchQuery && (
-              <div className="mt-3 text-center text-sm text-gray-600 dark:text-gray-400 transition-colors duration-300">
-                Kết quả cho:{' '}
-                <span className="text-gray-900 dark:text-white font-semibold">
-                  "{searchQuery}"
-                </span>{' '}
-                ({metaData?.total || 0} truyện)
-              </div>
-            )}
-          </form>
+          <SearchBar
+            initialValue={searchQuery}
+            onSearch={setSearch}
+            onClear={clearSearch}
+          />
 
-          {/* Filters & Sorting */}
-          <div className="flex flex-col lg:flex-row gap-8 mb-10">
-            {/* Left Column: Filters */}
-            <div className="flex-1 space-y-6">
-              {/* Genres Filter */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Filter size={16} className="text-red-500" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 transition-colors duration-300">
-                    Thể loại
-                  </h3>
-                  {selectedGenres.length > 0 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      ({selectedGenres.length} đã chọn)
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() =>
-                      router.push(
-                        pathname + `?${createQueryString({ genres: '' })}`
-                      )
-                    }
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 border ${
-                      selectedGenres.length === 0
-                        ? 'bg-red-600 border-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
-                        : 'bg-white dark:bg-white/5 border-gray-300 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-red-400 dark:hover:border-white/30 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
-                    }`}
-                  >
-                    Tất cả
-                  </button>
-                  {allGenres.map((genre) => (
-                    <button
-                      key={genre.id}
-                      onClick={() => toggleGenre(genre.slug)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 border ${
-                        selectedGenres.includes(genre.slug)
-                          ? 'bg-red-600 border-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
-                          : 'bg-white dark:bg-white/5 border-gray-300 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-red-400 dark:hover:border-white/30 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
-                      }`}
-                    >
-                      {genre.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tags Filter */}
-              {allTags.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-500 mb-3 mt-4 transition-colors duration-300">
-                    Tags phổ biến
-                    {selectedTags.length > 0 && (
-                      <span className="ml-2">
-                        ({selectedTags.length} đã chọn)
-                      </span>
-                    )}
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag) => (
-                      <button
-                        key={tag.name}
-                        onClick={() => toggleTag(tag.name)}
-                        className={`px-3 py-1 rounded-full text-xs transition-colors border ${
-                          selectedTags.includes(tag.name)
-                            ? 'bg-gray-900 dark:bg-white text-white dark:text-black border-gray-900 dark:border-white font-bold'
-                            : 'bg-transparent border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-500 hover:border-gray-500 dark:hover:border-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                        }`}
-                      >
-                        #{tag.name}
-                        <span className="ml-1 opacity-60">({tag.count})</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column: Sort */}
-            <div className="lg:w-64 flex-shrink-0">
-              <div className="flex items-center gap-2 mb-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 transition-colors duration-300">
-                  Sắp xếp theo
-                </h3>
-              </div>
-
-              {/* Custom Dropdown */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full flex items-center justify-between bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-600/50 focus:border-red-600/50 transition-all hover:bg-gray-50 dark:hover:bg-white/10 shadow-lg"
-                >
-                  <span>
-                    {sortByParam === 'createdAt' &&
-                      orderParam === 'desc' &&
-                      'Mới nhất'}
-                    {sortByParam === 'createdAt' &&
-                      orderParam === 'asc' &&
-                      'Cũ nhất'}
-                    {sortByParam === 'views' && 'Đọc nhiều nhất'}
-                    {sortByParam === 'rating' && 'Đánh giá cao'}
-                    {sortByParam === 'likes' && 'Yêu thích nhất'}
-                    {sortByParam === 'updatedAt' && 'Mới cập nhật'}
-                  </span>
-                  <ChevronDown
-                    className={`text-gray-400 transition-transform duration-200 ${
-                      isDropdownOpen ? 'rotate-180' : ''
-                    }`}
-                    size={18}
-                  />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setIsDropdownOpen(false)}
-                    />
-
-                    <div className="absolute top-full mt-2 w-full bg-white dark:bg-[#1a1a1a] border border-gray-300 dark:border-white/10 rounded-lg shadow-2xl overflow-hidden z-20 animate-in fade-in slide-in-from-top-2 duration-200 transition-colors">
-                      {[
-                        {
-                          value: 'createdAt',
-                          order: 'desc',
-                          label: 'Mới nhất',
-                        },
-                        {
-                          value: 'updatedAt',
-                          order: 'desc',
-                          label: 'Mới cập nhật',
-                        },
-                        { value: 'createdAt', order: 'asc', label: 'Cũ nhất' },
-                        {
-                          value: 'views',
-                          order: 'desc',
-                          label: 'Đọc nhiều nhất',
-                        },
-                        {
-                          value: 'rating',
-                          order: 'desc',
-                          label: 'Đánh giá cao',
-                        },
-                        {
-                          value: 'likes',
-                          order: 'desc',
-                          label: 'Yêu thích nhất',
-                        },
-                      ].map((option) => {
-                        const isActive =
-                          sortByParam === option.value &&
-                          orderParam === option.order;
-                        return (
-                          <button
-                            key={`${option.value}-${option.order}`}
-                            onClick={() => {
-                              const query = createQueryString({
-                                sortBy: option.value,
-                                order: option.order,
-                              });
-                              router.push(`${pathname}?${query}`);
-                              setIsDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-3 transition-colors ${
-                              isActive
-                                ? 'bg-red-600 text-white font-semibold'
-                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                          >
-                            {option.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Active Filters Display */}
-          {(selectedGenres.length > 0 || selectedTags.length > 0) && (
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-white/5 overflow-x-auto scrollbar-hide transition-colors duration-300">
-              <span className="text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
-                Đang lọc:
-              </span>
-              {selectedGenres.map((genreSlug) => {
-                const genre = allGenres.find((g) => g.slug === genreSlug);
-                return (
-                  <div
-                    key={genreSlug}
-                    className="flex items-center gap-1 px-2 py-1 bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs rounded hover:bg-red-500/20 transition-colors"
-                  >
-                    {genre?.name || genreSlug}
-                    <button onClick={() => removeGenre(genreSlug)}>
-                      <X size={12} />
-                    </button>
-                  </div>
-                );
-              })}
-              {selectedTags.map((tag) => (
-                <div
-                  key={tag}
-                  className="flex items-center gap-1 px-2 py-1 bg-gray-200 dark:bg-white/10 border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 text-xs rounded hover:bg-gray-300 dark:hover:bg-white/20 transition-colors"
-                >
-                  #{tag}
-                  <button onClick={() => removeTag(tag)}>
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() =>
-                  router.push(
-                    pathname +
-                      `?${createQueryString({
-                        genres: '',
-                        tags: '',
-                      })}`
-                  )
-                }
-                className="text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white underline whitespace-nowrap ml-auto transition-colors"
-              >
-                Xóa bộ lọc
-              </button>
+          {searchQuery && (
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Kết quả cho:{' '}
+              <span className="font-bold text-gray-900 dark:text-white">
+                "{searchQuery}"
+              </span>{' '}
+              ({metaData?.total || 0} truyện)
             </div>
           )}
 
-          {/* Book Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
-            {allBooks.map((book, index) => {
-              if (index === allBooks.length - 1) {
-                return (
-                  <div key={book.id} ref={lastBookRef} className="w-full">
-                    <BookCard book={book} />
-                  </div>
-                );
-              }
-              return (
-                <div key={book.id} className="w-full">
+          <div className="flex flex-col lg:flex-row gap-8 mb-10">
+            <FilterSection
+              allGenres={filtersData?.genres || []}
+              allTags={filtersData?.tags || []}
+              selectedGenres={genres}
+              selectedTags={tags}
+              onToggleGenre={(slug: string) => toggleFilter('genres', slug)}
+              onToggleTag={(tag: string) => toggleFilter('tags', tag)}
+              onClearGenres={() => toggleFilter('genres', '')}
+            />
+            <SortDropdown
+              currentSort={sortBy}
+              currentOrder={order}
+              onSortChange={setSort}
+            />
+          </div>
+
+          <ActiveFilters
+            genres={genres}
+            tags={tags}
+            allGenres={filtersData?.genres || []}
+            onRemoveGenre={(slug: string) => toggleFilter('genres', slug)}
+            onRemoveTag={(tag: string) => toggleFilter('tags', tag)}
+            onClearAll={clearFilters}
+          />
+
+          {books.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
+              {books.map((book, index) => (
+                <div
+                  key={`${book.id}-${index}`}
+                  ref={index === books.length - 1 ? lastBookRef : null}
+                  className="w-full"
+                >
                   <BookCard book={book} />
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Loading More */}
-          {isFetching && page > 1 && (
-            <div className="flex justify-center py-8">
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-red-600 border-t-transparent"></div>
-                <span>Đang tải thêm sách...</span>
-              </div>
+              ))}
             </div>
-          )}
-
-          {/* No More Books */}
-          {!hasMore && allBooks.length > 0 && (
-            <div className="flex justify-center py-8 text-gray-500 dark:text-gray-400">
-              <p>Đã hiển thị tất cả sách</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && allBooks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-white/5 rounded-2xl border border-gray-300 dark:border-white/10 mt-8 transition-colors duration-300">
-              <div className="bg-gray-200 dark:bg-white/10 p-4 rounded-full mb-4 transition-colors duration-300">
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-white/5 rounded-2xl border border-gray-300 dark:border-white/10 mt-8">
+              <div className="bg-gray-200 dark:bg-white/10 p-4 rounded-full mb-4">
                 <Search size={32} className="text-gray-400" />
               </div>
-              <p className="text-xl text-gray-900 dark:text-white font-medium mb-2 transition-colors duration-300">
+              <p className="text-xl font-medium mb-2">
                 Không tìm thấy truyện nào
               </p>
-              <p className="text-gray-500 text-sm mb-6">
-                Hãy thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.
-              </p>
               <button
-                onClick={() => router.push(pathname)}
+                onClick={clearAll}
                 className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors font-medium"
               >
                 Xóa tất cả bộ lọc
               </button>
+            </div>
+          )}
+
+          {isFetchingMore && (
+            <div className="flex justify-center py-8 gap-2 text-gray-600 dark:text-gray-400">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-red-600 border-t-transparent"></div>
+              <span>Đang tải thêm sách...</span>
+            </div>
+          )}
+
+          {!hasMore && books.length > 0 && (
+            <div className="flex justify-center py-8 text-gray-500 dark:text-gray-400">
+              <p>Đã hiển thị tất cả sách</p>
             </div>
           )}
         </main>

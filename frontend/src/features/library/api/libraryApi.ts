@@ -62,6 +62,7 @@ export const libraryApi = createApi({
         }),
         invalidatesTags: [
           { type: 'Library', id: `LIST_${LibraryStatus.READING}` },
+          { type: 'Library', id: 'LIST_ALL' },
         ],
       }
     ),

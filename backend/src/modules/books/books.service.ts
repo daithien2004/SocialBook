@@ -35,7 +35,7 @@ export class BooksService {
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async findAll(query: {
     page: number;
@@ -60,30 +60,44 @@ export class BooksService {
       order = 'desc',
     } = query;
 
-    const skip = (page - 1) * limit;
+    const validLimit = Math.min(Math.max(limit, 1), 100);
+    const skip = (page - 1) * validLimit;
 
     const matchStage: any = { isDeleted: false };
 
     if (status) matchStage.status = status;
 
-    // Sửa phần genres để xử lý giống tags
     if (genres) {
-      const genresList = genres.split(',').map((genre) => genre.trim());
-      matchStage.genres = { $in: genresList };
+      const genreSlugs = genres.split(',').map((g) => g.trim());
+
+      const genreDocs = await this.genreModel.find({
+        slug: { $in: genreSlugs }
+      }).select('_id');
+
+      const genreIds = genreDocs.map(doc => doc._id);
+
+      if (genreIds.length > 0) {
+        matchStage.genres = { $in: genreIds };
+      } else {
+        return {
+          data: [],
+          metaData: {
+            page,
+            limit: validLimit,
+            total: 0,
+            totalPages: 0,
+          },
+        };
+      }
     }
 
-    if (author) matchStage.authorId = new Types.ObjectId(author);
+    if (author) {
+      matchStage.authorId = new Types.ObjectId(author);
+    }
 
     if (tags) {
-      const tagsList = tags.split(',').map((tag) => tag.trim());
+      const tagsList = tags.split(',').map((t) => t.trim());
       matchStage.tags = { $in: tagsList };
-    }
-
-    if (search) {
-      matchStage.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { slug: { $regex: search, $options: 'i' } },
-      ];
     }
 
     const sortOrder = order === 'asc' ? 1 : -1;
@@ -111,35 +125,66 @@ export class BooksService {
         break;
     }
 
-    const [result] = await this.bookModel.aggregate([
-      { $match: matchStage },
+    const pipeline: any[] = [];
 
-      ...(sortBy === 'rating' || sortBy === 'popular'
-        ? [
-            {
-              $lookup: {
-                from: 'reviews',
-                localField: '_id',
-                foreignField: 'bookId',
-                as: 'reviewsData',
-              },
-            },
-            {
-              $addFields: {
-                computedRating: { $avg: '$reviewsData.rating' },
-                reviewsCount: { $size: '$reviewsData' },
-              },
-            },
-          ]
-        : []),
+    if (search) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'authors',
+            localField: 'authorId',
+            foreignField: '_id',
+            as: 'authorData',
+          },
+        },
+        {
+          $addFields: {
+            authorName: { $arrayElemAt: ['$authorData.name', 0] }
+          }
+        },
+        {
+          $match: {
+            ...matchStage,
+            $or: [
+              { title: { $regex: search, $options: 'i' } },
+              { slug: { $regex: search, $options: 'i' } },
+              { authorName: { $regex: search, $options: 'i' } },
+            ]
+          }
+        }
+      );
+    } else {
+      pipeline.push({ $match: matchStage });
+    }
 
-      { $sort: sortStage },
+    if (sortBy === 'rating' || sortBy === 'popular') {
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'reviews',
+            localField: '_id',
+            foreignField: 'bookId',
+            as: 'reviewsData',
+          },
+        },
+        {
+          $addFields: {
+            computedRating: { $avg: '$reviewsData.rating' },
+            reviewsCount: { $size: '$reviewsData' },
+          },
+        }
+      );
+    }
 
-      {
-        $facet: {
-          data: [
-            { $skip: skip },
-            { $limit: limit },
+    pipeline.push({ $sort: sortStage });
+
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: skip },
+          { $limit: validLimit },
+
+          ...(search ? [] : [
             {
               $lookup: {
                 from: 'authors',
@@ -149,62 +194,144 @@ export class BooksService {
               },
             },
             {
-              $unwind: { path: '$authorId', preserveNullAndEmptyArrays: true },
-            },
-            {
-              $lookup: {
-                from: 'genres',
-                localField: 'genres',
-                foreignField: '_id',
-                as: 'genres',
+              $unwind: {
+                path: '$authorId',
+                preserveNullAndEmptyArrays: true
               },
             },
-            { $project: { reviewsData: 0, password: 0 } },
-          ],
-          totalCount: [{ $count: 'count' }],
-        },
+          ]),
+
+          ...(search ? [
+            {
+              $addFields: {
+                authorId: { $arrayElemAt: ['$authorData', 0] }
+              }
+            }
+          ] : []),
+
+          {
+            $lookup: {
+              from: 'genres',
+              localField: 'genres',
+              foreignField: '_id',
+              as: 'genres',
+            },
+          },
+
+          {
+            $lookup: {
+              from: 'chapters',
+              localField: '_id',
+              foreignField: 'bookId',
+              as: 'chaptersData',
+            },
+          },
+
+          ...(sortBy !== 'rating' && sortBy !== 'popular'
+            ? [
+              {
+                $lookup: {
+                  from: 'reviews',
+                  localField: '_id',
+                  foreignField: 'bookId',
+                  as: 'reviewsData',
+                },
+              },
+            ]
+            : []),
+
+          {
+            $addFields: {
+              stats: {
+                chapters: { $size: '$chaptersData' },
+                views: { $ifNull: ['$views', 0] },
+                likes: { $ifNull: ['$likes', 0] },
+                rating: {
+                  $ifNull: [
+                    {
+                      $cond: {
+                        if: { $gt: [{ $size: '$reviewsData' }, 0] },
+                        then: { $avg: '$reviewsData.rating' },
+                        else: 0
+                      }
+                    },
+                    0
+                  ]
+                },
+                reviews: { $size: '$reviewsData' },
+              },
+            },
+          },
+          {
+            $project: {
+              reviewsData: 0,
+              chaptersData: 0,
+              computedRating: 0,
+              reviewsCount: 0,
+              password: 0,
+              authorData: 0,
+              authorName: 0,
+            }
+          },
+        ],
+
+        totalCount: [{ $count: 'count' }],
       },
-    ]);
+    });
+
+    const [result] = await this.bookModel.aggregate(pipeline);
 
     const books = result.data;
     const total = result.totalCount[0]?.count || 0;
 
-    const booksWithStats = await Promise.all(
-      books.map(async (book) => {
-        const chapterCount = await this.chapterModel.countDocuments({
-          bookId: book._id,
-        });
-
-        return {
-          ...book,
-          stats: {
-            chapters: chapterCount,
-            views: book.views || 0,
-            likes: book.likes || 0,
-            rating: book.computedRating || 0,
-            reviews: book.reviewsCount || 0,
-          },
-        };
-      }),
-    );
-
     return {
-      data: booksWithStats,
+      data: books,
       metaData: {
         page,
-        limit,
+        limit: validLimit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / validLimit),
       },
     };
   }
 
   async getFilters() {
-    const genres = await this.genreModel
-      .find()
-      .select('name slug')
-      .sort({ name: 1 })
-      .lean();
+    const genresAggregation = await this.genreModel.aggregate([
+      {
+        $lookup: {
+          from: 'books',
+          let: { genreId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $in: ['$$genreId', '$genres'] },
+                    { $eq: ['$isDeleted', false] },
+                    { $eq: ['$status', 'published'] }
+                  ]
+                }
+              }
+            }
+          ],
+          as: 'books'
+        }
+      },
+      {
+        $addFields: {
+          count: { $size: '$books' }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          slug: 1,
+          count: 1
+        }
+      },
+      { $sort: { name: 1 } }
+    ]);
 
     const tagsAggregation = await this.bookModel.aggregate([
       { $match: { isDeleted: false, status: 'published' } },
@@ -215,10 +342,11 @@ export class BooksService {
     ]);
 
     return {
-      genres: genres.map((g) => ({
+      genres: genresAggregation.map((g) => ({
         id: g._id.toString(),
         name: g.name,
         slug: g.slug,
+        count: g.count,
       })),
       tags: tagsAggregation.map((t) => ({
         name: t.name,

@@ -17,7 +17,7 @@ export function ReadingSidebar() {
   // Chưa đăng nhập
   if (status === 'unauthenticated') {
     return (
-      <aside className="hidden xl:block xl:w-80 flex-shrink-0">
+      <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
           <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
             <div className="flex items-center gap-2 mb-4">
@@ -57,7 +57,7 @@ export function ReadingSidebar() {
   // Đang loading
   if (isLoading) {
     return (
-      <aside className="hidden xl:block xl:w-80 flex-shrink-0">
+      <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
           <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
             <div className="flex items-center gap-2 mb-4">
@@ -90,7 +90,7 @@ export function ReadingSidebar() {
   // Không có sách đang đọc
   if (books.length === 0) {
     return (
-      <aside className="hidden xl:block xl:w-80 flex-shrink-0">
+      <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
           <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
             <div className="flex items-center gap-2 mb-4">
@@ -134,7 +134,7 @@ export function ReadingSidebar() {
   const hasMore = books.length > 5;
 
   return (
-    <aside className="hidden xl:block xl:w-80 flex-shrink-0">
+    <aside className="hidden xl:block xl:w-64 flex-shrink-0">
       <div className="sticky top-8">
         <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
           <div className="flex items-center justify-between mb-4">

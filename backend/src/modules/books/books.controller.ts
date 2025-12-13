@@ -30,7 +30,7 @@ import { GenreDocument } from '../genres/schemas/genre.schema';
 
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) {}
+  constructor(private readonly booksService: BooksService) { }
 
   @Public()
   @Get()
@@ -44,6 +44,18 @@ export class BooksController {
     @Query('sortBy') sortBy?: string,
     @Query('order') order?: string,
   ) {
+    const params = {
+      page: +page,
+      limit: +limit,
+      status: 'published',
+      search,
+      tags,
+      genres,
+      sortBy,
+      order,
+    }
+
+    console.log('Params:', params); 
     const result = await this.booksService.findAll({
       page: +page,
       limit: +limit,

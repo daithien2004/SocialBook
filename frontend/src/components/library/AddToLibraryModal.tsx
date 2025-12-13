@@ -223,7 +223,7 @@ export default function AddToLibraryModal({
                 type="text"
                 autoFocus
                 placeholder="Tên danh sách..."
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:border-blue-500"
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:border-blue-500 text-black"
                 value={newCollectionName}
                 onChange={(e) => setNewCollectionName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateCollection()}

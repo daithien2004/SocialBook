@@ -8,7 +8,6 @@ import Link from 'next/link';
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
 import { formatCompact } from '@/lib/utils';
 
-// BookCard Component with Dark Mode Support
 export function BookCard({ book }: { book: Book }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -48,7 +47,7 @@ export function BookCard({ book }: { book: Book }) {
               </p>
             </div>
 
-            <h3 className="mb-4 text-center font-sans text-lg font-black uppercase leading-none tracking-wider text-gray-900 dark:text-gray-100 bg-clip-text group-hover:text-red-600 dark:group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all">
+            <h3 className="mb-4 text-center text-sm font-notosans text-gray-900 dark:text-gray-100 bg-clip-text group-hover:text-red-600 dark:group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all">
               {book.title}
             </h3>
 

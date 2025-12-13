@@ -1,30 +1,24 @@
 'use client';
 
 import { useGetPersonalizedRecommendationsQuery } from '@/src/features/recommendations/api/recommendationsApi';
-import { Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Sparkles, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useState } from 'react';
-import { RecommendedBookCard } from './RecommendedBookCard';
 
 export const RecommendedForYouSection = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const limit = 12;
 
   const { data, isLoading, error } = useGetPersonalizedRecommendationsQuery(
-    { page: currentPage, limit },
+    { page: 1, limit },
     {
       skip: status !== 'authenticated',
     }
   );
-
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    // Scroll to top of section
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   if (status !== 'authenticated') {
     return null;
@@ -32,27 +26,23 @@ export const RecommendedForYouSection = () => {
 
   if (isLoading) {
     return (
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-red-600 dark:text-red-500" />
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-wide">
-                Gợi ý cho bạn
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Đang phân tích sở thích của bạn...
-              </p>
-            </div>
-          </div>
+      <div className="bg-white/80 dark:bg-[#161515]/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="w-5 h-5 text-red-600 dark:text-red-500" />
+          <h3 className="font-bold text-gray-900 dark:text-white">
+            Gợi ý cho bạn
+          </h3>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded-md animate-pulse"
-            />
+        <div className="space-y-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <div className="w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -61,15 +51,15 @@ export const RecommendedForYouSection = () => {
 
   if (error) {
     return (
-      <div className="mb-12 p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200 dark:border-red-800 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-5 h-5 text-red-600 dark:text-red-400" />
-          <h3 className="font-semibold text-red-900 dark:text-red-200">
+          <h3 className="font-semibold text-red-900 dark:text-red-200 text-sm">
             Không thể tải đề xuất
           </h3>
         </div>
-        <p className="text-sm text-red-700 dark:text-red-300">
-          Đã có lỗi xảy ra khi tải sách đề xuất. Vui lòng thử lại sau.
+        <p className="text-xs text-red-700 dark:text-red-300">
+          Đã có lỗi xảy ra. Vui lòng thử lại sau.
         </p>
       </div>
     );
@@ -77,146 +67,115 @@ export const RecommendedForYouSection = () => {
 
   if (!data?.recommendations || data.recommendations.length === 0) {
     return (
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-red-600 dark:text-red-500" />
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-wide">
-                Gợi ý cho bạn
-              </h2>
-            </div>
-          </div>
+      <div className="bg-white/80 dark:bg-[#161515]/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="w-5 h-5 text-red-600 dark:text-red-500" />
+          <h3 className="font-bold text-gray-900 dark:text-white">
+            Gợi ý cho bạn
+          </h3>
         </div>
 
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-900/50 rounded-md border-2 border-dashed border-gray-300 dark:border-gray-700">
-          <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 mb-2">
-            Chúng tôi cần thêm thông tin để đề xuất sách cho bạn
+        <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+          <Sparkles className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Chưa có gợi ý
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Hãy đọc và đánh giá thêm sách để nhận gợi ý phù hợp hơn!
+          <p className="text-xs text-gray-500 dark:text-gray-500">
+            Đọc thêm sách để nhận gợi ý!
           </p>
         </div>
       </div>
     );
   }
 
-  const { pagination } = data;
+  // Sắp xếp theo matchScore (cao xuống thấp)
+  const sortedRecommendations = [...data.recommendations].sort((a, b) => {
+    const scoreA = a.matchScore || 0;
+    const scoreB = b.matchScore || 0;
+    return scoreB - scoreA;
+  });
+
+  const displayedBooks = sortedRecommendations.slice(0, 12);
 
   return (
-    <div className="mb-12">
+    <div className="bg-white/80 dark:bg-[#161515]/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5 transition-all duration-300">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-6 h-6 text-red-600 dark:text-red-500" />
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-wide">
-              Gợi ý cho bạn
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {pagination.totalItems} cuốn sách dành riêng cho bạn
-            </p>
-          </div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-red-600 dark:text-red-500" />
+          <h3 className="font-bold text-gray-900 dark:text-white">
+            Gợi ý cho bạn
+          </h3>
         </div>
-
-        {/* Desktop View All Button */}
-        <button
-          onClick={() => router.push('/recommendations')}
-          className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all duration-300"
-          aria-label="View all recommendations"
-        >
-          Xem tất cả
-          <ChevronRight className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* Books Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {data.recommendations.map((rec) => (
-          <RecommendedBookCard
+      {/* Books List */}
+      <div className="space-y-2 mb-4">
+        {displayedBooks.map((rec) => (
+          <div
             key={rec.bookId}
-            book={rec.book}
-            matchScore={rec.matchScore}
-            reason={rec.reason}
-          />
+            className="relative"
+            onMouseEnter={() => setHoveredId(rec.bookId)}
+            onMouseLeave={() => setHoveredId(null)}
+          >
+            <button
+              onClick={() => router.push(`/books/${rec.book.slug}`)}
+              className="flex gap-3 w-full text-left hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-lg p-2 transition-all duration-200 group"
+            >
+              {/* Book Cover */}
+              <div className="relative w-14 h-20 flex-shrink-0 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 shadow-md group-hover:shadow-lg transition-shadow">
+                {rec.book.coverUrl ? (
+                  <Image
+                    src={rec.book.coverUrl}
+                    alt={rec.book.title}
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                )}
+                {rec.matchScore && (
+                  <div className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                    {rec.matchScore}%
+                  </div>
+                )}
+              </div>
+
+              {/* Book Info */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-red-600 dark:group-hover:text-red-500 transition-colors">
+                  {rec.book.title}
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                  {rec.book.authorId?.name || 'Unknown Author'}
+                </p>
+              </div>
+            </button>
+
+            {/* Tooltip */}
+            {hoveredId === rec.bookId && rec.reason && (
+              <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg px-3 py-2 shadow-xl border border-gray-700 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="flex items-start gap-2">
+                  <Sparkles className="w-3 h-3 text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">{rec.reason}</p>
+                </div>
+                {/* Arrow */}
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-800 border-l border-t border-gray-700 rotate-45" />
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
-      {/* Pagination Controls */}
-      {pagination.totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-2">
-          {/* Previous Button */}
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={!pagination.hasPrevPage}
-            className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Trước</span>
-          </button>
-
-          {/* Page Numbers */}
-          <div className="flex items-center gap-1">
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-              .filter((page) => {
-                // Show first page, last page, current page, and pages around current
-                return (
-                  page === 1 ||
-                  page === pagination.totalPages ||
-                  Math.abs(page - currentPage) <= 1
-                );
-              })
-              .map((page, index, array) => {
-                // Add ellipsis
-                const prevPage = array[index - 1];
-                const showEllipsis = prevPage && page - prevPage > 1;
-
-                return (
-                  <div key={page} className="flex items-center gap-1">
-                    {showEllipsis && (
-                      <span className="px-2 text-gray-500 dark:text-gray-400">
-                        ...
-                      </span>
-                    )}
-                    <button
-                      onClick={() => handlePageChange(page)}
-                      className={`min-w-[40px] h-10 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
-                        page === currentPage
-                          ? 'bg-red-600 text-white hover:bg-red-700'
-                          : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}
-                      aria-label={`Go to page ${page}`}
-                      aria-current={page === currentPage ? 'page' : undefined}
-                    >
-                      {page}
-                    </button>
-                  </div>
-                );
-              })}
-          </div>
-
-          {/* Next Button */}
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={!pagination.hasNextPage}
-            className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            aria-label="Next page"
-          >
-            <span className="hidden sm:inline">Sau</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Mobile View All Button */}
+      {/* View All Button */}
       <button
         onClick={() => router.push('/recommendations')}
-        className="md:hidden w-full mt-6 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-md transition-all duration-300"
-        aria-label="View all recommendations"
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg transition-all duration-300 hover:shadow-md"
       >
-        Xem tất cả gợi ý
+        Xem tất cả
         <ChevronRight className="w-4 h-4" />
       </button>
     </div>

@@ -1,140 +1,96 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
 import { BFF_CHAPTERS_ENDPOINTS } from '@/src/constants/client-endpoints';
-import { Chapter } from '../types/chapter.interface';
-import { Book } from '../../books/types/book.interface';
+import { Chapter, ChapterDetailData, ChapterPreview, ChaptersListData, CreateChapterParams, DeleteChapterParams, GetChapterByIdParams, GetChapterParams, GetChaptersParams, ImportChaptersParams, UpdateChapterParams } from '../types/chapter.interface';
 
-interface GetChapterRequest {
-  bookSlug: string;
-  chapterSlug: string;
-}
+export const CHAPTER_TAGS = {
+  CHAPTERS: 'Chapters',
+  CHAPTER: 'Chapter',
+} as const;
 
-interface GetChapterResponse {
-  book: Book;
-  chapter: Chapter;
-  navigation: {
-    previous: ChapterNavigation | null;
-    next: ChapterNavigation | null;
-  };
-}
-
-interface ChapterNavigation {
-  id: string;
-  title: string;
-  slug: string;
-  orderIndex: number;
-}
-
-interface GetChaptersRequest {
-  bookSlug: string;
-}
-
-interface GetChaptersResponse {
-  book: Partial<Book>;
-  chapters: Chapter[];
-  total: number;
-}
-
-interface CreateChapterRequest {
-  bookSlug: string;
-  data: {
-    title: string;
-    paragraphs: { id: string; content: string }[];
-    slug?: string;
-  };
-}
-
-interface UpdateChapterRequest {
-  bookSlug: string;
-  chapterId: string;
-  data: {
-    title?: string;
-    paragraphs?: { id: string; content: string }[];
-    slug?: string;
-  };
-}
+export type ChapterTagType = typeof CHAPTER_TAGS[keyof typeof CHAPTER_TAGS];
 
 export const chaptersApi = createApi({
-  reducerPath: 'chapterApi',
+  reducerPath: 'chaptersApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Chapters', 'Chapter'],
+  tagTypes: Object.values(CHAPTER_TAGS),
   endpoints: (builder) => ({
-    getChapter: builder.query<GetChapterResponse, GetChapterRequest>({
-      query: (data) => ({
+    getChapter: builder.query<ChapterDetailData, GetChapterParams>({
+      query: (params) => ({
         url: BFF_CHAPTERS_ENDPOINTS.getChapterBySlug(
-          data.bookSlug,
-          data.chapterSlug
+          params.bookSlug,
+          params.chapterSlug
         ),
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [
-        { type: 'Chapter', id: arg.chapterSlug },
+      providesTags: (result, error, params) => [
+        { type: CHAPTER_TAGS.CHAPTER, id: params.chapterSlug },
       ],
     }),
 
-    getChapters: builder.query<GetChaptersResponse, GetChaptersRequest>({
-      query: (data) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.getChapters(data.bookSlug),
+    getChapters: builder.query<ChaptersListData, GetChaptersParams>({
+      query: (params) => ({
+        url: BFF_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
         method: 'GET',
       }),
-      providesTags: ['Chapters'],
+      providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
-    // Admin endpoints
-    getAdminChapters: builder.query<GetChaptersResponse, GetChaptersRequest>({
-      query: (data) => ({
-        url: `/admin/books/${data.bookSlug}/chapters`,
+    getAdminChapters: builder.query<ChaptersListData, GetChaptersParams>({
+      query: (params) => ({
+        url: `/admin/books/${params.bookSlug}/chapters`,
         method: 'GET',
       }),
-      providesTags: ['Chapters'],
+      providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
-    getChapterById: builder.query<Chapter, { bookSlug: string; chapterId: string }>({
+    getChapterById: builder.query<Chapter, GetChapterByIdParams>({
       query: ({ bookSlug, chapterId }) => ({
         url: BFF_CHAPTERS_ENDPOINTS.getChapterById(bookSlug, chapterId),
         method: 'GET',
       }),
       providesTags: (result, error, { chapterId }) => [
-        { type: 'Chapter', id: chapterId },
+        { type: CHAPTER_TAGS.CHAPTER, id: chapterId },
       ],
     }),
 
-    createChapter: builder.mutation<Chapter, CreateChapterRequest>({
+    createChapter: builder.mutation<Chapter, CreateChapterParams>({
       query: ({ bookSlug, data }) => ({
         url: BFF_CHAPTERS_ENDPOINTS.createChapter(bookSlug),
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Chapters'],
+      invalidatesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
-    updateChapter: builder.mutation<Chapter, UpdateChapterRequest>({
+    updateChapter: builder.mutation<Chapter, UpdateChapterParams>({
       query: ({ bookSlug, chapterId, data }) => ({
         url: BFF_CHAPTERS_ENDPOINTS.updateChapter(bookSlug, chapterId),
         method: 'PUT',
         body: data,
       }),
       invalidatesTags: (result, error, { chapterId }) => [
-        { type: 'Chapter', id: chapterId },
-        'Chapters',
+        { type: CHAPTER_TAGS.CHAPTER, id: chapterId },
+        { type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' },
       ],
     }),
 
-    deleteChapter: builder.mutation<void, { bookSlug: string; chapterId: string }>({
+    deleteChapter: builder.mutation<void, DeleteChapterParams>({
       query: ({ bookSlug, chapterId }) => ({
         url: BFF_CHAPTERS_ENDPOINTS.deleteChapter(bookSlug, chapterId),
         method: 'DELETE',
       }),
-      invalidatesTags: ['Chapters'],
+      invalidatesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
-    importChaptersPreview: builder.mutation<{ title: string; content: string }[], { bookSlug: string; formData: FormData }>({
-      query: ({ bookSlug, formData }) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.importChapter(bookSlug),
-        method: 'POST',
-        body: formData,
+    importChaptersPreview: builder.mutation<ChapterPreview[],
+      ImportChaptersParams>({
+        query: ({ bookSlug, formData }) => ({
+          url: BFF_CHAPTERS_ENDPOINTS.importChapter(bookSlug),
+          method: 'POST',
+          body: formData,
+        }),
       }),
-    }),
   }),
 });
 

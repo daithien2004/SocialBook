@@ -1,76 +1,24 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
 import { BFF_BOOKS_ENDPOINTS } from '@/src/constants/client-endpoints';
-import { BackendPagination, Book, BookForAdmin } from '../types/book.interface';
+import { AdminBooksData, Book, BookForAdmin, BookStats, FiltersData, GetAdminBooksParams, GetBookParams, GetBooksParams, PaginatedData, UpdateBookParams } from '../types/book.interface';
+import { buildLikeBookInvalidationTags, buildListTags, buildUpdateBookInvalidationTags } from '../books.helpers';
 
-type BookStatus = 'draft' | 'published' | 'completed';
-export interface ApiResponse<T> {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: T;
-}
+export const BOOK_TAGS = {
+  BOOKS: 'Books',
+  BOOK_DETAIL: 'BookDetail',
+  ADMIN_BOOKS: 'AdminBooks',
+  BOOK_STATS: 'BookStats',
+} as const;
 
-interface GetBookRequest {
-  bookSlug: string;
-}
-
-export interface AdminBooksResponse {
-  books: BookForAdmin[];
-  pagination: BackendPagination;
-}
-
-export interface BookStatsResponse {
-  views: number;
-  likes: number;
-  chapters: number;
-}
-
-export interface GetBooksRequest {
-  page: number;
-  limit?: number;
-  search?: string;
-  genres?: string;
-  tags?: string;
-  sortBy?: BookOrderField;
-  order?: 'asc' | 'desc';
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  metaData: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export interface FiltersResponse {
-  genres: Array<{
-    id: string;
-    name: string;
-    slug: string;
-  }>;
-  tags: Array<{
-    name: string;
-    count: number;
-  }>;
-}
-
-export type BookOrderField =
-  | 'views'
-  | 'likes'
-  | 'createdAt'
-  | 'updatedAt'
-  | 'rating';
+export type BookTagType = typeof BOOK_TAGS[keyof typeof BOOK_TAGS];
 
 export const booksApi = createApi({
   reducerPath: 'booksApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Books', 'BookDetail', 'AdminBooks', 'BookStats'],
+  tagTypes: Object.values(BOOK_TAGS),
   endpoints: (builder) => ({
-    getBookBySlug: builder.query<Book, GetBookRequest>({
+    getBookBySlug: builder.query<Book, GetBookParams>({
       query: (data) => {
         return {
           url: BFF_BOOKS_ENDPOINTS.getBySlug(data.bookSlug),
@@ -78,28 +26,20 @@ export const booksApi = createApi({
         };
       },
       providesTags: (result, error, arg) => [
-        { type: 'BookDetail', id: arg.bookSlug },
+        { type: BOOK_TAGS.BOOK_DETAIL, id: arg.bookSlug },
       ],
     }),
-    getBooks: builder.query<PaginatedResponse<Book>, GetBooksRequest>({
+    getBooks: builder.query<PaginatedData<Book>, GetBooksParams>({
       query: (params) => ({
         url: BFF_BOOKS_ENDPOINTS.getAll,
         method: 'GET',
         params: params,
       }),
       providesTags: (result) =>
-        result && result.data
-          ? [
-              ...result.data.map((book) => ({
-                type: 'Books' as const,
-                id: book.slug,
-              })),
-              { type: 'Books', id: 'LIST' },
-            ]
-          : [{ type: 'Books', id: 'LIST' }],
+        buildListTags(result?.data, BOOK_TAGS.BOOKS, 'slug'),
     }),
 
-    getFilters: builder.query<FiltersResponse, void>({
+    getFilters: builder.query<FiltersData, void>({
       query: () => ({
         url: BFF_BOOKS_ENDPOINTS.getFilters,
         method: 'GET',
@@ -114,19 +54,14 @@ export const booksApi = createApi({
       }),
 
       invalidatesTags: [
-        { type: 'Books', id: 'LIST' },
-        { type: 'AdminBooks', id: 'LIST' },
+        { type: BOOK_TAGS.BOOKS, id: 'LIST' },
+        { type: BOOK_TAGS.ADMIN_BOOKS, id: 'LIST' },
       ],
     }),
 
     getAdminBooks: builder.query<
-      AdminBooksResponse,
-      {
-        page?: number;
-        limit?: number;
-        search?: string;
-        status?: BookStatus;
-      }
+      AdminBooksData,
+      GetAdminBooksParams
     >({
       query: (params) => ({
         url: BFF_BOOKS_ENDPOINTS.getAllForAdmin,
@@ -134,15 +69,7 @@ export const booksApi = createApi({
         params,
       }),
       providesTags: (result) =>
-        result?.books
-          ? [
-              ...result.books.map((book) => ({
-                type: 'AdminBooks' as const,
-                id: book.id,
-              })),
-              { type: 'AdminBooks', id: 'LIST' },
-            ]
-          : [{ type: 'AdminBooks', id: 'LIST' }],
+        buildListTags(result?.books, BOOK_TAGS.ADMIN_BOOKS, 'id'),
     }),
 
     getBookById: builder.query<BookForAdmin, string>({
@@ -151,45 +78,31 @@ export const booksApi = createApi({
         method: 'GET',
       }),
       providesTags: (result, error, bookId) => [
-        { type: 'AdminBooks', id: bookId },
+        { type: BOOK_TAGS.ADMIN_BOOKS, id: bookId },
       ],
     }),
 
-    getBookStats: builder.query<BookStatsResponse, string>({
+    getBookStats: builder.query<BookStats, string>({
       query: (bookId) => ({
         url: BFF_BOOKS_ENDPOINTS.getBookStats(bookId),
         method: 'GET',
       }),
       providesTags: (result, error, bookId) => [
-        { type: 'BookStats', id: bookId },
+        { type: BOOK_TAGS.BOOK_STATS, id: bookId },
       ],
     }),
 
     updateBook: builder.mutation<
       BookForAdmin,
-      { bookId: string; formData: FormData }
+      UpdateBookParams
     >({
       query: ({ bookId, formData }) => ({
         url: BFF_BOOKS_ENDPOINTS.updateBook(bookId),
         method: 'PUT',
         body: formData,
       }),
-      invalidatesTags: (result, error, { bookId }) => {
-        const tags: {
-          type: 'AdminBooks' | 'Books' | 'BookDetail';
-          id: string;
-        }[] = [
-          { type: 'AdminBooks', id: bookId },
-          { type: 'AdminBooks', id: 'LIST' },
-          { type: 'Books', id: 'LIST' },
-        ];
-
-        if (result && (result as any).slug) {
-          tags.push({ type: 'BookDetail', id: (result as any).slug });
-        }
-
-        return tags;
-      },
+      invalidatesTags: (result, error, { bookId }) =>
+        buildUpdateBookInvalidationTags(result, bookId),
     }),
 
     deleteBook: builder.mutation<void, string>({
@@ -198,8 +111,8 @@ export const booksApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: [
-        { type: 'AdminBooks', id: 'LIST' },
-        { type: 'Books', id: 'LIST' },
+        { type: BOOK_TAGS.ADMIN_BOOKS, id: 'LIST' },
+        { type: BOOK_TAGS.BOOKS, id: 'LIST' },
       ],
     }),
 
@@ -211,16 +124,8 @@ export const booksApi = createApi({
         url: BFF_BOOKS_ENDPOINTS.like(bookId),
         method: 'PATCH',
       }),
-      invalidatesTags: (result, error, bookId) => {
-        const tags: { type: 'BookStats' | 'BookDetail'; id: string }[] = [
-          { type: 'BookStats', id: bookId },
-        ];
-
-        if (result?.slug) {
-          tags.push({ type: 'BookDetail', id: result.slug });
-        }
-        return tags;
-      },
+      invalidatesTags: (result, error, bookId) =>
+        buildLikeBookInvalidationTags(result, bookId),
     }),
   }),
 });
