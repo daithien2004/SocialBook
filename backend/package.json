@@ -24,6 +24,7 @@
     "@google-cloud/text-to-speech": "^6.4.0",
     "@google/genai": "^1.30.0",
     "@google/generative-ai": "^0.24.1",
+    "@huggingface/inference": "^4.13.5",
     "@langchain/community": "^1.0.5",
     "@langchain/core": "^1.1.0",
     "@langchain/google-genai": "^2.0.0",
