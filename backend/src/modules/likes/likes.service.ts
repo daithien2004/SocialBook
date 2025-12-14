@@ -11,12 +11,14 @@ import { NotificationsService } from '@/src/modules/notifications/notifications.
 import { Post, PostDocument } from '../posts/schemas/post.schema';
 import { CommentTargetType } from '@/src/modules/comments/constants/targetType.constant';
 import { Comment, CommentDocument } from '@/src/modules/comments/schemas/comment.schema';
+import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
 
 @Injectable()
 export class LikesService {
   constructor(@InjectModel(Like.name) private readonly likeModel: Model<LikeDocument>,
               @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
               @InjectModel(Comment.name) private readonly commentModel: Model<CommentDocument>,
+              @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
               private readonly notifications: NotificationsService,) {}
 
   async getCount(dto: ToggleLikeDto) {
@@ -133,28 +135,41 @@ export class LikesService {
     let ownerId: string | null = null;
     let title = 'Ai đó đã thích nội dung của bạn';
     let message = 'Bạn có một lượt thích mới.';
+    let actionUrl = '';
+
+    // 🔹 Lấy thông tin người hành động
+    const actor = await this.userModel
+      .findById(actorId)
+      .select('_id username image')
+      .lean();
+
+    if (!actor) return;
+
     if (targetType === 'post') {
       const post = await this.postModel
         .findById(targetId)
-        .select('_id userId title content')
+        .select('_id userId content')
         .lean();
+
       if (!post) return;
 
       ownerId = post.userId.toString();
-      title = 'Ai đó đã thích bài viết của bạn';
+      title = `${actor.username} đã thích bài viết của bạn`;
       message = `Bài viết "${post.content}" vừa nhận được một lượt thích.`;
+      actionUrl = `/posts/${post._id}`;
 
     } else if (targetType === 'comment') {
-
       const comment = await this.commentModel
         .findById(targetId)
-        .select('id userId content postId')
+        .select('_id userId content postId')
         .lean();
+
       if (!comment) return;
 
       ownerId = comment.userId.toString();
-      title = 'Ai đó đã thích bình luận của bạn';
+      title = `${actor.username} đã thích bình luận của bạn`;
       message = `Bình luận "${comment.content}" vừa được thích.`;
+      actionUrl = `/posts/${comment.targetId}`;
 
     } else {
       return;
@@ -163,15 +178,18 @@ export class LikesService {
     if (!ownerId || ownerId === actorId) {
       return;
     }
+
     await this.notifications.create({
       userId: ownerId,
       title,
       message,
       type: 'like',
+      actionUrl,
       meta: {
-        targetType,
+        actorId: actor._id.toString(),
+        username: actor.username,
+        image: actor.image,
         targetId,
-        actorId,
       },
     });
   }
