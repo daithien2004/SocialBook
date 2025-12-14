@@ -1,6 +1,5 @@
-/**
- * Split text into chunks with overlap
- */
+import { sanitizeText } from './text-preprocessing';
+
 function splitTextIntoChunks(text: string, chunkSize = 1000, overlap = 200): string[] {
     if (!text) return [];
     if (text.length <= chunkSize) return [text];
@@ -43,12 +42,12 @@ function splitTextIntoChunks(text: string, chunkSize = 1000, overlap = 200): str
 }
 
 export function createChapterDocument(chapter: any): string[] {
-    const bookTitle = chapter.bookId?.title || '';
-    const chapterTitle = chapter.title || '';
+    const bookTitle = sanitizeText(chapter.bookId?.title || '');
+    const chapterTitle = sanitizeText(chapter.title || '');
 
     // Combine all paragraphs into single text first
     const fullContent = chapter.paragraphs
-        .map((p: any) => p.content)
+        .map((p: any) => sanitizeText(p.content))
         .join(' ')
         .replace(/\s+/g, ' ')
         .trim();
@@ -64,9 +63,9 @@ export function createChapterDocument(chapter: any): string[] {
 
 export function createAuthorDocument(author: any): string {
     const parts = [
-        author.name ? `Tên tác giả: ${author.name}` : '',
-        author.bio ? `Tiểu sử: ${author.bio}` : '',
-        author.nationality ? `Quốc tịch: ${author.nationality}` : '',
+        author.name ? `Tên tác giả: ${sanitizeText(author.name)}` : '',
+        author.bio ? `Tiểu sử: ${sanitizeText(author.bio)}` : '',
+        author.nationality ? `Quốc tịch: ${sanitizeText(author.nationality)}` : '',
     ].filter(Boolean);
 
     return parts.join('. ').replace(/\s+/g, ' ').trim();
