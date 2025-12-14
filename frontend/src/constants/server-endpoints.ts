@@ -139,3 +139,7 @@ export const NESTJS_GEMINI_ENDPOINTS = {
 export const NESTJS_RECOMMENDATIONS_ENDPOINTS = {
   getPersonalized: '/recommendations/personalized',
 };
+
+export const NESTJS_CHROMA_ENDPOINTS = {
+  askChatbot: '/chroma/chat/ask',
+}

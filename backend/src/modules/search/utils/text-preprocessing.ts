@@ -33,6 +33,9 @@ export function createBookDocument(book: any): string {
         book.genres?.length
             ? `Thể loại: ${book.genres.map((g: any) => g.name).join(', ')}`
             : '',
+        book.tags?.length
+            ? `Từ khóa: ${book.tags.join(', ')}`
+            : '',
         book.description ? `Mô tả: ${book.description}` : '',
     ].filter(Boolean);
 

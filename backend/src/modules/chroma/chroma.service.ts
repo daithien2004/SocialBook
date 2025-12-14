@@ -3,13 +3,16 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { Document } from '@langchain/core/documents';
 import { Book } from '../books/schemas/book.schema';
 import { Chapter } from '../chapters/schemas/chapter.schema';
 import { Author } from '../authors/schemas/author.schema';
 import { createBookDocument } from '../search/utils/text-preprocessing';
 import { createChapterDocument, createAuthorDocument } from '../search/utils/content-preprocessing';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { RunnableSequence } from '@langchain/core/runnables';
 
 @Injectable()
 export class ChromaService implements OnModuleInit {
@@ -17,6 +20,7 @@ export class ChromaService implements OnModuleInit {
     private vectorStore: Chroma;
     private embeddings: GoogleGenerativeAIEmbeddings;
     private isInitialized = false;
+    private chatModel: ChatGoogleGenerativeAI;
 
     constructor(
         @InjectModel(Book.name) private bookModel: Model<Book>,
@@ -31,6 +35,12 @@ export class ChromaService implements OnModuleInit {
             this.embeddings = new GoogleGenerativeAIEmbeddings({
                 apiKey: this.configService.get('GOOGLE_API_KEY'),
                 model: 'text-embedding-004',
+            });
+
+            this.chatModel = new ChatGoogleGenerativeAI({
+                apiKey: this.configService.get('GOOGLE_API_KEY'),
+                model: 'gemini-2.5-flash',
+                temperature: 0.7,
             });
 
 
@@ -432,6 +442,66 @@ export class ChromaService implements OnModuleInit {
                 collectionName: this.configService.get('CHROMA_COLLECTION', 'socialbook_books'),
                 isInitialized: this.isInitialized,
                 error: error.message
+            };
+        }
+    }
+
+    async askChatbot(userQuestion: string) {
+        if (!this.isInitialized) {
+            throw new Error('Chroma Service not initialized');
+        }
+
+        const results = await this.vectorStore.similaritySearch(userQuestion, 200);
+
+        if (!results || results.length === 0) {
+            return {
+                question: userQuestion,
+                answer: "Xin lỗi, tôi không tìm thấy thông tin nào về vấn đề này trong thư viện sách hiện có.",
+                sources: []
+            };
+        }
+        const context = results.map(doc => doc.pageContent).join('\n\n---\n\n');
+
+        const promptTemplate = PromptTemplate.fromTemplate(`
+            Bạn là một trợ lý ảo am hiểu về sách (Thủ thư).
+            Dưới đây là thông tin tôi tìm được trong thư viện dữ liệu của chúng ta:
+            
+            ----------------
+            {context}
+            ----------------
+
+            Hãy dùng thông tin trên để trả lời câu hỏi sau của người dùng một cách tự nhiên, thân thiện và chính xác.
+            
+            Lưu ý:
+            - Nếu thông tin trong ngữ cảnh không đủ để trả lời, hãy thành thật nói là bạn không biết, đừng tự bịa ra thông tin sai lệch.
+            - Nếu có thể, hãy trích dẫn tên sách hoặc chương truyện liên quan.
+            
+            Câu hỏi: {question}
+        `);
+
+        const chain = RunnableSequence.from([
+            promptTemplate,
+            this.chatModel,
+            new StringOutputParser()
+        ]);
+
+        try {
+            const answer = await chain.invoke({
+                context: context,
+                question: userQuestion
+            });
+
+            return {
+                question: userQuestion,
+                answer: answer,
+                sources: results.map(r => r.metadata)
+            };
+        } catch (error) {
+            this.logger.error('Chatbot generation error:', error);
+            return {
+                question: userQuestion,
+                answer: "Xin lỗi, tôi đang gặp chút sự cố khi suy nghĩ câu trả lời. Bạn hỏi lại sau nhé!",
+                sources: []
             };
         }
     }
