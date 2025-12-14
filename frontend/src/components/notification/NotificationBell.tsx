@@ -6,19 +6,14 @@ import { useNotifications } from './useNotifications';
 import type { Session } from 'next-auth';
 import Image from 'next/image';
 import { timeAgo } from '@/src/lib/utils';
+import {useRouter} from "next/navigation";
 
 export function NotificationBell({ session }: { session: Session | null }) {
   const token = session?.accessToken as string | undefined;
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   const { notifications, unreadCount, markAsRead, refetch } =
     useNotifications(token);
-
-  // Fetch danh sách khi load
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  // Đóng dropdown khi click bên ngoài
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -26,7 +21,6 @@ export function NotificationBell({ session }: { session: Session | null }) {
         setOpen(false);
       }
     };
-
     if (open) {
       document.addEventListener('mousedown', handleClickOutside);
     }
@@ -119,17 +113,20 @@ export function NotificationBell({ session }: { session: Session | null }) {
                     }}
                   >
                     <div
-                      onClick={() => markAsRead(notif.id)}
-                      className="w-full text-left flex gap-4 px-5 py-4"
+                        onClick={() => {
+                          markAsRead(notif.id);
+                          if (notif.actionUrl) {
+                            router.push(notif.actionUrl);
+                          }
+                        }}
+                        className="w-full text-left flex gap-4 px-5 py-4"
                     >
                       {/* Avatar */}
                       <div className="flex-shrink-0 relative">
-                        <Image
-                          src={notif.meta?.actorAvatar || '/user.png'}
+                        <img
+                          src={notif.meta?.image || '/user.png'}
                           alt=""
-                          width={44}
-                          height={44}
-                          className="rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
+                          className="h-9 w-9 rounded-full object-cover dark:border-gray-800 shadow-sm"
                         />
                         {isUnread && (
                           <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-500 border-2 border-white dark:border-[#1a1a1a] shadow-sm" />
