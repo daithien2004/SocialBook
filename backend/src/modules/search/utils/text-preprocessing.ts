@@ -1,13 +1,24 @@
-export function preprocessText(text: string): string {
+/**
+ * Sanitize text to remove invalid Unicode characters that cause ChromaDB errors
+ * and normalize whitespace.
+ */
+export function sanitizeText(text: string): string {
     if (!text) return '';
 
+    // Remove lone surrogates and invalid Unicode sequences
     return text
-        // Remove excessive whitespace
-        .replace(/\s+/g, ' ')
-        // Remove special characters but keep Vietnamese
-        .replace(/[^\w\s\u00C0-\u1EF9,.-]/g, '')
-        // Trim
+        .replace(/[\uD800-\uDFFF]/g, '') // Remove unpaired surrogates
+        .replace(/\uFFFD/g, '') // Remove replacement characters
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters except \t, \n, \r
+        .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
+}
+
+/**
+ * @deprecated Use sanitizeText instead
+ */
+export function preprocessText(text: string): string {
+    return sanitizeText(text);
 }
 
 export function createBookDocument(book: any): string {
@@ -25,5 +36,5 @@ export function createBookDocument(book: any): string {
         book.description ? `Mô tả: ${book.description}` : '',
     ].filter(Boolean);
 
-    return preprocessText(parts.join('. '));
+    return sanitizeText(parts.join('. '));
 }

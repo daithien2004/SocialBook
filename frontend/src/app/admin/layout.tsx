@@ -9,11 +9,11 @@ const navItems = [
   { name: 'Analytics', icon: BarChart2, href: '/admin/analytics' },
   { name: 'Users', icon: Users, href: '/admin/users' },
   { name: 'Books', icon: BookOpen, href: '/admin/books' },
+  { name: 'Authors', icon: PenLine, href: '/admin/authors' },
+  { name: 'Genres', icon: Shapes, href: '/admin/genres' },
   { name: 'Posts', icon: FileText, href: '/admin/posts' },
   { name: 'Comments', icon: MessageSquare, href: '/admin/comments' },
   { name: 'Reports', icon: BarChart2, href: '/admin/reports' },
-  { name: 'Authors', icon: PenLine, href: '/admin/authors' },
-  { name: 'Genres', icon: Shapes, href: '/admin/genres' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

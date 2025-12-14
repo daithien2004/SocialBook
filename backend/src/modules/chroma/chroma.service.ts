@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { Document } from '@langchain/core/documents';
 import { Book } from '../books/schemas/book.schema';
 import { Chapter } from '../chapters/schemas/chapter.schema';
@@ -33,6 +33,15 @@ export class ChromaService implements OnModuleInit {
                 model: 'text-embedding-004',
             });
 
+            // Initialize Chat Model for Summarization (Semantic Enrichment)
+            // Using gemini-1.5-flash for 1M token context window and speed
+            this.chatModel = new ChatGoogleGenerativeAI({
+                apiKey: this.configService.get('GOOGLE_API_KEY'),
+                model: 'gemini-2.5-flash',
+                maxOutputTokens: 1024,
+                temperature: 0.3, // Low temperature for factual extraction
+            });
+
             // Initialize Chroma vector store
             this.vectorStore = new Chroma(this.embeddings, {
                 collectionName: this.configService.get(
@@ -55,6 +64,42 @@ export class ChromaService implements OnModuleInit {
             throw new Error('Vector store not initialized');
         }
         return this.vectorStore;
+    }
+
+    private chatModel: ChatGoogleGenerativeAI;
+
+    // tóm tắt nội dung để tìm kiếm
+    private async generateChapterSummary(content: string, bookTitle: string, chapterTitle: string): Promise<string> {
+        try {
+            if (!content || content.length < 50) return ''; // Too short to summarize
+
+            // Prompt designed to extract IMPLICIT details and KEY ENTITIES
+            const prompt = `
+Bạn là một trợ lý AI chuyên tóm tắt tiểu thuyết để phục vụ tìm kiếm.
+Hãy đọc nội dung chương truyện dưới đây và tạo một bản "Tóm tắt Chuyên sâu" (Dense Summary) bằng tiếng Việt.
+
+**Thông tin:**
+- Sách: ${bookTitle}
+- Chương: ${chapterTitle}
+
+**Yêu cầu quan trọng:**
+1. Tóm tắt nội dung chính của chương.
+2. **TRÍCH XUẤT ĐẶC BIỆT**: Liệt kê rõ ràng các đặc điểm nhận dạng của nhân vật (ví dụ: vết sẹo, màu mắt, vũ khí), các đồ vật quan trọng, các chiêu thức/phép thuật xuất hiện.
+3. Nếu có chi tiết nào KHÔNG được nói rõ nhưng có thể suy luận (ví dụ: "vết sẹo hình tia chớp" của Harry Potter), hãy nhắc đến nó để bổ sung ngữ cảnh.
+4. Giữ nguyên các danh từ riêng.
+
+**Nội dung chương:**
+"${content.substring(0, 30000)}..." (cắt bớt nếu quá dài, nhưng Flash chịu được 1M token)
+
+**BẢN TÓM TẮT:**
+`;
+            const response = await this.chatModel.invoke(prompt);
+            const summary = response.content.toString();
+            return summary;
+        } catch (e) {
+            this.logger.warn(`⚠️ Failed to generate summary for ${chapterTitle}: ${e.message}`);
+            return '';
+        }
     }
 
     /**
@@ -185,8 +230,8 @@ export class ChromaService implements OnModuleInit {
 
         if (!chapter) throw new Error('Chapter not found');
 
+        // 1. Create standard chunks
         const documentChunks = createChapterDocument(chapter);
-
         const documents = documentChunks.map((chunk, index) => {
             return new Document({
                 pageContent: chunk,
@@ -205,22 +250,57 @@ export class ChromaService implements OnModuleInit {
             });
         });
 
+        // 2. Generate and Index SUMMARY (Semantic Enrichment)
+        // Combine all paragraphs for summarization
+        const fullContent = (chapter.paragraphs || [])
+            .map((p: any) => p.content || '')
+            .join(' ');
+
+        const summary = await this.generateChapterSummary(
+            fullContent,
+            (chapter.bookId as any).title,
+            chapter.title
+        );
+
+        if (summary) {
+            const summaryDoc = new Document({
+                pageContent: `[TÓM TẮT] ${summary}`, // Prefix to indicate it's a summary
+                metadata: {
+                    type: 'chapter_summary', // NEW TYPE
+                    chapterId: chapter._id.toString(),
+                    chapterTitle: chapter.title,
+                    chapterSlug: chapter.slug,
+                    bookId: (chapter.bookId as any)._id.toString(),
+                    bookTitle: (chapter.bookId as any).title,
+                    bookSlug: (chapter.bookId as any).slug,
+                    orderIndex: chapter.orderIndex,
+                    chunkIndex: -1, // Use -1 to indicate it's not a standard chunk
+                    createdAt: chapter.createdAt ? new Date(chapter.createdAt).toISOString() : new Date().toISOString(),
+                },
+            });
+            documents.push(summaryDoc); // Add summary to the list of docs to index
+            this.logger.log(`✨ Generated summary for chapter: ${chapter.title}`);
+        }
+
         await this.vectorStore.addDocuments(documents);
-        this.logger.log(`✅ Indexed chapter: ${chapter.title} (${documents.length} chunks)`);
+        this.logger.log(`✅ Indexed chapter: ${chapter.title} (${documents.length} chunks + summary)`);
 
         return { success: true, chapterId: chapter._id, chunks: documents.length };
     }
 
     /**
-     * Bulk index all chapters with batch processing and concurrency
-     * Optimized for high-performance execution using parallel processing to maximize CPU and Network utilization.
+     * Helper to sleep (prevent rate limiting)
      */
+    private sleep(ms: number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     async reindexAllChapters() {
-        const BATCH_SIZE = 50; // Smaller batch size per worker to prevent timeouts
-        const CONCURRENCY = 10; // Higher concurrency to utilize bandwidth
+        const BATCH_SIZE = 1; // Process 1 by 1 for Free Tier (Safety check)
+        const CONCURRENCY = 1; // Strictly sequential to avoid 429 errors
         const totalChapters = await this.chapterModel.countDocuments();
 
-        this.logger.log(`📚 Found ${totalChapters} chapters. Starting parallel indexing (Concurrency: ${CONCURRENCY})...`);
+        this.logger.log(`📚 Found ${totalChapters} chapters. Starting SEQUENTIAL indexing to respect API Limits...`);
 
         const batches: number[] = [];
         for (let i = 0; i < totalChapters; i += BATCH_SIZE) {
@@ -244,8 +324,8 @@ export class ChromaService implements OnModuleInit {
                     // Skip if bookId is missing or invalid (populated field)
                     if (!chapter.bookId || !(chapter.bookId as any)._id) continue;
 
+                    // 1. Standard Chunks
                     const chunks = createChapterDocument(chapter);
-
                     chunks.forEach((chunk, index) => {
                         documents.push(new Document({
                             pageContent: chunk,
@@ -263,6 +343,41 @@ export class ChromaService implements OnModuleInit {
                             },
                         }));
                     });
+
+                    // 2. Semantic Summary (With Rate Limiting)
+                    const fullContent = (chapter.paragraphs || [])
+                        .map((p: any) => p.content || '')
+                        .join(' ');
+
+                    // Add delay BEFORE request to safeguard rate limit
+                    // Free tier assumes ~15 RPM => 4 seconds per request
+                    await this.sleep(4000);
+
+                    const summary = await this.generateChapterSummary(
+                        fullContent,
+                        (chapter.bookId as any).title,
+                        chapter.title
+                    );
+
+                    if (summary) {
+                        documents.push(new Document({
+                            pageContent: `[TÓM TẮT] ${summary}`,
+                            metadata: {
+                                type: 'chapter_summary',
+                                chapterId: chapter._id.toString(),
+                                chapterTitle: chapter.title,
+                                chapterSlug: chapter.slug,
+                                bookId: (chapter.bookId as any)._id.toString(),
+                                bookTitle: (chapter.bookId as any).title,
+                                bookSlug: (chapter.bookId as any).slug,
+                                orderIndex: chapter.orderIndex,
+                                chunkIndex: -1,
+                                createdAt: chapter.createdAt ? new Date(chapter.createdAt).toISOString() : new Date().toISOString(),
+                            },
+                        }));
+                        this.logger.log(`✨ Generated summary for ${chapter.title}`);
+                    }
+
                 } catch (err) {
                     this.logger.warn(`Skipping chapter ${chapter._id} due to error: ${err.message}`);
                 }
@@ -410,9 +525,22 @@ export class ChromaService implements OnModuleInit {
      * Get collection stats
      */
     async getCollectionStats() {
-        return {
-            collectionName: this.configService.get('CHROMA_COLLECTION'),
-            isInitialized: this.isInitialized,
-        };
+        try {
+            // @ts-ignore - access private or underlying collection if possible, or assume it's exposed
+            const count = await this.vectorStore.collection.count();
+
+            return {
+                collectionName: this.configService.get('CHROMA_COLLECTION', 'socialbook_books'),
+                isInitialized: this.isInitialized,
+                documentCount: count
+            };
+        } catch (error) {
+            this.logger.error(`Failed to get stats: ${error.message}`);
+            return {
+                collectionName: this.configService.get('CHROMA_COLLECTION', 'socialbook_books'),
+                isInitialized: this.isInitialized,
+                error: error.message
+            };
+        }
     }
 }

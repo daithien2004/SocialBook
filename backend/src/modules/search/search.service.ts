@@ -26,16 +26,66 @@ export class SearchService {
             minScore?: number;
         } = {},
     ) {
-        const { limit = 10, minScore = 0.1 } = options;
+        const { limit = 10, minScore = 0.25 } = options;
 
         // 1. Run Vector Search, Keyword Search, and Author Search in parallel
+        // Add timeout to prevent hanging on slow ChromaDB/Gemini API
+        // 30s timeout to accommodate Vietnamese embedding generation which is slower
+        this.logger.log(`🔍 Starting semantic search for query: "${query}"`);
+
+        const vectorSearchPromise = Promise.race([
+            // Fetch more results (limit * 10) to ensure we find books/chapters even if authors rank higher
+            this.chromaService.getVectorStore().similaritySearchWithScore(
+                query,
+                Math.max(limit * 20, 200),
+                { type: { $in: ['book', 'chapter', 'chapter_summary'] } } // Filter: only search books and chapters (and summaries)
+            ),
+            new Promise<[any, number][]>((_, reject) =>
+                setTimeout(() => reject(new Error('Vector search timeout after 30s')), 30000)
+            )
+        ]).then(results => {
+            this.logger.warn(`🔍 [DEBUG] RAW Vector search returned ${results.length} items for query: "${query}"`);
+
+            if (results.length > 0) {
+                results.slice(0, 3).forEach((res, idx) => {
+                    const [doc, dist] = res;
+                    this.logger.warn(`🔍 [DEBUG] Item ${idx}: Type=${doc.metadata.type}, ID=${doc.metadata.bookId || doc.metadata.chapterId || doc.metadata.authorId}, Distance=${dist}, Similarity=${1 - dist}, Content="${doc.pageContent.substring(0, 50)}..."`);
+                });
+            } else {
+                this.logger.warn(`❌ [DEBUG] ChromaDB returned 0 documents! The collection is likely empty or unconnected.`);
+            }
+
+            // Filter to only book and chapter content (exclude author metadata)
+            const contentResults = results.filter(([doc, distance]) => {
+                const isContent = doc.metadata.type === 'book' || doc.metadata.type === 'chapter' || doc.metadata.type === 'chapter_summary';
+                if (!isContent) {
+                    // this.logger.debug(`Skipping type: ${doc.metadata.type}, distance: ${distance}`);
+                }
+                return isContent;
+            });
+
+            return contentResults;
+        }).catch(err => {
+            this.logger.error(`❌ Vector search failed: ${err.message}`);
+            return [] as [any, number][]; // Fallback to keyword/author search
+        });
+
+
         const [vectorResults, keywordBooks, matchingAuthors] = await Promise.all([
-            this.chromaService.getVectorStore().similaritySearchWithScore(query, limit * 5),
+            vectorSearchPromise,
+            // Keyword search: search title and description
             this.bookModel.find({
-                title: { $regex: query, $options: 'i' },
+                $or: [
+                    { title: { $regex: query, $options: 'i' } },
+                    { description: { $regex: query, $options: 'i' } },
+                ],
                 status: 'published'
-            }).select('_id title slug coverUrl authorId genres description').limit(5).lean(),
-            // NEW: Search for authors matching the query
+            })
+                .populate('authorId', 'name')
+                .select('_id title slug coverUrl authorId genres description')
+                .limit(20)
+                .lean(),
+            // Search for authors matching the query
             this.authorModel.find({
                 name: { $regex: query, $options: 'i' }
             }).select('_id name').limit(5).lean()
@@ -55,6 +105,8 @@ export class SearchService {
         }
 
         // 3. Group results by bookId
+        this.logger.log(`📊 Processing ${vectorResults.length} vector results, minScore: ${minScore}`);
+
         const bookGroups = new Map<string, {
             bookScore: number;
             chapters: Map<string, any>; // Use Map to deduplicate chapters/chunks
@@ -66,11 +118,37 @@ export class SearchService {
         }>();
 
         // Process Vector Results
+        let filteredByScore = 0;
         for (const [doc, distance] of vectorResults) {
-            const similarity = Math.max(0, 1 - distance);
-            if (similarity < minScore) continue;
-
+            let similarity = Math.max(0, 1 - distance);
             const type = doc.metadata.type;
+
+            // 🚀 SEMANTIC ENRICHMENT BOOST
+            // If we match a Summary, it means we hit a core concept/implicit detail.
+            // Boost this score significantly to ensure it ranks high.
+            if (type === 'chapter_summary') {
+                this.logger.log(`🚀 [BOOST] Matched Concept Summary for Book ID ${doc.metadata.bookId} (Original: ${similarity.toFixed(3)})`);
+                similarity = Math.min(similarity * 1.5, 0.99); // Boost by 1.5x, max 0.99
+            }
+
+            if (similarity < minScore) {
+                filteredByScore++;
+                continue;
+            }
+
+
+            this.logger.log(`✨ Found match: type=${type}, similarity=${similarity.toFixed(3)}, bookId=${doc.metadata.bookId}`);
+
+            // Handle author matches - add to authorBookIds to fetch their books later
+            if (type === 'author') {
+                const authorId = doc.metadata.authorId;
+                if (authorId && !authorBookIds.includes(authorId)) {
+                    authorBookIds.push(authorId);
+                    this.logger.log(`📚 Author match: ${doc.metadata.authorName}`);
+                }
+                continue;
+            }
+
             const bookId = doc.metadata.bookId;
 
             if (!bookId) continue;
@@ -205,4 +283,5 @@ export class SearchService {
             .sort((a, b) => b.relevanceScore - a.relevanceScore)
             .slice(0, limit);
     }
+
 }

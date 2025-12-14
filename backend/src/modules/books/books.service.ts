@@ -35,7 +35,7 @@ export class BooksService {
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async findAll(query: {
     page: number;
@@ -116,21 +116,21 @@ export class BooksService {
 
       ...(sortBy === 'rating' || sortBy === 'popular'
         ? [
-            {
-              $lookup: {
-                from: 'reviews',
-                localField: '_id',
-                foreignField: 'bookId',
-                as: 'reviewsData',
-              },
+          {
+            $lookup: {
+              from: 'reviews',
+              localField: '_id',
+              foreignField: 'bookId',
+              as: 'reviewsData',
             },
-            {
-              $addFields: {
-                computedRating: { $avg: '$reviewsData.rating' },
-                reviewsCount: { $size: '$reviewsData' },
-              },
+          },
+          {
+            $addFields: {
+              computedRating: { $avg: '$reviewsData.rating' },
+              reviewsCount: { $size: '$reviewsData' },
             },
-          ]
+          },
+        ]
         : []),
 
       { $sort: sortStage },
@@ -190,7 +190,7 @@ export class BooksService {
 
     return {
       data: booksWithStats,
-      metaData: {
+      meta: {
         page,
         limit,
         total,
