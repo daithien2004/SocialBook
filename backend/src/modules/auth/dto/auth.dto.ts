@@ -4,7 +4,11 @@ import {
   MinLength,
   IsNotEmpty,
   IsOptional,
+  Matches,
 } from 'class-validator';
+
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+const PASSWORD_MESSAGE = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm: chữ hoa, chữ thường, số và ký tự đặc biệt';
 
 export class SignupLocalDto {
   @IsString()
@@ -15,11 +19,11 @@ export class SignupLocalDto {
   email: string;
 
   @IsString()
-  @MinLength(6)
+  @Matches(PASSWORD_REGEX, { message: PASSWORD_MESSAGE })
   password: string;
 
   @IsString()
-  @MinLength(6)
+  @IsNotEmpty({ message: 'Vui lòng nhập lại mật khẩu' })
   confirmPassword: string;
 }
 
@@ -40,12 +44,11 @@ export class SignupGoogleDto {
 }
 
 export class LoginDto {
-  @IsEmail({}, { message: 'Invalid email format' })
+  @IsEmail({}, { message: 'Email không hợp lệ' })
   email: string;
 
   @IsString()
-  @MinLength(6)
-  @IsNotEmpty({ message: 'Password is required' })
+  @IsNotEmpty({ message: 'Vui lòng nhập mật khẩu' })
   password: string;
 }
 
@@ -63,6 +66,6 @@ export class ResetPasswordDto {
   otp: string;
 
   @IsString()
-  @MinLength(6, { message: 'New password must be at least 6 characters' })
+  @Matches(PASSWORD_REGEX, { message: PASSWORD_MESSAGE })
   newPassword: string;
 }
