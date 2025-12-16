@@ -398,9 +398,15 @@ export class BooksService {
     const baseSlug = dto.slug?.trim() || slugify(dto.title);
     const uniqueSlug = await this.generateUniqueSlug(baseSlug);
 
-    // 4. Create Book
+    // 4. Convert string to ObjectId explicitly (spread operator prevents auto-conversion)
+    const authorIdObj = new Types.ObjectId(dto.authorId);
+    const genresObj = dto.genres.map(g => new Types.ObjectId(g));
+
+    // 5. Create Book
     const newBook = await this.bookModel.create({
       ...dto,
+      authorId: authorIdObj,
+      genres: genresObj,
       title: dto.title.trim(),
       description: dto.description?.trim(),
       slug: uniqueSlug,
@@ -450,9 +456,18 @@ export class BooksService {
       coverUrl = await this.cloudinaryService.uploadImage(coverFile);
     }
 
-    // 4. Update
+    // 4. Convert string to ObjectId if provided
+    const updateData: any = { ...dto, slug, coverUrl };
+    if (dto.authorId) {
+      updateData.authorId = new Types.ObjectId(dto.authorId);
+    }
+    if (dto.genres) {
+      updateData.genres = dto.genres.map(g => new Types.ObjectId(g));
+    }
+
+    // 5. Update
     const updatedBook = await this.bookModel
-      .findByIdAndUpdate(id, { ...dto, slug, coverUrl }, { new: true })
+      .findByIdAndUpdate(id, updateData, { new: true })
       .populate('authorId', 'name avatar')
       .populate('genres', 'name');
 
@@ -526,8 +541,8 @@ export class BooksService {
   }
 
   private async validateReferences(
-    authorId: Types.ObjectId,
-    genresId: Types.ObjectId[],
+    authorId: string | Types.ObjectId,
+    genresId: string[] | Types.ObjectId[],
   ) {
     if (authorId && !Types.ObjectId.isValid(authorId))
       throw new BadRequestException('Invalid Author ID');
