@@ -1,10 +1,16 @@
+import { Book } from '@/src/features/books/types/book.interface';
 import Link from 'next/link';
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ChapterListDrawer from './ChapterListDrawer';
 
-export const BookSidebar = ({ book, bookSlug }: any) => {
+interface BookSidebarProps {
+  book: Book;
+  bookSlug: string;
+}
+
+export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
   const router = useRouter();
   const [showAllChapters, setShowAllChapters] = useState(false);
 
@@ -59,7 +65,7 @@ export const BookSidebar = ({ book, bookSlug }: any) => {
           </div>
 
           <div className="space-y-2">
-            {recentChapters.map((chapter: any) => (
+            {recentChapters.map((chapter) => (
               <Link
                 key={chapter.id}
                 href={`/books/${bookSlug}/chapters/${chapter.slug}`}
@@ -102,7 +108,13 @@ export const BookSidebar = ({ book, bookSlug }: any) => {
   );
 };
 
-const DetailRow = ({ label, value, highlight }: any) => (
+interface DetailRowProps {
+  label: string;
+  value: string | number;
+  highlight?: boolean;
+}
+
+const DetailRow = ({ label, value, highlight }: DetailRowProps) => (
   <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-white/5 last:border-0">
     <span className="text-gray-500">{label}</span>
     <span

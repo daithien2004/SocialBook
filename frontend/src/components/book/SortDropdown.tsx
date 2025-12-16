@@ -3,11 +3,17 @@ import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { SORT_OPTIONS } from '@/src/features/books/books.constants';
 
+interface SortDropdownProps {
+  currentSort: string;
+  currentOrder: 'asc' | 'desc';
+  onSortChange: (sort: string, order: 'asc' | 'desc') => void;
+}
+
 export const SortDropdown = ({
   currentSort,
   currentOrder,
   onSortChange,
-}: any) => {
+}: SortDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const activeLabel =

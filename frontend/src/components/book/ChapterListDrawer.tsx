@@ -1,12 +1,6 @@
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-interface Chapter {
-  id: string;
-  slug: string;
-  title: string;
-  orderIndex: number;
-}
+import { Chapter } from '@/src/features/books/types/book.interface';
 
 interface ChapterListDrawerProps {
   isOpen: boolean;

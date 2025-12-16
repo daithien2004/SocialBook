@@ -49,6 +49,8 @@ export interface Chapter {
   content: string;
   orderIndex: number;
   viewsCount: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Review {

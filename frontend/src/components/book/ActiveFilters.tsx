@@ -1,6 +1,17 @@
 'use client';
 import { X } from 'lucide-react';
 
+import { FiltersData } from '@/src/features/books/types/book.interface';
+
+interface ActiveFiltersProps {
+  genres: string[];
+  tags: string[];
+  allGenres: FiltersData['genres'];
+  onRemoveGenre: (slug: string) => void;
+  onRemoveTag: (tag: string) => void;
+  onClearAll: () => void;
+}
+
 export const ActiveFilters = ({
   genres,
   tags,
@@ -8,7 +19,7 @@ export const ActiveFilters = ({
   onRemoveGenre,
   onRemoveTag,
   onClearAll,
-}: any) => {
+}: ActiveFiltersProps) => {
   if (genres.length === 0 && tags.length === 0) return null;
 
   return (
@@ -18,7 +29,7 @@ export const ActiveFilters = ({
       </span>
 
       {genres.map((slug: string) => {
-        const name = allGenres?.find((g: any) => g.slug === slug)?.name || slug;
+        const name = allGenres?.find((g) => g.slug === slug)?.name || slug;
         return (
           <div
             key={slug}

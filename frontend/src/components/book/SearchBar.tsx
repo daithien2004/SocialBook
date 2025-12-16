@@ -2,7 +2,13 @@
 import { Search, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-export const SearchBar = ({ initialValue, onSearch, onClear }: any) => {
+interface SearchBarProps {
+  initialValue: string;
+  onSearch: (value: string) => void;
+  onClear: () => void;
+}
+
+export const SearchBar = ({ initialValue, onSearch, onClear }: SearchBarProps) => {
   const [input, setInput] = useState(initialValue);
 
   // Sync khi URL thay đổi từ bên ngoài

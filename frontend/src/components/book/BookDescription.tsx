@@ -1,7 +1,14 @@
 import Link from 'next/link';
 import { BookOpen } from 'lucide-react';
 
-export const BookDescription = ({ description, tags, title, author }: any) => {
+interface BookDescriptionProps {
+  description: string;
+  tags: string[];
+  title: string;
+  author: string;
+}
+
+export const BookDescription = ({ description, tags, title, author }: BookDescriptionProps) => {
   return (
     <div className="bg-white dark:bg-black/70 border border-gray-200 dark:border-white/10 rounded-xl p-6 md:p-8 shadow-sm dark:shadow-lg">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-white/5">

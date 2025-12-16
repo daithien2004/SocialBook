@@ -1,5 +1,16 @@
 'use client';
 import { Filter } from 'lucide-react';
+import { FiltersData } from '@/src/features/books/types/book.interface';
+
+interface FilterSectionProps {
+  allGenres: FiltersData['genres'];
+  allTags: FiltersData['tags'];
+  selectedGenres: string[];
+  selectedTags: string[];
+  onToggleGenre: (slug: string) => void;
+  onToggleTag: (tag: string) => void;
+  onClearGenres: () => void;
+}
 
 export const FilterSection = ({
   allGenres,
@@ -9,7 +20,7 @@ export const FilterSection = ({
   onToggleGenre,
   onToggleTag,
   onClearGenres,
-}: any) => {
+}: FilterSectionProps) => {
   return (
     <div className="flex-1 space-y-6">
       {/* Genres */}
@@ -36,7 +47,7 @@ export const FilterSection = ({
           >
             Tất cả
           </button>
-          {allGenres?.map((genre: any) => (
+          {allGenres?.map((genre) => (
             <button
               key={genre.id}
               onClick={() => onToggleGenre(genre.slug)}
@@ -70,7 +81,7 @@ export const FilterSection = ({
             Tags phổ biến
           </h3>
           <div className="flex flex-wrap gap-2">
-            {allTags.map((tag: any) => (
+            {allTags.map((tag) => (
               <button
                 key={tag.name}
                 onClick={() => onToggleTag(tag.name)}

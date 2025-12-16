@@ -1,5 +1,17 @@
+import { Book } from '@/src/features/books/types/book.interface';
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
 import CreatePostModal from '@/src/components/post/CreatePostModal';
+
+interface BookModalsProps {
+  book: Book;
+  isLibraryOpen: boolean;
+  isShareOpen: boolean;
+  closeLibrary: () => void;
+  closeShare: () => void;
+  onShareSubmit: (data: any) => Promise<any>;
+  defaultShareContent: string;
+  isSharing: boolean;
+}
 
 export const BookModals = ({
   book,
@@ -10,7 +22,7 @@ export const BookModals = ({
   onShareSubmit,
   defaultShareContent,
   isSharing,
-}: any) => {
+}: BookModalsProps) => {
   if (!book) return null;
 
   return (

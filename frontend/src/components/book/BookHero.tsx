@@ -3,13 +3,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Star, BookOpen, Bookmark, Heart, Share2 } from 'lucide-react';
 
+import { ElementType } from 'react';
+import { Book } from '@/src/features/books/types/book.interface';
+
+interface BookHeroProps {
+  book: Book;
+  isLiking: boolean;
+  onToggleLike: () => void;
+  onOpenLibrary: () => void;
+  onOpenShare: () => void;
+}
+
 export const BookHero = ({
   book,
   isLiking,
   onToggleLike,
   onOpenLibrary,
   onOpenShare,
-}: any) => {
+}: BookHeroProps) => {
   return (
     <div className="bg-white/60 dark:bg-transparent border border-gray-200 dark:border-white/10 rounded-xl p-6 md:p-8 mb-8 shadow-sm dark:shadow-2xl backdrop-blur-sm">
       <div className="flex flex-col lg:flex-row gap-8">
@@ -84,7 +95,11 @@ export const BookHero = ({
 };
 
 // Sub-components nội bộ
-const Badge = ({ status }: { status: string }) => (
+interface BadgeProps {
+  status: string;
+}
+
+const Badge = ({ status }: BadgeProps) => (
   <span
     className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border ${
       status === 'completed'
@@ -96,7 +111,11 @@ const Badge = ({ status }: { status: string }) => (
   </span>
 );
 
-const StatsGrid = ({ book }: any) => (
+interface StatsGridProps {
+  book: Book;
+}
+
+const StatsGrid = ({ book }: StatsGridProps) => (
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-50 dark:bg-white/5 p-4 rounded-lg border border-gray-200 dark:border-white/5">
     <StatItem
       value={book.stats?.averageRating || 0}
@@ -110,7 +129,14 @@ const StatsGrid = ({ book }: any) => (
   </div>
 );
 
-const StatItem = ({ value, label, icon, isRating }: any) => (
+interface StatItemProps {
+  value: number | string | undefined;
+  label: string;
+  icon?: React.ReactNode;
+  isRating?: boolean;
+}
+
+const StatItem = ({ value, label, icon, isRating }: StatItemProps) => (
   <div className="text-center border-r border-gray-200 dark:border-white/10 last:border-0">
     <div
       className={`flex items-center justify-center gap-1 font-bold text-xl ${
@@ -123,7 +149,15 @@ const StatItem = ({ value, label, icon, isRating }: any) => (
   </div>
 );
 
-const IconButton = ({ onClick, active, disabled, icon: Icon, title }: any) => (
+interface IconButtonProps {
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+  icon: ElementType;
+  title: string;
+}
+
+const IconButton = ({ onClick, active, disabled, icon: Icon, title }: IconButtonProps) => (
   <button
     onClick={onClick}
     disabled={disabled}
