@@ -1,4 +1,4 @@
-// src/hooks/useReadingProgress.ts
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   useUpdateReadingProgressMutation,
@@ -11,7 +11,6 @@ export function useReadingProgress(
   chapterId: string,
   enabled: boolean = true
 ) {
-  // --- API ---
   const [updateProgress] = useUpdateReadingProgressMutation();
   const { data: progressData, isLoading } = useGetChapterProgressQuery(
     { bookId, chapterId },
@@ -21,7 +20,6 @@ export function useReadingProgress(
   const lastProgressRef = useRef(0);
   const savedProgress = progressData?.progress || 0;
 
-  // --- HÀM KHÔI PHỤC VỊ TRÍ (Gọi thủ công) ---
   const restoreScroll = useCallback(() => {
     if (savedProgress > 0) {
       const docHeight =
@@ -33,12 +31,10 @@ export function useReadingProgress(
         behavior: 'smooth',
       });
 
-      // Cập nhật ref để tránh việc vừa scroll xuống đã bị tính là đọc xong/thay đổi
       lastProgressRef.current = savedProgress;
     }
   }, [savedProgress]);
 
-  // --- LOGIC LƯU TIẾN ĐỘ (Giữ nguyên) ---
   useEffect(() => {
     if (!enabled || !bookId || !chapterId) return;
 
@@ -67,7 +63,6 @@ export function useReadingProgress(
     };
   }, [bookId, chapterId, enabled, updateProgress]);
 
-  // Trả về dữ liệu và hàm để UI sử dụng
   return {
     savedProgress,
     isLoadingProgress: isLoading,

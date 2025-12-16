@@ -2,7 +2,7 @@ import 'next-auth';
 
 declare module 'next-auth' {
   interface User extends DefaultUser {
-    username: string; // <-- Bắt buộc phải có
+    username: string;
     role:string;
     accessToken: string;
     refreshToken: string;
@@ -21,7 +21,6 @@ declare module 'next-auth' {
 
 declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
-    // Thêm các thuộc tính bạn muốn lưu trong token
     id: string;
     email: string;
     username: string;

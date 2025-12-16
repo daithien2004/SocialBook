@@ -3,19 +3,16 @@ import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
 import { toast } from 'sonner';
 
-// Client chỉ gọi Next.js API routes (BFF)
 const clientApi = axios.create({
-  baseURL: '/api', // ← Same origin, no CORS
-  withCredentials: true, // ← Tự động gửi cookies
+  baseURL: '/api', 
+  withCredentials: true, 
 });
 
 clientApi.interceptors.request.use(
   (config) => {
-    // Nếu không phải FormData, mặc định là JSON
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
-    // Nếu là FormData, axios sẽ tự động set Content-Type với boundary
     return config;
   },
   (error) => Promise.reject(error)

@@ -31,3 +31,8 @@ export interface RecommendationsResponse {
   pagination: PaginationMeta;
   analysis: RecommendationAnalysis;
 }
+
+export interface GetRecommendationsRequest {
+  page?: number;
+  limit?: number;
+}

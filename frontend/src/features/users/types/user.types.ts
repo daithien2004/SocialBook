@@ -23,3 +23,23 @@ export interface UserListResponse {
         totalPages: number;
     };
 }
+
+export interface UserOverviewResponse {
+    id: string;
+    username: string;
+    image: string | null;
+    createdAt: Date;
+    postCount: number;
+    bio: string;
+    location: string;
+    website: string;
+    readingListCount: number;
+    followersCount: number;
+}
+
+export interface UpdateUserOverviewRequest {
+    bio: string;
+    location: string;
+    website: string;
+    username: string;
+}

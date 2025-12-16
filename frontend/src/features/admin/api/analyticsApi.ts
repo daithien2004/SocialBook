@@ -1,38 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
-
-// ============ Analytics Data Types ============
-
-export interface ReadingHeatmapData {
-    hour: number; // 0-23
-    count: number;
-}
-
-export interface ChapterEngagementData {
-    chapterId: string;
-    chapterTitle: string;
-    bookTitle: string;
-    viewCount: number;
-    completionRate: number;
-    averageTimeSpent: number;
-}
-
-export interface ReadingSpeedData {
-    date: string;
-    averageSpeed: number;
-}
-
-export interface GeographicData {
-    country: string;
-    userCount: number;
-}
-
-export interface ActiveUsersData {
-    count: number;
-    timestamp: string;
-}
-
-// ============ Analytics API ============
+import { ReadingHeatmapData, ChapterEngagementData, ReadingSpeedData, GeographicData, ActiveUsersData } from '../types/admin.interface';
 
 export const analyticsApi = createApi({
     reducerPath: 'analyticsApi',

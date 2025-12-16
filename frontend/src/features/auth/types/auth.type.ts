@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { User } from '../slice/authSlice';
 
 export const signupSchema = z
   .object({
@@ -32,3 +33,39 @@ export const forgotPasswordSchema = z
 export type SignupFormValues = z.infer<typeof signupSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+
+export interface AuthResponse {
+  accessToken: string;
+  user: User;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignupRequest {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResendOtpRequest {
+  email: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
+}

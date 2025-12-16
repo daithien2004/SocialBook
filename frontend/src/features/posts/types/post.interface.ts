@@ -16,3 +16,41 @@ export interface Post {
   totalComments?: number;
   likedByCurrentUser?: boolean;
 }
+
+export interface CreatePostRequest {
+  bookId: string;
+  content: string;
+  images?: File[];
+}
+
+export interface UpdatePostRequest {
+  content?: string;
+  bookId?: string;
+  images?: File[];
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginationParamsByUser {
+  page?: number;
+  limit?: number;
+  userId: string;
+}
+
+export interface PaginatedPostsResponse {
+  items: Post[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface DeleteImageRequest {
+  imageUrl: string;
+}
+

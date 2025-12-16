@@ -1,43 +1,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
-import { User } from '../slice/authSlice';
 import { BFF_AUTH_ENDPOINTS } from '@/src/constants/client-endpoints';
-
-export interface AuthResponse {
-  accessToken: string;
-  user: User;
-}
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface SignupRequest {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export interface VerifyOtpRequest {
-  email: string;
-  otp: string;
-}
-
-export interface ResendOtpRequest {
-  email: string;
-}
-
-export interface ForgotPasswordRequest {
-  email: string;
-}
-
-export interface ResetPasswordRequest {
-  email: string;
-  otp: string;
-  newPassword: string;
-}
+import { User } from 'next-auth';
+import { SignupRequest, VerifyOtpRequest, ForgotPasswordRequest, ResetPasswordRequest, ResendOtpRequest } from '../types/auth.type';
 
 export const authApi = createApi({
   reducerPath: 'authApi',

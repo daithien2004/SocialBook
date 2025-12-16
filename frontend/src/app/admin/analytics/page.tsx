@@ -1,7 +1,7 @@
 'use client';
 
 import { useGetReadingHeatmapQuery, useGetChapterEngagementQuery, useGetReadingSpeedQuery, useGetGeographicDistributionQuery, useGetActiveUsersQuery } from '@/src/features/admin/api/analyticsApi';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Activity, TrendingUp, Globe, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';

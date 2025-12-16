@@ -7,7 +7,7 @@ export interface AuthResponse {
     image?: string;
   };
 }
-// Định nghĩa type cho ResponseDto từ backend
+
 export interface ResponseDto<T> {
   success: boolean;
   statusCode: number;
@@ -17,7 +17,6 @@ export interface ResponseDto<T> {
   path: string;
 }
 
-// Định nghĩa type cho ErrorResponseDto từ backend
 export interface ErrorResponseDto {
   success: false;
   statusCode: number;

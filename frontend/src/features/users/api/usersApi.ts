@@ -1,26 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
-import { UserListResponse } from '../types/user.types';
-
-export interface UserOverviewResponse {
-    id: string;
-    username: string;
-    image: string | null;
-    createdAt: Date;
-    postCount: number;
-    bio: string;
-    location: string;
-    website: string;
-    readingListCount: number;
-    followersCount: number;
-}
-
-export interface UpdateUserOverviewRequest {
-    bio: string;
-    location: string;
-    website: string;
-    username: string;
-}
+import { UpdateUserOverviewRequest, UserListResponse, UserOverviewResponse } from '../types/user.types';
 
 export const usersApi = createApi({
     reducerPath: 'usersApi',
@@ -84,8 +64,7 @@ export const usersApi = createApi({
                 { type: "Users", id: `OVERVIEW_${userId}` },
             ],
         }),
-        
-        // cá nhân hóa trải nghiệm đọc
+
         getReadingPreferences: builder.query<any, void>({
             query: () => ({
                 url: '/users/reading-preferences',

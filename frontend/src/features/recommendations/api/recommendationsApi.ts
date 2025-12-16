@@ -1,12 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/client-api';
 import { BFF_RECOMMENDATIONS_ENDPOINTS } from '@/src/constants/client-endpoints';
-import { RecommendationsResponse } from '../types/recommendation.interface';
-
-export interface GetRecommendationsRequest {
-  page?: number;
-  limit?: number;
-}
+import { GetRecommendationsRequest, RecommendationsResponse } from '../types/recommendation.interface';
 
 export const recommendationsApi = createApi({
   reducerPath: 'recommendationsApi',

@@ -1,51 +1,14 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { Post } from '../../posts/types/post.interface';
+import { CreatePostRequest, DeleteImageRequest, PaginatedPostsResponse, PaginationParams, PaginationParamsByUser, Post, UpdatePostRequest } from '../../posts/types/post.interface';
 import { axiosBaseQuery } from '@/src/lib/client-api';
 import { BFF_POSTS_ENDPOINTS } from '@/src/constants/client-endpoints';
 
-export interface CreatePostRequest {
-  bookId: string;
-  content: string;
-  images?: File[];
-}
-
-export interface UpdatePostRequest {
-  content?: string;
-  bookId?: string;
-  images?: File[];
-}
-
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-}
-
-export interface PaginationParamsByUser {
-  page?: number;
-  limit?: number;
-  userId: string;
-}
-
-export interface PaginatedPostsResponse {
-  items: Post[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export interface DeleteImageRequest {
-  imageUrl: string;
-}
 
 export const postApi = createApi({
   reducerPath: 'postApi',
   baseQuery: axiosBaseQuery(),
   tagTypes: ['Post', 'PostDetail'],
   endpoints: (builder) => ({
-    // Lấy danh sách posts với pagination (lazy loading)
     getPosts: builder.query<PaginatedPostsResponse, PaginationParams>({
       query: ({ page = 1, limit = 10 } = {}) => ({
         url: BFF_POSTS_ENDPOINTS.getAll,
@@ -55,16 +18,15 @@ export const postApi = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.items.map(({ id }) => ({
-                type: 'Post' as const,
-                id: id,
-              })),
-              { type: 'Post', id: 'LIST' },
-            ]
+            ...result.items.map(({ id }) => ({
+              type: 'Post' as const,
+              id: id,
+            })),
+            { type: 'Post', id: 'LIST' },
+          ]
           : [{ type: 'Post', id: 'LIST' }],
     }),
 
-    // Lấy chi tiết 1 post
     getPostById: builder.query<Post, string>({
       query: (id) => ({
         url: BFF_POSTS_ENDPOINTS.getOne(id),
@@ -80,18 +42,17 @@ export const postApi = createApi({
         params: { page, limit, userId },
       }),
       providesTags: (result) =>
-          result
-              ? [
-                ...result.items.map(({ id }) => ({
-                  type: 'Post' as const,
-                  id,
-                })),
-                { type: 'Post', id: 'LIST' },
-              ]
-              : [{ type: 'Post', id: 'LIST' }],
+        result
+          ? [
+            ...result.items.map(({ id }) => ({
+              type: 'Post' as const,
+              id,
+            })),
+            { type: 'Post', id: 'LIST' },
+          ]
+          : [{ type: 'Post', id: 'LIST' }],
     }),
 
-    // Tạo post mới
     createPost: builder.mutation<Post, CreatePostRequest>({
       query: (data) => {
         const formData = new FormData();
@@ -113,7 +74,6 @@ export const postApi = createApi({
       invalidatesTags: [{ type: 'Post', id: 'LIST' }],
     }),
 
-    // Cập nhật post
     updatePost: builder.mutation<Post, { id: string; data: UpdatePostRequest }>(
       {
         query: ({ id, data }) => {
@@ -146,7 +106,6 @@ export const postApi = createApi({
       }
     ),
 
-    // Xóa mềm post
     deletePost: builder.mutation<{ message: string; id: string }, string>({
       query: (id) => ({
         url: BFF_POSTS_ENDPOINTS.delete(id),
@@ -158,7 +117,6 @@ export const postApi = createApi({
       ],
     }),
 
-    // Xóa vĩnh viễn post
     deletePostPermanent: builder.mutation<{ message: string }, string>({
       query: (id) => ({
         url: BFF_POSTS_ENDPOINTS.deletePermanent(id),
@@ -170,7 +128,6 @@ export const postApi = createApi({
       ],
     }),
 
-    // Xóa một ảnh trong post
     deletePostImage: builder.mutation<
       { message: string; imageUrls: string[] },
       { id: string; data: DeleteImageRequest }

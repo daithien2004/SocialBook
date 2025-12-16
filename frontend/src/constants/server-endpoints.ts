@@ -1,6 +1,3 @@
-import { id } from 'date-fns/locale';
-import { get } from 'lodash';
-
 export const NESTJS_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
   verifyOtp: '/auth/verify-otp',

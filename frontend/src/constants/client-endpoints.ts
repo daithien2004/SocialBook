@@ -1,5 +1,3 @@
-import { get } from 'http';
-
 export const BFF_AUTH_ENDPOINTS = {
   signup: '/auth/signup',
   verifyOtp: '/auth/verify-otp',

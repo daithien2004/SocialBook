@@ -33,7 +33,6 @@ export const getErrorMessage = (err: any) => {
   return Array.isArray(raw) ? raw.join('\n') : (raw || 'Update failed');
 };
 
-/* Format: "3 phút trước / 2 giờ / Hôm nay" */
 export function timeAgo(dateString: string) {
   const date = new Date(dateString);
   const now = Date.now();

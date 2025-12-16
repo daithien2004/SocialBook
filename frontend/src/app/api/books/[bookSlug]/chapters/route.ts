@@ -1,5 +1,4 @@
 import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
-import { books } from '@/src/lib/books';
 import serverApi from '@/src/lib/server-api';
 
 import { NextRequest, NextResponse } from 'next/server';
