@@ -11,7 +11,6 @@ import {
   Length,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { Types } from 'mongoose';
 
 export class CreateBookDto {
   @IsNotEmpty({ message: 'Tiêu đề sách là bắt buộc' })
@@ -24,7 +23,7 @@ export class CreateBookDto {
 
   @IsNotEmpty({ message: 'Tác giả là bắt buộc' })
   @IsMongoId({ message: 'Author ID không hợp lệ' })
-  authorId: Types.ObjectId;
+  authorId: string;
 
   // ✅ Transform string/array thành array
   @Transform(({ value }) => {
@@ -36,7 +35,7 @@ export class CreateBookDto {
   @ArrayMinSize(1, { message: 'Phải chọn ít nhất 1 thể loại' })
   @ArrayMaxSize(5, { message: 'Tối đa 5 thể loại' })
   @IsMongoId({ each: true, message: 'Mỗi genres ID phải là MongoId hợp lệ' })
-  genres: Types.ObjectId[];
+  genres: string[];
 
   @IsOptional()
   @IsString()

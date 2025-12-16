@@ -4,7 +4,6 @@ import { ConfigModule } from '@nestjs/config';
 import { ChromaService } from './chroma.service';
 import { ChromaController } from './chroma.controller';
 import { Book, BookSchema } from '../books/schemas/book.schema';
-import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema';
 import { Author, AuthorSchema } from '../authors/schemas/author.schema';
 
 @Global()
@@ -13,7 +12,6 @@ import { Author, AuthorSchema } from '../authors/schemas/author.schema';
         ConfigModule,
         MongooseModule.forFeature([
             { name: Book.name, schema: BookSchema },
-            { name: Chapter.name, schema: ChapterSchema },
             { name: Author.name, schema: AuthorSchema },
         ]),
     ],

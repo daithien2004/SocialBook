@@ -66,7 +66,10 @@ import { NotificationsModule } from '@/src/modules/notifications/notifications.m
     }),
     RedisModule.forRoot({
       type: 'single',
-      url: 'redis://localhost:6379',
+      options: {
+        host: 'localhost',
+        port: 6379,
+      },
     }),
     ThrottlerModule.forRoot([
       {
