@@ -9,10 +9,12 @@ import { Author, AuthorSchema } from '../authors/schemas/author.schema';
 import { Review, ReviewSchema } from '../reviews/schemas/review.schema';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { ReadingList, ReadingListSchema } from '@/src/modules/library/schemas/reading-list.schema';
+import { SearchModule } from '../search/search.module';
 
 @Module({
   imports: [
     CloudinaryModule,
+    SearchModule,
     MongooseModule.forFeature([
       { name: Book.name, schema: BookSchema },
       { name: Chapter.name, schema: ChapterSchema },
@@ -26,4 +28,4 @@ import { ReadingList, ReadingListSchema } from '@/src/modules/library/schemas/re
   controllers: [BooksController],
   exports: [BooksService, MongooseModule],
 })
-export class BooksModule {}
+export class BooksModule { }

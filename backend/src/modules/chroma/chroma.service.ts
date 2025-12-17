@@ -9,9 +9,10 @@ import { Book } from '../books/schemas/book.schema';
 import { Author } from '../authors/schemas/author.schema';
 import { createChunkedBookDocuments } from '../search/utils/text-preprocessing';
 import { createAuthorDocument } from '../search/utils/content-preprocessing';
-import { RunnableSequence } from '@langchain/core/runnables';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
+import { RunnableSequence } from '@langchain/core/runnables';
+
 @Injectable()
 export class ChromaService implements OnModuleInit {
     private readonly logger = new Logger(ChromaService.name);
@@ -38,7 +39,6 @@ export class ChromaService implements OnModuleInit {
                 model: 'gemini-2.5-flash',
                 temperature: 0.7,
             });
-
 
             this.vectorStore = new Chroma(this.embeddings, {
                 collectionName: this.configService.get(

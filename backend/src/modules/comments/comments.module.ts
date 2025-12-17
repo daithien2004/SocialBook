@@ -8,14 +8,12 @@ import { ContentModerationModule } from '../content-moderation/content-moderatio
 import { Post, PostSchema } from '@/src/modules/posts/schemas/post.schema';
 import { Chapter, ChapterSchema } from '@/src/modules/chapters/schemas/chapter.schema';
 import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
-import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Comment.name, schema: CommentSchema },
       { name: Post.name, schema: PostSchema },
-      { name: User.name, schema: UserSchema },
       { name: Chapter.name, schema: ChapterSchema },
     ]),
     forwardRef(() => LikesModule),

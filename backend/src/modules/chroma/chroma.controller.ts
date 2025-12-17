@@ -10,7 +10,7 @@ export class ChromaController {
     constructor(private readonly chromaService: ChromaService) { }
 
     // Index lại TẤT CẢ (Books + Authors only)
-    @Public()
+    @Public() // Temporary for testing
     @Post('reindex-all')
     async reindexAll() {
         const [books, authors] = await Promise.all([
@@ -29,9 +29,8 @@ export class ChromaController {
     }
 
     // Xóa toàn bộ collection
-    // @Roles('admin')
+    @Roles('admin')
     @Post('clear')
-    @Public()
     async clearCollection() {
         const result = await this.chromaService.clearCollection();
 

@@ -1,11 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  useAskChatbotMutation,
-  SearchSource,
-} from '@/src/features/chatbot/api/chatbotApi';
 import { MessageCircle, X, Send, BookOpen, Loader2 } from 'lucide-react';
+import { useAskChatbotMutation } from '../features/chatbot/api/chatBotApi';
 
 interface Message {
   id: string;

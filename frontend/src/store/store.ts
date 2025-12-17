@@ -18,7 +18,6 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { likeApi } from '@/src/features/likes/api/likeApi';
 import { geminiApi } from '../features/gemini/api/geminiApi';
 import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
-import { chatBotApi } from '../features/chatbot/api/chatbotApi';
 import {
   persistStore,
   persistReducer,
@@ -30,6 +29,7 @@ import {
   REGISTER,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import { chatBotApi } from '../features/chatbot/api/chatBotApi';
 
 const recommendationsPersistConfig = {
   key: 'recommendations',

@@ -1,4 +1,3 @@
-import { NESTJS_CHROMA_ENDPOINTS } from "@/src/constants/server-endpoints";
 import { axiosBaseQuery } from "@/src/lib/nestjs-client-api";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
@@ -25,7 +24,7 @@ export const chatBotApi = createApi({
     endpoints: (builder) => ({
         askChatbot: builder.mutation<ChatResponse, ChatRequest>({
             query: (body) => ({
-                url: NESTJS_CHROMA_ENDPOINTS.askChatbot,
+                url: '/chroma/chat/ask',
                 method: 'POST',
                 body,
             }),
@@ -36,3 +35,5 @@ export const chatBotApi = createApi({
 export const {
     useAskChatbotMutation,
 } = chatBotApi;
+
+
