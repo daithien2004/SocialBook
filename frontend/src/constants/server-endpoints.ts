@@ -92,6 +92,8 @@ export const NESTJS_LIBRARY_ENDPOINTS = {
   // Collections System (Folder)
   collections: '/collections', // GET, POST
   collectionDetail: (id: string) => `/collections/${id}`,
+  collectionDetailUser: (userId: string, id: string) =>
+    `/collections/detail?userId=${userId}&id=${id}`,
 };
 
 export const NESTJS_STATISTICS_ENDPOINTS = {

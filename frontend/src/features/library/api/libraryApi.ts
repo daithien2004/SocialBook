@@ -1,7 +1,7 @@
 // src/features/library/api/libraryApi.ts
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_LIBRARY_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_LIBRARY_ENDPOINTS } from '@/src/constants/server-endpoints';
 import {
   LibraryItem,
   Collection,
@@ -21,7 +21,7 @@ export const libraryApi = createApi({
   endpoints: (builder) => ({
     getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus }>({
       query: ({ status }) => ({
-        url: BFF_LIBRARY_ENDPOINTS.getLibrary,
+        url: NESTJS_LIBRARY_ENDPOINTS.getLibrary,
         method: 'GET',
         params: { status },
       }),
@@ -33,7 +33,7 @@ export const libraryApi = createApi({
 
     updateLibraryStatus: builder.mutation<LibraryItem, UpdateStatusRequest>({
       query: (data) => ({
-        url: BFF_LIBRARY_ENDPOINTS.updateStatus,
+        url: NESTJS_LIBRARY_ENDPOINTS.updateStatus,
         method: 'POST',
         body: data,
       }),
@@ -45,7 +45,7 @@ export const libraryApi = createApi({
       { bookId: string; chapterId: string }
     >({
       query: ({ bookId, chapterId }) => ({
-        url: BFF_LIBRARY_ENDPOINTS.updateProgress,
+        url: NESTJS_LIBRARY_ENDPOINTS.updateProgress,
         method: 'GET',
         params: { bookId, chapterId },
       }),
@@ -56,7 +56,7 @@ export const libraryApi = createApi({
     updateReadingProgress: builder.mutation<LibraryItem, UpdateProgressRequest>(
       {
         query: (data) => ({
-          url: BFF_LIBRARY_ENDPOINTS.updateProgress,
+          url: NESTJS_LIBRARY_ENDPOINTS.updateProgress,
           method: 'PATCH',
           body: data,
         }),
@@ -72,7 +72,7 @@ export const libraryApi = createApi({
       AddToCollectionsRequest
     >({
       query: (data) => ({
-        url: BFF_LIBRARY_ENDPOINTS.updateBookCollections,
+        url: NESTJS_LIBRARY_ENDPOINTS.updateBookCollections,
         method: 'PATCH',
         body: data,
       }),
@@ -81,7 +81,7 @@ export const libraryApi = createApi({
 
     removeBookFromLibrary: builder.mutation<null, string>({
       query: (bookId) => ({
-        url: BFF_LIBRARY_ENDPOINTS.removeBook(bookId),
+        url: NESTJS_LIBRARY_ENDPOINTS.removeBook(bookId),
         method: 'DELETE',
       }),
       invalidatesTags: ['Library', 'Collection'],
@@ -92,7 +92,7 @@ export const libraryApi = createApi({
       string
     >({
       query: (bookId) => ({
-        url: BFF_LIBRARY_ENDPOINTS.getBookLibraryInfo(bookId),
+        url: NESTJS_LIBRARY_ENDPOINTS.getBookLibraryInfo(bookId),
         method: 'GET',
       }),
       providesTags: (result, error, bookId) => [
@@ -102,7 +102,7 @@ export const libraryApi = createApi({
 
     getCollections: builder.query<Collection[], string | void>({
       query: (userId) => ({
-        url: `${BFF_LIBRARY_ENDPOINTS.collections}?userId=${userId}`,
+        url: `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId}`,
         method: 'GET',
       }),
       providesTags: [{ type: 'Collection', id: 'LIST' }],
@@ -110,7 +110,7 @@ export const libraryApi = createApi({
 
     getCollectionDetail: builder.query<CollectionDetailResponse, string>({
       query: (id) => ({
-        url: BFF_LIBRARY_ENDPOINTS.collectionDetail(id),
+        url: NESTJS_LIBRARY_ENDPOINTS.collectionDetail(id),
         method: 'GET',
       }),
       providesTags: (result, error, id) => [{ type: 'Collection', id }],
@@ -121,7 +121,7 @@ export const libraryApi = createApi({
       { id: string; userId: string }
     >({
       query: ({ id, userId }) => ({
-        url: BFF_LIBRARY_ENDPOINTS.collectionDetailNoUser(id, userId),
+        url: NESTJS_LIBRARY_ENDPOINTS.collectionDetailUser(id, userId),
         method: 'GET',
       }),
       providesTags: (result, error, { id }) => [
@@ -132,7 +132,7 @@ export const libraryApi = createApi({
     // 8. Tạo Folder mới
     createCollection: builder.mutation<Collection, CreateCollectionRequest>({
       query: (data) => ({
-        url: BFF_LIBRARY_ENDPOINTS.collections,
+        url: NESTJS_LIBRARY_ENDPOINTS.collections,
         method: 'POST',
         body: data,
       }),
@@ -144,7 +144,7 @@ export const libraryApi = createApi({
       { id: string; data: UpdateCollectionRequest }
     >({
       query: ({ id, data }) => ({
-        url: BFF_LIBRARY_ENDPOINTS.collectionDetail(id),
+        url: NESTJS_LIBRARY_ENDPOINTS.collectionDetail(id),
         method: 'PATCH',
         body: data,
       }),
@@ -156,7 +156,7 @@ export const libraryApi = createApi({
 
     deleteCollection: builder.mutation<null, string>({
       query: (id) => ({
-        url: BFF_LIBRARY_ENDPOINTS.collectionDetail(id),
+        url: NESTJS_LIBRARY_ENDPOINTS.collectionDetail(id),
         method: 'DELETE',
       }),
       invalidatesTags: ['Collection'],

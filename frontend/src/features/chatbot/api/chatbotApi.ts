@@ -1,5 +1,5 @@
-import { BFF_CHROMA_ENDPOINTS } from "@/src/constants/client-endpoints";
-import { axiosBaseQuery } from "@/src/lib/client-api";
+import { NESTJS_CHROMA_ENDPOINTS } from "@/src/constants/server-endpoints";
+import { axiosBaseQuery } from "@/src/lib/nestjs-client-api";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
 export interface SearchSource {
@@ -25,7 +25,7 @@ export const chatBotApi = createApi({
     endpoints: (builder) => ({
         askChatbot: builder.mutation<ChatResponse, ChatRequest>({
             query: (body) => ({
-                url: BFF_CHROMA_ENDPOINTS.askChatbot,
+                url: NESTJS_CHROMA_ENDPOINTS.askChatbot,
                 method: 'POST',
                 body,
             }),

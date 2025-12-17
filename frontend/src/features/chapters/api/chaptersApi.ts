@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_CHAPTERS_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { Chapter, ChapterDetailData, ChapterPreview, ChaptersListData, CreateChapterParams, DeleteChapterParams, GetChapterByIdParams, GetChapterParams, GetChaptersParams, ImportChaptersParams, UpdateChapterParams } from '../types/chapter.interface';
 
 export const CHAPTER_TAGS = {
@@ -17,7 +17,7 @@ export const chaptersApi = createApi({
   endpoints: (builder) => ({
     getChapter: builder.query<ChapterDetailData, GetChapterParams>({
       query: (params) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.getChapterBySlug(
+        url: NESTJS_CHAPTERS_ENDPOINTS.getChapterBySlug(
           params.bookSlug,
           params.chapterSlug
         ),
@@ -30,7 +30,7 @@ export const chaptersApi = createApi({
 
     getChapters: builder.query<ChaptersListData, GetChaptersParams>({
       query: (params) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
+        url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
         method: 'GET',
       }),
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
@@ -46,7 +46,7 @@ export const chaptersApi = createApi({
 
     getChapterById: builder.query<Chapter, GetChapterByIdParams>({
       query: ({ bookSlug, chapterId }) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.getChapterById(bookSlug, chapterId),
+        url: NESTJS_CHAPTERS_ENDPOINTS.getChapterById(bookSlug, chapterId),
         method: 'GET',
       }),
       providesTags: (result, error, { chapterId }) => [
@@ -56,7 +56,7 @@ export const chaptersApi = createApi({
 
     createChapter: builder.mutation<Chapter, CreateChapterParams>({
       query: ({ bookSlug, data }) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.createChapter(bookSlug),
+        url: NESTJS_CHAPTERS_ENDPOINTS.createChapter(bookSlug),
         method: 'POST',
         body: data,
       }),
@@ -65,7 +65,7 @@ export const chaptersApi = createApi({
 
     updateChapter: builder.mutation<Chapter, UpdateChapterParams>({
       query: ({ bookSlug, chapterId, data }) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.updateChapter(bookSlug, chapterId),
+        url: NESTJS_CHAPTERS_ENDPOINTS.updateChapter(bookSlug, chapterId),
         method: 'PUT',
         body: data,
       }),
@@ -77,7 +77,7 @@ export const chaptersApi = createApi({
 
     deleteChapter: builder.mutation<void, DeleteChapterParams>({
       query: ({ bookSlug, chapterId }) => ({
-        url: BFF_CHAPTERS_ENDPOINTS.deleteChapter(bookSlug, chapterId),
+        url: NESTJS_CHAPTERS_ENDPOINTS.deleteChapter(bookSlug, chapterId),
         method: 'DELETE',
       }),
       invalidatesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
@@ -86,7 +86,7 @@ export const chaptersApi = createApi({
     importChaptersPreview: builder.mutation<ChapterPreview[],
       ImportChaptersParams>({
         query: ({ bookSlug, formData }) => ({
-          url: BFF_CHAPTERS_ENDPOINTS.importChapter(bookSlug),
+          url: NESTJS_CHAPTERS_ENDPOINTS.importPreview(bookSlug),
           method: 'POST',
           body: formData,
         }),

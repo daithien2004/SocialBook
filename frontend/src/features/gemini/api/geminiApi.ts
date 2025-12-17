@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_GEMINI_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_GEMINI_ENDPOINTS } from '@/src/constants/server-endpoints';
 
 export const geminiApi = createApi({
   reducerPath: 'geminiApi',
@@ -8,7 +8,7 @@ export const geminiApi = createApi({
   endpoints: (builder) => ({
     summarizeChapter: builder.mutation<string, string>({
       query: (chapterId) => ({
-        url: BFF_GEMINI_ENDPOINTS.summarizeChapter(chapterId),
+        url: NESTJS_GEMINI_ENDPOINTS.summarizeChapter(chapterId),
         method: 'POST',
       }),
     }),

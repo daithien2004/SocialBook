@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_REVIEWS_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_REVIEWS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import {
   Review,
   CreateReviewRequest,
@@ -14,21 +14,21 @@ export const reviewApi = createApi({
   endpoints: (builder) => ({
     getReviewsByBook: builder.query<Review[], string>({
       query: (bookId) => ({
-        url: BFF_REVIEWS_ENDPOINTS.getByBook(bookId),
+        url: NESTJS_REVIEWS_ENDPOINTS.getByBook(bookId),
         method: 'GET',
       }),
       providesTags: (result, error, bookId) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'Review' as const, id })),
-              { type: 'Review', id: `LIST_${bookId}` },
-            ]
+            ...result.map(({ id }) => ({ type: 'Review' as const, id })),
+            { type: 'Review', id: `LIST_${bookId}` },
+          ]
           : [],
     }),
 
     createReview: builder.mutation<Review, CreateReviewRequest>({
       query: (data) => ({
-        url: BFF_REVIEWS_ENDPOINTS.create,
+        url: NESTJS_REVIEWS_ENDPOINTS.create,
         method: 'POST',
         body: data,
       }),
@@ -42,7 +42,7 @@ export const reviewApi = createApi({
       { id: string; data: UpdateReviewRequest; bookId: string }
     >({
       query: ({ id, data }) => ({
-        url: BFF_REVIEWS_ENDPOINTS.update(id),
+        url: NESTJS_REVIEWS_ENDPOINTS.update(id),
         method: 'PATCH',
         body: data,
       }),
@@ -54,7 +54,7 @@ export const reviewApi = createApi({
 
     deleteReview: builder.mutation<null, { id: string; bookId: string }>({
       query: ({ id }) => ({
-        url: BFF_REVIEWS_ENDPOINTS.delete(id),
+        url: NESTJS_REVIEWS_ENDPOINTS.delete(id),
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, { id, bookId }) => [
@@ -68,7 +68,7 @@ export const reviewApi = createApi({
       { id: string; bookId: string }
     >({
       query: ({ id }) => ({
-        url: BFF_REVIEWS_ENDPOINTS.toggleLike(id),
+        url: NESTJS_REVIEWS_ENDPOINTS.toggleLike(id),
         method: 'PATCH',
       }),
       invalidatesTags: (result, error, { id, bookId }) => [

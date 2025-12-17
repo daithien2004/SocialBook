@@ -1,5 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
 import { UpdateUserOverviewRequest, UserListResponse, UserOverviewResponse } from '../types/user.types';
 
 export const usersApi = createApi({

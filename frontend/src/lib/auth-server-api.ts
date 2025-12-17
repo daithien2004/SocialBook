@@ -13,7 +13,7 @@ export async function getAuthenticatedServerApi() {
   return serverApi.create({
     headers: {
       ...serverApi.defaults.headers,
-      Authorization: `Bearer ${accessToken}`, 
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 }

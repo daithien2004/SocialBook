@@ -6,7 +6,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Chuyển tiếp request đến NestJS
     const response = await serverApi.post(NESTJS_AUTH_ENDPOINTS.resendOtp, body);
 
     return NextResponse.json(response.data);

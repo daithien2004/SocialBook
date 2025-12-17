@@ -1,6 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
-import { axiosBaseQuery } from "@/src/lib/client-api";
-import { BFF_LIKES_ENDPOINTS } from "@/src/constants/client-endpoints";
+import { axiosBaseQuery } from "@/src/lib/nestjs-client-api";
+import { NESTJS_LIKES_ENDPOINTS } from "@/src/constants/server-endpoints";
 
 export interface LikeRequest {
     targetId: string;
@@ -15,7 +15,7 @@ export const likeApi = createApi({
 
         postToggleLike: builder.mutation<boolean, LikeRequest>({
             query: ({ targetId, targetType }) => ({
-                url: BFF_LIKES_ENDPOINTS.postToggleLike,
+                url: NESTJS_LIKES_ENDPOINTS.postToggleLike,
                 method: "POST",
                 body: { targetId, targetType },
             }),
@@ -26,7 +26,7 @@ export const likeApi = createApi({
 
         getCount: builder.query<{ count: number }, LikeRequest>({
             query: ({ targetId, targetType }) => ({
-                url: BFF_LIKES_ENDPOINTS.getCount,
+                url: NESTJS_LIKES_ENDPOINTS.getCount,
                 method: "GET",
                 params: { targetId, targetType },
             }),
@@ -37,7 +37,7 @@ export const likeApi = createApi({
 
         getStatus: builder.query<{ isLiked: boolean }, LikeRequest>({
             query: ({ targetId, targetType }) => ({
-                url: BFF_LIKES_ENDPOINTS.getStatus,
+                url: NESTJS_LIKES_ENDPOINTS.getStatus,
                 method: "GET",
                 params: { targetId, targetType },
             }),

@@ -1,8 +1,6 @@
-// src/features/admin/api/adminApi.ts
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
 import { AuthorOption, GenreOption } from '../types/bookRelation.interface';
-
 
 export const bookRelationApi = createApi({
   reducerPath: 'bookRelationApi',
@@ -11,7 +9,7 @@ export const bookRelationApi = createApi({
   endpoints: (builder) => ({
     getAuthors: builder.query<AuthorOption[], void>({
       query: () => ({
-        url: '/authors', 
+        url: '/authors',
         method: 'GET',
       }),
       providesTags: ['Authors'],

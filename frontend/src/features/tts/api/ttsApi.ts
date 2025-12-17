@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_TTS_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_TTS_ENDPOINTS } from '@/src/constants/server-endpoints';
 
 export interface TTSAudio {
     id: string;
@@ -50,7 +50,7 @@ export const ttsApi = createApi({
             { chapterId: string; options?: GenerateAudioOptions }
         >({
             query: ({ chapterId, options = {} }) => ({
-                url: BFF_TTS_ENDPOINTS.generateChapter(chapterId),
+                url: NESTJS_TTS_ENDPOINTS.generateChapter(chapterId),
                 method: 'POST',
                 body: options,
             }),
@@ -72,7 +72,7 @@ export const ttsApi = createApi({
             { bookId: string; options?: GenerateAudioOptions }
         >({
             query: ({ bookId, options = {} }) => ({
-                url: BFF_TTS_ENDPOINTS.generateBook(bookId),
+                url: NESTJS_TTS_ENDPOINTS.generateBook(bookId),
                 method: 'POST',
                 body: options,
             }),
@@ -82,7 +82,7 @@ export const ttsApi = createApi({
         // Get TTS audio by chapter ID
         getChapterAudio: builder.query<TTSAudio | null, string>({
             query: (chapterId) => ({
-                url: BFF_TTS_ENDPOINTS.getByChapter(chapterId),
+                url: NESTJS_TTS_ENDPOINTS.getByChapter(chapterId),
                 method: 'GET',
             }),
             transformResponse: (response: any) => {
@@ -98,7 +98,7 @@ export const ttsApi = createApi({
         // Delete TTS audio for a chapter
         deleteChapterAudio: builder.mutation<void, string>({
             query: (chapterId) => ({
-                url: BFF_TTS_ENDPOINTS.delete(chapterId),
+                url: NESTJS_TTS_ENDPOINTS.delete(chapterId),
                 method: 'DELETE',
             }),
             invalidatesTags: (result, error, chapterId) => [
@@ -110,7 +110,7 @@ export const ttsApi = createApi({
         // Increment play count
         incrementPlayCount: builder.mutation<void, string>({
             query: (chapterId) => ({
-                url: BFF_TTS_ENDPOINTS.incrementPlay(chapterId),
+                url: NESTJS_TTS_ENDPOINTS.incrementPlay(chapterId),
                 method: 'POST',
             }),
             // Don't invalidate tags for play count - no need to refetch
