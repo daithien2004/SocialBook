@@ -172,43 +172,28 @@ export class FollowsService {
 
     if (existing) {
       const nextStatus = !existing.status;
-
       await this.followModel.updateOne(
         { _id: existing._id },
         { $set: { status: nextStatus, updatedAt: new Date() } },
       );
 
-      if (!nextStatus) {
-        return { isFollowing: false };
-      }
-    } else {
-      await this.followModel.create({
-        userId: userObjectId,
-        targetId: targetObjectId,
-        status: true,
-      });
+      return { isFollowing: nextStatus };
     }
 
-    const actor = await this.userModel
-      .findById(currentUserId)
-      .select('_id name avatar')
-      .lean();
-
-    if (!actor) {
-      return { isFollowing: true };
-    }
+    await this.followModel.create({
+      userId: userObjectId,
+      targetId: targetObjectId,
+      status: true,
+    });
 
     await this.notifications.create({
-      userId: targetUserId,
+      userId: targetObjectId.toString(),
       title: 'Bạn có người theo dõi mới',
-      message: `${actor.username} vừa theo dõi bạn.`,
+      message: 'Ai đó vừa theo dõi bạn.',
       type: 'follow',
-      actionUrl: `/users/${actor._id}`,
       meta: {
-        actorId: actor._id.toString(),
-        username: actor.username,
-        image: actor.image,
-        targetId: targetUserId,
+        actorId: currentUserId,
+        targetUserId,
       },
     });
 

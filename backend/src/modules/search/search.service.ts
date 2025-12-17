@@ -1,18 +1,58 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ChromaService } from '../chroma/chroma.service';
 import { Book } from '../books/schemas/book.schema';
 import { Author } from '../authors/schemas/author.schema';
+import { Chapter } from '../chapters/schemas/chapter.schema';
+import { Review } from '../reviews/schemas/review.schema';
+import { Genre } from '../genres/schemas/genre.schema';
 import { SearchQueryDto } from './dto/search-query.dto';
 
-export interface SearchResult {
-    type: 'book' | 'author';
+export interface BookStats {
+    chapters: number;
+    views: number;
+    likes: number;
+    rating: number;
+    reviews: number;
+}
+
+export interface SearchResultBook {
     id: string;
+    _id: string;
     title: string;
+    slug: string;
+    description?: string;
+    coverUrl?: string;
+    status: string;
+    tags?: string[];
+    views: number;
+    likes: number;
+    createdAt: Date;
+    updatedAt: Date;
+    authorId: {
+        _id: string;
+        name: string;
+        avatar?: string;
+    };
+    genres: Array<{
+        _id: string;
+        name: string;
+        slug: string;
+    }>;
+    stats: BookStats;
     score: number;
-    data: any;
-    excerpt?: string;
+    matchType?: string;
+}
+
+export interface PaginatedSearchResult {
+    data: SearchResultBook[];
+    metaData: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
 }
 
 @Injectable()
@@ -23,56 +63,129 @@ export class SearchService {
         private readonly chromaService: ChromaService,
         @InjectModel(Book.name) private bookModel: Model<Book>,
         @InjectModel(Author.name) private authorModel: Model<Author>,
+        @InjectModel(Chapter.name) private chapterModel: Model<Chapter>,
+        @InjectModel(Review.name) private reviewModel: Model<Review>,
+        @InjectModel(Genre.name) private genreModel: Model<Genre>,
     ) { }
 
     /**
      * ============================================
-     * MAIN SEARCH ALGORITHM
+     * MAIN SEARCH ALGORITHM (với Pagination & Filters)
      * ============================================
-     * 1. FUZZY SEARCH (MongoDB): Tên sách + Tên tác giả
-     * 2. SEMANTIC SEARCH (ChromaDB): Description của book
-     * 3. Merge & Sort results
      */
-    async intelligentSearch(searchQueryDto: SearchQueryDto): Promise<SearchResult[]> {
-        const { query, limit = 10 } = searchQueryDto;
-
-        this.logger.log(`\n🔍 ===== SEARCH: "${query}" (limit: ${limit}) =====`);
+    async intelligentSearch(searchQueryDto: SearchQueryDto): Promise<PaginatedSearchResult> {
+        const {
+            query,
+            page = 1,
+            limit = 12,
+            genres,
+            author,
+            tags,
+            sortBy = 'score',
+            order = 'desc'
+        } = searchQueryDto;
 
         try {
             // ============================================
-            // STEP 1: FUZZY SEARCH - Tên sách & Tác giả
+            // STEP 1: FUZZY + SEMANTIC + DESCRIPTION KEYWORD SEARCH
             // ============================================
-            const fuzzyMatches = await this.fuzzySearchTitleAuthor(query);
+            const [fuzzyBookIds, semanticBookIds, descriptionBookIds] = await Promise.all([
+                this.fuzzySearchBookIds(query),
+                this.semanticSearchBookIds(query),
+                this.descriptionKeywordSearch(query),
+            ]);
 
-            if (fuzzyMatches.length > 0) {
-                this.logger.log(`📌 Fuzzy search found ${fuzzyMatches.length} exact/partial matches`);
+            // Merge book IDs with scores
+            const bookScoreMap = new Map<string, { score: number; matchType: string }>();
+
+            for (const { id, score, matchType } of fuzzyBookIds) {
+                bookScoreMap.set(id, { score, matchType });
             }
 
-            // ============================================
-            // STEP 2: SEMANTIC SEARCH - Book Descriptions
-            // ============================================
-            const semanticMatches = await this.semanticSearchBooks(query);
-
-            if (semanticMatches.length > 0) {
-                this.logger.log(`🧠 Semantic search found ${semanticMatches.length} description matches`);
+            for (const { id, score } of semanticBookIds) {
+                const existing = bookScoreMap.get(id);
+                if (!existing) {
+                    bookScoreMap.set(id, { score, matchType: 'semantic' });
+                } else if (score > existing.score) {
+                    bookScoreMap.set(id, { score, matchType: 'semantic' });
+                }
             }
 
-            // ============================================
-            // STEP 3: Merge & Deduplicate
-            // ============================================
-            const allResults = this.mergeAndDeduplicate(fuzzyMatches, semanticMatches);
+            // Merge description keyword results
+            for (const { id, score } of descriptionBookIds) {
+                const existing = bookScoreMap.get(id);
+                if (!existing) {
+                    bookScoreMap.set(id, { score, matchType: 'description_keyword' });
+                } else if (score > existing.score) {
+                    bookScoreMap.set(id, { score, matchType: 'description_keyword' });
+                }
+            }
 
-            // ============================================
-            // STEP 4: Sort & Limit
-            // ============================================
-            const finalResults = allResults
-                .sort((a, b) => b.score - a.score)
-                .slice(0, limit);
+            let bookIds = Array.from(bookScoreMap.keys());
+            this.logger.log(`📊 Found ${bookIds.length} unique books from search`);
 
-            this.logger.log(`✅ Returning ${finalResults.length} results`);
-            this.logger.log(`   Types: ${finalResults.filter(r => r.type === 'book').length} books, ${finalResults.filter(r => r.type === 'author').length} authors\n`);
+            if (bookIds.length === 0) {
+                return this.emptyResult(page, limit);
+            }
 
-            return finalResults;
+            // STEP 2: Build filter query
+            const filterQuery: any = {
+                _id: { $in: bookIds.map(id => new Types.ObjectId(id)) },
+                isDeleted: false,
+                status: 'published',
+            };
+
+            // Filter by genres
+            if (genres) {
+                const genreSlugs = genres.split(',').map(g => g.trim());
+                const genreDocs = await this.genreModel.find({ slug: { $in: genreSlugs } }).select('_id');
+                const genreIds = genreDocs.map(doc => doc._id);
+
+                if (genreIds.length > 0) {
+                    filterQuery.genres = { $in: genreIds };
+                } else {
+                    return this.emptyResult(page, limit);
+                }
+            }
+
+            // Filter by author
+            if (author && Types.ObjectId.isValid(author)) {
+                filterQuery.authorId = new Types.ObjectId(author);
+            }
+
+            // Filter by tags
+            if (tags) {
+                const tagsList = tags.split(',').map(t => t.trim());
+                filterQuery.tags = { $in: tagsList };
+            }
+
+            // STEP 3: Fetch books with full data
+            const totalCount = await this.bookModel.countDocuments(filterQuery);
+
+            // Get books with populated data
+            let books = await this.bookModel
+                .find(filterQuery)
+                .populate('authorId', 'name avatar')
+                .populate('genres', 'name slug')
+                .lean();
+
+            // STEP 4: Add stats to each book
+            const booksWithStats = await this.enrichBooksWithStats(books, bookScoreMap);
+
+            // STEP 5: Sort and paginate
+            const sortedBooks = this.sortBooks(booksWithStats, sortBy, order);
+            const skip = (page - 1) * limit;
+            const paginatedBooks = sortedBooks.slice(skip, skip + limit);
+
+            return {
+                data: paginatedBooks,
+                metaData: {
+                    page,
+                    limit,
+                    total: totalCount,
+                    totalPages: Math.ceil(totalCount / limit),
+                },
+            };
 
         } catch (error) {
             this.logger.error(`❌ Search error: ${error.message}`, error.stack);
@@ -80,34 +193,17 @@ export class SearchService {
         }
     }
 
-    /**
-     * ============================================
-     * FUZZY SEARCH - Tên sách & Tác giả
-     * ============================================
-     * MongoDB regex search cho:
-     * - Book titles
-     * - Author names
-     * Returns high-priority results (score 10.0-15.0)
-     */
-    private async fuzzySearchTitleAuthor(query: string): Promise<SearchResult[]> {
-        const results: SearchResult[] = [];
+    /** FUZZY SEARCH - Search by title, slug, and author name */
+    private async fuzzySearchBookIds(query: string): Promise<Array<{ id: string; score: number; matchType: string }>> {
+        const results: Array<{ id: string; score: number; matchType: string }> = [];
         const normalizedQuery = this.normalizeText(query);
 
-        // Skip nếu query quá ngắn hoặc quá dài
-        if (normalizedQuery.length < 2) {
-            return results;
-        }
+        if (normalizedQuery.length < 2) return results;
 
         const originalWords = query.trim().split(/\s+/).filter(w => w.length > 1);
-
-        // Skip nếu query quá dài (>6 words) - có thể là descriptive sentence
-        if (originalWords.length > 6) {
-            this.logger.debug(`⏭️  Skipping fuzzy search for long query (${originalWords.length} words)`);
-            return results;
-        }
+        if (originalWords.length > 6) return results;
 
         try {
-
             const requiredWords = originalWords.slice(0, Math.ceil(originalWords.length * 0.7));
             const regexPattern = originalWords.length <= 3
                 ? originalWords.join('.*')
@@ -115,105 +211,65 @@ export class SearchService {
 
             const regex = new RegExp(regexPattern, 'i');
 
-            // ============================================
-            // 1. Search Books by Title
-            // ============================================
+            // Search books by title and slug
             const books = await this.bookModel
                 .find({
-                    title: { $regex: regex },
-                    status: 'published'
+                    $or: [
+                        { title: { $regex: regex } },
+                        { slug: { $regex: regex } },
+                    ],
+                    status: 'published',
+                    isDeleted: false,
                 })
-                .populate('authorId', 'name')
-                .populate('genres', 'name')
-                .limit(20)
+                .select('_id title slug')
+                .limit(30)
                 .lean();
 
             for (const book of books) {
-                const similarity = this.calculateTextSimilarity(query, book.title);
+                const titleSimilarity = this.calculateTextSimilarity(query, book.title);
+                const slugSimilarity = this.calculateTextSimilarity(query, book.slug || '');
+                const similarity = Math.max(titleSimilarity, slugSimilarity);
 
-                // Keep exact, starts-with, and contains matches
                 if (similarity >= 0.6) {
-                    let score = 0;
-                    if (similarity >= 1.0) score = 15.0;      // Exact match
-                    else if (similarity >= 0.8) score = 12.0; // Starts with
-                    else if (similarity >= 0.6) score = 10.0; // Contains
-
+                    let score = similarity >= 1.0 ? 15.0 : similarity >= 0.8 ? 12.0 : 10.0;
                     results.push({
-                        type: 'book',
                         id: book._id.toString(),
-                        title: book.title,
                         score,
-                        data: {
-                            slug: book.slug,
-                            author: (book.authorId as any)?.name || 'Unknown',
-                            genres: book.genres?.map((g: any) => g.name).join(', ') || '',
-                            description: book.description?.substring(0, 200) || '',
-                            coverUrl: book.coverUrl,
-                        },
-                        excerpt: `Exact title match: ${book.title}`,
+                        matchType: similarity >= 1.0 ? 'exact' : similarity >= 0.8 ? 'starts_with' : 'contains',
                     });
-
-                    this.logger.debug(`📖 Fuzzy BOOK: "${book.title}" (similarity: ${similarity.toFixed(2)}, score: ${score})`);
                 }
             }
 
-            // ============================================
-            // 2. Search Authors by Name
-            // ============================================
+            // Search authors and get their books
             const authors = await this.authorModel
                 .find({ name: { $regex: regex } })
+                .select('_id name')
                 .limit(10)
                 .lean();
 
             for (const author of authors) {
                 const similarity = this.calculateTextSimilarity(query, author.name);
 
-                // Keep exact, starts-with, and contains matches
                 if (similarity >= 0.6) {
-                    let score = 0;
-                    if (similarity >= 1.0) score = 15.0;      // Exact match
-                    else if (similarity >= 0.8) score = 12.0; // Starts with
-                    else if (similarity >= 0.6) score = 10.0; // Contains
-
-                    results.push({
-                        type: 'author',
-                        id: author._id.toString(),
-                        title: author.name,
-                        score,
-                        data: {
-                            bio: author.bio?.substring(0, 200) || '',
-                            photoUrl: author.photoUrl,
-                        },
-                        excerpt: `Exact author match: ${author.name}`,
-                    });
-
-                    this.logger.debug(`👤 Fuzzy AUTHOR: "${author.name}" (similarity: ${similarity.toFixed(2)}, score: ${score})`);
-
-                    // ⭐ Fetch books by this author
                     const authorBooks = await this.bookModel
-                        .find({ authorId: author._id, status: 'published' })
-                        .populate('authorId', 'name')
-                        .populate('genres', 'name')
-                        .limit(10)
+                        .find({ authorId: author._id, status: 'published', isDeleted: false })
+                        .select('_id')
+                        .limit(15)
                         .lean();
 
-                    for (const book of authorBooks) {
-                        results.push({
-                            type: 'book',
-                            id: book._id.toString(),
-                            title: book.title,
-                            score: score * 0.9, // Books inherit 90% of author score
-                            data: {
-                                slug: book.slug,
-                                author: (book.authorId as any)?.name || 'Unknown',
-                                genres: book.genres?.map((g: any) => g.name).join(', ') || '',
-                                description: book.description?.substring(0, 200) || '',
-                                coverUrl: book.coverUrl,
-                            },
-                            excerpt: `By author: ${author.name}`,
-                        });
+                    let score = similarity >= 1.0 ? 15.0 : similarity >= 0.8 ? 12.0 : 10.0;
 
-                        this.logger.debug(`  📖 Book by author: "${book.title}" (score: ${(score * 0.9).toFixed(1)})`);
+                    for (const book of authorBooks) {
+                        const bookId = book._id.toString();
+                        const existingIndex = results.findIndex(r => r.id === bookId);
+
+                        if (existingIndex === -1) {
+                            results.push({
+                                id: bookId,
+                                score: score * 0.9,
+                                matchType: 'author_match',
+                            });
+                        }
                     }
                 }
             }
@@ -227,81 +283,32 @@ export class SearchService {
 
     /**
      * ============================================
-     * SEMANTIC SEARCH - Book Descriptions ONLY
+     * SEMANTIC SEARCH - Return Book IDs with Scores
      * ============================================
-     * ChromaDB vector search on book descriptions
-     * Returns semantic matches (score 0.0-1.0)
      */
-    private async semanticSearchBooks(query: string): Promise<SearchResult[]> {
-        const results: SearchResult[] = [];
+    private async semanticSearchBookIds(query: string): Promise<Array<{ id: string; score: number }>> {
+        const results: Array<{ id: string; score: number }> = [];
 
         try {
             const vectorStore = this.chromaService.getVectorStore();
             const rawResults = await vectorStore.similaritySearchWithScore(query, 50);
 
-            this.logger.debug(`📊 ChromaDB returned ${rawResults.length} results`);
-
-            if (rawResults.length === 0) {
-                return results;
-            }
-
-            // Collect unique book IDs
-            const bookIds: string[] = [];
             const bookScores = new Map<string, number>();
 
             for (const [doc, distance] of rawResults) {
                 const { type, bookId } = doc.metadata;
                 const score = 1 / (1 + distance);
 
-                // 🔍 DEBUG: Log ALL results including skipped ones
-                this.logger.debug(`📊 Raw ChromaDB: type=${type}, bookId=${bookId}, distance=${distance.toFixed(3)}, score=${score.toFixed(3)}`);
+                if (type !== 'book' || !bookId) continue;
 
-                // ⚠️ ONLY process book entities, skip authors entirely
-                if (type !== 'book' || !bookId) {
-                    this.logger.debug(`⏭️  Skipped: type=${type}, bookId=${bookId}`);
-                    continue;
-                }
-
-                // Keep highest score for each book
                 if (!bookScores.has(bookId) || bookScores.get(bookId)! < score) {
                     bookScores.set(bookId, score);
-                    if (!bookIds.includes(bookId)) {
-                        bookIds.push(bookId);
-                    }
                 }
             }
 
-            // Fetch book data from DB
-            if (bookIds.length > 0) {
-                const books = await this.bookModel
-                    .find({ _id: { $in: bookIds }, status: 'published' })
-                    .populate('authorId', 'name')
-                    .populate('genres', 'name')
-                    .lean();
-
-                for (const book of books) {
-                    const bookId = book._id.toString();
-                    const score = bookScores.get(bookId) || 0;
-
-                    // Filter out very low scores (TEMPORARY: lowered for debugging)
-                    if (score < 0.3) continue;
-
-                    results.push({
-                        type: 'book',
-                        id: bookId,
-                        title: book.title,
-                        score,
-                        data: {
-                            slug: book.slug,
-                            author: (book.authorId as any)?.name || 'Unknown',
-                            genres: book.genres?.map((g: any) => g.name).join(', ') || '',
-                            description: book.description?.substring(0, 200) || '',
-                            coverUrl: book.coverUrl,
-                        },
-                        excerpt: book.description?.substring(0, 150) || '',
-                    });
-
-                    this.logger.debug(`🧠 Semantic BOOK: "${book.title}" (score: ${score.toFixed(3)})`);
+            for (const [id, score] of bookScores) {
+                if (score >= 0.5) {
+                    results.push({ id, score });
                 }
             }
 
@@ -312,45 +319,204 @@ export class SearchService {
         return results;
     }
 
-    /**
-     * ============================================
-     * MERGE & DEDUPLICATE
-     * ============================================
-     * Merge fuzzy + semantic results
-     * Keep highest score for duplicates
-     */
-    private mergeAndDeduplicate(fuzzyResults: SearchResult[], semanticResults: SearchResult[]): SearchResult[] {
-        const resultMap = new Map<string, SearchResult>();
+    /** DESCRIPTION KEYWORD SEARCH - Search keywords in book descriptions */
+    private async descriptionKeywordSearch(query: string): Promise<Array<{ id: string; score: number }>> {
+        const results: Array<{ id: string; score: number }> = [];
 
-        // Add fuzzy results first (higher priority)
-        for (const result of fuzzyResults) {
-            const key = `${result.type}-${result.id}`;
-            resultMap.set(key, result);
-        }
+        try {
+            // Extract significant words from query
+            // - At least 4 chars for common words
+            // - At least 3 chars for capitalized words (proper nouns like "Ron", "Harry")
+            const words = query
+                .trim()
+                .split(/\s+/)
+                .filter(w => {
+                    if (this.isStopWord(w)) return false;
+                    // Keep proper nouns (capitalized) with 3+ chars
+                    if (w[0] === w[0].toUpperCase() && w.length >= 3) return true;
+                    // Keep common words with 4+ chars
+                    return w.length >= 4;
+                });
 
-        // Merge semantic results
-        for (const result of semanticResults) {
-            const key = `${result.type}-${result.id}`;
-            const existing = resultMap.get(key);
+            if (words.length === 0) return results;
 
-            if (!existing) {
-                // New result
-                resultMap.set(key, result);
-            } else if (result.score > existing.score) {
-                // Update if semantic score is higher (rare)
-                this.logger.debug(`🔄 Updating ${key}: ${existing.score.toFixed(2)} → ${result.score.toFixed(2)}`);
-                resultMap.set(key, result);
+            // Build regex pattern with word boundaries
+            const regexPattern = words.map(w => `\\b${w}\\b`).join('|');
+            const regex = new RegExp(regexPattern, 'i');
+
+            // Search in description field
+            const books = await this.bookModel
+                .find({
+                    description: { $regex: regex },
+                    status: 'published',
+                    isDeleted: false,
+                })
+                .select('_id title description')
+                .limit(10)
+                .lean();
+
+            for (const book of books) {
+                const description = book.description?.toLowerCase() || '';
+
+                // Calculate score based on how many words match
+                const matchedWords = words.filter(word =>
+                    description.includes(word.toLowerCase())
+                );
+
+                if (matchedWords.length > 0) {
+                    // Count proper nouns matched
+                    const properNounMatches = matchedWords.filter(w => w[0] === w[0].toUpperCase());
+
+                    // Count frequency of matches (how many times keywords appear)
+                    let frequencyBonus = 0;
+                    for (const word of matchedWords) {
+                        const count = (description.match(new RegExp(word.toLowerCase(), 'gi')) || []).length;
+                        frequencyBonus += (count - 1) * 0.2; // +0.2 for each additional occurrence
+                    }
+
+                    // Base score: 8.0
+                    // +2.0 per proper noun match (boosted from 1.0)
+                    // +0.5 per common word match
+                    // +1.0 bonus if matching multiple proper nouns (like "Ron Weasley")
+                    const multipleProperNounBonus = properNounMatches.length >= 2 ? 1.0 : 0;
+                    const score = 8.0
+                        + (properNounMatches.length * 2.0)
+                        + ((matchedWords.length - properNounMatches.length) * 0.5)
+                        + multipleProperNounBonus
+                        + Math.min(frequencyBonus, 2.0); // Cap frequency bonus at 2.0
+
+                    results.push({ id: book._id.toString(), score });
+                }
             }
+        } catch (error) {
+            this.logger.error(`❌ Description keyword search error: ${error.message}`);
         }
 
-        return Array.from(resultMap.values());
+        return results;
     }
 
-    /**
-     * ============================================
-     * HELPER: Normalize text
-     * ============================================
-     */
+    /** Check if a word is a stop word */
+    private isStopWord(word: string): boolean {
+        const stopWords = [
+            // Vietnamese common words
+            'của', 'và', 'là', 'có', 'một', 'với', 'này', 'đó', 'được', 'cho',
+            'trong', 'về', 'từ', 'như', 'không', 'những', 'các', 'khi', 'để', 'theo',
+            'cậu', 'bé', 'người', 'bạn', 'tên', 'kết', 'thân', 'nhau', 'rồi', 'thì',
+            'mà', 'nên', 'vì', 'còn', 'đã', 'sẽ', 'đang', 'cũng', 'rất', 'lại',
+            'ra', 'vào', 'lên', 'xuống', 'đi', 'đến', 'tới', 'chỉ', 'thôi', 'nữa',
+            'hay', 'hoặc', 'nhưng', 'tuy', 'nếu', 'thế', 'sao', 'gì', 'nào', 'đâu',
+            // English common words
+            'the', 'and', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'for',
+            'with', 'this', 'that', 'from', 'but', 'not', 'all', 'can', 'will', 'just'
+        ];
+        return stopWords.includes(word.toLowerCase());
+    }
+
+    /** ENRICH BOOKS WITH STATS */
+    private async enrichBooksWithStats(
+        books: any[],
+        scoreMap: Map<string, { score: number; matchType: string }>
+    ): Promise<SearchResultBook[]> {
+        const bookIds = books.map(b => b._id);
+
+        // Get chapter counts
+        const chapterCounts = await this.chapterModel.aggregate([
+            { $match: { bookId: { $in: bookIds } } },
+            { $group: { _id: '$bookId', count: { $sum: 1 } } }
+        ]);
+        const chapterMap = new Map(chapterCounts.map(c => [c._id.toString(), c.count]));
+
+        // Get review stats
+        const reviewStats = await this.reviewModel.aggregate([
+            { $match: { bookId: { $in: bookIds } } },
+            {
+                $group: {
+                    _id: '$bookId',
+                    avgRating: { $avg: '$rating' },
+                    reviewCount: { $sum: 1 }
+                }
+            }
+        ]);
+        const reviewMap = new Map(reviewStats.map(r => [
+            r._id.toString(),
+            { rating: Math.round((r.avgRating || 0) * 10) / 10, reviews: r.reviewCount }
+        ]));
+
+        return books.map(book => {
+            const bookId = book._id.toString();
+            const scoreData = scoreMap.get(bookId) || { score: 0, matchType: 'unknown' };
+            const reviewData = reviewMap.get(bookId) || { rating: 0, reviews: 0 };
+
+            return {
+                id: bookId,
+                _id: bookId,
+                title: book.title,
+                slug: book.slug,
+                description: book.description,
+                coverUrl: book.coverUrl,
+                status: book.status,
+                tags: book.tags,
+                views: book.views || 0,
+                likes: book.likes || 0,
+                createdAt: book.createdAt,
+                updatedAt: book.updatedAt,
+                authorId: book.authorId ? {
+                    _id: book.authorId._id?.toString() || '',
+                    name: book.authorId.name || 'Unknown',
+                    avatar: book.authorId.avatar,
+                } : { _id: '', name: 'Unknown', avatar: undefined },
+                genres: (book.genres || []).map((g: any) => ({
+                    _id: g._id?.toString() || '',
+                    name: g.name,
+                    slug: g.slug,
+                })),
+                stats: {
+                    chapters: chapterMap.get(bookId) || 0,
+                    views: book.views || 0,
+                    likes: book.likes || 0,
+                    rating: reviewData.rating,
+                    reviews: reviewData.reviews,
+                },
+                score: scoreData.score,
+                matchType: scoreData.matchType,
+            };
+        });
+    }
+
+    /** SORT BOOKS */
+    private sortBooks(books: SearchResultBook[], sortBy: string, order: string): SearchResultBook[] {
+        const multiplier = order === 'asc' ? 1 : -1;
+
+        return [...books].sort((a, b) => {
+            switch (sortBy) {
+                case 'views':
+                    return (a.views - b.views) * multiplier;
+                case 'likes':
+                    return (a.likes - b.likes) * multiplier;
+                case 'rating':
+                    return (a.stats.rating - b.stats.rating) * multiplier;
+                case 'popular':
+                    return (a.stats.reviews - b.stats.reviews) * multiplier;
+                case 'createdAt':
+                    return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * multiplier;
+                case 'updatedAt':
+                    return (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * multiplier;
+                case 'score':
+                default:
+                    return (a.score - b.score) * multiplier;
+            }
+        });
+    }
+
+    /** Empty result helper */
+    private emptyResult(page: number, limit: number): PaginatedSearchResult {
+        return {
+            data: [],
+            metaData: { page, limit, total: 0, totalPages: 0 },
+        };
+    }
+
+    /** Normalize text for comparison */
     private normalizeText(text: string): string {
         if (!text) return '';
         return text
@@ -360,12 +526,7 @@ export class SearchService {
             .trim();
     }
 
-    /**
-     * ============================================
-     * HELPER: Calculate text similarity
-     * ============================================
-     * Returns: 1.0 (exact), 0.8 (starts with), 0.6 (contains), 0.0 (no match)
-     */
+    /** Calculate text similarity */
     private calculateTextSimilarity(query: string, targetText: string): number {
         if (!query || !targetText) return 0.0;
 
@@ -373,12 +534,12 @@ export class SearchService {
         const normalizedTarget = this.normalizeText(targetText);
 
         if (normalizedTarget === normalizedQuery) {
-            return 1.0; // Exact match
+            return 1.0;
         } else if (normalizedTarget.startsWith(normalizedQuery)) {
-            return 0.8; // Starts with
+            return 0.8;
         } else if (normalizedTarget.includes(normalizedQuery)) {
-            return 0.6; // Contains
+            return 0.6;
         }
-        return 0.0; // No match
+        return 0.0;
     }
 }

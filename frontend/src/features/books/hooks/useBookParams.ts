@@ -12,7 +12,9 @@ export const useBookParams = () => {
     const genres = useMemo(() => searchParams.get('genres')?.split(',').filter(Boolean) || [], [searchParams]);
     const tags = useMemo(() => searchParams.get('tags')?.split(',').filter(Boolean) || [], [searchParams]);
     const searchQuery = searchParams.get('search') || '';
-    const sortBy = (searchParams.get('sortBy') as BookOrderField) || 'createdAt';
+    // When searching, default to 'score' for relevance; when browsing, default to 'createdAt'
+    const defaultSort = searchQuery ? 'score' : 'createdAt';
+    const sortBy = (searchParams.get('sortBy') as BookOrderField) || defaultSort;
     const order = (searchParams.get('order') as 'asc' | 'desc') || 'desc';
 
     const updateParams = useCallback((updates: Record<string, string | null>) => {

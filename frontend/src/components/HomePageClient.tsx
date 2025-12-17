@@ -14,7 +14,6 @@ import { MobileReadingSection } from './book/MobileReadingSection';
 import { ReadingSidebar } from './book/ReadingSidebar';
 import { RecommendedForYouSection } from './book/RecommendedForYouSection';
 import { TabNavigation } from './book/TabNavigation';
-import { ChatWidget } from './ChatWidget';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabType>('trending');
@@ -54,7 +53,6 @@ export default function HomePage() {
       <div className="relative z-10">
         <main>
           <div className="pb-8">
-            <ChatWidget />
             <BannerSlider books={featuredBooks} />
           </div>
 

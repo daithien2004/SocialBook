@@ -15,7 +15,6 @@ import type { Session } from 'next-auth';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { NotificationBell } from '@/src/components/notification/NotificationBell';
-import { ChatWidget } from './ChatWidget';
 
 type HeaderClientProps = {
   session: Session | null;

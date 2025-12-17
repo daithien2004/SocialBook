@@ -121,7 +121,3 @@ export const BFF_GEMINI_ENDPOINTS = {
 export const BFF_RECOMMENDATIONS_ENDPOINTS = {
   getPersonalized: '/recommendations/personalized',
 };
-
-export const BFF_CHROMA_ENDPOINTS = {
-  askChatbot: 'chat/ask',
-};
