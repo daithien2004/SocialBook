@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
       { params: { page, limit, status, search } },
     );
 
-    // Backend may return { data: { books: [], pagination: {} } } or { data: { data: [], meta: {} } }
+    // Backend returns { message, data: [], meta: {} } keys
     const books = response.data?.books || response.data?.data || [];
-    const pagination = response.data?.pagination || response.data?.meta || {};
+    const pagination = response.data?.pagination || response.data?.meta || response.data?.metaData || {};
 
     return NextResponse.json({
       success: true,
