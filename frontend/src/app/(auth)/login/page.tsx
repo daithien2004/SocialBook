@@ -105,9 +105,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Image */}
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        {/* Background ảnh */}
         <Image
           src="https://res.cloudinary.com/dajg703uq/image/upload/v1763780207/snapedit_1763780184287_v11fnr.jpg"
           alt="Login background"
@@ -115,9 +113,7 @@ export default function LoginPage() {
           className="object-cover"
           priority
         />
-        {/* Nội dung sách – đẹp như Goodreads + Wattpad */}
         <div className="absolute bottom-0 left-0 right-0 py-10 text-white">
-          {/* Thông tin sách */}
           <div className="max-w-2xl mx-auto">
             <div className="ml-40">
               <h1 className="text-5xl md:text-3xl font-bold leading-tight">
@@ -131,13 +127,10 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-8 transform transition-all duration-300 hover:shadow-2xl">
           <div className="text-center">
-            <h2 className="text-3xl font-serif font-bold text-indigo-900">
-              Đăng Nhập
-            </h2>
+            <h2 className="text-3xl font-bold text-black">Đăng Nhập</h2>
             <p className="text-sm text-gray-500 mt-2">
               Chào mừng bạn trở lại với thư viện sách trực tuyến
             </p>
@@ -150,7 +143,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Google Sign In Button */}
             <button
               type="button"
               onClick={handleGoogleSignin}
@@ -188,23 +180,6 @@ export default function LoginPage() {
               )}
             </button>
 
-            {/* Apple Sign In Button */}
-            <button
-              type="button"
-              disabled
-              className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 opacity-50 cursor-not-allowed shadow-sm"
-            >
-              <svg
-                className="w-5 h-5 mr-2"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-              </svg>
-              Đăng nhập bằng Apple
-            </button>
-
-            {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200" />
@@ -216,7 +191,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Email Input - Label luôn ở trên */}
             <div className="relative">
               <label
                 htmlFor="email"
@@ -241,7 +215,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password Input - Label luôn ở trên */}
             <div className="relative">
               <label
                 htmlFor="password"
@@ -307,7 +280,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Remember me & Forgot Password */}
             <div className="flex items-center justify-between">
               <Link
                 href="/forgot-password"
@@ -317,7 +289,6 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isAnyLoading}
@@ -333,7 +304,6 @@ export default function LoginPage() {
               )}
             </button>
 
-            {/* Sign Up Link */}
             <div className="text-center text-sm mt-4">
               <span className="text-gray-600">Chưa có tài khoản? </span>
               <Link

@@ -25,7 +25,7 @@ import { LoginDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Public()
   @Post('google/login')
@@ -48,13 +48,11 @@ export class AuthController {
   async login(@Request() req: any, @Body() dto: LoginDto) {
     const result = await this.authService.login(req.user);
 
-    // Trả về cả accessToken và refreshToken
-    // BFF sẽ xử lý việc set cookies
     return {
       message: 'Login successful',
       data: {
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken, // ← Thêm này
+        refreshToken: result.refreshToken,
         user: result.user,
       },
     };
@@ -120,7 +118,6 @@ export class AuthController {
     }
 
     try {
-      // Validate refresh token và lấy userId
       const payload = await this.authService.validateRefreshToken(refreshToken);
 
       const { accessToken, refreshToken: newRefreshToken } =
@@ -130,7 +127,7 @@ export class AuthController {
         message: 'Refresh successful',
         data: {
           accessToken,
-          refreshToken: newRefreshToken, // ← Trả về refresh token mới
+          refreshToken: newRefreshToken,
         },
       };
     } catch (error) {

@@ -24,7 +24,7 @@ export class AuthService {
     private configService: ConfigService,
     private otpService: OtpService,
     @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
-  ) {}
+  ) { }
 
   async login(user: any) {
     // VALIDATION
@@ -197,6 +197,12 @@ export class AuthService {
     const existingUser = await this.usersService.findByEmail(email);
     if (!existingUser) {
       throw new BadRequestException('User not found');
+    }
+
+    if (!existingUser.password) {
+      throw new BadRequestException(
+        'Tài khoản này đăng nhập bằng bên thứ ba nên không thể đổi mật khẩu'
+      );
     }
     // RETURN
     return this.otpService.generateOTP(email);

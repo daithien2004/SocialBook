@@ -15,7 +15,6 @@ import type { Session } from 'next-auth';
 import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { NotificationBell } from '@/src/components/notification/NotificationBell';
-import { ChatWidget } from './ChatWidget';
 
 type HeaderClientProps = {
   session: Session | null;
@@ -24,7 +23,6 @@ type HeaderClientProps = {
 export function HeaderClient({ session }: HeaderClientProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // theme
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -37,7 +35,6 @@ export function HeaderClient({ session }: HeaderClientProps) {
   const handleLogout = async () => {
     await signOut({ redirect: false });
     router.push('/login');
-    router.refresh();
   };
 
   const goTo = (path: string) => {
@@ -56,7 +53,6 @@ export function HeaderClient({ session }: HeaderClientProps) {
     <header className="fixed top-0 z-50 w-full h-16 bg-white/80 dark:bg-black backdrop-blur-md border-b border-gray-200 dark:border-white/10 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 h-full">
         <div className="flex items-center justify-between h-full">
-          {/* Logo */}
           <div
             className="flex items-center gap-3 group cursor-pointer"
             onClick={() => router.push('/')}
@@ -68,7 +64,6 @@ export function HeaderClient({ session }: HeaderClientProps) {
             </h1>
           </div>
 
-          {/* Nav */}
           <nav className="hidden md:flex items-center gap-6">
             <button
               onClick={() => router.push('/books')}
@@ -93,16 +88,12 @@ export function HeaderClient({ session }: HeaderClientProps) {
               <Library className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
               Thư viện
             </button>
-
-            {/* ĐÃ BỎ ThemeToggle ở đây */}
           </nav>
 
-          {/* Action */}
           <div className="flex items-center gap-3">
             {isAuthenticated && userId ? (
               <>
                 <NotificationBell session={session} />
-                {/* Avatar + Dropdown */}
                 <div className="relative inline-flex items-center">
                   <button
                     onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -147,7 +138,6 @@ export function HeaderClient({ session }: HeaderClientProps) {
                           Ngôn ngữ: Tiếng Việt
                         </button>
 
-                        {/* Chủ đề */}
                         <button
                           onClick={toggleTheme}
                           className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
