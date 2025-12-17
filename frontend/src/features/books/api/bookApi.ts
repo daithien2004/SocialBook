@@ -1,8 +1,8 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_BOOKS_ENDPOINTS } from '@/src/constants/client-endpoints';
 import { AdminBooksData, Book, BookForAdmin, BookStats, FiltersData, GetAdminBooksParams, GetBookParams, GetBooksParams, PaginatedData, UpdateBookParams } from '../types/book.interface';
 import { buildLikeBookInvalidationTags, buildListTags, buildUpdateBookInvalidationTags } from '../books.helpers';
+import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
 
 export const BOOK_TAGS = {
   BOOKS: 'Books',
@@ -21,7 +21,7 @@ export const booksApi = createApi({
     getBookBySlug: builder.query<Book, GetBookParams>({
       query: (data) => {
         return {
-          url: BFF_BOOKS_ENDPOINTS.getBySlug(data.bookSlug),
+          url: NESTJS_BOOKS_ENDPOINTS.getBookBySlug(data.bookSlug),
           method: 'GET',
         };
       },
@@ -31,7 +31,7 @@ export const booksApi = createApi({
     }),
     getBooks: builder.query<PaginatedData<Book>, GetBooksParams>({
       query: (params) => ({
-        url: BFF_BOOKS_ENDPOINTS.getAll,
+        url: NESTJS_BOOKS_ENDPOINTS.getBooks,
         method: 'GET',
         params: params,
       }),
@@ -41,14 +41,14 @@ export const booksApi = createApi({
 
     getFilters: builder.query<FiltersData, void>({
       query: () => ({
-        url: BFF_BOOKS_ENDPOINTS.getFilters,
+        url: NESTJS_BOOKS_ENDPOINTS.getFilters,
         method: 'GET',
       }),
     }),
 
     createBook: builder.mutation<Book, FormData>({
       query: (formData) => ({
-        url: BFF_BOOKS_ENDPOINTS.createBook,
+        url: NESTJS_BOOKS_ENDPOINTS.createBook,
         method: 'POST',
         body: formData,
       }),
@@ -64,7 +64,7 @@ export const booksApi = createApi({
       GetAdminBooksParams
     >({
       query: (params) => ({
-        url: BFF_BOOKS_ENDPOINTS.getAllForAdmin,
+        url: NESTJS_BOOKS_ENDPOINTS.getAllBookForAdmin,
         method: 'GET',
         params,
       }),
@@ -74,7 +74,7 @@ export const booksApi = createApi({
 
     getBookById: builder.query<BookForAdmin, string>({
       query: (bookId) => ({
-        url: BFF_BOOKS_ENDPOINTS.getById(bookId),
+        url: NESTJS_BOOKS_ENDPOINTS.getBookById(bookId),
         method: 'GET',
       }),
       providesTags: (result, error, bookId) => [
@@ -84,7 +84,7 @@ export const booksApi = createApi({
 
     getBookStats: builder.query<BookStats, string>({
       query: (bookId) => ({
-        url: BFF_BOOKS_ENDPOINTS.getBookStats(bookId),
+        url: NESTJS_BOOKS_ENDPOINTS.getBookStats(bookId),
         method: 'GET',
       }),
       providesTags: (result, error, bookId) => [
@@ -97,7 +97,7 @@ export const booksApi = createApi({
       UpdateBookParams
     >({
       query: ({ bookId, formData }) => ({
-        url: BFF_BOOKS_ENDPOINTS.updateBook(bookId),
+        url: NESTJS_BOOKS_ENDPOINTS.updateBook(bookId),
         method: 'PUT',
         body: formData,
       }),
@@ -107,7 +107,7 @@ export const booksApi = createApi({
 
     deleteBook: builder.mutation<void, string>({
       query: (bookId) => ({
-        url: BFF_BOOKS_ENDPOINTS.deleteBook(bookId),
+        url: NESTJS_BOOKS_ENDPOINTS.deleteBook(bookId),
         method: 'DELETE',
       }),
       invalidatesTags: [
@@ -121,7 +121,7 @@ export const booksApi = createApi({
       string
     >({
       query: (bookId) => ({
-        url: BFF_BOOKS_ENDPOINTS.like(bookId),
+        url: NESTJS_BOOKS_ENDPOINTS.like(bookId),
         method: 'PATCH',
       }),
       invalidatesTags: (result, error, bookId) =>

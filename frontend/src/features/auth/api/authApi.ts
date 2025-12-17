@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_AUTH_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_AUTH_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { User } from 'next-auth';
 import { SignupRequest, VerifyOtpRequest, ForgotPasswordRequest, ResetPasswordRequest, ResendOtpRequest } from '../types/auth.type';
 
@@ -11,7 +11,7 @@ export const authApi = createApi({
   endpoints: (builder) => ({
     signup: builder.mutation<{ otp: string }, SignupRequest>({
       query: (data) => ({
-        url: BFF_AUTH_ENDPOINTS.signup,
+        url: NESTJS_AUTH_ENDPOINTS.signup,
         method: 'POST',
         body: data,
       }),
@@ -19,7 +19,7 @@ export const authApi = createApi({
 
     verifyOtp: builder.mutation<string, VerifyOtpRequest>({
       query: (data) => ({
-        url: BFF_AUTH_ENDPOINTS.verifyOtp,
+        url: NESTJS_AUTH_ENDPOINTS.verifyOtp,
         method: 'POST',
         body: data,
       }),
@@ -27,7 +27,7 @@ export const authApi = createApi({
 
     forgotPassword: builder.mutation<string, ForgotPasswordRequest>({
       query: (data) => ({
-        url: BFF_AUTH_ENDPOINTS.forgotPassword,
+        url: NESTJS_AUTH_ENDPOINTS.forgotPassword,
         method: 'POST',
         body: data,
       }),
@@ -35,7 +35,7 @@ export const authApi = createApi({
 
     resetPassword: builder.mutation<string, ResetPasswordRequest>({
       query: (data) => ({
-        url: BFF_AUTH_ENDPOINTS.resetPassword,
+        url: NESTJS_AUTH_ENDPOINTS.resetPassword,
         method: 'POST',
         body: data,
       }),
@@ -43,7 +43,7 @@ export const authApi = createApi({
 
     getProfile: builder.query<User, void>({
       query: () => ({
-        url: BFF_AUTH_ENDPOINTS.profile,
+        url: NESTJS_AUTH_ENDPOINTS.profile,
         method: 'GET',
       }),
       providesTags: ['User'],
@@ -51,7 +51,7 @@ export const authApi = createApi({
 
     resendOtp: builder.mutation<string, ResendOtpRequest>({
       query: (data) => ({
-        url: BFF_AUTH_ENDPOINTS.resendOtp,
+        url: NESTJS_AUTH_ENDPOINTS.resendOtp,
         method: 'POST',
         body: data,
       }),

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ChromaService } from './chroma.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
@@ -49,6 +49,16 @@ export class ChromaController {
         return {
             message: 'Collection stats retrieved',
             data: stats,
+        };
+    }
+
+    @Public()
+    @Post('chat/ask')
+    async askQuestion(@Body() body: { question: string }) {
+        const result = await this.chromaService.askChatbot(body.question);
+        return {
+            message: 'Question answered successfully',
+            data: result,
         };
     }
 }

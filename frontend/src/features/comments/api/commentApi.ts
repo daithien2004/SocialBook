@@ -1,9 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
 import {
-  BFF_COMMENTS_ENDPOINTS,
-  BFF_LIKES_ENDPOINTS,
-} from '@/src/constants/client-endpoints';
+  NESTJS_COMMENTS_ENDPOINTS,
+  NESTJS_LIKES_ENDPOINTS,
+} from '@/src/constants/server-endpoints';
 import { GetCommentsResponse, GetCommentsRequest, ResolveParentResponse, GetResolveParentRequest, PostCommentsResponse, PostCommentsRequest, PostToggleLikeResponse, PostToggleLikeRequest, CommentRequest } from '../types/comment.interface';
 
 export const commentApi = createApi({
@@ -14,7 +14,7 @@ export const commentApi = createApi({
     getCommentsByTarget: builder.query<GetCommentsResponse, GetCommentsRequest>(
       {
         query: ({ targetId, parentId, cursor, limit }) => ({
-          url: BFF_COMMENTS_ENDPOINTS.getCommentsByTarget,
+          url: NESTJS_COMMENTS_ENDPOINTS.getCommentsByTarget,
           method: 'GET',
           params: { targetId, parentId, cursor, limit },
         }),
@@ -42,7 +42,7 @@ export const commentApi = createApi({
       GetResolveParentRequest
     >({
       query: ({ targetId, parentId, targetType }) => ({
-        url: BFF_COMMENTS_ENDPOINTS.getResolveParent,
+        url: NESTJS_COMMENTS_ENDPOINTS.getResolveParent,
         method: 'GET',
         params: { targetId, parentId, targetType },
       }),
@@ -50,7 +50,7 @@ export const commentApi = createApi({
 
     postCreate: builder.mutation<PostCommentsResponse, PostCommentsRequest>({
       query: (data) => ({
-        url: BFF_COMMENTS_ENDPOINTS.postCreateComment,
+        url: NESTJS_COMMENTS_ENDPOINTS.postCreate,
         method: 'POST',
         body: data,
       }),
@@ -71,7 +71,7 @@ export const commentApi = createApi({
       PostToggleLikeRequest
     >({
       query: (data) => ({
-        url: BFF_LIKES_ENDPOINTS.postToggleLike,
+        url: NESTJS_LIKES_ENDPOINTS.postToggleLike,
         method: 'POST',
         body: data,
       }),
@@ -85,7 +85,7 @@ export const commentApi = createApi({
 
     getCommentCount: builder.query<{ count: number }, CommentRequest>({
       query: ({ targetId, targetType }) => ({
-        url: BFF_COMMENTS_ENDPOINTS.getCount,
+        url: NESTJS_COMMENTS_ENDPOINTS.getCount,
         method: "GET",
         params: { targetId, targetType },
       }),

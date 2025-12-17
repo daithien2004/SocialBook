@@ -38,6 +38,22 @@ export class UsersController {
     };
   }
 
+  @Get('admin')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async findAllAdmin(
+    @Query() query: any,
+    @Query('current') current: string,
+    @Query('pageSize') pageSize: string,
+  ) {
+    const result = await this.usersService.findAll(query, +current, +pageSize);
+    return {
+      message: 'Get users successfully',
+      ...result,
+    };
+  }
+
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)

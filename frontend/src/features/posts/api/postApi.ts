@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { CreatePostRequest, DeleteImageRequest, PaginatedPostsResponse, PaginationParams, PaginationParamsByUser, Post, UpdatePostRequest } from '../../posts/types/post.interface';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_POSTS_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_POSTS_ENDPOINTS } from '@/src/constants/server-endpoints';
 
 
 export const postApi = createApi({
@@ -11,7 +11,7 @@ export const postApi = createApi({
   endpoints: (builder) => ({
     getPosts: builder.query<PaginatedPostsResponse, PaginationParams>({
       query: ({ page = 1, limit = 10 } = {}) => ({
-        url: BFF_POSTS_ENDPOINTS.getAll,
+        url: NESTJS_POSTS_ENDPOINTS.getAll,
         method: 'GET',
         params: { page, limit },
       }),
@@ -29,7 +29,7 @@ export const postApi = createApi({
 
     getPostById: builder.query<Post, string>({
       query: (id) => ({
-        url: BFF_POSTS_ENDPOINTS.getOne(id),
+        url: NESTJS_POSTS_ENDPOINTS.getOne(id),
         method: 'GET',
       }),
       providesTags: (result, error, id) => [{ type: 'PostDetail', id }],
@@ -37,7 +37,7 @@ export const postApi = createApi({
 
     getPostsByUser: builder.query<PaginatedPostsResponse, PaginationParamsByUser>({
       query: ({ page = 1, limit = 10, userId }) => ({
-        url: BFF_POSTS_ENDPOINTS.getAllByUser,
+        url: NESTJS_POSTS_ENDPOINTS.getAllByUsers,
         method: 'GET',
         params: { page, limit, userId },
       }),
@@ -66,7 +66,7 @@ export const postApi = createApi({
         }
 
         return {
-          url: BFF_POSTS_ENDPOINTS.create,
+          url: NESTJS_POSTS_ENDPOINTS.create,
           method: 'POST',
           body: formData,
         };
@@ -94,7 +94,7 @@ export const postApi = createApi({
           }
 
           return {
-            url: BFF_POSTS_ENDPOINTS.update(id),
+            url: NESTJS_POSTS_ENDPOINTS.update(id),
             method: 'PATCH',
             body: formData,
           };
@@ -108,7 +108,7 @@ export const postApi = createApi({
 
     deletePost: builder.mutation<{ message: string; id: string }, string>({
       query: (id) => ({
-        url: BFF_POSTS_ENDPOINTS.delete(id),
+        url: NESTJS_POSTS_ENDPOINTS.delete(id),
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [
@@ -119,7 +119,7 @@ export const postApi = createApi({
 
     deletePostPermanent: builder.mutation<{ message: string }, string>({
       query: (id) => ({
-        url: BFF_POSTS_ENDPOINTS.deletePermanent(id),
+        url: NESTJS_POSTS_ENDPOINTS.deletePermanent(id),
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [
@@ -133,7 +133,7 @@ export const postApi = createApi({
       { id: string; data: DeleteImageRequest }
     >({
       query: ({ id, data }) => ({
-        url: BFF_POSTS_ENDPOINTS.deleteImage(id),
+        url: NESTJS_POSTS_ENDPOINTS.deleteImage(id),
         method: 'DELETE',
         body: data,
       }),

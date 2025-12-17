@@ -342,17 +342,28 @@ export default function ChapterManagementPage() {
           return;
         }
 
+        // Skip chapters with no content
+        if (paragraphs.length === 0) {
+          console.warn(`Skipping chapter "${chapter.title}" because it has no content`);
+          failCount++;
+          continue;
+        }
+
         await createChapter({
-          bookSlug: book.slug,
+          bookSlug: book.slug, // Uses slug from UseParams, but ensure it matches API expectation (seems to use slug in URL)
           data: {
-            title: chapter.title,
+            title: chapter.title || `Chapter ${successCount + 1}`,
             paragraphs: paragraphs,
           },
         }).unwrap();
         successCount++;
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to import chapter ${chapter.title}:`, error);
         failCount++;
+        // Show specific error for the first failure
+        if (failCount === 1) {
+          toast.error(`Import failed for "${chapter.title}": ${error?.data?.message || 'Invalid data'}`);
+        }
       }
     }
 

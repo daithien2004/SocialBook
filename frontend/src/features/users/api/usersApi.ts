@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_USERS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { UpdateUserOverviewRequest, UserListResponse, UserOverviewResponse } from '../types/user.types';
 
 export const usersApi = createApi({
@@ -9,14 +10,14 @@ export const usersApi = createApi({
     endpoints: (builder) => ({
         getUsers: builder.query<UserListResponse, string>({
             query: (query) => ({
-                url: `/admin/users?${query}`,
+                url: `${NESTJS_USERS_ENDPOINTS.getUsersAdmin}?${query}`,
                 method: 'GET',
             }),
             providesTags: ['Users'],
         }),
         banUser: builder.mutation<void, string>({
             query: (id) => ({
-                url: `/admin/users/${id}/ban`,
+                url: NESTJS_USERS_ENDPOINTS.banUser(id),
                 method: 'PATCH',
             }),
             invalidatesTags: ['Users'],

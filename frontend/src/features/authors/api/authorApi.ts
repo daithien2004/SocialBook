@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_AUTHORS_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_AUTHORS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import {
   Author,
   AuthorsListResponse,
@@ -18,7 +18,7 @@ export const authorApi = createApi({
       { page?: number; pageSize?: number; name?: string }
     >({
       query: (params) => ({
-        url: BFF_AUTHORS_ENDPOINTS.getAll,
+        url: NESTJS_AUTHORS_ENDPOINTS.getAll,
         method: 'GET',
         params: {
           current: params.page || 1,
@@ -35,14 +35,14 @@ export const authorApi = createApi({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Author' as const, id })),
-              { type: 'Authors', id: 'LIST' },
-            ]
+            ...result.data.map(({ id }) => ({ type: 'Author' as const, id })),
+            { type: 'Authors', id: 'LIST' },
+          ]
           : [{ type: 'Authors', id: 'LIST' }],
     }),
     getAuthor: builder.query<Author, string>({
       query: (id) => ({
-        url: BFF_AUTHORS_ENDPOINTS.getById(id),
+        url: NESTJS_AUTHORS_ENDPOINTS.getById(id),
         method: 'GET',
       }),
       transformResponse: (response: any) => {
@@ -52,7 +52,7 @@ export const authorApi = createApi({
     }),
     createAuthor: builder.mutation<Author, CreateAuthorRequest>({
       query: (body) => ({
-        url: BFF_AUTHORS_ENDPOINTS.create,
+        url: NESTJS_AUTHORS_ENDPOINTS.create,
         method: 'POST',
         body,
       }),
@@ -61,7 +61,7 @@ export const authorApi = createApi({
     }),
     updateAuthor: builder.mutation<Author, UpdateAuthorRequest>({
       query: ({ id, data }) => ({
-        url: BFF_AUTHORS_ENDPOINTS.update(id),
+        url: NESTJS_AUTHORS_ENDPOINTS.update(id),
         method: 'PUT',
         body: data,
       }),
@@ -73,7 +73,7 @@ export const authorApi = createApi({
     }),
     deleteAuthor: builder.mutation<void, string>({
       query: (id) => ({
-        url: BFF_AUTHORS_ENDPOINTS.delete(id),
+        url: NESTJS_AUTHORS_ENDPOINTS.delete(id),
         method: 'DELETE',
       }),
       invalidatesTags: [{ type: 'Authors', id: 'LIST' }],

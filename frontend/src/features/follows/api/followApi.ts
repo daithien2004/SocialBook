@@ -1,5 +1,5 @@
-import {createApi} from "@reduxjs/toolkit/query/react";
-import {axiosBaseQuery} from "@/src/lib/client-api";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { axiosBaseQuery } from "@/src/lib/nestjs-client-api";
 
 export interface FollowStateResponse {
     isOwner: boolean;

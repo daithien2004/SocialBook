@@ -11,12 +11,15 @@ import { vi } from 'date-fns/locale';
 import { Search, Plus, Eye, Heart, BookOpen, Filter, ChevronLeft, ChevronRight, Loader2, Edit, Trash2, BookText } from 'lucide-react';
 import { BookForAdmin, BackendPagination } from '@/src/features/books/types/book.interface';
 
+import { useDebounce } from '@/src/hooks/useDebounce';
+
 type BookStatus = 'draft' | 'published' | 'completed';
 type StatusFilter = BookStatus | 'all';
 
 export default function AdminBooksPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   // Delete modal state
@@ -26,7 +29,7 @@ export default function AdminBooksPage() {
   const { data, isLoading, isFetching, refetch } = useGetAdminBooksQuery({
     page,
     limit: 15,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
   }, {
     refetchOnMountOrArgChange: true,

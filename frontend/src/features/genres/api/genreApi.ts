@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_GENRES_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_GENRES_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { Genre, GenresListResponse, CreateGenreRequest, UpdateGenreRequest } from '../types/genre.interface';
 
 export const genreApi = createApi({
@@ -10,7 +10,7 @@ export const genreApi = createApi({
     endpoints: (builder) => ({
         getGenres: builder.query<GenresListResponse, { page?: number; pageSize?: number; name?: string }>({
             query: (params) => ({
-                url: BFF_GENRES_ENDPOINTS.getAll,
+                url: NESTJS_GENRES_ENDPOINTS.getAll,
                 method: 'GET',
                 params: {
                     current: params.page || 1,
@@ -34,7 +34,7 @@ export const genreApi = createApi({
         }),
         getGenre: builder.query<Genre, string>({
             query: (id) => ({
-                url: BFF_GENRES_ENDPOINTS.getById(id),
+                url: NESTJS_GENRES_ENDPOINTS.getById(id),
                 method: 'GET',
             }),
             transformResponse: (response: any) => {
@@ -44,7 +44,7 @@ export const genreApi = createApi({
         }),
         createGenre: builder.mutation<Genre, CreateGenreRequest>({
             query: (body) => ({
-                url: BFF_GENRES_ENDPOINTS.create,
+                url: NESTJS_GENRES_ENDPOINTS.create,
                 method: 'POST',
                 body,
             }),
@@ -53,7 +53,7 @@ export const genreApi = createApi({
         }),
         updateGenre: builder.mutation<Genre, UpdateGenreRequest>({
             query: ({ id, data }) => ({
-                url: BFF_GENRES_ENDPOINTS.update(id),
+                url: NESTJS_GENRES_ENDPOINTS.update(id),
                 method: 'PUT',
                 body: data,
             }),
@@ -65,7 +65,7 @@ export const genreApi = createApi({
         }),
         deleteGenre: builder.mutation<void, string>({
             query: (id) => ({
-                url: BFF_GENRES_ENDPOINTS.delete(id),
+                url: NESTJS_GENRES_ENDPOINTS.delete(id),
                 method: 'DELETE',
             }),
             invalidatesTags: [{ type: 'Genres', id: 'LIST' }],

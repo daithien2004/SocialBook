@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/client-api';
-import { BFF_RECOMMENDATIONS_ENDPOINTS } from '@/src/constants/client-endpoints';
+import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_RECOMMENDATIONS_ENDPOINTS } from '@/src/constants/server-endpoints';
 import { GetRecommendationsRequest, RecommendationsResponse } from '../types/recommendation.interface';
 
 export const recommendationsApi = createApi({
@@ -13,7 +13,7 @@ export const recommendationsApi = createApi({
       GetRecommendationsRequest
     >({
       query: (params) => ({
-        url: BFF_RECOMMENDATIONS_ENDPOINTS.getPersonalized,
+        url: NESTJS_RECOMMENDATIONS_ENDPOINTS.getPersonalized,
         method: 'GET',
         params: {
           page: params?.page || 1,

@@ -10,14 +10,17 @@ import { Author } from '@/src/features/authors/types/author.interface';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
+import { useDebounce } from '@/src/hooks/useDebounce';
+
 export default function AdminAuthorsPage() {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 500);
 
     const { data, isLoading, isFetching, refetch } = useGetAuthorsQuery({
         page,
         pageSize: 15,
-        name: search || undefined,
+        name: debouncedSearch || undefined,
     }, {
         refetchOnMountOrArgChange: true,
     });

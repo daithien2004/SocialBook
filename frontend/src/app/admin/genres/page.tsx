@@ -9,14 +9,17 @@ import { Search, Plus, Loader2, Edit, Trash2, ChevronLeft, ChevronRight, Tag } f
 import { Genre } from '@/src/features/genres/types/genre.interface';
 import { toast } from 'sonner';
 
+import { useDebounce } from '@/src/hooks/useDebounce';
+
 export default function AdminGenresPage() {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 500);
 
     const { data, isLoading, isFetching, refetch } = useGetGenresQuery({
         page,
         pageSize: 15,
-        name: search || undefined,
+        name: debouncedSearch || undefined,
     }, {
         refetchOnMountOrArgChange: true,
     });

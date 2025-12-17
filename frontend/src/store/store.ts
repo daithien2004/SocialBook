@@ -29,6 +29,7 @@ import {
   REGISTER,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import { chatBotApi } from '../features/chatbot/api/chatBotApi';
 
 const recommendationsPersistConfig = {
   key: 'recommendations',
@@ -61,6 +62,7 @@ export const store = configureStore({
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [geminiApi.reducerPath]: geminiApi.reducer,
     [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
+    [chatBotApi.reducerPath]: chatBotApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -85,7 +87,8 @@ export const store = configureStore({
       .concat(analyticsApi.middleware)
       .concat(likeApi.middleware)
       .concat(geminiApi.middleware)
-      .concat(recommendationsApi.middleware),
+      .concat(recommendationsApi.middleware)
+      .concat(chatBotApi.middleware),
 });
 
 setupListeners(store.dispatch);

@@ -2,14 +2,20 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
 import { toast } from 'sonner';
+import { getSession } from 'next-auth/react';
 
 const clientApi = axios.create({
-  baseURL: '/api',
+  baseURL: process.env.NEXT_PUBLIC_NEST_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
 });
 
 clientApi.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    const session = await getSession();
+    if (session?.accessToken) {
+      config.headers.Authorization = `Bearer ${session.accessToken}`;
+    }
+
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
@@ -18,7 +24,7 @@ clientApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-export const axiosNextJsBaseQuery =
+export const axiosBaseQuery =
   (): BaseQueryFn<
     {
       url: string;

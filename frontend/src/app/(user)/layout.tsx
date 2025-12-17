@@ -1,5 +1,6 @@
 import { Header } from '@/src/components/header';
 import { ReactNode } from 'react';
+import { ChatWidget } from '@/src/components/ChatWidget';
 
 export default async function ClientLayout({
   children,
@@ -22,6 +23,8 @@ export default async function ClientLayout({
         <div className="relative z-10">
           <Header />
           <main className="pt-16 min-h-screen">{children}</main>
+
+          <ChatWidget />
         </div>
       </div>
     </>
