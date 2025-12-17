@@ -18,7 +18,6 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { likeApi } from '@/src/features/likes/api/likeApi';
 import { geminiApi } from '../features/gemini/api/geminiApi';
 import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
-import { chatBotApi } from '../features/chatbot/api/chatbotApi';
 import {
   persistStore,
   persistReducer,
@@ -62,7 +61,6 @@ export const store = configureStore({
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [geminiApi.reducerPath]: geminiApi.reducer,
     [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
-    [chatBotApi.reducerPath]: chatBotApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -87,8 +85,7 @@ export const store = configureStore({
       .concat(analyticsApi.middleware)
       .concat(likeApi.middleware)
       .concat(geminiApi.middleware)
-      .concat(recommendationsApi.middleware)
-      .concat(chatBotApi.middleware),
+      .concat(recommendationsApi.middleware),
 });
 
 setupListeners(store.dispatch);

@@ -46,6 +46,7 @@ export const TABS = Object.values(TAB_CONFIG);
 export type TabType = typeof TAB_CONFIG[keyof typeof TAB_CONFIG]['id'];
 
 export const SORT_OPTIONS = [
+    { value: 'score', order: 'desc', label: 'Phù hợp nhất' },
     { value: 'createdAt', order: 'desc', label: 'Mới nhất' },
     { value: 'updatedAt', order: 'desc', label: 'Mới cập nhật' },
     { value: 'createdAt', order: 'asc', label: 'Cũ nhất' },

@@ -28,28 +28,21 @@ export class NotificationsService {
       type: dto.type,
       isRead: false,
       sentAt: new Date(),
-      actionUrl: dto.actionUrl,
-      meta: dto.meta
+      meta: dto.meta ?? {},
     });
-
     const payload = {
       id: (doc as any).id,
       userId: dto.userId,
-      title: doc.title,
-      message: doc.message,
-      type: doc.type,
+      title: dto.title,
+      message: dto.message,
+      type: dto.type,
       isRead: doc.isRead,
       createdAt: doc.createdAt,
-      actionUrl: doc.actionUrl,
-      meta: doc.meta,
+      meta: doc['meta'],
     };
-
     if (this.server) {
-      this.server
-        .to(this.userRoom(dto.userId))
-        .emit('notification:new', payload);
+      this.server.to(this.userRoom(dto.userId)).emit('notification:new', payload);
     }
-
     return payload;
   }
 

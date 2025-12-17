@@ -1,4 +1,14 @@
+/**
+ * Text Preprocessing Utilities for Book Indexing
+ * Handles Vietnamese text normalization and document creation for semantic search
+ */
 
+/**
+ * Normalize Vietnamese text for better search results
+ * - Preserves diacritics (important for Vietnamese)
+ * - Removes excessive whitespace
+ * - Handles special characters
+ */
 export function normalizeVietnameseText(text: string): string {
     if (!text) return '';
 
@@ -11,6 +21,10 @@ export function normalizeVietnameseText(text: string): string {
         .trim();
 }
 
+/**
+ * Extract keywords from text for metadata
+ * Simple extraction based on word frequency and length
+ */
 export function extractKeywords(text: string, limit: number = 10): string[] {
     if (!text) return [];
 
@@ -32,7 +46,10 @@ export function extractKeywords(text: string, limit: number = 10): string[] {
         .map(([word]) => word);
 }
 
-
+/**
+ * Create searchable document text for a book
+ * Combines all relevant fields for semantic search
+ */
 export function createBookDocument(book: any): string {
     const parts: string[] = [];
 
@@ -76,6 +93,14 @@ export function createBookDocument(book: any): string {
 
     return parts.join('\n');
 }
+
+/**
+ * ============================================
+ * CHUNKING STRATEGY FOR BETTER SEMANTIC SEARCH
+ * ============================================
+ * Split book description into smaller chunks for better matching
+ * Each chunk can be matched independently, improving recall
+ */
 
 /**
  * Chunk text into overlapping segments

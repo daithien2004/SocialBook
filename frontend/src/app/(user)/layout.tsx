@@ -1,5 +1,3 @@
-import Chat from '@/src/components/Chat';
-import { ChatWidget } from '@/src/components/ChatWidget';
 import { Header } from '@/src/components/header';
 import { ReactNode } from 'react';
 

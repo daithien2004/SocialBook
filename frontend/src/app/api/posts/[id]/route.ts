@@ -8,9 +8,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-      const { id } = params;
     const response = await serverApi.get(
-      NESTJS_POSTS_ENDPOINTS.getOne(id)
+      NESTJS_POSTS_ENDPOINTS.getOne(params.id)
     );
 
     return NextResponse.json(response.data);

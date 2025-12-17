@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BooksService } from './books.service';
+import { SearchService } from '../search/search.service';
 
 import { Public } from '@/src/common/decorators/customize';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -24,14 +25,19 @@ import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/src/common/guards/roles.guard';
 
 import { CreateBookDto } from './dto/create-book.dto';
-import { Model } from 'mongoose';
-import { BookDocument } from './schemas/book.schema';
-import { GenreDocument } from '../genres/schemas/genre.schema';
 
 @Controller('books')
 export class BooksController {
-  constructor(private readonly booksService: BooksService) { }
+  constructor(
+    private readonly booksService: BooksService,
+    private readonly searchService: SearchService,
+  ) { }
 
+  /**
+   * GET /books - Public endpoint
+   * If search query is provided, uses new intelligent search
+   * Otherwise, uses old findAll for browsing
+   */
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -44,23 +50,29 @@ export class BooksController {
     @Query('sortBy') sortBy?: string,
     @Query('order') order?: string,
   ) {
-    const params = {
-      page: +page,
-      limit: +limit,
-      status: 'published',
-      search,
-      tags,
-      genres,
-      sortBy,
-      order,
+    // If search query provided, use new intelligent search
+    if (search && search.trim()) {
+      const result = await this.searchService.intelligentSearch({
+        query: search.trim(),
+        page: +page,
+        limit: +limit,
+        genres,
+        tags,
+        sortBy: sortBy || 'score',
+        order: order || 'desc',
+      });
+
+      return {
+        message: 'Search completed successfully',
+        data: result,
+      };
     }
 
-    console.log('Params:', params); 
+    // No search query - use traditional browsing with findAll
     const result = await this.booksService.findAll({
       page: +page,
       limit: +limit,
       status: 'published',
-      search,
       tags,
       genres,
       sortBy,
