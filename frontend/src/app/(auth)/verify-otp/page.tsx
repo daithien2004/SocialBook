@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Mail, CheckCircle, ArrowLeft } from 'lucide-react';
 import {
   useResendOtpMutation,
   useVerifyOtpMutation,
@@ -94,105 +95,135 @@ export default function VerifyOtpPage() {
     }
   };
 
+  const handleBackClick = () => {
+    router.push('/signup');
+  };
+
+  const handleLoginClick = () => {
+    router.push('/login');
+  };
+
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-10 text-center transform transition-all duration-500 scale-105">
-          <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-500 mb-6 shadow-xl">
-            <svg
-              className="h-12 w-12 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+                <CheckCircle className="w-12 h-12 text-green-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                Xác Minh Thành Công!
+              </h1>
+              <p className="text-gray-600 mb-8">
+                Chuyển đến trang đăng nhập trong giây lát...
+              </p>
+            </div>
           </div>
-          <h3 className="text-3xl font-bold text-gray-900 mb-3">
-            Xác Minh Thành Công!
-          </h3>
-          <p className="text-gray-600">
-            Chuyển đến trang đăng nhập trong giây lát...
-          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="w-full flex items-center justify-center px-6 py-12 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-10 space-y-8 transform transition-all hover:shadow-3xl">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900">Xác Minh Email</h2>
-            <p className="text-gray-600 mt-3">
-              Chúng tôi đã gửi mã{' '}
-              <strong className="text-blue-600">6 chữ số</strong> đến
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <button
+            onClick={handleBackClick}
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Quay lại
+          </button>
+
+          {/* Hiển thị lỗi */}
+          {errorMsg && (
+            <div className="rounded-md bg-red-50 p-4 mb-6 text-center">
+              <p className="text-sm text-red-800">{errorMsg}</p>
+            </div>
+          )}
+
+          {/* Hiển thị thông báo resend */}
+          {resendMsg && (
+            <div className="rounded-md bg-green-50 p-4 mb-6 text-center">
+              <p className="text-sm text-green-700">{resendMsg}</p>
+            </div>
+          )}
+
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+              <Mail className="w-8 h-8 text-blue-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Xác Minh Email</h1>
+            <p className="text-gray-600 mt-2">
+              Nhập mã OTP đã được gửi đến{' '}
+              <span className="font-medium">{email}</span>
             </p>
-            <p className="text-lg font-semibold text-blue-600 mt-2">{email}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {errorMsg && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm animate-pulse">
-                {errorMsg}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Mã OTP
+              </label>
+              <div className="flex justify-center gap-2">
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => {
+                      inputRefs.current[index] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    onPaste={index === 0 ? handlePaste : undefined}
+                    className="w-12 h-12 text-2xl font-bold text-center border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                    autoFocus={index === 0}
+                  />
+                ))}
               </div>
-            )}
-
-            {resendMsg && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
-                {resendMsg}
+              <div className="text-center mt-3">
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isResending || countdown > 0}
+                  className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {countdown > 0
+                    ? `Gửi lại sau ${countdown}s`
+                    : isResending
+                    ? 'Đang gửi lại...'
+                    : 'Gửi Lại Mã'}
+                </button>
               </div>
-            )}
-
-            <div className="flex justify-center gap-3">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => {
-                    inputRefs.current[index] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={index === 0 ? handlePaste : undefined}
-                  className="w-14 h-14 text-2xl font-bold text-center border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none transition-all duration-200 shadow-sm"
-                  autoFocus={index === 0}
-                />
-              ))}
             </div>
 
             <button
               type="submit"
               disabled={isVerifying || otp.join('').length !== 6}
-              className="w-full py-4 rounded-xl text-white font-semibold text-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all disabled:opacity-50"
             >
               {isVerifying ? 'Đang xác minh...' : 'Xác Nhận'}
             </button>
           </form>
-
-          <div className="text-center text-sm text-gray-600">
-            <p>
-              Chưa nhận được mã?{' '}
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={isResending || countdown > 0}
-                className="font-medium text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {countdown > 0 ? `Gửi lại sau ${countdown}s` : 'Gửi lại mã'}
-              </button>
-            </p>
-          </div>
         </div>
+
+        <p className="text-center text-gray-600 mt-6">
+          Đã có tài khoản?{' '}
+          <button
+            onClick={handleLoginClick}
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Đăng nhập
+          </button>
+        </p>
       </div>
     </div>
   );
