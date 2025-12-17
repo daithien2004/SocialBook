@@ -38,7 +38,6 @@ export class BooksController {
   async getPublicBooks(
     @Query('page') page = 1,
     @Query('limit') limit = 12,
-    @Query('search') search?: string,
     @Query('genres') genres?: string,
     @Query('tags') tags?: string,
     @Query('sortBy') sortBy?: string,
@@ -48,19 +47,17 @@ export class BooksController {
       page: +page,
       limit: +limit,
       status: 'published',
-      search,
       tags,
       genres,
       sortBy,
       order,
     }
 
-    console.log('Params:', params); 
+    console.log('Params:', params);
     const result = await this.booksService.findAll({
       page: +page,
       limit: +limit,
       status: 'published',
-      search,
       tags,
       genres,
       sortBy,

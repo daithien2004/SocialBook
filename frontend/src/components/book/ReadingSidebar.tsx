@@ -158,7 +158,7 @@ export function ReadingSidebar() {
           </div>
 
           <div className="space-y-4">
-            {displayBooks.map((item) => (
+            {displayBooks.filter(item => item.bookId).map((item) => (
               <div key={item.id} className="flex gap-3 group">
                 {/* Book Cover */}
                 <Link

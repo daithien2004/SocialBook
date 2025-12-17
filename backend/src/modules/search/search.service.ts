@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { ChromaService } from '../chroma/chroma.service';
 import { Book } from '../books/schemas/book.schema';
 import { Author } from '../authors/schemas/author.schema';
+import { Chapter } from '../chapters/schemas/chapter.schema';
+import { Genre } from '../genres/schemas/genre.schema';
 import { SearchQueryDto } from './dto/search-query.dto';
 
 export interface SearchResult {
@@ -23,20 +25,37 @@ export class SearchService {
         private readonly chromaService: ChromaService,
         @InjectModel(Book.name) private bookModel: Model<Book>,
         @InjectModel(Author.name) private authorModel: Model<Author>,
+        @InjectModel(Chapter.name) private chapterModel: Model<Chapter>,
+        @InjectModel(Genre.name) private genreModel: Model<Genre>,
     ) { }
 
     /**
      * ============================================
-     * MAIN SEARCH ALGORITHM
+     * MAIN SEARCH ALGORITHM WITH PAGINATION
      * ============================================
      * 1. FUZZY SEARCH (MongoDB): Tên sách + Tên tác giả
      * 2. SEMANTIC SEARCH (ChromaDB): Description của book
      * 3. Merge & Sort results
+     * 4. Apply filters & pagination
      */
-    async intelligentSearch(searchQueryDto: SearchQueryDto): Promise<SearchResult[]> {
-        const { query, limit = 10 } = searchQueryDto;
+    async intelligentSearch(searchQueryDto: SearchQueryDto): Promise<{
+        data: any[];
+        metaData: { page: number; limit: number; total: number; totalPages: number };
+    }> {
+        const {
+            query,
+            page = 1,
+            limit = 20,
+            genres,
+            tags,
+            sortBy = 'relevance',
+            order = 'desc'
+        } = searchQueryDto;
 
-        this.logger.log(`\n🔍 ===== SEARCH: "${query}" (limit: ${limit}) =====`);
+        const validLimit = Math.min(Math.max(limit, 1), 100);
+        const skip = (page - 1) * validLimit;
+
+        this.logger.log(`\n🔍 ===== SEARCH: "${query}" (page: ${page}, limit: ${validLimit}) =====`);
 
         try {
             // ============================================
@@ -60,24 +79,128 @@ export class SearchService {
             // ============================================
             // STEP 3: Merge & Deduplicate
             // ============================================
-            const allResults = this.mergeAndDeduplicate(fuzzyMatches, semanticMatches);
+            let allResults = this.mergeAndDeduplicate(fuzzyMatches, semanticMatches);
 
             // ============================================
-            // STEP 4: Sort & Limit
+            // STEP 4: Filter by genres and tags
             // ============================================
-            const finalResults = allResults
-                .sort((a, b) => b.score - a.score)
-                .slice(0, limit);
+            if (genres || tags) {
+                allResults = await this.applyFilters(allResults, genres, tags);
+            }
 
-            this.logger.log(`✅ Returning ${finalResults.length} results`);
-            this.logger.log(`   Types: ${finalResults.filter(r => r.type === 'book').length} books, ${finalResults.filter(r => r.type === 'author').length} authors\n`);
+            // ============================================
+            // STEP 5: Sort
+            // ============================================
+            allResults = this.applySorting(allResults, sortBy, order);
 
-            return finalResults;
+            // ============================================
+            // STEP 6: Pagination
+            // ============================================
+            const total = allResults.length;
+            const totalPages = Math.ceil(total / validLimit);
+            const paginatedResults = allResults.slice(skip, skip + validLimit);
+
+            // ============================================
+            // STEP 7: Fetch full book details
+            // ============================================
+            const bookIds = paginatedResults
+                .filter(r => r.type === 'book')
+                .map(r => r.id);
+
+            const books = await this.bookModel
+                .find({ _id: { $in: bookIds } })
+                .populate('authorId', 'name')
+                .populate('genres', 'name slug')
+                .lean();
+
+            // Map books to maintain search result order and add stats
+            const booksMap = new Map(books.map(b => [b._id.toString(), b]));
+            const enrichedBooks = await Promise.all(
+                paginatedResults.map(async (result) => {
+                    const book = booksMap.get(result.id);
+                    if (!book) return null;
+
+                    // Get chapter count
+                    const chaptersCount = await this.chapterModel.countDocuments({ bookId: book._id });
+
+                    return {
+                        ...book,
+                        id: book._id.toString(),
+                        stats: {
+                            chapters: chaptersCount,
+                            views: book.views || 0,
+                            likes: book.likes || 0,
+                            rating: 0, // Will be calculated if needed
+                            reviews: 0,
+                        },
+                        relevanceScore: result.score,
+                    };
+                })
+            );
+
+            const finalData = enrichedBooks.filter(b => b !== null);
+
+            this.logger.log(`✅ Returning ${finalData.length} of ${total} results (page ${page}/${totalPages})\n`);
+
+            return {
+                data: finalData,
+                metaData: {
+                    page,
+                    limit: validLimit,
+                    total,
+                    totalPages,
+                },
+            };
 
         } catch (error) {
             this.logger.error(`❌ Search error: ${error.message}`, error.stack);
             throw error;
         }
+    }
+
+    /**
+     * Apply genre and tag filters to search results
+     */
+    private async applyFilters(results: SearchResult[], genres?: string, tags?: string): Promise<SearchResult[]> {
+        if (!genres && !tags) return results;
+
+        const bookIds = results.filter(r => r.type === 'book').map(r => r.id);
+        const matchStage: any = { _id: { $in: bookIds } };
+
+        if (genres) {
+            const genreSlugs = genres.split(',').map(g => g.trim());
+            const genreDocs = await this.genreModel.find({ slug: { $in: genreSlugs } }).select('_id');
+            const genreIds = genreDocs.map(doc => doc._id);
+            if (genreIds.length > 0) {
+                matchStage.genres = { $in: genreIds };
+            }
+        }
+
+        if (tags) {
+            const tagsList = tags.split(',').map(t => t.trim());
+            matchStage.tags = { $in: tagsList };
+        }
+
+        const filteredBooks = await this.bookModel.find(matchStage).select('_id').lean();
+        const filteredIds = new Set(filteredBooks.map(b => b._id.toString()));
+
+        return results.filter(r => r.type !== 'book' || filteredIds.has(r.id));
+    }
+
+    /**
+     * Apply sorting to search results
+     */
+    private applySorting(results: SearchResult[], sortBy: string, order: string): SearchResult[] {
+        const sortOrder = order === 'asc' ? 1 : -1;
+
+        if (sortBy === 'relevance') {
+            // Default: sort by score (relevance)
+            return results.sort((a, b) => sortOrder * (b.score - a.score));
+        }
+
+        // For other sort options, we'll need the full book data
+        // This is handled in the final enrichment step
+        return results;
     }
 
     /**
