@@ -27,6 +27,8 @@ export interface GetChapterParams {
 
 export interface GetChaptersParams {
   bookSlug: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface GetChapterByIdParams {

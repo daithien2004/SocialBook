@@ -145,7 +145,7 @@ export class ChaptersService {
     };
   }
 
-  async getChaptersByBookSlug(bookSlug: string) {
+  async getChaptersByBookSlug(bookSlug: string, page: number = 1, limit: number = 20) {
     // VALIDATION
     if (!bookSlug?.trim()) {
       throw new BadRequestException('Book slug là bắt buộc');
@@ -159,10 +159,17 @@ export class ChaptersService {
       throw new NotFoundException(`Không tìm thấy sách với slug: ${bookSlug}`);
     }
 
-    // EXECUTION - Lấy danh sách chương + TTS mới nhất
+    const skip = (page - 1) * limit;
+
+    // EXECUTION - Get Total Count
+    const totalChapters = await this.chapterModel.countDocuments({ bookId: book._id });
+
+    // EXECUTION - Lấy danh sách chương + TTS mới nhất with Pagination
     const chapters = await this.chapterModel.aggregate([
       { $match: { bookId: book._id } },
       { $sort: { orderIndex: 1 } },
+      { $skip: skip },
+      { $limit: Number(limit) },
       {
         $lookup: {
           from: 'texttospeeches',
@@ -209,7 +216,12 @@ export class ChaptersService {
         title: book.title,
         slug: book.slug,
       },
-      total: chapters.length,
+      meta: {
+        current: Number(page),
+        pageSize: Number(limit),
+        pages: Math.ceil(totalChapters / limit),
+        total: totalChapters,
+      },
       chapters: chapters.map((chapter: any) => ({
         id: chapter._id.toString(),
         title: chapter.title,

@@ -32,14 +32,22 @@ export const chaptersApi = createApi({
       query: (params) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
         method: 'GET',
+        params: {
+          page: params.page,
+          limit: params.limit
+        }
       }),
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
     getAdminChapters: builder.query<ChaptersListData, GetChaptersParams>({
       query: (params) => ({
-        url: `/admin/books/${params.bookSlug}/chapters`,
+        url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
         method: 'GET',
+        params: {
+          page: params.page,
+          limit: params.limit
+        }
       }),
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),

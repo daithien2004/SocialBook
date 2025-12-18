@@ -89,7 +89,9 @@ export class UsersService {
         .limit(limit)
         .select('-password -hashedRt')
         .lean(),
-      this.userModel.countDocuments(filter),
+      Object.keys(filter).length === 0
+        ? this.userModel.estimatedDocumentCount()
+        : this.userModel.countDocuments(filter),
     ]);
 
     return {
@@ -158,7 +160,7 @@ export class UsersService {
     const [postCount, readingListCount, followersCount] = await Promise.all([
       this.postModel.countDocuments({ userId: objectId, isDelete: false }),
       this.readingListModel.countDocuments({ userId: objectId }),
-      this.followModel.countDocuments({ targetId: objectId , status: true}),
+      this.followModel.countDocuments({ targetId: objectId, status: true }),
     ]);
 
     return {
