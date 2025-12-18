@@ -14,7 +14,6 @@ import {
   MoreVertical,
 } from 'lucide-react';
 
-// Import API Hooks & Types
 import {
   useGetLibraryBooksQuery,
   useGetCollectionsQuery,
@@ -25,14 +24,12 @@ import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 
 export default function LibraryPage() {
-  // --- STATE ---
   const [activeTab, setActiveTab] = useState<LibraryStatus>(
     LibraryStatus.READING
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
 
-  // --- DATA FETCHING ---
   const {
     data: libraryData,
     isLoading: isLoadingLibrary,
@@ -52,7 +49,6 @@ export default function LibraryPage() {
 
   const books = libraryData || [];
 
-  // --- HANDLERS ---
   const handleCreateCollection = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCollectionName.trim()) return;
@@ -69,7 +65,6 @@ export default function LibraryPage() {
     }
   };
 
-  // --- RENDER HELPERS ---
   const tabs = [
     { id: LibraryStatus.READING, label: 'Đọc hiện tại', icon: Clock },
     { id: LibraryStatus.COMPLETED, label: 'Đã hoàn thành', icon: Bookmark },
@@ -78,29 +73,23 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] pb-20 transition-colors duration-300 font-sans selection:bg-blue-500 selection:text-white relative">
-      {/* --- GLOBAL BACKGROUND FIXED --- */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
-          src="/main-background.jpg" // Đảm bảo đường dẫn này đúng với vị trí ảnh của bạn
+          src="/main-background.jpg"
           alt="Background Texture"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40" // Opacity thay đổi theo mode
+          className="w-full h-full object-cover opacity-10 dark:opacity-40"
         />
-        {/* Overlay chỉnh màu nền cho phù hợp */}
         <div className="absolute inset-0 bg-white/80 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>
 
       <div className="relative z-10">
-        {' '}
-        {/* Nội dung chính nằm trên ảnh nền */}
         <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* HEADER */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Thư viện của tôi
             </h1>
           </div>
 
-          {/* === PHẦN 1: BỘ SƯU TẬP (FOLDERS) === */}
           <section className="mb-10">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
@@ -126,7 +115,6 @@ export default function LibraryPage() {
               </div>
             ) : (
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {/* Nút Tạo nhanh */}
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
                   className="flex-none w-40 h-20 border-2 border-dashed border-gray-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors bg-white dark:bg-white/5"
@@ -137,7 +125,6 @@ export default function LibraryPage() {
                   </span>
                 </button>
 
-                {/* Danh sách Folder */}
                 {collections?.map((col) => (
                   <Link
                     key={col.id}
@@ -161,9 +148,6 @@ export default function LibraryPage() {
             )}
           </section>
 
-          {/* === PHẦN 2: DANH SÁCH SÁCH (3 TABS) === */}
-
-          {/* Tabs Navigation */}
           <div className="border-b border-gray-200 dark:border-white/10 mb-6">
             <nav className="flex gap-8">
               {tabs.map((tab) => {
@@ -193,7 +177,6 @@ export default function LibraryPage() {
             </nav>
           </div>
 
-          {/* Content Grid */}
           <div className="min-h-[300px]">
             {isLoadingLibrary || isFetchingLibrary ? (
               <LibrarySkeleton />
@@ -201,7 +184,6 @@ export default function LibraryPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {books?.map((item) => (
                   <div key={item.id} className="group relative flex flex-col">
-                    {/* Cover Image */}
                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-md dark:shadow-black/50 mb-3 group-hover:shadow-xl dark:group-hover:shadow-black/70 transition-all duration-300 bg-gray-200 dark:bg-white/5">
                       <Link href={`/books/${item.bookId.slug}`}>
                         <Image
@@ -210,17 +192,10 @@ export default function LibraryPage() {
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        {/* Overlay khi hover */}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 dark:group-hover:bg-black/20 transition-colors" />
                       </Link>
-
-                      {/* Nút Quick Action (Góc trên phải) */}
-                      <button className="absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white dark:hover:bg-black text-gray-700 dark:text-gray-200">
-                        <MoreVertical size={16} />
-                      </button>
                     </div>
 
-                    {/* Book Info */}
                     <div className="flex-1 flex flex-col">
                       <Link href={`/books/${item.bookId.slug}`}>
                         <h3 className="font-bold text-gray-900 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-1 text-sm md:text-base">
@@ -228,7 +203,6 @@ export default function LibraryPage() {
                         </h3>
                       </Link>
 
-                      {/* Hiển thị trạng thái đọc dở */}
                       {activeTab === LibraryStatus.READING &&
                       item.lastReadChapterId ? (
                         <div className="mt-auto pt-2">
@@ -261,7 +235,6 @@ export default function LibraryPage() {
                 ))}
               </div>
             ) : (
-              // Empty State
               <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-[#1a1a1a]/50 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
                 <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
                   <BookOpen
@@ -289,7 +262,6 @@ export default function LibraryPage() {
             )}
           </div>
         </div>
-        {/* === MODAL TẠO FOLDER === */}
         {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl border border-gray-200 dark:border-white/10 w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">

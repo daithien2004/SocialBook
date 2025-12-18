@@ -195,7 +195,7 @@ export const ChatWidget = () => {
 
       <button
         onClick={handleToggle}
-        className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+        className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${
           isOpen
             ? 'bg-gradient-to-br from-gray-700 to-gray-600 hover:from-gray-800 hover:to-gray-700'
             : 'bg-gradient-to-br from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
@@ -204,7 +204,7 @@ export const ChatWidget = () => {
         {isOpen ? (
           <X className="text-white" size={24} />
         ) : (
-          <MessageCircle className="text-white" size={24} />
+          <MessageCircle className="text-white" size={18} />
         )}
       </button>
     </div>

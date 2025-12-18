@@ -14,7 +14,6 @@ import {
   X,
 } from 'lucide-react';
 
-// API Hooks & Types
 import {
   useGetCollectionDetailQuery,
   useUpdateCollectionMutation,
@@ -29,12 +28,10 @@ export default function CollectionDetailPage() {
   const params = useParams();
   const collectionId = params.id as string;
 
-  // --- STATE ---
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [editName, setEditName] = useState('');
 
-  // --- QUERIES ---
   const {
     data: response,
     isLoading,
@@ -44,16 +41,12 @@ export default function CollectionDetailPage() {
   const collection = response?.folder;
   const books = response?.books || [];
 
-  // --- MUTATIONS ---
   const [updateCollection, { isLoading: isUpdating }] =
     useUpdateCollectionMutation();
   const [deleteCollection, { isLoading: isDeleting }] =
     useDeleteCollectionMutation();
   const [updateBookCollections] = useAddBookToCollectionsMutation();
 
-  // --- HANDLERS ---
-
-  // 1. Xử lý đổi tên Folder
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) return;
@@ -70,24 +63,26 @@ export default function CollectionDetailPage() {
     }
   };
 
-  // 2. Xử lý xóa Folder
   const handleDeleteCollection = async () => {
-    if (
-      !confirm(
-        'Bạn có chắc muốn xóa bộ sưu tập này? Sách bên trong sẽ không bị xóa khỏi thư viện.'
-      )
-    )
-      return;
-
-    try {
-      await deleteCollection(collectionId).unwrap();
-      router.push('/library');
-    } catch (error) {
-      toast.error('Lỗi khi xóa bộ sưu tập');
-    }
+    toast('Bạn có chắc muốn xóa bộ sưu tập này?', {
+      action: {
+        label: 'Xóa',
+        onClick: async () => {
+          try {
+            await deleteCollection(collectionId).unwrap();
+            router.push('/library');
+          } catch (error) {
+            toast.error('Lỗi khi xóa bộ sưu tập');
+          }
+        },
+      },
+      cancel: {
+        label: 'Hủy',
+        onClick: () => {},
+      },
+    });
   };
 
-  // 3. Xóa sách khỏi Folder này
   const handleRemoveBookFromCollection = async (
     e: React.MouseEvent,
     book: LibraryItem
@@ -110,14 +105,12 @@ export default function CollectionDetailPage() {
     }
   };
 
-  // Mở modal edit và điền sẵn tên cũ
   const openEditModal = () => {
     if (collection) setEditName(collection.name);
     setIsEditModalOpen(true);
     setIsMenuOpen(false);
   };
 
-  // --- RENDER LOADING & ERROR ---
   if (isLoading) return <CollectionDetailSkeleton />;
 
   if (error || !collection) {
@@ -142,7 +135,6 @@ export default function CollectionDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] pb-20 transition-colors duration-300">
-      {/* GLOBAL BACKGROUND FIXED */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
           src="/main-background.jpg"
@@ -152,7 +144,6 @@ export default function CollectionDetailPage() {
         <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>
 
-      {/* HEADER BACKGROUND */}
       <div className="z-10 bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl border-b border-gray-200 dark:border-white/10 sticky top-0 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -173,8 +164,7 @@ export default function CollectionDetailPage() {
             </span>
           </div>
 
-          {/* MENU OPTIONS */}
-          <div className="relative">
+          <div className="relative z-50">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
@@ -188,20 +178,20 @@ export default function CollectionDetailPage() {
             {isMenuOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-10"
+                  className="fixed inset-0 z-40"
                   onClick={() => setIsMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-lg border border-gray-100 dark:border-white/10 py-1 z-20 animate-in fade-in zoom-in-95 duration-100 transition-colors">
+                <div className="absolute overflow-hidden right-0 top-full mt-2 w-48 bg-white dark:bg-[#1a1a1a] rounded-md shadow-md border border-gray-200 dark:border-white/20 z-50 animate-in fade-in zoom-in-95 duration-100 transition-colors">
                   <button
                     onClick={openEditModal}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
+                    className="w-full px-4 py-2.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 flex items-center gap-2 transition-colors"
                   >
                     <Pencil size={16} /> Đổi tên
                   </button>
                   <button
                     onClick={handleDeleteCollection}
                     disabled={isDeleting}
-                    className="w-full px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
+                    className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors disabled:opacity-50"
                   >
                     <Trash2 size={16} />
                     {isDeleting ? 'Đang xóa...' : 'Xóa bộ sưu tập'}
@@ -213,13 +203,11 @@ export default function CollectionDetailPage() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
-        {/* BOOK LIST */}
+      <div className="relative max-w-7xl mx-auto px-4 py-8">
         {books.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {books.map((item) => (
               <div key={item.id} className="group relative flex flex-col">
-                {/* Cover Image */}
                 <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-md mb-3 group-hover:shadow-xl transition-all duration-300">
                   <Link href={`/books/${item.bookId.slug}`}>
                     <Image
@@ -231,7 +219,6 @@ export default function CollectionDetailPage() {
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                   </Link>
 
-                  {/* Nút Xóa khỏi folder */}
                   <button
                     onClick={(e) => handleRemoveBookFromCollection(e, item)}
                     title="Gỡ khỏi bộ sưu tập này"
@@ -241,14 +228,12 @@ export default function CollectionDetailPage() {
                   </button>
                 </div>
 
-                {/* Info */}
                 <div className="flex-1">
                   <Link href={`/books/${item.bookId.slug}`}>
                     <h3 className="font-bold text-gray-900 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm mb-1">
                       {item.bookId.title}
                     </h3>
                   </Link>
-                  {/* Hiển thị tiến độ nếu đang đọc */}
                   {item.status === 'READING' && item.lastReadChapterId ? (
                     <p className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1 mt-1">
                       <BookOpen size={12} />
@@ -265,7 +250,6 @@ export default function CollectionDetailPage() {
             ))}
           </div>
         ) : (
-          // Empty State
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-24 h-24 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4 transition-colors">
               <BookOpen
@@ -290,17 +274,14 @@ export default function CollectionDetailPage() {
         )}
       </div>
 
-      {/* === MODAL ĐỔI TÊN === */}
       {isEditModalOpen && (
         <>
-          {/* Overlay */}
           <div
-            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-100 animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-[100] animate-in fade-in duration-200"
             onClick={() => setIsEditModalOpen(false)}
           />
 
-          {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none">
             <div className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200 pointer-events-auto transition-colors">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors">
                 Đổi tên bộ sưu tập
@@ -339,7 +320,6 @@ export default function CollectionDetailPage() {
   );
 }
 
-// Loading Skeleton
 function CollectionDetailSkeleton() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] transition-colors duration-300">

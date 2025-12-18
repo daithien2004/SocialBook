@@ -1,7 +1,6 @@
 import { Book } from '@/src/features/books/types/book.interface';
 import Link from 'next/link';
 import { useState } from 'react';
-import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ChapterListDrawer from './ChapterListDrawer';
 
@@ -58,7 +57,7 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
             </h3>
             <button
               onClick={() => setShowAllChapters(true)}
-              className="text-xs text-red-600 hover:underline transition-colors"
+              className="text-xs text-white hover:underline transition-colors"
             >
               Xem tất cả
             </button>

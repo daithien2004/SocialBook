@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface CreatePostModalProps {
   isSubmitting: boolean;
@@ -33,7 +34,13 @@ export default function CreatePostModal({
   const [content, setContent] = useState(defaultContent);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -112,26 +119,28 @@ export default function CreatePostModal({
     fileInputRef.current?.click();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const totalImages = images.length;
   const canAddMore = totalImages < maxImages;
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+        className="bg-white dark:bg-[#1a1a1a] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-white/10 flex items-center justify-between transition-colors">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">
+            {title}
+          </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
             aria-label="Đóng"
           >
             <svg
@@ -154,22 +163,24 @@ export default function CreatePostModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Content Input */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors">
               {contentLabel}
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={contentPlaceholder}
-              className="w-full border text-black border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full border border-gray-300 dark:border-white/10 bg-white dark:bg-black/40 text-gray-900 dark:text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500"
               rows={6}
             />
-            <p className="text-xs text-gray-500 mt-1">{content.length} ký tự</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">
+              {content.length} ký tự
+            </p>
           </div>
 
           {/* Images Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors">
               Hình ảnh
             </label>
 
@@ -187,7 +198,7 @@ export default function CreatePostModal({
             <button
               onClick={handleClickUpload}
               disabled={!canAddMore}
-              className="w-full mb-3 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:border-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full mb-3 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-white/20 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:border-indigo-500 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               <svg
                 className="w-5 h-5"
@@ -213,7 +224,7 @@ export default function CreatePostModal({
                 {previewUrls.map((url, index) => (
                   <div
                     key={`upload-${index}`}
-                    className="relative group aspect-video bg-gray-100 rounded-lg overflow-hidden"
+                    className="relative group aspect-video bg-gray-100 dark:bg-white/5 rounded-lg overflow-hidden transition-colors"
                   >
                     <img
                       src={url}
@@ -249,9 +260,9 @@ export default function CreatePostModal({
                 ))}
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <div className="border-2 border-dashed border-gray-300 dark:border-white/20 rounded-lg p-8 text-center transition-colors">
                 <svg
-                  className="w-12 h-12 mx-auto text-gray-400 mb-2"
+                  className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-2 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -263,32 +274,34 @@ export default function CreatePostModal({
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <p className="text-sm text-gray-500">Chưa có hình ảnh nào</p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">
+                  Chưa có hình ảnh nào
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 transition-colors">
                   Click nút trên để chọn ảnh
                 </p>
               </div>
             )}
 
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 transition-colors">
               Đã thêm {totalImages}/{maxImages} hình ảnh
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-white/10 flex items-center justify-end gap-3 transition-colors">
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !content.trim()}
-            className="px-6 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? 'Đang đăng...' : 'Đăng bài'}
           </button>
@@ -296,4 +309,6 @@ export default function CreatePostModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
