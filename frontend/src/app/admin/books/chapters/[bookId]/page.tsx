@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useGetBookByIdQuery } from '@/src/features/books/api/bookApi';
 import {
@@ -26,12 +26,58 @@ export default function ChapterManagementPage() {
   const params = useParams();
   const bookId = params.bookId as string;
 
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
   const { data: bookData, isLoading: isLoadingBook } = useGetBookByIdQuery(bookId);
-  const { data: chaptersData, isLoading: isLoadingChapters, refetch: refetchChapters } = useGetAdminChaptersQuery({
+
+  const { data: chaptersData, isFetching: isFetchingChapters, isLoading: isLoadingChapters, refetch: refetchChaptersQuery } = useGetAdminChaptersQuery({
     bookSlug: bookData?.slug || '',
+    page,
+    limit: 20
   }, {
     skip: !bookData?.slug,
   });
+
+  const refetchChapters = () => {
+    setPage(1);
+    setChapters([]);
+    refetchChaptersQuery();
+  };
+
+  // Infinite Scroll Effect
+  useEffect(() => {
+    if (chaptersData?.chapters) {
+      if (page === 1) {
+        setChapters(chaptersData.chapters);
+      } else {
+        setChapters(prev => [...prev, ...chaptersData.chapters]);
+      }
+      // Check if we reached the total or if returned less than limit
+      const total = chaptersData.total || 0;
+      const currentCount = (page - 1) * 20 + chaptersData.chapters.length;
+      setHasMore(currentCount < total);
+    }
+  }, [chaptersData, page]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingChapters) {
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 0.1, rootMargin: '500px' } // Load 500px before reaching bottom
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isFetchingChapters]);
 
   const [triggerGetChapter, { isFetching: isFetchingDetails }] = useLazyGetChapterByIdQuery();
   const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
@@ -57,11 +103,11 @@ export default function ChapterManagementPage() {
   const editChapterBottomRef = useRef<HTMLDivElement>(null);
 
   const book = bookData;
-  const chapters = chaptersData?.chapters || [];
+  // const chapters = chaptersData?.chapters || []; // Removed old derivation
 
 
 
-  const handleToggleExpand = (chapterId: string) => {
+  const handleToggleExpand = (chapterId: string, e?: React.MouseEvent) => {
     if (expandedChapterId === chapterId) {
       setExpandedChapterId(null);
       setEditingChapterId(null);
@@ -385,50 +431,48 @@ export default function ChapterManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Quản lý chương</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Sách: <span className="font-semibold">{book?.title}</span> • {chapters.length} chương
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleGenerateAllAudio}
-                disabled={isGeneratingAllAudio || chapters.length === 0}
-                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
-              >
-                {isGeneratingAllAudio ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Volume2 className="w-5 h-5" />
-                )}
-                Tạo Audio Toàn Bộ
-              </button>
-              <button
-                onClick={() => setShowNewChapterForm(!showNewChapterForm)}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
-              >
-                <Plus className="w-5 h-5" />
-                Thêm chương mới
-              </button>
-              <button
-                onClick={() => setIsImportModalOpen(true)}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
-              >
-                <Upload className="w-5 h-5" />
-                Import File
-              </button>
-            </div>
+      {/* Header Card */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Quản lý chương</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Sách: <span className="font-semibold text-gray-800">{book?.title}</span> • {chapters.length} chương
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleGenerateAllAudio}
+              disabled={isGeneratingAllAudio || chapters.length === 0}
+              className="flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed group"
+            >
+              {isGeneratingAllAudio ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Volume2 className="w-5 h-5" />
+              )}
+              <span>Tạo Audio</span>
+            </button>
+            <button
+              onClick={() => setShowNewChapterForm(!showNewChapterForm)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow hover:-translate-y-0.5 group"
+            >
+              <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+              <span>Thêm chương</span>
+            </button>
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow hover:-translate-y-0.5 group"
+            >
+              <Upload className="w-5 h-5" />
+              <span>Import File</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="py-6">
+      <div className="py-0">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           {/* New Chapter Form */}
           {showNewChapterForm && (
@@ -505,8 +549,8 @@ export default function ChapterManagementPage() {
                 <div key={chapter.id} className="hover:bg-gray-50 transition-colors">
                   {/* Chapter Header */}
                   <div
-                    className="flex items-center justify-between p-4 cursor-pointer sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm"
-                    onClick={() => handleToggleExpand(chapter.id)}
+                    className="flex items-center justify-between px-4 py-3 cursor-pointer sticky top-0 z-10 bg-white border-b border-gray-50"
+                    onClick={(e) => handleToggleExpand(chapter.id, e)}
                   >
                     <div className="flex items-center gap-3 flex-1">
                       {expandedChapterId === chapter.id ? (
@@ -629,6 +673,10 @@ export default function ChapterManagementPage() {
                       )}
                     </div>
                   )}
+                  {/* Loading Sentinel */}
+                  <div ref={observerTarget} className="flex justify-center items-center">
+                    {isFetchingChapters && page > 1 && <Loader2 className="w-6 h-6 animate-spin text-blue-500" />}
+                  </div>
                 </div>
               ))
             )}

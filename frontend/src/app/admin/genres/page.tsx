@@ -8,8 +8,8 @@ import { vi } from 'date-fns/locale';
 import { Search, Plus, Loader2, Edit, Trash2, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
 import { Genre } from '@/src/features/genres/types/genre.interface';
 import { toast } from 'sonner';
-
 import { useDebounce } from '@/src/hooks/useDebounce';
+import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
 
 export default function AdminGenresPage() {
     const [page, setPage] = useState(1);
@@ -29,8 +29,6 @@ export default function AdminGenresPage() {
     const meta = data?.meta;
 
     const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`Bạn có chắc chắn muốn xóa thể loại "${name}"?`)) return;
-
         try {
             await deleteGenre(id).unwrap();
             toast.success('Xóa thể loại thành công!');
@@ -44,30 +42,27 @@ export default function AdminGenresPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="px-6 py-5 flex items-center justify-between">
+            {/* Header & Search Card */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Quản lý thể loại</h1>
                         <p className="text-sm text-gray-500 mt-1">
-                            Tổng cộng <span className="font-semibold">{meta?.total?.toLocaleString() || 0}</span> thể loại
+                            Tổng cộng <span className="font-semibold text-gray-800">{meta?.total?.toLocaleString() || 0}</span> thể loại
                         </p>
                     </div>
                     <Link
                         href="/admin/genres/new"
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
                     >
                         <Plus className="w-5 h-5" />
                         Thêm thể loại mới
                     </Link>
                 </div>
-            </div>
 
-            {/* Search */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="px-6 py-4">
+                <div className="px-6 py-4 bg-gray-50/50">
                     <div className="relative">
-                        <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Tìm kiếm tên thể loại..."
@@ -76,7 +71,7 @@ export default function AdminGenresPage() {
                                 setSearch(e.target.value);
                                 setPage(1);
                             }}
-                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                         />
                     </div>
                 </div>
@@ -91,7 +86,7 @@ export default function AdminGenresPage() {
 
             {/* Table */}
             {!(isLoading || isFetching) && (
-                <div className="py-6">
+                <div className="py-0">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">
@@ -144,14 +139,19 @@ export default function AdminGenresPage() {
                                                         >
                                                             <Edit className="w-5 h-5 text-green-600" />
                                                         </Link>
-                                                        <button
-                                                            onClick={() => handleDelete(genre.id, genre.name)}
-                                                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                        <ConfirmDelete
                                                             title="Xóa thể loại"
-                                                            disabled={isDeleting}
+                                                            description={`Bạn có chắc chắn muốn xóa thể loại "${genre.name}"?`}
+                                                            onConfirm={() => handleDelete(genre.id, genre.name)}
                                                         >
-                                                            <Trash2 className="w-5 h-5 text-red-600" />
-                                                        </button>
+                                                            <button
+                                                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Xóa thể loại"
+                                                                disabled={isDeleting}
+                                                            >
+                                                                <Trash2 className="w-5 h-5 text-red-600" />
+                                                            </button>
+                                                        </ConfirmDelete>
                                                     </div>
                                                 </td>
                                             </tr>

@@ -32,6 +32,10 @@ export const chaptersApi = createApi({
       query: (params) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
         method: 'GET',
+        params: {
+          page: params.page,
+          limit: params.limit
+        }
       }),
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
@@ -40,6 +44,10 @@ export const chaptersApi = createApi({
       query: (params) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
         method: 'GET',
+        params: {
+          page: params.page,
+          limit: params.limit
+        }
       }),
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),

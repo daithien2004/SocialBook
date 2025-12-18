@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 
 import { useDebounce } from '@/src/hooks/useDebounce';
+import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
 
 export default function AdminAuthorsPage() {
     const [page, setPage] = useState(1);
@@ -30,10 +31,9 @@ export default function AdminAuthorsPage() {
     const meta = data?.meta;
 
     const handleDelete = async (id: string, name: string) => {
-        if (!confirm(`Bạn có chắc chắn muốn xóa tác giả "${name}"?`)) return;
-
         try {
             await deleteAuthor(id).unwrap();
+            toast.success('Xóa tác giả thành công');
             refetch();
         } catch (error) {
             console.error('Failed to delete author:', error);
@@ -43,30 +43,27 @@ export default function AdminAuthorsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="px-6 py-5 flex items-center justify-between">
+            {/* Header & Search Card */}
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Quản lý tác giả</h1>
                         <p className="text-sm text-gray-500 mt-1">
-                            Tổng cộng <span className="font-semibold">{meta?.total?.toLocaleString() || 0}</span> tác giả
+                            Tổng cộng <span className="font-semibold text-gray-800">{meta?.total?.toLocaleString() || 0}</span> tác giả
                         </p>
                     </div>
                     <Link
                         href="/admin/authors/new"
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
                     >
                         <Plus className="w-5 h-5" />
                         Thêm tác giả mới
                     </Link>
                 </div>
-            </div>
 
-            {/* Search */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="px-6 py-4">
+                <div className="px-6 py-4 bg-gray-50/50">
                     <div className="relative">
-                        <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Tìm kiếm tên tác giả..."
@@ -75,7 +72,7 @@ export default function AdminAuthorsPage() {
                                 setSearch(e.target.value);
                                 setPage(1);
                             }}
-                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                         />
                     </div>
                 </div>
@@ -90,7 +87,7 @@ export default function AdminAuthorsPage() {
 
             {/* Table */}
             {!(isLoading || isFetching) && (
-                <div className="py-6">
+                <div className="py-0">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">
@@ -148,14 +145,19 @@ export default function AdminAuthorsPage() {
                                                         >
                                                             <Edit className="w-5 h-5 text-green-600" />
                                                         </Link>
-                                                        <button
-                                                            onClick={() => handleDelete(author.id, author.name)}
-                                                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                        <ConfirmDelete
                                                             title="Xóa tác giả"
-                                                            disabled={isDeleting}
+                                                            description={`Bạn có chắc chắn muốn xóa tác giả "${author.name}"?`}
+                                                            onConfirm={() => handleDelete(author.id, author.name)}
                                                         >
-                                                            <Trash2 className="w-5 h-5 text-red-600" />
-                                                        </button>
+                                                            <button
+                                                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Xóa tác giả"
+                                                                disabled={isDeleting}
+                                                            >
+                                                                <Trash2 className="w-5 h-5 text-red-600" />
+                                                            </button>
+                                                        </ConfirmDelete>
                                                     </div>
                                                 </td>
                                             </tr>
