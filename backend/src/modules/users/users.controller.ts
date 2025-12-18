@@ -50,7 +50,11 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Get users successfully',
-      ...result,
+      items: result.items,
+      pagination: {
+        ...result.meta,
+        totalItems: result.meta.total,
+      },
     };
   }
 
@@ -65,7 +69,11 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Get users successfully',
-      ...result,
+      items: result.items,
+      pagination: {
+        ...result.meta,
+        totalItems: result.meta.total,
+      },
     };
   }
 

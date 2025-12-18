@@ -44,7 +44,7 @@ export class ChaptersController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
   ) {
-    const result = await this.chaptersService.findByBookSlug(bookSlug, page, limit);
+    const result = await this.chaptersService.getChaptersByBookSlug(bookSlug, page, limit);
     return {
       message: 'Get list chapters successfully',
       data: result,
