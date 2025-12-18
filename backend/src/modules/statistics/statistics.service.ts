@@ -9,6 +9,7 @@ import { Post, PostDocument } from '../posts/schemas/post.schema';
 import { Comment, CommentDocument } from '../comments/schemas/comment.schema';
 import { Review, ReviewDocument } from '../reviews/schemas/review.schema';
 import { Progress, ProgressDocument } from '../progress/schemas/progress.schema';
+import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
 
 // DTOs
 import {
@@ -23,7 +24,6 @@ import {
   GeographicData,
   ActiveUsersData,
 } from './dto/statistics.dto';
-
 @Injectable()
 export class StatisticsService {
   constructor(
@@ -33,6 +33,7 @@ export class StatisticsService {
     @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
+    @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
   ) { }
 
   async getOverview(): Promise<OverviewStats> {
@@ -41,7 +42,7 @@ export class StatisticsService {
 
     const [
       totalUsers,
-      activeUsers, // Note: Logic cũ đang đếm New Users trong 30 ngày
+      activeUsers,
       bannedUsers,
       previousMonthUsers,
       totalBooks,
@@ -61,18 +62,7 @@ export class StatisticsService {
         },
       }),
       this.bookModel.countDocuments(),
-      this.bookModel
-        .aggregate([
-          {
-            $group: {
-              _id: null,
-              totalChapters: {
-                $sum: { $size: { $ifNull: ['$chapters', []] } },
-              },
-            },
-          },
-        ])
-        .then((res) => res[0]?.totalChapters || 0),
+      this.chapterModel.countDocuments(),
       this.postModel.countDocuments(),
       this.postModel.countDocuments({ deletedAt: null }),
       this.commentModel.countDocuments(),
@@ -153,16 +143,7 @@ export class StatisticsService {
   async getBookStats(): Promise<BookStats> {
     const [total, totalChapters, byGenre, popularBooks] = await Promise.all([
       this.bookModel.countDocuments(),
-      this.bookModel
-        .aggregate([
-          {
-            $group: {
-              _id: null,
-              total: { $sum: { $size: { $ifNull: ['$chapters', []] } } },
-            },
-          },
-        ])
-        .then((result) => result[0]?.total || 0),
+      this.chapterModel.countDocuments(),
       this.bookModel.aggregate([
         { $unwind: '$genres' },
         {

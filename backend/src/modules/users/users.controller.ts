@@ -38,6 +38,26 @@ export class UsersController {
     };
   }
 
+  @Get('admin')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  async findAllAdmin(
+    @Query() query: any,
+    @Query('current') current: string,
+    @Query('pageSize') pageSize: string,
+  ) {
+    const result = await this.usersService.findAll(query, +current, +pageSize);
+    return {
+      message: 'Get users successfully',
+      items: result.items,
+      pagination: {
+        ...result.meta,
+        totalItems: result.meta.total,
+      },
+    };
+  }
+
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -49,7 +69,11 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Get users successfully',
-      ...result,
+      items: result.items,
+      pagination: {
+        ...result.meta,
+        totalItems: result.meta.total,
+      },
     };
   }
 

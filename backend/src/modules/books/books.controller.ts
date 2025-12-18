@@ -132,7 +132,8 @@ export class BooksController {
 
     return {
       message: 'Admin: Get all books successfully',
-      ...result,
+      books: result.data,
+      pagination: result.metaData,
     };
   }
 

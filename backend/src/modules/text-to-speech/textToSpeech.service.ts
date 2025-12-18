@@ -434,8 +434,27 @@ export class TextToSpeechService {
       );
     }
 
+    // Validate Content-Type
+    const contentType = response.headers.get('content-type');
+    if (contentType && (contentType.includes('text/html') || contentType.includes('application/json') || contentType.includes('text/plain'))) {
+      const errText = await response.text();
+      console.error(`❌ VoiceRSS returned non-audio response (${contentType}):`, errText);
+      throw new InternalServerErrorException(`VoiceRSS API returned error: ${errText.substring(0, 200)}`);
+    }
+
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    // Validate buffer size (audio file should be larger than 100 bytes)
+    if (buffer.length < 100) {
+      const errText = buffer.toString('utf-8');
+      console.error(`❌ VoiceRSS returned too small buffer (${buffer.length} bytes):`, errText);
+      // Check if it's a text error message disguised as a small file
+      if (errText.includes('ERROR:')) {
+        throw new InternalServerErrorException(`VoiceRSS Error: ${errText}`);
+      }
+      throw new InternalServerErrorException(`VoiceRSS API returned invalid audio data (too small)`);
+    }
 
     const fakeAudioFile: Express.Multer.File = {
       buffer,
