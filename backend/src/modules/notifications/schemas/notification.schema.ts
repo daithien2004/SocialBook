@@ -43,6 +43,24 @@ export class Notification {
 
   @Prop({ type: Date, default: Date.now })
   updatedAt: Date;
+
+  @Prop({
+    type: {
+      actorId: { type: Types.ObjectId, ref: 'User' },
+      username: { type: String },
+      image: { type: String || undefined},
+      targetId: { type: Types.ObjectId}
+    },
+  })
+  meta: {
+    actorId: Types.ObjectId;
+    name: string;
+    avatar: string;
+    targetId: Types.ObjectId;
+  };
+
+  @Prop({ type: String, default: null })
+  actionUrl: string | null;
 }
 
 export type NotificationDocument = HydratedDocument<Notification>;

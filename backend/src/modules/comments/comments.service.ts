@@ -19,6 +19,7 @@ import { ContentModerationService } from '../content-moderation/content-moderati
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
 import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
 import { Chapter, ChapterDocument } from '@/src/modules/chapters/schemas/chapter.schema';
+import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
 
 @Injectable()
 export class CommentsService {
@@ -28,6 +29,7 @@ export class CommentsService {
     private readonly contentModerationService: ContentModerationService,
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
     @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly notifications: NotificationsService,
   ) { }
 
@@ -224,78 +226,60 @@ export class CommentsService {
     let ownerId: string | null = null;
     let title = 'Ai đó đã bình luận nội dung của bạn';
     let message = `Bạn có một bình luận mới: "${commentContent}"`;
+    let actionUrl = '';
+
+    const actor = await this.userModel
+      .findById(actorId)
+      .select('_id username image')
+      .lean();
+
+    if (!actor) return;
+
     if (parentId) {
       const parent = await this.commentModel
         .findById(parentId)
-        .select('_id userId content')
+        .select('_id userId content targetId targetType')
         .lean();
+
       if (!parent) return;
 
       ownerId = parent.userId?.toString();
-      title = 'Ai đó đã trả lời bình luận của bạn';
+      title = `${actor.username} đã trả lời bình luận của bạn`;
       message = `Bình luận của bạn vừa có phản hồi: "${commentContent}"`;
-    } else {
+      actionUrl = `/${targetType}s/${parent.targetId}`;
+    }
+
+    else {
       if (targetType === 'post') {
         const post = await this.postModel
           .findById(targetId)
-          .select('_id userId title content')
+          .select('_id userId content')
           .lean();
+
         if (!post) return;
 
         ownerId = post.userId?.toString();
-        title = 'Ai đó đã bình luận bài viết của bạn';
+        title = `${actor.username} đã bình luận bài viết của bạn`;
         message = `Bài viết "${post.content}" vừa có bình luận: "${commentContent}"`;
+        actionUrl = `/posts/${post._id}`;
 
-      } else if (targetType === 'chapter') {
-        const chapter = await this.chapterModel
-          .findById(targetId)
-          .populate('bookId', 'userId title') // 👈 cần Book.userId
-          .select('_id bookId title')
-          .exec();
-        if (!chapter) return;
-
-        const bookUserId = (chapter as any)?.bookId?.userId;
-        if (!bookUserId) return;
-
-        ownerId = bookUserId.toString();
-        title = 'Ai đó đã bình luận chương của bạn';
-        message = `Chương "${chapter.title}" vừa có bình luận: "${commentContent}"`;
-
-      } else if (targetType === 'paragraph') {
-        const chapter = await this.chapterModel
-          .findOne({ 'paragraphs._id': new Types.ObjectId(targetId) })
-          .populate('bookId', 'userId title') // 👈 cần Book.userId
-          .select('_id bookId title paragraphs')
-          .exec();
-        if (!chapter) return;
-
-        const paragraphSubdoc = chapter.paragraphs.id(new Types.ObjectId(targetId));
-        const paragraphText = (paragraphSubdoc as any)?.content ?? '';
-
-        const bookUserId = (chapter as any)?.bookId?.userId;
-        if (!bookUserId) return;
-
-        ownerId = bookUserId.toString();
-        title = 'Ai đó đã bình luận đoạn của bạn';
-        message = `Đoạn trong chương "${chapter.title}" vừa có bình luận: "${commentContent}"`;
       } else {
         return;
       }
     }
 
     if (!ownerId || ownerId === actorId) return;
-
     await this.notifications.create({
       userId: ownerId,
       title,
       message,
       type: parentId ? 'reply' : 'comment',
+      actionUrl,
       meta: {
-        targetType,
+        actorId: actor._id.toString(),
+        username: actor.username,
+        image: actor.image,
         targetId,
-        parentId: parentId ?? null,
-        commentId: commentId ?? null,
-        actorId,
       },
     });
   }
