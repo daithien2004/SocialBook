@@ -295,7 +295,7 @@ export default function CollectionDetailPage() {
         <>
           {/* Overlay */}
           <div
-            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-100 animate-in fade-in duration-200"
             onClick={() => setIsEditModalOpen(false)}
           />
 

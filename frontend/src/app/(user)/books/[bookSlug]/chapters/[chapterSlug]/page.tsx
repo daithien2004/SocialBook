@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 
 // --- IMPORTS THƯ VIỆN & COMPONENT ---
-import { comments } from '@/src/lib/comments';
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
 import {
   useGetChapterQuery,
@@ -100,14 +99,6 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     }
   }, [savedProgress, restoreScroll]);
 
-  const chapterComments = useMemo(() => {
-    if (!chapter?.id) return [];
-    return comments
-      .filter((c) => c.targetType === 'chapter' && c.targetId === chapter.id)
-      .map((c) => ({ ...c, targetType: 'chapter' as const }));
-  }, [chapter?.id]);
-
-  // --- HANDLERS ---
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -286,7 +277,6 @@ ${book.description?.slice(0, 100)}...
 
         <div className="mt-8">
           <CommentSection
-            comments={chapterComments}
             targetId={chapter.id}
             targetType="chapter"
           />

@@ -51,12 +51,12 @@ export default function CommentInput({
           onKeyDown={handleKeyDown}
           disabled={isSubmitting}
           maxLength={maxLength}
-          className="w-full px-4 py-3 bg-neutral-900/50 border border-white/10 rounded-xl text-neutral-200 placeholder:text-neutral-600 focus:outline-none focus:border-blue-500/50 focus:bg-neutral-900 focus:ring-1 focus:ring-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 bg-white dark:bg-[#1a1a1a] border-2 border-gray-300 dark:border-white/20 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed duration-300 shadow-sm"
           aria-label="Nhập bình luận"
         />
 
         {content.length > 0 && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-600 font-mono pointer-events-none transition-opacity">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-600 dark:text-gray-400 font-medium pointer-events-none transition-opacity">
             {content.length}/{maxLength}
           </span>
         )}
@@ -66,11 +66,11 @@ export default function CommentInput({
         onClick={handleSubmit}
         disabled={!isValid || isSubmitting}
         className={`
-          flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium transition-all duration-200 min-w-[80px]
+          flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-200 min-w-[80px] shadow-lg
           ${
             !isValid || isSubmitting
-              ? 'bg-white/5 text-neutral-600 cursor-not-allowed border border-transparent'
-              : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20 active:scale-95 border border-blue-500/50' // Active state
+              ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed'
+              : 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-400 shadow-blue-500/30 dark:shadow-blue-400/30 active:scale-95 border-2 border-blue-700 dark:border-blue-400'
           }
         `}
         aria-label="Gửi bình luận"

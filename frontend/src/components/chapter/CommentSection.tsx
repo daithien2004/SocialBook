@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
-import { useTheme } from "next-themes";
+import { useTheme } from 'next-themes';
 
 export interface Comment {
   id: string;
@@ -19,7 +19,6 @@ export interface Comment {
 }
 
 interface CommentSectionProps {
-  comments: Comment[];
   targetId: string;
   targetType: 'book' | 'chapter';
   emptyMessage?: string;
@@ -27,7 +26,6 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({
-  comments,
   targetId,
   className = '',
 }: CommentSectionProps) {
@@ -51,7 +49,8 @@ export default function CommentSection({
     } catch (error: any) {
       console.error('Failed to submit comment:', error);
       // Display the error message from backend
-      const errorMessage = error?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+      const errorMessage =
+        error?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -60,16 +59,7 @@ export default function CommentSection({
 
   return (
     <section className={`w-full pt-10 border-t border-white/5 ${className}`}>
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-blue-500/10 rounded-lg">
-          <MessageCircle className="w-5 h-5 text-blue-400" />
-        </div>
-        <h2 className="text-xl font-bold text-neutral-200">
-          Thảo luận chương ({comments.length})
-        </h2>
-      </div>
-
-      <div className="mb-10 bg-neutral-900/50 p-4 rounded-xl border border-white/5">
+      <div className="mb-10 bg-gray-100 dark:bg-neutral-900/50 border border-gray-300 dark:border-white/10 p-4 rounded-xl">
         <CommentInput
           placeholder="Bạn nghĩ gì về chương này?..."
           onSubmit={handleSubmit}
@@ -83,7 +73,7 @@ export default function CommentSection({
           isCommentOpen={true}
           parentId={null}
           targetType={'chapter'}
-          theme={theme as "light" | "dark" | undefined}
+          theme={theme as 'light' | 'dark' | undefined}
         />
       </div>
     </section>
