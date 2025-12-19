@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           }`}
       >
         <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-          <h2 className="text-xl font-bold">SocialBook</h2>
+          <h2 className="ml-4 text-xl font-bold">SocialBook</h2>
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="md:hidden text-gray-500 hover:text-gray-700"
@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Content */}
-      <main className="flex-1 ml-0 p-6 overflow-y-auto">
+      <main className="flex-1 ml-0 px-5 overflow-y-auto">
         {children}
       </main>
     </div>

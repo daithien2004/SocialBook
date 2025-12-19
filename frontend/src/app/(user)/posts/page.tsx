@@ -20,7 +20,7 @@ export default function Post() {
         {/* HEADER */}
         <header className="border-b border-slate-100 dark:border-gray-800 backdrop-blur"></header>
 
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 mt-4 flex justify-center gap-4 pb-4">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 mt-4 flex justify-center gap-4 pb-4">
 
           {/* LEFT SIDEBAR */}
           <aside className="hidden lg:block w-[22%]">

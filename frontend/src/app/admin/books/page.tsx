@@ -3,13 +3,15 @@
 
 import { useState } from 'react';
 import { useGetAdminBooksQuery, useDeleteBookMutation } from '@/src/features/books/api/bookApi';
-import DeleteBookModal from '@/src/components/admin/book/DeleteBookModal';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Search, Plus, Eye, Heart, BookOpen, Filter, ChevronLeft, ChevronRight, Loader2, Edit, Trash2, BookText } from 'lucide-react';
 import { BookForAdmin, BackendPagination } from '@/src/features/books/types/book.interface';
+import { toast } from 'sonner';
+import { useDebounce } from '@/src/hooks/useDebounce';
+import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
 
 type BookStatus = 'draft' | 'published' | 'completed';
 type StatusFilter = BookStatus | 'all';
@@ -17,16 +19,13 @@ type StatusFilter = BookStatus | 'all';
 export default function AdminBooksPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-
-  // Delete modal state
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [bookToDelete, setBookToDelete] = useState<BookForAdmin | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useGetAdminBooksQuery({
     page,
     limit: 15,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
   }, {
     refetchOnMountOrArgChange: true,
@@ -37,26 +36,15 @@ export default function AdminBooksPage() {
   const pagination: BackendPagination | undefined = data?.pagination;
 
   // Delete handlers
-  const handleDeleteClick = (book: BookForAdmin) => {
-    setBookToDelete(book);
-    setDeleteModalOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!bookToDelete) return;
+  const handleDelete = async (id: string) => {
     try {
-      await deleteBook(bookToDelete.id).unwrap();
+      await deleteBook(id).unwrap();
+      toast.success('Xóa sách thành công');
       refetch();
-      setDeleteModalOpen(false);
-      setBookToDelete(null);
     } catch (error) {
       console.error('Failed to delete book:', error);
+      toast.error('Xóa sách thất bại');
     }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteModalOpen(false);
-    setBookToDelete(null);
   };
 
   const getStatusBadge = (status: BookStatus) => {
@@ -73,57 +61,59 @@ export default function AdminBooksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-5 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 rounded-lg">
+      {/* Header & Filters Card */}
+      <div className="bg-white rounded-b-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
+        {/* Top Header */}
+        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quản lý sách</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Tổng cộng <span className="font-semibold">{pagination?.total?.toLocaleString() || 0}</span> cuốn sách
+              Tổng cộng <span className="font-semibold text-gray-800">{pagination?.total?.toLocaleString() || 0}</span> cuốn sách
             </p>
           </div>
           <Link
             href="/admin/books/new"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-medium transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
           >
             <Plus className="w-5 h-5" />
             Thêm sách mới
           </Link>
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4 flex flex-col sm:flex-row gap-4">
+        {/* Filters Bar */}
+        <div className="px-6 py-4 bg-gray-50/50 flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm tên sách hoặc slug..."
+              placeholder="Tìm kiếm tên sách hoặc tác giả..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
             />
           </div>
           <div className="flex items-center gap-3">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value as StatusFilter);
-                setPage(1);
-              }}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="draft">Bản nháp</option>
-              <option value="published">Đang phát hành</option>
-              <option value="completed">Hoàn thành</option>
-            </select>
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 z-10" />
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as StatusFilter);
+                  setPage(1);
+                }}
+                className="pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none appearance-none cursor-pointer shadow-sm min-w-[180px]"
+              >
+                <option value="all">Tất cả trạng thái</option>
+                <option value="draft">Bản nháp</option>
+                <option value="published">Đang phát hành</option>
+                <option value="completed">Hoàn thành</option>
+              </select>
+              <ChevronLeft className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 rotate-[-90deg] pointer-events-none" />
+            </div>
           </div>
         </div>
       </div>
@@ -137,7 +127,7 @@ export default function AdminBooksPage() {
 
       {/* Table */}
       {!(isLoading || isFetching) && (
-        <div className="py-6">
+        <div className="py-0">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -220,13 +210,18 @@ export default function AdminBooksPage() {
                             <Link href={`/admin/books/edit/${book.id}`} className="p-2 hover:bg-green-50 rounded-lg transition-colors" title="Chỉnh sửa">
                               <Edit className="w-5 h-5 text-green-600" />
                             </Link>
-                            <button
-                              onClick={() => handleDeleteClick(book)}
-                              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            <ConfirmDelete
                               title="Xóa sách"
+                              description={`Bạn có chắc chắn muốn xóa sách "${book.title}"?`}
+                              onConfirm={() => handleDelete(book.id)}
                             >
-                              <Trash2 className="w-5 h-5 text-red-600" />
-                            </button>
+                              <button
+                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Xóa sách"
+                              >
+                                <Trash2 className="w-5 h-5 text-red-600" />
+                              </button>
+                            </ConfirmDelete>
                           </div>
                         </td>
                       </tr>
@@ -256,15 +251,6 @@ export default function AdminBooksPage() {
           </div>
         </div>
       )}
-
-      {/* Delete Modal */}
-      <DeleteBookModal
-        book={bookToDelete}
-        isOpen={deleteModalOpen}
-        isDeleting={isDeleting}
-        onClose={handleDeleteCancel}
-        onConfirm={handleDeleteConfirm}
-      />
     </div>
   );
-}
+} 

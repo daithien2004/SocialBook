@@ -9,6 +9,7 @@ export const NESTJS_AUTH_ENDPOINTS = {
 
 export const NESTJS_USERS_ENDPOINTS = {
   getUsers: '/users',
+  getUsersAdmin: '/users/admin',
   banUser: (id: string) => `/users/${id}/ban`,
   readingPreferences: '/users/me/reading-preferences',
 };
@@ -154,5 +155,14 @@ export const NESTJS_GAMIFICATION_ENDPOINTS = {
   dailyGoals: '/gamification/daily-goals',
   streak: '/gamification/streak',
   streakCheckIn: '/gamification/streak/check-in',
+};
+
+export const NESTJS_ANALYTICS_ENDPOINTS = {
+  getReadingHeatmap: '/statistics/analytics/reading-heatmap',
+  getChapterEngagement: '/statistics/analytics/chapter-engagement',
+  getReadingSpeed: '/statistics/analytics/reading-speed',
+  getGeographicDistribution: '/statistics/analytics/geographic',
+  getActiveUsers: '/statistics/analytics/active-users',
+  seedReadingHistory: '/statistics/seed-reading-history',
 };
 

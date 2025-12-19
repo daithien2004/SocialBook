@@ -32,19 +32,16 @@ export default function ChapterListDrawer({
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
-          isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-        }`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+          }`}
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
       <div
-        className={`fixed ${
-          hasHeader ? 'top-15' : 'top-0'
-        } right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-[#1a1a1a] border-l border-gray-300 dark:border-white/10 z-[61] shadow-2xl transform transition-all duration-300 ease-in-out flex flex-col ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed ${hasHeader ? 'top-15' : 'top-0'
+          } right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-[#1a1a1a] border-l border-gray-300 dark:border-white/10 z-[61] shadow-2xl transform transition-all duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         {/* Header */}
         <div className="p-5 border-b border-gray-200 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1a1a1a] transition-colors duration-300">
@@ -72,19 +69,17 @@ export default function ChapterListDrawer({
               <button
                 key={chap.id}
                 onClick={() => handleChapterSelect(chap.slug)}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 border flex items-center justify-between group ${
-                  isActive
+                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 border flex items-center justify-between group ${isActive
                     ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-blue-100'
                     : 'border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
-                }`}
+                  }`}
               >
                 <div className="flex flex-col gap-0.5">
                   <span
-                    className={`text-xs font-bold uppercase tracking-wider ${
-                      isActive
+                    className={`text-xs font-bold uppercase tracking-wider ${isActive
                         ? 'text-blue-600 dark:text-blue-400'
                         : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
-                    }`}
+                      }`}
                   >
                     Chương {chap.orderIndex}
                   </span>

@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Request,
   UseGuards,
   UseInterceptors,
@@ -38,8 +39,12 @@ export class ChaptersController {
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getChapters(@Param('bookSlug') bookSlug: string) {
-    const result = await this.chaptersService.findByBookSlug(bookSlug);
+  async getChapters(
+    @Param('bookSlug') bookSlug: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 20,
+  ) {
+    const result = await this.chaptersService.getChaptersByBookSlug(bookSlug, page, limit);
     return {
       message: 'Get list chapters successfully',
       data: result,

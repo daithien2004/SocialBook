@@ -6,12 +6,29 @@ import { io, Socket } from "socket.io-client";
 
 export type NotificationItem = {
     id: string;
+    userId: string;
     title: string;
     message: string;
-    type: string;
+    type:
+        | 'info'
+        | 'success'
+        | 'warning'
+        | 'error'
+        | 'system'
+        | 'message'
+        | 'comment'
+        | 'reply'
+        | 'like'
+        | 'follow';
     isRead: boolean;
     createdAt: string;
-    meta?: any;
+    actionUrl: string | null;
+    meta: {
+        actorId: string;
+        name: string;
+        image: string;
+        targetId?: string;
+    };
 };
 
 export function useNotifications(userToken: string | undefined) {
