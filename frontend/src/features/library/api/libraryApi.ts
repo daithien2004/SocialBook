@@ -1,4 +1,3 @@
-// src/features/library/api/libraryApi.ts
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
 import { NESTJS_LIBRARY_ENDPOINTS } from '@/src/constants/server-endpoints';
@@ -161,6 +160,17 @@ export const libraryApi = createApi({
       }),
       invalidatesTags: ['Collection'],
     }),
+
+    recordReadingTime: builder.mutation<any, { bookId: string; chapterId: string; durationInSeconds: number }>({
+      query: (body) => ({
+        url: NESTJS_LIBRARY_ENDPOINTS.readingTime,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (result, error, { bookId }) => [
+         { type: 'Library', id: 'LIST_ALL' }
+      ]
+    }),
   }),
 });
 
@@ -181,4 +191,5 @@ export const {
   useCreateCollectionMutation,
   useUpdateCollectionMutation,
   useDeleteCollectionMutation,
+  useRecordReadingTimeMutation,
 } = libraryApi;

@@ -108,7 +108,7 @@ export const BFF_TTS_ENDPOINTS = {
 };
 
 export const BFF_USERS_ENDPOINTS = {
-  readingPreferences: '/users/reading-preferences',
+  readingPreferences: '/users/me/reading-preferences',
 };
 
 export const BFF_GEMINI_ENDPOINTS = {

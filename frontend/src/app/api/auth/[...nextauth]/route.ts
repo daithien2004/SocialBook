@@ -71,6 +71,8 @@ export const authOptions: NextAuthOptions = {
               ...user,
               accessToken,
               refreshToken,
+              onboardingCompleted: user.onboardingCompleted,
+              onboardingId: user.onboardingId,
             };
           }
 
@@ -105,6 +107,8 @@ export const authOptions: NextAuthOptions = {
           if (authData.user?.role) {
             user.role = authData.user.role;
           }
+          user.onboardingCompleted = authData.user?.onboardingCompleted;
+          user.onboardingId = authData.user?.onboardingId;
 
           return true; // Cho phép đăng nhập
         } catch (error) {
@@ -116,7 +120,7 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
@@ -126,11 +130,21 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email!;
         token.image = user.image!;
         token.role = user.role || 'user';
+        token.onboardingCompleted = user.onboardingCompleted;
+        token.onboardingId = user.onboardingId;
 
         // Giải mã token để lấy thời gian hết hạn
         const decodedAccessToken = jwtDecode<{ exp: number }>(user.accessToken);
         token.accessTokenExpires = decodedAccessToken.exp * 1000;
 
+        return token;
+      }
+
+      // Handle session update
+      if (trigger === "update" && session) {
+        if (session.user?.onboardingCompleted !== undefined) {
+             token.onboardingCompleted = session.user.onboardingCompleted;
+        }
         return token;
       }
 
@@ -154,6 +168,8 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email; // Vẫn giữ email
         session.user.image = token.image as string;
         session.user.role = token.role;
+        session.user.onboardingCompleted = token.onboardingCompleted;
+        session.user.onboardingId = token.onboardingId;
         session.accessToken = token.accessToken;
       }
       return session;

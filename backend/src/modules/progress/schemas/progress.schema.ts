@@ -1,4 +1,3 @@
-// src/modules/progress/schemas/progress.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { ReadingStatus } from '../../library/schemas/reading-list.schema';
@@ -24,6 +23,15 @@ export class Progress {
 
   @Prop({ type: String, enum: ReadingStatus, default: ReadingStatus.READING })
   status: string;
+
+  @Prop({ default: 0 })
+  xpEarned: number;
+
+  @Prop({ default: 0 })
+  pagesRead: number; // Session pages
+
+  @Prop({ default: 0 })
+  wordsRead: number;
 
   @Prop({ type: Date, default: Date.now })
   lastReadAt: Date;

@@ -12,8 +12,9 @@ import {
   ProgressDocument,
 } from '../progress/schemas/progress.schema';
 
-import { AddToCollectionsDto, UpdateProgressDto } from './dto/library.dto';
+import { AddToCollectionsDto, UpdateProgressDto, UpdateReadingTimeDto } from './dto/library.dto';
 import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
+import { GamificationService } from '../gamification/gamification.service';
 
 @Injectable()
 export class LibraryService {
@@ -23,7 +24,8 @@ export class LibraryService {
     @InjectModel(Chapter.name)
     private chapterModel: Model<ChapterDocument>,
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
-  ) {}
+    private gamificationService: GamificationService,
+  ) { }
 
   async getSystemLibrary(userId: string, status: ReadingStatus) {
     return this.readingListModel
@@ -127,6 +129,28 @@ export class LibraryService {
     ]);
 
     return updatedReadingList;
+  }
+
+  async recordReadingTime(userId: string, dto: UpdateReadingTimeDto) {
+    const { bookId, chapterId, durationInSeconds } = dto;
+    const userObjectId = new Types.ObjectId(userId);
+    const chapterObjectId = new Types.ObjectId(chapterId);
+
+    await this.progressModel.findOneAndUpdate(
+      { userId: userObjectId, chapterId: chapterObjectId },
+      {
+        $inc: { timeSpent: durationInSeconds }
+      },
+      { upsert: true, new: true }
+    );
+
+    const minutes = Math.ceil(durationInSeconds / 60);
+
+    if (minutes > 0) {
+      await this.gamificationService.updateDailyProgress(userId, durationInSeconds / 60);
+    }
+
+    return { success: true };
   }
 
   async updateBookCollections(userId: string, dto: AddToCollectionsDto) {

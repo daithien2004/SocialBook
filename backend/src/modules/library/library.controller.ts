@@ -18,13 +18,13 @@ import {
   AddToCollectionsDto,
   UpdateLibraryStatusDto,
   UpdateProgressDto,
+  UpdateReadingTimeDto,
 } from './dto/library.dto';
 import { ReadingStatus } from './schemas/reading-list.schema';
 
 @Controller('library')
-@UseGuards(JwtAuthGuard)
 export class LibraryController {
-  constructor(private readonly libraryService: LibraryService) {}
+  constructor(private readonly libraryService: LibraryService) { }
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -80,6 +80,16 @@ export class LibraryController {
     const data = await this.libraryService.updateProgress(req.user.id, dto);
     return {
       message: 'Update reading progress successfully',
+      data,
+    };
+  }
+
+  @Post('reading-time')
+  @UseGuards(JwtAuthGuard)
+  async recordReadingTime(@Req() req, @Body() dto: UpdateReadingTimeDto) {
+    const data = await this.libraryService.recordReadingTime(req.user.id, dto);
+     return {
+      message: 'Recorded reading time successfully',
       data,
     };
   }

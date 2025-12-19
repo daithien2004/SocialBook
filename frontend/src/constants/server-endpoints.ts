@@ -86,6 +86,7 @@ export const NESTJS_LIBRARY_ENDPOINTS = {
   getLibrary: '/library',
   updateStatus: '/library/status',
   updateProgress: '/library/progress',
+  readingTime: '/library/reading-time',
   updateBookCollections: '/library/collections',
   removeBook: (bookId: string) => `/library/${bookId}`,
   getBookLibraryInfo: (bookId: string) => `/library/book/${bookId}`,
@@ -140,6 +141,22 @@ export const NESTJS_RECOMMENDATIONS_ENDPOINTS = {
   getPersonalized: '/recommendations/personalized',
 };
 
+export const NESTJS_ONBOARDING_ENDPOINTS = {
+  status: '/onboarding/status',
+  start: '/onboarding/start',
+  updateStep: '/onboarding/update-step',
+  complete: '/onboarding/complete',
+};
+
+export const NESTJS_GAMIFICATION_ENDPOINTS = {
+  stats: '/gamification/stats',
+  achievements: '/gamification/achievements',
+  leaderboard: '/gamification/leaderboard',
+  dailyGoals: '/gamification/daily-goals',
+  streak: '/gamification/streak',
+  streakCheckIn: '/gamification/streak/check-in',
+};
+
 export const NESTJS_ANALYTICS_ENDPOINTS = {
   getReadingHeatmap: '/statistics/analytics/reading-heatmap',
   getChapterEngagement: '/statistics/analytics/chapter-engagement',
@@ -148,3 +165,4 @@ export const NESTJS_ANALYTICS_ENDPOINTS = {
   getActiveUsers: '/statistics/analytics/active-users',
   seedReadingHistory: '/statistics/seed-reading-history',
 };
+
