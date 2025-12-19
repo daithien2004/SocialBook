@@ -45,12 +45,6 @@ export class UserOnboarding {
 
   @Prop({
     type: String,
-    enum: ['beginner', 'intermediate', 'advanced'],
-  })
-  readingLevel: string;
-
-  @Prop({
-    type: String,
     enum: ['short', 'medium', 'long'],
   })
   preferredBookLength: string;

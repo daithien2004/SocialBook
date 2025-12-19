@@ -6,7 +6,6 @@ import { UserGamification, UserGamificationSchema } from './schemas/user-gamific
 import { Achievement, AchievementSchema } from './schemas/achievement.schema';
 import { UserAchievement, UserAchievementSchema } from './schemas/user-achievement.schema';
 import { DailyGoal, DailyGoalSchema } from './schemas/daily-goal.schema';
-import { Leaderboard, LeaderboardSchema } from './schemas/leaderboard.schema';
 import { UserOnboarding, UserOnboardingSchema } from '../onboarding/schemas/user-onboarding.schema';
 
 @Module({
@@ -16,7 +15,6 @@ import { UserOnboarding, UserOnboardingSchema } from '../onboarding/schemas/user
       { name: Achievement.name, schema: AchievementSchema },
       { name: UserAchievement.name, schema: UserAchievementSchema },
       { name: DailyGoal.name, schema: DailyGoalSchema },
-      { name: Leaderboard.name, schema: LeaderboardSchema },
       { name: UserOnboarding.name, schema: UserOnboardingSchema },
     ]),
   ],

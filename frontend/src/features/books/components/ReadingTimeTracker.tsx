@@ -3,61 +3,62 @@
 import { useEffect, useRef } from 'react';
 import { useRecordReadingTimeMutation } from '@/src/features/library/api/libraryApi';
 import { useSession } from 'next-auth/react';
+import { useDispatch } from 'react-redux';
+import { gamificationApi } from '@/src/features/gamification/api/gamificationApi';
 
 interface ReadingTimeTrackerProps {
   bookId: string;
   chapterId: string;
 }
 
-const REPORT_INTERVAL = 60000;
-
 export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProps) {
   const { status } = useSession();
   const [recordReadingTime] = useRecordReadingTimeMutation();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const accumulatedSeconds = useRef(0);
+
+  const recordReadingTimeRef = useRef(recordReadingTime);
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    // Only track if user is authenticated and window is visible
+    recordReadingTimeRef.current = recordReadingTime;
+  }, [recordReadingTime]);
+
+  useEffect(() => {
     if (status !== 'authenticated') return;
 
-    const startTracking = () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      
-      intervalRef.current = setInterval(() => {
-         if (document.visibilityState === 'visible') {
-            recordReadingTime({
-              bookId,
-              chapterId,
-              durationInSeconds: 60
-            }).catch(console.error); 
-         }
-      }, REPORT_INTERVAL);
+    const TICK_INTERVAL = 1000;
+
+    const tick = () => {
+       if (document.visibilityState === 'visible') {
+          accumulatedSeconds.current += 1;
+
+          if (accumulatedSeconds.current >= 60) {
+             const secondsToRecord = 60; 
+             accumulatedSeconds.current -= 60;
+             
+             recordReadingTimeRef.current({
+                bookId,
+                chapterId,
+                durationInSeconds: secondsToRecord
+             })
+             .then((result) => {
+                 if ('data' in result) {
+                     dispatch(gamificationApi.util.invalidateTags(['DailyGoals', 'GamificationStats']));
+                 }
+             })
+             .catch(console.error);
+          }
+       }
     };
 
-    const stopTracking = () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-
-    startTracking();
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        startTracking();
-      } else {
-        stopTracking();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    intervalRef.current = setInterval(tick, TICK_INTERVAL);
 
     return () => {
-      stopTracking();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [bookId, chapterId, status, recordReadingTime]);
+  }, [bookId, chapterId, status, dispatch]);
 
   return null;
 }

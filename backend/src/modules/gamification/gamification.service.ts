@@ -5,7 +5,6 @@ import { UserGamification } from './schemas/user-gamification.schema';
 import { Achievement } from './schemas/achievement.schema';
 import { UserAchievement } from './schemas/user-achievement.schema';
 import { DailyGoal } from './schemas/daily-goal.schema';
-import { Leaderboard } from './schemas/leaderboard.schema';
 import { UserOnboarding } from '../onboarding/schemas/user-onboarding.schema';
 
 @Injectable()
@@ -15,7 +14,6 @@ export class GamificationService {
     @InjectModel(Achievement.name) private achievementModel: Model<Achievement>,
     @InjectModel(UserAchievement.name) private userAchievementModel: Model<UserAchievement>,
     @InjectModel(DailyGoal.name) private dailyGoalModel: Model<DailyGoal>,
-    @InjectModel(Leaderboard.name) private leaderboardModel: Model<Leaderboard>,
     @InjectModel(UserOnboarding.name) private userOnboardingModel: Model<UserOnboarding>,
   ) { }
 
@@ -178,9 +176,40 @@ export class GamificationService {
   }
 
   async getUserAchievements(userId: string) {
-    return this.userAchievementModel.find({ userId: new Types.ObjectId(userId) })
-      .populate('achievementId')
-      .sort({ unlockedAt: -1 })
-      .exec();
+  return this.userAchievementModel
+    .find({ userId: new Types.ObjectId(userId) })
+    .populate('achievementId', 'name description')
+    .exec();
+}
+
+  async debugSetStreak(userId: string, streak: number) {
+    let userGamification = await this.userGamificationModel.findOne({ userId: new Types.ObjectId(userId) });
+    
+    if (!userGamification) {
+      userGamification = await this.userGamificationModel.create({
+        userId: new Types.ObjectId(userId),
+        currentStreak: streak,
+        longestStreak: streak,
+        lastReadDate: new Date(),
+        streakStartDate: new Date()
+      });
+    } else {
+      userGamification.currentStreak = streak;
+      if (streak > userGamification.longestStreak) {
+        userGamification.longestStreak = streak;
+      }
+      userGamification.lastReadDate = new Date();
+    }
+
+    await userGamification.save();
+    
+    // Force check achievements
+    await this.checkStreakAchievements(userGamification, userId);
+
+    return {
+      success: true,
+      currentStreak: userGamification.currentStreak,
+      message: `Streak forced to ${streak} days`
+    };
   }
 }

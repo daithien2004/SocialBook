@@ -65,12 +65,14 @@ export const RecommendedForYouSection = () => {
             Gợi ý cho bạn
           </h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div className="flex flex-col gap-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="aspect-[2/3] bg-gray-200 dark:bg-white/5 rounded-lg mb-2" />
-              <div className="h-4 bg-gray-200 dark:bg-white/5 rounded w-3/4 mb-1" />
-              <div className="h-3 bg-gray-200 dark:bg-white/5 rounded w-1/2" />
+            <div key={i} className="animate-pulse flex gap-3 p-2">
+              <div className="w-16 h-24 bg-gray-200 dark:bg-white/5 rounded-lg flex-shrink-0" />
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 dark:bg-white/5 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-200 dark:bg-white/5 rounded w-1/2" />
+              </div>
             </div>
           ))}
         </div>
@@ -114,14 +116,8 @@ export const RecommendedForYouSection = () => {
     );
   }
 
-  // Sắp xếp theo matchScore (cao xuống thấp)
-  const sortedRecommendations = [...data.recommendations].sort((a, b) => {
-    const scoreA = a.matchScore || 0;
-    const scoreB = b.matchScore || 0;
-    return scoreB - scoreA;
-  });
-
-  const displayedBooks = sortedRecommendations.slice(0, 12);
+  // Hiển thị đúng số lượng từ API (limit)
+  const displayedBooks = data.recommendations;
 
   return (
     <section className="mb-12">
@@ -133,8 +129,8 @@ export const RecommendedForYouSection = () => {
         </h2>
       </div>
 
-      {/* Books List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      {/* Books List - Single Column */}
+      <div className="flex flex-col gap-3">
         {displayedBooks.map((rec) => (
           <div
             key={rec.bookId}
@@ -178,24 +174,15 @@ export const RecommendedForYouSection = () => {
 
             {/* Tooltip */}
             {hoveredId === rec.bookId && rec.reason && (
-              <div className="absolute left-full ml-2 top-0 z-50 w-64 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg p-3 shadow-xl pointer-events-none">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg p-3 shadow-xl pointer-events-none">
                 {rec.reason}
                 {/* Arrow */}
-                <div className="absolute right-full top-4 border-8 border-transparent border-r-gray-900 dark:border-r-gray-800" />
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-900 dark:border-t-gray-800" />
               </div>
             )}
           </div>
         ))}
       </div>
-
-      {/* View All Button */}
-      <button
-        onClick={() => router.push('/recommendations')}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-red-200 dark:border-red-800 rounded-lg transition-all duration-300 hover:shadow-md mt-6"
-      >
-        Xem tất cả
-        <ChevronRight size={16} />
-      </button>
     </section>
   );
 };

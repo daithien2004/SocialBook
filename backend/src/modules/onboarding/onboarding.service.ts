@@ -90,19 +90,8 @@ export class OnboardingService {
     await this.userModel.findByIdAndUpdate(userId, {
       onboardingCompleted: true,
       gamificationId: gamification._id,
-      // Apply reading preferences from onboarding if needed (mapping logic)
     });
 
-    // 3. Generate initial recommendations (Placeholder)
-    await this.generateRecommendations(onboarding);
-
     return { success: true };
-  }
-
-  async generateRecommendations(userPreferences: any) {
-    // This would call the RecommendationsService
-    // For now, we just log or return
-    console.log('Generating recommendations for:', userPreferences.favoriteGenres);
-    return [];
   }
 }

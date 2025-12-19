@@ -17,6 +17,8 @@ export function AchievementsWidget() {
 
   const displayList = achievements.slice(0, 3);
 
+  console.log(achievements)
+
   return (
     <div className="bg-white dark:bg-[#1f1f1f] rounded-2xl p-5 border border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">
       <div className="flex items-center justify-between mb-4">
@@ -39,7 +41,7 @@ export function AchievementsWidget() {
             const achievement = item.achievementId;
             return (
               <div
-                key={item._id}
+                key={item.id}
                 className="flex items-start gap-3 p-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 transition-colors"
               >
                 <div className="p-2 bg-yellow-100 dark:bg-yellow-500/20 rounded-full shrink-0">

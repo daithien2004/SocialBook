@@ -9,16 +9,19 @@ import {
   Moon,
   Sun,
   Flame,
+  Target,
+  Trophy,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import type { Session } from 'next-auth';
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { NotificationBell } from '@/src/components/notification/NotificationBell';
 import {
   useGetStreakQuery,
   useCheckInStreakMutation,
+  useGetDailyGoalQuery,
 } from '@/src/features/gamification/api/gamificationApi';
 import { toast } from 'sonner';
 
@@ -42,8 +45,35 @@ export function HeaderClient({ session }: HeaderClientProps) {
 
   const [checkInStreak] = useCheckInStreakMutation();
 
+  const { data: dailyGoal } = useGetDailyGoalQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  // Ref to track celebration to avoid spam
+  const hasCelebratedRef = useRef(false);
+
   useEffect(() => {
     setMounted(true);
+
+    // Celebration Logic for Daily Goal
+    if (dailyGoal) {
+       const minutesGoal = dailyGoal.goals?.minutes;
+       const current = minutesGoal?.current || 0;
+       const target = minutesGoal?.target || 90;
+       
+       if (current >= target && !hasCelebratedRef.current) {
+          hasCelebratedRef.current = true;
+          import('canvas-confetti').then((confetti) => {
+            confetti.default({
+              particleCount: 150,
+              spread: 100,
+              origin: { y: 0.3 }, // Fire from top area
+              colors: ['#FFD700', '#FFA500', '#ffffff'],
+            });
+          });
+          toast.success('Xuất sắc! Bạn đã đạt mục tiêu hôm nay! 🎉');
+       }
+    }
 
     if (isAuthenticated) {
       const performCheckIn = async () => {
@@ -66,7 +96,7 @@ export function HeaderClient({ session }: HeaderClientProps) {
       };
       performCheckIn();
     }
-  }, [isAuthenticated, checkInStreak]);
+  }, [isAuthenticated, checkInStreak, dailyGoal]);
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -127,6 +157,27 @@ export function HeaderClient({ session }: HeaderClientProps) {
           <div className="flex items-center gap-3">
             {isAuthenticated && userId ? (
               <>
+                {/* Daily Goal Display */}
+                {dailyGoal && (
+                  <div
+                    className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
+                      (dailyGoal.goals?.minutes?.current || 0) >= (dailyGoal.goals?.minutes?.target || 90)
+                        ? 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-500/30 text-yellow-700 dark:text-yellow-400'
+                        : 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400'
+                    }`}
+                    title="Mục tiêu đọc sách hôm nay"
+                  >
+                    {(dailyGoal.goals?.minutes?.current || 0) >= (dailyGoal.goals?.minutes?.target || 90) ? (
+                      <Trophy className="w-4 h-4" />
+                    ) : (
+                      <Target className="w-4 h-4" />
+                    )}
+                    <span className="text-sm font-bold font-mono">
+                      {dailyGoal.goals?.minutes?.current || 0}/{dailyGoal.goals?.minutes?.target || 90}p
+                    </span>
+                  </div>
+                )}
+
                 {/* Streak Display */}
                 <div
                   className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 text-orange-600 dark:text-orange-400"

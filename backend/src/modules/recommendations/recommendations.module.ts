@@ -14,6 +14,7 @@ import { Review, ReviewSchema } from '../reviews/schemas/review.schema';
 import { Like, LikeSchema } from '../likes/schemas/like.schema';
 import { ChaptersService } from '../chapters/chapters.service';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema';
+import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
 
 @Module({
   imports: [
@@ -23,7 +24,9 @@ import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema';
       { name: Progress.name, schema: ProgressSchema },
       { name: Review.name, schema: ReviewSchema },
       { name: Like.name, schema: LikeSchema },
+      { name: Like.name, schema: LikeSchema },
       { name: Chapter.name, schema: ChapterSchema },
+      { name: Genre.name, schema: GenreSchema },
     ]),
   ],
   controllers: [RecommendationsController],
