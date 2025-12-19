@@ -30,6 +30,8 @@ import {
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import { chatBotApi } from '../features/chatbot/api/chatBotApi';
+import { onboardingApi } from '../features/onboarding/api/onboardingApi';
+import { gamificationApi } from '../features/gamification/api/gamificationApi';
 
 const recommendationsPersistConfig = {
   key: 'recommendations',
@@ -63,6 +65,8 @@ export const store = configureStore({
     [geminiApi.reducerPath]: geminiApi.reducer,
     [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
     [chatBotApi.reducerPath]: chatBotApi.reducer,
+    [onboardingApi.reducerPath]: onboardingApi.reducer,
+    [gamificationApi.reducerPath]: gamificationApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -88,7 +92,9 @@ export const store = configureStore({
       .concat(likeApi.middleware)
       .concat(geminiApi.middleware)
       .concat(recommendationsApi.middleware)
-      .concat(chatBotApi.middleware),
+      .concat(chatBotApi.middleware)
+      .concat(onboardingApi.middleware)
+      .concat(gamificationApi.middleware)
 });
 
 setupListeners(store.dispatch);

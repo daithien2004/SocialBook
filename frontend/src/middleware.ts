@@ -8,7 +8,27 @@ export default withAuth(
 
     // Nếu là admin route nhưng user không phải admin → redirect về home
     if (isAdminRoute && token?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', req.url));
+        return NextResponse.redirect(new URL('/', req.url));
+    }
+
+    // Onboarding Redirection Logic
+    const isOnboardingPage = req.nextUrl.pathname === '/onboarding';
+    
+    if (token) {
+      const isCompleted = token.onboardingCompleted;
+      
+      if (
+        !isCompleted && 
+        !isOnboardingPage && 
+        !req.nextUrl.pathname.startsWith('/api') && 
+        !req.nextUrl.pathname.startsWith('/_next')
+      ) {
+         return NextResponse.redirect(new URL('/onboarding', req.url));
+      }
+
+      if (isCompleted && isOnboardingPage) {
+        return NextResponse.redirect(new URL('/', req.url));
+      }
     }
 
     return NextResponse.next();
@@ -24,7 +44,7 @@ export default withAuth(
         }
 
         // Các routes khác không yêu cầu auth
-        return true;
+        return true; 
       },
     },
     pages: {
@@ -34,5 +54,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/', '/onboarding'],
 };

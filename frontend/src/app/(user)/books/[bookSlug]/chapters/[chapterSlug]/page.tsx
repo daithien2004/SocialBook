@@ -34,6 +34,7 @@ import AudiobookView from '@/src/components/chapter/AudiobookView';
 import ChapterSummaryModal from '@/src/components/chapter/ChapterSummaryModal';
 import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
 import ChapterListDrawer from '@/src/components/book/ChapterListDrawer';
+import { ReadingTimeTracker } from '@/src/features/books/components/ReadingTimeTracker';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -229,6 +230,13 @@ ${book.description?.slice(0, 100)}...
         />
         <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>
+
+      {book && chapter && (
+        <ReadingTimeTracker 
+          bookId={book.id} 
+          chapterId={chapter.id} 
+        />
+      )}
 
       {/* 1. PROGRESS BAR (Top) */}
       <div

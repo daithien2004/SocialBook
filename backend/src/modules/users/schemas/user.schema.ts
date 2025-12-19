@@ -13,7 +13,6 @@ export class User {
   @Prop({ unique: true, required: true })
   email: string;
 
-  // ✅ Password là OPTIONAL (cho OAuth users)
   @Prop({ required: false })
   password?: string;
 
@@ -23,7 +22,6 @@ export class User {
   @Prop({ default: false })
   isBanned: boolean;
 
-  // Thêm field để phân biệt loại đăng nhập
   @Prop({
     type: String,
     enum: ['local', 'google', 'facebook'],
@@ -31,7 +29,6 @@ export class User {
   })
   provider: string;
 
-  // Lưu providerId (Google ID, Facebook ID, etc.)
   @Prop({ required: false })
   providerId?: string;
 
@@ -49,6 +46,30 @@ export class User {
 
   @Prop()
   hashedRt?: string; // lưu refresh token hash
+
+  // Gamification & Onboarding
+  @Prop({ type: Types.ObjectId, ref: 'UserGamification' })
+  gamificationId?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'UserOnboarding' })
+  onboardingId?: Types.ObjectId;
+
+  @Prop({ default: false })
+  onboardingCompleted: boolean;
+
+  // XP & Level (denormalized)
+  @Prop({ default: 0 })
+  currentXP: number;
+
+  @Prop({ default: 1 })
+  currentLevel: number;
+
+  // Streak (denormalized)
+  @Prop({ default: 0 })
+  currentStreak: number;
+
+  @Prop({ type: Date })
+  lastReadDate?: Date;
 
   // Reading Preferences (Embedded Document)
   @Prop({
@@ -95,7 +116,6 @@ export type UserDocument = HydratedDocument<User>;
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Add indexes for performance optimization
-UserSchema.index({ createdAt: -1 }); // For date-based queries (growth metrics)
-UserSchema.index({ email: 1 }); // For email lookups
-UserSchema.index({ provider: 1 }); // For filtering by provider
+UserSchema.index({ createdAt: -1 });
+UserSchema.index({ email: 1 });
+UserSchema.index({ provider: 1 });

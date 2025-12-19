@@ -67,7 +67,7 @@ export const usersApi = createApi({
 
         getReadingPreferences: builder.query<any, void>({
             query: () => ({
-                url: '/users/reading-preferences',
+                url: '/users/me/reading-preferences',
                 method: 'GET',
             }),
             providesTags: ['Users'],
@@ -75,7 +75,7 @@ export const usersApi = createApi({
 
         updateReadingPreferences: builder.mutation<any, any>({
             query: (body) => ({
-                url: '/users/reading-preferences',
+                url: '/users/me/reading-preferences',
                 method: 'PUT',
                 body,
             }),
