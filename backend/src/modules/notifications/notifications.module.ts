@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsService } from './notifications.service';
 import { Notification, NotificationSchema } from './schemas/notification.schema';
+import { ReminderService } from './reminder.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -21,7 +22,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       { name: Notification.name, schema: NotificationSchema },
     ]),
   ],
-  providers: [NotificationsGateway, NotificationsService],
-  exports: [NotificationsService],
+  providers: [NotificationsGateway, NotificationsService, ReminderService],
+  exports: [NotificationsService, ReminderService],
 })
 export class NotificationsModule {}

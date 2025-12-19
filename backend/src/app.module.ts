@@ -32,6 +32,8 @@ import { RecommendationsModule } from './modules/recommendations/recommendations
 import { ScraperModule } from './modules/scraper/scraper.module';
 import { SearchModule } from './modules/search/search.module';
 import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
 
 @Module({
   imports: [
@@ -103,6 +105,9 @@ import { NotificationsModule } from '@/src/modules/notifications/notifications.m
     ScraperModule,
     NotificationsModule,
     SearchModule,
+    OnboardingModule,
+    GamificationModule,
+    LibraryModule,
   ],
   controllers: [AppController],
   providers: [

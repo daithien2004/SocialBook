@@ -1,9 +1,10 @@
 'use client';
 
 import { useGetPersonalizedRecommendationsQuery } from '@/src/features/recommendations/api/recommendationsApi';
-import { Sparkles, ChevronRight } from 'lucide-react';
+import { Sparkles, ChevronRight, LogIn } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -11,106 +12,125 @@ export const RecommendedForYouSection = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
   const limit = 12;
 
   const { data, isLoading, error } = useGetPersonalizedRecommendationsQuery(
     { page: 1, limit },
-    {
-      skip: status !== 'authenticated',
-    }
+    { skip: status !== 'authenticated' }
   );
 
-  if (status !== 'authenticated') {
-    return null;
+  // Chưa đăng nhập
+  if (status === 'unauthenticated') {
+    return (
+      <section className="mb-12">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-8 transition-colors duration-300">
+          <div className="flex items-center gap-2 mb-6">
+            <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Gợi ý cho bạn
+            </h2>
+          </div>
+
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-20 h-20 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
+              <LogIn size={32} className="text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              Đăng nhập để nhận gợi ý cá nhân hóa
+            </h3>
+            <p className="text-base text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+              Khám phá những cuốn sách phù hợp với sở thích của bạn dựa trên
+              lịch sử đọc và đánh giá
+            </p>
+            <Link
+              href="/login"
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-md hover:shadow-lg flex items-center gap-2"
+            >
+              Đăng nhập ngay
+              <ChevronRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   if (isLoading) {
     return (
-      <div className="bg-white/80 dark:bg-[#161515]/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-red-600 dark:text-red-500" />
-          <h3 className="font-bold text-gray-900 dark:text-white">
+      <section className="mb-12">
+        <div className="flex items-center gap-2 mb-6">
+          <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Gợi ý cho bạn
-          </h3>
+          </h2>
         </div>
-
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex gap-3">
-              <div className="w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse flex-shrink-0" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
+            <div key={i} className="animate-pulse flex gap-3 p-2">
+              <div className="w-16 h-24 bg-gray-200 dark:bg-white/5 rounded-lg flex-shrink-0" />
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 dark:bg-white/5 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-gray-200 dark:bg-white/5 rounded w-1/2" />
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200 dark:border-red-800 rounded-xl p-5">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-5 h-5 text-red-600 dark:text-red-400" />
-          <h3 className="font-semibold text-red-900 dark:text-red-200 text-sm">
+      <section className="mb-12">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <p className="text-blue-600 dark:text-blue-400 font-medium">
             Không thể tải đề xuất
-          </h3>
+          </p>
+          <p className="text-blue-500 dark:text-blue-300 text-sm">
+            Đã có lỗi xảy ra. Vui lòng thử lại sau.
+          </p>
         </div>
-        <p className="text-xs text-red-700 dark:text-red-300">
-          Đã có lỗi xảy ra. Vui lòng thử lại sau.
-        </p>
-      </div>
+      </section>
     );
   }
 
   if (!data?.recommendations || data.recommendations.length === 0) {
     return (
-      <div className="bg-white/80 dark:bg-[#161515]/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-red-600 dark:text-red-500" />
-          <h3 className="font-bold text-gray-900 dark:text-white">
+      <section className="mb-12">
+        <div className="flex items-center gap-2 mb-6">
+          <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Gợi ý cho bạn
-          </h3>
+          </h2>
         </div>
-
-        <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-          <Sparkles className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <div className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-8 text-center">
+          <p className="text-gray-600 dark:text-gray-400 font-medium mb-1">
             Chưa có gợi ý
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-500">
+          <p className="text-gray-500 dark:text-gray-500 text-sm">
             Đọc thêm sách để nhận gợi ý!
           </p>
         </div>
-      </div>
+      </section>
     );
   }
 
-  // Sắp xếp theo matchScore (cao xuống thấp)
-  const sortedRecommendations = [...data.recommendations].sort((a, b) => {
-    const scoreA = a.matchScore || 0;
-    const scoreB = b.matchScore || 0;
-    return scoreB - scoreA;
-  });
-
-  const displayedBooks = sortedRecommendations.slice(0, 12);
+  // Hiển thị đúng số lượng từ API (limit)
+  const displayedBooks = data.recommendations;
 
   return (
-    <div className="bg-white/80 dark:bg-[#161515]/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-5 transition-all duration-300">
+    <section className="mb-12">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-red-600 dark:text-red-500" />
-          <h3 className="font-bold text-gray-900 dark:text-white">
-            Gợi ý cho bạn
-          </h3>
-        </div>
+      <div className="flex items-center gap-2 mb-6">
+        <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Gợi ý cho bạn
+        </h2>
       </div>
 
-      {/* Books List */}
-      <div className="space-y-2 mb-4">
+      {/* Books List - Single Column */}
+      <div className="flex flex-col gap-3">
         {displayedBooks.map((rec) => (
           <div
             key={rec.bookId}
@@ -123,32 +143,29 @@ export const RecommendedForYouSection = () => {
               className="flex gap-3 w-full text-left hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-lg p-2 transition-all duration-200 group"
             >
               {/* Book Cover */}
-              <div className="relative w-14 h-20 flex-shrink-0 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 shadow-md group-hover:shadow-lg transition-shadow">
+              <div className="relative w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
                 {rec.book.coverUrl ? (
                   <Image
                     src={rec.book.coverUrl}
                     alt={rec.book.title}
                     fill
-                    className="object-cover"
-                    sizes="56px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <Sparkles className="w-6 h-6" />
-                  </div>
+                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800" />
                 )}
                 {rec.matchScore && (
-                  <div className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                  <div className="absolute top-1 right-1 bg-blue-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">
                     {rec.matchScore}%
                   </div>
                 )}
               </div>
 
               {/* Book Info */}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-red-600 dark:group-hover:text-red-500 transition-colors">
+              <div className="flex-1 min-w-0 flex flex-col">
+                <h3 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
                   {rec.book.title}
-                </h4>
+                </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
                   {rec.book.authorId?.name || 'Unknown Author'}
                 </p>
@@ -157,27 +174,15 @@ export const RecommendedForYouSection = () => {
 
             {/* Tooltip */}
             {hoveredId === rec.bookId && rec.reason && (
-              <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg px-3 py-2 shadow-xl border border-gray-700 animate-in fade-in slide-in-from-top-1 duration-200">
-                <div className="flex items-start gap-2">
-                  <Sparkles className="w-3 h-3 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="leading-relaxed">{rec.reason}</p>
-                </div>
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg p-3 shadow-xl pointer-events-none">
+                {rec.reason}
                 {/* Arrow */}
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 dark:bg-gray-800 border-l border-t border-gray-700 rotate-45" />
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-900 dark:border-t-gray-800" />
               </div>
             )}
           </div>
         ))}
       </div>
-
-      {/* View All Button */}
-      <button
-        onClick={() => router.push('/recommendations')}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg transition-all duration-300 hover:shadow-md"
-      >
-        Xem tất cả
-        <ChevronRight className="w-4 h-4" />
-      </button>
-    </div>
+    </section>
   );
 };

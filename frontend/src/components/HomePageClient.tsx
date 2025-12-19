@@ -9,6 +9,8 @@ import { useTabsManager } from '../features/books/hooks/useTabsManager';
 import { BookOrderField } from '../features/books/types/book.interface';
 import { BannerSlider } from './book/BannerSlider';
 import { BookGrid } from './book/BookGrid';
+import { DailyGoalWidget } from './gamification/DailyGoalWidget';
+import { AchievementsWidget } from './gamification/AchievementsWidget';
 import { GenresSection } from './book/GenresSection';
 import { MobileReadingSection } from './book/MobileReadingSection';
 import { ReadingSidebar } from './book/ReadingSidebar';
@@ -61,6 +63,8 @@ export default function HomePage() {
           <div className="max-w-[1920px] mx-auto px-4 xl:px-8 flex gap-8">
             <aside className="hidden xl:block xl:w-64 flex-shrink-0">
               <div className="top-20 space-y-6">
+                <DailyGoalWidget />
+                <AchievementsWidget />
                 <ReadingSidebar />
                 <GenresSection books={currentState.books} />
               </div>

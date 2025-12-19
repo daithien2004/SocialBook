@@ -64,6 +64,8 @@ export class AuthService {
         username: user.username,
         image: user.image,
         role: roleName,
+        onboardingCompleted: user.onboardingCompleted,
+        onboardingId: user.onboardingId,
       },
     };
   }
@@ -168,6 +170,8 @@ export class AuthService {
         username: user.username,
         image: user.image,
         role: roleName,
+        onboardingCompleted: user.onboardingCompleted,
+        onboardingId: user.onboardingId,
       },
     };
   }

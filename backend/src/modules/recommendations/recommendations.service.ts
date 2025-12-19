@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { GeminiService } from '../gemini/gemini.service';
 import { Book, BookDocument } from '../books/schemas/book.schema';
+import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
 import {
   ReadingList,
   ReadingListDocument,
@@ -13,7 +14,6 @@ import {
 } from '../progress/schemas/progress.schema';
 import { Review, ReviewDocument } from '../reviews/schemas/review.schema';
 import { Like, LikeDocument } from '../likes/schemas/like.schema';
-import { GenreDocument } from '../genres/schemas/genre.schema';
 import { AuthorDocument } from '../authors/schemas/author.schema';
 
 type PopulatedBook = Omit<BookDocument, 'genres' | 'authorId'> & {
@@ -123,6 +123,7 @@ export class RecommendationsService {
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Like.name) private likeModel: Model<LikeDocument>,
+    @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
     private geminiService: GeminiService,
   ) { }
 
@@ -454,7 +455,7 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
       };
     } catch (error) {
       this.logger.error('AI recommendation generation failed:', error);
-      return this.getFallbackRecommendations(
+      return await this.getFallbackRecommendations(
         userProfile,
         availableBooks,
         limit,
@@ -462,29 +463,58 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
     }
   }
 
-  private getFallbackRecommendations(
+  private async getFallbackRecommendations(
     userProfile: UserProfile,
     availableBooks: PopulatedBook[],
     limit: number,
-  ): RecommendationResponse {
-    const recommendations: EnrichedRecommendation[] = availableBooks
-      .filter((book) => {
-        const bookGenres = book.genres?.map((g) => g.name) || [];
-        return bookGenres.some((g) => userProfile.favoriteGenres.includes(g));
-      })
-      .sort(
-        (a, b) =>
-          (b.views || 0) + (b.likes || 0) - ((a.views || 0) + (a.likes || 0)),
-      )
-      .slice(0, limit)
-      .map((book) => ({
-        bookId: book._id.toString(),
-        title: book.title,
-        reason: `Cùng thể loại với sách bạn đã thích`,
-        matchScore: 70,
-        slug: book.slug,
-        book: book,
-      }));
+  ): Promise<RecommendationResponse> {
+    let recommendations: EnrichedRecommendation[] = [];
+
+    const favoriteGenreNames = userProfile.favoriteGenres || [];
+    if (favoriteGenreNames.length > 0) {
+       const genres = await this.genreModel.find({ name: { $in: favoriteGenreNames } }).lean();
+       const genreIds = genres.map(g => g._id);
+
+       if (genreIds.length > 0) {
+         const matchedBooks = await this.bookModel.find({
+            genres: { $in: genreIds },
+            status: 'published',
+            isDeleted: false
+         })
+         .sort({ views: -1, likes: -1 })
+         .limit(limit)
+         .populate('genres authorId')
+         .lean<PopulatedBook[]>();
+
+         recommendations = matchedBooks.map((book) => ({
+            bookId: book._id.toString(),
+            title: book.title,
+            reason: `Phù hợp với sở thích: ${book.genres?.find(g => favoriteGenreNames.includes(g.name))?.name || 'Thể loại yêu thích'}`,
+            matchScore: 80,
+            slug: book.slug,
+            book: book,
+         }));
+       }
+    }
+
+    if (recommendations.length < limit) {
+      const existingIds = new Set(recommendations.map(r => r.bookId));
+      
+      const additional = availableBooks
+        .filter(b => !existingIds.has(b._id.toString()))
+        .sort((a, b) => (b.views || 0) + (b.likes || 0) - ((a.views || 0) + (a.likes || 0)))
+        .slice(0, limit - recommendations.length)
+        .map((book) => ({
+          bookId: book._id.toString(),
+          title: book.title,
+          reason: `Sách phổ biến được nhiều người đọc`,
+          matchScore: 60,
+          slug: book.slug,
+          book: book,
+        }));
+        
+       recommendations = [...recommendations, ...additional];
+    }
 
     return {
       analysis: {
