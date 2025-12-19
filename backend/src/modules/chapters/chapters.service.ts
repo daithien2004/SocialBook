@@ -145,7 +145,7 @@ export class ChaptersService {
     };
   }
 
-  async getChaptersByBookSlug(bookSlug: string, page: number = 1, limit: number = 20) {
+  async getChaptersByBookSlug(bookSlug: string, page: number, limit: number) {
     // VALIDATION
     if (!bookSlug?.trim()) {
       throw new BadRequestException('Book slug là bắt buộc');

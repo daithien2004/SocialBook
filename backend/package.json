@@ -81,6 +81,7 @@
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@types/bcrypt": "^6.0.0",
+    "@types/cheerio": "^0.22.35",
     "@types/cookie-parser": "^1.4.9",
     "@types/date-fns": "^2.5.3",
     "@types/express": "^5.0.0",

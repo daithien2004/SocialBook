@@ -102,4 +102,125 @@ export class ScraperController {
       return { success: false, message: error.message };
     }
   }
+
+  /**
+   * Import sách từ category nhasachmienphi.com
+   * POST /scraper/nsmp/import-category
+   * Body: { "categoryUrl": "https://nhasachmienphi.com/category/...", "limit": 10 }
+   */
+  @Public()
+  @Post('nsmp/import-category')
+  async importFromNSMPCategory(
+    @Body('categoryUrl') categoryUrl: string,
+    @Body('limit') limit?: number,
+  ) {
+    if (!categoryUrl) {
+      return {
+        success: false,
+        message: 'Category URL is required',
+        data: null,
+      };
+    }
+
+    try {
+      const result = await this.scraperService.crawlAndImportNSMPCategory(
+        categoryUrl,
+        limit || 10,
+      );
+
+      return {
+        success: true,
+        message: `Import completed: ${result.success} books imported successfully`,
+        data: {
+          summary: {
+            totalProcessed: result.success + result.failed,
+            successCount: result.success,
+            failedCount: result.failed,
+          },
+          books: result.books,
+          errors: result.errors,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Import failed',
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Import một cuốn sách từ nhasachmienphi.com
+   * POST /scraper/nsmp/import-book
+   * Body: { "bookUrl": "https://nhasachmienphi.com/vu-bi-an-..." }
+   */
+  @Public()
+  @Post('nsmp/import-book')
+  async importNSMPSingleBook(@Body('bookUrl') bookUrl: string) {
+    if (!bookUrl) {
+      return {
+        success: false,
+        message: 'Book URL is required',
+        data: null,
+      };
+    }
+
+    const result = await this.scraperService.importNSMPSingleBook(bookUrl);
+
+    if (result.success) {
+      return {
+        success: true,
+        message: 'Book imported successfully',
+        data: result.book,
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Import failed',
+        error: result.error,
+      };
+    }
+  }
+
+  /**
+   * Preview danh sách sách trong category (không import)
+   * GET /scraper/nsmp/preview-category?categoryUrl=...&limit=20
+   */
+  @Public()
+  @Get('nsmp/preview-category')
+  async previewNSMPCategory(
+    @Query('categoryUrl') categoryUrl: string,
+    @Query('limit') limit?: number,
+  ) {
+    if (!categoryUrl) {
+      return {
+        success: false,
+        message: 'Category URL is required',
+      };
+    }
+
+    try {
+      const bookUrls = await this.scraperService.crawlNSMPCategoryBooks(
+        categoryUrl,
+        limit ? parseInt(limit.toString()) : 20,
+      );
+
+      return {
+        success: true,
+        message: `Found ${bookUrls.length} books`,
+        data: {
+          categoryUrl,
+          totalBooks: bookUrls.length,
+          bookUrls,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to preview category',
+        error: error.message,
+      };
+    }
+  }
 }
