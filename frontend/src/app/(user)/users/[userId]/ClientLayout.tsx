@@ -20,8 +20,8 @@ export default function ClientLayout(props : ClientLayoutProps) {
             skip: !profileUserId,
         });
     return (
-        <div className="min-h-screen bg-gray-100">
-            <ProfileHeader username={overview?.username}
+        <div className="min-h-screen bg-gray-100 dark:bg-[#1a1a1a] text-slate-900 dark:text-gray-200">
+        <ProfileHeader username={overview?.username}
                            image={overview?.image}
                            postCount = {overview?.postCount}
                            readingListCount = {overview?.readingListCount}

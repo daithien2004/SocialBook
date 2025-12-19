@@ -45,10 +45,9 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
   ];
 
   return (
-      <div className="sticky top-0 z-10 bg-white shadow-sm">
+      <div className="sticky top-0 z-10 bg-white dark:bg-[#1a1a1a] border-b border-slate-100 dark:border-gray-800">
         <div className="container mx-auto max-w-6xl px-4">
-          <div className="flex flex-col items-center justify-between md:flex-row md:h-14">
-            {/* Navigation Tabs */}
+          <div className="flex flex-col md:flex-row md:h-14 items-center justify-between">
             <nav className="flex w-full md:w-auto overflow-x-auto no-scrollbar">
               {tabs.map((tab) => {
                 const isActive =
@@ -60,12 +59,11 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
                         key={tab.href}
                         href={tab.href}
                         className={[
-                          "px-4 py-3 text-lg font-serif whitespace-nowrap border-b-4",
+                          "px-4 py-3 text-base font-serif whitespace-nowrap border-b-4 transition-colors",
                           isActive
-                              ? "border-[#ff9800] text-gray-1000"
-                              : "border-transparent text-gray-500 hover:text-gray-700 hover:font-bold",
+                              ? "border-[#ff9800] text-slate-900 dark:text-gray-100"
+                              : "border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-gray-200",
                         ].join(" ")}
-                        aria-current={isActive ? "page" : undefined}
                     >
                       {tab.label}
                     </Link>
@@ -73,16 +71,19 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
               })}
             </nav>
 
-            {/* Action Buttons */}
             <div className="py-2 md:py-0">
               {isAuthenticated && isOwner ? (
                   <Button
-                      onClick={()=>{router.push(`/users/${profileUserId}/profile`)}}
+                      onClick={() => router.push(`/users/${profileUserId}/profile`)}
                       variant="outline"
                       size="sm"
-                      className="h-9 gap-2 text-gray-600 font-serif font-bold text-base border-gray-200 hover:bg-gray-100"
+                      className="h-9 gap-2 text-sm font-semibold
+                text-slate-700 dark:text-gray-200
+                bg-white dark:bg-gray-900
+                border-slate-200 dark:border-gray-700
+                hover:bg-slate-100 dark:hover:bg-gray-800"
                   >
-                    <Settings className="h-6 w-6" strokeWidth={2.5}/>
+                    <Settings className="h-5 w-5" />
                     Sửa hồ sơ
                   </Button>
               ) : (
@@ -91,23 +92,26 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
                         variant="outline"
                         size="sm"
                         onClick={handleFollowClick}
-                        disabled={isToggling} // ❌ bỏ isLoading query, chỉ dùng isToggling
-                        className="h-9 gap-2 text-gray-600 text-center text-base font-semibold bg-gray-50 border-gray-200 hover:bg-gray-100 disabled:opacity-60"
+                        disabled={isToggling}
+                        className="h-9 gap-2 text-sm font-semibold
+                  text-slate-700 dark:text-gray-200
+                  bg-slate-50 dark:bg-gray-900
+                  border-slate-200 dark:border-gray-700
+                  hover:bg-slate-100 dark:hover:bg-gray-800"
                     >
-                      <UserPlus
-                          className="h-4 w-4"
-                          color={isFollowing ? "#4caf50" : "#e1a337"}
-                          strokeWidth={3}
-                      />
+                      <UserPlus className="h-4 w-4" />
                       {isAuthenticated && isFollowing ? "Đang theo dõi" : "Theo dõi"}
                     </Button>
 
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-9 gap-2 text-gray-600 text-base font-semibold bg-gray-50 border-gray-200 hover:bg-gray-100"
+                        className="h-9
+                  bg-slate-50 dark:bg-gray-900
+                  border-slate-200 dark:border-gray-700
+                  hover:bg-slate-100 dark:hover:bg-gray-800"
                     >
-                      <Ellipsis color="#000000" strokeWidth={2} />
+                      <Ellipsis className="h-4 w-4 text-slate-600 dark:text-gray-300" />
                     </Button>
                   </div>
               )}

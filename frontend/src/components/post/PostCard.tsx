@@ -27,6 +27,7 @@ import {
   usePostToggleLikeMutation,
 } from '@/src/features/likes/api/likeApi';
 import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
+import {useRouter} from "next/navigation";
 
 interface PostCardProps {
   post: Post;
@@ -39,7 +40,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showShare, setShowShare] = useState(false);
-
+  const route = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
 
@@ -145,7 +146,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         <article className="w-full bg-white/95 dark:bg-[#1a1a1a] rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200 mb-5 overflow-hidden">
           {/* HEADER */}
           <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-pointer"
+                  onClick={()=>route.push(`users/${post.userId.id}`)}>
               <div className="relative">
                 <img
                     src={
