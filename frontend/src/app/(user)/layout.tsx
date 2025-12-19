@@ -1,6 +1,7 @@
 import { Header } from '@/src/components/header';
 import { ReactNode } from 'react';
 import { ChatWidget } from '@/src/components/ChatWidget';
+import {ThemeProvider} from "next-themes";
 
 export default async function ClientLayout({
   children,
@@ -8,7 +9,11 @@ export default async function ClientLayout({
   children: ReactNode;
 }) {
   return (
-    <>
+    <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange>
       <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
         {/* Background Image */}
         <div className="fixed inset-0 z-0">
@@ -27,6 +32,6 @@ export default async function ClientLayout({
           <ChatWidget />
         </div>
       </div>
-    </>
+    </ThemeProvider>
   );
 }

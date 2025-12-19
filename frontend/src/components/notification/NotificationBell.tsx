@@ -11,7 +11,7 @@ import {useRouter} from "next/navigation";
 export function NotificationBell({ session }: { session: Session | null }) {
   const token = session?.accessToken as string | undefined;
   const [open, setOpen] = useState(false);
-  const router = useRouter();
+  const route = useRouter();
   const { notifications, unreadCount, markAsRead, refetch } =
       useNotifications(token);
   useEffect(() => {
@@ -116,10 +116,10 @@ export function NotificationBell({ session }: { session: Session | null }) {
                               onClick={() => {
                                 markAsRead(notif.id);
                                 if (notif.actionUrl) {
-                                  router.push(notif.actionUrl);
+                                  route.push(notif.actionUrl);
                                 }
                               }}
-                              className="w-full text-left flex gap-4 px-5 py-4"
+                              className="w-full text-left flex gap-4 px-5 py-4 cursor-pointer"
                           >
                             {/* Avatar */}
                             <div className="flex-shrink-0 relative">

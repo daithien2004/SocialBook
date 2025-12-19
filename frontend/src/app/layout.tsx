@@ -19,14 +19,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <AuthSync />
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
             {children}
-          </ThemeProvider>
         </Providers>
         <Toaster richColors position="bottom-right" />
       </body>

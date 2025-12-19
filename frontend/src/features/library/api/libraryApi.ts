@@ -120,7 +120,7 @@ export const libraryApi = createApi({
       { id: string; userId: string }
     >({
       query: ({ id, userId }) => ({
-        url: NESTJS_LIBRARY_ENDPOINTS.collectionDetailUser(id, userId),
+        url: NESTJS_LIBRARY_ENDPOINTS.collectionDetailUser(userId, id),
         method: 'GET',
       }),
       providesTags: (result, error, { id }) => [

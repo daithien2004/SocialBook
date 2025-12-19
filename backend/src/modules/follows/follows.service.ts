@@ -191,7 +191,7 @@ export class FollowsService {
 
     const actor = await this.userModel
       .findById(currentUserId)
-      .select('_id name avatar')
+      .select('_id username image')
       .lean();
 
     if (!actor) {
