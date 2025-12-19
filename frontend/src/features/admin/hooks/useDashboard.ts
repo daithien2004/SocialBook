@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { OverviewStats, GrowthMetric } from '../types/dashboard.types';
+import { OverviewStats, GrowthMetric, BookStats } from '../types/dashboard.types';
 import { toast } from 'sonner';
-import { ViewType } from '@/src/components/admin/ViewTypeSelector';
-import { NESTJS_STATISTICS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { ViewType } from '@/src/components/admin/dashboard/ViewTypeSelector';
+import { NESTJS_STATISTICS_ENDPOINTS, NESTJS_ANALYTICS_ENDPOINTS } from '@/src/constants/server-endpoints';
 
 import clientApi from '@/src/lib/nestjs-client-api';
 
 export function useDashboardData(timeRange: string, viewType: ViewType = 'day') {
     const [stats, setStats] = useState<OverviewStats | null>(null);
+    const [bookStats, setBookStats] = useState<BookStats | null>(null);
+    const [analytics, setAnalytics] = useState<any>(null); // Using any for now, or define a type if strict
     const [growthData, setGrowthData] = useState<GrowthMetric[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,23 +23,27 @@ export function useDashboardData(timeRange: string, viewType: ViewType = 'day') 
             setLoading(true);
             setError(null);
 
-            const [overviewRes, growthRes] = await Promise.all([
+            const [overviewRes, growthRes, booksRes, activeUsersRes] = await Promise.all([
                 clientApi.get(NESTJS_STATISTICS_ENDPOINTS.overview),
                 clientApi.get(`${NESTJS_STATISTICS_ENDPOINTS.growth(Number(timeRange))}&groupBy=${viewType}`),
+                clientApi.get(NESTJS_STATISTICS_ENDPOINTS.books),
+                clientApi.get(NESTJS_ANALYTICS_ENDPOINTS.getActiveUsers),
             ]);
 
             const overviewData = overviewRes.data;
             const growthDataRes = growthRes.data;
+            const booksDataRes = booksRes.data;
+            const activeUsersDataRes = activeUsersRes.data;
 
             console.log('📊 Dashboard Statistics Debug:', {
                 overviewData,
-                overviewDataData: overviewData.data,
-                booksData: overviewData.data?.books,
-                chaptersCount: overviewData.data?.books?.chapters,
+                booksStats: booksDataRes.data,
             });
 
             setStats(overviewData.data);
             setGrowthData(growthDataRes.data || []);
+            setBookStats(booksDataRes.data);
+            setAnalytics({ activeUsers: activeUsersDataRes.data });
         } catch (err: any) {
             console.error('Dashboard data fetch error:', err);
             setError(err.message || 'Failed to load dashboard data');
@@ -48,6 +54,8 @@ export function useDashboardData(timeRange: string, viewType: ViewType = 'day') 
 
     return {
         stats,
+        bookStats,
+        analytics,
         growthData,
         loading,
         error,
@@ -79,23 +87,23 @@ export function useExportStatistics() {
             const overviewData: OverviewStats = overviewRes.data.data;
 
             // Generate Summary Section
-            let csvContent = 'SUMMARY REPORT\n';
-            csvContent += `Generated at,${new Date().toLocaleString()}\n`;
-            csvContent += `Time Range,Last ${days} days\n\n`;
+            let csvContent = 'BÁO CÁO TỔNG HỢP\n';
+            csvContent += `Được tạo lúc,${new Date().toLocaleString()}\n`;
+            csvContent += `Khoảng thời gian,${days} ngày qua\n\n`;
 
-            csvContent += 'OVERVIEW STATISTICS\n';
-            csvContent += `Total Users,${overviewData.users.total}\n`;
-            csvContent += `Active Users (30d),${overviewData.users.active}\n`;
-            csvContent += `New Users (Growth),${overviewData.users.growth}%\n`;
-            csvContent += `Total Books,${overviewData.books.total}\n`;
-            csvContent += `Total Chapters,${overviewData.books.chapters}\n`;
-            csvContent += `Total Posts,${overviewData.posts.total}\n`;
-            csvContent += `Total Comments,${overviewData.comments}\n`;
-            csvContent += `Total Reviews,${overviewData.reviews}\n\n`;
+            csvContent += 'THỐNG KÊ TỔNG QUAN\n';
+            csvContent += `Tổng thành viên,${overviewData.users.total}\n`;
+            csvContent += `Thành viên hoạt động (30d),${overviewData.users.active}\n`;
+            csvContent += `Thành viên mới (Tăng trưởng),${overviewData.users.growth}%\n`;
+            csvContent += `Tổng sách,${overviewData.books.total}\n`;
+            csvContent += `Tổng chương,${overviewData.books.chapters}\n`;
+            csvContent += `Tổng bài viết,${overviewData.posts.total}\n`;
+            csvContent += `Tổng bình luận,${overviewData.comments}\n`;
+            csvContent += `Tổng đánh giá,${overviewData.reviews}\n\n`;
 
             // Generate Growth Data Section
-            csvContent += 'DAILY GROWTH DATA\n';
-            csvContent += 'Date,New Users,New Books,New Posts\n';
+            csvContent += 'DỮ LIỆU TĂNG TRƯỞNG HÀNG NGÀY\n';
+            csvContent += 'Ngày,Thành viên mới,Sách mới,Bài viết mới\n';
             const rows = growthData.map(item =>
                 `${item.date},${item.users},${item.books},${item.posts}`
             ).join('\n');
@@ -112,10 +120,10 @@ export function useExportStatistics() {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            toast.success('Full report exported successfully');
+            toast.success('Xuất báo cáo thành công');
         } catch (err: any) {
             console.error('Export error:', err);
-            toast.error('Failed to export statistics');
+            toast.error('Không thể xuất thống kê');
         } finally {
             setExporting(false);
         }

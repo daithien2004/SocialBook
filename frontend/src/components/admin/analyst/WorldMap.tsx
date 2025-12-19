@@ -118,7 +118,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ data }) => {
               show: true,
               x: event.pageX,
               y: event.pageY,
-              content: `${d.properties.name}: ${userCount} users`,
+              content: `${d.properties.name}: ${userCount} người dùng`,
             });
           })
           .on('mousemove', function (event: any, d: any) {
@@ -129,7 +129,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ data }) => {
               show: true,
               x: event.pageX,
               y: event.pageY,
-              content: `${d.properties.name}: ${userCount} users`,
+              content: `${d.properties.name}: ${userCount} người dùng`,
             });
           })
           .on('mouseleave', function (event: any, d: any) {
@@ -147,7 +147,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ data }) => {
           .attr('y', height / 2)
           .attr('text-anchor', 'middle')
           .attr('fill', '#666')
-          .text('Error loading map data. Please refresh.');
+          .text('Lỗi tải dữ liệu bản đồ. Vui lòng tải lại.');
       });
   }, [data, dimensions]);
 

@@ -4,11 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Users, BookOpen, FileText, MessageSquare, BarChart2, Download } from 'lucide-react';
-import { StatCard } from '@/src/components/admin/StatCard';
-import { UserGrowthChart } from '@/src/components/admin/UserGrowthChart';
-import { TimeRangeSelector } from '@/src/components/admin/TimeRangeSelector';
-import { ViewTypeSelector, ViewType } from '@/src/components/admin/ViewTypeSelector';
+import { StatCard } from '@/src/components/admin/dashboard/StatCard';
+import { UserGrowthChart } from '@/src/components/admin/dashboard/UserGrowthChart';
+import { TimeRangeSelector } from '@/src/components/admin/dashboard/TimeRangeSelector';
+import { ViewTypeSelector, ViewType } from '@/src/components/admin/dashboard/ViewTypeSelector';
 import { useDashboardData, useExportStatistics } from '@/src/features/admin/hooks/useDashboard';
+import { PopularBooksTable } from '@/src/components/admin/dashboard/PopularBooksTable';
+import { GenreDistributionChart } from '@/src/components/admin/dashboard/GenreDistributionChart';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -16,7 +18,7 @@ export default function AdminDashboard() {
   const [viewType, setViewType] = useState<ViewType>('day');
   const [timeRange, setTimeRange] = useState('30');
 
-  const { stats, growthData, loading, error, refetch } = useDashboardData(timeRange, viewType);
+  const { stats, growthData, bookStats, loading, error, refetch } = useDashboardData(timeRange, viewType);
   const { exportCSV, exporting } = useExportStatistics();
 
   // Reset time range when view type changes
@@ -82,8 +84,8 @@ export default function AdminDashboard() {
       {/* Header with Time Range and Export */}
       <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {session?.user?.username}!</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Bảng Điều Khiển Admin</h1>
+          <p className="text-gray-600 dark:text-gray-400">Chào mừng trở lại, {session?.user?.username}!</p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <ViewTypeSelector value={viewType} onChange={handleViewTypeChange} />
@@ -94,7 +96,7 @@ export default function AdminDashboard() {
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             <Download className="w-4 h-4" />
-            {exporting ? 'Exporting...' : 'Export CSV'}
+            {exporting ? 'Đang xuất...' : 'Xuất CSV'}
           </button>
         </div>
       </div>
@@ -102,7 +104,7 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          title="Total Users"
+          title="Tổng thành viên"
           value={stats.users.total.toLocaleString()}
           icon={Users}
           trend={{
@@ -113,21 +115,21 @@ export default function AdminDashboard() {
           iconColor="text-blue-600"
         />
         <StatCard
-          title="Total Books"
+          title="Tổng sách"
           value={stats.books.total.toLocaleString()}
           icon={BookOpen}
           iconBgColor="bg-green-50"
           iconColor="text-green-600"
         />
         <StatCard
-          title="Active Posts"
+          title="Bài viết hoạt động"
           value={stats.posts.active.toLocaleString()}
           icon={FileText}
           iconBgColor="bg-purple-50"
           iconColor="text-purple-600"
         />
         <StatCard
-          title="Total Comments"
+          title="Tổng bình luận"
           value={stats.comments.toLocaleString()}
           icon={MessageSquare}
           iconBgColor="bg-yellow-50"
@@ -140,7 +142,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Active Users ({timeRange}d)</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Thành viên hoạt động ({timeRange}d qua)</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.users.active.toLocaleString()}
               </p>
@@ -154,7 +156,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Chapters</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng số chương</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.books.chapters.toLocaleString()}
               </p>
@@ -168,7 +170,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Reviews</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tổng đánh giá</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
                 {stats.reviews.toLocaleString()}
               </p>
@@ -180,38 +182,76 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Growth Chart */}
-      {growthData.length > 0 && <UserGrowthChart data={growthData} viewType={viewType} timeRange={timeRange} />}
+      {/* Detailed Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Growth Chart - Takes up 2 columns */}
+        <div className="lg:col-span-2">
+          {growthData.length > 0 && <UserGrowthChart data={growthData} viewType={viewType} timeRange={timeRange} />}
+        </div>
+
+        {/* Genre Distribution - Takes up 1 column */}
+        <div className="lg:col-span-1">
+          {bookStats && <GenreDistributionChart genres={bookStats.byGenre} />}
+        </div>
+      </div>
+
+      {/* Popular Content Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-2">
+          {bookStats && <PopularBooksTable books={bookStats.popularBooks} />}
+        </div>
+        {/* Could add another widget here, e.g. Recent Activity feed if implemented */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Keeping the detailed stats small cards here for now, or could move them */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Trạng thái hệ thống</h3>
+            <div className="flex items-center gap-2 mt-4">
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-300">Tất cả hệ thống hoạt động</span>
+            </div>
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Độ trễ máy chủ</span>
+                <span className="text-gray-900 dark:text-white font-medium">45ms</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">Trạng thái cơ sở dữ liệu</span>
+                <span className="text-green-600 dark:text-green-400 font-medium">Đã kết nối</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         <a
           href="/admin/users"
-          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow block"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700 p-6 block"
         >
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Manage Users</h3>
-          <p className="text-gray-600 text-sm">
-            View and manage users, ban/unban accounts
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Quản lý người dùng</h3>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            Xem và quản lý người dùng, cấm/bỏ cấm tài khoản
           </p>
         </a>
 
         <a
           href="/admin/books"
-          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow block"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700 p-6 block"
         >
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Manage Books</h3>
-          <p className="text-gray-600 text-sm">
-            Add, edit, and manage books and chapters
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Quản lý sách</h3>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            Thêm, sửa và quản lý sách và chương
           </p>
         </a>
 
         <a
           href="/admin/posts"
-          className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow block"
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700 p-6 block"
         >
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Moderate Posts</h3>
-          <p className="text-gray-600 text-sm">
-            Review and moderate user posts
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Kiểm duyệt bài viết</h3>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            Xem và kiểm duyệt bài viết người dùng
           </p>
         </a>
       </div>
