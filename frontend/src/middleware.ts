@@ -21,7 +21,8 @@ export default withAuth(
         !isCompleted && 
         !isOnboardingPage && 
         !req.nextUrl.pathname.startsWith('/api') && 
-        !req.nextUrl.pathname.startsWith('/_next')
+        !req.nextUrl.pathname.startsWith('/_next') &&
+        token.role !== 'admin'
       ) {
          return NextResponse.redirect(new URL('/onboarding', req.url));
       }
