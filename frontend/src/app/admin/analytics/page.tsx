@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Activity, TrendingUp, Globe, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import WorldMap from '@/src/components/admin/WorldMap';
+import WorldMap from '@/src/components/admin/analyst/WorldMap';
 
 export default function AnalyticsPage() {
     return (
@@ -80,9 +80,9 @@ function ActiveUsersCard() {
                     <div className="p-2.5 bg-blue-50 rounded-lg">
                         <Users className="h-6 w-6 text-blue-600" />
                     </div>
-                    Active Readers (Live)
+                    Độc giả đang hoạt động (Trực tiếp)
                 </CardTitle>
-                <CardDescription className="text-gray-500">Currently reading in last 5 minutes</CardDescription>
+                <CardDescription className="text-gray-500">Đang đọc trong 5 phút qua</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
                 {isLoading ? (
@@ -92,7 +92,7 @@ function ActiveUsersCard() {
                 )}
                 <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full">
                     <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
-                    <p className="text-sm text-blue-700 font-medium">Live • Updated every 30s</p>
+                    <p className="text-sm text-blue-700 font-medium">Trực tiếp • Cập nhật mỗi 30s</p>
                 </div>
             </CardContent>
         </Card>
@@ -110,9 +110,9 @@ function ReadingHeatmapCard() {
                     <div className="p-2 bg-amber-50 rounded-lg">
                         <Activity className="h-5 w-5 text-amber-600" />
                     </div>
-                    Reading Activity Heatmap
+                    Biểu đồ nhiệt hoạt động đọc
                 </CardTitle>
-                <CardDescription>Reading activity by hour of day</CardDescription>
+                <CardDescription>Hoạt động đọc theo giờ trong ngày</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
                 {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>}
@@ -121,8 +121,8 @@ function ReadingHeatmapCard() {
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={data}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="hour" label={{ value: 'Hour of Day', position: 'insideBottom', offset: -5 }} stroke="#9ca3af" />
-                            <YAxis label={{ value: 'Readings', angle: -90, position: 'insideLeft' }} stroke="#9ca3af" />
+                            <XAxis dataKey="hour" label={{ value: 'Giờ trong ngày', position: 'insideBottom', offset: -5 }} stroke="#9ca3af" />
+                            <YAxis label={{ value: 'Lượt đọc', angle: -90, position: 'insideLeft' }} stroke="#9ca3af" />
                             <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
                             <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                                 {data.map((entry, index) => (
@@ -148,14 +148,14 @@ function ChapterEngagementCard() {
                     <div className="p-2 bg-green-50 rounded-lg">
                         <TrendingUp className="h-5 w-5 text-green-600" />
                     </div>
-                    Top Chapters by Engagement
+                    Chương có tương tác cao nhất
                 </CardTitle>
-                <CardDescription>Most read chapters with completion rates</CardDescription>
+                <CardDescription>Các chương được đọc nhiều nhất với tỷ lệ hoàn thành</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-                {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>}
-                {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Error loading data</div>}
-                {data && data.length === 0 && <div className="h-64 flex items-center justify-center text-gray-400">No data yet</div>}
+                {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Đang tải...</div>}
+                {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
+                {data && data.length === 0 && <div className="h-64 flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>}
                 {data && data.length > 0 && (
                     <div className="space-y-4">
                         {data.map((chapter, idx) => (
@@ -167,7 +167,7 @@ function ChapterEngagementCard() {
                                     </div>
                                     <div className="text-right ml-4">
                                         <p className="text-sm font-bold text-gray-900">{chapter.viewCount}</p>
-                                        <p className="text-xs text-gray-500">views</p>
+                                        <p className="text-xs text-gray-500">lượt xem</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
@@ -196,14 +196,14 @@ function ReadingSpeedCard() {
                     <div className="p-2 bg-purple-50 rounded-lg">
                         <Activity className="h-5 w-5 text-purple-600" />
                     </div>
-                    Reading Speed Trend
+                    Xu hướng tốc độ đọc
                 </CardTitle>
-                <CardDescription>Average reading speed (words per minute)</CardDescription>
+                <CardDescription>Tốc độ đọc trung bình (từ/phút)</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-                {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>}
-                {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Error loading data</div>}
-                {data && data.length === 0 && <div className="h-64 flex items-center justify-center text-gray-400">No data yet</div>}
+                {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Đang tải...</div>}
+                {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
+                {data && data.length === 0 && <div className="h-64 flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>}
                 {data && data.length > 0 && (
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={data}>
@@ -231,13 +231,13 @@ function GeographicCard() {
                     <div className="p-2 bg-cyan-50 rounded-lg">
                         <Globe className="h-5 w-5 text-cyan-600" />
                     </div>
-                    Geographic Distribution
+                    Phân bố địa lý
                 </CardTitle>
-                <CardDescription>Readers by country (Interactive Map)</CardDescription>
+                <CardDescription>Độc giả theo quốc gia (Bản đồ tương tác)</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-                {isLoading && <div className="h-[400px] flex items-center justify-center text-gray-400">Loading...</div>}
-                {error && <div className="h-[400px] flex items-center justify-center text-red-500 font-medium">Error loading data</div>}
+                {isLoading && <div className="h-[400px] flex items-center justify-center text-gray-400">Đang tải...</div>}
+                {error && <div className="h-[400px] flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
                 {data && (
                     <div className="w-full">
                         <WorldMap data={data} />
@@ -245,7 +245,7 @@ function GeographicCard() {
                             {data.slice(0, 4).map((country, idx) => (
                                 <div key={idx} className="flex flex-col items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200">
                                     <span className="font-semibold text-sm text-gray-900">{country.country}</span>
-                                    <span className="text-sm font-bold bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full mt-2">{country.userCount} users</span>
+                                    <span className="text-sm font-bold bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full mt-2">{country.userCount} người dùng</span>
                                 </div>
                             ))}
                         </div>
