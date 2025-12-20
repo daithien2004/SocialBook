@@ -92,7 +92,6 @@ const ListComments: React.FC<ListCommentsProps> = (props) => {
                 targetType={targetType}
                 comment={c}
                 targetId={targetId}
-                theme={theme}
               />
             ))
           ) : (
