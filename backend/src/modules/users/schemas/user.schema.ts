@@ -57,13 +57,6 @@ export class User {
   @Prop({ default: false })
   onboardingCompleted: boolean;
 
-  // Streak (denormalized)
-  @Prop({ default: 0 })
-  currentStreak: number;
-
-  @Prop({ type: Date })
-  lastReadDate?: Date;
-
   // Reading Preferences (Embedded Document)
   @Prop({
     type: {
