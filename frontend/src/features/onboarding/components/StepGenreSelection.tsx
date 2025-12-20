@@ -38,18 +38,18 @@ export default function StepGenreSelection({ onSubmit, initialData }: any) {
             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2
               ${
                 selected.includes(genre.id)
-                  ? 'border-black bg-neutral-100 dark:bg-white/10 dark:border-white text-black dark:text-white'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                  ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
               }
             `}
           >
-            <span className="font-medium dark:text-gray-200">{genre.name}</span>
+            <span className="font-medium">{genre.name}</span>
           </button>
         ))}
       </div>
 
       <Button
-        className="w-full bg-black hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500"
         disabled={selected.length < 3}
         onClick={() => onSubmit({ favoriteGenres: selected })}
       >

@@ -35,15 +35,6 @@ export class DailyGoal {
 
   @Prop({ default: false })
   allGoalsMet: boolean;
-
-  @Prop({ default: 0 })
-  xpEarned: number;
-
-  @Prop({ default: false })
-  reminderSent: boolean;
-
-  @Prop()
-  reminderSentAt: Date;
 }
 
 export const DailyGoalSchema = SchemaFactory.createForClass(DailyGoal);

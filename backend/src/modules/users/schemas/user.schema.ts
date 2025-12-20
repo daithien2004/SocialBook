@@ -57,20 +57,6 @@ export class User {
   @Prop({ default: false })
   onboardingCompleted: boolean;
 
-  // XP & Level (denormalized)
-  @Prop({ default: 0 })
-  currentXP: number;
-
-  @Prop({ default: 1 })
-  currentLevel: number;
-
-  // Streak (denormalized)
-  @Prop({ default: 0 })
-  currentStreak: number;
-
-  @Prop({ type: Date })
-  lastReadDate?: Date;
-
   // Reading Preferences (Embedded Document)
   @Prop({
     type: {

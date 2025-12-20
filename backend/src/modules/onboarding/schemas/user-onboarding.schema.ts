@@ -43,23 +43,8 @@ export class UserOnboarding {
     weekend: boolean;
   };
 
-  @Prop({
-    type: String,
-    enum: ['short', 'medium', 'long'],
-  })
-  preferredBookLength: string;
-
-  @Prop({
-    type: String,
-    enum: ['light', 'moderate', 'challenging'],
-  })
-  contentComplexity: string;
-
   @Prop()
   completedAt: Date;
-
-  @Prop()
-  skippedAt: Date;
 }
 
 export const UserOnboardingSchema = SchemaFactory.createForClass(UserOnboarding);

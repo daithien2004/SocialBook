@@ -11,10 +11,38 @@ import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
 import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
 import { ScrapedBookData } from './dto/scraper.dto';
 
+interface BookInfo {
+  title: string;
+  author: string;
+  genre: string;
+  imageUrl: string;
+  description: string;
+  chapters: ChapterInfo[];
+}
+
+interface ChapterInfo {
+  title: string;
+  url: string;
+  order: number;
+}
+
+export interface CrawlResult {
+  success: number;
+  failed: number;
+  books: {
+    id: string;
+    title: string;
+    slug: string;
+    chaptersCount: number;
+  }[];
+  errors: string[];
+}
+
 @Injectable()
 export class ScraperService {
   private readonly logger = new Logger(ScraperService.name);
   private readonly baseUrl = 'https://truyenfull.vision';
+  private readonly nhasachmienphi = 'https://nhasachmienphi.com';
 
   constructor(
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
@@ -240,7 +268,7 @@ export class ScraperService {
     htmlContent = htmlContent.replace(/<br\s*\/?>/gi, splitToken);
 
     const temp$ = cheerio.load(htmlContent);
-    const textContent = temp$.text();
+    const textContent = temp$('*').text();
     const paragraphsRaw = textContent.split(splitToken);
 
     const paragraphs = paragraphsRaw
@@ -477,6 +505,590 @@ export class ScraperService {
     } catch (error) {
       return [];
     }
+  }
+
+  /**
+   * Crawl danh sách sách từ category nhasachmienphi.com
+   */
+  async crawlNSMPCategoryBooks(
+    categoryUrl: string,
+    limit: number = 20,
+  ): Promise<string[]> {
+    try {
+      this.logger.log(`[NSMP] Crawling category: ${categoryUrl}`);
+      const response = await firstValueFrom(
+        this.httpService.get(categoryUrl, {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          },
+          timeout: 10000,
+        }),
+      );
+
+      const $ = cheerio.load(response.data);
+      const bookUrls: string[] = [];
+
+      $('.item_sach a').each((index, element) => {
+        if (index < limit) {
+          const url = $(element).attr('href');
+          if (url && url.includes('.html')) {
+            bookUrls.push(url);
+          }
+        }
+      });
+
+      this.logger.log(`[NSMP] Found ${bookUrls.length} books in category`);
+      return bookUrls;
+    } catch (error) {
+      this.logger.error(`[NSMP] Error crawling category: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+ * Crawl chi tiết một cuốn sách từ nhasachmienphi.com
+ */
+async crawlNSMPBookDetails(bookUrl: string): Promise<BookInfo> {
+  try {
+    this.logger.log(`[NSMP] Crawling book: ${bookUrl}`);
+    const response = await firstValueFrom(
+      this.httpService.get(bookUrl, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+        timeout: 10000,
+      }),
+    );
+
+    const $ = cheerio.load(response.data);
+
+    const title = $('h1.tblue.fs-20, h1.tblue').first().text().trim();
+
+    const authorText = $('div.mg-t-10:contains("Tác giả:")').text();
+    const author = authorText
+      ? authorText.replace('Tác giả:', '').trim()
+      : 'Unknown';
+
+    const genre =
+      $('div.mg-tb-10 a.tblue').first().text().trim() || 'Uncategorized';
+
+    let imageUrl = $('img[src*="thumbnail"]').first().attr('src') || '';
+    if (imageUrl && !imageUrl.startsWith('http')) {
+      imageUrl = this.nhasachmienphi + imageUrl;
+    }
+
+    // ✅ IMPROVED: Clean description với nhiều selectors
+    const description = this.cleanNSMPDescription($);
+
+    const chapters: ChapterInfo[] = [];
+    $('.item_ch a, .box_chhr a').each((index, element) => {
+      const chapterTitle = $(element).text().trim();
+      const chapterUrl = $(element).attr('href');
+
+      if (chapterUrl && chapterTitle) {
+        chapters.push({
+          title: chapterTitle,
+          url: chapterUrl,
+          order: index + 1,
+        });
+      }
+    });
+
+    return {
+      title,
+      author,
+      genre,
+      imageUrl,
+      description,
+      chapters,
+    };
+  } catch (error) {
+    this.logger.error(
+      `[NSMP] Error crawling book details from ${bookUrl}: ${error.message}`,
+    );
+    throw error;
+  }
+}
+
+
+
+  /**
+ * ✅ IMPROVED: Helper để clean description từ nhasachmienphi
+ */
+private cleanNSMPDescription($: any): string {
+  const descriptionParagraphs: string[] = [];
+
+  // Thử nhiều selectors khác nhau
+  const selectors = [
+    '.gioi_thieu_sach',
+    '.content_p_al .gioi_thieu_sach', 
+    '.content_p .gioi_thieu_sach',
+    'div.gioi_thieu_sach'
+  ];
+
+  let contentElement: any | null = null;
+
+  // Tìm selector phù hợp
+  for (const selector of selectors) {
+    const element = $(selector);
+    if (element.length > 0) {
+      contentElement = element;
+      break;
+    }
+  }
+
+  if (!contentElement || contentElement.length === 0) {
+    // Fallback về meta description
+    return $('meta[name="description"]').attr('content') || 'No description';
+  }
+
+  // Lấy tất cả paragraphs
+  contentElement.find('p').each((_, element) => {
+    let text = $(element).text().trim();
+
+    // Clean HTML entities
+    text = text
+      .replace(/&#8211;/g, '–')
+      .replace(/&hellip;/g, '...')
+      .replace(/&#8220;/g, '"')
+      .replace(/&#8221;/g, '"')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&#8230;/g, '...')
+      .trim();
+
+    // Skip ads paragraphs and empty ones
+    if (
+      text && 
+      !text.includes('Xem thêm') && 
+      !text.includes('INLINE RELATED') &&
+      text.length > 10
+    ) {
+      descriptionParagraphs.push(text);
+    }
+  });
+
+  let description = descriptionParagraphs.join('\n\n');
+
+  // Nếu vẫn không có gì, thử lấy text trực tiếp
+  if (!description || description.length < 50) {
+    const directText = contentElement
+      .clone()
+      .find('a, script, style')
+      .remove()
+      .end()
+      .text()
+      .trim();
+
+    if (directText && directText.length > 50) {
+      // Split by multiple newlines và clean
+      description = directText
+        .split(/\n\n+/)
+        .map(p => p.trim())
+        .filter(p => 
+          p.length > 10 && 
+          !p.includes('Xem thêm') &&
+          !p.includes('INLINE RELATED')
+        )
+        .join('\n\n');
+    }
+  }
+
+  // Clean up excessive whitespace
+  description = description.replace(/\n{3,}/g, '\n\n').trim();
+
+  // Giới hạn độ dài nếu quá dài (optional)
+  if (description.length > 2000) {
+    description = description.substring(0, 2000).trim() + '...';
+  }
+
+  return description || 'No description available';
+}
+
+  /**
+ * Crawl nội dung một chapter từ nhasachmienphi
+ */
+async crawlNSMPChapterContent(chapterUrl: string): Promise<{
+  title: string;
+  paragraphs: { content: string }[];
+}> {
+  try {
+    this.logger.log(`[NSMP] Crawling chapter: ${chapterUrl}`);
+    const response = await firstValueFrom(
+      this.httpService.get(chapterUrl, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+        timeout: 10000,
+      }),
+    );
+
+    const $ = cheerio.load(response.data);
+
+    // ✅ Get chapter title
+    let title = $('h2.mg-t-10').text().trim();
+    
+    if (!title) {
+      title = $('h2').first().text().trim();
+    }
+    
+    if (!title) {
+      title = 'Untitled Chapter';
+    }
+
+    // ✅ Get paragraphs from chapter content
+    const paragraphs: { content: string }[] = [];
+    
+    // Try multiple selectors
+    const contentSelectors = [
+      '.noi_dung_online p',
+      '.content_p p',
+      '.content_p_al p',
+    ];
+
+    let foundContent = false;
+    
+    for (const selector of contentSelectors) {
+      const elements = $(selector);
+      
+      if (elements.length > 0) {
+        elements.each((_, element) => {
+          let text = $(element).text().trim();
+          
+          // Clean HTML entities
+          text = text
+            .replace(/&#8211;/g, '–')
+            .replace(/&hellip;/g, '...')
+            .replace(/&#8220;/g, '"')
+            .replace(/&#8221;/g, '"')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&#8230;/g, '...')
+            .trim();
+          
+          // Only add non-empty paragraphs
+          if (text && text.length > 5) {
+            paragraphs.push({ content: text });
+            foundContent = true;
+          }
+        });
+        
+        if (foundContent) break; // Stop after finding content
+      }
+    }
+
+    // ✅ Fallback: if no paragraphs found, create one with error message
+    if (paragraphs.length === 0) {
+      paragraphs.push({ 
+        content: 'No content available for this chapter.' 
+      });
+    }
+
+    return {
+      title,
+      paragraphs,
+    };
+  } catch (error) {
+    this.logger.error(
+      `[NSMP] Error crawling chapter content: ${error.message}`,
+    );
+    
+    // Return error as paragraph
+    return {
+      title: 'Error',
+      paragraphs: [{ content: 'Content unavailable due to error.' }],
+    };
+  }
+}
+
+  /**
+ * Import một cuốn sách từ nhasachmienphi vào database
+ */
+async importNSMPBookToDatabase(bookUrl: string): Promise<BookDocument> {
+  try {
+    const bookInfo = await this.crawlNSMPBookDetails(bookUrl);
+
+    // Check if book exists
+    const slug = this.generateSlug(bookInfo.title);
+    const existingBook = await this.bookModel.findOne({ slug });
+
+    if (existingBook) {
+      this.logger.warn(`[NSMP] Book already exists: ${bookInfo.title}`);
+      
+      // ✅ Still import missing chapters if book exists
+      const existingChapters = await this.chapterModel.countDocuments({
+        bookId: existingBook._id,
+      });
+      
+      this.logger.log(
+        `[NSMP] Existing book has ${existingChapters}/${bookInfo.chapters.length} chapters`,
+      );
+      
+      if (existingChapters < bookInfo.chapters.length) {
+        this.logger.log('[NSMP] Importing missing chapters...');
+        
+        let successChapters = 0;
+        for (const [index, chapterInfo] of bookInfo.chapters.entries()) {
+          try {
+            await this.importNSMPChapter(existingBook._id, chapterInfo);
+            successChapters++;
+
+            if (index < bookInfo.chapters.length - 1) {
+              await this.delay(500);
+            }
+          } catch (error) {
+            this.logger.error(
+              `[NSMP] Failed to import chapter ${chapterInfo.title}: ${error.message}`,
+            );
+          }
+        }
+        
+        this.logger.log(
+          `[NSMP] Import completed: ${successChapters}/${bookInfo.chapters.length} chapters`,
+        );
+      }
+      
+      return existingBook;
+    }
+
+    // Find or create genre
+    let genre = await this.genreModel.findOne({ name: bookInfo.genre });
+    if (!genre) {
+      genre = await this.genreModel.create({
+        name: bookInfo.genre,
+        description: `Thể loại ${bookInfo.genre}`,
+        slug: this.generateSlug(bookInfo.genre),
+      });
+      this.logger.log(`[NSMP] Created new genre: ${genre.name}`);
+    }
+
+    // Find or create author
+    let author = await this.authorModel.findOne({ name: bookInfo.author });
+    if (!author) {
+      author = await this.authorModel.create({
+        name: bookInfo.author,
+        bio: `Tác giả ${bookInfo.author}`,
+      });
+      this.logger.log(`[NSMP] Created new author: ${author.name}`);
+    }
+
+    // Create book
+    const book = await this.bookModel.create({
+      title: bookInfo.title,
+      description: bookInfo.description,
+      coverUrl: bookInfo.imageUrl,
+      authorId: author._id,
+      genres: [genre._id],
+      status: 'published',
+      slug: slug,
+      views: 0,
+      likes: 0,
+    });
+
+    this.logger.log(
+      `[NSMP] ✓ Created book: ${book.title} - Starting to import ${bookInfo.chapters.length} chapters...`,
+    );
+
+    // Import chapters with progress tracking
+    let successChapters = 0;
+    let failedChapters = 0;
+
+    for (const [index, chapterInfo] of bookInfo.chapters.entries()) {
+      try {
+        await this.importNSMPChapter(book._id, chapterInfo);
+        successChapters++;
+
+        // Log progress every 5 chapters
+        if ((index + 1) % 5 === 0 || index === bookInfo.chapters.length - 1) {
+          this.logger.log(
+            `[NSMP] Progress: ${index + 1}/${bookInfo.chapters.length} chapters processed`,
+          );
+        }
+
+        if (index < bookInfo.chapters.length - 1) {
+          await this.delay(500);
+        }
+      } catch (error) {
+        failedChapters++;
+        this.logger.error(
+          `[NSMP] Failed to import chapter ${chapterInfo.title}: ${error.message}`,
+        );
+      }
+    }
+
+    this.logger.log(
+      `[NSMP] ✅ Import completed for "${book.title}": ${successChapters} success, ${failedChapters} failed`,
+    );
+
+    return book;
+  } catch (error) {
+    this.logger.error(
+      `[NSMP] Error importing book from ${bookUrl}: ${error.message}`,
+    );
+    throw error;
+  }
+}
+
+ /**
+ * Import một chapter từ nhasachmienphi
+ */
+private async importNSMPChapter(
+  bookId: any,
+  chapterInfo: ChapterInfo,
+): Promise<ChapterDocument> {
+  try {
+    const chapterData = await this.crawlNSMPChapterContent(chapterInfo.url);
+    const chapterSlug = this.generateSlug(chapterInfo.title);
+
+    // ✅ Check if chapter already exists
+    const existingChapter = await this.chapterModel.findOne({
+      bookId,
+      slug: chapterSlug,
+    });
+
+    if (existingChapter) {
+      this.logger.log(`[NSMP] Chapter already exists: ${chapterInfo.title}`);
+      return existingChapter;
+    }
+
+    // ✅ Create chapter with paragraphs
+    const chapter = await this.chapterModel.create({
+      bookId,
+      title: chapterData.title,
+      slug: chapterSlug,
+      paragraphs: chapterData.paragraphs, // ✅ Array of {content: string}
+      orderIndex: chapterInfo.order,
+      viewsCount: 0,
+    });
+
+    this.logger.log(`[NSMP] ✓ Created chapter: ${chapter.title} (${chapterData.paragraphs.length} paragraphs)`);
+
+    return chapter;
+  } catch (error) {
+    this.logger.error(
+      `[NSMP] Error importing chapter ${chapterInfo.title}: ${error.message}`,
+    );
+    throw error;
+  }
+}
+
+  /**
+   * Crawl và import toàn bộ category từ nhasachmienphi
+   */
+  async crawlAndImportNSMPCategory(
+    categoryUrl: string,
+    limit: number = 10,
+  ): Promise<CrawlResult> {
+    const result: CrawlResult = {
+      success: 0,
+      failed: 0,
+      books: [],
+      errors: [],
+    };
+
+    try {
+      const bookUrls = await this.crawlNSMPCategoryBooks(categoryUrl, limit);
+      this.logger.log(`[NSMP] Found ${bookUrls.length} books to import`);
+
+      for (const [index, bookUrl] of bookUrls.entries()) {
+        try {
+          this.logger.log(
+            `[NSMP] Processing book ${index + 1}/${bookUrls.length}: ${bookUrl}`,
+          );
+
+          const book = await this.importNSMPBookToDatabase(bookUrl);
+
+          const chaptersCount = await this.chapterModel.countDocuments({
+            bookId: book._id,
+          });
+
+          result.books.push({
+            id: book._id.toString(),
+            title: book.title,
+            slug: book.slug,
+            chaptersCount,
+          });
+
+          result.success++;
+          this.logger.log(`[NSMP] ✓ Successfully imported: ${book.title}`);
+
+          if (index < bookUrls.length - 1) {
+            await this.delay(2000);
+          }
+        } catch (error) {
+          result.failed++;
+          const errorMsg = `Failed to import book from ${bookUrl}: ${error.message}`;
+          result.errors.push(errorMsg);
+          this.logger.error(`[NSMP] ✗ ${errorMsg}`);
+        }
+      }
+
+      this.logger.log(
+        `[NSMP] Import completed: ${result.success} success, ${result.failed} failed`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `[NSMP] Error in crawlAndImportNSMPCategory: ${error.message}`,
+      );
+      result.errors.push(`Category crawl failed: ${error.message}`);
+    }
+
+    return result;
+  }
+
+  /**
+   * Import một cuốn sách đơn lẻ từ nhasachmienphi
+   */
+  async importNSMPSingleBook(bookUrl: string): Promise<{
+    success: boolean;
+    book?: {
+      id: string;
+      title: string;
+      slug: string;
+      chaptersCount: number;
+    };
+    error?: string;
+  }> {
+    try {
+      const book = await this.importNSMPBookToDatabase(bookUrl);
+
+      const chaptersCount = await this.chapterModel.countDocuments({
+        bookId: book._id,
+      });
+
+      return {
+        success: true,
+        book: {
+          id: book._id.toString(),
+          title: book.title,
+          slug: book.slug,
+          chaptersCount,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Generate slug từ string
+   */
+  private generateSlug(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .trim();
   }
 
   private delay(ms: number): Promise<void> {

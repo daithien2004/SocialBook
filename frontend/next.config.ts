@@ -49,6 +49,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cellphones.com.vn',
       },
+      {
+        protocol: 'https',
+        hostname: 'nhasachmienphi.com',
+      },
     ],
   },
 };

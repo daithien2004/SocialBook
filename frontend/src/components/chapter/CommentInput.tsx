@@ -41,49 +41,46 @@ export default function CommentInput({
     content.trim().length >= minLength && content.trim().length <= maxLength;
 
   return (
-    <div className="flex gap-3 items-center">
-      <div className="relative flex-1 group">
-        <input
-          type="text"
-          placeholder={placeholder}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isSubmitting}
-          maxLength={maxLength}
-          className="w-full px-4 py-3 bg-white dark:bg-[#1a1a1a] border-2 border-gray-300 dark:border-white/20 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed duration-300 shadow-sm"
-          aria-label="Nhập bình luận"
-        />
+    <div className="relative group w-full">
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={isSubmitting}
+        maxLength={maxLength}
+        className="w-full pl-5 pr-32 py-4 bg-gray-50/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:bg-white dark:focus:bg-[#1a1a1a] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all shadow-sm"
+        aria-label="Nhập bình luận"
+      />
 
+      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
         {content.length > 0 && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-600 dark:text-gray-400 font-medium pointer-events-none transition-opacity">
+          <span className="text-xs text-gray-400 font-medium px-2 hidden sm:block">
             {content.length}/{maxLength}
           </span>
         )}
+        
+        <button
+          onClick={handleSubmit}
+          disabled={!isValid || isSubmitting}
+          className={`
+            flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200
+            ${
+              !isValid || isSubmitting
+                ? 'bg-transparent text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95'
+            }
+          `}
+          aria-label="Gửi bình luận"
+        >
+          {isSubmitting ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Send className="w-5 h-5" />
+          )}
+        </button>
       </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={!isValid || isSubmitting}
-        className={`
-          flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-200 min-w-[80px] shadow-lg
-          ${
-            !isValid || isSubmitting
-              ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed'
-              : 'bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-400 shadow-blue-500/30 dark:shadow-blue-400/30 active:scale-95 border-2 border-blue-700 dark:border-blue-400'
-          }
-        `}
-        aria-label="Gửi bình luận"
-      >
-        {isSubmitting ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
-        ) : (
-          <>
-            <span className="hidden sm:inline">Gửi</span>
-            <Send className="w-4 h-4" />
-          </>
-        )}
-      </button>
     </div>
   );
 }

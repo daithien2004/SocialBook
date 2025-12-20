@@ -35,7 +35,7 @@ export default function AddToLibraryModal({
   bookId,
 }: AddToLibraryModalProps) {
   // --- STATE ---
-  // Trạng thái chính (Đọc/Muốn đọc/Lưu trữ)
+  // Trạng thái chính (Đọc/Đã hoàn thành/Lưu trữ)
   const [selectedStatus, setSelectedStatus] = useState<LibraryStatus | null>(
     null
   );
@@ -165,7 +165,7 @@ export default function AddToLibraryModal({
               active={selectedStatus === LibraryStatus.COMPLETED}
               onClick={() => handleStatusChange(LibraryStatus.COMPLETED)}
               icon={Bookmark}
-              label="Muốn đọc"
+              label="Đã hoàn thành"
               color="text-yellow-600 bg-yellow-50 border-yellow-200"
             />
             <StatusButton

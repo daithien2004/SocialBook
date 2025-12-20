@@ -53,7 +53,7 @@ export function BookCard({ book }: { book: Book }) {
 
             <div className="mt-auto flex items-center justify-between border-t border-gray-200 dark:border-white/10 pt-3">
               <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-gray-600 dark:text-gray-400">
-                <span>VOL {book.stats?.chapters || 1}</span>
+                <span>VOL {book.stats?.chapters || 0}</span>
 
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 opacity-75"></span>

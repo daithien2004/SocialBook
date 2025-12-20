@@ -36,11 +36,11 @@ export default function StepReadingHabits({ onSubmit, initialData }: any) {
             onClick={() => toggleTime(opt.key)}
             className={`p-4 rounded-xl border-2 text-left transition-all
               ${times[opt.key]
-                 ? 'border-black bg-neutral-100 dark:bg-white/10 dark:border-white'
-                : 'border-gray-200 dark:border-gray-700'
+                 ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400'
+                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
               }`}
           >
-            <div className={`font-semibold ${times[opt.key] ? 'text-black dark:text-white' : 'dark:text-gray-200'}`}>
+            <div className={`font-semibold ${times[opt.key] ? 'text-indigo-700 dark:text-indigo-300' : 'dark:text-gray-200'}`}>
               {opt.label}
             </div>
             <div className="text-sm text-gray-400">{opt.sub}</div>
@@ -49,7 +49,7 @@ export default function StepReadingHabits({ onSubmit, initialData }: any) {
       </div>
 
       <Button 
-        className="w-full bg-black hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500"
         onClick={() => onSubmit({ readingTime: times })}
       >
         Sắp xong rồi

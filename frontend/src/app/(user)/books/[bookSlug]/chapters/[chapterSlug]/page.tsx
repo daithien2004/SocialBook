@@ -85,6 +85,10 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const hasShownResumeToast = useRef(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [chapterSlug]);
+
+  useEffect(() => {
     if (savedProgress > 5 && !hasShownResumeToast.current) {
       hasShownResumeToast.current = true;
       setTimeout(() => {

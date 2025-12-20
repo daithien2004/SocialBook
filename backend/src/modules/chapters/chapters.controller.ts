@@ -42,7 +42,7 @@ export class ChaptersController {
   async getChapters(
     @Param('bookSlug') bookSlug: string,
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 20,
+    @Query('limit') limit: number = 200,
   ) {
     const result = await this.chaptersService.getChaptersByBookSlug(bookSlug, page, limit);
     return {
