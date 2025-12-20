@@ -93,12 +93,29 @@ export class GamificationService {
     }
 
     const oneDayMs = 24 * 60 * 60 * 1000;
-    const isConsecutive = lastRead && (today.getTime() - lastRead.getTime() === oneDayMs);
+    
+    let diffDays = 1; 
+    if (lastRead) {
+      const diffTime = today.getTime() - lastRead.getTime();
+      diffDays = Math.floor(diffTime / oneDayMs);
+    }
 
-    if (isConsecutive) {
-      userGamification.currentStreak += 1;
-    } else {
+    let freezeUsed = 0;
+
+    if (!lastRead) {
       userGamification.currentStreak = 1;
+    } else if (diffDays === 1) {
+      userGamification.currentStreak += 1;
+    } else if (diffDays > 1) {
+      const missedDays = diffDays - 1;
+      
+      if (userGamification.streakFreezeCount >= missedDays) {
+        userGamification.streakFreezeCount -= missedDays;
+        userGamification.currentStreak += 1; 
+        freezeUsed = missedDays;
+      } else {
+        userGamification.currentStreak = 1;
+      }
     }
 
     if (userGamification.currentStreak > userGamification.longestStreak) {
@@ -114,7 +131,9 @@ export class GamificationService {
     return {
       message: 'Streak updated',
       currentStreak: userGamification.currentStreak,
-      longestStreak: userGamification.longestStreak
+      longestStreak: userGamification.longestStreak,
+      freezeUsed,
+      remainingFreezes: userGamification.streakFreezeCount
     };
   }
 

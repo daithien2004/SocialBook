@@ -14,9 +14,6 @@ export class Achievement {
   @Prop({ required: true })
   description: string;
 
-  @Prop()
-  iconUrl: string;
-
   @Prop({
     type: String,
     enum: ['reading', 'streak', 'social', 'special'],
@@ -31,21 +28,8 @@ export class Achievement {
   requirement: {
     type: 'books_completed' | 'pages_read' | 'streak_days' | 'reviews_written' | 'custom';
     value: number;
-    condition?: string; // JSON logic string if needed
+    condition?: string;
   };
-
-  @Prop()
-  badgeUrl: string;
-
-  @Prop({
-    type: String,
-    enum: ['common', 'rare', 'epic', 'legendary'],
-    default: 'common'
-  })
-  rarity: string;
-
-  @Prop({ default: 0 })
-  unlockedByCount: number;
 
   @Prop({ default: true })
   isActive: boolean;
