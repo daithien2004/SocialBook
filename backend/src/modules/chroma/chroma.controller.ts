@@ -31,6 +31,7 @@ export class ChromaController {
     // Xóa toàn bộ collection
     @Roles('admin')
     @Post('clear')
+    @Public()
     async clearCollection() {
         const result = await this.chromaService.clearCollection();
 

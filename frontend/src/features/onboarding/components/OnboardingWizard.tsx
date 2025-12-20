@@ -108,7 +108,7 @@ export default function OnboardingWizard() {
               <div
                 key={label}
                 className={`text-sm font-medium ${
-                  step > idx ? 'text-black dark:text-white' : 'text-gray-400'
+                  step > idx ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'
                 }`}
               >
                 {label}
@@ -118,7 +118,7 @@ export default function OnboardingWizard() {
         </div>
         <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-black dark:bg-white"
+            className="h-full bg-indigo-600 dark:bg-indigo-500"
             initial={{ width: `${((step - 1) / 4) * 100}%` }}
             animate={{ width: `${(step / 4) * 100}%` }}
             transition={{ duration: 0.3 }}

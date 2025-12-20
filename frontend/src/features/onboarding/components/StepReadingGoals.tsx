@@ -54,8 +54,8 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all
                   ${
                     goal.unit === option.value
-                      ? 'border-black bg-neutral-100 dark:bg-white/10 dark:border-white text-black dark:text-white'
-                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300'
+                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
                   }`}
               >
                 {option.label}
@@ -76,8 +76,8 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all
                   ${
                     goal.amount === amount
-                     ? 'border-black bg-neutral-100 dark:bg-white/10 dark:border-white text-black dark:text-white'
-                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300'
+                     ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
                   }`}
               >
                 {amount} {goal.unit === 'minutes' ? 'phút' : goal.unit === 'pages' ? 'trang' : 'cuốn'}
@@ -102,8 +102,8 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold capitalize transition-all
                   ${
                     goal.type === type.id
-                      ? 'border-black bg-neutral-100 dark:bg-white/10 dark:border-white text-black dark:text-white'
-                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300'
+                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
                   }`}
               >
                 {type.label}
@@ -114,7 +114,7 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
       </div>
 
       <Button
-        className="w-full bg-black hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500"
         onClick={() => onSubmit({ readingGoal: goal })}
       >
         Thiết lập mục tiêu
