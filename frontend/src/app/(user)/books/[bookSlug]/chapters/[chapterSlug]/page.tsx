@@ -236,9 +236,9 @@ ${book.description?.slice(0, 100)}...
       </div>
 
       {book && chapter && (
-        <ReadingTimeTracker 
-          bookId={book.id} 
-          chapterId={chapter.id} 
+        <ReadingTimeTracker
+          bookId={book.id}
+          chapterId={chapter.id}
         />
       )}
 
