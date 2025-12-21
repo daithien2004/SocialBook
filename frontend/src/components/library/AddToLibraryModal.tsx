@@ -34,24 +34,25 @@ export default function AddToLibraryModal({
   onClose,
   bookId,
 }: AddToLibraryModalProps) {
-  // --- STATE ---
-  // Trạng thái chính (Đọc/Đã hoàn thành/Lưu trữ)
+  const { data, status } = useSession();
+  const isLoggedIn = status === 'authenticated';
+
   const [selectedStatus, setSelectedStatus] = useState<LibraryStatus | null>(
     null
   );
-  // Danh sách folder đã chọn
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  // Tạo folder mới
+
   const [isCreating, setIsCreating] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
 
-  // --- API HOOKS ---
-  const { data: collectionsData } = useGetCollectionsQuery(currentUserId);
+  const { data: collectionsData } = useGetCollectionsQuery(currentUserId, {
+    skip: !isLoggedIn,
+  });
   const { data: libraryInfo, isFetching } = useGetBookLibraryInfoQuery(bookId, {
-    skip: !isOpen, // Chỉ fetch khi mở modal
+    skip: !isOpen,
   });
 
   const [updateStatus] = useUpdateLibraryStatusMutation();
@@ -60,7 +61,6 @@ export default function AddToLibraryModal({
 
   const collections = collectionsData || [];
 
-  // Sync state khi có data từ API
   useEffect(() => {
     if (libraryInfo) {
       setSelectedStatus(libraryInfo.status);
@@ -68,7 +68,6 @@ export default function AddToLibraryModal({
     }
   }, [libraryInfo]);
 
-  // Reset state khi mở modal
   useEffect(() => {
     if (isOpen) {
       setIsCreating(false);
@@ -78,12 +77,7 @@ export default function AddToLibraryModal({
 
   if (!isOpen) return null;
 
-  // --- HANDLERS ---
-
-  // 1. Xử lý thay đổi trạng thái chính (Tabs hệ thống)
   const handleStatusChange = async (status: LibraryStatus) => {
-    // Nếu bấm vào cái đang chọn -> Bỏ chọn (Xóa khỏi thư viện) - Logic nâng cao
-    // Ở đây mình làm đơn giản: Bấm là chọn
     setSelectedStatus(status);
     try {
       await updateStatus({ bookId, status }).unwrap();
@@ -92,7 +86,6 @@ export default function AddToLibraryModal({
     }
   };
 
-  // 2. Xử lý check/uncheck folder
   const handleToggleCollection = async (collectionId: string) => {
     const isSelected = selectedCollections.includes(collectionId);
     let newIds: string[] = [];
@@ -103,28 +96,22 @@ export default function AddToLibraryModal({
       newIds = [...selectedCollections, collectionId];
     }
 
-    // Cập nhật UI ngay lập tức (Optimistic)
     setSelectedCollections(newIds);
 
-    // Gọi API
     try {
       await updateCollections({ bookId, collectionIds: newIds }).unwrap();
     } catch (error) {
-      // Revert nếu lỗi
       setSelectedCollections(selectedCollections);
       console.error('Lỗi update collection', error);
     }
   };
 
-  // 3. Tạo folder mới ngay trong modal
   const handleCreateCollection = async () => {
     if (!newCollectionName.trim()) return;
     try {
-      // Tạo xong trả về collection mới
       const res = await createCollection({ name: newCollectionName }).unwrap();
       const newColId = res.id;
 
-      // Tự động tick chọn folder vừa tạo
       await handleToggleCollection(newColId);
 
       setNewCollectionName('');
@@ -140,7 +127,6 @@ export default function AddToLibraryModal({
         className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h3 className="font-bold text-gray-900">Lưu vào thư viện</h3>
           <button
@@ -152,7 +138,6 @@ export default function AddToLibraryModal({
         </div>
 
         <div className="overflow-y-auto p-4 space-y-6">
-          {/* SECTION 1: Trạng thái chính */}
           <div className="grid grid-cols-3 gap-2">
             <StatusButton
               active={selectedStatus === LibraryStatus.READING}
@@ -177,7 +162,6 @@ export default function AddToLibraryModal({
             />
           </div>
 
-          {/* SECTION 2: Danh sách Folder */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 mb-3">
               Bộ sưu tập của tôi
@@ -216,7 +200,6 @@ export default function AddToLibraryModal({
             </div>
           </div>
 
-          {/* SECTION 3: Tạo Folder Mới */}
           {isCreating ? (
             <div className="flex gap-2 animate-in fade-in slide-in-from-top-2">
               <input
@@ -258,7 +241,6 @@ export default function AddToLibraryModal({
   );
 }
 
-// Sub-component cho nút trạng thái
 function StatusButton({ active, onClick, icon: Icon, label, color }: any) {
   return (
     <button
