@@ -29,13 +29,12 @@ export function StatCard({
           {trend && (
             <div className="flex items-center mt-2">
               <span
-                className={`text-xs font-medium ${
-                  trend.isPositive ? 'text-green-600' : 'text-red-600'
-                }`}
+                className={`text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'
+                  }`}
               >
                 {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
               </span>
-              <span className="text-xs text-gray-500 ml-2">vs last month</span>
+              <span className="text-xs text-gray-500 ml-2">so với tháng trước</span>
             </div>
           )}
         </div>

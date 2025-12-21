@@ -9,6 +9,7 @@ import { Post, PostSchema } from '@/src/modules/posts/schemas/post.schema';
 import { Chapter, ChapterSchema } from '@/src/modules/chapters/schemas/chapter.schema';
 import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
 import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
+import { Book, BookSchema } from '@/src/modules/books/schemas/book.schema';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -16,6 +17,7 @@ import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
       { name: Post.name, schema: PostSchema },
       { name: User.name, schema: UserSchema },
       { name: Chapter.name, schema: ChapterSchema },
+      { name: Book.name, schema: BookSchema },
     ]),
     forwardRef(() => LikesModule),
     ContentModerationModule,

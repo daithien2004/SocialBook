@@ -18,24 +18,24 @@ export function TimeRangeSelector({
     switch (viewType) {
       case 'day':
         return [
-          { value: '7', label: 'Last 7 Days' },
-          { value: '30', label: 'Last 30 Days' },
-          { value: '90', label: 'Last 90 Days' },
+          { value: '7', label: '7 ngày qua' },
+          { value: '30', label: '30 ngày qua' },
+          { value: '90', label: '90 ngày qua' },
         ];
       case 'month':
         return [
-          { value: '90', label: 'Last 3 Months' },
-          { value: '180', label: 'Last 6 Months' },
-          { value: '365', label: 'Last 12 Months' },
+          { value: '90', label: '3 tháng qua' },
+          { value: '180', label: '6 tháng qua' },
+          { value: '365', label: '12 tháng qua' },
         ];
       case 'year':
         return [
-          { value: '730', label: 'Last 2 Years' },
-          { value: '1095', label: 'Last 3 Years' },
-          { value: '1825', label: 'Last 5 Years' },
+          { value: '730', label: '2 năm qua' },
+          { value: '1095', label: '3 năm qua' },
+          { value: '1825', label: '5 năm qua' },
         ];
       default:
-        return [{ value: '30', label: 'Last 30 Days' }];
+        return [{ value: '30', label: '30 ngày qua' }];
     }
   };
 
@@ -43,7 +43,7 @@ export function TimeRangeSelector({
 
   return (
     <div className="flex items-center gap-4">
-      <label className="text-sm font-medium text-gray-700">Time Range:</label>
+      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Thời gian:</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
