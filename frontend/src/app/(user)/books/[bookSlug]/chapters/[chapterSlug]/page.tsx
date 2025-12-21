@@ -227,9 +227,6 @@ ${book.description?.slice(0, 100)}...
         <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>
 
-      {book && chapter && (
-      )}
-
       {/* 1. PROGRESS BAR (Top) */}
       <div
         className="fixed top-0 left-0 h-1 bg-blue-600 z-[60] transition-all duration-300 ease-out"
@@ -282,11 +279,10 @@ ${book.description?.slice(0, 100)}...
 
       {/* 4. FLOATING DOCK (Thanh công cụ nổi) */}
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
-          isControlsVisible
-            ? 'translate-y-0 opacity-100'
-            : 'translate-y-24 opacity-0'
-        }`}
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isControlsVisible
+          ? 'translate-y-0 opacity-100'
+          : 'translate-y-24 opacity-0'
+          }`}
       >
         <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl border border-gray-300 dark:border-white/10 shadow-2xl transition-colors duration-300">
           {/* Nút Mục Lục */}
@@ -353,9 +349,8 @@ ${book.description?.slice(0, 100)}...
       {/* 5. DRAWER MỤC LỤC (Slide-over) */}
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
-          showTOC ? 'opacity-100 visible' : 'opacity-0 invisible'
-        }`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${showTOC ? 'opacity-100 visible' : 'opacity-0 invisible'
+          }`}
         onClick={() => setShowTOC(false)}
       />
 
