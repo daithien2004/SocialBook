@@ -1,7 +1,13 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_USERS_ENDPOINTS } from '@/src/constants/server-endpoints';
-import { UpdateUserOverviewRequest, UserListResponse, UserOverviewResponse } from '../types/user.types';
+import {createApi} from '@reduxjs/toolkit/query/react';
+import {axiosBaseQuery} from '@/src/lib/nestjs-client-api';
+import {NESTJS_USERS_ENDPOINTS} from '@/src/constants/server-endpoints';
+import {
+    SearchUsersParams,
+    SearchUsersResponse,
+    UpdateUserOverviewRequest,
+    UserListResponse,
+    UserOverviewResponse
+} from '../types/user.types';
 
 export const usersApi = createApi({
     reducerPath: 'usersApi',
@@ -27,13 +33,13 @@ export const usersApi = createApi({
             UserOverviewResponse,
             { body: UpdateUserOverviewRequest; userId: string }
         >({
-            query: ({ body }) => ({
+            query: ({body}) => ({
                 url: `/users/me/overview`,
                 method: 'PATCH',
                 body,
             }),
-            invalidatesTags: (result, error, { userId }) => [
-                { type: 'Users', id: `OVERVIEW_${userId}` },
+            invalidatesTags: (result, error, {userId}) => [
+                {type: 'Users', id: `OVERVIEW_${userId}`},
             ],
         }),
 
@@ -41,7 +47,7 @@ export const usersApi = createApi({
             UserOverviewResponse,
             { file: File; userId: string }
         >({
-            query: ({ file }) => {
+            query: ({file}) => {
                 const formData = new FormData();
                 formData.append("file", file);
 
@@ -51,8 +57,8 @@ export const usersApi = createApi({
                     body: formData,
                 };
             },
-            invalidatesTags: (result, error, { userId }) => [
-                { type: "Users", id: `OVERVIEW_${userId}` },
+            invalidatesTags: (result, error, {userId}) => [
+                {type: "Users", id: `OVERVIEW_${userId}`},
             ],
         }),
 
@@ -62,7 +68,7 @@ export const usersApi = createApi({
                 method: "GET",
             }),
             providesTags: (result, error, userId) => [
-                { type: "Users", id: `OVERVIEW_${userId}` },
+                {type: "Users", id: `OVERVIEW_${userId}`},
             ],
         }),
 
@@ -82,6 +88,20 @@ export const usersApi = createApi({
             }),
             invalidatesTags: ['Users'],
         }),
+
+        searchUsers: builder.query<SearchUsersResponse, SearchUsersParams>({
+            query: ({keyword, current = 1, pageSize = 10}) => ({
+                url: `/users/search`,
+                method: 'GET',
+                params: {
+                    keyword,
+                    current,
+                    pageSize,
+                },
+            }),
+            providesTags: ['Users'],
+        }),
+
     }),
 });
 
@@ -93,4 +113,6 @@ export const {
     usePatchUpdateUserAvatarMutation,
     useGetReadingPreferencesQuery,
     useUpdateReadingPreferencesMutation,
+    useSearchUsersQuery,
+    useLazySearchUsersQuery,
 } = usersApi;

@@ -43,3 +43,26 @@ export interface UpdateUserOverviewRequest {
     website: string;
     username: string;
 }
+
+export interface SearchUsersParams {
+    keyword: string;
+    current?: number;
+    pageSize?: number;
+}
+
+export interface SearchUsersResponse {
+    message: string;
+    items: {
+        id: string;
+        username: string;
+        image?: string;
+        bio?: string;
+        createdAt: string;
+    }[];
+    pagination: {
+        current: number;
+        pageSize: number;
+        totalItems: number;
+        totalPages: number;
+    };
+}

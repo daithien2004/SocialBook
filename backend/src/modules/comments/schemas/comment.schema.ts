@@ -16,6 +16,9 @@ export class Comment {
   @Prop({ type: Types.ObjectId, ref: 'Comment', default: null })
   parentId: Types.ObjectId | null;
 
+  @Prop({ type: Boolean, default: false })
+  isDelete: boolean;
+
   @Prop({ type: String, required: true, trim: true })
   content: string;
 

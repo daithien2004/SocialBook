@@ -1,4 +1,4 @@
-import { IsEnum, IsMongoId, IsOptional, ValidateIf } from 'class-validator';
+import { IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { TARGET_TYPES } from '@/src/modules/comments/constants/targetType.constant';
 
 export class CreateCommentDto {
@@ -23,4 +23,10 @@ export class CommentCountDto {
 
   @IsEnum(TARGET_TYPES)
   targetType: string;
+}
+
+export class UpdateCommentDto {
+  @IsString()
+  @IsNotEmpty()
+  content: string;
 }

@@ -47,6 +47,7 @@ export class CommentsService {
     const filter: FilterQuery<CommentDocument> = {
       targetId: new Types.ObjectId(targetId),
       parentId: parentId ? new Types.ObjectId(parentId) : null,
+      isDelete: false,
     };
 
     if (cursor && Types.ObjectId.isValid(cursor)) {
@@ -337,6 +338,65 @@ export class CommentsService {
     }
 
     return null;
+  }
+
+  async updateComment(
+    userId: string,
+    commentId: string,
+    content: string,
+  ) {
+    if (!Types.ObjectId.isValid(commentId)) {
+      throw new BadRequestException('Invalid comment ID');
+    }
+
+    const comment = await this.commentModel.findById(commentId);
+    if (!comment) throw new NotFoundException('Comment not found');
+
+    if (comment.isDelete) {
+      throw new BadRequestException('Comment has been deleted');
+    }
+
+    if (comment.userId.toString() !== userId) {
+      throw new ForbiddenException('You are not allowed to edit this comment');
+    }
+
+    const moderationResult =
+      await this.contentModerationService.checkContent(content);
+
+    if (!moderationResult.isSafe) {
+      throw new BadRequestException('Comment content is not allowed');
+    }
+
+    comment.content = content.trim();
+    comment.updatedAt = new Date();
+
+    await comment.save();
+
+    return this.commentModel
+      .findById(comment._id)
+      .populate('userId', 'username image')
+      .lean();
+  }
+
+  async deleteComment(userId: string, commentId: string) {
+    if (!Types.ObjectId.isValid(commentId)) {
+      throw new BadRequestException('Invalid comment ID');
+    }
+
+    const comment = await this.commentModel.findById(commentId);
+    if (!comment) throw new NotFoundException('Comment not found');
+
+    if (comment.userId.toString() !== userId) {
+      throw new ForbiddenException('You are not allowed to delete this comment');
+    }
+
+    if (comment.isDelete) return;
+
+    comment.isDelete = true;
+    comment.content = 'Bình luận đã bị xóa';
+    comment.updatedAt = new Date();
+
+    await comment.save();
   }
 
 }

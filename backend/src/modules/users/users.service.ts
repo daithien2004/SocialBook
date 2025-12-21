@@ -286,4 +286,49 @@ export class UsersService {
 
     return user.readingPreferences;
   }
+
+  async searchUsersByUsername(
+    keyword: string,
+    current = 1,
+    pageSize = 10,
+  ) {
+    if (!keyword || !keyword.trim()) {
+      throw new BadRequestException('Search keyword is required');
+    }
+
+    const page = Number(current) || 1;
+    const limit = Number(pageSize) || 10;
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      username: {
+        $regex: keyword,
+        $options: 'i', // không phân biệt hoa thường
+      },
+      isBanned: false,
+    };
+
+    const [items, totalItems] = await Promise.all([
+      this.userModel
+        .find(filter)
+        .select('username image createdAt bio') // chỉ lấy dữ liệu cần
+        .sort({ username: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      this.userModel.countDocuments(filter),
+    ]);
+
+    return {
+      items,
+      meta: {
+        current: page,
+        pageSize: limit,
+        total: totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+      },
+    };
+  }
+
 }
