@@ -58,10 +58,17 @@ export default function CommentSection({
   };
 
   return (
-    <section className={`w-full pt-10 border-t border-white/5 ${className}`}>
-      <div className="mb-10 bg-gray-100 dark:bg-neutral-900/50 border border-gray-300 dark:border-white/10 p-4 rounded-xl">
+    <section className={`w-full mt-16 ${className}`}>
+      <div className="flex items-center gap-4 mb-8">
+        <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+          Thảo luận chương
+        </h3>
+        <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent dark:from-white/10" />
+      </div>
+
+      <div className="mb-10">
         <CommentInput
-          placeholder="Bạn nghĩ gì về chương này?..."
+          placeholder="Chia sẻ suy nghĩ của bạn về chương này..."
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
         />

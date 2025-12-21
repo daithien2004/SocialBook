@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'https',
         hostname: 'static.truyenfull.vision',
         port: '',
         pathname: '/**',
@@ -44,6 +48,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'cellphones.com.vn',
+      },
+      {
+        protocol: 'https',
+        hostname: 'nhasachmienphi.com',
       },
     ],
   },

@@ -1,4 +1,5 @@
 import { Book } from '@/src/features/books/types/book.interface';
+import { Chapter } from '@/src/features/chapters/types/chapter.interface';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -98,7 +99,7 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
       <ChapterListDrawer
         isOpen={showAllChapters}
         onClose={() => setShowAllChapters(false)}
-        chapters={allChapters}
+        chapters={allChapters as unknown as Chapter[]}
         bookSlug={bookSlug}
         totalChapters={allChapters.length}
         hasHeader={true}

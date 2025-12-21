@@ -24,7 +24,6 @@ import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
       { name: Progress.name, schema: ProgressSchema },
       { name: Review.name, schema: ReviewSchema },
       { name: Like.name, schema: LikeSchema },
-      { name: Like.name, schema: LikeSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: Genre.name, schema: GenreSchema },
     ]),

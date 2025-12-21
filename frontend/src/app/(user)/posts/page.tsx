@@ -6,11 +6,13 @@ import CreatePostForm from '@/src/components/post/CreatePostForm';
 import { useSession } from 'next-auth/react';
 import { BookOpen, Users, Library, Quote, ImageIcon, PenSquare } from 'lucide-react';
 import RecommendedBooks from "@/src/components/post/RecommendedBooks";
+import {useRouter} from "next/navigation";
 
 export default function Post() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+  const route = useRouter();
   const currentUserName = session?.user?.name || 'Người đọc';
   const currentUserImage = (session?.user as any)?.image || '/abstract-book-pattern.png';
 
@@ -58,12 +60,13 @@ export default function Post() {
                 <nav className="space-y-2 text-sm text-slate-700 dark:text-gray-300">
                   <button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
                     <BookOpen size={16} />
-                    <span>Trang chủ</span>
+                    <span  onClick={()=>route.push(`/`)}
+                    >Trang chủ</span>
                   </button>
 
                   <button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
                     <Users size={16} />
-                    <span>Bạn bè & theo dõi</span>
+                    <span onClick={()=>route.push(`users/${currentUserId}/following`)}>Bạn bè & theo dõi</span>
                   </button>
 
                   <button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
@@ -73,7 +76,9 @@ export default function Post() {
 
                   <button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
                     <Library size={16} />
-                    <span>Thư viện cá nhân</span>
+                    <span
+                        onClick={()=>route.push(`/library`)}
+                    >Thư viện cá nhân</span>
                   </button>
                 </nav>
               </div>

@@ -11,24 +11,24 @@ export default function StepCompletion({ onSubmit }: any) {
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 },
-      colors: ['#000000', '#555555', '#ffffff'],
+      colors: ['#4f46e5', '#818cf8', '#fbbf24', '#ffffff'], // Indigo-ish colors
     });
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4 md:p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-black flex items-center justify-center p-4 md:p-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
         className="max-w-lg w-full bg-white dark:bg-[#111] rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800"
       >
-        <div className="bg-black dark:bg-white p-8 text-center relative overflow-hidden">
+        <div className="bg-indigo-600 dark:bg-indigo-900 p-8 text-center relative overflow-hidden">
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 150 }}
-            className="text-7xl mb-4 grayscale"
+            className="text-7xl mb-4"
           >
             🎉
           </motion.div>
@@ -37,7 +37,7 @@ export default function StepCompletion({ onSubmit }: any) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-3xl md:text-4xl font-bold text-white dark:text-black mb-2"
+            className="text-3xl md:text-4xl font-bold text-white mb-2"
           >
             Mọi thứ đã sẵn sàng!
           </motion.h1>
@@ -46,13 +46,13 @@ export default function StepCompletion({ onSubmit }: any) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.1 }}
             transition={{ delay: 0.4 }}
-            className="absolute -top-10 -right-10 w-40 h-40 bg-white dark:bg-black rounded-full"
+            className="absolute -top-10 -right-10 w-40 h-40 bg-white rounded-full"
           />
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.1 }}
             transition={{ delay: 0.5 }}
-            className="absolute -bottom-10 -left-10 w-40 h-40 bg-white dark:bg-black rounded-full"
+            className="absolute -bottom-10 -left-10 w-40 h-40 bg-white rounded-full"
           />
         </div>
 
@@ -72,10 +72,10 @@ export default function StepCompletion({ onSubmit }: any) {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, type: 'spring' }}
-            className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 mb-8 text-center"
+            className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl p-6 mb-8 text-center"
           >
-            <div className="text-5xl mb-3 grayscale">🏅</div>
-            <p className="text-gray-500 dark:text-gray-400 font-semibold text-sm uppercase tracking-wide mb-1">
+            <div className="text-5xl mb-3">🏅</div>
+            <p className="text-indigo-600 dark:text-indigo-400 font-semibold text-sm uppercase tracking-wide mb-1">
               Phần thưởng đầu tiên
             </p>
             <p className="text-gray-900 dark:text-white text-lg font-bold">
@@ -91,7 +91,7 @@ export default function StepCompletion({ onSubmit }: any) {
             <Button
               onClick={() => onSubmit({})}
               size="lg"
-              className="w-full bg-black hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-semibold py-6 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500 font-semibold py-6 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               Bắt đầu khám phá ngay →
             </Button>

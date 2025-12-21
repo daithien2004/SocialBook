@@ -17,32 +17,8 @@ export class UserGamification {
   @Prop()
   lastReadDate: Date;
 
-  @Prop()
-  streakStartDate: Date;
-
   @Prop({ default: 0 })
   streakFreezeCount: number;
-
-  @Prop({
-    type: [{
-      date: Date,
-      pagesRead: Number,
-      minutesRead: Number,
-      chaptersCompleted: Number,
-      goalMet: Boolean
-    }],
-    default: []
-  })
-  dailyStats: {
-    date: Date;
-    pagesRead: number;
-    minutesRead: number;
-    chaptersCompleted: number;
-    goalMet: boolean;
-  }[];
-
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Achievement' }] })
-  achievementIds: Types.ObjectId[];
 }
 
 export const UserGamificationSchema = SchemaFactory.createForClass(UserGamification);

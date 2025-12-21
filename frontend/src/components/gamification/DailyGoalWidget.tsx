@@ -22,48 +22,39 @@ export function DailyGoalWidget() {
   const isCompleted = progress >= 100;
 
   return (
-    <div className={`rounded-2xl p-6 border shadow-sm transition-all duration-500
-      ${isCompleted 
-        ? 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-700' 
-        : 'bg-white dark:bg-[#1e1e1e] border-gray-100 dark:border-zinc-800'
-      }`}
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`p-2 rounded-xl 
-          ${isCompleted 
-            ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400' 
-            : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
-          }`}
-        >
-          {isCompleted ? <Trophy className="w-5 h-5" /> : <Target className="w-5 h-5" />}
-        </div>
-        <div>
-          <h3 className={`font-bold ${isCompleted ? 'text-yellow-900 dark:text-yellow-100' : 'text-gray-900 dark:text-gray-100'}`}>
-            {isCompleted ? 'Mục tiêu hoàn thành!' : 'Mục tiêu hôm nay'}
-          </h3>
-          <p className={`text-xs ${isCompleted ? 'text-yellow-700 dark:text-yellow-200' : 'text-gray-500 dark:text-gray-400'}`}>
-            {isCompleted ? 'Bạn thật tuyệt vời!' : 'Tiếp tục cố gắng nhé!'}
-          </p>
-        </div>
+    <div className="bg-white dark:bg-[#1f1f1f] rounded-2xl p-5 border border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          {isCompleted ? <Trophy size={18} className="text-yellow-500" /> : <Target size={18} className="text-blue-500" />}
+          {isCompleted ? 'Mục tiêu hoàn thành' : 'Mục tiêu hôm nay'}
+        </h3>
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+          {isCompleted ? 'Xuất sắc!' : 'Đang thực hiện'}
+        </span>
       </div>
 
       <div className="space-y-4">
-        <div>
+        <div className="p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 transition-colors">
           <div className="flex justify-between text-sm mb-2">
-            <span className={isCompleted ? 'text-yellow-800 dark:text-yellow-200' : 'text-gray-600 dark:text-gray-400'}>
-              {isCompleted ? 'Đã đạt được' : 'Đã hoàn thành'}
+            <span className="text-gray-500 dark:text-gray-400 font-medium">
+              Tiến độ
             </span>
-            <span className={`font-bold ${isCompleted ? 'text-yellow-900 dark:text-yellow-100' : 'text-gray-900 dark:text-gray-100'}`}>
-              {currentGoal.current} / {currentGoal.target} {unitLabel}
+            <span className="font-bold text-gray-900 dark:text-white">
+              {currentGoal.current} <span className="text-xs font-normal text-gray-400">/ {currentGoal.target} {unitLabel}</span>
             </span>
           </div>
-          <div className={`h-2.5 w-full rounded-full overflow-hidden ${isCompleted ? 'bg-yellow-200 dark:bg-yellow-900/50' : 'bg-gray-100 dark:bg-zinc-800'}`}>
+          
+          <div className="h-2 w-full rounded-full overflow-hidden bg-gray-200 dark:bg-white/10">
             <div 
-              className={`h-full rounded-full transition-all duration-1000 ease-out ${isCompleted ? 'bg-yellow-500' : 'bg-blue-500'}`}
+              className={`h-full rounded-full transition-all duration-1000 ease-out ${isCompleted ? 'bg-yellow-500' : 'bg-blue-600'}`}
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
+
+        <p className="text-xs text-center text-gray-400 dark:text-gray-500">
+          {isCompleted ? 'Bạn đã hoàn thành mục tiêu ngày hôm nay. Tiếp tục giữ vững nhé!' : 'Hãy dành chút thời gian đọc sách để đạt mục tiêu nhé!'}
+        </p>
       </div>
     </div>
   );

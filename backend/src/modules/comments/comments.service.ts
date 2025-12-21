@@ -20,6 +20,7 @@ import { NotificationsService } from '@/src/modules/notifications/notifications.
 import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
 import { Chapter, ChapterDocument } from '@/src/modules/chapters/schemas/chapter.schema';
 import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
+import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
 
 @Injectable()
 export class CommentsService {
@@ -29,6 +30,7 @@ export class CommentsService {
     private readonly contentModerationService: ContentModerationService,
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
     @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
+    @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly notifications: NotificationsService,
   ) { }
@@ -238,7 +240,7 @@ export class CommentsService {
     if (parentId) {
       const parent = await this.commentModel
         .findById(parentId)
-        .select('_id userId content targetId targetType')
+        .select('userId targetId targetType')
         .lean();
 
       if (!parent) return;
@@ -246,7 +248,12 @@ export class CommentsService {
       ownerId = parent.userId?.toString();
       title = `${actor.username} đã trả lời bình luận của bạn`;
       message = `Bình luận của bạn vừa có phản hồi: "${commentContent}"`;
-      actionUrl = `/${targetType}s/${parent.targetId}`;
+
+      actionUrl =
+        (await this.resolveActionUrl(
+          parent.targetType,
+          parent.targetId.toString(),
+        )) ?? '';
     }
 
     else {
@@ -283,4 +290,53 @@ export class CommentsService {
       },
     });
   }
+
+  private async resolveActionUrl(
+    targetType: string,
+    targetId: string,
+  ): Promise<string | null> {
+
+    if (targetType === 'post') {
+      return `/posts/${targetId}`;
+    }
+
+    if (targetType === 'chapter') {
+      const chapter = await this.chapterModel
+        .findById(targetId)
+        .select('bookId slug')
+        .lean();
+
+      if (!chapter) return null;
+
+      const book = await this.bookModel
+        .findById(chapter.bookId)
+        .select('slug')
+        .lean();
+
+      if (!book) return null;
+
+      return `/books/${book.slug}/chapters/${chapter.slug}`;
+    }
+
+    if (targetType === 'paragraph') {
+      const chapter = await this.chapterModel
+        .findOne({ 'paragraphs._id': targetId })
+        .select('bookId slug')
+        .lean();
+
+      if (!chapter) return null;
+
+      const book = await this.bookModel
+        .findById(chapter.bookId)
+        .select('slug')
+        .lean();
+
+      if (!book) return null;
+
+      return `/books/${book.slug}/chapters/${chapter.slug}`;
+    }
+
+    return null;
+  }
+
 }

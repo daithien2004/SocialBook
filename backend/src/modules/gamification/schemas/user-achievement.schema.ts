@@ -16,15 +16,6 @@ export class UserAchievement {
 
   @Prop({ default: 0 })
   progress: number;
-
-  @Prop({ default: false })
-  isNotified: boolean;
-
-  @Prop({ default: 0 })
-  displayOrder: number;
-
-  @Prop({ default: false })
-  isFavorite: boolean;
 }
 
 export const UserAchievementSchema = SchemaFactory.createForClass(UserAchievement);
