@@ -33,7 +33,6 @@ export function ChapterContent({
 }: ChapterContentProps) {
   const { data: session } = useSession();
   const { settings } = useReadingSettings();
-
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
     null
   );
@@ -107,16 +106,17 @@ export function ChapterContent({
         style={{
           backgroundColor: settings.backgroundColor,
           color: settings.textColor,
-          paddingLeft: `${settings.marginWidth + 34}px`,
+          paddingLeft: `${settings.marginWidth}px`,
           paddingRight: `${settings.marginWidth}px`,
         }}
       >
         <article className="space-y-2">
           {paragraphs.map((para) => (
-              <div key={para.id} className="group">
-                <div className="flex items-start gap-3">
+              <div key={para.id} className="group relative">
+                <div className="flex items-start">
+                  {/* Paragraph */}
                   <p
-                      className={`flex-1 transition-colors duration-300 ${
+                      className={`transition-colors duration-300 ${
                           activeParagraphId === para.id
                               ? 'text-slate-700 dark:text-indigo-700'
                               : ''
@@ -136,30 +136,41 @@ export function ChapterContent({
                     {para.content}
                   </p>
 
-                  {/* Buttons */}
+                  {/* Action buttons – FIX hover mất nút */}
                   <div
                       className="
-                      flex flex-col gap-2 shrink-0
-                      opacity-0 pointer-events-none
-                      group-hover:opacity-100 group-hover:pointer-events-auto
-                      transition
-                    "
+                          absolute
+                          right-[-48px]
+                          top-1/2 -translate-y-1/2
+                          flex flex-col gap-2
+
+                          opacity-0
+                          group-hover:opacity-100
+                          hover:opacity-100
+
+                          transition-opacity duration-200 ease-out
+                        "
                   >
                     <button
                         onClick={() => handleToggleComments(para)}
                         className={`p-2 rounded-full transition-all ${
                             activeParagraphId === para.id
                                 ? 'bg-indigo-600 text-white scale-110'
-                                : 'bg-neutral-200 text-neutral-600 hover:bg-indigo-600 hover:text-white dark:bg-neutral-800/50 dark:text-neutral-400 dark:hover:bg-indigo-500 hover:scale-110'
+                                : 'bg-neutral-200 text-neutral-600 hover:bg-indigo-600 hover:text-white dark:bg-gray-700 dark:text-white dark:hover:bg-indigo-500 hover:scale-110'
                         }`}
                         title="Bình luận đoạn này"
                     >
-                      <MessageSquarePlus size={18} />
+                      <MessageSquarePlus size={18}/>
                     </button>
 
                     <button
                         onClick={() => handleOpenPostModal(para)}
-                        className="p-2 rounded-full bg-neutral-800/50 text-neutral-400 hover:bg-green-600 hover:text-white hover:scale-110 transition-all"
+                        className="
+                            p-2 rounded-full
+                            bg-gray-700 text-white
+                            hover:bg-green-600 hover:text-white hover:scale-110
+                            transition-all
+                          "
                         title="Chia sẻ đoạn này"
                     >
                       <Share2 size={18} />

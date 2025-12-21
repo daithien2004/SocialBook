@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { BookOpen, Users, Library, Quote, ImageIcon, PenSquare } from 'lucide-react';
 import RecommendedBooks from "@/src/components/post/RecommendedBooks";
 import {useRouter} from "next/navigation";
+import UserSearchSidebar from "@/src/components/post/UserSearchSidebar";
 
 export default function Post() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -51,6 +52,7 @@ export default function Post() {
                 </button>
               </div>
 
+              <UserSearchSidebar />
               {/* NAVIGATION */}
               <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4">
                 <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide mb-3">
@@ -69,10 +71,10 @@ export default function Post() {
                     <span onClick={()=>route.push(`users/${currentUserId}/following`)}>Bạn bè & theo dõi</span>
                   </button>
 
-                  <button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
-                    <Quote size={16} />
-                    <span>Trích dẫn yêu thích</span>
-                  </button>
+                  {/*<button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">*/}
+                  {/*  <Quote size={16} />*/}
+                  {/*  <span>Trích dẫn yêu thích</span>*/}
+                  {/*</button>*/}
 
                   <button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
                     <Library size={16} />
@@ -141,31 +143,30 @@ export default function Post() {
           {/* RIGHT SIDEBAR */}
           <aside className="hidden lg:block w-[22%]">
             <div className="sticky top-20 space-y-4">
+              {/*<div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4">*/}
+              {/*  <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide mb-3">*/}
+              {/*    Gợi ý cho bạn*/}
+              {/*  </h2>*/}
 
-              <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4">
-                <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                  Gợi ý cho bạn
-                </h2>
+              {/*  <ul className="space-y-2 text-sm text-slate-700 dark:text-gray-300">*/}
+              {/*    <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">*/}
+              {/*      <span>Tác giả nổi bật</span>*/}
+              {/*      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400">*/}
+              {/*      Khám phá*/}
+              {/*    </span>*/}
+              {/*    </li>*/}
 
-                <ul className="space-y-2 text-sm text-slate-700 dark:text-gray-300">
-                  <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">
-                    <span>Tác giả nổi bật</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400">
-                    Khám phá
-                  </span>
-                  </li>
+              {/*    <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">*/}
+              {/*      <span>Bài viết hay gần đây</span>*/}
+              {/*      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />*/}
+              {/*    </li>*/}
 
-                  <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">
-                    <span>Bài viết hay gần đây</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  </li>
-
-                  <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">
-                    <span>Nhóm đọc nổi bật</span>
-                    <span className="text-[10px] text-slate-400 dark:text-gray-500">Mới</span>
-                  </li>
-                </ul>
-              </div>
+              {/*    <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">*/}
+              {/*      <span>Nhóm đọc nổi bật</span>*/}
+              {/*      <span className="text-[10px] text-slate-400 dark:text-gray-500">Mới</span>*/}
+              {/*    </li>*/}
+              {/*  </ul>*/}
+              {/*</div>*/}
 
               <RecommendedBooks />
             </div>

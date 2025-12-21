@@ -27,7 +27,7 @@ const defaultSettings: ReadingPreferences = {
     backgroundColor: '#1a1a1a',
     textColor: '#e5e5e5',
     textAlign: 'justify',
-    marginWidth: 20,
+    marginWidth: 40,
 };
 
 export const useReadingSettings = create<ReadingSettingsStore>()(
