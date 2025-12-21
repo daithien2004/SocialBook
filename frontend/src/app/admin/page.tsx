@@ -222,39 +222,6 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        <a
-          href="/admin/users"
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700 p-6 block"
-        >
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Quản lý người dùng</h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Xem và quản lý người dùng, cấm/bỏ cấm tài khoản
-          </p>
-        </a>
-
-        <a
-          href="/admin/books"
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700 p-6 block"
-        >
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Quản lý sách</h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Thêm, sửa và quản lý sách và chương
-          </p>
-        </a>
-
-        <a
-          href="/admin/posts"
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 dark:border-gray-700 p-6 block"
-        >
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Kiểm duyệt bài viết</h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Xem và kiểm duyệt bài viết người dùng
-          </p>
-        </a>
-      </div>
     </div>
   );
 }
