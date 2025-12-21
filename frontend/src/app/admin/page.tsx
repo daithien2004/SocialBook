@@ -12,7 +12,7 @@ import { useDashboardData, useExportStatistics } from '@/src/features/admin/hook
 import { PopularBooksTable } from '@/src/components/admin/dashboard/PopularBooksTable';
 import { GenreDistributionChart } from '@/src/components/admin/dashboard/GenreDistributionChart';
 
-export default function AdminDashboard() {
+export default function AdminPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [viewType, setViewType] = useState<ViewType>('day');

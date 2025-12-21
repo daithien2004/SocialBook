@@ -1,6 +1,6 @@
 'use client';
 
-import { useGetReadingHeatmapQuery, useGetChapterEngagementQuery, useGetReadingSpeedQuery, useGetGeographicDistributionQuery, useGetActiveUsersQuery } from '@/src/features/admin/api/analyticsApi';
+import { useGetReadingHeatmapQuery, useGetChapterEngagementQuery, useGetGeographicDistributionQuery, useGetActiveUsersQuery } from '@/src/features/admin/api/analyticsApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Activity, TrendingUp, Globe, Users } from 'lucide-react';
@@ -17,10 +17,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <ReadingHeatmapCard />
-                        <ReadingSpeedCard />
-                    </div>
+                    <ReadingHeatmapCard />
                     <div className="grid grid-cols-1 gap-6">
                         <GeographicCard />
                     </div>
@@ -179,41 +176,6 @@ function ChapterEngagementCard() {
                             </div>
                         ))}
                     </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-}
-
-// ============ Reading Speed Component ============
-function ReadingSpeedCard() {
-    const { data, isLoading, error } = useGetReadingSpeedQuery({ days: 7 });
-
-    return (
-        <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="pb-3 border-b border-gray-100">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                    <div className="p-2 bg-purple-50 rounded-lg">
-                        <Activity className="h-5 w-5 text-purple-600" />
-                    </div>
-                    Xu hướng tốc độ đọc
-                </CardTitle>
-                <CardDescription>Tốc độ đọc trung bình (từ/phút)</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-                {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Đang tải...</div>}
-                {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
-                {data && data.length === 0 && <div className="h-64 flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>}
-                {data && data.length > 0 && (
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={data}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="date" stroke="#9ca3af" />
-                            <YAxis label={{ value: 'WPM', angle: -90, position: 'insideLeft' }} stroke="#9ca3af" />
-                            <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-                            <Line type="monotone" dataKey="averageSpeed" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5, fill: '#8b5cf6' }} activeDot={{ r: 7 }} />
-                        </LineChart>
-                    </ResponsiveContainer>
                 )}
             </CardContent>
         </Card>

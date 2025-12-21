@@ -74,7 +74,7 @@ export function FileImportModal({
             setSelectedChapterIndex(0);
         } catch (error: any) {
             console.error('Error parsing file:', JSON.stringify(error, null, 2));
-            const errorMessage = error?.data?.message || error?.message || 'Failed to parse file. Please try again.';
+            const errorMessage = error?.data?.message || error?.message || 'Không thể phân tích tập tin. Vui lòng thử lại.';
             alert(errorMessage);
         }
     };
@@ -101,7 +101,7 @@ export function FileImportModal({
             .map(({ title, content }) => ({ title, content }));
 
         if (selectedChapters.length === 0) {
-            alert('Please select at least one chapter to import.');
+            alert('Vui lòng chọn ít nhất một chương để nhập.');
             return;
         }
 
@@ -132,7 +132,7 @@ export function FileImportModal({
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
                     <div>
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                            Import Chapters from File
+                            Nhập chương từ tập tin
                         </h2>
                         {file && (
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -167,10 +167,10 @@ export function FileImportModal({
                                 >
                                     <Upload className="h-16 w-16 text-gray-400 mb-4" />
                                     <span className="text-xl font-medium text-gray-900 dark:text-gray-100">
-                                        {file ? file.name : 'Click to upload EPUB or MOBI'}
+                                        {file ? file.name : 'Nhấn để tải lên EPUB hoặc MOBI'}
                                     </span>
                                     <span className="text-sm text-gray-500 mt-2">
-                                        Supported formats: .epub, .mobi, .azw, .azw3
+                                        Định dạng hỗ trợ: .epub, .mobi, .azw, .azw3
                                     </span>
                                 </label>
                             </div>
@@ -182,7 +182,7 @@ export function FileImportModal({
                                 <div className="p-4 border-b border-gray-200 dark:border-gray-800">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                            Chapters ({parsedChapters.length})
+                                            Danh sách chương ({parsedChapters.length})
                                         </h3>
                                         <button
                                             onClick={() =>
@@ -193,12 +193,12 @@ export function FileImportModal({
                                             className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                                         >
                                             {parsedChapters.every((c) => c.selected)
-                                                ? 'Deselect All'
-                                                : 'Select All'}
+                                                ? 'Bỏ chọn tất cả'
+                                                : 'Chọn tất cả'}
                                         </button>
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        {parsedChapters.filter((c) => c.selected).length} selected
+                                        {parsedChapters.filter((c) => c.selected).length} đã chọn
                                     </div>
                                 </div>
 
@@ -233,7 +233,7 @@ export function FileImportModal({
                                                         Chương {getChapterDisplayNumber(index)}: {chapter.title || 'Chưa có tiêu đề'}
                                                     </div>
                                                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                        {chapter.content.length.toLocaleString()} characters
+                                                        {chapter.content.length.toLocaleString()} ký tự
                                                     </div>
                                                 </div>
                                             </div>
@@ -247,7 +247,7 @@ export function FileImportModal({
                                 <div className="p-6 border-b border-gray-200 dark:border-gray-800">
                                     <div className="flex items-center gap-2 text-blue-600 mb-2">
                                         <Eye className="h-4 w-4" />
-                                        <span className="text-xs font-medium uppercase tracking-wide">Preview & Edit</span>
+                                        <span className="text-xs font-medium uppercase tracking-wide">Xem trước & Chỉnh sửa</span>
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                         Chương {getChapterDisplayNumber(selectedChapterIndex)}
@@ -259,7 +259,7 @@ export function FileImportModal({
                                         <>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Chapter Title
+                                                    Tiêu đề chương
                                                 </label>
                                                 <input
                                                     value={parsedChapters[selectedChapterIndex].title}
@@ -267,17 +267,17 @@ export function FileImportModal({
                                                         handleChapterChange(selectedChapterIndex, 'title', e.target.value)
                                                     }
                                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 dark:border-gray-700 text-lg font-medium"
-                                                    placeholder="Enter chapter title"
+                                                    placeholder="Nhập tiêu đề chương"
                                                 />
                                             </div>
 
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        Chapter Content
+                                                        Nội dung chương
                                                     </label>
                                                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {parsedChapters[selectedChapterIndex].content.length.toLocaleString()} characters
+                                                        {parsedChapters[selectedChapterIndex].content.length.toLocaleString()} ký tự
                                                     </span>
                                                 </div>
                                                 <textarea
@@ -287,7 +287,7 @@ export function FileImportModal({
                                                     }
                                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 dark:border-gray-700 font-mono text-sm resize-none"
                                                     style={{ minHeight: '500px' }}
-                                                    placeholder="Chapter content will appear here..."
+                                                    placeholder="Nội dung chương sẽ xuất hiện ở đây..."
                                                 />
                                             </div>
                                         </>
@@ -303,7 +303,7 @@ export function FileImportModal({
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                         {step === 'preview' && (
                             <span>
-                                {parsedChapters.filter((c) => c.selected).length} of {parsedChapters.length} chapters selected
+                                {parsedChapters.filter((c) => c.selected).length} trong tổng số {parsedChapters.length} chương đã chọn
                             </span>
                         )}
                     </div>
@@ -317,7 +317,7 @@ export function FileImportModal({
                                 {isPreviewLoading && (
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                 )}
-                                Preview Chapters
+                                Xem trước
                             </button>
                         ) : (
                             <>
@@ -325,7 +325,7 @@ export function FileImportModal({
                                     onClick={() => setStep('upload')}
                                     className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors font-medium"
                                 >
-                                    Back
+                                    Quay lại
                                 </button>
                                 <button
                                     onClick={handleImportConfirm}
@@ -335,7 +335,7 @@ export function FileImportModal({
                                     {isImporting && (
                                         <Loader2 className="h-4 w-4 animate-spin" />
                                     )}
-                                    Import {parsedChapters.filter((c) => c.selected).length} Chapters
+                                    Nhập {parsedChapters.filter((c) => c.selected).length} Chương
                                 </button>
                             </>
                         )}
