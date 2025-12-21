@@ -166,8 +166,8 @@ export class StatisticsService {
       ]),
       this.bookModel
         .find()
-        .select('title slug viewCount likeCount')
-        .sort({ viewCount: -1 })
+        .select('title slug views likes')
+        .sort({ views: -1 })
         .limit(10)
         .lean(),
     ]);

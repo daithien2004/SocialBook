@@ -14,7 +14,7 @@ export function useReadingProgress(
   const [updateProgress] = useUpdateReadingProgressMutation();
   const { data: progressData, isLoading } = useGetChapterProgressQuery(
     { bookId, chapterId },
-    { skip: !bookId || !chapterId }
+    { skip: !enabled || !bookId || !chapterId }
   );
 
   const lastProgressRef = useRef(0);

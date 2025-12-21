@@ -37,15 +37,13 @@ export function UserGrowthChart({
     switch (viewType) {
       case 'month':
         const months = Math.round(rangeNum / 30);
-        return `Growth Metrics (Last ${months} Month${months > 1 ? 's' : ''})`;
+        return `Chỉ số tăng trưởng (${months} tháng qua)`;
       case 'year':
         const years = Math.round(rangeNum / 365);
-        return `Growth Metrics (Last ${years} Year${years > 1 ? 's' : ''})`;
+        return `Chỉ số tăng trưởng (${years} năm qua)`;
       case 'day':
       default:
-        return `Growth Metrics (Last ${rangeNum} Day${
-          rangeNum > 1 ? 's' : ''
-        })`;
+        return `Chỉ số tăng trưởng (${rangeNum} ngày qua)`;
     }
   };
 
@@ -108,7 +106,7 @@ export function UserGrowthChart({
             dataKey="users"
             stroke="#6366f1"
             strokeWidth={2}
-            name="Users"
+            name="Thành viên"
             dot={{ r: 3 }}
           />
           <Line
@@ -116,7 +114,7 @@ export function UserGrowthChart({
             dataKey="books"
             stroke="#10b981"
             strokeWidth={2}
-            name="Books"
+            name="Sách"
             dot={{ r: 3 }}
           />
           <Line
@@ -124,7 +122,7 @@ export function UserGrowthChart({
             dataKey="posts"
             stroke="#f59e0b"
             strokeWidth={2}
-            name="Posts"
+            name="Bài viết"
             dot={{ r: 3 }}
           />
         </LineChart>

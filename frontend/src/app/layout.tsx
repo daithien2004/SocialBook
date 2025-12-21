@@ -1,6 +1,6 @@
 import './globals.css';
+import ScrollToTop from '../components/ScrollToTop';
 import { Providers } from '../context/Providers';
-
 import { Toaster } from 'sonner';
 import AuthSync from '../components/AuthSync';
 import { ThemeProvider } from '../context/ThemeProvider';
@@ -18,6 +18,7 @@ export default function RootLayout({
     <html lang="vi" className="mdl-js" suppressHydrationWarning>
       <body>
         <Providers>
+          <ScrollToTop />
           <AuthSync />
             {children}
         </Providers>

@@ -35,6 +35,7 @@ import ChapterSummaryModal from '@/src/components/chapter/ChapterSummaryModal';
 import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
 import ChapterListDrawer from '@/src/components/book/ChapterListDrawer';
 import { ReadingTimeTracker } from '@/src/features/books/components/ReadingTimeTracker';
+import { useSession } from 'next-auth/react';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -46,6 +47,9 @@ interface ChapterPageProps {
 export default function ChapterPage({ params }: ChapterPageProps) {
   const { bookSlug, chapterSlug } = use(params);
   const router = useRouter();
+
+  const { data, status } = useSession();
+  const isLoggedIn = status === 'authenticated';
 
   // --- STATE QUẢN LÝ UI ---
   const [showTOC, setShowTOC] = useState(false);
@@ -79,14 +83,10 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const { savedProgress, restoreScroll } = useReadingProgress(
     book?.id || '',
     chapter?.id || '',
-    !isLoading && !!chapter && viewMode === 'read'
+    !isLoading && !!chapter && viewMode === 'read' && isLoggedIn
   );
 
   const hasShownResumeToast = useRef(false);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [chapterSlug]);
 
   useEffect(() => {
     if (savedProgress > 5 && !hasShownResumeToast.current) {
@@ -118,14 +118,6 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
-
-  const handleChapterSelect = useCallback(
-    (slug: string) => {
-      setShowTOC(false);
-      router.push(`/books/${bookSlug}/chapters/${slug}`);
-    },
-    [bookSlug, router]
-  );
 
   const handleSharePost = async (data: CreatePostData) => {
     if (!book?.id) {
@@ -236,10 +228,7 @@ ${book.description?.slice(0, 100)}...
       </div>
 
       {book && chapter && (
-        <ReadingTimeTracker 
-          bookId={book.id} 
-          chapterId={chapter.id} 
-        />
+        <ReadingTimeTracker bookId={book.id} chapterId={chapter.id} />
       )}
 
       {/* 1. PROGRESS BAR (Top) */}
@@ -288,19 +277,17 @@ ${book.description?.slice(0, 100)}...
         </div>
 
         <div className="mt-8">
-          <CommentSection
-            targetId={chapter.id}
-            targetType="chapter"
-          />
+          <CommentSection targetId={chapter.id} targetType="chapter" />
         </div>
       </main>
 
       {/* 4. FLOATING DOCK (Thanh công cụ nổi) */}
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isControlsVisible
-          ? 'translate-y-0 opacity-100'
-          : 'translate-y-24 opacity-0'
-          }`}
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
+          isControlsVisible
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-24 opacity-0'
+        }`}
       >
         <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl border border-gray-300 dark:border-white/10 shadow-2xl transition-colors duration-300">
           {/* Nút Mục Lục */}
@@ -367,8 +354,9 @@ ${book.description?.slice(0, 100)}...
       {/* 5. DRAWER MỤC LỤC (Slide-over) */}
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${showTOC ? 'opacity-100 visible' : 'opacity-0 invisible'
-          }`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
+          showTOC ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
         onClick={() => setShowTOC(false)}
       />
 
