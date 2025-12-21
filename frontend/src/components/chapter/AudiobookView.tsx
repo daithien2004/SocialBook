@@ -285,7 +285,7 @@ export default function AudiobookView({
                     <div className="w-24"></div>
 
                     {/* Main Controls */}
-                    <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-6">
                         <button
                             onClick={() => skip(-10)}
                             className="p-2 text-[#666666] hover:text-[#1A1A1A] transition-colors"
@@ -312,17 +312,18 @@ export default function AudiobookView({
                         >
                             <SkipForward className="w-6 h-6" />
                         </button>
-                    </div>
 
-                    {/* Right: Speed Control */}
-                    <div className="w-24 flex justify-end">
                         <button
                             onClick={changeSpeed}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#EAE5DC] text-xs font-medium text-[#2D2D2D] hover:bg-[#DCD6CC] transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#EAE5DC] text-xs font-medium text-[#2D2D2D] hover:bg-[#DCD6CC] transition-colors ml-2"
+                            title="Tốc độ phát"
                         >
                             <span>{playbackRate}x</span>
                         </button>
                     </div>
+
+                    {/* Right: Empty for balance */}
+                    <div className="w-24"></div>
                 </div>
             </div>
         </div>
