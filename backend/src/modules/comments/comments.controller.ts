@@ -3,7 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
-  HttpStatus,
+  HttpStatus, Param,
   Post,
   Query,
   Request,
@@ -15,7 +15,7 @@ import { Types } from 'mongoose';
 import { Public } from '@/src/common/decorators/customize';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
-import { CommentCountDto, CreateCommentDto } from './dto/create-comment.dto';
+import { CommentCountDto, CreateCommentDto, UpdateCommentDto } from './dto/create-comment.dto';
 import { GetCommentsDto, ResolveParentQueryDto } from './dto/get-comment.dto';
 
 @Controller('comments')
@@ -80,6 +80,40 @@ export class CommentsController {
     return {
       message: 'Get like count successfully',
       data,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/edit')
+  @HttpCode(HttpStatus.OK)
+  async updateComment(
+    @Request() req: any,
+    @Param('id') commentId: string,
+    @Body() dto: UpdateCommentDto,
+  ) {
+    const data = await this.commentsService.updateComment(
+      req.user.id,
+      commentId,
+      dto.content,
+    );
+
+    return {
+      message: 'Comment updated successfully',
+      data,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/delete')
+  @HttpCode(HttpStatus.OK)
+  async deleteComment(
+    @Request() req: any,
+    @Param('id') commentId: string,
+  ) {
+    await this.commentsService.deleteComment(req.user.id, commentId);
+
+    return {
+      message: 'Comment deleted successfully',
     };
   }
 }

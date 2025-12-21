@@ -4,6 +4,7 @@ export interface GetCommentsRequest {
     cursor?: string;
     limit: number;
 }
+
 export interface CommentRequest {
     targetId: string;
     targetType: string;
@@ -66,4 +67,21 @@ export interface GetCommentsResponse {
 export interface ResolveParentResponse {
     parentId: string | null;
     level: number;
+}
+
+export interface EditCommentRequest {
+    id: string;
+    content: string;
+    targetId: string;
+    parentId?: string | null;
+}
+
+export interface EditCommentResponse {
+    data: any;
+}
+
+export interface DeleteCommentRequest {
+    id: string;
+    targetId: string;
+    parentId?: string | null;
 }

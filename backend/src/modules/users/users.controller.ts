@@ -164,4 +164,29 @@ export class UsersController {
       data,
     };
   }
+
+  @Public()
+  @Get('search')
+  @HttpCode(HttpStatus.OK)
+  async searchUsers(
+    @Query('keyword') keyword: string,
+    @Query('current') current: string,
+    @Query('pageSize') pageSize: string,
+  ) {
+    const result = await this.usersService.searchUsersByUsername(
+      keyword,
+      +current,
+      +pageSize,
+    );
+
+    return {
+      message: 'Search users successfully',
+      items: result.items,
+      pagination: {
+        ...result.meta,
+        totalItems: result.meta.total,
+      },
+    };
+  }
+
 }

@@ -15,10 +15,10 @@ interface ReadingSettingsPanelProps {
 }
 
 const FONT_FAMILIES = [
+    { value: '"Times New Roman", serif', label: 'Times', preview: 'Times New Roman' },
     { value: 'Georgia, serif', label: 'Serif (Georgia)', preview: 'Georgia' },
     { value: 'Arial, sans-serif', label: 'Sans-serif (Arial)', preview: 'Arial' },
     { value: '"Courier New", monospace', label: 'Monospace', preview: 'Courier New' },
-    { value: '"Times New Roman", serif', label: 'Times', preview: 'Times New Roman' },
 ];
 
 const THEME_PRESETS = [
@@ -164,7 +164,12 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
                             className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/20 transition-all font-medium text-sm"
                         >
                             {FONT_FAMILIES.map((font) => (
-                                <option key={font.value} value={font.value} style={{ fontFamily: font.preview }}>
+                                <option
+                                    key={font.value}
+                                    value={font.value}
+                                    style={{ fontFamily: font.preview }}
+                                    className="bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100"
+                                >
                                     {font.label}
                                 </option>
                             ))}

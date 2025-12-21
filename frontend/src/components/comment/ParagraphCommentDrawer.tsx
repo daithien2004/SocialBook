@@ -75,29 +75,31 @@ export default function ParagraphCommentDrawer({
         `}
             >
                 {/* Header */}
-                <div className="p-5 border-b border-gray-200 dark:border-white/5 flex justify-between items-start">
-                    <div className="pr-4">
-                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-                            Thảo luận
-                        </h3>
-
-                        {paragraphContent && (
-                            <p className="text-[15px] text-gray-500 dark:text-gray-400 mt-1 text-justify">
-                                {paragraphContent}
-                            </p>
-                        )}
-                    </div>
-
+                <div className="relative p-5 border-b border-gray-200 dark:border-white/5">
+                    {/* Close button */}
                     <button
                         onClick={onClose}
                         className="
-              p-2 rounded-full transition-colors
-              text-gray-600 hover:text-gray-900 hover:bg-gray-100
-              dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10
-            "
+                                      absolute top-4 right-4
+                                      p-2 rounded-full transition-colors
+                                      text-gray-600 hover:text-gray-900 hover:bg-gray-100
+                                      dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10
+                                    "
                     >
                         <X size={20} />
                     </button>
+
+                    {/* Title */}
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white pr-10">
+                        Thảo luận
+                    </h3>
+
+                    {/* Paragraph content – FULL WIDTH */}
+                    {paragraphContent && (
+                        <p className="mt-2 text-[15px] text-gray-500 dark:text-gray-400 text-justify">
+                            {paragraphContent}
+                        </p>
+                    )}
                 </div>
 
                 {/* Content */}
