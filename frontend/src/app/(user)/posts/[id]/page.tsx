@@ -6,6 +6,7 @@ import { useGetPostByIdQuery } from '@/src/features/posts/api/postApi';
 import ModalPostComment from '@/src/components/post/ModalPostComment';
 import {useGetCountQuery, useGetStatusQuery} from "@/src/features/likes/api/likeApi";
 import {useGetCommentCountQuery} from "@/src/features/comments/api/commentApi";
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export default function PostModalOverlay() {
     const router = useRouter();
@@ -15,9 +16,13 @@ export default function PostModalOverlay() {
         targetType: 'post',
     });
 
-    const { data: likeStatus, isLoading: isLikeStatusLoading } = useGetStatusQuery({
+    const { isAuthenticated } = useAppAuth();
+
+    const { data: likeStatus } = useGetStatusQuery({
         targetId: id,
         targetType: 'post',
+    }, {
+         skip: !isAuthenticated,
     });
 
     const { data: commentCount } = useGetCommentCountQuery({

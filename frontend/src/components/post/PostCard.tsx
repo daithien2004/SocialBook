@@ -48,6 +48,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [deleteImage] = useDeletePostImageMutation();
   const [toggleLike] = usePostToggleLikeMutation();
 
+  const { isAuthenticated } = useAppAuth();
+
   const { data: likeCount, isLoading: isLikeLoading } = useGetCountQuery({
     targetId: post.id,
     targetType: 'post',
@@ -56,6 +58,8 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const { data: likeStatus, isLoading: isLikeStatusLoading } = useGetStatusQuery({
     targetId: post.id,
     targetType: 'post',
+  }, {
+    skip: !isAuthenticated,
   });
 
   const { data: commentCount } = useGetCommentCountQuery({
