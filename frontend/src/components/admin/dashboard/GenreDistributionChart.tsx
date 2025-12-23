@@ -25,7 +25,7 @@ export function GenreDistributionChart({ genres }: GenreDistributionChartProps) 
                             cx="50%"
                             cy="50%"
                             innerRadius={60}
-                            outerRadius={100}
+                            outerRadius={85}
                             fill="#8884d8"
                             paddingAngle={5}
                             dataKey="count"

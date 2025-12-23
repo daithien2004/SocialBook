@@ -15,9 +15,10 @@ interface ReadingSettingsPanelProps {
 }
 
 const FONT_FAMILIES = [
+    { value: 'var(--font-merriweather), serif', label: 'Serif (Merriweather)', preview: 'var(--font-merriweather)' },
+    { value: 'var(--font-inter), sans-serif', label: 'Sans-serif (Inter)', preview: 'var(--font-inter)' },
+    { value: 'var(--font-notosans), sans-serif', label: 'Noto Sans', preview: 'var(--font-notosans)' },
     { value: '"Times New Roman", serif', label: 'Times', preview: 'Times New Roman' },
-    { value: 'Georgia, serif', label: 'Serif (Georgia)', preview: 'Georgia' },
-    { value: 'Arial, sans-serif', label: 'Sans-serif (Arial)', preview: 'Arial' },
     { value: '"Courier New", monospace', label: 'Monospace', preview: 'Courier New' },
 ];
 
@@ -115,8 +116,8 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
                                         });
                                     }}
                                     className={`relative p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${settings.theme === preset.theme
-                                            ? 'border-black dark:border-white shadow-md bg-white dark:bg-white/5'
-                                            : 'border-transparent bg-white dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
+                                        ? 'border-black dark:border-white shadow-md bg-white dark:bg-white/5'
+                                        : 'border-transparent bg-white dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
                                         }`}
                                 >
                                     <div
@@ -222,8 +223,8 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
                                     key={align}
                                     onClick={() => updateSettings({ textAlign: align as any })}
                                     className={`flex-1 p-2 rounded-lg transition-all ${settings.textAlign === align
-                                            ? 'bg-black dark:bg-white text-white dark:text-black shadow-sm'
-                                            : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                                        ? 'bg-black dark:bg-white text-white dark:text-black shadow-sm'
+                                        : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
                                         }`}
                                 >
                                     <div className="flex flex-col gap-1 items-center justify-center py-1">
@@ -269,17 +270,15 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
 
             {/* Reset Dialog Overlay */}
             <div
-                className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] transition-opacity duration-300 ${
-                    showResetDialog ? 'opacity-100 visible' : 'opacity-0 invisible'
-                }`}
+                className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] transition-opacity duration-300 ${showResetDialog ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
                 onClick={() => !isResetting && setShowResetDialog(false)}
             />
 
             {/* Reset Confirmation Dialog */}
             <div
-                className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-full max-w-sm transition-all duration-300 ${
-                    showResetDialog ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
-                }`}
+                className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-full max-w-sm transition-all duration-300 ${showResetDialog ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+                    }`}
             >
                 <div className="bg-white dark:bg-[#09090b] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden">
                     {/* Header */}

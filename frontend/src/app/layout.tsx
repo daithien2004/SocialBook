@@ -3,7 +3,7 @@ import ScrollToTop from '../components/ScrollToTop';
 import { Providers } from '../context/Providers';
 import { Toaster } from 'sonner';
 import AuthSync from '../components/AuthSync';
-import { ThemeProvider } from '../context/ThemeProvider';
+import { inter, merriweather, notoSans } from '@/src/components/book/Fonts';
 
 export const metadata = {
   title: 'SocialBook',
@@ -15,12 +15,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className="mdl-js" suppressHydrationWarning>
+    <html lang="vi" className={`${inter.variable} ${merriweather.variable} ${notoSans.variable} mdl-js`} suppressHydrationWarning>
       <body>
         <Providers>
           <ScrollToTop />
           <AuthSync />
-            {children}
+          {children}
         </Providers>
         <Toaster richColors position="bottom-right" />
       </body>
