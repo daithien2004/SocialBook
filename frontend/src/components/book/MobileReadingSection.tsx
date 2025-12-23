@@ -5,17 +5,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useGetLibraryBooksQuery } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export function MobileReadingSection() {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isGuest } = useAppAuth();
   const { data: books = [], isLoading } = useGetLibraryBooksQuery(
     { status: LibraryStatus.READING },
-    { skip: status !== 'authenticated' }
+    { skip: !isAuthenticated }
   );
 
   // Chưa đăng nhập
-  if (status === 'unauthenticated') {
+  if (isGuest) {
     return (
       <section className="xl:hidden px-4 py-6">
         <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">

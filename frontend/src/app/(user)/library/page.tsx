@@ -21,7 +21,7 @@ import {
 } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
 import { toast } from 'sonner';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export default function LibraryPage() {
   const [activeTab, setActiveTab] = useState<LibraryStatus>(
@@ -36,8 +36,8 @@ export default function LibraryPage() {
     isFetching: isFetchingLibrary,
   } = useGetLibraryBooksQuery({ status: activeTab });
 
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+  const { user } = useAppAuth();
+  const currentUserId = user?.id;
 
   const { data: collections, isLoading: isLoadingCollections } =
     useGetCollectionsQuery(currentUserId, {

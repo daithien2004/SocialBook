@@ -2,14 +2,14 @@
 
 import { useGetUserAchievementsQuery } from '@/src/features/gamification/api/gamificationApi';
 import { Trophy, Medal, Award } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export function AchievementsWidget() {
-  const { status } = useSession();
+  const { isAuthenticated } = useAppAuth();
   const { data: achievements = [], isLoading } = useGetUserAchievementsQuery(
     undefined,
     {
-      skip: status !== 'authenticated',
+      skip: !isAuthenticated,
     }
   );
 

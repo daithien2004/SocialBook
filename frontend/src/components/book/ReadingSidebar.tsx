@@ -5,17 +5,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useGetLibraryBooksQuery } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export function ReadingSidebar() {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isGuest } = useAppAuth();
   const { data: books = [], isLoading } = useGetLibraryBooksQuery(
     { status: LibraryStatus.READING },
-    { skip: status !== 'authenticated' }
+    { skip: !isAuthenticated }
   );
 
   // Chưa đăng nhập
-  if (status === 'unauthenticated') {
+  if (isGuest) {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">

@@ -7,7 +7,7 @@ import {
     useGetReadingPreferencesQuery,
     useUpdateReadingPreferencesMutation,
 } from '@/src/features/users/api/usersApi';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 interface ReadingSettingsPanelProps {
     isOpen: boolean;
@@ -29,8 +29,8 @@ const THEME_PRESETS = [
 
 export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSettingsPanelProps) {
     const { settings, updateSettings, resetToDefaults, loadUserPreferences } = useReadingSettings();
-    const { data: session } = useSession();
-    const { data: userPrefs } = useGetReadingPreferencesQuery(undefined, { skip: !session });
+    const { isAuthenticated } = useAppAuth();
+    const { data: userPrefs } = useGetReadingPreferencesQuery(undefined, { skip: !isAuthenticated });
     const [updatePrefs] = useUpdateReadingPreferencesMutation();
     const [isInitialized, setIsInitialized] = useState(false);
     const [showResetDialog, setShowResetDialog] = useState(false);
@@ -46,14 +46,14 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
 
     // Debounced sync to backend
     useEffect(() => {
-        if (!session || !isInitialized) return;
+        if (!isAuthenticated || !isInitialized) return;
 
         const timer = setTimeout(() => {
             updatePrefs(settings);
         }, 1000); // 1s debounce
 
         return () => clearTimeout(timer);
-    }, [settings, updatePrefs, session, isInitialized]);
+    }, [settings, updatePrefs, isAuthenticated, isInitialized]);
 
     const handleReset = async () => {
         setIsResetting(true);

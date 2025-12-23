@@ -9,7 +9,7 @@ import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 import CreatePostModal, {
   CreatePostData,
 } from '@/src/components/post/CreatePostModal';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { MessageSquarePlus, Share2, Send, X, Loader2 } from 'lucide-react';
 import ParagraphCommentDrawer from '../comment/ParagraphCommentDrawer';
 
@@ -31,7 +31,7 @@ export function ChapterContent({
   bookId,
   bookTitle,
 }: ChapterContentProps) {
-  const { data: session } = useSession();
+  const { user } = useAppAuth();
   const { settings } = useReadingSettings();
   const [activeParagraphId, setActiveParagraphId] = useState<string | null>(
     null

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRecordReadingTimeMutation } from '@/src/features/library/api/libraryApi';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { useDispatch } from 'react-redux';
 import { gamificationApi } from '@/src/features/gamification/api/gamificationApi';
 
@@ -12,7 +12,7 @@ interface ReadingTimeTrackerProps {
 }
 
 export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProps) {
-  const { status } = useSession();
+  const { isAuthenticated } = useAppAuth();
   const [recordReadingTime] = useRecordReadingTimeMutation();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -26,7 +26,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
   }, [recordReadingTime]);
 
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (!isAuthenticated) return;
 
     const TICK_INTERVAL = 1000;
 
@@ -58,7 +58,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [bookId, chapterId, status, dispatch]);
+  }, [bookId, chapterId, isAuthenticated, dispatch]);
 
   return null;
 }

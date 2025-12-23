@@ -35,7 +35,7 @@ import ChapterSummaryModal from '@/src/components/chapter/ChapterSummaryModal';
 import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
 import ChapterListDrawer from '@/src/components/book/ChapterListDrawer';
 import { ReadingTimeTracker } from '@/src/features/books/components/ReadingTimeTracker';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -48,8 +48,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const { bookSlug, chapterSlug } = use(params);
   const router = useRouter();
 
-  const { data, status } = useSession();
-  const isLoggedIn = status === 'authenticated';
+  const { isAuthenticated: isLoggedIn } = useAppAuth();
 
   // --- STATE QUẢN LÝ UI ---
   const [showTOC, setShowTOC] = useState(false);
@@ -226,6 +225,10 @@ ${book.description?.slice(0, 100)}...
         />
         <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>
+
+      {book && chapter && (
+        <ReadingTimeTracker bookId={book.id} chapterId={chapter.id} />
+      )}
 
       {/* 1. PROGRESS BAR (Top) */}
       <div

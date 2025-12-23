@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import PostList from '@/src/components/post/PostList';
 import CreatePostForm from '@/src/components/post/CreatePostForm';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { BookOpen, Users, Library, Quote, ImageIcon, PenSquare } from 'lucide-react';
 import RecommendedBooks from "@/src/components/post/RecommendedBooks";
 import {useRouter} from "next/navigation";
@@ -11,11 +11,11 @@ import UserSearchSidebar from "@/src/components/post/UserSearchSidebar";
 
 export default function Post() {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+  const { user } = useAppAuth();
+  const currentUserId = user?.id;
   const route = useRouter();
-  const currentUserName = session?.user?.name || 'Người đọc';
-  const currentUserImage = (session?.user as any)?.image || '/abstract-book-pattern.png';
+  const currentUserName = user?.name || 'Người đọc';
+  const currentUserImage = user?.image || '/abstract-book-pattern.png';
 
   return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#121212]">

@@ -5,17 +5,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import {
   loginSchema,
   LoginFormValues,
 } from '@/src/features/auth/types/auth.type';
 import Image from 'next/image';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAppAuth();
 
   const [isCredentialsLoading, setIsCredentialsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -23,15 +24,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user) {
-      const userRole = session.user.role;
+    if (isAuthenticated && user) {
+      const userRole = user.role;
       if (userRole === 'admin') {
         router.push('/admin');
       } else {
         router.push('/');
       }
     }
-  }, [status, session, router]);
+  }, [isAuthenticated, user, router]);
 
   useEffect(() => {
     const error = searchParams.get('error');
@@ -93,9 +94,9 @@ export default function LoginPage() {
   };
 
   const isAnyLoading =
-    isCredentialsLoading || isGoogleLoading || status === 'loading';
+    isCredentialsLoading || isGoogleLoading || isAuthLoading;
 
-  if (status === 'loading') {
+  if (isAuthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />

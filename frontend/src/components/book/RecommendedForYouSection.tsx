@@ -2,14 +2,14 @@
 
 import { useGetPersonalizedRecommendationsQuery } from '@/src/features/recommendations/api/recommendationsApi';
 import { Sparkles, ChevronRight, LogIn } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 
 export const RecommendedForYouSection = () => {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isGuest } = useAppAuth();
   const router = useRouter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -17,11 +17,11 @@ export const RecommendedForYouSection = () => {
 
   const { data, isLoading, error } = useGetPersonalizedRecommendationsQuery(
     { page: 1, limit },
-    { skip: status !== 'authenticated' }
+    { skip: !isAuthenticated }
   );
 
   // Chưa đăng nhập
-  if (status === 'unauthenticated') {
+  if (isGuest) {
     return (
       <section className="mb-12">
         <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-8 transition-colors duration-300">

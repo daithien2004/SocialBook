@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 interface CreatePostFormProps {
   onClose: () => void;
@@ -17,8 +17,7 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: session, status } = useSession();
-  const user = session?.user;
+  const { user } = useAppAuth();
 
   const [createPost, { isLoading }] = useCreatePostMutation();
 

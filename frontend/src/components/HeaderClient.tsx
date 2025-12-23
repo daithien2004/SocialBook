@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import type { Session } from 'next-auth';
 import { useRef, useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { NotificationBell } from '@/src/components/notification/NotificationBell';
@@ -24,29 +23,28 @@ import {
   useGetDailyGoalQuery,
 } from '@/src/features/gamification/api/gamificationApi';
 import { toast } from 'sonner';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
-type HeaderClientProps = {
-  session: Session | null;
-};
-
-export function HeaderClient({ session }: HeaderClientProps) {
+export function HeaderClient() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  const isAuthenticated = !!session;
-  const userId = session?.user.id as string | undefined;
-  const avatarUrl = session?.user.image as string | undefined;
+  // Use the global auth hook
+  const { user, isAuthenticated, isGuest } = useAppAuth();
+
+  const userId = user?.id;
+  const avatarUrl = user?.image;
 
   const { data: streakData } = useGetStreakQuery(undefined, {
-    skip: !isAuthenticated,
+    skip: isGuest,
   });
 
   const [checkInStreak] = useCheckInStreakMutation();
 
   const { data: dailyGoal } = useGetDailyGoalQuery(undefined, {
-    skip: !isAuthenticated,
+    skip: isGuest,
   });
 
   // Ref to track celebration to avoid spam
@@ -91,7 +89,7 @@ export function HeaderClient({ session }: HeaderClientProps) {
             });
           }
         } catch (error) {
-          toast.error('Streak check-in failed');
+          // Silent fail or specialized handling
         }
       };
       performCheckIn();
@@ -155,7 +153,7 @@ export function HeaderClient({ session }: HeaderClientProps) {
           </nav>
 
           <div className="flex items-center gap-3">
-            {isAuthenticated && userId ? (
+            {isAuthenticated && user ? (
               <>
                 {/* Daily Goal Display */}
                 {dailyGoal && (
@@ -195,7 +193,7 @@ export function HeaderClient({ session }: HeaderClientProps) {
                   </span>
                 </div>
 
-                <NotificationBell session={session} />
+                <NotificationBell />
                 <div className="relative inline-flex items-center">
                   <button
                     onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -213,15 +211,15 @@ export function HeaderClient({ session }: HeaderClientProps) {
                     <div className="absolute right-0 top-11 mt-2 w-56 rounded-lg bg-white dark:bg-[#18181b] shadow-lg border border-gray-200 dark:border-zinc-700 overflow-hidden z-50">
                       <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-700">
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {session?.user?.name || 'Người dùng'}
+                          {user.name || 'Người dùng'}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                          {session?.user?.email}
+                          {user.email}
                         </p>
                       </div>
 
                       <div className="py-1">
-                        {!session?.user?.onboardingCompleted && (
+                        {!user.onboardingCompleted && (
                            <button
                              onClick={() => goTo('/onboarding')}
                              className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/10"

@@ -1,14 +1,14 @@
 'use client';
 
 import { useGetDailyGoalQuery } from '@/src/features/gamification/api/gamificationApi';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { Target } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { Trophy } from 'lucide-react';
 
 export function DailyGoalWidget() {
-  const { status } = useSession();
+  const { isAuthenticated } = useAppAuth();
   const { data: dailyGoal, isLoading } = useGetDailyGoalQuery(undefined, {
-    skip: status !== 'authenticated',
+    skip: !isAuthenticated,
   });
 
   if (isLoading || !dailyGoal) return null;

@@ -21,7 +21,7 @@ import {
     useGetBookLibraryInfoQuery,
 } from '@/src/features/library/api/libraryApi';
 import {LibraryStatus} from '@/src/features/library/types/library.interface';
-import {useSession} from 'next-auth/react';
+import {useAppAuth} from '@/src/hooks/useAppAuth';
 
 interface AddToLibraryModalProps {
     isOpen: boolean;
@@ -34,8 +34,8 @@ export default function AddToLibraryModal({
                                               onClose,
                                               bookId,
                                           }: AddToLibraryModalProps) {
-    const {data, status} = useSession();
-    const isLoggedIn = status === 'authenticated';
+    const { user, isAuthenticated } = useAppAuth();
+    const isLoggedIn = isAuthenticated;
 
     const [selectedStatus, setSelectedStatus] = useState<LibraryStatus | null>(
         null
@@ -45,8 +45,7 @@ export default function AddToLibraryModal({
     const [isCreating, setIsCreating] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
 
-    const {data: session} = useSession();
-    const currentUserId = session?.user?.id;
+    const currentUserId = user?.id;
 
     const {data: collectionsData} = useGetCollectionsQuery(currentUserId, {
         skip: !isLoggedIn,

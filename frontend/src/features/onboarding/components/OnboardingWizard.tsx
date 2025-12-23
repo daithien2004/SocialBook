@@ -9,7 +9,7 @@ import {
   useCompleteOnboardingMutation,
   useStartOnboardingMutation,
 } from '../api/onboardingApi';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { useDispatch } from 'react-redux';
 import { gamificationApi } from '@/src/features/gamification/api/gamificationApi';
 import StepGenreSelection from './StepGenreSelection';
@@ -24,15 +24,15 @@ export default function OnboardingWizard() {
   const dispatch = useDispatch();
   const [step, setStep] = useState<number | null>(null);
   const { data: statusData, isLoading: isStatusLoading } = useGetOnboardingStatusQuery();
-  const { data: session, update } = useSession();
+  const { user, update } = useAppAuth();
 
   const [startOnboarding] = useStartOnboardingMutation(); // Init mutation
 
   useEffect(() => {
-    if (session?.user && !session.user.onboardingId && !session.user.onboardingCompleted) {
+    if (user && !user.onboardingId && !user.onboardingCompleted) {
        startOnboarding();
     }
-  }, [session, startOnboarding]);
+  }, [user, startOnboarding]);
 
   useEffect(() => {
     if (statusData?.currentStep) {
@@ -63,7 +63,10 @@ export default function OnboardingWizard() {
         setStep(step + 1);
       } else {
         await completeOnboarding().unwrap();
-        await update({ ...session, user: { ...session?.user, onboardingCompleted: true } });
+        await update({ 
+          // @ts-ignore
+          user: { ...user, onboardingCompleted: true } 
+        });
         dispatch(gamificationApi.util.invalidateTags(['GamificationStats', 'Achievements']));
         toast.success('Welcome to SocialBook!');
         router.replace('/');

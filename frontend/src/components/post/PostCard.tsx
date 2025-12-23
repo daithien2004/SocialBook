@@ -20,7 +20,7 @@ import {
   useDeletePostMutation,
   useDeletePostImageMutation,
 } from '@/src/features/posts/api/postApi';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import {
   useGetCountQuery,
   useGetStatusQuery,
@@ -41,8 +41,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showShare, setShowShare] = useState(false);
   const route = useRouter();
-  const { data: session } = useSession();
-  const user = session?.user;
+  const { user } = useAppAuth();
 
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
   const [deleteImage] = useDeletePostImageMutation();

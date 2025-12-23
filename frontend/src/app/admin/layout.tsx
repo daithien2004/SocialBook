@@ -1,6 +1,7 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut, PenLine, Shapes } from 'lucide-react';
 
@@ -17,10 +18,8 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
+  const { user } = useAppAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const user = session?.user;
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">

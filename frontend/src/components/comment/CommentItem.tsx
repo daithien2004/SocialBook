@@ -1,7 +1,7 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
-import {useSession} from 'next-auth/react';
+import {useAppAuth} from '@/src/hooks/useAppAuth';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
     Heart,
@@ -46,8 +46,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content);
 
-    const {data: session} = useSession();
-    const user = session?.user;
+    const { user } = useAppAuth();
     const isOwner = comment.userId?.id === user?.id;
 
     const [editComment, {isLoading: isEditingComment}] =

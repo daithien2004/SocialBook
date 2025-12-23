@@ -1,32 +1,32 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { useDispatch } from 'react-redux';
 import { logout, setCredentials } from '../features/auth/slice/authSlice';
 
 export default function AuthSync() {
-  const { data: session, status } = useSession();
+  const { user, accessToken, isAuthenticated } = useAppAuth();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    if (isAuthenticated && user) {
       dispatch(
         setCredentials({
           user: {
-            id: session.user.id || '',
-            email: session.user.email || '',
-            username: session.user.username || '',
-            image: session.user.image || undefined,
+            id: user.id || '',
+            email: user.email || '',
+            username: user.username || '',
+            image: user.image || undefined,
           },
-          accessToken: session.accessToken || '',
+          accessToken: accessToken || '',
         })
       );
-    } else {
+    } else if (!isAuthenticated) {
       // status === 'unauthenticated'
       dispatch(logout());
     }
-  }, [status, session, dispatch]);
+  }, [isAuthenticated, user, accessToken, dispatch]);
 
   return null; // Component này không render ra UI
 }

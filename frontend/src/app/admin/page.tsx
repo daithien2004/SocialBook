@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { Users, BookOpen, FileText, MessageSquare, BarChart2, Download } from 'lucide-react';
 import { StatCard } from '@/src/components/admin/dashboard/StatCard';
 import { UserGrowthChart } from '@/src/components/admin/dashboard/UserGrowthChart';
@@ -14,7 +14,7 @@ import { GenreDistributionChart } from '@/src/components/admin/dashboard/GenreDi
 
 export default function AdminPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { user, isAuthenticated, isLoading: isAuthLoading, isAdmin } = useAppAuth();
   const [viewType, setViewType] = useState<ViewType>('day');
   const [timeRange, setTimeRange] = useState('30');
 
@@ -39,18 +39,20 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (isAuthLoading) return;
+
+    if (!isAuthenticated) {
       router.push('/login');
       return;
     }
 
-    if (status === 'authenticated' && session?.user?.role !== 'admin') {
+    if (isAuthenticated && !isAdmin) {
       router.push('/');
       return;
     }
-  }, [status, session, router]);
+  }, [isAuthenticated, isAuthLoading, isAdmin, router]);
 
-  if (status === 'loading' || loading) {
+  if (isAuthLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
@@ -85,7 +87,7 @@ export default function AdminPage() {
       <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Bảng Điều Khiển Admin</h1>
-          <p className="text-gray-600 dark:text-gray-400">Chào mừng trở lại, {session?.user?.username}!</p>
+          <p className="text-gray-600 dark:text-gray-400">Chào mừng trở lại, {user?.username}!</p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <ViewTypeSelector value={viewType} onChange={handleViewTypeChange} />

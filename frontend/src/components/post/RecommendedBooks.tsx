@@ -1,23 +1,23 @@
 'use client';
 
 import { List } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { useGetPersonalizedRecommendationsQuery } from '@/src/features/recommendations/api/recommendationsApi';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function RecommendedBooks() {
-  const { status } = useSession();
+  const { isAuthenticated } = useAppAuth();
   const router = useRouter();
 
   const limit = 12;
 
   const { data, isLoading, error } = useGetPersonalizedRecommendationsQuery(
       { page: 1, limit },
-      { skip: status !== 'authenticated' }
+      { skip: !isAuthenticated }
   );
 
-  if (status !== 'authenticated') return null;
+  if (!isAuthenticated) return null;
 
   if (isLoading) {
     return (

@@ -3,13 +3,13 @@
 import { Bell, X, Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNotifications } from './useNotifications';
-import type { Session } from 'next-auth';
-import Image from 'next/image';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { timeAgo } from '@/src/lib/utils';
-import {useRouter} from "next/navigation";
+import { useRouter } from 'next/navigation';
 
-export function NotificationBell({ session }: { session: Session | null }) {
-  const token = session?.accessToken as string | undefined;
+export function NotificationBell() {
+  const { accessToken } = useAppAuth();
+  const token = accessToken;
   const [open, setOpen] = useState(false);
   const route = useRouter();
   const { notifications, unreadCount, markAsRead, refetch } =
