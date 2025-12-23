@@ -47,7 +47,7 @@ export default function UserSearchSidebar() {
 
     return (
         <div
-            className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4 space-y-2">
+            className="bg-white dark:dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4 space-y-2">
             {/* HEADER */}
             <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide">
                 Tìm người dùng

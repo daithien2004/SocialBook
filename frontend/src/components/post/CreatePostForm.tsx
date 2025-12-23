@@ -69,7 +69,7 @@ export default function CreatePostForm({onClose}: CreatePostFormProps) {
             onClose();
         } catch (error: any) {
             console.log('Failed to create post:', error);
-            toast.info(error?.data?.message || 'Lỗi khi đăng bài viết');
+            console.log(error?.data?.message || 'Lỗi khi đăng bài viết');
         }
     };
 
