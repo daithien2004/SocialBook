@@ -43,6 +43,7 @@ export class PostsController {
     };
   }
 
+  @Public()
   @Get('user')
   @HttpCode(HttpStatus.OK)
   async findAllByUser(@Req() req: any,@Query() query: PaginationUserDto) {
