@@ -5,7 +5,7 @@ import {MessageCircle} from 'lucide-react';
 import {toast} from 'sonner';
 import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
-import {usePostCreateMutation} from '@/src/features/comments/api/commentApi';
+import {useGetCommentCountQuery, usePostCreateMutation} from '@/src/features/comments/api/commentApi';
 import {useTheme} from 'next-themes';
 import {useRouter} from 'next/navigation';
 import {useAppAuth} from '@/src/hooks/useAppAuth';
@@ -34,6 +34,11 @@ export default function CommentSection({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [createComment] = usePostCreateMutation();
     const {theme, setTheme} = useTheme();
+
+    const {data: commentCount} = useGetCommentCountQuery({
+        targetId: targetId,
+        targetType: 'chapter',
+    });
 
     const {isAuthenticated} = useAppAuth();
     const router = useRouter();
@@ -75,7 +80,7 @@ export default function CommentSection({
         <section className={`w-full mt-16 ${className}`}>
             <div className="flex items-center gap-4 mb-8">
                 <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-                    Thảo luận chương
+                    Thảo luận chương ({commentCount?.count ?? 0})
                 </h3>
                 <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent dark:from-white/10"/>
             </div>

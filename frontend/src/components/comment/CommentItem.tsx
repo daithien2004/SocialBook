@@ -308,7 +308,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         className="flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-neutral-500 dark:hover:text-white"
                     >
                         <MessageCircle size={12}/>
-                        Trả lời
+                        Trả lời ({comment.repliesCount})
                     </button>
                 </div>
 
