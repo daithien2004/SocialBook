@@ -308,7 +308,7 @@ export class BooksService {
                   $and: [
                     { $in: ['$$genreId', '$genres'] },
                     { $eq: ['$isDeleted', false] },
-                    { $eq: ['$status', 'published'] }
+                    { $in: ['$status', ['published', 'completed']] }
                   ]
                 }
               }
@@ -334,7 +334,7 @@ export class BooksService {
     ]);
 
     const tagsAggregation = await this.bookModel.aggregate([
-      { $match: { isDeleted: false, status: 'published' } },
+      { $match: { isDeleted: false, status: { $in: ['published', 'completed'] } } },
       { $unwind: '$tags' },
       { $group: { _id: '$tags', count: { $sum: 1 } } },
       { $sort: { count: -1, _id: 1 } },
