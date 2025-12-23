@@ -46,9 +46,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content);
 
-    const { isAuthenticated } = useAppAuth();
+    const {isAuthenticated} = useAppAuth();
 
-    const { user } = useAppAuth();
+    const {user} = useAppAuth();
     const isOwner = comment.userId?.id === user?.id;
 
     const [editComment, {isLoading: isEditingComment}] =
@@ -68,9 +68,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const {data: likeStatus} = useGetStatusQuery({
         targetId: comment.id,
         targetType: 'comment',
-       
+
     }, {
-         skip: !isAuthenticated,
+        skip: !isAuthenticated,
     });
 
     const [
@@ -163,8 +163,11 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
             setReplyText('');
             setShowReplies(true);
             setIsReplying(false);
-        } catch (e) {
-            console.error('Create reply failed:', e);
+        } catch (e: any) {
+            console.log('Create reply failed:', e);
+            const errorMessage =
+                e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+            toast.error(errorMessage);
         }
     };
 
