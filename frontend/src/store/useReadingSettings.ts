@@ -21,7 +21,7 @@ interface ReadingSettingsStore {
 const defaultSettings: ReadingPreferences = {
     theme: 'dark',
     fontSize: 18,
-    fontFamily: 'Georgia, serif',
+    fontFamily: 'var(--font-merriweather), serif',
     lineHeight: 1.8,
     letterSpacing: 0.5,
     backgroundColor: '#1a1a1a',

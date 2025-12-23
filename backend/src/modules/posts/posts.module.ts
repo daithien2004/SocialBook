@@ -22,4 +22,4 @@ import { Book, BookSchema } from '../books/schemas/book.schema';
     PostsService,
   ],
 })
-export class PostsModule {}
+export class PostsModule { }

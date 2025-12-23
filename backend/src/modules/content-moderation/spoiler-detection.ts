@@ -10,12 +10,12 @@ const SPOILER_PATTERNS = [
     /chapter\s+\d+.*?(die|dies|died|death|alive|live|marry|married|divorce|betray|betrayed|kill|killed)/i,
 
     // Character fate reveals
-    /(nam chính|nữ chính|nhân vật chính|main character|protagonist).*?(chết|sống|kết hôn|về với|chia tay|bị giết|giết|chết)/i,
-    /(male lead|female lead|main character|protagonist).*?(die|dies|died|marry|marries|married|divorce|divorces|betray|betrays|betrayed|kill|kills|killed)/i,
+    /(nam chính|nữ chính|nhân vật chính|main character|protagonist).*?(chết|sẽ chết|bị giết|sống|kết hôn|về với|chia tay|giết)/i,
+    /(male lead|female lead|main character|protagonist).*?(die|dies|died|dead|death|will die|will be dead|gonna die|going to die|marry|marries|married|divorce|divorces|betray|betrays|betrayed|kill|kills|killed|will kill|will be killed|gets killed)/i,
 
     // Ending spoilers
-    /(kết thúc|ending|cuối cùng|finally|in the end).*?(chết|sống|về với|kết hôn|có thai|sinh con)/i,
-    /(happy ending|sad ending|bad ending|good ending|tragic ending)/i,
+    /(kết thúc|ending|cuối cùng|finally|in the end).*?(chết|sống|về với|kết hôn|có thai|sinh con|có hậu|bi thảm|buồn|vui vẻ)/i,
+    /(happy ending|sad ending|bad ending|good ending|tragic ending|kết thúc có hậu|kết thúc buồn|kết thúc bi thảm|kết thúc vui vẻ)/i,
 
     // Plot reveals
     /thực ra.*?(là|không phải|chính là)/i,

@@ -19,10 +19,10 @@ export function PopularBooksTable({ books }: PopularBooksTableProps) {
                             <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider pb-3 ps-2">
                                 Tựa sách
                             </th>
-                            <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider pb-3">
+                            <th className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider pb-3">
                                 Lượt xem
                             </th>
-                            <th className="text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider pb-3">
+                            <th className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider pb-3">
                                 Lượt thích
                             </th>
                             <th className="text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider pb-3 pe-2">
@@ -43,20 +43,21 @@ export function PopularBooksTable({ books }: PopularBooksTableProps) {
                                     </div>
                                 </td>
                                 <td className="py-3">
-                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                    <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-300">
                                         <Eye className="w-4 h-4 mr-1.5 text-blue-500" />
                                         {book.views.toLocaleString()}
                                     </div>
                                 </td>
                                 <td className="py-3">
-                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                    <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-300">
                                         <ThumbsUp className="w-4 h-4 mr-1.5 text-pink-500" />
                                         {book.likes.toLocaleString()}
                                     </div>
                                 </td>
-                                <td className="py-3 text-right pe-2">
+                                <td className="py-3 pl-11 text-center">
                                     <Link
-                                        href={`/admin/books/${book.id}`}
+                                        href={`/books/${book.slug}`}
+                                        target="_blank"
                                         className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium"
                                     >
                                         Xem

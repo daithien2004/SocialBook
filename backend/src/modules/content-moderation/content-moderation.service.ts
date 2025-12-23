@@ -18,9 +18,17 @@ export class ContentModerationService {
     private readonly apiUrl: string;
 
     constructor(private configService: ConfigService) {
-        this.rapidApiKey = this.configService.get<string>('RAPID_API_KEY') || '';
+        // FIX: Use the correct env var name that matches .env file
+        this.rapidApiKey = this.configService.get<string>('RAPID_MODER_API_KEY') || '';
         this.rapidApiHost = this.configService.get<string>('RAPID_API_HOST') || 'nsfw-text-moderation-api.p.rapidapi.com';
         this.apiUrl = this.configService.get<string>('RAPID_API_URL') || 'https://nsfw-text-moderation-api.p.rapidapi.com/moderation_check.php';
+
+        // Log initialization status for debugging
+        if (!this.rapidApiKey) {
+            this.logger.error('⚠️  RAPID_MODER_API_KEY is missing! Content moderation will be SKIPPED.');
+        } else {
+            this.logger.log('✅ Content Moderation Service initialized with RapidAPI.');
+        }
     }
 
     async checkContent(text: string): Promise<ModerationResult> {
