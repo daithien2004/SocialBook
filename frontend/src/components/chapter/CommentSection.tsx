@@ -60,7 +60,6 @@ export default function CommentSection({
 
       toast.success('Bình luận đã được gửi!');
     } catch (error: any) {
-      console.error('Failed to submit comment:', error);
       if (error?.status !== 401) {
         const errorMessage =
           error?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';

@@ -16,7 +16,7 @@ export class Achievement {
 
   @Prop({
     type: String,
-    enum: ['reading', 'streak', 'social', 'special'],
+    enum: ['reading', 'streak', 'social', 'special', 'onboarding'],
     required: true
   })
   category: string;
@@ -26,7 +26,7 @@ export class Achievement {
     required: true
   })
   requirement: {
-    type: 'books_completed' | 'pages_read' | 'streak_days' | 'reviews_written' | 'custom';
+    type: 'books_completed' | 'pages_read' | 'streak_days' | 'reviews_written' | 'custom' | 'onboarding';
     value: number;
     condition?: string;
   };

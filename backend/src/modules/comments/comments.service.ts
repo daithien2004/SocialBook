@@ -346,25 +346,25 @@ export class CommentsService {
     content: string,
   ) {
     if (!Types.ObjectId.isValid(commentId)) {
-      throw new BadRequestException('Invalid comment ID');
+      throw new BadRequestException('ID bình luận không hợp lệ');
     }
 
     const comment = await this.commentModel.findById(commentId);
-    if (!comment) throw new NotFoundException('Comment not found');
+    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
 
     if (comment.isDelete) {
-      throw new BadRequestException('Comment has been deleted');
+      throw new BadRequestException('Bình luận đã được xóa');
     }
 
     if (comment.userId.toString() !== userId) {
-      throw new ForbiddenException('You are not allowed to edit this comment');
+      throw new ForbiddenException('Bạn không được phép chỉnh sửa bình luận này');
     }
 
     const moderationResult =
       await this.contentModerationService.checkContent(content);
 
     if (!moderationResult.isSafe) {
-      throw new BadRequestException('Comment content is not allowed');
+      throw new BadRequestException('bình luận không hợp lệ');
     }
 
     comment.content = content.trim();
