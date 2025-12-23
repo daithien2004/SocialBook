@@ -5,6 +5,7 @@ import { OnboardingController } from './onboarding.controller';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { UserGamification, UserGamificationSchema } from '../gamification/schemas/user-gamification.schema';
 import { UserOnboarding, UserOnboardingSchema } from './schemas/user-onboarding.schema';
+import { GamificationModule } from '../gamification/gamification.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { UserOnboarding, UserOnboardingSchema } from './schemas/user-onboarding.
       { name: User.name, schema: UserSchema },
       { name: UserGamification.name, schema: UserGamificationSchema },
     ]),
+    GamificationModule,
   ],
   controllers: [OnboardingController],
   providers: [OnboardingService],

@@ -165,15 +165,27 @@ export class GamificationService {
     let achievement = await this.achievementModel.findOne({ code: achievementCode });
 
     if (!achievement) {
-      achievement = await this.achievementModel.create({
-        code: achievementCode,
-        name: `Chuỗi đọc ${achievementCode.split('_')[1]} ngày`,
-        description: `Duy trì chuỗi đọc sách trong ${achievementCode.split('_')[1]} ngày liên tiếp`,
-        category: 'streak',
-        requirement: { type: 'streak_days', value: parseInt(achievementCode.split('_')[1]) },
-        rarity: 'common',
-        isActive: true
-      });
+      if (achievementCode === 'NEWBIE') {
+        achievement = await this.achievementModel.create({
+          code: 'NEWBIE',
+          name: 'Người mới bắt đầu',
+          description: 'Hoàn thành quá trình Onboarding',
+          category: 'onboarding',
+          requirement: { type: 'onboarding', value: 1 },
+          rarity: 'common',
+          isActive: true
+        });
+      } else if (achievementCode.startsWith('STREAK_')) {
+        achievement = await this.achievementModel.create({
+          code: achievementCode,
+          name: `Chuỗi đọc ${achievementCode.split('_')[1]} ngày`,
+          description: `Duy trì chuỗi đọc sách trong ${achievementCode.split('_')[1]} ngày liên tiếp`,
+          category: 'streak',
+          requirement: { type: 'streak_days', value: parseInt(achievementCode.split('_')[1]) },
+          rarity: 'common',
+          isActive: true
+        });
+      }
     }
 
     if (!achievement) return;

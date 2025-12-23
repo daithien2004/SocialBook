@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { UserOnboarding } from './schemas/user-onboarding.schema';
 import { User } from '../users/schemas/user.schema';
 import { UserGamification } from '../gamification/schemas/user-gamification.schema';
+import { GamificationService } from '../gamification/gamification.service';
 
 @Injectable()
 export class OnboardingService {
@@ -11,6 +12,7 @@ export class OnboardingService {
     @InjectModel(UserOnboarding.name) private userOnboardingModel: Model<UserOnboarding>,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(UserGamification.name) private userGamificationModel: Model<UserGamification>,
+    private readonly gamificationService: GamificationService,
   ) { }
 
   async getOnboardingStatus(userId: string) {
@@ -91,6 +93,8 @@ export class OnboardingService {
       onboardingCompleted: true,
       gamificationId: gamification._id,
     });
+
+    await this.gamificationService.unlockAchievement(userId, 'NEWBIE');
 
     return { success: true };
   }

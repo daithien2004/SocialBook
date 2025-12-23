@@ -139,7 +139,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                 targetType: 'post',
             }).unwrap();
         } catch (error) {
-            console.error('Toggle like failed:', error);
+            console.log('Toggle like failed:', error);
         }
     };
 
