@@ -58,13 +58,20 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
     }
 
     try {
-      await createPost({
+      const result = await createPost({
         bookId,
         content,
         images,
       }).unwrap();
 
-      toast.success('Đăng bài viết thành công! 🎉');
+      if (result.warning) {
+        toast.warning('Bài viết đang được xem xét', {
+          description: result.warning,
+          duration: 5000, // Show longer for user to read
+        });
+      } else {
+        toast.success('Đăng bài viết thành công! 🎉');
+      }
       onClose();
     } catch (error: any) {
       console.log('Failed to create post:', error);

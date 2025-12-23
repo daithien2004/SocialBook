@@ -125,12 +125,20 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     }
 
     try {
-      await createPost({
+      const result = await createPost({
         bookId: book.id,
         content: data.content,
         images: data.images,
       }).unwrap();
-      toast.success('Chia sẻ thành công!');
+
+      if (result.warning) {
+        toast.warning('Bài viết đang được xem xét', {
+          description: result.warning,
+          duration: 5000
+        });
+      } else {
+        toast.success('Chia sẻ thành công!');
+      }
       setIsShareModalOpen(false);
     } catch (error: any) {
       if (error?.status !== 401) {
