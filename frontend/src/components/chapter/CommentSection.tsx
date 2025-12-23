@@ -7,6 +7,8 @@ import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export interface Comment {
   id: string;
@@ -32,9 +34,20 @@ export default function CommentSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createComment] = usePostCreateMutation();
   const { theme, setTheme } = useTheme();
+  
+  const { isAuthenticated } = useAppAuth();
+  const router = useRouter();
+
   const handleSubmit = async (content: string) => {
     const trimmed = content.trim();
     if (!trimmed) return;
+
+    if (!isAuthenticated) {
+      toast.info('Vui lòng đăng nhập để bình luận', {
+        action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -48,10 +61,11 @@ export default function CommentSection({
       toast.success('Bình luận đã được gửi!');
     } catch (error: any) {
       console.error('Failed to submit comment:', error);
-      // Display the error message from backend
-      const errorMessage =
-        error?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
-      toast.error(errorMessage);
+      if (error?.status !== 401) {
+        const errorMessage =
+          error?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }

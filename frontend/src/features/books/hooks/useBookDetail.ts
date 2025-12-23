@@ -15,8 +15,10 @@ export const useBookDetail = (bookSlug: string) => {
     if (!book?.id) return;
     try {
       await likeBook(book.slug).unwrap();
-    } catch {
-      toast.error('Không thể thích sách này');
+    } catch (error: any) {
+      if (error?.status !== 401) {
+         toast.error('Không thể thích sách này');
+      }
     }
   };
 
@@ -31,7 +33,9 @@ export const useBookDetail = (bookSlug: string) => {
       toast.success('Chia sẻ thành công!');
       return true; // Return true to signal success to modal
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Không thể tạo bài viết');
+      if (err?.status !== 401) {
+        toast.error(err?.data?.message || 'Không thể tạo bài viết');
+      }
       return false;
     }
   };

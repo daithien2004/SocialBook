@@ -24,7 +24,6 @@ export const BookHero = ({
   return (
     <div className="bg-white/60 dark:bg-transparent border border-gray-200 dark:border-white/10 rounded-xl p-6 md:p-8 mb-8 shadow-sm dark:shadow-2xl backdrop-blur-sm">
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Book Cover */}
         <div className="flex-none mx-auto lg:mx-0">
           <div className="w-[240px] h-[360px] md:w-[280px] md:h-[420px] relative rounded-lg overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)] dark:shadow-[0_0_40px_rgba(0,0,0,0.6)] group">
             <Image
@@ -37,7 +36,6 @@ export const BookHero = ({
           </div>
         </div>
 
-        {/* Info */}
         <div className="flex-1">
           <div className="mb-2 flex items-center gap-2">
             <Badge status={book.status} />
@@ -59,7 +57,6 @@ export const BookHero = ({
 
           <StatsGrid book={book} />
 
-          {/* Buttons */}
           <div className="flex flex-wrap gap-4 mt-8">
             {book.chapters?.length > 0 && (
               <Link
@@ -94,7 +91,6 @@ export const BookHero = ({
   );
 };
 
-// Sub-components nội bộ
 interface BadgeProps {
   status: string;
 }

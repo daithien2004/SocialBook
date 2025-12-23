@@ -133,7 +133,9 @@ export default function ChapterPage({ params }: ChapterPageProps) {
       toast.success('Chia sẻ thành công!');
       setIsShareModalOpen(false);
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Không thể tạo bài viết');
+      if (error?.status !== 401) {
+        toast.error(error?.data?.message || 'Không thể tạo bài viết');
+      }
     }
   };
 

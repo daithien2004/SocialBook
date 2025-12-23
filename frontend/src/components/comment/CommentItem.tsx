@@ -46,6 +46,8 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content);
 
+    const { isAuthenticated } = useAppAuth();
+
     const { user } = useAppAuth();
     const isOwner = comment.userId?.id === user?.id;
 
@@ -66,6 +68,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const {data: likeStatus} = useGetStatusQuery({
         targetId: comment.id,
         targetType: 'comment',
+       
+    }, {
+         skip: !isAuthenticated,
     });
 
     const [
@@ -112,9 +117,10 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         }).unwrap();
 
                         toast.success('Bình luận đã được xóa!');
-                    } catch (e) {
-                        console.error('Delete comment failed:', e);
-                        toast.error('Xóa bình luận thất bại');
+                    } catch (e: any) {
+                        if (e?.status !== 401) {
+                            toast.error('Xóa bình luận thất bại');
+                        }
                     }
                 },
             },

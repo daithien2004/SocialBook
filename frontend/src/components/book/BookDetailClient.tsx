@@ -1,11 +1,9 @@
-// src/app/books/[slug]/BookDetailClient.tsx
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { HeaderClient } from '@/src/components/HeaderClient';
 
-// Hooks & Components
 import { useBookDetail } from '@/src/features/books/hooks/useBookDetail';
 import { BookHero } from './BookHero';
 import { BookDescription } from './BookDescription';
@@ -18,7 +16,6 @@ interface BookDetailClientProps {
 }
 
 export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
-  // 1. Hook Logic
   const {
     book,
     isLoading,
@@ -30,11 +27,9 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     defaultShareContent,
   } = useBookDetail(bookSlug);
 
-  // 2. Local UI State (Modals)
   const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
   const [isShareModalOpen, setShareModalOpen] = useState(false);
 
-  // 3. Loading & Error UI
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#161515] flex items-center justify-center">
@@ -59,10 +54,8 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     );
   }
 
-  // 4. Main Render
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
-      {/* Background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
           src="/main-background.jpg"
@@ -73,10 +66,9 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
       </div>
 
       <div className="relative z-10">
-        <HeaderClient session={null} />
+        <HeaderClient />
 
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-          {/* Hero Section */}
           <BookHero
             book={book}
             isLiking={isLiking}
@@ -86,7 +78,6 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
           />
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               <BookDescription
                 description={book.description}
@@ -97,14 +88,12 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <ReviewSection bookId={book.id} />
             </div>
 
-            {/* Sidebar */}
             <div className="lg:col-span-1">
               <BookSidebar book={book} bookSlug={bookSlug} />
             </div>
           </div>
         </div>
 
-        {/* Modals Container */}
         <BookModals
           book={book}
           isLibraryOpen={isLibraryModalOpen}

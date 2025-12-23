@@ -31,15 +31,19 @@ export const ReviewSection = ({ bookId }: { bookId: string }) => {
       setRating(5);
       toast.success('Đánh giá thành công!');
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Lỗi khi gửi đánh giá');
+      if (err?.status !== 401) {
+        toast.error(err?.data?.message || 'Lỗi khi gửi đánh giá');
+      }
     }
   };
 
   const handleLike = async (reviewId: string) => {
     try {
       await toggleLikeReview({ id: reviewId, bookId }).unwrap();
-    } catch {
-      toast.error('Lỗi khi thích đánh giá');
+    } catch (error: any) {
+      if (error?.status !== 401) {
+        toast.error('Lỗi khi thích đánh giá');
+      }
     }
   };
 

@@ -12,6 +12,7 @@ import {
   Loader2,
   BookOpen,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Post } from '@/src/features/posts/types/post.interface';
 import ModalPostComment from '@/src/components/post/ModalPostComment';
 import SharePostModal from '@/src/components/post/SharePostModal';
@@ -81,11 +82,13 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   const handleDelete = async () => {
     try {
       await deletePost(post.id).unwrap();
-      alert('Xóa bài viết thành công!');
+      toast.success('Xóa bài viết thành công!');
       setShowDeleteConfirm(false);
     } catch (error: any) {
       console.error('Failed to delete post:', error);
-      alert(error?.data?.message || 'Lỗi khi xóa bài viết');
+      if (error?.status !== 401) {
+        toast.error(error?.data?.message || 'Lỗi khi xóa bài viết');
+      }
     }
   };
 
@@ -102,10 +105,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
         setCurrentImageIndex((prev) => Math.max(0, prev - 1));
       }
 
-      alert('Xóa ảnh thành công!');
+      toast.success('Xóa ảnh thành công!');
     } catch (error: any) {
       console.error('Failed to delete image:', error);
-      alert(error?.data?.message || 'Lỗi khi xóa ảnh');
+      if (error?.status !== 401) {
+        toast.error(error?.data?.message || 'Lỗi khi xóa ảnh');
+      }
     }
   };
 

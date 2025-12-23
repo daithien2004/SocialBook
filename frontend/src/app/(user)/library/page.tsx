@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -29,15 +30,18 @@ export default function LibraryPage() {
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
+  const { user, isAuthenticated } = useAppAuth();
 
   const {
     data: libraryData,
     isLoading: isLoadingLibrary,
     isFetching: isFetchingLibrary,
-  } = useGetLibraryBooksQuery({ status: activeTab });
+  } = useGetLibraryBooksQuery({ status: activeTab }, {
+    skip: !isAuthenticated
+  });
 
-  const { user } = useAppAuth();
   const currentUserId = user?.id;
+  const router = useRouter();
 
   const { data: collections, isLoading: isLoadingCollections } =
     useGetCollectionsQuery(currentUserId, {
@@ -60,10 +64,44 @@ export default function LibraryPage() {
       setNewCollectionName('');
       setIsCreateModalOpen(false);
       toast.success('Đã tạo bộ sưu tập mới');
-    } catch (error) {
-      toast.error('Không thể tạo bộ sưu tập. Vui lòng thử lại.');
+    } catch (error: any) {
+      if (error?.status !== 401) {
+        toast.error('Không thể tạo bộ sưu tập. Vui lòng thử lại.');
+      }
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-[#161515] flex flex-col items-center justify-center p-4 transition-colors duration-300">
+        <div className="max-w-md w-full bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl p-8 text-center border border-gray-100 dark:border-white/5">
+          <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <BookOpen size={40} className="text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            Thư viện cá nhân
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+            Đăng nhập để quản lý sách đang đọc, lưu trữ bộ sưu tập và đồng bộ tiến độ đọc trên mọi thiết bị.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push('/login')}
+              className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95"
+            >
+              Đăng nhập ngay
+            </button>
+            <Link
+              href="/books"
+              className="w-full py-3 px-6 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all"
+            >
+              Khám phá sách trước
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: LibraryStatus.READING, label: 'Đọc hiện tại', icon: Clock },

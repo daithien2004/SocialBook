@@ -2,6 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export interface CreatePostModalProps {
   isSubmitting: boolean;
@@ -36,6 +40,21 @@ export default function CreatePostModal({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { isAuthenticated } = useAppAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isOpen && !isAuthenticated) {
+      toast.info('Vui lòng đăng nhập để đăng bài viết', {
+        action: {
+          label: 'Đăng nhập',
+          onClick: () => router.push('/login'),
+        },
+      });
+      onClose();
+    }
+  }, [isOpen, isAuthenticated, onClose, router]);
 
   useEffect(() => {
     setMounted(true);
@@ -119,7 +138,7 @@ export default function CreatePostModal({
     fileInputRef.current?.click();
   };
 
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !mounted || !isAuthenticated) return null;
 
   const totalImages = images.length;
   const canAddMore = totalImages < maxImages;

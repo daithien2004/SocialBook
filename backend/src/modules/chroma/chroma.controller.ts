@@ -9,8 +9,7 @@ import { Public } from '@/src/common/decorators/customize';
 export class ChromaController {
     constructor(private readonly chromaService: ChromaService) { }
 
-    // Index lại TẤT CẢ (Books + Authors only)
-    @Public() // Temporary for testing
+    @Public()
     @Post('reindex-all')
     async reindexAll() {
         const [books, authors] = await Promise.all([
@@ -28,7 +27,6 @@ export class ChromaController {
         };
     }
 
-    // Xóa toàn bộ collection
     @Roles('admin')
     @Post('clear')
     @Public()
@@ -41,8 +39,7 @@ export class ChromaController {
         };
     }
 
-    // Kiểm tra tình trạng
-    @Public() // Temporary for testing
+    @Public()
     @Get('stats')
     async getStats() {
         const stats = await this.chromaService.getCollectionStats();
