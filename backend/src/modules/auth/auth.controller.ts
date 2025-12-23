@@ -49,7 +49,7 @@ export class AuthController {
     const result = await this.authService.login(req.user);
 
     return {
-      message: 'Login successful',
+      message: 'Đăng nhập thành công',
       data: {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
@@ -69,7 +69,7 @@ export class AuthController {
     const otp = await this.authService.signup(dto);
 
     return {
-      message: 'OTP sent to email',
+      message: 'Mã OTP đã được gửi đến email của bạn',
       data: {
         otp: otp,
       },
@@ -96,7 +96,7 @@ export class AuthController {
     try {
       const result = await this.authService.resendOtp(email);
       return {
-        message: 'OTP resent successfully',
+        message: 'Gửi lại mã OTP thành công',
         data: {
           remainingTime: result.remainingTime,
         },
@@ -112,7 +112,7 @@ export class AuthController {
   async refresh(@Body('refreshToken') refreshToken: string) {
     if (!refreshToken) {
       throw new HttpException(
-        'Refresh token is required',
+        'Vui lòng cung cấp Refresh token',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -124,14 +124,14 @@ export class AuthController {
         await this.authService.refresh(payload.sub, refreshToken);
 
       return {
-        message: 'Refresh successful',
+        message: 'Làm mới token thành công',
         data: {
           accessToken,
           refreshToken: newRefreshToken,
         },
       };
     } catch (error) {
-      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('Refresh token không hợp lệ', HttpStatus.UNAUTHORIZED);
     }
   }
 
@@ -140,7 +140,7 @@ export class AuthController {
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto.email);
     return {
-      message: 'OTP sent to your email for password reset',
+      message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
     };
   }
 

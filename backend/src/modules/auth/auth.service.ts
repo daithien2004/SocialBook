@@ -27,18 +27,16 @@ export class AuthService {
   ) { }
 
   async login(user: any) {
-    // VALIDATION
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Người dùng không tồn tại');
     }
 
     if (!user.isVerified) {
-      throw new UnauthorizedException('Account has not been verified');
+      throw new UnauthorizedException('Tài khoản chưa được xác thực');
     }
 
-    // Populate role để lấy role name
     const userWithRole = await this.usersService.findById(user.id.toString());
-    let roleName = 'user'; // default
+    let roleName = 'user';
     if (
       userWithRole?.roleId &&
       typeof userWithRole.roleId === 'object' &&
@@ -47,14 +45,12 @@ export class AuthService {
       roleName = (userWithRole.roleId as any).name || 'user';
     }
 
-    // EXECUTION
     const tokens = await this.signTokens(
       user.id.toString(),
       user.email,
       roleName,
     );
 
-    // RETURN
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -71,31 +67,24 @@ export class AuthService {
   }
 
   async logout(userId: string) {
-    // EXECUTION
     await this.usersService.updateRefreshToken(userId, { hashedRt: null });
-    // RETURN
-    return { message: 'Logged out successfully' };
+    return { message: 'Đăng xuất thành công' };
   }
 
   async signup(dto: SignupLocalDto): Promise<string> {
-    // VALIDATION
     const user = await this.usersService.findByEmail(dto.email);
     if (user) {
       if (!user.isVerified) {
-        // If user exists but is not verified, allow resending OTP
-        // Optionally update user details here if needed
         return await this.sendOtp(dto.email);
       }
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('Email này đã được sử dụng');
     }
 
-    // Fetch default 'user' role
     const userRole = await this.roleModel.findOne({ name: 'user' });
     if (!userRole) {
-      throw new InternalServerErrorException('Default user role not found');
+      throw new InternalServerErrorException('Không tìm thấy role mặc định cho user');
     }
 
-    // EXECUTION
     await this.usersService.create({
       username: dto.username,
       email: dto.email,
@@ -104,24 +93,18 @@ export class AuthService {
       roleId: userRole._id,
     });
 
-    // RETURN
     return await this.sendOtp(dto.email);
   }
 
-  // Endpoint xử lý cả login VÀ signup
   async googleAuth(dto: SignupGoogleDto) {
-    // VALIDATION
     let user = await this.usersService.findByEmail(dto.email);
 
-    // EXECUTION
     if (!user) {
       const userRole = await this.roleModel.findOne({ name: 'user' });
-      console.log(userRole);
       if (!userRole) {
-        throw new InternalServerErrorException('Default user role not found');
+        throw new InternalServerErrorException('Không tìm thấy role mặc định cho user');
       }
 
-      // Chưa có account → TỰ ĐỘNG TẠO MỚI
       user = await this.usersService.create({
         username: dto.username || dto.email.split('@')[0],
         email: dto.email,
@@ -132,20 +115,19 @@ export class AuthService {
         roleId: userRole._id,
       });
     } else {
-      // Đã có account → KIỂM TRA PROVIDER
-      if (user.provider === 'local') {
-        // User đã đăng ký bằng email/password trước đó
-        throw new ConflictException(
-          'Email already registered with password. Please login with your password or link your Google account first.',
-        );
+      if (!user.isVerified) {
+        throw new UnauthorizedException('Tài khoản chưa được xác thực');
       }
 
-      // Nếu user.provider === 'google' → Cho phép login
+      if (user.provider === 'local') {
+        throw new ConflictException(
+          'Email đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng mật khẩu hoặc liên kết tài khoản Google trước.',
+        );
+      }
     }
 
-    // Populate role để lấy role name
     const userWithRole = await this.usersService.findById(user.id.toString());
-    let roleName = 'user'; // default
+    let roleName = 'user';
     if (
       userWithRole?.roleId &&
       typeof userWithRole.roleId === 'object' &&
@@ -154,13 +136,11 @@ export class AuthService {
       roleName = (userWithRole.roleId as any).name || 'user';
     }
 
-    // EXECUTION
     const tokens = await this.signTokens(
       user.id.toString(),
       user.email,
       roleName,
     );
-    // RESPONSE
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -177,30 +157,26 @@ export class AuthService {
   }
 
   async verifyOtpAndActivate(email: string, otp: string): Promise<string> {
-    // VALIDATION
     const isValid = await this.otpService.verifyOTP(email, otp);
     if (!isValid) {
-      throw new BadRequestException('Invalid OTP');
+      throw new BadRequestException('Mã OTP không hợp lệ');
     }
 
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new BadRequestException('Người dùng không tồn tại');
     }
 
-    // EXECUTION
     user.isVerified = true;
     await user.save();
 
-    // RETURN
-    return 'Registration successful';
+    return 'Đăng ký thành công';
   }
 
   async forgotPassword(email: string): Promise<string> {
-    // VALIDATION
     const existingUser = await this.usersService.findByEmail(email);
     if (!existingUser) {
-      throw new BadRequestException('User not found');
+      throw new BadRequestException('Người dùng không tồn tại');
     }
 
     if (!existingUser.password) {
@@ -208,7 +184,6 @@ export class AuthService {
         'Tài khoản này đăng nhập bằng bên thứ ba nên không thể đổi mật khẩu'
       );
     }
-    // RETURN
     return this.otpService.generateOTP(email);
   }
 
@@ -217,49 +192,43 @@ export class AuthService {
     otp: string,
     newPassword: string,
   ): Promise<string> {
-    // VALIDATION
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new BadRequestException('Người dùng không tồn tại');
     }
 
     const isSamePassword = await bcrypt.compare(newPassword, user.password!);
     if (isSamePassword) {
       throw new BadRequestException(
-        'New password must be different from current password',
+        'Mật khẩu mới phải khác mật khẩu hiện tại',
       );
     }
 
     const isValid = await this.otpService.verifyOTP(email, otp);
     if (!isValid) {
-      throw new BadRequestException('Invalid OTP');
+      throw new BadRequestException('Mã OTP không hợp lệ');
     }
 
-    // EXECUTION
     const hashPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashPassword;
     await user.save();
 
-    // RETURN
-    return 'Password reset successful';
+    return 'Đặt lại mật khẩu thành công';
   }
 
   async validateUser(email: string, password: string) {
-    // VALIDATION
     const user = await this.usersService.findByEmail(email);
     if (!user)
       throw new UnauthorizedException(
-        'Invalid email. Please check and try again.',
+        'Email không hợp lệ. Vui lòng kiểm tra và thử lại.',
       );
 
-    // EXECUTION
     const pwMatches = await bcrypt.compare(password, user.password!);
     if (!pwMatches)
       throw new UnauthorizedException(
-        'Invalid password. Please check and try again.',
+        'Mật khẩu không đúng. Vui lòng kiểm tra và thử lại.',
       );
 
-    // RETURN
     return user;
   }
 
@@ -267,44 +236,38 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      throw new BadRequestException('Email not found in system');
+      throw new BadRequestException('Không tìm thấy email trong hệ thống');
     }
 
-    // Nếu user chưa active, cho phép gửi OTP
     if (!user.isVerified) {
       const otp = await this.otpService.generateOTP(email);
       return otp;
     }
 
-    throw new BadRequestException('Account already activated');
+    throw new BadRequestException('Tài khoản đã được kích hoạt');
   }
 
   async resendOtp(email: string): Promise<{ remainingTime: number }> {
-    // Kiểm tra TTL của OTP hiện tại
     const ttl = await this.otpService.getOtpTTL(email);
 
-    // Nếu không có OTP nào tồn tại
     if (ttl === -2) {
       throw new BadRequestException(
-        'No previous OTP request found. Please request a new OTP.',
+        'Không tìm thấy yêu cầu OTP trước đó. Vui lòng yêu cầu mã OTP mới.',
       );
     }
 
-    // Chỉ cho phép resend nếu OTP cũ còn ít hơn 4 phút (240s)
-    // Tránh spam khi vừa mới gửi OTP
-    const RESEND_COOLDOWN = 60; // 1 phút
+    const RESEND_COOLDOWN = 60;
     if (ttl > 300 - RESEND_COOLDOWN) {
       const waitTime = ttl - (300 - RESEND_COOLDOWN);
       throw new BadRequestException(
-        `Please wait ${waitTime} seconds before resending OTP`,
+        `Vui lòng đợi ${waitTime} giây trước khi gửi lại OTP`,
       );
     }
 
-    // Gửi OTP mới
     await this.otpService.generateOTP(email);
 
     return {
-      remainingTime: 300, // OTP mới có hiệu lực 5 phút
+      remainingTime: 300,
     };
   }
 
@@ -315,10 +278,9 @@ export class AuthService {
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
 
     if (!accessSecret || !refreshSecret) {
-      throw new InternalServerErrorException('JWT secrets not configured');
+      throw new InternalServerErrorException('JWT secrets chưa được cấu hình');
     }
 
-    // EXECUTION
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: accessSecret,
@@ -333,23 +295,19 @@ export class AuthService {
     const hashedRt = await bcrypt.hash(refreshToken, 10);
     await this.usersService.updateRefreshToken(userId, { hashedRt });
 
-    // RETURN
     return { accessToken, refreshToken };
   }
 
   async refresh(userId: string, refreshToken: string) {
-    // VALIDATION
     const user = await this.usersService.findById(userId);
     if (!user || !user.hashedRt) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException('Từ chối truy cập');
     }
-    // EXECUTION
     const rtMatches = await bcrypt.compare(refreshToken, user.hashedRt);
     if (!rtMatches) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException('Từ chối truy cập');
     }
 
-    // RETURN
     let roleName = 'user';
     if (
       user.roleId &&
@@ -367,18 +325,17 @@ export class AuthService {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
-      // Kiểm tra token có trong DB không (nếu dùng token rotation)
       const isValid = await this.usersService.checkRefreshTokenInDB(
         payload.sub,
         token,
       );
       if (!isValid) {
-        throw new UnauthorizedException('Invalid refresh token');
+        throw new UnauthorizedException('Refresh token không hợp lệ');
       }
 
       return payload;
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Refresh token không hợp lệ');
     }
   }
 }
