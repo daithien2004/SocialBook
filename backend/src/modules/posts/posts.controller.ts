@@ -46,11 +46,11 @@ export class PostsController {
   @Public()
   @Get('user')
   @HttpCode(HttpStatus.OK)
-  async findAllByUser(@Req() req: any,@Query() query: PaginationUserDto) {
+  async findAllByUser(@Req() req: any, @Query() query: PaginationUserDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
-    const result = await this.postsService.findAllByUser(query.userId ,query.page, limit);
+    const result = await this.postsService.findAllByUser(query.userId, query.page, limit);
     return {
-      data: {...result},
+      data: { ...result },
       message: 'Get posts successfully',
     };
   }
@@ -154,6 +154,40 @@ export class PostsController {
     return {
       message: 'Image removed successfully',
       data,
+    };
+  }
+
+  // ===== ADMIN ENDPOINTS =====
+
+  @Get('admin/flagged')
+  @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @HttpCode(HttpStatus.OK)
+  async getFlaggedPosts(@Query() query: PaginationDto) {
+    const limit = query.limit > 100 ? 100 : query.limit;
+    const result = await this.postsService.getFlaggedPosts(query.page, limit);
+    return {
+      data: result,
+      message: 'Get flagged posts successfully',
+    };
+  }
+
+  @Patch('admin/:id/approve')
+  @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @HttpCode(HttpStatus.OK)
+  async approvePost(@Param('id') id: string) {
+    const result = await this.postsService.approvePost(id);
+    return {
+      message: result.message,
+    };
+  }
+
+  @Delete('admin/:id/reject')
+  @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @HttpCode(HttpStatus.OK)
+  async rejectPost(@Param('id') id: string) {
+    const result = await this.postsService.rejectPost(id);
+    return {
+      message: result.message,
     };
   }
 }

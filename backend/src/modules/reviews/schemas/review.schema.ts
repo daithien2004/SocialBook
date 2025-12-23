@@ -30,6 +30,15 @@ export class Review {
 
   @Prop({ type: Boolean, default: false })
   verifiedPurchase: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  isFlagged: boolean;
+
+  @Prop({ type: String })
+  moderationReason?: string;
+
+  @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
+  moderationStatus?: string;
 }
 
 export const ReviewSchema = SchemaFactory.createForClass(Review);

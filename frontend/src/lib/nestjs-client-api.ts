@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
 import { toast } from 'sonner';
-import { getSession } from 'next-auth/react';
+import { getSession, signOut } from 'next-auth/react';
 const clientApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_NEST_API_URL || 'http://localhost:5000/api',
   withCredentials: true,
@@ -71,6 +71,17 @@ export const axiosBaseQuery =
               },
             },
           });
+        }
+
+        if (status === 403 && err.response?.data?.error === 'USER_BANNED') {
+          toast.error('Tài khoản đã bị cấm', {
+            id: 'user-banned',
+            description: err.response?.data?.message || 'Tài khoản của bạn đã bị cấm. Vui lòng liên hệ quản trị viên.',
+            duration: 1000,
+          });
+
+
+          await signOut({ redirect: false })
         }
 
         return {

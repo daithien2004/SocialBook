@@ -35,11 +35,6 @@ export function useDashboardData(timeRange: string, viewType: ViewType = 'day') 
             const booksDataRes = booksRes.data;
             const activeUsersDataRes = activeUsersRes.data;
 
-            console.log('📊 Dashboard Statistics Debug:', {
-                overviewData,
-                booksStats: booksDataRes.data,
-            });
-
             setStats(overviewData.data);
             setGrowthData(growthDataRes.data || []);
             setBookStats(booksDataRes.data);
