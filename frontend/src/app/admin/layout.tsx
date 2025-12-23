@@ -3,7 +3,7 @@
 import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
-import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut, PenLine, Shapes } from 'lucide-react';
+import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut, PenLine, Shapes, AlertTriangle } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', icon: Home, href: '/admin/dashboard' },
@@ -12,6 +12,7 @@ const navItems = [
   { name: 'Books', icon: BookOpen, href: '/admin/books' },
   { name: 'Authors', icon: PenLine, href: '/admin/authors' },
   { name: 'Genres', icon: Shapes, href: '/admin/genres' },
+  { name: 'Moderation', icon: AlertTriangle, href: '/admin/moderation-queue' },
   { name: 'Posts', icon: FileText, href: '/admin/posts' },
   { name: 'Comments', icon: MessageSquare, href: '/admin/comments' },
   { name: 'Reports', icon: BarChart2, href: '/admin/reports' },

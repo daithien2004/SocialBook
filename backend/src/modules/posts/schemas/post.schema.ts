@@ -18,6 +18,15 @@ export class Post {
   @Prop({ type: Boolean, default: false })
   isDelete: boolean;
 
+  @Prop({ type: Boolean, default: false })
+  isFlagged: boolean;
+
+  @Prop({ type: String })
+  moderationReason?: string;
+
+  @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
+  moderationStatus?: string;
+
   @Prop({ type: Date, default: Date.now })
   createdAt: Date;
 
