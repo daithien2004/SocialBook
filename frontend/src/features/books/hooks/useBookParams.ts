@@ -44,6 +44,8 @@ export const useBookParams = () => {
     };
 
     const clearFilters = () => updateParams({ genres: null, tags: null });
+    const clearGenres = () => updateParams({ genres: null });
+    const clearTags = () => updateParams({ tags: null });
     const clearSearch = () => updateParams({ search: null });
     const clearAll = () => router.push(pathname);
 
@@ -57,6 +59,8 @@ export const useBookParams = () => {
         setSort,
         setSearch,
         clearFilters,
+        clearGenres,
+        clearTags,
         clearSearch,
         clearAll
     };
