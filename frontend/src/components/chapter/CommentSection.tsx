@@ -34,7 +34,7 @@ export default function CommentSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createComment] = usePostCreateMutation();
   const { theme, setTheme } = useTheme();
-  
+
   const { isAuthenticated } = useAppAuth();
   const router = useRouter();
 

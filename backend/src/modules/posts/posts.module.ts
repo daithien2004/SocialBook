@@ -6,10 +6,12 @@ import { Module } from '@nestjs/common';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { BooksModule } from '../books/books.module';
 import { Book, BookSchema } from '../books/schemas/book.schema';
+import { ContentModerationModule } from '../content-moderation/content-moderation.module';
 
 @Module({
   imports: [
     CloudinaryModule,
+    ContentModerationModule,
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
       { name: Book.name, schema: BookSchema },

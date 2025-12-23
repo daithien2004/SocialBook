@@ -30,6 +30,15 @@ export class Comment {
 
   @Prop({ type: Date, default: Date.now })
   updatedAt: Date;
+
+  @Prop({ type: Boolean, default: false })
+  isFlagged: boolean;
+
+  @Prop({ type: String })
+  moderationReason?: string;
+
+  @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
+  moderationStatus?: string;
 }
 
 
