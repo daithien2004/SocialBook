@@ -4,9 +4,15 @@ export const VIETNAMESE_TOXIC_WORDS = [
     // Profanity - Variations, no accent, spaced, masked
     'dm', 'dmm', 'dmml', 'dmm', 'dml', 'djt', 'dit me', 'dit me may', 'dit me m',
     'deo', 'deo the', 'deo hieu', 'de0', 'd3o',
-    'lon', 'cacl', 'cak', 'cakc', 'cak',
-    'cl', 'c*l', 'l0n', 'l*n', 'clm', 'clmm', 'clmml',
-    'cc', 'c*c', 'c*c', 'c**',
+
+    // Genital references (with proper diacritics)
+    'lồn', 'lon', 'l*n', 'l0n',
+    'cặc', 'cac', 'cacl', 'cak', 'cakc',
+    'cu', 'cứt', 'cứ',
+
+    // Common combinations
+    'cl', 'c*l', 'clm', 'clmm', 'clmml',
+    'cc', 'c*c', 'c**',
     'vl', 'vkl', 'v~l', 'vllll', 'vleu',
 
     // Strong insults
@@ -27,7 +33,10 @@ export const VIETNAMESE_TOXIC_WORDS = [
     'tồi tệ',
     'đồ mặt dày',
     'mặt chó',
+    'mặt lồn',
     'mặt l*n',
+    'mặt cặc',
+    'mặt cac',
     'mặt như cái bồn cầu',
 
     // Threat / Aggressive expressions
@@ -56,6 +65,12 @@ export const VIETNAMESE_TOXIC_WORDS = [
     'địt mẹ mày',
 
     // Animal-based insults (expanded)
+    'chó',
+    'con chó',
+    'thằng chó',
+    'chó chết',
+    'đồ chó',
+    'như chó',
     'đồ chó má',
     'con đĩ chó',
     'đồ khỉ',
