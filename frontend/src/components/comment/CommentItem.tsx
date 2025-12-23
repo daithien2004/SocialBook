@@ -46,9 +46,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content);
 
-    const { isAuthenticated } = useAppAuth();
+    const {isAuthenticated} = useAppAuth();
 
-    const { user } = useAppAuth();
+    const {user} = useAppAuth();
     const isOwner = comment.userId?.id === user?.id;
 
     const [editComment, { isLoading: isEditingComment }] =
@@ -167,8 +167,11 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
             setReplyText('');
             setShowReplies(true);
             setIsReplying(false);
-        } catch (e) {
-            console.error('Create reply failed:', e);
+        } catch (e: any) {
+            console.log('Create reply failed:', e);
+            const errorMessage =
+                e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+            toast.error(errorMessage);
         }
     };
 
@@ -307,8 +310,8 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         onClick={handleReplyClick}
                         className="flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-neutral-500 dark:hover:text-white"
                     >
-                        <MessageCircle size={12} />
-                        Trả lời
+                        <MessageCircle size={12}/>
+                        Trả lời ({comment.repliesCount})
                     </button>
                 </div>
 
