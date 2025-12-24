@@ -399,4 +399,16 @@ export class CommentsService {
     await comment.save();
   }
 
+  async countByParentId(parentId: string) {
+    if (!Types.ObjectId.isValid(parentId)) {
+      throw new BadRequestException('Invalid parentId');
+    }
+
+    const count = await this.commentModel.countDocuments({
+      parentId: new Types.ObjectId(parentId),
+      isDelete: false,
+    });
+
+    return count;
+  }
 }

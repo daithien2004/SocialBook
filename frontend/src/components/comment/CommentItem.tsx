@@ -15,7 +15,7 @@ import ListComments from './ListComments';
 
 import {
     useDeleteCommentMutation,
-    useEditCommentMutation,
+    useEditCommentMutation, useGetReplyCountByParentQuery,
     useLazyGetResolveParentQuery,
     usePostCreateMutation,
 } from '@/src/features/comments/api/commentApi';
@@ -60,7 +60,11 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const [createComment, { isLoading: isPostingReply }] =
         usePostCreateMutation();
 
-    const { data: likeCount } = useGetCountQuery({
+    const {data: replyCount, isLoading} = useGetReplyCountByParentQuery({
+        parentId: comment.id,
+    });
+
+    const {data: likeCount} = useGetCountQuery({
         targetId: comment.id,
         targetType: 'comment',
     });
@@ -311,7 +315,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         className="flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-neutral-500 dark:hover:text-white"
                     >
                         <MessageCircle size={12}/>
-                        Trả lời ({comment.repliesCount})
+                        Trả lời ({replyCount?.count})
                     </button>
                 </div>
 
