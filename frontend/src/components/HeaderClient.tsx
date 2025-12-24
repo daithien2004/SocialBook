@@ -24,6 +24,9 @@ import {
 } from '@/src/features/gamification/api/gamificationApi';
 import { toast } from 'sonner';
 import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useDispatch } from 'react-redux';
+import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
+import { logout } from '../features/auth/slice/authSlice';
 
 export function HeaderClient() {
   const router = useRouter();
@@ -92,7 +95,11 @@ export function HeaderClient() {
     }
   }, [isAuthenticated, checkInStreak, dailyGoal]);
 
+  const dispatch = useDispatch();
+
   const handleLogout = async () => {
+    dispatch(recommendationsApi.util.resetApiState());
+    dispatch(logout());
     await signOut({ redirect: false });
     router.push('/login');
   };

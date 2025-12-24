@@ -85,7 +85,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                 title={book.title}
                 author={book.authorId.name}
               />
-              <ReviewSection bookId={book.id} />
+              <ReviewSection bookId={book.id} bookSlug={book.slug} />
             </div>
 
             <div className="lg:col-span-1">

@@ -9,8 +9,11 @@ import {
   useCreateReviewMutation,
   useToggleLikeReviewMutation,
 } from '@/src/features/reviews/api/reviewApi';
+import { BOOK_TAGS, booksApi } from '@/src/features/books/api/bookApi';
+import { useDispatch } from 'react-redux';
 
-export const ReviewSection = ({ bookId }: { bookId: string }) => {
+export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: string }) => {
+  const dispatch = useDispatch();
   const { data: reviews, isLoading } = useGetReviewsByBookQuery(bookId, {
     skip: !bookId,
   });
@@ -26,6 +29,7 @@ export const ReviewSection = ({ bookId }: { bookId: string }) => {
     if (!content.trim()) return toast.error('Vui lòng nhập nội dung');
     try {
       await createReview({ bookId, content, rating }).unwrap();
+      dispatch(booksApi.util.invalidateTags([{ type: BOOK_TAGS.BOOK_DETAIL, id: bookSlug }]));
       setIsOpen(false);
       setContent('');
       setRating(5);
