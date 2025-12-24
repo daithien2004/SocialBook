@@ -15,6 +15,10 @@ import { Like, LikeSchema } from '../likes/schemas/like.schema';
 import { ChaptersService } from '../chapters/chapters.service';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema';
 import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
+import {
+  UserOnboarding,
+  UserOnboardingSchema,
+} from '../onboarding/schemas/user-onboarding.schema';
 
 @Module({
   imports: [
@@ -26,6 +30,7 @@ import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
       { name: Like.name, schema: LikeSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: Genre.name, schema: GenreSchema },
+      { name: UserOnboarding.name, schema: UserOnboardingSchema },
     ]),
   ],
   controllers: [RecommendationsController],
