@@ -86,7 +86,7 @@ export default function CommentSection({
             </div>
 
             <div className="mb-10">
-                <CommentInput
+<CommentInput
                     placeholder="Chia sẻ suy nghĩ của bạn về chương này..."
                     onSubmit={handleSubmit}
                     isSubmitting={isSubmitting}

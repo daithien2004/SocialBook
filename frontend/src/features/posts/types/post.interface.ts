@@ -15,6 +15,12 @@ export interface Post {
   totalLikes?: number;
   totalComments?: number;
   likedByCurrentUser?: boolean;
+
+  // Moderation fields
+  isFlagged?: boolean;
+  moderationReason?: string;
+  moderationStatus?: 'pending' | 'approved' | 'rejected';
+  warning?: string;
 }
 
 export interface CreatePostRequest {
