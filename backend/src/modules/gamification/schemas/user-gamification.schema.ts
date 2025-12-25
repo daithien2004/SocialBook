@@ -17,7 +17,7 @@ export class UserGamification {
   @Prop()
   lastReadDate: Date;
 
-  @Prop({ default: 0 })
+  @Prop({ default: 2 })
   streakFreezeCount: number;
 }
 
