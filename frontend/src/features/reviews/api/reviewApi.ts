@@ -6,6 +6,7 @@ import {
   CreateReviewRequest,
   UpdateReviewRequest,
 } from '../types/review.interface';
+import { recommendationsApi } from '../../recommendations/api/recommendationsApi';
 
 export const reviewApi = createApi({
   reducerPath: 'reviewApi',
@@ -35,6 +36,10 @@ export const reviewApi = createApi({
       invalidatesTags: (result, error, { bookId }) => [
         { type: 'Review', id: `LIST_${bookId}` },
       ],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(recommendationsApi.util.resetApiState());
+      },
     }),
 
     updateReview: builder.mutation<

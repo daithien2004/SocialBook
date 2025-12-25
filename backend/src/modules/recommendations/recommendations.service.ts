@@ -16,6 +16,11 @@ import { Review, ReviewDocument } from '../reviews/schemas/review.schema';
 import { Like, LikeDocument } from '../likes/schemas/like.schema';
 import { AuthorDocument } from '../authors/schemas/author.schema';
 
+import {
+  UserOnboarding,
+  UserOnboardingDocument,
+} from '../onboarding/schemas/user-onboarding.schema';
+
 type PopulatedBook = Omit<BookDocument, 'genres' | 'authorId'> & {
   genres?: GenreDocument[];
   authorId?: AuthorDocument;
@@ -124,6 +129,8 @@ export class RecommendationsService {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Like.name) private likeModel: Model<LikeDocument>,
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
+    @InjectModel(UserOnboarding.name)
+    private userOnboardingModel: Model<UserOnboardingDocument>,
     private geminiService: GeminiService,
   ) { }
 
@@ -167,7 +174,7 @@ export class RecommendationsService {
   private async buildUserProfile(userId: string): Promise<UserProfile> {
     const userObjectId = new Types.ObjectId(userId);
 
-    const [readingLists, progresses, reviews, likedBooks] = await Promise.all([
+    const [readingLists, progresses, reviews, likedBooks, userOnboarding] = await Promise.all([
       this.readingListModel
         .find({ userId: userObjectId })
         .populate({
@@ -198,6 +205,11 @@ export class RecommendationsService {
         .find({ likedBy: userObjectId })
         .populate('genres')
         .lean<PopulatedBook[]>(),
+
+      this.userOnboardingModel
+        .findOne({ userId: userObjectId })
+        .populate('favoriteGenres')
+        .lean<{ favoriteGenres: GenreDocument[] }>(),
     ]);
 
     const validReadingLists = readingLists.filter((rl) => rl.bookId != null);
@@ -253,6 +265,14 @@ export class RecommendationsService {
         });
       }
     });
+    
+    if (userOnboarding?.favoriteGenres) {
+      userOnboarding.favoriteGenres.forEach((genre) => {
+        if (genre && genre.name) {
+          genreCounts.set(genre.name, (genreCounts.get(genre.name) || 0) + 3);
+        }
+      });
+    }
 
     const favoriteGenres = Array.from(genreCounts.entries())
       .sort((a, b) => b[1] - a[1])

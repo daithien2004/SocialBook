@@ -55,6 +55,24 @@ export class CommentsController {
   }
 
   @Public()
+  @Get('count-by-parent/:parentId')
+  @HttpCode(HttpStatus.OK)
+  async countByParent(
+    @Param('parentId') parentId: string,
+  ) {
+    const count = await this.commentsService.countByParentId(parentId);
+
+    return {
+      message: 'Get reply count successfully',
+      data: {
+        parentId,
+        count,
+      },
+    };
+  }
+
+
+  @Public()
   @Get('resolve-parent')
   @HttpCode(HttpStatus.OK)
   async resolveParent(@Query() query: ResolveParentQueryDto) {

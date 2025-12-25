@@ -9,6 +9,8 @@ import {
     type FollowStateResponse,
 } from "@/src/features/follows/api/followApi";
 import {useState} from "react";
+import {useDispatch} from "react-redux";
+import {usersApi} from "@/src/features/users/api/usersApi";
 
 interface ProfileNavProps {
     profileUserId: string;
@@ -18,6 +20,7 @@ interface ProfileNavProps {
 export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps) {
     const segment = useSelectedLayoutSegment();
     const router = useRouter();
+    const dispatch = useDispatch();
 
     const [followState, setFollowState] = useState<FollowStateResponse | null>(
         initialFollowState
@@ -31,10 +34,17 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
 
     const handleFollowClick = async () => {
         try {
-            const updated = await toggleFollow(profileUserId).unwrap();
-            setFollowState(updated);
-        } catch (e: any) {
-            console.log("Toggle follow failed:", e);
+            const result = await toggleFollow(profileUserId);
+
+            if ('data' in result) {
+                dispatch(
+                    usersApi.util.invalidateTags([
+                        {type: 'Users', id: `OVERVIEW_${profileUserId}`},
+                    ])
+                );
+            }
+        } catch (e) {
+            console.error(e);
         }
     };
 

@@ -1,7 +1,7 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
-import {useAppAuth} from '@/src/hooks/useAppAuth';
+import React, { useEffect, useState } from 'react';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
     Heart,
@@ -15,7 +15,7 @@ import ListComments from './ListComments';
 
 import {
     useDeleteCommentMutation,
-    useEditCommentMutation,
+    useEditCommentMutation, useGetReplyCountByParentQuery,
     useLazyGetResolveParentQuery,
     usePostCreateMutation,
 } from '@/src/features/comments/api/commentApi';
@@ -26,8 +26,8 @@ import {
     usePostToggleLikeMutation,
 } from '@/src/features/likes/api/likeApi';
 
-import {CommentItem} from '@/src/features/comments/types/comment.interface';
-import {toast} from "sonner";
+import { CommentItem } from '@/src/features/comments/types/comment.interface';
+import { toast } from "sonner";
 
 interface CommentItemProps {
     comment: CommentItem;
@@ -36,46 +36,50 @@ interface CommentItemProps {
 }
 
 const CommentItemCard: React.FC<CommentItemProps> = ({
-                                                         comment,
-                                                         targetId,
-                                                         targetType,
-                                                     }) => {
+    comment,
+    targetId,
+    targetType,
+}) => {
     const [showReplies, setShowReplies] = useState(false);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content);
 
-    const { isAuthenticated } = useAppAuth();
+    const {isAuthenticated} = useAppAuth();
 
-    const { user } = useAppAuth();
+    const {user} = useAppAuth();
     const isOwner = comment.userId?.id === user?.id;
 
-    const [editComment, {isLoading: isEditingComment}] =
+    const [editComment, { isLoading: isEditingComment }] =
         useEditCommentMutation();
-    const [deleteComment, {isLoading: isDeletingComment}] =
+    const [deleteComment, { isLoading: isDeletingComment }] =
         useDeleteCommentMutation();
 
     const [postToggleLike] = usePostToggleLikeMutation();
-    const [createComment, {isLoading: isPostingReply}] =
+    const [createComment, { isLoading: isPostingReply }] =
         usePostCreateMutation();
+
+    const {data: replyCount, isLoading} = useGetReplyCountByParentQuery({
+        parentId: comment.id,
+    });
 
     const {data: likeCount} = useGetCountQuery({
         targetId: comment.id,
         targetType: 'comment',
     });
 
-    const {data: likeStatus} = useGetStatusQuery({
+    const { data: likeStatus } = useGetStatusQuery({
         targetId: comment.id,
         targetType: 'comment',
-       
+
     }, {
-         skip: !isAuthenticated,
+        skip: !isAuthenticated,
     });
 
     const [
         triggerResolveParent,
-        {data: resolvedData, isLoading: isResolvingParent},
+        { data: resolvedData, isLoading: isResolvingParent },
     ] = useLazyGetResolveParentQuery();
 
     const handleReplyClick = () => {
@@ -99,8 +103,12 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
             }).unwrap();
             toast.success('Bình luận đã được chỉnh sửa!');
             setIsEditing(false);
-        } catch (e) {
-            console.log('Edit comment failed:', e);
+        } catch (e: any) {
+            if (e?.status === 400 && e?.data?.message) {
+                toast.error(`Sửa thất bại: ${e.data.message}`);
+            } else if (e?.status !== 401) {
+                toast.error('Sửa bình luận thất bại. Vui lòng thử lại.');
+            }
         }
     };
 
@@ -163,8 +171,11 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
             setReplyText('');
             setShowReplies(true);
             setIsReplying(false);
-        } catch (e) {
-            console.error('Create reply failed:', e);
+        } catch (e: any) {
+            console.log('Create reply failed:', e);
+            const errorMessage =
+                e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
+            toast.error(errorMessage);
         }
     };
 
@@ -193,9 +204,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                 <div className="flex items-center">
                     <div className="relative rounded-2xl bg-gray-100 px-3 py-2 dark:bg-zinc-800">
                         <div className="pr-6">
-              <span className="mb-0.5 block text-sm font-bold text-gray-900 dark:text-neutral-100">
-                {comment.userId?.username}
-              </span>
+                            <span className="mb-0.5 block text-sm font-bold text-gray-900 dark:text-neutral-100">
+                                {comment.userId?.username}
+                            </span>
 
                             {isEditing ? (
                                 <div className="flex items-start gap-2">
@@ -221,7 +232,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                         onClick={handleEditComment}
                                         className="p-1 text-blue-600 hover:text-blue-500"
                                     >
-                                        <CornerDownRight size={14}/>
+                                        <CornerDownRight size={14} />
                                     </button>
                                 </div>
                             ) : (
@@ -253,7 +264,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                         className="z-[99999] w-44 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 shadow-lg dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-100"
                                     >
                                         <DropdownMenu.Arrow
-                                            className="h-3 w-3 -mt-1 rotate-45 fill-white dark:fill-neutral-900"/>
+                                            className="h-3 w-3 -mt-1 rotate-45 fill-white dark:fill-neutral-900" />
 
                                         <DropdownMenu.Item
                                             onSelect={(e) => {
@@ -286,11 +297,10 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                 <div className="ml-3 mt-1 flex items-center gap-4">
                     <button
                         onClick={handleLikeComment}
-                        className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
-                            likeStatus?.isLiked
+                        className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${likeStatus?.isLiked
                                 ? 'text-red-500'
                                 : 'text-gray-500 hover:text-red-500 dark:text-neutral-500'
-                        }`}
+                            }`}
                     >
                         <Heart
                             size={12}
@@ -305,7 +315,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         className="flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-neutral-500 dark:hover:text-white"
                     >
                         <MessageCircle size={12}/>
-                        Trả lời
+                        Trả lời ({replyCount?.count})
                     </button>
                 </div>
 
@@ -316,7 +326,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                             {isResolvingParent && !resolvedData && (
                                 <div
                                     className="flex items-center gap-2 px-2 text-xs text-gray-500 dark:text-neutral-500">
-                                    <Loader2 size={12} className="animate-spin"/>
+                                    <Loader2 size={12} className="animate-spin" />
                                     Đang tải phản hồi...
                                 </div>
                             )}
@@ -352,9 +362,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                         className="rounded-xl bg-blue-600 p-2 text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         {isPostingReply ? (
-                                            <Loader2 size={16} className="animate-spin"/>
+                                            <Loader2 size={16} className="animate-spin" />
                                         ) : (
-                                            <CornerDownRight size={16}/>
+                                            <CornerDownRight size={16} />
                                         )}
                                     </button>
                                 </div>

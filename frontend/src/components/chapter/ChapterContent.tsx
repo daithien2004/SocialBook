@@ -87,12 +87,20 @@ export function ChapterContent({
       return;
     }
     try {
-      await createPost({
+      const result = await createPost({
         bookId: bookId,
         content: data.content,
         images: data.images,
       }).unwrap();
-      toast.success('Chia sẻ thành công!');
+
+      if (result.warning) {
+        toast.warning('Bài viết đang được xem xét', {
+          description: result.warning,
+          duration: 5000
+        });
+      } else {
+        toast.success('Chia sẻ thành công!');
+      }
       setPostModalOpen(false);
     } catch (error: any) {
       toast.error(error?.data?.message || 'Không thể tạo bài viết');
@@ -112,33 +120,32 @@ export function ChapterContent({
       >
         <article className="space-y-2">
           {paragraphs.map((para) => (
-              <div key={para.id} className="group relative">
-                <div className="flex items-start">
-                  {/* Paragraph */}
-                  <p
-                      className={`transition-colors duration-300 ${
-                          activeParagraphId === para.id
-                              ? 'text-slate-700 dark:text-indigo-700'
-                              : ''
-                      }`}
-                      style={{
-                        fontSize: `${settings.fontSize}px`,
-                        fontFamily: settings.fontFamily,
-                        lineHeight: settings.lineHeight,
-                        letterSpacing: `${settings.letterSpacing}px`,
-                        textAlign: settings.textAlign as any,
-                        color:
-                            activeParagraphId === para.id
-                                ? undefined
-                                : settings.textColor,
-                      }}
-                  >
-                    {para.content}
-                  </p>
+            <div key={para.id} className="group relative">
+              <div className="flex items-start">
+                {/* Paragraph */}
+                <p
+                  className={`transition-colors duration-300 ${activeParagraphId === para.id
+                      ? 'text-slate-700 dark:text-indigo-700'
+                      : ''
+                    }`}
+                  style={{
+                    fontSize: `${settings.fontSize}px`,
+                    fontFamily: settings.fontFamily,
+                    lineHeight: settings.lineHeight,
+                    letterSpacing: `${settings.letterSpacing}px`,
+                    textAlign: settings.textAlign as any,
+                    color:
+                      activeParagraphId === para.id
+                        ? undefined
+                        : settings.textColor,
+                  }}
+                >
+                  {para.content}
+                </p>
 
-                  {/* Action buttons – FIX hover mất nút */}
-                  <div
-                      className="
+                {/* Action buttons – FIX hover mất nút */}
+                <div
+                  className="
                           absolute
                           right-[-48px]
                           top-1/2 -translate-y-1/2
@@ -150,47 +157,46 @@ export function ChapterContent({
 
                           transition-opacity duration-200 ease-out
                         "
+                >
+                  <button
+                    onClick={() => handleToggleComments(para)}
+                    className={`p-2 rounded-full transition-all ${activeParagraphId === para.id
+                        ? 'bg-indigo-600 text-white scale-110'
+                        : 'bg-neutral-200 text-neutral-600 hover:bg-indigo-600 hover:text-white dark:bg-gray-700 dark:text-white dark:hover:bg-indigo-500 hover:scale-110'
+                      }`}
+                    title="Bình luận đoạn này"
                   >
-                    <button
-                        onClick={() => handleToggleComments(para)}
-                        className={`p-2 rounded-full transition-all ${
-                            activeParagraphId === para.id
-                                ? 'bg-indigo-600 text-white scale-110'
-                                : 'bg-neutral-200 text-neutral-600 hover:bg-indigo-600 hover:text-white dark:bg-gray-700 dark:text-white dark:hover:bg-indigo-500 hover:scale-110'
-                        }`}
-                        title="Bình luận đoạn này"
-                    >
-                      <MessageSquarePlus size={18}/>
-                    </button>
+                    <MessageSquarePlus size={18} />
+                  </button>
 
-                    <button
-                        onClick={() => handleOpenPostModal(para)}
-                        className="
+                  <button
+                    onClick={() => handleOpenPostModal(para)}
+                    className="
                             p-2 rounded-full
                             bg-gray-700 text-white
                             hover:bg-green-600 hover:text-white hover:scale-110
                             transition-all
                           "
-                        title="Chia sẻ đoạn này"
-                    >
-                      <Share2 size={18} />
-                    </button>
-                  </div>
+                    title="Chia sẻ đoạn này"
+                  >
+                    <Share2 size={18} />
+                  </button>
                 </div>
               </div>
+            </div>
           ))}
         </article>
       </main>
 
       <ParagraphCommentDrawer
-          isOpen={commentDrawerOpen}
-          onClose={() => {
-            setCommentDrawerOpen(false);
-            setActiveParagraphId(null);
-            setActiveParagraph(null);
-          }}
-          paragraphId={activeParagraph?.id || null}
-          paragraphContent={activeParagraph?.content}
+        isOpen={commentDrawerOpen}
+        onClose={() => {
+          setCommentDrawerOpen(false);
+          setActiveParagraphId(null);
+          setActiveParagraph(null);
+        }}
+        paragraphId={activeParagraph?.id || null}
+        paragraphContent={activeParagraph?.content}
       />
 
       {/* Create Post Modal */}

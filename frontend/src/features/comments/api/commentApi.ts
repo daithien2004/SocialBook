@@ -13,7 +13,12 @@ import {
     PostCommentsRequest,
     PostToggleLikeResponse,
     PostToggleLikeRequest,
-    CommentRequest, EditCommentRequest, EditCommentResponse, DeleteCommentRequest
+    CommentRequest,
+    EditCommentRequest,
+    EditCommentResponse,
+    DeleteCommentRequest,
+    GetReplyCountByParentResponse,
+    GetReplyCountByParentRequest
 } from '../types/comment.interface';
 
 export const commentApi = createApi({
@@ -73,6 +78,12 @@ export const commentApi = createApi({
                     type: 'Comment',
                     id: `COUNT-${arg.targetType}-${arg.targetId}`,
                 },
+                arg.parentId
+                    ? {
+                        type: 'Comment',
+                        id: `REPLY-COUNT-${arg.parentId}`,
+                    }
+                    : undefined,
             ],
         }),
 
@@ -139,6 +150,22 @@ export const commentApi = createApi({
                 },
             ],
         }),
+
+        getReplyCountByParent: builder.query<
+            GetReplyCountByParentResponse,
+            GetReplyCountByParentRequest
+        >({
+            query: ({parentId}) => ({
+                url: NESTJS_COMMENTS_ENDPOINTS.getReplyCountByParent(parentId),
+                method: 'GET',
+            }),
+            providesTags: (result, error, arg) => [
+                {
+                    type: 'Comment' as const,
+                    id: `REPLY-COUNT-${arg.parentId}`,
+                },
+            ],
+        }),
     }),
 });
 
@@ -148,6 +175,7 @@ export const {
     useLazyGetResolveParentQuery,
     useGetCommentCountQuery,
     usePostToggleLikeMutation,
+    useGetReplyCountByParentQuery,
 
     useEditCommentMutation,
     useDeleteCommentMutation,

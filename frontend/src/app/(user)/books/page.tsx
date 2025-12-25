@@ -25,6 +25,7 @@ export default function BooksPage() {
     clearSearch,
     clearFilters,
     clearAll,
+    clearGenres,
   } = useBookParams();
 
   const { data: filtersData, isLoading: isFiltersLoading } =
@@ -101,7 +102,7 @@ export default function BooksPage() {
               selectedTags={tags}
               onToggleGenre={(slug: string) => toggleFilter('genres', slug)}
               onToggleTag={(tag: string) => toggleFilter('tags', tag)}
-              onClearGenres={() => toggleFilter('genres', '')}
+              onClearGenres={clearGenres}
             />
             <SortDropdown
               currentSort={sortBy}

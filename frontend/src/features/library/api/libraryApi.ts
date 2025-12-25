@@ -12,6 +12,7 @@ import {
   CreateCollectionRequest,
   UpdateCollectionRequest,
 } from '../types/library.interface';
+import { recommendationsApi } from '../../recommendations/api/recommendationsApi';
 
 export const libraryApi = createApi({
   reducerPath: 'libraryApi',
@@ -37,6 +38,10 @@ export const libraryApi = createApi({
         body: data,
       }),
       invalidatesTags: ['Library'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(recommendationsApi.util.resetApiState());
+      },
     }),
 
     getChapterProgress: builder.query<
