@@ -63,6 +63,17 @@ export const axiosNextJsBaseQuery =
           }, 1500);
         }
 
+        if (status === 403 && (err.response?.data as any)?.error === 'USER_BANNED') {
+          toast.error('Tài khoản đã bị cấm', {
+            description: (err.response?.data as any)?.message || 'Tài khoản của bạn đã bị cấm. Vui lòng liên hệ quản trị viên.',
+            duration: 5000,
+          });
+
+          import('next-auth/react').then(({ signOut }) => {
+            signOut({ redirect: true, callbackUrl: '/login' });
+          });
+        }
+
         return {
           error: {
             status,

@@ -35,6 +35,14 @@ export class AuthService {
       throw new UnauthorizedException('Tài khoản chưa được xác thực');
     }
 
+    if (user.isBanned) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+        error: 'USER_BANNED',
+      });
+    }
+
     const userWithRole = await this.usersService.findById(user.id.toString());
     let roleName = 'user';
     if (
@@ -117,6 +125,14 @@ export class AuthService {
     } else {
       if (!user.isVerified) {
         throw new UnauthorizedException('Tài khoản chưa được xác thực');
+      }
+
+      if (user.isBanned) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+          error: 'USER_BANNED',
+        });
       }
 
       if (user.provider === 'local') {
@@ -224,10 +240,19 @@ export class AuthService {
       );
 
     const pwMatches = await bcrypt.compare(password, user.password!);
-    if (!pwMatches)
+    if (!pwMatches) {
       throw new UnauthorizedException(
         'Mật khẩu không đúng. Vui lòng kiểm tra và thử lại.',
       );
+    }
+
+    if (user.isBanned) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+        error: 'USER_BANNED',
+      });
+    }
 
     return user;
   }

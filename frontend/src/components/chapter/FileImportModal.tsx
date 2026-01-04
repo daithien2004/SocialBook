@@ -156,7 +156,7 @@ export function FileImportModal({
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept=".epub,.mobi,.azw,.azw3"
+                                    accept=".epub,.mobi"
                                     className="hidden"
                                     onChange={handleFileChange}
                                     id="file-upload"
@@ -170,7 +170,7 @@ export function FileImportModal({
                                         {file ? file.name : 'Nhấn để tải lên EPUB hoặc MOBI'}
                                     </span>
                                     <span className="text-sm text-gray-500 mt-2">
-                                        Định dạng hỗ trợ: .epub, .mobi, .azw, .azw3
+                                        Định dạng hỗ trợ: .epub, .mobi
                                     </span>
                                 </label>
                             </div>
