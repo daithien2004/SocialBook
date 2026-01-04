@@ -64,7 +64,6 @@ export default function EditPostForm({post, onClose}: EditPostFormProps) {
                     images: newImages.length > 0 ? newImages : undefined,
                 },
             }).unwrap();
-
             toast.success('Cập nhật bài viết thành công! 🎉');
             onClose();
         } catch (error: any) {

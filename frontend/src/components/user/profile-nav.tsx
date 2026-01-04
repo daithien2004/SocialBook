@@ -37,6 +37,14 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
             const result = await toggleFollow(profileUserId);
 
             if ('data' in result) {
+                setFollowState((prev) =>
+                    prev
+                        ? {
+                            ...prev,
+                            isFollowing: !prev.isFollowing,
+                        }
+                        : prev
+                );
                 dispatch(
                     usersApi.util.invalidateTags([
                         {type: 'Users', id: `OVERVIEW_${profileUserId}`},
@@ -44,7 +52,7 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
                 );
             }
         } catch (e) {
-            console.error(e);
+            console.log(e);
         }
     };
 

@@ -1,17 +1,18 @@
 'use client';
 
 import {useEffect, useMemo, useRef, useState} from 'react';
-import { Button } from '@/components/ui/button';
-import { Camera } from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {Camera} from 'lucide-react';
 import {
     useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
     usePatchUpdateUserProfileOverviewMutation,
 } from '@/src/features/users/api/usersApi';
-import { useParams } from 'next/navigation';
+import {useParams} from 'next/navigation';
 import {getErrorMessage} from "@/src/lib/utils";
+import {toast} from "sonner";
 
 const UserProfilePage = () => {
-    const { userId } = useParams<{ userId: string }>();
+    const {userId} = useParams<{ userId: string }>();
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -47,13 +48,13 @@ const UserProfilePage = () => {
         if (fileInputRef.current) fileInputRef.current.value = ''; // quan trọng
     };
 
-    const { data: overview, isLoading: isOverviewLoading } =
-        useGetUserOverviewQuery(userId, { skip: !userId });
+    const {data: overview, isLoading: isOverviewLoading} =
+        useGetUserOverviewQuery(userId, {skip: !userId});
 
-    const [updateOverview, { isLoading: isSaving }] =
+    const [updateOverview, {isLoading: isSaving}] =
         usePatchUpdateUserProfileOverviewMutation();
 
-    const [updateAvatar, { isLoading: isSavingAvatarApi }] =
+    const [updateAvatar, {isLoading: isSavingAvatarApi}] =
         usePatchUpdateUserAvatarMutation();
 
     // form state
@@ -75,11 +76,11 @@ const UserProfilePage = () => {
                 file: selectedFile,
             }).unwrap();
 
-            console.log("Avatar updated:", res);
+            toast.success('Thay đổi hình ảnh thành công');
 
             handleCancelAvatar();
         } catch (err: any) {
-            console.error(getErrorMessage(err));
+            console.log(getErrorMessage(err));
             // toast.error(getErrorMessage(err));
         } finally {
             setSavingAvatar(false);
@@ -110,8 +111,8 @@ const UserProfilePage = () => {
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+        setForm((prev) => ({...prev, [name]: value}));
     };
 
     const handleSave = async () => {
@@ -125,7 +126,7 @@ const UserProfilePage = () => {
                     website: form.website,
                 },
             }).unwrap();
-            console.log(res);
+            toast.success('Cập nhật hồ sơ thành công');
         } catch (err: any) {
             console.log(getErrorMessage(err));
         }
@@ -141,9 +142,11 @@ const UserProfilePage = () => {
     "
         >
             {/* Header */}
-            <div className="relative rounded-t-2xl bg-gradient-to-b from-teal-700 via-teal-600 to-teal-500 px-6 py-10 md:py-12">
+            <div
+                className="relative rounded-t-2xl bg-gradient-to-b from-teal-700 via-teal-600 to-teal-500 px-6 py-10 md:py-12">
                 <div className="pointer-events-none absolute inset-0 opacity-10">
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJub25lIi8+PHBhdHRlcm4gaWQ9InBhdHRlcm4iIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48L3BhdHRlcm4+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIi8+PC9zdmc+')] bg-repeat"></div>
+                    <div
+                        className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJub25lIi8+PHBhdHRlcm4gaWQ9InBhdHRlcm4iIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48L3BhdHRlcm4+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIi8+PC9zdmc+')] bg-repeat"></div>
                 </div>
 
                 {/* Avatar + name */}
@@ -166,7 +169,8 @@ const UserProfilePage = () => {
               shadow-lg disabled:opacity-60
             "
                         >
-                            <div className="relative h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden">
+                            <div
+                                className="relative h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden">
                                 <img
                                     src={
                                         previewUrl ??
