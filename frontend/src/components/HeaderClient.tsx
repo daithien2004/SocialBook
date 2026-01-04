@@ -49,18 +49,21 @@ export function HeaderClient() {
     skip: isGuest,
   });
 
-  const hasCelebratedRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
 
-    if (dailyGoal) {
+    if (dailyGoal && userId) {
        const minutesGoal = dailyGoal.goals?.minutes;
        const current = minutesGoal?.current || 0;
        const target = minutesGoal?.target || 90;
        
-       if (current >= target && !hasCelebratedRef.current) {
-          hasCelebratedRef.current = true;
+       const todayStr = new Date().toISOString().split('T')[0];
+       const celebrationKey = `daily-goal-celebrated-${userId}-${todayStr}`;
+       const hasCelebratedToday = localStorage.getItem(celebrationKey);
+
+       if (current >= target && !hasCelebratedToday) {
+          localStorage.setItem(celebrationKey, 'true');
           import('canvas-confetti').then((confetti) => {
             confetti.default({
               particleCount: 150,
