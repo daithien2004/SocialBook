@@ -130,6 +130,7 @@ export const VIETNAMESE_TOXIC_WORDS = [
     'd.m',
     'd-m',
     'đ..m',
+    'dcm',
     'l o n',
     'l-0-n',
     'c a c',

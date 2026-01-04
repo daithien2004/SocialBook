@@ -17,6 +17,7 @@ export const SearchBar = ({
 }: SearchBarProps) => {
   const [input, setInput] = useState(initialValue);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const isComposing = useRef(false);
 
   // Sync khi URL thay đổi từ bên ngoài
   useEffect(() => {
@@ -36,6 +37,8 @@ export const SearchBar = ({
   const handleInputChange = useCallback((value: string) => {
     setInput(value);
 
+    if (isComposing.current) return;
+
     // Clear previous timeout
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -48,6 +51,27 @@ export const SearchBar = ({
       }
     }, debounceMs);
   }, [onSearch, debounceMs]);
+
+  const handleCompositionStart = () => {
+    isComposing.current = true;
+  };
+
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    isComposing.current = false;
+    // Trigger search immediately after composition ends (optional, or wait for next debounce)
+    const value = e.currentTarget.value;
+
+    // Clear previous timeout to maintain consistent debounce behavior
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      if (value.trim()) {
+        onSearch(value);
+      }
+    }, debounceMs);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +99,8 @@ export const SearchBar = ({
         type="text"
         value={input}
         onChange={(e) => handleInputChange(e.target.value)}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         placeholder="Tìm kiếm tên truyện, tác giả..."
         className="block w-full pl-5 pr-12 py-4 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600/50 shadow-lg backdrop-blur-sm transition-all"
       />

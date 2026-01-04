@@ -46,14 +46,6 @@ export default function BooksPage() {
     order,
   });
 
-  if (isBooksLoading || isFiltersLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#141414]">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 relative transition-colors duration-300">
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -120,7 +112,11 @@ export default function BooksPage() {
             onClearAll={clearFilters}
           />
 
-          {books.length > 0 ? (
+          {isBooksLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+            </div>
+          ) : books.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8">
               {books.map((book, index) => (
                 <div
