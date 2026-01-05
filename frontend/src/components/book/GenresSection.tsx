@@ -14,25 +14,30 @@ export const GenresSection = ({ books }: GenresSectionProps) => {
   const router = useRouter();
 
   const genresWithCount = useMemo(() => {
-    const genresMap = new Map<string, number>();
+    const genresMap = new Map<string, { name: string; count: number }>();
 
     books.forEach((book) => {
       if (book.genres && Array.isArray(book.genres)) {
         book.genres.forEach((genre) => {
-          if (genre?.name) {
-            genresMap.set(genre.name, (genresMap.get(genre.name) || 0) + 1);
+          if (genre?.slug && genre?.name) {
+            const existing = genresMap.get(genre.slug);
+            if (existing) {
+              existing.count += 1;
+            } else {
+              genresMap.set(genre.slug, { name: genre.name, count: 1 });
+            }
           }
         });
       }
     });
 
     return Array.from(genresMap.entries())
-      .map(([name, count]) => ({ name, count }))
+      .map(([slug, { name, count }]) => ({ slug, name, count }))
       .sort((a, b) => b.count - a.count);
   }, [books]);
 
-  const handleGenreClick = (genreName: string) => {
-    router.push(`/books?genres=${encodeURIComponent(genreName)}`);
+  const handleGenreClick = (genreSlug: string) => {
+    router.push(`/books?genres=${encodeURIComponent(genreSlug)}`);
   };
 
   if (genresWithCount.length === 0) return null;
@@ -51,8 +56,8 @@ export const GenresSection = ({ books }: GenresSectionProps) => {
       <div className="grid grid-cols-2 gap-2 mb-4">
         {genresWithCount.map((genre) => (
           <button
-            key={genre.name}
-            onClick={() => handleGenreClick(genre.name)}
+            key={genre.slug}
+            onClick={() => handleGenreClick(genre.slug)}
             className="group relative px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:border-red-500 dark:hover:border-red-500 transition-all duration-200 text-left"
           >
             <div className="flex items-center justify-between gap-2">

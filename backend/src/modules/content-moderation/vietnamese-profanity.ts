@@ -8,7 +8,7 @@ export const VIETNAMESE_TOXIC_WORDS = [
     // Genital references (with proper diacritics)
     'lồn', 'lon', 'l*n', 'l0n',
     'cặc', 'cac', 'cacl', 'cak', 'cakc',
-    'cu', 'cứt', 'cứ',
+    'cứt',
 
     // Common combinations
     'cl', 'c*l', 'clm', 'clmm', 'clmml',
@@ -184,10 +184,6 @@ export const VIETNAMESE_TOXIC_WORDS = [
     'đồ lừa lọc',
 ];
 
-/**
- * Normalize Vietnamese text for comparison
- * Removes accents and converts to lowercase
- */
 export function normalizeVietnamese(text: string): string {
     if (!text) return '';
 
@@ -215,7 +211,6 @@ function escapeRegex(str: string): string {
 
 /**
  * Check if text contains Vietnamese toxic words
- * Returns the matched word if found, null otherwise
  */
 export function containsVietnameseToxicWords(text: string): string | null {
     const normalized = normalizeVietnamese(text);
@@ -226,8 +221,8 @@ export function containsVietnameseToxicWords(text: string): string | null {
 
         // Check if the toxic word appears as a whole word or phrase
         const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
-        if (regex.test(normalized) || normalized.includes(normalizedWord)) {
-            return word; // Return the original toxic word that was matched
+        if (regex.test(normalized)) {
+            return word;
         }
     }
 
