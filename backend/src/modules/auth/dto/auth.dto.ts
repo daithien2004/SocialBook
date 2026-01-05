@@ -29,8 +29,12 @@ export class SignupLocalDto {
 
 export class SignupGoogleDto {
   @IsString()
-  @IsNotEmpty()
-  username: string;
+  @IsOptional()
+  username?: string;
+
+  @IsString()
+  @IsOptional()
+  name?: string;
 
   @IsEmail()
   email: string;

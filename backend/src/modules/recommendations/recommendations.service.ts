@@ -142,25 +142,40 @@ export class RecommendationsService {
     const userProfile = await this.buildUserProfile(userId);
     const availableBooks = await this.getAvailableBooks(userId);
 
+    const interactionCount = await this.getInteractionCount(userId);
+    const MIN_ACTIVITY_FOR_AI = 3;
+
     const totalRecommendationsToGenerate = 15;
-    const aiRecommendations = await this.generateAIRecommendations(
-      userProfile,
-      availableBooks,
-      totalRecommendationsToGenerate,
-    );
+    let recommendationsResponse: RecommendationResponse;
+
+    if (interactionCount < MIN_ACTIVITY_FOR_AI) {
+      this.logger.log(`Low activity for user ${userId} (${interactionCount}). Skipping AI for speed.`);
+      recommendationsResponse = await this.getFallbackRecommendations(
+        userProfile,
+        availableBooks,
+        totalRecommendationsToGenerate,
+      );
+    } else {
+      this.logger.log(`Sufficient activity for user ${userId} (${interactionCount}). Generating AI recommendations.`);
+      recommendationsResponse = await this.generateAIRecommendations(
+        userProfile,
+        availableBooks,
+        totalRecommendationsToGenerate,
+      );
+    }
 
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginatedRecommendations = aiRecommendations.recommendations.slice(
+    const paginatedRecommendations = recommendationsResponse.recommendations.slice(
       startIndex,
       endIndex,
     );
 
-    const totalItems = aiRecommendations.recommendations.length;
+    const totalItems = recommendationsResponse.recommendations.length;
     const totalPages = Math.ceil(totalItems / limit);
 
     return {
-      analysis: aiRecommendations.analysis,
+      analysis: recommendationsResponse.analysis,
       recommendations: paginatedRecommendations,
       currentPage: page,
       limit,
@@ -169,6 +184,18 @@ export class RecommendationsService {
       hasNextPage: page < totalPages,
       hasPrevPage: page > 1,
     };
+  }
+
+  private async getInteractionCount(userId: string): Promise<number> {
+    const userObjectId = new Types.ObjectId(userId);
+    
+    const [completedCount, reviewCount, likedCount] = await Promise.all([
+      this.readingListModel.countDocuments({ userId: userObjectId, status: 'COMPLETED' }),
+      this.reviewModel.countDocuments({ userId: userObjectId }),
+      this.bookModel.countDocuments({ likedBy: userObjectId }),
+    ]);
+
+    return completedCount + reviewCount + likedCount;
   }
 
   private async buildUserProfile(userId: string): Promise<UserProfile> {

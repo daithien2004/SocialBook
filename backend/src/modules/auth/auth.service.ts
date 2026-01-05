@@ -114,7 +114,7 @@ export class AuthService {
       }
 
       user = await this.usersService.create({
-        username: dto.username || dto.email.split('@')[0],
+        username: dto.username || dto.name || dto.email.split('@')[0],
         email: dto.email,
         provider: 'google',
         providerId: dto.googleId,
