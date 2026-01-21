@@ -291,7 +291,7 @@ export class SearchService {
 
         try {
             const vectorStore = this.chromaService.getVectorStore();
-            const rawResults = await vectorStore.similaritySearchWithScore(query, 50);
+            const rawResults = await vectorStore.similaritySearchWithScore(query, 30);
 
             const bookScores = new Map<string, number>();
 
