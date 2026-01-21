@@ -69,14 +69,21 @@ import { GamificationModule } from './modules/gamification/gamification.module';
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'single',
-        options: {
-          host: configService.get<string>('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-          password: configService.get<string>('REDIS_PASSWORD'),
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const host = configService.get<string>('REDIS_HOST', 'localhost');
+        const port = configService.get<number>('REDIS_PORT', 6379);
+        const password = configService.get<string>('REDIS_PASSWORD');
+
+        return {
+          type: 'single',
+          options: {
+            host,
+            port,
+            password,
+            tls: host !== 'localhost' ? { rejectUnauthorized: false } : undefined,
+          },
+        };
+      },
     }),
     ThrottlerModule.forRoot([
       {
