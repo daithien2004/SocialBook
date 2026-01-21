@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     const err = error as { response?: { data?: { message?: string }; status?: number } };
     return NextResponse.json(
-      { message: err.response?.data?.message || 'Mã OTP không được gửi',
+      { message: err.response?.data?.message || 'Mã OTP không được gửi' },
       { status: err.response?.status || 500 }
     );
   }
