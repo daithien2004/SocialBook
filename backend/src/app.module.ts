@@ -66,12 +66,17 @@ import { GamificationModule } from './modules/gamification/gamification.module';
         },
       }),
     }),
-    RedisModule.forRoot({
-      type: 'single',
-      options: {
-        host: 'localhost',
-        port: 6379,
-      },
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'single',
+        options: {
+          host: configService.get<string>('REDIS_HOST', 'localhost'),
+          port: configService.get<number>('REDIS_PORT', 6379),
+          password: configService.get<string>('REDIS_PASSWORD'),
+        },
+      }),
     }),
     ThrottlerModule.forRoot([
       {
