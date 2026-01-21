@@ -9,10 +9,11 @@ export async function POST(request: NextRequest) {
     const response = await serverApi.post(NESTJS_AUTH_ENDPOINTS.signup, body);
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string }; status?: number } };
     return NextResponse.json(
-      { message: error.response?.data?.message || 'Signup failed' },
-      { status: error.response?.status || 500 }
+      { message: err.response?.data?.message || 'Đăng ký thất bại' },
+      { status: err.response?.status || 500 }
     );
   }
 }

@@ -9,10 +9,11 @@ export async function POST(request: Request) {
     const response = await serverApi.post(NESTJS_AUTH_ENDPOINTS.resendOtp, body);
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string }; status?: number } };
     return NextResponse.json(
-      { message: error.response?.data?.message || 'Failed to resend OTP' },
-      { status: error.response?.status || 500 }
+      { message: err.response?.data?.message || 'Mã OTP không được gửi',
+      { status: err.response?.status || 500 }
     );
   }
 }

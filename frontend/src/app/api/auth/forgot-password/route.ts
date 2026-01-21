@@ -12,13 +12,14 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string }; status?: number } };
     return NextResponse.json(
       {
         message:
-          error.response?.data?.message || 'Forgot password request failed',
+          err.response?.data?.message || 'Yêu cầu khôi phục mật khẩu thất bại',
       },
-      { status: error.response?.status || 500 }
+      { status: err.response?.status || 500 }
     );
   }
 }

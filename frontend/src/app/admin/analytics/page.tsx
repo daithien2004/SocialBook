@@ -40,7 +40,7 @@ function ActiveUsersCard() {
     // Animate counter
     useEffect(() => {
         if (data?.count !== undefined) {
-            let start = count;
+            const start = count;
             const end = data.count;
             const duration = 1000;
             const stepTime = 50;

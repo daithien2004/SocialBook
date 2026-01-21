@@ -12,10 +12,11 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json(response.data);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string }; status?: number } };
     return NextResponse.json(
-      { message: error.response?.data?.message || 'Verification failed' },
-      { status: error.response?.status || 500 }
+      { message: err.response?.data?.message || 'Xác thực thất bại' },
+      { status: err.response?.status || 500 }
     );
   }
 }

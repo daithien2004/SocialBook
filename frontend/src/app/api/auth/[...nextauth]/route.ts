@@ -91,15 +91,13 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         try {
-          let authData: any;
-
           const response = await serverApi.post('/auth/google/login', {
             email: user.email,
             name: user.name,
             googleId: user.id,
             image: user.image,
           });
-          authData = response.data.data;
+          const authData = response.data.data;
           user.id = authData.user.id;
           user.accessToken = authData.accessToken;
           user.refreshToken = authData.refreshToken;
@@ -143,7 +141,7 @@ export const authOptions: NextAuthOptions = {
       // Handle session update
       if (trigger === "update" && session) {
         if (session.user?.onboardingCompleted !== undefined) {
-             token.onboardingCompleted = session.user.onboardingCompleted;
+          token.onboardingCompleted = session.user.onboardingCompleted;
         }
         return token;
       }

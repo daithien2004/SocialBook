@@ -12,7 +12,7 @@ export default function OnboardingPage() {
           SocialBook
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Let's set up your profile
+          Thiết lập hồ sơ của bạn
         </p>
       </div>
 
