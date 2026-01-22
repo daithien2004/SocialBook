@@ -37,8 +37,12 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // Cấu hình CORS
+  const origin = frontendUrl.includes(',')
+    ? frontendUrl.split(',').map((url) => url.trim())
+    : frontendUrl;
+
   app.enableCors({
-    origin: frontendUrl,
+    origin,
     credentials: true,
   });
 
