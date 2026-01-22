@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
 import debounce from 'lodash.debounce';
 
-const SOCKET_URL = 'http://localhost:5000/chat';
+const SOCKET_URL = (process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000') + '/chat';
 
 export default function Chat() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -72,9 +72,9 @@ export default function Chat() {
         prev.map((msg) =>
           msg.messageId === messageId
             ? {
-                ...msg,
-                deliveredTo: [...(msg.deliveredTo || []), deliveredTo],
-              }
+              ...msg,
+              deliveredTo: [...(msg.deliveredTo || []), deliveredTo],
+            }
             : msg
         )
       );
@@ -189,7 +189,7 @@ export default function Chat() {
               key={user}
               className={`cursor-pointer p-1 ${
                 recipient === user ? 'bg-blue-100' : ''
-              }`}
+                }`}
               onClick={() => {
                 if (!currentRoom) setRecipient(user);
               }}
@@ -231,8 +231,8 @@ export default function Chat() {
           {currentRoom
             ? `Room ${currentRoom}`
             : recipient
-            ? `User ${recipient}`
-            : 'Select a room or user'}
+              ? `User ${recipient}`
+              : 'Select a room or user'}
         </p>
         {typingUsers.length > 0 && (
           <p className="text-gray-500">
@@ -248,16 +248,16 @@ export default function Chat() {
             data-message-id={msg.messageId}
             ref={
               socket &&
-              socket.id &&
-              !msg.readBy.includes(socket.id) &&
-              msg.user !== socket.id
+                socket.id &&
+                !msg.readBy.includes(socket.id) &&
+                msg.user !== socket.id
                 ? (el) => {
-                    if (el) {
-                      messageRefs.current.set(msg.messageId, el);
-                    } else {
-                      messageRefs.current.delete(msg.messageId);
-                    }
+                  if (el) {
+                    messageRefs.current.set(msg.messageId, el);
+                  } else {
+                    messageRefs.current.delete(msg.messageId);
                   }
+                }
                 : null
             }
             className="flex items-center"

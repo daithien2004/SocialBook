@@ -18,10 +18,18 @@ export const SearchBar = ({
   const [input, setInput] = useState(initialValue);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const isComposing = useRef(false);
+  const lastSearchedValue = useRef(initialValue);
 
-  // Sync khi URL thay đổi từ bên ngoài
+  // Sync khi URL thay đổi từ bên ngoài (nhưng bỏ qua nếu do chính mình vừa search)
   useEffect(() => {
-    setInput(initialValue);
+    // So sánh đã trim() để tránh việc URL (thường bị trim) ghi đè mất dấu cách cuối câu người dùng đang gõ
+    const normalizedInitial = initialValue.trim();
+    const normalizedLast = lastSearchedValue.current.trim();
+
+    if (normalizedInitial !== normalizedLast) {
+      setInput(initialValue);
+      lastSearchedValue.current = initialValue;
+    }
   }, [initialValue]);
 
   // Cleanup debounce on unmount
@@ -48,6 +56,7 @@ export const SearchBar = ({
     debounceRef.current = setTimeout(() => {
       if (value.trim()) {
         onSearch(value);
+        lastSearchedValue.current = value;
       }
     }, debounceMs);
   }, [onSearch, debounceMs]);
@@ -69,6 +78,7 @@ export const SearchBar = ({
     debounceRef.current = setTimeout(() => {
       if (value.trim()) {
         onSearch(value);
+        lastSearchedValue.current = value;
       }
     }, debounceMs);
   };
@@ -80,6 +90,7 @@ export const SearchBar = ({
       clearTimeout(debounceRef.current);
     }
     onSearch(input);
+    lastSearchedValue.current = input;
   };
 
   const handleClear = () => {
@@ -88,6 +99,7 @@ export const SearchBar = ({
     }
     setInput('');
     onClear();
+    lastSearchedValue.current = '';
   };
 
   return (
