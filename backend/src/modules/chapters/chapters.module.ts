@@ -5,7 +5,6 @@ import { ChaptersService } from './chapters.service';
 import { ChaptersController } from './chapters.controller';
 import { BooksModule } from '../books/books.module';
 import { Book, BookSchema } from '../books/schemas/book.schema';
-import { SearchModule } from '../search/search.module';
 import { TextToSpeechModule } from '../text-to-speech/text-to-speech.module';
 import { FileImportService } from './file-import.service';
 
@@ -15,8 +14,8 @@ import { FileImportService } from './file-import.service';
       { name: Chapter.name, schema: ChapterSchema },
       { name: Book.name, schema: BookSchema },
     ]),
-    BooksModule,
-    SearchModule,
+    // Bọc forwardRef cho cả BooksModule nếu bên Books cũng gọi Chapters
+    forwardRef(() => BooksModule),
     forwardRef(() => TextToSpeechModule),
   ],
   controllers: [ChaptersController],

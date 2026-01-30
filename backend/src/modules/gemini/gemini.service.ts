@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ConfigService } from '@nestjs/config';
 import { ChaptersService } from '../chapters/chapters.service';
@@ -11,6 +11,7 @@ export class GeminiService {
 
   constructor(
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => ChaptersService))
     private readonly chaptersService: ChaptersService,
   ) {
     const apiKey = this.configService.getOrThrow('GOOGLE_API_KEY');

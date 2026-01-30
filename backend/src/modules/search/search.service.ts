@@ -8,6 +8,9 @@ import { Chapter } from '../chapters/schemas/chapter.schema';
 import { Review } from '../reviews/schemas/review.schema';
 import { Genre } from '../genres/schemas/genre.schema';
 import { SearchQueryDto } from './dto/search-query.dto';
+import { GeminiService } from '../gemini/gemini.service';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Redis } from 'ioredis';
 
 export interface BookStats {
     chapters: number;
@@ -66,7 +69,59 @@ export class SearchService {
         @InjectModel(Chapter.name) private chapterModel: Model<Chapter>,
         @InjectModel(Review.name) private reviewModel: Model<Review>,
         @InjectModel(Genre.name) private genreModel: Model<Genre>,
+        @InjectRedis() private readonly redis: Redis,
+        private readonly geminiService: GeminiService,
     ) { }
+
+    /**
+     * Analyze query using LLM with Redis caching
+     * Returns structured data: keywords, genre, tags, etc.
+     */
+    private async analyzeQueryWithAI(query: string): Promise<any> {
+        if (!query || query.length < 5) return null;
+
+        const CACHE_KEY = `search_analysis:${this.normalizeText(query)}`;
+        const cached = await this.redis.get(CACHE_KEY);
+
+        if (cached) {
+            this.logger.debug(`✅ Query Analysis Cache HIT: ${query}`);
+            return JSON.parse(cached);
+        }
+
+        this.logger.debug(`🤖 Query Analysis Cache MISS, calling Gemini: ${query}`);
+
+        const prompt = `
+            Analyze this book search query: "${query}"
+            Return ONLY a JSON object with this structure (no markdown):
+            {
+                "extractedKeywords": ["keyword1", "keyword2"],
+                "targetGenres": ["exact_genre_name_in_vietnamese"],
+                "targetTags": ["tag1", "tag2"],
+                "excludeTags": ["tag_to_exclude"],
+                "sentiment": "positive" | "negative",
+                "isQuestion": boolean
+            }
+            If the user is looking for specific elements (e.g. "không main nữ"), put "main nữ" in excludeTags.
+            If the query implies a genre (e.g. "tiên hiệp", "ngôn tình"), key it in targetGenres.
+        `;
+
+        try {
+            // Set 1.5s timeout for AI to ensure speed
+            const result = await Promise.race([
+                this.geminiService.generateJSON(prompt),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('AI Timeout')), 1500))
+            ]);
+
+            if (result) {
+                await this.redis.set(CACHE_KEY, JSON.stringify(result), 'EX', 86400); // Cache 24h
+                return result;
+            }
+        } catch (error) {
+            this.logger.warn(`⚠️ AI Analysis failed/timeout: ${error.message}`);
+        }
+        return null;
+    }
+
 
     /**
      * ============================================
@@ -89,10 +144,20 @@ export class SearchService {
             // ============================================
             // STEP 1: FUZZY + SEMANTIC + DESCRIPTION KEYWORD SEARCH
             // ============================================
+            // Perform AI Analysis (Parallel with other initializations if possible, but here we wait to use its output for filters)
+            // Ideally fire this first. For now, we call it here.
+            const aiAnalysis = await this.analyzeQueryWithAI(query);
+
+            // Refined Keywords from AI
+            let refinedQuery = query;
+            if (aiAnalysis && aiAnalysis.extractedKeywords && aiAnalysis.extractedKeywords.length > 0) {
+               
+            }
+
             const [fuzzyBookIds, semanticBookIds, descriptionBookIds] = await Promise.all([
                 this.fuzzySearchBookIds(query),
                 this.semanticSearchBookIds(query),
-                this.descriptionKeywordSearch(query),
+                this.descriptionKeywordSearch(query, aiAnalysis?.extractedKeywords), // Pass AI keywords
             ]);
 
             // Merge book IDs with scores
@@ -157,6 +222,28 @@ export class SearchService {
             if (tags) {
                 const tagsList = tags.split(',').map(t => t.trim());
                 filterQuery.tags = { $in: tagsList };
+            }
+
+            // --- AI AUGMENTED FILTERS ---
+            if (aiAnalysis) {
+                // 1. AI Genre Detection (Only apply if user didn't explicitly select genres)
+                if (!genres && aiAnalysis.targetGenres && aiAnalysis.targetGenres.length > 0) {
+                    const genreDocs = await this.genreModel.find({
+                        name: { $in: aiAnalysis.targetGenres.map(g => new RegExp(g, 'i')) }
+                    }).select('_id');
+                    const genreIds = genreDocs.map(doc => doc._id);
+                    if (genreIds.length > 0) {
+                        filterQuery.genres = { $in: genreIds };
+                    }
+                }
+
+                // 2. AI Exclude Tags
+                if (aiAnalysis.excludeTags && aiAnalysis.excludeTags.length > 0) {
+                    const excludeRegex = aiAnalysis.excludeTags.map(t => new RegExp(t, 'i'));
+                    // Assuming 'tags' field contains strings
+                    if (!filterQuery.tags) filterQuery.tags = {};
+                    filterQuery.tags['$nin'] = excludeRegex;
+                }
             }
 
             // STEP 3: Fetch books with full data
@@ -320,7 +407,7 @@ export class SearchService {
     }
 
     /** DESCRIPTION KEYWORD SEARCH - Search keywords in book descriptions */
-    private async descriptionKeywordSearch(query: string): Promise<Array<{ id: string; score: number }>> {
+    private async descriptionKeywordSearch(query: string, aiKeywords?: string[]): Promise<Array<{ id: string; score: number }>> {
         const results: Array<{ id: string; score: number }> = [];
 
         try {
@@ -338,10 +425,13 @@ export class SearchService {
                     return w.length >= 4;
                 });
 
-            if (words.length === 0) return results;
+            if (words.length === 0 && (!aiKeywords || aiKeywords.length === 0)) return results;
+
+            // Combine manual words and AI keywords
+            const searchTerms = [...new Set([...words, ...(aiKeywords || [])])];
 
             // Build regex pattern with word boundaries
-            const regexPattern = words.map(w => `\\b${w}\\b`).join('|');
+            const regexPattern = searchTerms.map(w => `\\b${w}\\b`).join('|');
             const regex = new RegExp(regexPattern, 'i');
 
             // Search in description field
@@ -359,7 +449,7 @@ export class SearchService {
                 const description = book.description?.toLowerCase() || '';
 
                 // Calculate score based on how many words match
-                const matchedWords = words.filter(word =>
+                const matchedWords = searchTerms.filter(word =>
                     description.includes(word.toLowerCase())
                 );
 
