@@ -1,8 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
+import { BaseSoftDeleteSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class Post {
+export class Post extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
@@ -15,6 +17,7 @@ export class Post {
   @Prop({ type: [String], default: [] })
   imageUrls: string[];
 
+  // Keep specific field name if different from Base
   @Prop({ type: Boolean, default: false })
   isDelete: boolean;
 
@@ -26,12 +29,6 @@ export class Post {
 
   @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
   moderationStatus?: string;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 }
 export type PostDocument = HydratedDocument<Post>;
 

@@ -77,7 +77,16 @@ export class ContentModerationService {
                 return { isSafe: true, isSpoiler: false, isToxic: false };
             }
 
-            const result = await response.json();
+            const result = await response.json() as {
+                moderation_classes?: {
+                    toxic?: number;
+                    sexual?: number;
+                    violent?: number;
+                    insulting?: number;
+                    discriminatory?: number;
+                    'self-harm'?: number;
+                }
+            };
 
             this.logger.debug(`RapidAPI Response: ${JSON.stringify(result)}`);
 
@@ -98,12 +107,12 @@ export class ContentModerationService {
                 let reason = '';
                 if (isToxic) {
                     const reasons: string[] = [];
-                    if (classes.toxic > threshold) reasons.push('độc hại');
-                    if (classes.sexual > threshold) reasons.push('tình dục');
-                    if (classes.violent > threshold) reasons.push('bạo lực');
-                    if (classes.insulting > threshold) reasons.push('xúc phạm');
-                    if (classes.discriminatory > threshold) reasons.push('phân biệt đối xử');
-                    if (classes['self-harm'] > threshold) reasons.push('tự gây hại');
+                    if ((classes.toxic || 0) > threshold) reasons.push('độc hại');
+                    if ((classes.sexual || 0) > threshold) reasons.push('tình dục');
+                    if ((classes.violent || 0) > threshold) reasons.push('bạo lực');
+                    if ((classes.insulting || 0) > threshold) reasons.push('xúc phạm');
+                    if ((classes.discriminatory || 0) > threshold) reasons.push('phân biệt đối xử');
+                    if ((classes['self-harm'] || 0) > threshold) reasons.push('tự gây hại');
                     reason = `Phát hiện nội dung ${reasons.join(', ')}`;
                 }
 

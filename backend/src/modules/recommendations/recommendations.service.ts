@@ -188,7 +188,7 @@ export class RecommendationsService {
 
   private async getInteractionCount(userId: string): Promise<number> {
     const userObjectId = new Types.ObjectId(userId);
-    
+
     const [completedCount, reviewCount, likedCount] = await Promise.all([
       this.readingListModel.countDocuments({ userId: userObjectId, status: 'COMPLETED' }),
       this.reviewModel.countDocuments({ userId: userObjectId }),
@@ -292,7 +292,7 @@ export class RecommendationsService {
         });
       }
     });
-    
+
     if (userOnboarding?.favoriteGenres) {
       userOnboarding.favoriteGenres.forEach((genre) => {
         if (genre && genre.name) {
@@ -519,34 +519,34 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
 
     const favoriteGenreNames = userProfile.favoriteGenres || [];
     if (favoriteGenreNames.length > 0) {
-       const genres = await this.genreModel.find({ name: { $in: favoriteGenreNames } }).lean();
-       const genreIds = genres.map(g => g._id);
+      const genres = await this.genreModel.find({ name: { $in: favoriteGenreNames } }).lean();
+      const genreIds = genres.map(g => g._id);
 
-       if (genreIds.length > 0) {
-         const matchedBooks = await this.bookModel.find({
-            genres: { $in: genreIds },
-            status: 'published',
-            isDeleted: false
-         })
-         .sort({ views: -1, likes: -1 })
-         .limit(limit)
-         .populate('genres authorId')
-         .lean<PopulatedBook[]>();
+      if (genreIds.length > 0) {
+        const matchedBooks = await this.bookModel.find({
+          genres: { $in: genreIds },
+          status: 'published',
+          isDeleted: false
+        })
+          .sort({ views: -1, likes: -1 })
+          .limit(limit)
+          .populate('genres authorId')
+          .lean<PopulatedBook[]>();
 
-         recommendations = matchedBooks.map((book) => ({
-            bookId: book._id.toString(),
-            title: book.title,
-            reason: `Phù hợp với sở thích: ${book.genres?.find(g => favoriteGenreNames.includes(g.name))?.name || 'Thể loại yêu thích'}`,
-            matchScore: 80,
-            slug: book.slug,
-            book: book,
-         }));
-       }
+        recommendations = matchedBooks.map((book) => ({
+          bookId: book._id.toString(),
+          title: book.title,
+          reason: `Phù hợp với sở thích: ${book.genres?.find(g => favoriteGenreNames.includes(g.name))?.name || 'Thể loại yêu thích'}`,
+          matchScore: 80,
+          slug: book.slug,
+          book: book,
+        }));
+      }
     }
 
     if (recommendations.length < limit) {
       const existingIds = new Set(recommendations.map(r => r.bookId));
-      
+
       const additional = availableBooks
         .filter(b => !existingIds.has(b._id.toString()))
         .sort((a, b) => (b.views || 0) + (b.likes || 0) - ((a.views || 0) + (a.likes || 0)))
@@ -559,8 +559,8 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
           slug: book.slug,
           book: book,
         }));
-        
-       recommendations = [...recommendations, ...additional];
+
+      recommendations = [...recommendations, ...additional];
     }
 
     return {

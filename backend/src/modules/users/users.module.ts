@@ -1,26 +1,27 @@
-import { Module} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './schemas/user.schema';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
-import { Post, PostSchema } from '@/src/modules/posts/schemas/post.schema';
-import { ReadingList, ReadingListSchema } from '@/src/modules/library/schemas/reading-list.schema';
-import { Follow, FollowSchema } from '@/src/modules/follows/schemas/follow.schema';
+import { UsersRepository } from './users.repository';
 import { CloudinaryModule } from '@/src/modules/cloudinary/cloudinary.module';
+import { PostsModule } from '../posts/posts.module';
+import { FollowsModule } from '../follows/follows.module';
+import { LibraryModule } from '../library/library.module';
 
 @Module({
   imports: [
     CloudinaryModule,
+    PostsModule,
+    FollowsModule,
+    LibraryModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
-      { name: Post.name, schema: PostSchema },
-      { name: ReadingList.name, schema: ReadingListSchema },
-      { name: Follow.name, schema: FollowSchema },
     ]),
 
   ],
   controllers: [UsersController],
-  providers: [UsersService],
-  exports: [UsersService],
+  providers: [UsersService, UsersRepository],
+  exports: [UsersService, UsersRepository],
 })
-export class UsersModule {}
+export class UsersModule { }

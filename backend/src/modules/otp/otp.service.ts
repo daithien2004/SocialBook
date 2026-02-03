@@ -14,7 +14,7 @@ export class OtpService {
   constructor(
     @InjectRedis() private readonly redis: Redis,
     private readonly mailerService: MailerService,
-  ) {}
+  ) { }
 
   async generateOTP(email: string): Promise<string> {
     const key = `${this.OTP_PREFIX}${email}`;

@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 export type RoleDocument = Role & Document;
 
 @Schema({ timestamps: true })
-export class Role {
-  _id: Types.ObjectId;
-
+export class Role extends BaseSchema {
   @Prop({ type: String, required: true, unique: true })
   name: string;
 }

@@ -2,10 +2,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import slugify from 'slugify';
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 export type GenreDocument = Genre & Document;
 
 @Schema({ timestamps: true })
-export class Genre {
+export class Genre extends BaseSchema {
   @Prop({ required: true, unique: true, index: true })
   name: string;
 

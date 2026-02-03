@@ -5,6 +5,7 @@ import { UserOnboarding } from './schemas/user-onboarding.schema';
 import { User } from '../users/schemas/user.schema';
 import { UserGamification } from '../gamification/schemas/user-gamification.schema';
 import { GamificationService } from '../gamification/gamification.service';
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 
 @Injectable()
 export class OnboardingService {
@@ -48,7 +49,7 @@ export class OnboardingService {
   async updateStep(userId: string, step: number, data: any) {
     const onboarding = await this.userOnboardingModel.findOne({ userId: new Types.ObjectId(userId) });
     if (!onboarding) {
-      throw new NotFoundException('Onboarding session not found. Please start onboarding first.');
+      throw new NotFoundException(ErrorMessages.ONBOARDING_NOT_FOUND);
     }
 
     if (onboarding.isCompleted) {
@@ -72,7 +73,7 @@ export class OnboardingService {
   async completeOnboarding(userId: string) {
     const onboarding = await this.userOnboardingModel.findOne({ userId: new Types.ObjectId(userId) });
     if (!onboarding) {
-      throw new NotFoundException('Onboarding session not found');
+      throw new NotFoundException(ErrorMessages.ONBOARDING_NOT_FOUND);
     }
 
     onboarding.isCompleted = true;

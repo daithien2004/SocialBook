@@ -14,8 +14,10 @@ export const NOTIFICATION_TYPES = [
   'follow',
 ] as const;
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class Notification {
+export class Notification extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
@@ -38,18 +40,12 @@ export class Notification {
   @Prop({ type: Date, default: null })
   sentAt: Date | null;
 
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
-
   @Prop({
     type: {
       actorId: { type: Types.ObjectId, ref: 'User' },
       username: { type: String },
-      image: { type: String || undefined},
-      targetId: { type: Types.ObjectId}
+      image: { type: String || undefined },
+      targetId: { type: Types.ObjectId }
     },
   })
   meta: {

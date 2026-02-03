@@ -58,9 +58,8 @@ export class ChaptersController {
   async create(
     @Param('bookSlug') bookSlug: string,
     @Body() dto: CreateChapterDto,
-    @Request() req: any,
   ) {
-    const data = await this.chaptersService.createChapter(bookSlug, dto, req.user);
+    const data = await this.chaptersService.createChapter(bookSlug, dto);
     return {
       message: 'Create chapter successfully',
       data,

@@ -1,27 +1,28 @@
-import { PostsService } from './posts.service';
-import { PostsController } from './posts.controller';
 import { Post, PostSchema } from '@/src/modules/posts/schemas/post.schema';
-import { MongooseModule } from '@nestjs/mongoose';
 import { Module } from '@nestjs/common';
-import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { MongooseModule } from '@nestjs/mongoose';
 import { BooksModule } from '../books/books.module';
-import { Book, BookSchema } from '../books/schemas/book.schema';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
+import { PostsController } from './posts.controller';
+import { PostsRepository } from './posts.repository';
+import { PostsService } from './posts.service';
 
 @Module({
   imports: [
     CloudinaryModule,
     ContentModerationModule,
+    BooksModule,
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
-      { name: Book.name, schema: BookSchema },
     ]),
   ],
   controllers: [PostsController],
-  providers: [PostsService],
+  providers: [PostsService, PostsRepository],
   exports: [
     MongooseModule,
     PostsService,
+    PostsRepository,
   ],
 })
 export class PostsModule { }

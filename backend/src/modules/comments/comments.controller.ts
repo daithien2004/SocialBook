@@ -6,9 +6,10 @@ import {
   HttpStatus, Param,
   Post,
   Query,
-  Request,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { CommentsService } from './comments.service';
 import { Types } from 'mongoose';
 
@@ -20,12 +21,12 @@ import { GetCommentsDto, ResolveParentQueryDto } from './dto/get-comment.dto';
 
 @Controller('comments')
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(private readonly commentsService: CommentsService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Request() req: any, @Body() dto: CreateCommentDto) {
+  async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateCommentDto) {
     const data = await this.commentsService.create(req.user.id, dto);
     return {
       message: 'Comment created successfully',
@@ -37,7 +38,7 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @Get('target')
   @HttpCode(HttpStatus.OK)
-  async getByTarget(@Request() req: any, @Query() query: GetCommentsDto) {
+  async getByTarget(@Req() req: Request & { user: { id: string } }, @Query() query: GetCommentsDto) {
     const { targetId, parentId, cursor, limit } = query;
 
     const result = await this.commentsService.findByTarget(
@@ -105,7 +106,7 @@ export class CommentsController {
   @Post(':id/edit')
   @HttpCode(HttpStatus.OK)
   async updateComment(
-    @Request() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Param('id') commentId: string,
     @Body() dto: UpdateCommentDto,
   ) {
@@ -125,7 +126,7 @@ export class CommentsController {
   @Post(':id/delete')
   @HttpCode(HttpStatus.OK)
   async deleteComment(
-    @Request() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Param('id') commentId: string,
   ) {
     await this.commentsService.deleteComment(req.user.id, commentId);

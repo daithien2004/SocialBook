@@ -12,6 +12,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { LibraryService } from './library.service';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import {
@@ -29,7 +30,7 @@ export class LibraryController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getLibrary(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Query('status') status: ReadingStatus = ReadingStatus.READING,
   ) {
     const data = await this.libraryService.getSystemLibrary(
@@ -44,7 +45,7 @@ export class LibraryController {
 
   @Post('status')
   @HttpCode(HttpStatus.OK)
-  async updateStatus(@Req() req: any, @Body() dto: UpdateLibraryStatusDto) {
+  async updateStatus(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateLibraryStatusDto) {
     const data = await this.libraryService.updateStatus(
       req.user.id,
       dto.bookId,
@@ -59,7 +60,7 @@ export class LibraryController {
   @Get('progress')
   @HttpCode(HttpStatus.OK)
   async getChapterProgress(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Query('bookId') bookId: string,
     @Query('chapterId') chapterId: string,
   ) {
@@ -76,7 +77,7 @@ export class LibraryController {
 
   @Patch('progress')
   @HttpCode(HttpStatus.OK)
-  async updateProgress(@Req() req: any, @Body() dto: UpdateProgressDto) {
+  async updateProgress(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateProgressDto) {
     const data = await this.libraryService.updateProgress(req.user.id, dto);
     return {
       message: 'Update reading progress successfully',
@@ -86,9 +87,9 @@ export class LibraryController {
 
   @Post('reading-time')
   @UseGuards(JwtAuthGuard)
-  async recordReadingTime(@Req() req, @Body() dto: UpdateReadingTimeDto) {
+  async recordReadingTime(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateReadingTimeDto) {
     const data = await this.libraryService.recordReadingTime(req.user.id, dto);
-     return {
+    return {
       message: 'Recorded reading time successfully',
       data,
     };
@@ -96,7 +97,7 @@ export class LibraryController {
 
   @Patch('collections')
   @HttpCode(HttpStatus.OK)
-  async updateCollections(@Req() req: any, @Body() dto: AddToCollectionsDto) {
+  async updateCollections(@Req() req: Request & { user: { id: string } }, @Body() dto: AddToCollectionsDto) {
     const data = await this.libraryService.updateBookCollections(
       req.user.id,
       dto,
@@ -109,7 +110,7 @@ export class LibraryController {
 
   @Delete(':bookId')
   @HttpCode(HttpStatus.OK)
-  async remove(@Req() req: any, @Param('bookId') bookId: string) {
+  async remove(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
     await this.libraryService.removeFromLibrary(req.user.id, bookId);
     return {
       message: 'Remove book from library successfully',
@@ -118,7 +119,7 @@ export class LibraryController {
 
   @Get('book/:bookId')
   @HttpCode(HttpStatus.OK)
-  async getBookLibraryInfo(@Req() req: any, @Param('bookId') bookId: string) {
+  async getBookLibraryInfo(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
     const data = await this.libraryService.getBookLibraryInfo(
       req.user.id,
       bookId,

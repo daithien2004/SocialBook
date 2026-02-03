@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
 
 // Schemas
 import { User, UserDocument } from '../users/schemas/user.schema';
@@ -176,14 +176,14 @@ export class StatisticsService {
       total,
       totalChapters,
       byGenre: byGenre.map((item) => ({
-        genres: item._id,
-        count: item.count,
+        genres: item._id as string,
+        count: item.count as number,
       })),
       popularBooks: popularBooks.map((book) => ({
         ...book, // Interceptor sẽ tự động map _id -> id
         views: book.views || 0,
         likes: book.likes || 0,
-      })) as any,
+      })) as unknown as BookStats['popularBooks'],
     };
   }
 
@@ -226,7 +226,7 @@ export class StatisticsService {
     }
 
     // Reusable aggregation stages with dynamic date formatting
-    const commonStages: any[] = [
+    const commonStages: PipelineStage[] = [
       { $match: { createdAt: { $gte: startDate } } },
       {
         $group: {
@@ -238,14 +238,14 @@ export class StatisticsService {
     ];
 
     const [userGrowth, bookGrowth, postGrowth] = await Promise.all([
-      this.userModel.aggregate(commonStages),
-      this.bookModel.aggregate(commonStages),
-      this.postModel.aggregate(commonStages),
+      this.userModel.aggregate<{ _id: string; count: number }>(commonStages),
+      this.bookModel.aggregate<{ _id: string; count: number }>(commonStages),
+      this.postModel.aggregate<{ _id: string; count: number }>(commonStages),
     ]);
 
     const dateMap = new Map<string, GrowthMetric>();
 
-    const mergeData = (data: any[], key: keyof GrowthMetric) => {
+    const mergeData = (data: { _id: string; count: number }[], key: keyof GrowthMetric) => {
       data.forEach((item) => {
         const existing = dateMap.get(item._id) || {
           date: item._id,
@@ -253,7 +253,9 @@ export class StatisticsService {
           books: 0,
           posts: 0,
         };
-        (existing as any)[key] = item.count;
+        if (key !== 'date') {
+          (existing as any)[key] = item.count;
+        }
         dateMap.set(item._id, existing);
       });
     };

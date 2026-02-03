@@ -10,8 +10,10 @@ export enum ReadingStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true, collection: 'reading_lists' })
-export class ReadingList {
+export class ReadingList extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 

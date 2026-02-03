@@ -1,53 +1,48 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 
-import { Post, PostDocument } from './schemas/post.schema';
-import { Book, BookDocument } from '../books/schemas/book.schema';
+import { BooksRepository } from '../books/books.repository';
+import { PostsRepository } from './posts.repository';
+import { PostDocument } from './schemas/post.schema';
 
+import { CacheService } from '@/src/shared/cache/cache.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ContentModerationService } from '../content-moderation/content-moderation.service';
 
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PostModal } from './modals/post.modal';
 
 @Injectable()
 export class PostsService {
   constructor(
-    @InjectModel(Post.name) private postModel: Model<PostDocument>,
-    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
+    private readonly postsRepository: PostsRepository,
+    private readonly booksRepository: BooksRepository,
     private cloudinaryService: CloudinaryService,
     private contentModerationService: ContentModerationService,
+    private readonly cacheService: CacheService,
   ) { }
 
   async findAll(page: number = 1, limit: number = 10) {
+    const cacheKey = `posts:feed:global:page:${page}:limit:${limit}`;
+    const cachedData = await this.cacheService.get<Record<string, unknown>>(cacheKey);
+    if (cachedData) return cachedData;
+
     const skip = (page - 1) * limit;
 
     const [posts, total] = await Promise.all([
-      this.postModel
-        .find({ isDelete: false, isFlagged: false })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('userId', 'username email image')
-        .populate({
-          path: 'bookId',
-          select: 'title coverUrl',
-          populate: {
-            path: 'authorId',
-            select: 'name bio',
-          },
-        })
-        .lean(),
-      this.postModel.countDocuments({ isDelete: false, isFlagged: false }),
+      this.postsRepository.findAllWithPopulate(skip, limit),
+      this.postsRepository.count({ isDelete: false, isFlagged: false }),
     ]);
 
-    return {
-      items: posts,
+    const result = {
+      items: PostModal.fromArray(posts),
       meta: {
         page,
         limit,
@@ -55,6 +50,9 @@ export class PostsService {
         totalPages: Math.ceil(total / limit),
       },
     };
+
+    await this.cacheService.set(cacheKey, result, 300);
+    return result;
   }
 
   async findAllByUser(
@@ -63,35 +61,21 @@ export class PostsService {
     limit: number = 10,
   ) {
     if (!Types.ObjectId.isValid(userId)) {
-      throw new BadRequestException('Invalid User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const skip = (page - 1) * limit;
     const userObjectId = new Types.ObjectId(userId);
 
-    const query = { isDelete: false, isFlagged: false, userId: userObjectId }; // luôn có userId
+    const query = { isDelete: false, isFlagged: false, userId: userObjectId };
 
     const [posts, total] = await Promise.all([
-      this.postModel
-        .find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('userId', 'name email image')
-        .populate({
-          path: 'bookId',
-          select: 'title coverUrl',
-          populate: {
-            path: 'authorId',
-            select: 'name bio',
-          },
-        })
-        .lean(),
-      this.postModel.countDocuments(query),
+      this.postsRepository.findAllWithPopulate(skip, limit, query),
+      this.postsRepository.count(query),
     ]);
 
     return {
-      items: posts,
+      items: PostModal.fromArray(posts),
       meta: {
         page,
         limit,
@@ -103,24 +87,19 @@ export class PostsService {
 
   async findOne(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Post ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const post = await this.postModel
-      .findOne({ _id: id, isDelete: false, isFlagged: false })
-      .populate('userId', 'username email image')
-      .populate({
-        path: 'bookId',
-        select: 'title coverUrl',
-        populate: {
-          path: 'authorId',
-          select: 'name bio',
-        },
-      })
-      .lean();
+    const cacheKey = `post:id:${id}`;
+    const cachedPost = await this.cacheService.get<PostModal>(cacheKey);
+    if (cachedPost) return cachedPost;
 
-    if (!post) throw new NotFoundException('Post not found');
+    const post = await this.postsRepository.findByIdWithPopulate(id);
 
-    return post;
+    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
+
+    const modal = new PostModal(post);
+    await this.cacheService.set(cacheKey, modal, 1800);
+    return modal;
   }
 
   async create(
@@ -129,15 +108,15 @@ export class PostsService {
     files?: Express.Multer.File[],
   ) {
     if (!Types.ObjectId.isValid(dto.bookId)) {
-      throw new BadRequestException('Invalid Book ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     // Check content moderation
     const moderationResult = await this.contentModerationService.checkContent(dto.content);
     console.log('🔍 Moderation result:', moderationResult);
 
-    const bookExists = await this.bookModel.exists({ _id: dto.bookId });
-    if (!bookExists) throw new NotFoundException('Book not found');
+    const bookExists = await this.booksRepository.existsById(dto.bookId);
+    if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
     let imageUrls: string[] = [];
     if (files && files.length > 0) {
@@ -145,7 +124,7 @@ export class PostsService {
     }
 
     // Prepare post data
-    const postData: any = {
+    const postData: Partial<PostDocument> = {
       userId: new Types.ObjectId(userId),
       bookId: new Types.ObjectId(dto.bookId),
       content: dto.content,
@@ -165,32 +144,32 @@ export class PostsService {
       postData.moderationStatus = 'pending';
     }
 
-    const newPost = await this.postModel.create(postData);
+    const result = await this.postsRepository.createPost(postData);
 
-    // Return populated result with moderation info
-    const result = await this.postModel
-      .findById(newPost._id)
-      .populate('userId', 'name email image')
-      .populate('bookId', 'title coverUrl')
-      .lean() as any;
+    if (!result) {
+      throw new InternalServerErrorException('Failed to create post');
+    }
 
-    // Add warning message if flagged
+    await this.cacheService.clear('posts:feed:global:*');
+
+    const modal = new PostModal(result);
+
     if (result.isFlagged) {
       return {
-        ...result,
+        ...modal,
         warning: `Bài viết phát hiện nội dung vi phạm cần quản trị viên phê duyệt: ${result.moderationReason}`,
       };
     }
 
-    return result;
+    return modal;
   }
 
   async update(id: string, dto: UpdatePostDto, files?: Express.Multer.File[]) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Post ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const post = await this.postModel.findOne({ _id: id, isDelete: false });
-    if (!post) throw new NotFoundException('Post not found');
+    const post = await this.postsRepository.findOneForUpdate(id);
+    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
 
     let newImageUrls: string[] = [];
     if (files && files.length > 0) {
@@ -218,9 +197,9 @@ export class PostsService {
 
     if (dto.bookId) {
       if (!Types.ObjectId.isValid(dto.bookId))
-        throw new BadRequestException('Invalid Book ID');
-      const bookExists = await this.bookModel.exists({ _id: dto.bookId });
-      if (!bookExists) throw new NotFoundException('New Book not found');
+        throw new BadRequestException(ErrorMessages.INVALID_ID);
+      const bookExists = await this.booksRepository.existsById(dto.bookId);
+      if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
       post.bookId = new Types.ObjectId(dto.bookId);
     }
 
@@ -229,52 +208,58 @@ export class PostsService {
     }
 
     post.updatedAt = new Date();
-    const updatedPost = await post.save();
+    const updatedPost = await this.postsRepository.updateWithPopulate(post);
 
-    return await this.postModel
-      .findById(updatedPost._id)
-      .populate('userId', 'name email image')
-      .populate('bookId', 'title coverUrl')
-      .lean();
+    await Promise.all([
+      this.cacheService.del(`post:id:${id}`),
+      this.cacheService.clear('posts:feed:global:*'),
+    ]);
+
+    return new PostModal(updatedPost!);
   }
 
   async remove(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Post ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const post = await this.postModel.findOneAndUpdate(
-      { _id: id, isDelete: false },
-      { isDelete: true, updatedAt: new Date() },
-      { new: true },
-    );
+    await this.postsRepository.softDelete(id);
 
-    if (!post) throw new NotFoundException('Post not found');
+    // Invalidate Cache
+    await Promise.all([
+      this.cacheService.del(`post:id:${id}`),
+      this.cacheService.clear('posts:feed:global:*'),
+    ]);
 
     return { success: true };
   }
 
   async removeHard(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Post ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const post = await this.postModel.findById(id);
+    const post = await this.postsRepository.findById(id);
     if (post && post.imageUrls && post.imageUrls.length > 0) {
       // Logic delete from cloud loop here if needed
     }
 
-    const result = await this.postModel.deleteOne({ _id: id });
-    if (result.deletedCount === 0)
-      throw new NotFoundException('Post not found');
+    await this.postsRepository.delete(id);
 
+    // Invalidate Cache
+    await Promise.all([
+      this.cacheService.del(`post:id:${id}`),
+      this.cacheService.clear('posts:feed:global:*'),
+    ]);
+
+    // Emulated result since delete returns void
     return { success: true };
   }
 
   async removeImage(postId: string, imageUrl: string) {
     if (!Types.ObjectId.isValid(postId))
-      throw new BadRequestException('Invalid Post ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const post = await this.postModel.findOne({ _id: postId, isDelete: false });
-    if (!post) throw new NotFoundException('Post not found');
+    const post = await this.postsRepository.findOneForUpdate(postId);
+    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
 
     post.imageUrls = post.imageUrls.filter((url) => url !== imageUrl);
     post.updatedAt = new Date();
@@ -295,19 +280,12 @@ export class PostsService {
     const skip = (page - 1) * limit;
 
     const [posts, total] = await Promise.all([
-      this.postModel
-        .find({ isFlagged: true, isDelete: false })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate('userId', 'username email image')
-        .populate('bookId', 'title coverUrl')
-        .lean(),
-      this.postModel.countDocuments({ isFlagged: true, isDelete: false }),
+      this.postsRepository.getFlaggedPosts(skip, limit),
+      this.postsRepository.count({ isFlagged: true, isDelete: false }),
     ]);
 
     return {
-      items: posts,
+      items: PostModal.fromArray(posts),
       meta: {
         page,
         limit,
@@ -319,10 +297,10 @@ export class PostsService {
 
   async approvePost(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Post ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const post = await this.postModel.findById(id);
-    if (!post) throw new NotFoundException('Post not found');
+    const post = await this.postsRepository.findOneForUpdate(id);
+    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
 
     if (!post.isFlagged) {
       throw new BadRequestException('Post is not flagged');
@@ -333,18 +311,30 @@ export class PostsService {
     post.updatedAt = new Date();
     await post.save();
 
+    // Invalidate Cache
+    await Promise.all([
+      this.cacheService.del(`post:id:${id}`),
+      this.cacheService.clear('posts:feed:global:*'),
+    ]);
+
     return { success: true, message: 'Post approved successfully' };
   }
 
   async rejectPost(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Post ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const post = await this.postModel.findById(id);
-    if (!post) throw new NotFoundException('Post not found');
+    const post = await this.postsRepository.findById(id);
+    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
 
     // Hard delete the rejected post
-    await this.postModel.deleteOne({ _id: id });
+    await this.postsRepository.delete(id);
+
+    // Invalidate Cache
+    await Promise.all([
+      this.cacheService.del(`post:id:${id}`),
+      this.cacheService.clear('posts:feed:global:*'),
+    ]);
 
     return { success: true, message: 'Post rejected and deleted' };
   }

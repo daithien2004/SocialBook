@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { ConfigService } from '@nestjs/config';
 import { ChaptersService } from '../chapters/chapters.service';
 
@@ -7,13 +7,13 @@ import { ChaptersService } from '../chapters/chapters.service';
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
   private genAI: GoogleGenerativeAI;
-  private model: any;
+  private model: GenerativeModel;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly chaptersService: ChaptersService,
   ) {
-    const apiKey = this.configService.getOrThrow('GOOGLE_API_KEY');
+    const apiKey = this.configService.getOrThrow('env.GOOGLE_API_KEY');
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',

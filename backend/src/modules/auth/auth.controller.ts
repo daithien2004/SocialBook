@@ -22,6 +22,7 @@ import { LocalAuthGuard } from '@/src/common/guards/local-auth.guard';
 import { JwtRefreshAuthGuard } from '@/src/common/guards/jwt-refresh-auth.guard';
 import { Public } from '@/src/common/decorators/customize';
 import { LoginDto } from './dto/auth.dto';
+import { User } from '@/src/modules/users/schemas/user.schema';
 
 @Controller('auth')
 export class AuthController {
@@ -45,7 +46,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Request() req: any, @Body() dto: LoginDto) {
+  async login(@Req() req: { user: User }, @Body() dto: LoginDto) {
     const result = await this.authService.login(req.user);
 
     return {
@@ -59,7 +60,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  getProfile(@Request() req: any) {
+  getProfile(@Req() req: { user: User }) {
     return req.user;
   }
 

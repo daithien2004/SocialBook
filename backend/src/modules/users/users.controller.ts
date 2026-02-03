@@ -14,6 +14,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserOverviewDto } from './dto/user.dto';
 import { UpdateReadingPreferencesDto } from './dto/update-reading-preferences.dto';
@@ -114,7 +115,7 @@ export class UsersController {
   @Patch('me/overview')
   @HttpCode(HttpStatus.OK)
   async updateMyProfileOverview(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Body() dto: UpdateUserOverviewDto,
   ) {
     const data = await this.usersService.updateUserProfileOverview(
@@ -131,7 +132,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file')) // field name = "file"
   async updateMyAvatar(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @UploadedFile() file: Express.Multer.File,
   ) {
     const result = await this.usersService.updateUserImage(req.user.id, file);
@@ -141,7 +142,7 @@ export class UsersController {
   // Cá nhân hóa trải nghiệm đọc
   @Get('me/reading-preferences')
   @HttpCode(HttpStatus.OK)
-  async getMyReadingPreferences(@Req() req: any) {
+  async getMyReadingPreferences(@Req() req: Request & { user: { id: string } }) {
     const data = await this.usersService.getReadingPreferences(req.user.id);
     return {
       message: 'Get reading preferences successfully',
@@ -152,7 +153,7 @@ export class UsersController {
   @Put('me/reading-preferences')
   @HttpCode(HttpStatus.OK)
   async updateMyReadingPreferences(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Body() dto: UpdateReadingPreferencesDto,
   ) {
     const data = await this.usersService.updateReadingPreferences(

@@ -3,30 +3,27 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 
 // Schemas
-import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
-import {
-  Follow,
-  FollowDocument,
-} from '@/src/modules/follows/schemas/follow.schema';
-import { UsersService } from '@/src/modules/users/users.service';
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
+import { UsersService } from '@/src/modules/users/users.service';
+import { UsersRepository } from '../users/users.repository';
+import { FollowsRepository } from './follows.repository';
 
 @Injectable()
 export class FollowsService {
   constructor(
-    @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private userService: UsersService,
+    private readonly followsRepository: FollowsRepository,
+    private readonly userService: UsersService,
+    private readonly usersRepository: UsersRepository,
     private readonly notifications: NotificationsService
-  ) {}
+  ) { }
 
   async getStatus(currentUserId: string, targetUserId: string) {
     if (!Types.ObjectId.isValid(targetUserId)) {
-      throw new BadRequestException('Invalid Target User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     if (currentUserId === targetUserId) {
@@ -35,11 +32,7 @@ export class FollowsService {
 
     await this.ensureUserExists(targetUserId);
 
-    const follow = await this.followModel.exists({
-      userId: new Types.ObjectId(currentUserId),
-      targetId: new Types.ObjectId(targetUserId),
-      status: true
-    });
+    const follow = await this.followsRepository.existsFollowing(currentUserId, targetUserId);
 
     return {
       isOwner: false,
@@ -49,24 +42,16 @@ export class FollowsService {
 
   async getFollowingList(userId: string) {
     if (!userId || !Types.ObjectId.isValid(userId)) {
-      throw new BadRequestException('User ID is required');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
-    const follows = await this.followModel
-      .find({
-        userId: new Types.ObjectId(userId),
-        status: true,})
-      .select('targetId')
-      .lean();
+    const follows = await this.followsRepository.findFollowingIds(userId);
 
     if (!follows.length) return [];
 
     const targetIds = follows.map((f) => f.targetId);
 
-    const users = await this.userModel
-      .find({ _id: { $in: targetIds } })
-      .select('username image bio') // các field cơ bản
-      .lean();
+    const users = await this.usersRepository.findByIds(targetIds, 'username image bio');
 
     const usersWithStats = await Promise.all(
       users.map(async (user) => {
@@ -90,36 +75,24 @@ export class FollowsService {
 
   async getFollowingStatsList(targetUserId: string, currentUserId: string) {
     if (!targetUserId || !Types.ObjectId.isValid(targetUserId)) {
-      throw new BadRequestException('User ID is required');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     // Lấy tất cả follow mà userId là targetUser (những người mà targetUser đang follow)
-    const follows = await this.followModel
-      .find({ userId: new Types.ObjectId(targetUserId), status: true })
-      .select('targetId')
-      .lean();
+    const follows = await this.followsRepository.findFollowingIds(targetUserId);
 
     if (!follows.length) return [];
 
     const targetIds = follows.map((f) => f.targetId as Types.ObjectId);
 
     // Lấy thông tin user của những người được follow
-    const users = await this.userModel
-      .find({ _id: { $in: targetIds } })
-      .select('username image bio')
-      .lean();
+    const users = await this.usersRepository.findByIds(targetIds, 'username image bio');
 
     // Set chứa những user mà currentUser đang follow trong nhóm này
     let currentUserFollowingSet = new Set<string>();
 
     if (currentUserId && Types.ObjectId.isValid(currentUserId)) {
-      const currentUserFollows = await this.followModel
-        .find({
-          userId: new Types.ObjectId(currentUserId),
-          targetId: { $in: targetIds },
-        })
-        .select('targetId')
-        .lean();
+      const currentUserFollows = await this.followsRepository.findFollowedTargetsByUser(currentUserId, targetIds);
 
       currentUserFollowingSet = new Set(
         currentUserFollows.map((f) => f.targetId.toString()),
@@ -154,10 +127,10 @@ export class FollowsService {
 
   async toggle(currentUserId: string, targetUserId: string) {
     if (!Types.ObjectId.isValid(targetUserId)) {
-      throw new BadRequestException('Invalid Target User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
     if (currentUserId === targetUserId) {
-      throw new BadRequestException('Cannot follow yourself');
+      throw new BadRequestException(ErrorMessages.CANNOT_FOLLOW_SELF);
     }
 
     await this.ensureUserExists(targetUserId);
@@ -165,34 +138,25 @@ export class FollowsService {
     const userObjectId = new Types.ObjectId(currentUserId);
     const targetObjectId = new Types.ObjectId(targetUserId);
 
-    const existing = await this.followModel.findOne({
-      userId: userObjectId,
-      targetId: targetObjectId,
-    });
+    const existing = await this.followsRepository.findByUserAndTarget(userObjectId, targetObjectId);
 
     if (existing) {
       const nextStatus = !existing.status;
 
-      await this.followModel.updateOne(
-        { _id: existing._id },
-        { $set: { status: nextStatus, updatedAt: new Date() } },
-      );
+      await this.followsRepository.updateStatus(existing._id, nextStatus);
 
       if (!nextStatus) {
         return { isFollowing: false };
       }
     } else {
-      await this.followModel.create({
+      await this.followsRepository.create({
         userId: userObjectId,
         targetId: targetObjectId,
         status: true,
       });
     }
 
-    const actor = await this.userModel
-      .findById(currentUserId)
-      .select('_id username image')
-      .lean();
+    const actor = await this.usersRepository.findById(currentUserId, '_id username image');
 
     if (!actor) {
       return { isFollowing: true };
@@ -217,42 +181,30 @@ export class FollowsService {
 
 
   private async ensureUserExists(userId: string) {
-    const exists = await this.userModel.exists({ _id: userId });
+    const exists = await this.usersRepository.existsById(userId);
     if (!exists) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
     }
   }
 
   async getFollowersList(targetUserId: string, currentUserId: string) {
     if (!targetUserId || !Types.ObjectId.isValid(targetUserId)) {
-      throw new BadRequestException('Target user ID is required');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     // Lấy tất cả follow mà target là userTarget
-    const follows = await this.followModel
-      .find({ targetId: new Types.ObjectId(targetUserId), status: true })
-      .select('userId')
-      .lean();
+    const follows = await this.followsRepository.findFollowerIds(targetUserId);
 
     if (!follows.length) return [];
 
     const followerIds = follows.map((f) => f.userId as Types.ObjectId);
 
-    const users = await this.userModel
-      .find({ _id: { $in: followerIds } })
-      .select('username image bio')
-      .lean();
+    const users = await this.usersRepository.findByIds(followerIds, 'username image bio');
 
     let currentUserFollowingSet = new Set<string>();
 
     if (currentUserId && Types.ObjectId.isValid(currentUserId)) {
-      const currentUserFollows = await this.followModel
-        .find({
-          userId: new Types.ObjectId(currentUserId),
-          targetId: { $in: followerIds },
-        })
-        .select('targetId')
-        .lean();
+      const currentUserFollows = await this.followsRepository.findFollowedTargetsByUser(currentUserId, followerIds);
 
       currentUserFollowingSet = new Set(
         currentUserFollows.map((f) => f.targetId.toString()),

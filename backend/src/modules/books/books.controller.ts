@@ -99,8 +99,8 @@ export class BooksController {
   @Public()
   @Get(':slug')
   @HttpCode(HttpStatus.OK)
-  async getBookBySlug(@Request() req: any, @Param('slug') slug: string) {
-    const userId = req.user?.id || null;
+  async getBookBySlug(@Request() req: Request & { user?: { id: string } }, @Param('slug') slug: string) {
+    const userId = req.user?.id || undefined;
     const data = await this.booksService.findBySlug(slug, userId);
 
     return {
@@ -133,7 +133,7 @@ export class BooksController {
     return {
       message: 'Admin: Get all books successfully',
       books: result.data,
-      pagination: result.metaData,
+      pagination: result.meta,
     };
   }
 
@@ -196,7 +196,7 @@ export class BooksController {
   @Patch(':slug/like')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async toggleLike(@Param('slug') slug: string, @Request() req: any) {
+  async toggleLike(@Param('slug') slug: string, @Request() req: Request & { user: { id: string } }) {
     const result = await this.booksService.toggleLike(slug, req.user.id);
     return {
       message: result.isLiked ? 'Liked book' : 'Unliked book',

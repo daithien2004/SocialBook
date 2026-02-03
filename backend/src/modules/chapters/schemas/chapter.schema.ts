@@ -3,26 +3,23 @@ import { Document, Types } from 'mongoose';
 
 export type ChapterDocument = Chapter & Document;
 
-// Interface cho Paragraph với _id
 export interface ParagraphDocument {
   _id: Types.ObjectId;
   content: string;
 }
 
-@Schema({ _id: true }) // Bật tự động tạo _id
+@Schema({ _id: true })
 class Paragraph {
-  // Không cần khai báo _id ở đây, MongoDB tự thêm
-
   @Prop({ required: true })
   content: string;
 }
 
 const ParagraphSchema = SchemaFactory.createForClass(Paragraph);
 
-@Schema({ timestamps: true })
-export class Chapter {
-  _id: Types.ObjectId;
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
 
+@Schema({ timestamps: true })
+export class Chapter extends BaseSchema {
   @Prop({ type: Types.ObjectId, required: true, ref: 'Book' })
   bookId: Types.ObjectId;
 
@@ -45,9 +42,6 @@ export class Chapter {
 
   @Prop({ required: true })
   orderIndex: number;
-
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 export const ChapterSchema = SchemaFactory.createForClass(Chapter);

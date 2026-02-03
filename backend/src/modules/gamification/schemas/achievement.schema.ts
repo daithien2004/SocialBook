@@ -3,8 +3,10 @@ import { HydratedDocument } from 'mongoose';
 
 export type AchievementDocument = HydratedDocument<Achievement>;
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class Achievement {
+export class Achievement extends BaseSchema {
   @Prop({ required: true, unique: true, trim: true })
   code: string;
 

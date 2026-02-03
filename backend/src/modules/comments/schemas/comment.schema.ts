@@ -2,8 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { TARGET_TYPES } from '@/src/modules/comments/constants/targetType.constant';
 
+import { BaseSoftDeleteSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class Comment {
+export class Comment extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
@@ -24,12 +26,6 @@ export class Comment {
 
   @Prop({ type: Number, default: 0 })
   likesCount: number;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 
   @Prop({ type: Boolean, default: false })
   isFlagged: boolean;

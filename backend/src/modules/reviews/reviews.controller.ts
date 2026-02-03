@@ -11,6 +11,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -20,12 +21,12 @@ import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
 @Controller('reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(private readonly reviewsService: ReviewsService) { }
 
   @Public()
   @Get('book/:bookId')
   @HttpCode(HttpStatus.OK)
-  async findAllByBook(@Req() req: any, @Param('bookId') bookId: string) {
+  async findAllByBook(@Req() req: Request & { user?: { id: string } }, @Param('bookId') bookId: string) {
     const userId = req.user?.id;
     const data = await this.reviewsService.findAllByBook(bookId, userId);
     return {
@@ -37,7 +38,7 @@ export class ReviewsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Req() req: any, @Body() dto: CreateReviewDto) {
+  async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateReviewDto) {
     const data = await this.reviewsService.create(req.user.id, dto);
     return {
       message: 'Review created successfully',
@@ -49,7 +50,7 @@ export class ReviewsController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async update(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
     @Body() dto: UpdateReviewDto,
   ) {
@@ -63,7 +64,7 @@ export class ReviewsController {
   @Patch(':id/like')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async toggleLike(@Req() req: any, @Param('id') id: string) {
+  async toggleLike(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
     const data = await this.reviewsService.toggleLike(id, req.user.id);
     return {
       message: 'Toggle like review successfully',
@@ -74,7 +75,7 @@ export class ReviewsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async remove(@Req() req: any, @Param('id') id: string) {
+  async remove(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
     await this.reviewsService.remove(id, req.user.id);
     return {
       message: 'Review deleted successfully',

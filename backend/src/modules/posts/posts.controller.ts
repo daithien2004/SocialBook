@@ -17,6 +17,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { PostsService } from './posts.service';
@@ -29,7 +30,7 @@ import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(private readonly postsService: PostsService) { }
 
   @Public()
   @Get()
@@ -38,7 +39,7 @@ export class PostsController {
     const limit = query.limit > 100 ? 100 : query.limit;
     const result = await this.postsService.findAll(query.page, limit);
     return {
-      data: {...result},
+      data: { ...result },
       message: 'Get posts successfully',
     };
   }
@@ -46,7 +47,7 @@ export class PostsController {
   @Public()
   @Get('user')
   @HttpCode(HttpStatus.OK)
-  async findAllByUser(@Req() req: any, @Query() query: PaginationUserDto) {
+  async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
     const result = await this.postsService.findAllByUser(query.userId, query.page, limit);
     return {
@@ -71,7 +72,7 @@ export class PostsController {
   @UseInterceptors(FilesInterceptor('images', 10))
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Body() dto: CreatePostDto,
     @UploadedFiles(
       new ParseFilePipe({

@@ -3,8 +3,10 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type DailyGoalDocument = HydratedDocument<DailyGoal>;
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class DailyGoal {
+export class DailyGoal extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 

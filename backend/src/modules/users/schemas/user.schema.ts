@@ -2,8 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { HydratedDocument } from 'mongoose';
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class User {
+export class User extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'Role', required: true })
   roleId: Types.ObjectId;
 
@@ -91,11 +93,6 @@ export class User {
     textAlign: string;
     marginWidth: number;
   };
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 }
 
 export type UserDocument = HydratedDocument<User>;

@@ -3,44 +3,38 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import * as bcrypt from 'bcrypt';
 import aqp from 'api-query-params';
+import * as bcrypt from 'bcrypt';
+import { Types } from 'mongoose';
 
+import { FollowsRepository } from '@/src/modules/follows/follows.repository';
+import { ReadingListRepository } from '@/src/modules/library/reading-list.repository';
+import { PostsRepository } from '@/src/modules/posts/posts.repository';
 import { User, UserDocument } from './schemas/user.schema';
-import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
-import {
-  ReadingList,
-  ReadingListDocument,
-} from '@/src/modules/library/schemas/reading-list.schema';
-import {
-  Follow,
-  FollowDocument,
-} from '@/src/modules/follows/schemas/follow.schema';
+import { UsersRepository } from './users.repository';
 
-import { CreateUserDto, UpdateRefreshTokenDto, UpdateUserOverviewDto } from './dto/user.dto';
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { CloudinaryService } from '@/src/modules/cloudinary/cloudinary.service';
+import { UpdateReadingPreferencesDto } from './dto/update-reading-preferences.dto';
+import { CreateUserDto, UpdateRefreshTokenDto, UpdateUserOverviewDto } from './dto/user.dto';
+import { UserModal } from './modals/user.modal';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Follow.name) private followModel: Model<FollowDocument>,
-    @InjectModel(Post.name) private postModel: Model<PostDocument>,
-    @InjectModel(ReadingList.name)
-    private readingListModel: Model<ReadingListDocument>,
+    private readonly usersRepository: UsersRepository,
+    private readonly followsRepository: FollowsRepository,
+    private readonly postsRepository: PostsRepository,
+    private readonly readingListRepository: ReadingListRepository,
     private cloudinaryService: CloudinaryService,
   ) { }
 
   async isEmailExist(email: string) {
-    const user = await this.userModel.exists({ email });
-    return !!user;
+    return this.usersRepository.existsByEmail(email);
   }
 
   async isUserExist(userId: string) {
-    const user = await this.userModel.exists({ _id: userId });
-    return !!user;
+    return this.usersRepository.existsById(userId);
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -49,10 +43,10 @@ export class UsersService {
 
     const isExist = await this.isEmailExist(email);
     if (isExist) {
-      throw new BadRequestException(`Email ${email} đã tồn tại.`);
+      throw new BadRequestException(ErrorMessages.EMAIL_EXISTS);
     }
 
-    const userData: any = {
+    const userData: Partial<User> = {
       username,
       email,
       provider,
@@ -67,12 +61,12 @@ export class UsersService {
       userData.password = hashPassword;
     }
 
-    const newUser = await this.userModel.create(userData);
-    return newUser;
+    const newUser = await this.usersRepository.create(userData as Partial<UserDocument>);
+    return new UserModal(newUser);
   }
 
-  async findAll(query: any, current: number, pageSize: number) {
-    const { filter, sort } = aqp(query);
+  async findAll(query: Record<string, unknown>, current: number, pageSize: number) {
+    const { filter, sort } = aqp(query as any);
 
     delete filter.current;
     delete filter.pageSize;
@@ -82,16 +76,14 @@ export class UsersService {
     const skip = (page - 1) * limit;
 
     const [items, totalItems] = await Promise.all([
-      this.userModel
-        .find(filter)
-        .sort((sort as any) || { createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .select('-password -hashedRt')
-        .lean(),
-      Object.keys(filter).length === 0
-        ? this.userModel.estimatedDocumentCount()
-        : this.userModel.countDocuments(filter),
+      this.usersRepository.findAllWithSelect(
+        filter,
+        (sort as any) || { createdAt: -1 },
+        skip,
+        limit,
+        '-password -hashedRt'
+      ),
+      this.usersRepository.count(filter),
     ]);
 
     return {
@@ -106,26 +98,30 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    return this.userModel.findOne({ email });
+    return this.usersRepository.findOne({ email });
   }
 
   async findById(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    return this.userModel
-      .findById(id)
-      .populate('roleId')
-      .select('-password')
-      .lean()
+    const user = await this.usersRepository.findByIdWithRole(id);
+    return user ? new UserModal(user) : null;
   }
 
   async updateRefreshToken(userId: string, updateDto: UpdateRefreshTokenDto) {
-    return this.userModel.findByIdAndUpdate(userId, updateDto, { new: true });
+    return this.usersRepository.update(userId, updateDto);
+  }
+
+  async findForRefreshToken(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
+    }
+    return this.usersRepository.findForRefreshToken(userId);
   }
 
   async checkRefreshTokenInDB(userId: string, rt: string) {
-    const user = await this.userModel.findById(userId).select('+hashedRt'); // Explicit select
+    const user = await this.usersRepository.findForRefreshToken(userId); // Explicit select
     if (!user || !user.hashedRt) return false;
 
     const isMatch = await bcrypt.compare(rt, user.hashedRt);
@@ -134,33 +130,30 @@ export class UsersService {
 
   async toggleBan(userId: string) {
     if (!Types.ObjectId.isValid(userId))
-      throw new BadRequestException('Invalid User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const user = await this.userModel.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
 
     user.isBanned = !user.isBanned;
     await user.save();
 
-    return user;
+    return new UserModal(user);
   }
 
   async getUserProfileOverview(userId: string) {
     if (!Types.ObjectId.isValid(userId))
-      throw new BadRequestException('Invalid User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     const objectId = new Types.ObjectId(userId);
 
-    const user = await this.userModel
-      .findById(objectId)
-      .select('username image createdAt bio location website')
-      .lean();
+    const user = await this.usersRepository.findProfile(objectId);
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
 
     const [postCount, readingListCount, followersCount] = await Promise.all([
-      this.postModel.countDocuments({ userId: objectId, isDelete: false }),
-      this.readingListModel.countDocuments({ userId: objectId }),
-      this.followModel.countDocuments({ targetId: objectId, status: true }),
+      this.postsRepository.countByUser(objectId),
+      this.readingListRepository.countByUser(objectId),
+      this.followsRepository.countFollowers(objectId),
     ]);
 
     return {
@@ -176,20 +169,17 @@ export class UsersService {
     dto: UpdateUserOverviewDto,
   ) {
     if (!Types.ObjectId.isValid(userId))
-      throw new BadRequestException('Invalid User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
     const objectId = new Types.ObjectId(userId);
 
-    const user = await this.userModel.findById(objectId);
-    if (!user) throw new NotFoundException('User not found');
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
 
     if (dto.username !== undefined && dto.username !== user.username) {
-      const existed = await this.userModel.exists({
-        username: dto.username,
-        _id: { $ne: objectId },
-      });
+      const existed = await this.usersRepository.existsByUsername(dto.username, objectId);
       if (existed) {
-        throw new BadRequestException('Username is already taken');
+        throw new BadRequestException(ErrorMessages.USERNAME_TAKEN);
       }
       user.username = dto.username;
     }
@@ -217,17 +207,17 @@ export class UsersService {
       throw new BadRequestException('Invalid User ID');
     }
     if (!file || !file.buffer) {
-      throw new BadRequestException('Image file is required');
+      throw new BadRequestException(ErrorMessages.IMAGE_REQUIRED);
     }
     if (!file.mimetype?.startsWith('image/')) {
-      throw new BadRequestException('File must be an image');
+      throw new BadRequestException(ErrorMessages.FILE_NOT_IMAGE);
     }
-    if (file.size > 5 * 1024 * 1024) throw new BadRequestException('Image is too large (max 5MB)');
+    if (file.size > 5 * 1024 * 1024) throw new BadRequestException(ErrorMessages.IMAGE_TOO_LARGE);
 
     const objectId = new Types.ObjectId(userId);
 
-    const user = await this.userModel.findById(objectId);
-    if (!user) throw new NotFoundException('User not found');
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
 
     const secureUrl = await this.cloudinaryService.uploadImage(file);
 
@@ -245,12 +235,9 @@ export class UsersService {
       throw new BadRequestException('Invalid User ID');
     }
 
-    const user = await this.userModel
-      .findById(userId)
-      .select('readingPreferences')
-      .lean();
+    const user = await this.usersRepository.findReadingPreferences(userId);
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
 
     // Return default preferences if not set
     return (
@@ -268,19 +255,19 @@ export class UsersService {
     );
   }
 
-  async updateReadingPreferences(userId: string, preferences: any) {
+  async updateReadingPreferences(userId: string, preferences: UpdateReadingPreferencesDto) {
     if (!Types.ObjectId.isValid(userId)) {
       throw new BadRequestException('Invalid User ID');
     }
 
-    const user = await this.userModel.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw new NotFoundException(ErrorMessages.USER_NOT_FOUND);
 
     // Merge with existing preferences
     user.readingPreferences = {
       ...user.readingPreferences,
       ...preferences,
-    } as any;
+    } as any; // Cast in implementation is sometimes unavoidable with Mongoose complex types
 
     await user.save();
 
@@ -293,7 +280,7 @@ export class UsersService {
     pageSize = 10,
   ) {
     if (!keyword || !keyword.trim()) {
-      throw new BadRequestException('Search keyword is required');
+      throw new BadRequestException(ErrorMessages.SEARCH_REQUIRED);
     }
 
     const page = Number(current) || 1;
@@ -309,15 +296,8 @@ export class UsersService {
     };
 
     const [items, totalItems] = await Promise.all([
-      this.userModel
-        .find(filter)
-        .select('username image createdAt bio') // chỉ lấy dữ liệu cần
-        .sort({ username: 1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-
-      this.userModel.countDocuments(filter),
+      this.usersRepository.getSearchUsers(filter, skip, limit),
+      this.usersRepository.count(filter),
     ]);
 
     return {
