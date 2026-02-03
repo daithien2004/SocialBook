@@ -1,11 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  BookOrderField,
-  useGetBooksQuery,
-} from '@/src/features/books/api/bookApi';
-import { Book } from '@/src/features/books/types/book.interface';
+import { useGetBooksQuery } from '@/src/features/books/api/bookApi';
+import { Book, BookOrderField } from '@/src/features/books/types/book.interface';
 import { ChevronDown, Search, X, Loader2 } from 'lucide-react';
 
 interface BookSelectorProps {
@@ -37,11 +34,11 @@ export default function BookSelector({
   });
 
   const books = data?.data || [];
-  const metaData = data?.metaData;
+  const meta = data?.meta;
 
   // Cập nhật danh sách sách khi có data mới
   useEffect(() => {
-    if (books.length > 0 && metaData) {
+    if (books.length > 0 && meta) {
       setAllBooks((prev) => {
         if (page === 1) {
           return books;
@@ -53,9 +50,9 @@ export default function BookSelector({
         return [...prev, ...uniqueBooks];
       });
 
-      setHasMore(metaData.page < metaData.totalPages);
+      setHasMore(meta.current < meta.totalPages);
     }
-  }, [books, page, metaData]);
+  }, [books, page, meta]);
 
   // Reset khi mở dropdown
   useEffect(() => {
@@ -140,11 +137,10 @@ export default function BookSelector({
         onClick={handleOpen}
         role="button"
         tabIndex={disabled ? -1 : 0}
-        className={`w-full rounded-2xl px-3.5 py-2.5 text-sm flex items-center justify-between transition-colors border ${
-          disabled
+        className={`w-full rounded-2xl px-3.5 py-2.5 text-sm flex items-center justify-between transition-colors border ${disabled
             ? 'bg-slate-100 border-slate-200 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700'
             : 'bg-white border-slate-200 hover:border-sky-400 cursor-pointer dark:bg-[#1a1a1a] dark:border-gray-700 dark:hover:border-sky-400'
-        }`}
+          }`}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {selectedBook ? (
@@ -183,9 +179,8 @@ export default function BookSelector({
             </button>
           )}
           <ChevronDown
-            className={`w-4 h-4 text-slate-500 dark:text-gray-400 transition-transform ${
-              isOpen ? 'rotate-180' : ''
-            }`}
+            className={`w-4 h-4 text-slate-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''
+              }`}
           />
         </div>
       </div>
@@ -237,11 +232,10 @@ export default function BookSelector({
                         ref={shouldObserve ? lastBookRef : null}
                         type="button"
                         onClick={() => handleSelect(book)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
-                          book.id === value
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${book.id === value
                             ? 'bg-sky-50 dark:bg-sky-900/30'
                             : 'hover:bg-slate-50 dark:hover:bg-gray-800'
-                        }`}
+                          }`}
                       >
                         <div className="w-9 h-12 rounded-md overflow-hidden bg-slate-100 dark:bg-gray-900/40 flex-shrink-0 border border-slate-200 dark:border-gray-700">
                           <img

@@ -20,7 +20,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreateBookDto } from './dto/create-book.dto';
 
 import { ErrorMessages } from '@/src/common/constants/error-messages';
-import { CacheService } from '@/src/shared/cache/cache.service';
+
 
 @Injectable()
 export class BooksService {
@@ -33,7 +33,6 @@ export class BooksService {
     private readonly reviewsRepository: ReviewsRepository,
     private readonly genresRepository: GenresRepository,
     private readonly cloudinaryService: CloudinaryService,
-    private readonly cacheService: CacheService,
   ) { }
 
   async findAll(query: {
@@ -140,16 +139,10 @@ export class BooksService {
   async findBySlug(slug: string, userId?: string) {
     this.logger.log(`Fetching book with slug: ${slug}`);
 
-    const cacheKey = `book:slug:${slug}`;
-    let bookCallback = await this.cacheService.get<any>(cacheKey);
+    const book = await this.booksRepository.findBySlugWithPopulate(slug);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
-    if (!bookCallback) {
-      const book = await this.booksRepository.findBySlugWithPopulate(slug);
-      if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
-
-      bookCallback = await this.enrichBookDetails(book);
-      await this.cacheService.set(cacheKey, bookCallback, 3600);
-    }
+    const bookCallback = await this.enrichBookDetails(book);
 
     this.booksRepository.incrementViews(new Types.ObjectId(bookCallback._id));
 
@@ -167,15 +160,9 @@ export class BooksService {
     if (!Types.ObjectId.isValid(id))
       throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const cacheKey = `book:id:${id}`;
-    let bookDetails = await this.cacheService.get<any>(cacheKey);
-
-    if (!bookDetails) {
-      const book = await this.booksRepository.findByIdWithPopulate(id);
-      if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
-      bookDetails = await this.enrichBookDetails(book);
-      await this.cacheService.set(cacheKey, bookDetails, 3600);
-    }
+    const book = await this.booksRepository.findByIdWithPopulate(id);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+    const bookDetails = await this.enrichBookDetails(book);
 
     return bookDetails;
   }
@@ -251,11 +238,7 @@ export class BooksService {
 
     const updatedBook = await this.booksRepository.updateAndPopulate(id, updateData);
 
-    await Promise.all([
-      this.cacheService.del(`book:slug:${book.slug}`),
-      this.cacheService.del(`book:slug:${updatedBook?.slug}`),
-      this.cacheService.del(`book:id:${id}`),
-    ]);
+
 
     return updatedBook ? new BookModal(updatedBook as BookDocument) : null;
   }
@@ -269,10 +252,7 @@ export class BooksService {
 
     await this.booksRepository.update(id, { isDeleted: true });
 
-    await Promise.all([
-      this.cacheService.del(`book:slug:${book.slug}`),
-      this.cacheService.del(`book:id:${id}`),
-    ]);
+
 
     return { message: 'Book deleted successfully' };
   }
@@ -286,10 +266,7 @@ export class BooksService {
 
     const updatedBook = await this.booksRepository.toggleLike(book._id, uid, isLiked);
 
-    await Promise.all([
-      this.cacheService.del(`book:slug:${slug}`),
-      this.cacheService.del(`book:id:${book._id.toString()}`),
-    ]);
+
 
     return {
       slug: updatedBook?.slug,

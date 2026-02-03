@@ -14,7 +14,7 @@ export class BookModal {
     tags: string[];
     views: number;
     likes: number;
-    author?: { id: string; name: string; bio: string; photoUrl: string };
+    authorId?: { id: string; name: string; bio: string; photoUrl: string };
     genres?: { id: string; name: string; slug: string }[];
     createdAt: Date;
     updatedAt: Date;
@@ -35,7 +35,7 @@ export class BookModal {
 
         if (book.authorId && typeof book.authorId === 'object') {
             const author = book.authorId as unknown as AuthorDocument;
-            this.author = {
+            this.authorId = {
                 id: (author._id as Types.ObjectId).toString(),
                 name: author.name,
                 bio: author.bio,
@@ -67,7 +67,10 @@ export class BookListModal {
     status: string;
     views: number;
     likes: number;
-    authorName?: string;
+    authorId?: { id: string; name: string; avatar?: string };
+    genres: { id: string; name: string; slug: string }[];
+    description: string;
+    createdAt: Date;
 
     constructor(book: BookDocument) {
         this.id = (book._id as Types.ObjectId).toString();
@@ -78,9 +81,28 @@ export class BookListModal {
         this.views = book.views || 0;
         this.likes = book.likes || 0;
 
+        this.description = book.description;
+        this.createdAt = book.createdAt;
+
         if (book.authorId && typeof book.authorId === 'object') {
             const author = book.authorId as unknown as AuthorDocument;
-            this.authorName = author.name;
+            this.authorId = {
+                id: (author._id as Types.ObjectId).toString(),
+                name: author.name,
+                avatar: author.photoUrl,
+            };
+        }
+
+        this.genres = [];
+        if (book.genres && Array.isArray(book.genres) && book.genres.length > 0) {
+             // Handle populated genres
+             if (typeof book.genres[0] === 'object') {
+                this.genres = (book.genres as unknown as GenreDocument[]).map(g => ({
+                    id: (g._id as Types.ObjectId).toString(),
+                    name: g.name,
+                    slug: g.slug
+                }));
+             }
         }
     }
 
@@ -94,7 +116,7 @@ export class BookInfoModal {
     title: string;
     slug: string;
     description?: string;
-    author?: { id: string; name: string };
+    authorId?: { id: string; name: string };
 
     constructor(book: any) {
         this.id = book._id?.toString() || book.id;
@@ -104,7 +126,7 @@ export class BookInfoModal {
 
         const authorData = book.authorId;
         if (authorData && typeof authorData === 'object' && authorData.name) {
-            this.author = {
+            this.authorId = {
                 id: authorData._id?.toString(),
                 name: authorData.name,
             };

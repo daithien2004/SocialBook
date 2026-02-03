@@ -1,3 +1,4 @@
+import { DataAccessModule } from '@/src/data-access/data-access.module';
 import { FollowsController } from '@/src/modules/follows/follows.controller';
 import { FollowsService } from '@/src/modules/follows/follows.service';
 import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
@@ -12,6 +13,7 @@ import { Follow, FollowSchema } from './schemas/follow.schema';
 @Module({
   imports: [
     UsersModule,
+    DataAccessModule,
     MongooseModule.forFeature([
       { name: Follow.name, schema: FollowSchema },
     ]),

@@ -10,7 +10,7 @@ import { BooksRepository } from '../../data-access/repositories/books.repository
 import { PostsRepository } from '../../data-access/repositories/posts.repository';
 import { PostDocument } from './schemas/post.schema';
 
-import { CacheService } from '@/src/shared/cache/cache.service';
+
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ContentModerationService } from '../content-moderation/content-moderation.service';
 
@@ -26,14 +26,9 @@ export class PostsService {
     private readonly booksRepository: BooksRepository,
     private cloudinaryService: CloudinaryService,
     private contentModerationService: ContentModerationService,
-    private readonly cacheService: CacheService,
   ) { }
 
   async findAll(page: number = 1, limit: number = 10) {
-    const cacheKey = `posts:feed:global:page:${page}:limit:${limit}`;
-    const cachedData = await this.cacheService.get<Record<string, unknown>>(cacheKey);
-    if (cachedData) return cachedData;
-
     const skip = (page - 1) * limit;
 
     const [posts, total] = await Promise.all([
@@ -51,7 +46,6 @@ export class PostsService {
       },
     };
 
-    await this.cacheService.set(cacheKey, result, 300);
     return result;
   }
 
@@ -89,16 +83,14 @@ export class PostsService {
     if (!Types.ObjectId.isValid(id))
       throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const cacheKey = `post:id:${id}`;
-    const cachedPost = await this.cacheService.get<PostModal>(cacheKey);
-    if (cachedPost) return cachedPost;
+    if (!Types.ObjectId.isValid(id))
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
     const post = await this.postsRepository.findByIdWithPopulate(id);
 
     if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
 
     const modal = new PostModal(post);
-    await this.cacheService.set(cacheKey, modal, 1800);
     return modal;
   }
 
@@ -150,7 +142,7 @@ export class PostsService {
       throw new InternalServerErrorException('Failed to create post');
     }
 
-    await this.cacheService.clear('posts:feed:global:*');
+
 
     const modal = new PostModal(result);
 
@@ -210,11 +202,6 @@ export class PostsService {
     post.updatedAt = new Date();
     const updatedPost = await this.postsRepository.updateWithPopulate(post);
 
-    await Promise.all([
-      this.cacheService.del(`post:id:${id}`),
-      this.cacheService.clear('posts:feed:global:*'),
-    ]);
-
     return new PostModal(updatedPost!);
   }
 
@@ -225,10 +212,7 @@ export class PostsService {
     await this.postsRepository.softDelete(id);
 
     // Invalidate Cache
-    await Promise.all([
-      this.cacheService.del(`post:id:${id}`),
-      this.cacheService.clear('posts:feed:global:*'),
-    ]);
+    await this.postsRepository.softDelete(id);
 
     return { success: true };
   }
@@ -245,10 +229,7 @@ export class PostsService {
     await this.postsRepository.delete(id);
 
     // Invalidate Cache
-    await Promise.all([
-      this.cacheService.del(`post:id:${id}`),
-      this.cacheService.clear('posts:feed:global:*'),
-    ]);
+    await this.postsRepository.delete(id);
 
     // Emulated result since delete returns void
     return { success: true };
@@ -312,10 +293,7 @@ export class PostsService {
     await post.save();
 
     // Invalidate Cache
-    await Promise.all([
-      this.cacheService.del(`post:id:${id}`),
-      this.cacheService.clear('posts:feed:global:*'),
-    ]);
+    await post.save();
 
     return { success: true, message: 'Post approved successfully' };
   }
@@ -331,10 +309,7 @@ export class PostsService {
     await this.postsRepository.delete(id);
 
     // Invalidate Cache
-    await Promise.all([
-      this.cacheService.del(`post:id:${id}`),
-      this.cacheService.clear('posts:feed:global:*'),
-    ]);
+    await this.postsRepository.delete(id);
 
     return { success: true, message: 'Post rejected and deleted' };
   }

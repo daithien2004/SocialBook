@@ -18,7 +18,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 
 import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
-import { CacheService } from '@/src/shared/cache/cache.service';
+
 import { BooksRepository } from '../../data-access/repositories/books.repository';
 import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
 import { ContentModerationService } from '../content-moderation/content-moderation.service';
@@ -37,7 +37,6 @@ export class CommentsService {
     private readonly booksRepository: BooksRepository,
     private readonly usersRepository: UsersRepository,
     private readonly notifications: NotificationsService,
-    private readonly cacheService: CacheService,
   ) { }
 
   async findByTarget(
@@ -49,13 +48,7 @@ export class CommentsService {
   ) {
     if (!targetId) throw new BadRequestException('Target ID is required');
 
-    const canCache = !cursor;
-    const cacheKey = `comments:target:${targetId}:parent:${parentId || 'root'}:firstpage`;
-
-    if (canCache) {
-      const cached = await this.cacheService.get<Record<string, unknown>>(cacheKey);
-      if (cached) return cached;
-    }
+    if (!targetId) throw new BadRequestException('Target ID is required');
 
     const filter: FilterQuery<CommentDocument> = {
       targetId: new Types.ObjectId(targetId),
@@ -99,9 +92,7 @@ export class CommentsService {
       },
     };
 
-    if (canCache) {
-      await this.cacheService.set(cacheKey, result, 900); // 15 minutes
-    }
+
 
     return result;
   }
@@ -196,8 +187,7 @@ export class CommentsService {
       console.log('createCommentNotification failed', e);
     }
 
-    const cacheKey = `comments:target:${targetId}:parent:${finalParentId || 'root'}:firstpage`;
-    await this.cacheService.del(cacheKey);
+
 
     return new CommentModal(newComment);
   }
@@ -354,8 +344,6 @@ export class CommentsService {
 
     // Invalidate Cache
     const parentId = comment.parentId ? comment.parentId.toString() : 'root';
-    const cacheKey = `comments:target:${comment.targetId}:parent:${parentId}:firstpage`;
-    await this.cacheService.del(cacheKey);
 
     const updated = await this.commentsRepository.update(comment._id, {
       content: content.trim(),
@@ -380,8 +368,6 @@ export class CommentsService {
 
     // Invalidate Cache
     const parentId = comment.parentId ? comment.parentId.toString() : 'root';
-    const cacheKey = `comments:target:${comment.targetId}:parent:${parentId}:firstpage`;
-    await this.cacheService.del(cacheKey);
 
     await this.commentsRepository.softDelete(comment._id);
   }

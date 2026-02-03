@@ -11,7 +11,7 @@ import { BooksRepository } from '../../data-access/repositories/books.repository
 import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
 
 import { ErrorMessages } from '@/src/common/constants/error-messages';
-import { CacheService } from '@/src/shared/cache/cache.service';
+
 import { formatPaginatedResponse } from '@/src/utils/helpers';
 import { BookInfoModal } from '../books/modals/book.modal';
 import { BookDocument } from '../books/schemas/book.schema';
@@ -33,7 +33,6 @@ export class ChaptersService {
   constructor(
     private readonly chaptersRepository: ChaptersRepository,
     private readonly booksRepository: BooksRepository,
-    private readonly cacheService: CacheService,
   ) { }
 
   async findByBookSlug(bookSlug: string) {
@@ -53,16 +52,6 @@ export class ChaptersService {
   }
 
   async findBySlug(bookSlug: string, chapterSlug: string): Promise<ChapterDetailResult> {
-    const cacheKey = `chapter:slug:${bookSlug}:${chapterSlug}`;
-    let cachedResult = await this.cacheService.get<ChapterDetailResult>(cacheKey);
-
-    if (cachedResult) {
-      if (cachedResult.chapter?.id) {
-        this.chaptersRepository.incrementViews(new Types.ObjectId(cachedResult.chapter.id));
-      }
-      return cachedResult;
-    }
-
     const book = await this.booksRepository.findBySlugWithPopulate(bookSlug);
 
     if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
@@ -90,7 +79,8 @@ export class ChaptersService {
       },
     };
 
-    await this.cacheService.set(cacheKey, result, 3600);
+
+
     return result;
   }
 
@@ -219,10 +209,9 @@ export class ChaptersService {
     if (chapterWithBook && chapterWithBook.bookId) {
       const book = await this.booksRepository.findById(chapterWithBook.bookId.toString());
       if (book) {
-        await Promise.all([
-          this.cacheService.del(`chapter:slug:${book.slug}:${existingChapter.slug}`),
-          this.cacheService.del(`chapter:slug:${book.slug}:${slug}`)
-        ]);
+    if (chapterWithBook && chapterWithBook.bookId) {
+      const book = await this.booksRepository.findById(chapterWithBook.bookId.toString());
+    }
       }
     }
 
@@ -240,9 +229,6 @@ export class ChaptersService {
     await this.chaptersRepository.delete(id);
 
     const book = await this.booksRepository.findById(chapter.bookId.toString());
-    if (book) {
-      await this.cacheService.del(`chapter:slug:${book.slug}:${chapter.slug}`);
-    }
 
     return { message: 'Chapter deleted successfully' };
   }

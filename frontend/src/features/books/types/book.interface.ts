@@ -179,9 +179,9 @@ export interface LikeResult {
 
 export interface PaginatedData<T> {
   data: T[];
-  metaData: {
-    page: number;
-    limit: number;
+  meta: {
+    current: number;
+    pageSize: number;
     total: number;
     totalPages: number;
   };
