@@ -6,10 +6,10 @@ import { ToggleLikeDto } from './dto/create-like.dto';
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
 import { CommentTargetType } from '@/src/modules/comments/constants/targetType.constant';
 
-import { UsersRepository } from '../users/users.repository';
-import { PostsRepository } from '../posts/posts.repository';
-import { CommentsRepository } from '../comments/comments.repository';
-import { LikesRepository } from './likes.repository';
+import { UsersRepository } from '@/src/data-access/repositories/users.repository';
+import { PostsRepository } from '@/src/data-access/repositories/posts.repository';
+import { CommentsRepository } from '@/src/data-access/repositories/comments.repository';
+import { LikesRepository } from '@/src/data-access/repositories/likes.repository';
 
 @Injectable()
 export class LikesService {

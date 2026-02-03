@@ -9,8 +9,8 @@ import { Types, UpdateQuery } from 'mongoose';
 import { BooksRepository } from '../../data-access/repositories/books.repository';
 import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
 import { GenresRepository } from '../../data-access/repositories/genres.repository';
-import { AuthorsRepository } from '../authors/authors.repository';
-import { ReviewsRepository } from '../reviews/reviews.repository';
+import { AuthorsRepository } from '@/src/data-access/repositories/authors.repository';
+import { ReviewsRepository } from '@/src/data-access/repositories/reviews.repository';
 import { BookListModal, BookModal } from './modals/book.modal';
 import { BookDocument } from './schemas/book.schema';
 

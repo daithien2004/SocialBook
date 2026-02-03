@@ -5,7 +5,7 @@ import { UsersModule } from '@/src/modules/users/users.module';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LikesModule } from '../likes/likes.module';
-import { FollowsRepository } from './follows.repository';
+import { FollowsRepository } from '@/src/data-access/repositories/follows.repository';
 import { Follow, FollowSchema } from './schemas/follow.schema';
 
 

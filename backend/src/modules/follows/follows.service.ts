@@ -9,8 +9,8 @@ import { Types } from 'mongoose';
 import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
 import { UsersService } from '@/src/modules/users/users.service';
-import { UsersRepository } from '../users/users.repository';
-import { FollowsRepository } from './follows.repository';
+import { UsersRepository } from '@/src/data-access/repositories/users.repository';
+import { FollowsRepository } from '@/src/data-access/repositories/follows.repository';
 
 @Injectable()
 export class FollowsService {
