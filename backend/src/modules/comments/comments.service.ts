@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { FilterQuery, Types } from 'mongoose';
 
-import { CommentsRepository } from './comments.repository';
+import { CommentsRepository } from '../../data-access/repositories/comments.repository';
 import { CommentTargetType, TARGET_TYPES } from './constants/targetType.constant';
 import { CommentDocument } from './schemas/comment.schema';
 
@@ -19,12 +19,12 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
 import { CacheService } from '@/src/shared/cache/cache.service';
+import { BooksRepository } from '../../data-access/repositories/books.repository';
+import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
 import { ContentModerationService } from '../content-moderation/content-moderation.service';
+import { PostsRepository } from '@/src/data-access/repositories/posts.repository';
+import { UsersRepository } from '@/src/data-access/repositories/users.repository';
 import { CommentModal } from './modals/comment.modal';
-import { PostsRepository } from '../posts/posts.repository';
-import { ChaptersRepository } from '../chapters/chapters.repository';
-import { BooksRepository } from '../books/books.repository';
-import { UsersRepository } from '../users/users.repository';
 
 @Injectable()
 export class CommentsService {

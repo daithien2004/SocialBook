@@ -1,19 +1,17 @@
+import { DataAccessModule } from '@/src/data-access/data-access.module';
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { AuthorsController } from './authors.controller';
-import { AuthorsRepository } from './authors.repository';
-import { AuthorsService } from './authors.service';
-import { Author, AuthorSchema } from './schemas/author.schema';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { AuthorsController } from './authors.controller';
+import { AuthorsService } from './authors.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Author.name, schema: AuthorSchema }]),
+    DataAccessModule,
     CloudinaryModule,
   ],
   controllers: [AuthorsController],
-  providers: [AuthorsService, CloudinaryService, AuthorsRepository],
-  exports: [AuthorsService, AuthorsRepository],
+  providers: [AuthorsService, CloudinaryService],
+  exports: [AuthorsService],
 })
 export class AuthorsModule { }

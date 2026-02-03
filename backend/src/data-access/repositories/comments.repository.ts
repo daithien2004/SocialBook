@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
+import { Comment, CommentDocument } from '../../modules/comments/schemas/comment.schema';
 import { GenericRepository } from '../../shared/repository/generic.repository';
-import { Comment, CommentDocument } from './schemas/comment.schema';
 
 @Injectable()
 export class CommentsRepository extends GenericRepository<CommentDocument> {

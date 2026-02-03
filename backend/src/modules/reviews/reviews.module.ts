@@ -1,18 +1,16 @@
+import { DataAccessModule } from '@/src/data-access/data-access.module';
 import { Module } from '@nestjs/common';
-import { ReviewsService } from './reviews.service';
-import { ReviewsController } from './reviews.controller';
-import { Review, ReviewSchema } from './schemas/review.schema';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
-import { ReviewsRepository } from './reviews.repository';
+import { ReviewsController } from './reviews.controller';
+import { ReviewsService } from './reviews.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Review.name, schema: ReviewSchema }]),
+    DataAccessModule,
     ContentModerationModule,
   ], controllers: [ReviewsController],
-  providers: [ReviewsService, ReviewsRepository],
-  exports: [ReviewsService, ReviewsRepository],
+  providers: [ReviewsService],
+  exports: [ReviewsService],
 })
 export class ReviewsModule { }
 

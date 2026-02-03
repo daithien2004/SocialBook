@@ -1,18 +1,18 @@
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import {
-    Injectable,
-    NotFoundException,
-    ConflictException,
-    InternalServerErrorException,
     BadRequestException,
+    ConflictException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
 } from '@nestjs/common';
-import { AuthorDocument } from './schemas/author.schema';
-import { AuthorsRepository } from './authors.repository';
 import { Types, UpdateQuery } from 'mongoose';
+import { AuthorsRepository } from '../../data-access/repositories/authors.repository';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { AuthorModal, AuthorSelectModal } from './modals/author.modal';
-import { ErrorMessages } from '@/src/common/constants/error-messages';
+import { AuthorDocument } from './schemas/author.schema';
 
 @Injectable()
 export class AuthorsService {

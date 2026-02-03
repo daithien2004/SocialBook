@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { Types, UpdateQuery } from 'mongoose';
 
+import { BooksRepository } from '../../data-access/repositories/books.repository';
+import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
+import { GenresRepository } from '../../data-access/repositories/genres.repository';
 import { AuthorsRepository } from '../authors/authors.repository';
-import { ChaptersRepository } from '../chapters/chapters.repository';
-import { GenresRepository } from '../genres/genres.repository';
 import { ReviewsRepository } from '../reviews/reviews.repository';
-import { BooksRepository } from './books.repository';
 import { BookListModal, BookModal } from './modals/book.modal';
 import { BookDocument } from './schemas/book.schema';
 

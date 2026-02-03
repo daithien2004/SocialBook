@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateQuery } from 'mongoose';
+import { CreateReviewDto } from '../../modules/reviews/dto/create-review.dto';
+import { UpdateReviewDto } from '../../modules/reviews/dto/update-review.dto';
+import { Review, ReviewDocument } from '../../modules/reviews/schemas/review.schema';
 import { GenericRepository } from '../../shared/repository/generic.repository';
-import { Review, ReviewDocument } from './schemas/review.schema';
-import { CreateReviewDto } from './dto/create-review.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Injectable()
 export class ReviewsRepository extends GenericRepository<ReviewDocument> {

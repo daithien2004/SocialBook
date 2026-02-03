@@ -7,11 +7,11 @@ import aqp from 'api-query-params';
 import * as bcrypt from 'bcrypt';
 import { Types } from 'mongoose';
 
-import { FollowsRepository } from '@/src/modules/follows/follows.repository';
 import { ReadingListRepository } from '@/src/modules/library/reading-list.repository';
-import { PostsRepository } from '@/src/modules/posts/posts.repository';
+import { FollowsRepository } from '../../data-access/repositories/follows.repository';
+import { PostsRepository } from '../../data-access/repositories/posts.repository';
+import { UsersRepository } from '../../data-access/repositories/users.repository';
 import { User, UserDocument } from './schemas/user.schema';
-import { UsersRepository } from './users.repository';
 
 import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { CloudinaryService } from '@/src/modules/cloudinary/cloudinary.service';

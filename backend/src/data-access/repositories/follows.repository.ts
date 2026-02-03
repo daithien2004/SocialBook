@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { Follow, FollowDocument } from '../../modules/follows/schemas/follow.schema';
 import { GenericRepository } from '../../shared/repository/generic.repository';
-import { Follow, FollowDocument } from './schemas/follow.schema';
 
 @Injectable()
 export class FollowsRepository extends GenericRepository<FollowDocument> {

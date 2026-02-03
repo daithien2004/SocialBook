@@ -7,10 +7,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Types, UpdateQuery } from 'mongoose';
-import { BooksRepository } from '../books/books.repository';
+import { BooksRepository } from '../../data-access/repositories/books.repository';
+import { GenresRepository } from '../../data-access/repositories/genres.repository';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
-import { GenresRepository } from './genres.repository';
 import { GenreModal, GenreSelectModal } from './modals/genre.modal';
 import { GenreDocument } from './schemas/genre.schema';
 

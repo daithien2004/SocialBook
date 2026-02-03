@@ -1,3 +1,4 @@
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import {
   BadRequestException,
   ConflictException,
@@ -6,8 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { ReviewsRepository } from './reviews.repository';
-import { ErrorMessages } from '@/src/common/constants/error-messages';
+import { ReviewsRepository } from '../../data-access/repositories/reviews.repository';
 
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';

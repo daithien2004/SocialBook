@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 
-import { BooksRepository } from '../books/books.repository';
-import { ChaptersRepository } from './chapters.repository';
+import { BooksRepository } from '../../data-access/repositories/books.repository';
+import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
 
 import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { CacheService } from '@/src/shared/cache/cache.service';
