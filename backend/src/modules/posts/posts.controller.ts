@@ -17,23 +17,27 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 
-import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginationDto, PaginationUserDto } from './dto/pagination.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { PostsService } from './posts.service';
 
 import { Public } from '@/src/common/decorators/customize';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
+@ApiTags('Posts')
+@ApiBearerAuth()
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) { }
 
   @Public()
   @Get()
+  @ApiOperation({ summary: 'Get all posts' })
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() query: PaginationDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
@@ -46,6 +50,7 @@ export class PostsController {
 
   @Public()
   @Get('user')
+  @ApiOperation({ summary: 'Get all posts by user' })
   @HttpCode(HttpStatus.OK)
   async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
@@ -58,6 +63,8 @@ export class PostsController {
 
   @Public()
   @Get(':id')
+  @ApiOperation({ summary: 'Get post details' })
+  @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     const data = await this.postsService.findOne(id);
@@ -70,6 +77,22 @@ export class PostsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
+  @ApiOperation({ summary: 'Create a new post' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        content: { type: 'string' },
+        bookId: { type: 'string' },
+        isDelete: { type: 'boolean' },
+        images: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+    },
+  })
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Req() req: Request & { user: { id: string } },
@@ -97,6 +120,23 @@ export class PostsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
+  @ApiOperation({ summary: 'Update a post' })
+  @ApiParam({ name: 'id', type: 'string' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        content: { type: 'string' },
+        bookId: { type: 'string' },
+        imageUrls: { type: 'array', items: { type: 'string' } },
+        images: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+    },
+  })
   @HttpCode(HttpStatus.OK)
   async update(
     @Param('id') id: string,
@@ -124,6 +164,8 @@ export class PostsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete a post (Soft delete)' })
+  @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string) {
     await this.postsService.remove(id);
@@ -134,6 +176,8 @@ export class PostsController {
 
   @Delete(':id/permanent')
   @UseGuards(JwtAuthGuard) // Nên thêm Role Admin guard ở đây
+  @ApiOperation({ summary: 'Delete a post permanently' })
+  @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async removeHard(@Param('id') id: string) {
     await this.postsService.removeHard(id);
@@ -144,6 +188,9 @@ export class PostsController {
 
   @Delete(':id/images')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Remove an image from a post' })
+  @ApiParam({ name: 'id', type: 'string' })
+  @ApiBody({ schema: { type: 'object', properties: { imageUrl: { type: 'string' } } } })
   @HttpCode(HttpStatus.OK)
   async removeImage(
     @Param('id') id: string,
@@ -162,6 +209,7 @@ export class PostsController {
 
   @Get('admin/flagged')
   @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @ApiOperation({ summary: 'Get flagged posts (Admin)' })
   @HttpCode(HttpStatus.OK)
   async getFlaggedPosts(@Query() query: PaginationDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
@@ -174,6 +222,8 @@ export class PostsController {
 
   @Patch('admin/:id/approve')
   @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @ApiOperation({ summary: 'Approve a post (Admin)' })
+  @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async approvePost(@Param('id') id: string) {
     const result = await this.postsService.approvePost(id);
@@ -184,6 +234,8 @@ export class PostsController {
 
   @Delete('admin/:id/reject')
   @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @ApiOperation({ summary: 'Reject a post (Admin)' })
+  @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async rejectPost(@Param('id') id: string) {
     const result = await this.postsService.rejectPost(id);
