@@ -76,9 +76,6 @@ export class AuthController {
 
     return {
       message: 'Mã OTP đã được gửi đến email của bạn',
-      data: {
-        otp: otp,
-      },
     };
   }
 
@@ -111,7 +108,7 @@ export class AuthController {
       return {
         message: 'Gửi lại mã OTP thành công',
         data: {
-          remainingTime: result.remainingTime,
+          resendCooldown: result.resendCooldown,
         },
       };
     } catch (error) {

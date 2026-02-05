@@ -8,7 +8,7 @@ export class OtpService {
   private readonly OTP_PREFIX = 'otp:';
   private readonly OTP_COUNT_PREFIX = 'otp_count:';
   private readonly OTP_EXPIRY = 300; // 5 phút
-  private readonly MAX_OTP_ATTEMPTS = 5; // Tối đa 5 lần trong 1 giờ
+  private readonly MAX_OTP_ATTEMPTS = 10; // Tối đa 10 lần trong 1 giờ
   private readonly RATE_LIMIT_WINDOW = 3600; // 1 giờ
 
   private readonly logger = new Logger(OtpService.name);

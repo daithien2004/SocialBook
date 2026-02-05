@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     Heart,
     MessageCircle,
@@ -12,8 +12,9 @@ import {
     Loader2,
     BookOpen,
 } from 'lucide-react';
-import {toast} from 'sonner';
-import {Post} from '@/src/features/posts/types/post.interface';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/src/lib/utils';
+import { Post } from '@/src/features/posts/types/post.interface';
 import ModalPostComment from '@/src/components/post/ModalPostComment';
 import SharePostModal from '@/src/components/post/SharePostModal';
 import EditPostForm from '@/src/components/post/EditPostForm';
@@ -21,20 +22,20 @@ import {
     useDeletePostMutation,
     useDeletePostImageMutation,
 } from '@/src/features/posts/api/postApi';
-import {useAppAuth} from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 import {
     useGetCountQuery,
     useGetStatusQuery,
     usePostToggleLikeMutation,
 } from '@/src/features/likes/api/likeApi';
-import {useGetCommentCountQuery} from '@/src/features/comments/api/commentApi';
-import {useRouter} from "next/navigation";
+import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
+import { useRouter } from "next/navigation";
 
 interface PostCardProps {
     post: Post;
 }
 
-const PostCard: React.FC<PostCardProps> = ({post}) => {
+const PostCard: React.FC<PostCardProps> = ({ post }) => {
     const [isCommentOpen, setIsCommentOpen] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
@@ -42,27 +43,27 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showShare, setShowShare] = useState(false);
     const route = useRouter();
-    const {user} = useAppAuth();
+    const { user } = useAppAuth();
 
-    const [deletePost, {isLoading: isDeleting}] = useDeletePostMutation();
+    const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
     const [deleteImage] = useDeletePostImageMutation();
     const [toggleLike] = usePostToggleLikeMutation();
 
-    const {isAuthenticated} = useAppAuth();
+    const { isAuthenticated } = useAppAuth();
 
-    const {data: likeCount, isLoading: isLikeLoading} = useGetCountQuery({
+    const { data: likeCount, isLoading: isLikeLoading } = useGetCountQuery({
         targetId: post.id,
         targetType: 'post',
     });
 
-    const {data: likeStatus, isLoading: isLikeStatusLoading} = useGetStatusQuery({
+    const { data: likeStatus, isLoading: isLikeStatusLoading } = useGetStatusQuery({
         targetId: post.id,
         targetType: 'post',
     }, {
         skip: !isAuthenticated,
     });
 
-    const {data: commentCount} = useGetCommentCountQuery({
+    const { data: commentCount } = useGetCommentCountQuery({
         targetId: post.id,
         targetType: 'post',
     });
@@ -91,7 +92,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
         } catch (error: any) {
             console.error('Failed to delete post:', error);
             if (error?.status !== 401) {
-                toast.error(error?.data?.message || 'Lỗi khi xóa bài viết');
+                toast.error(getErrorMessage(error));
             }
         }
     };
@@ -102,7 +103,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
         try {
             await deleteImage({
                 id: post.id,
-                data: {imageUrl},
+                data: { imageUrl },
             }).unwrap();
 
             if (currentImageIndex >= (post.imageUrls?.length || 1) - 1) {
@@ -113,7 +114,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
         } catch (error: any) {
             console.error('Failed to delete image:', error);
             if (error?.status !== 401) {
-                toast.error(error?.data?.message || 'Lỗi khi xóa ảnh');
+                toast.error(getErrorMessage(error));
             }
         }
     };
@@ -156,7 +157,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                 {/* HEADER */}
                 <div className="px-4 pt-4 pb-3 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer"
-                         onClick={() => route.push(`users/${post.userId.id}`)}>
+                        onClick={() => route.push(`users/${post.userId.id}`)}>
                         <div className="relative">
                             <img
                                 src={
@@ -169,7 +170,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                             />
                             {/* Chấm trạng thái online (optional) */}
                             <span
-                                className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900"/>
+                                className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
                         </div>
                         <div className="space-y-0.5">
                             <h2 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
@@ -187,7 +188,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                                 onClick={() => setShowMenu((prev) => !prev)}
                                 className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                             >
-                                <MoreVertical className="w-5 h-5 text-slate-500 dark:text-gray-400"/>
+                                <MoreVertical className="w-5 h-5 text-slate-500 dark:text-gray-400" />
                             </button>
 
                             {showMenu && (
@@ -200,7 +201,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                                         }}
                                         className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-800 transition"
                                     >
-                                        <Edit2 className="w-4 h-4"/>
+                                        <Edit2 className="w-4 h-4" />
                                         <span>Chỉnh sửa bài viết</span>
                                     </button>
                                     <button
@@ -210,7 +211,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                                         }}
                                         className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                                     >
-                                        <Trash2 className="w-4 h-4"/>
+                                        <Trash2 className="w-4 h-4" />
                                         <span>Xóa bài viết</span>
                                     </button>
                                 </div>
@@ -241,10 +242,10 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                         <div className="flex-1 min-w-0 space-y-1">
                             <div
                                 className="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded-full">
-                                <BookOpen size={13}/>
+                                <BookOpen size={13} />
                                 <span className="text-[10px] font-medium uppercase tracking-wide">
-                  Đang đọc
-                </span>
+                                    Đang đọc
+                                </span>
                             </div>
                             <h3
                                 className="font-semibold text-sm text-slate-900 dark:text-gray-100 truncate"
@@ -278,7 +279,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                                 className="absolute top-3 right-3 p-2 bg-slate-900/60 dark:bg-black/60 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                                 title="Xóa ảnh này"
                             >
-                                <X className="w-4 h-4"/>
+                                <X className="w-4 h-4" />
                             </button>
                         )}
 
@@ -304,11 +305,10 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                                         <button
                                             key={index}
                                             onClick={() => setCurrentImageIndex(index)}
-                                            className={`h-1.5 rounded-full transition-all shadow-sm ${
-                                                index === currentImageIndex
+                                            className={`h-1.5 rounded-full transition-all shadow-sm ${index === currentImageIndex
                                                     ? 'bg-white w-6'
                                                     : 'bg-white/60 w-1.5'
-                                            }`}
+                                                }`}
                                         />
                                     ))}
                                 </div>
@@ -329,13 +329,12 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                             >
                                 <Heart
                                     size={20}
-                                    className={`transition-transform duration-150 group-hover:scale-110 ${
-                                        likeStatus?.isLiked ? 'fill-rose-500 text-rose-500' : ''
-                                    }`}
+                                    className={`transition-transform duration-150 group-hover:scale-110 ${likeStatus?.isLiked ? 'fill-rose-500 text-rose-500' : ''
+                                        }`}
                                 />
                                 <span className="hidden sm:inline">
-                  {likeStatus?.isLiked ? 'Đã thích' : 'Thích'}
-                </span>
+                                    {likeStatus?.isLiked ? 'Đã thích' : 'Thích'}
+                                </span>
                             </button>
 
                             <button
@@ -362,14 +361,14 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                         </div>
 
                         <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-gray-400">
-              <span className="inline-flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-400"/>
-                <span>{likeCount?.count ?? 0} lượt thích</span>
-              </span>
                             <span className="inline-flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-400"/>
-                <span>{commentCount?.count ?? 0} bình luận</span>
-              </span>
+                                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                                <span>{likeCount?.count ?? 0} lượt thích</span>
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+                                <span>{commentCount?.count ?? 0} bình luận</span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -394,7 +393,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                 />
 
                 {showEditForm && (
-                    <EditPostForm post={post} onClose={() => setShowEditForm(false)}/>
+                    <EditPostForm post={post} onClose={() => setShowEditForm(false)} />
                 )}
 
                 {showDeleteConfirm && (
@@ -421,7 +420,7 @@ const PostCard: React.FC<PostCardProps> = ({post}) => {
                                     disabled={isDeleting}
                                     className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                                 >
-                                    {isDeleting && <Loader2 className="w-4 h-4 animate-spin"/>}
+                                    {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
                                     Xóa
                                 </button>
                             </div>

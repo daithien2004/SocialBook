@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/src/lib/utils';
 import { MessageCircle, Star, Send, Heart } from 'lucide-react';
 import {
   useGetReviewsByBookQuery,
@@ -36,7 +37,7 @@ export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: 
       toast.success('Đánh giá thành công!');
     } catch (err: any) {
       if (err?.status !== 401) {
-        toast.error(err?.data?.message || 'Lỗi khi gửi đánh giá');
+        toast.error(getErrorMessage(err));
       }
     }
   };
@@ -190,11 +191,10 @@ export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: 
                   </p>
                   <button
                     onClick={() => handleLike(review.id || review._id)}
-                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-all ${
-                      review.isLiked
+                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-all ${review.isLiked
                         ? 'bg-red-50 text-red-600 border-red-200'
                         : 'bg-white dark:bg-white/5 text-gray-500 border-transparent hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <Heart
                       size={14}

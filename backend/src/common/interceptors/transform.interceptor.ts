@@ -25,16 +25,14 @@ export class TransformInterceptor<T>
         }
 
         const transformedData = this.transformIds(data);
+        const { message, data: resData } = transformedData || {};
 
         return new ResponseDto({
           success: true,
           statusCode,
-          message: transformedData?.message || 'Request successful',
-          data:
-            transformedData?.data !== undefined
-              ? transformedData.data
-              : transformedData,
-          meta: transformedData?.meta || transformedData?.metaData,
+          message: message || 'Request successful',
+          data: resData,
+          meta: transformedData?.meta,
           path: request.url,
         });
       }),

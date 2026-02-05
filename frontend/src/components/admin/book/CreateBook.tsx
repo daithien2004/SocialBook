@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useCreateBookMutation } from '@/src/features/books/api/bookApi';
 import { useGetAuthorsQuery, useGetGenresQuery } from '@/src/features/admin/api/bookRelationApi';
+import { getErrorMessage } from '@/src/lib/utils';
 
 const DEFAULT_COVER = '/abstract-book-pattern.png';
 
@@ -157,17 +158,7 @@ export default function CreateBook() {
       }, 1500);
 
     } catch (err: any) {
-      let errorMsg = 'Không thể tạo sách. Vui lòng kiểm tra lại thông tin.';
-
-      if (err?.data?.message) {
-        if (Array.isArray(err.data.message)) {
-          errorMsg = err.data.message.join(', ');
-        } else {
-          errorMsg = err.data.message;
-        }
-      }
-
-      setMessage({ type: 'error', text: errorMsg });
+      setMessage({ type: 'error', text: getErrorMessage(err) });
     }
   };
 

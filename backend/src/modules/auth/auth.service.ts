@@ -82,6 +82,12 @@ export class AuthService {
     const user = await this.usersService.findByEmail(dto.email);
     if (user) {
       if (!user.isVerified) {
+        // Cập nhật lại thông tin user (username, password)
+        await this.usersService.updateUnverifiedUser(user.id.toString(), {
+          username: dto.username,
+          password: dto.password,
+        });
+        
         return await this.sendOtp(dto.email);
       }
       throw new ConflictException('Email này đã được sử dụng');
@@ -287,14 +293,14 @@ export class AuthService {
     }
 
     if (!user.isVerified) {
-      const otp = await this.otpService.generateOTP(email);
-      return otp;
+      await this.otpService.generateOTP(email);
+      return 'Mã OTP đã được gửi đến email của bạn';
     }
 
     throw new BadRequestException('Tài khoản đã được kích hoạt');
   }
 
-  async resendOtp(email: string): Promise<{ remainingTime: number }> {
+  async resendOtp(email: string): Promise<{ resendCooldown: number }> {
     const ttl = await this.otpService.getOtpTTL(email);
 
     if (ttl === -2) {
@@ -314,7 +320,7 @@ export class AuthService {
     await this.otpService.generateOTP(email);
 
     return {
-      remainingTime: 300,
+      resendCooldown: RESEND_COOLDOWN,
     };
   }
 

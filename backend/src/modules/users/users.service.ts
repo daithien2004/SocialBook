@@ -65,6 +65,14 @@ export class UsersService {
     return new UserModal(newUser);
   }
 
+  async updateUnverifiedUser(userId: string, dto: { username: string; password?: string }) {
+    const updateData: Partial<User> = { username: dto.username };
+    if (dto.password) {
+      updateData.password = await bcrypt.hash(dto.password, 10);
+    }
+    return this.usersRepository.update(userId, updateData);
+  }
+
   async findAll(query: Record<string, unknown>, current: number, pageSize: number) {
     const { filter, sort } = aqp(query as any);
 

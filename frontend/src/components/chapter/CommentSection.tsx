@@ -1,14 +1,15 @@
 'use client';
 
-import {useState} from 'react';
-import {MessageCircle} from 'lucide-react';
-import {toast} from 'sonner';
+import { useState } from 'react';
+import { MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/src/lib/utils';
 import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
-import {useGetCommentCountQuery, usePostCreateMutation} from '@/src/features/comments/api/commentApi';
-import {useTheme} from 'next-themes';
-import {useRouter} from 'next/navigation';
-import {useAppAuth} from '@/src/hooks/useAppAuth';
+import { useGetCommentCountQuery, usePostCreateMutation } from '@/src/features/comments/api/commentApi';
+import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export interface Comment {
     id: string;
@@ -28,19 +29,19 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({
-                                           targetId,
-                                           className = '',
-                                       }: CommentSectionProps) {
+    targetId,
+    className = '',
+}: CommentSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [createComment] = usePostCreateMutation();
-    const {theme, setTheme} = useTheme();
+    const { theme, setTheme } = useTheme();
 
-    const {data: commentCount} = useGetCommentCountQuery({
+    const { data: commentCount } = useGetCommentCountQuery({
         targetId: targetId,
         targetType: 'chapter',
     });
 
-    const {isAuthenticated} = useAppAuth();
+    const { isAuthenticated } = useAppAuth();
     const router = useRouter();
 
     const handleSubmit = async (content: string) => {
@@ -49,7 +50,7 @@ export default function CommentSection({
 
         if (!isAuthenticated) {
             toast.info('Vui lòng đăng nhập để bình luận', {
-                action: {label: 'Đăng nhập', onClick: () => router.push('/login')},
+                action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
             });
             return;
         }
@@ -67,9 +68,7 @@ export default function CommentSection({
         } catch (error: any) {
             console.log('Failed to submit comment:', error);
             if (error?.status !== 401) {
-                const errorMessage =
-                    error?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
-                toast.error(errorMessage);
+                toast.error(getErrorMessage(error));
             }
         } finally {
             setIsSubmitting(false);
@@ -82,11 +81,11 @@ export default function CommentSection({
                 <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
                     Thảo luận chương ({commentCount?.count ?? 0})
                 </h3>
-                <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent dark:from-white/10"/>
+                <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent dark:from-white/10" />
             </div>
 
             <div className="mb-10">
-<CommentInput
+                <CommentInput
                     placeholder="Chia sẻ suy nghĩ của bạn về chương này..."
                     onSubmit={handleSubmit}
                     isSubmitting={isSubmitting}

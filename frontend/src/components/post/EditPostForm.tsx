@@ -1,25 +1,26 @@
 'use client';
 
-import {useState, useRef} from 'react';
-import {Post} from '@/src/features/posts/types/post.interface';
-import {useUpdatePostMutation} from '@/src/features/posts/api/postApi';
-import {X, Image as ImageIcon, Loader2} from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Post } from '@/src/features/posts/types/post.interface';
+import { useUpdatePostMutation } from '@/src/features/posts/api/postApi';
+import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
-import {toast} from "sonner";
+import { toast } from "sonner";
+import { getErrorMessage } from '@/src/lib/utils';
 
 interface EditPostFormProps {
     post: Post;
     onClose: () => void;
 }
 
-export default function EditPostForm({post, onClose}: EditPostFormProps) {
+export default function EditPostForm({ post, onClose }: EditPostFormProps) {
     const [content, setContent] = useState(post.content);
     const [bookId, setBookId] = useState(post.bookId?.id || '');
     const [newImages, setNewImages] = useState<File[]>([]);
     const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [updatePost, {isLoading}] = useUpdatePostMutation();
+    const [updatePost, { isLoading }] = useUpdatePostMutation();
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -68,14 +69,14 @@ export default function EditPostForm({post, onClose}: EditPostFormProps) {
             onClose();
         } catch (error: any) {
             console.error('Failed to update post:', error);
-            alert(error?.data?.message || 'Lỗi khi cập nhật bài viết');
+            toast.error(getErrorMessage(error));
         }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             {/* Overlay */}
-            <div className="absolute inset-0 bg-slate-900/15 dark:bg-slate-900/40 backdrop-blur-[2px]"/>
+            <div className="absolute inset-0 bg-slate-900/15 dark:bg-slate-900/40 backdrop-blur-[2px]" />
 
             {/* Modal */}
             <div
@@ -91,7 +92,7 @@ export default function EditPostForm({post, onClose}: EditPostFormProps) {
                         className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                         disabled={isLoading}
                     >
-                        <X className="w-4 h-4 text-slate-500 dark:text-gray-400"/>
+                        <X className="w-4 h-4 text-slate-500 dark:text-gray-400" />
                     </button>
                 </div>
 
@@ -156,8 +157,8 @@ export default function EditPostForm({post, onClose}: EditPostFormProps) {
                                             />
                                             <span
                                                 className="absolute top-2 left-2 text-xs px-2 py-1 rounded bg-slate-900/70 text-white">
-                        Đã có
-                      </span>
+                                                Đã có
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
@@ -186,7 +187,7 @@ export default function EditPostForm({post, onClose}: EditPostFormProps) {
                                             className="absolute top-2 right-2 p-1.5 bg-slate-900/70 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
                                             disabled={isLoading}
                                         >
-                                            <X className="w-3.5 h-3.5"/>
+                                            <X className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 ))}
@@ -202,10 +203,10 @@ export default function EditPostForm({post, onClose}: EditPostFormProps) {
                                 className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                                 disabled={isLoading}
                             >
-                <span
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-gray-800">
-                  <ImageIcon className="w-4 h-4"/>
-                </span>
+                                <span
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-gray-800">
+                                    <ImageIcon className="w-4 h-4" />
+                                </span>
                                 <span>Thêm ảnh mới</span>
                             </button>
 
@@ -214,7 +215,7 @@ export default function EditPostForm({post, onClose}: EditPostFormProps) {
                                 disabled={isLoading || !content.trim()}
                                 className="inline-flex items-center gap-2 bg-sky-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-sky-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
                             >
-                                {isLoading && <Loader2 className="w-4 h-4 animate-spin"/>}
+                                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                                 <span>{isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}</span>
                             </button>
                         </div>

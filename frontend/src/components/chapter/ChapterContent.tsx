@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/src/lib/utils';
 import { useReadingSettings } from '@/src/store/useReadingSettings';
 import ListComments from '@/src/components/comment/ListComments';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
@@ -71,8 +72,7 @@ export function ChapterContent({
       toast.success('Bình luận đã được gửi!');
     } catch (e: any) {
       // Display the error message from backend
-      const errorMessage = e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
-      toast.error(errorMessage);
+      toast.error(getErrorMessage(e));
     }
   };
 
@@ -103,7 +103,7 @@ export function ChapterContent({
       }
       setPostModalOpen(false);
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Không thể tạo bài viết');
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -125,8 +125,8 @@ export function ChapterContent({
                 {/* Paragraph */}
                 <p
                   className={`transition-colors duration-300 ${activeParagraphId === para.id
-                      ? 'text-slate-700 dark:text-indigo-700'
-                      : ''
+                    ? 'text-slate-700 dark:text-indigo-700'
+                    : ''
                     }`}
                   style={{
                     fontSize: `${settings.fontSize}px`,
@@ -161,8 +161,8 @@ export function ChapterContent({
                   <button
                     onClick={() => handleToggleComments(para)}
                     className={`p-2 rounded-full transition-all ${activeParagraphId === para.id
-                        ? 'bg-indigo-600 text-white scale-110'
-                        : 'bg-neutral-200 text-neutral-600 hover:bg-indigo-600 hover:text-white dark:bg-gray-700 dark:text-white dark:hover:bg-indigo-500 hover:scale-110'
+                      ? 'bg-indigo-600 text-white scale-110'
+                      : 'bg-neutral-200 text-neutral-600 hover:bg-indigo-600 hover:text-white dark:bg-gray-700 dark:text-white dark:hover:bg-indigo-500 hover:scale-110'
                       }`}
                     title="Bình luận đoạn này"
                   >

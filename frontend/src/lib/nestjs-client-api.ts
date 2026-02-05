@@ -55,6 +55,10 @@ export const axiosBaseQuery =
           };
         }
 
+        if (method !== 'GET' && responseData.message) {
+          toast.success(responseData.message);
+        }
+
         return { data: responseData.data ?? null };
       } catch (axiosError) {
         const err = axiosError as AxiosError<ErrorResponseDto>;

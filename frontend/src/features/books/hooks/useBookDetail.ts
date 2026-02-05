@@ -4,6 +4,7 @@ import { useGetBookBySlugQuery, useLikeBookMutation } from '@/src/features/books
 import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
+import { getErrorMessage } from '@/src/lib/utils';
 
 export const useBookDetail = (bookSlug: string) => {
   const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });
@@ -42,7 +43,7 @@ export const useBookDetail = (bookSlug: string) => {
       return true; // Return true to signal success to modal
     } catch (err: any) {
       if (err?.status !== 401) {
-        toast.error(err?.data?.message || 'Không thể tạo bài viết');
+        toast.error(getErrorMessage(err));
       }
       return false;
     }
