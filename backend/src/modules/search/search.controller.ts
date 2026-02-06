@@ -15,7 +15,8 @@ export class SearchController {
 
         return {
             message: 'Search completed successfully',
-            data: result,
+            data: result.data,
+            meta: result.meta,
         };
     }
 }

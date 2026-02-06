@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, forwardRef, Inject } from '@nestjs/common';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { ConfigService } from '@nestjs/config';
 import { ChaptersService } from '../chapters/chapters.service';
@@ -11,9 +11,13 @@ export class GeminiService {
 
   constructor(
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => ChaptersService))
     private readonly chaptersService: ChaptersService,
   ) {
-    const apiKey = this.configService.getOrThrow('env.GOOGLE_API_KEY');
+    const apiKey = this.configService.get<string>('GOOGLE_API_KEY');
+    if (!apiKey) {
+      throw new Error('GOOGLE_API_KEY is not defined in environment variables');
+    }
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',

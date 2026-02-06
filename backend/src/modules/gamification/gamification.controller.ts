@@ -8,26 +8,49 @@ export class GamificationController {
 
   @Get('achievements')
   async getAchievements(@Req() req: Request & { user: { id: string } }) {
-    return this.gamificationService.getUserAchievements(req.user.id);
+
+    const data = await this.gamificationService.getUserAchievements(req.user.id);
+    return {
+      message: 'Get user achievements successfully',
+      data,
+    };
   }
 
   @Post('streak/check-in')
   async checkInStreak(@Req() req: Request & { user: { id: string } }) {
-    return await this.gamificationService.updateStreak(req.user.id);
+
+    const data = await this.gamificationService.updateStreak(req.user.id);
+    return {
+      message: 'Check-in user streak successfully',
+      data,
+    };
   }
 
   @Get('streak')
   async getStreak(@Req() req: Request & { user: { id: string } }) {
-    return await this.gamificationService.getStreak(req.user.id);
+
+    const data = await this.gamificationService.getStreak(req.user.id);
+    return {
+      message: 'Get user streak successfully',
+      data,
+    };
   }
 
   @Get('daily-goals')
   async getDailyGoals(@Req() req: Request & { user: { id: string } }) {
-    return await this.gamificationService.getDailyGoal(req.user.id);
+    const data = await this.gamificationService.getDailyGoal(req.user.id);
+    return {
+      message: 'Get user daily goals successfully',
+      data,
+    };
   }
 
   @Post('debug/set-streak')
   async debugSetStreak(@Req() req: Request & { user: { id: string } }, @Body() body: { streak: number }) {
-    return await this.gamificationService.debugSetStreak(req.user.id, body.streak);
+    const data = await this.gamificationService.debugSetStreak(req.user.id, body.streak);
+    return {
+      message: 'Set user streak successfully',
+      data,
+    };
   }
 }

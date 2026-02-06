@@ -11,7 +11,7 @@ import {
   Progress,
   ProgressDocument,
 } from '../progress/schemas/progress.schema';
-
+import { LibraryItemModal } from './modals/library-item.modal';
 import { AddToCollectionsDto, UpdateProgressDto, UpdateReadingTimeDto } from './dto/library.dto';
 import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
 import { GamificationService } from '../gamification/gamification.service';

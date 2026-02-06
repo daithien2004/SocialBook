@@ -45,21 +45,16 @@ export const axiosBaseQuery =
           params,
         });
 
-        const responseData = result.data as ResponseDto<unknown>;
-        if (!responseData.success) {
-          return {
-            error: {
-              status: responseData.statusCode,
-              data: responseData as any,
-            },
-          };
-        }
+        // Backend returns { message, data } or { message, data, meta }
+        const responseData = result.data;
 
-        if (method !== 'GET' && responseData.message) {
+        if (method !== 'GET' && responseData?.message) {
           toast.success(responseData.message);
         }
-
-        return { data: responseData };
+        if (responseData.meta !== undefined) {
+          return { data: { data: responseData.data, meta: responseData.meta } };
+        }
+        return { data: responseData.data !== undefined ? responseData.data : responseData };
       } catch (axiosError) {
         const err = axiosError as AxiosError<ErrorResponseDto>;
         const status = err.response?.status || 500;

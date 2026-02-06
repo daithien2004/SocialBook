@@ -59,10 +59,11 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Get users successfully',
-      items: result.items,
-      pagination: {
+      data: result.data,
+      meta: {
         ...result.meta,
-        totalItems: result.meta.total,
+        total: result.meta.total,
+        totalPages: Math.ceil(result.meta.total / +pageSize),
       },
     };
   }
@@ -78,10 +79,11 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Get users successfully',
-      items: result.items,
-      pagination: {
+      data: result.data,
+      meta: {
         ...result.meta,
-        totalItems: result.meta.total,
+        total: result.meta.total,
+        totalPages: Math.ceil(result.meta.total / +pageSize),
       },
     };
   }
@@ -213,10 +215,11 @@ export class UsersController {
 
     return {
       message: 'Search users successfully',
-      items: result.items,
-      pagination: {
+      data: result.data,
+      meta: {
         ...result.meta,
-        totalItems: result.meta.total,
+        total: result.meta.total,
+        totalPages: Math.ceil(result.meta.total / +pageSize),
       },
     };
   }

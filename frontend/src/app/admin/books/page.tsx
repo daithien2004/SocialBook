@@ -32,8 +32,8 @@ export default function AdminBooksPage() {
   });
 
   const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
-  const books: BookForAdmin[] = data?.books || [];
-  const pagination: BackendPagination | undefined = data?.pagination;
+  const books: BookForAdmin[] = data?.data || [];
+  const pagination: BackendPagination | undefined = data?.meta;
 
   // Delete handlers
   const handleDelete = async (id: string) => {
@@ -189,15 +189,15 @@ export default function AdminBooksPage() {
                         <td className="py-4 text-center">
                           <span className={getStatusBadge(book.status)}>{getStatusText(book.status)}</span>
                         </td>
-                        <td className="py-4 text-center font-bold text-lg">{book.stats.chapters}</td>
+                        <td className="py-4 text-center font-bold text-lg">{book.stats?.chapters || 0}</td>
                         <td className="py-4 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Eye className="w-5 h-5 text-gray-500" />
-                            <span className="font-semibold">{book.stats.views.toLocaleString()}</span>
+                            <span className="font-semibold">{(book.stats?.views || book.views || 0).toLocaleString()}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
-                          {format(new Date(book.updatedAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                          {(book.updatedAt || book.createdAt) ? format(new Date(book.updatedAt || book.createdAt), 'dd/MM/yyyy HH:mm', { locale: vi }) : '—'}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex justify-center gap-2">

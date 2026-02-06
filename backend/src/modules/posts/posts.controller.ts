@@ -43,8 +43,9 @@ export class PostsController {
     const limit = query.limit > 100 ? 100 : query.limit;
     const result = await this.postsService.findAll(query.page, limit);
     return {
-      data: { ...result },
       message: 'Get posts successfully',
+      data: result.data,
+      meta: result.meta,
     };
   }
 
@@ -56,8 +57,9 @@ export class PostsController {
     const limit = query.limit > 100 ? 100 : query.limit;
     const result = await this.postsService.findAllByUser(query.userId, query.page, limit);
     return {
-      data: { ...result },
       message: 'Get posts successfully',
+      data: result.data,
+      meta: result.meta,
     };
   }
 
@@ -215,7 +217,8 @@ export class PostsController {
     const limit = query.limit > 100 ? 100 : query.limit;
     const result = await this.postsService.getFlaggedPosts(query.page, limit);
     return {
-      data: result,
+      data: result.data,
+      meta: result.meta,
       message: 'Get flagged posts successfully',
     };
   }

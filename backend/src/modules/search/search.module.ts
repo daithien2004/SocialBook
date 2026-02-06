@@ -8,6 +8,7 @@ import { Author, AuthorSchema } from '../authors/schemas/author.schema';
 import { Chapter, ChapterSchema } from '../chapters/schemas/chapter.schema';
 import { Review, ReviewSchema } from '../reviews/schemas/review.schema';
 import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
+import { GeminiModule } from '../gemini/gemini.module';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
             { name: Genre.name, schema: GenreSchema },
         ]),
         ChromaModule,
+        GeminiModule,
     ],
     controllers: [SearchController],
     providers: [SearchService],

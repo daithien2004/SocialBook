@@ -1,9 +1,9 @@
 'use client';
 
-import {useEffect, useState} from 'react';
-import {Search} from 'lucide-react';
-import {useLazySearchUsersQuery} from '@/src/features/users/api/usersApi';
-import {useRouter} from "next/navigation";
+import { useEffect, useState } from 'react';
+import { Search } from 'lucide-react';
+import { useLazySearchUsersQuery } from '@/src/features/users/api/usersApi';
+import { useRouter } from "next/navigation";
 
 interface User {
     id: string;
@@ -34,9 +34,9 @@ export default function UserSearchSidebar() {
     }, [keyword, triggerSearch]);
 
     useEffect(() => {
-        if (!data?.items) return;
+        if (!data?.data) return;
 
-        const mappedUsers: User[] = data.items.map((u) => ({
+        const mappedUsers: User[] = data.data.map((u) => ({
             id: u.id,
             username: u.username,
             avatar: u.image,

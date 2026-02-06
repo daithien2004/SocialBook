@@ -82,7 +82,7 @@ export class CommentsService {
     }));
 
     const result = {
-      items,
+      data: items,
       meta: {
         nextCursor: hasMore
           ? comments[comments.length - 1]._id.toString()

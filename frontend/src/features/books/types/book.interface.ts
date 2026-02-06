@@ -96,8 +96,8 @@ export interface BookForAdmin {
 }
 
 export interface BackendPagination {
-  page: number;
-  limit: number;
+  current: number;
+  pageSize: number;
   total: number;
   totalPages: number;
 }

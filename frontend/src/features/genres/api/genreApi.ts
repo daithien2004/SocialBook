@@ -18,12 +18,6 @@ export const genreApi = createApi({
                     name: params.name,
                 },
             }),
-            transformResponse: (response: any) => {
-                return {
-                    data: response.data,
-                    meta: response.meta
-                };
-            },
             providesTags: (result) =>
                 result?.data
                     ? [
@@ -37,9 +31,6 @@ export const genreApi = createApi({
                 url: NESTJS_GENRES_ENDPOINTS.getById(id),
                 method: 'GET',
             }),
-            transformResponse: (response: any) => {
-                return response;
-            },
             providesTags: (result, error, id) => [{ type: 'Genre', id }],
         }),
         createGenre: builder.mutation<Genre, CreateGenreRequest>({
@@ -48,7 +39,6 @@ export const genreApi = createApi({
                 method: 'POST',
                 body,
             }),
-            transformResponse: (response: any) => response.data,
             invalidatesTags: [{ type: 'Genres', id: 'LIST' }],
         }),
         updateGenre: builder.mutation<Genre, UpdateGenreRequest>({
@@ -57,7 +47,6 @@ export const genreApi = createApi({
                 method: 'PUT',
                 body: data,
             }),
-            transformResponse: (response: any) => response.data,
             invalidatesTags: (result, error, { id }) => [
                 { type: 'Genre', id },
                 { type: 'Genres', id: 'LIST' },

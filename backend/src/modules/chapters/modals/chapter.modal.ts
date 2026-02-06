@@ -62,6 +62,11 @@ export class ChapterListModal {
     slug: string;
     orderIndex: number;
     viewsCount: number;
+    paragraphsCount: number;
+    ttsStatus?: string | null;
+    audioUrl?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
 
     constructor(chapter: ChapterDocument | any) {
         this.id = toIdString(chapter._id);
@@ -69,6 +74,11 @@ export class ChapterListModal {
         this.slug = chapter.slug;
         this.orderIndex = chapter.orderIndex;
         this.viewsCount = chapter.viewsCount || 0;
+        this.paragraphsCount = chapter.paragraphsCount || 0;
+        this.ttsStatus = chapter.ttsStatus || null;
+        this.audioUrl = chapter.audioUrl || null;
+        this.createdAt = chapter.createdAt;
+        this.updatedAt = chapter.updatedAt;
     }
 
     static fromArray(chapters: (ChapterDocument | any)[]): ChapterListModal[] {
