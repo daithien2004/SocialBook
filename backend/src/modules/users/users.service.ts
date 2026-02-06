@@ -95,7 +95,7 @@ export class UsersService {
     ]);
 
     return {
-      items,
+      data: items,
       meta: {
         current: page,
         pageSize: limit,
@@ -309,7 +309,7 @@ export class UsersService {
     ]);
 
     return {
-      items,
+      data: items,
       meta: {
         current: page,
         pageSize: limit,

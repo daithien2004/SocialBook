@@ -154,8 +154,8 @@ export interface BookStats {
 }
 
 export interface AdminBooksData {
-  books: BookForAdmin[];
-  pagination: BackendPagination;
+  data: BookForAdmin[];
+  meta: BackendPagination;
 }
 
 export interface FiltersData {

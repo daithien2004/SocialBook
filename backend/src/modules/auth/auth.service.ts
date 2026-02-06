@@ -1,3 +1,4 @@
+import { Logger } from '@/src/shared/logger';
 import {
   BadRequestException,
   ConflictException,
@@ -23,7 +24,10 @@ export class AuthService {
     private configService: ConfigService,
     private otpService: OtpService,
     private readonly rolesRepository: RolesRepository,
-  ) { }
+    private readonly logger: Logger,
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
   async login(user: User) {
     if (!user) {
@@ -95,7 +99,8 @@ export class AuthService {
 
     const userRole = await this.rolesRepository.findByName('user');
     if (!userRole) {
-      throw new InternalServerErrorException('Không tìm thấy role mặc định cho user');
+      this.logger.error('User role not found in database during signup - role may not be seeded');
+      throw new InternalServerErrorException('Đã có lỗi xảy ra trong quá trình đăng ký');
     }
 
     await this.usersService.create({
@@ -116,7 +121,8 @@ export class AuthService {
     if (!existingUser) {
       const userRole = await this.rolesRepository.findByName('user');
       if (!userRole) {
-        throw new InternalServerErrorException('Không tìm thấy role mặc định cho user');
+        this.logger.error('User role not found in database during Google signup - role may not be seeded');
+        throw new InternalServerErrorException('Đã có lỗi xảy ra trong quá trình đăng ký');
       }
 
       const newUser = await this.usersService.create({
@@ -331,6 +337,7 @@ export class AuthService {
     const refreshSecret = this.configService.get<string>('env.JWT_REFRESH_SECRET');
 
     if (!accessSecret || !refreshSecret) {
+      this.logger.error('JWT secrets not configured - check JWT_ACCESS_SECRET and JWT_REFRESH_SECRET environment variables');
       throw new InternalServerErrorException('JWT secrets chưa được cấu hình');
     }
 

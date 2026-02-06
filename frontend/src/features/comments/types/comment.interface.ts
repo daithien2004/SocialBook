@@ -59,7 +59,7 @@ export interface CommentItem {
 }
 
 export interface GetCommentsResponse {
-    items: CommentItem[];
+    data: CommentItem[];
     nextCursor: string | null;
     hasMore: boolean;
 }

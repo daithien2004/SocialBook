@@ -37,7 +37,7 @@ export class PostsService {
     ]);
 
     const result = {
-      items: PostModal.fromArray(posts),
+      data: PostModal.fromArray(posts),
       meta: {
         page,
         limit,
@@ -69,7 +69,7 @@ export class PostsService {
     ]);
 
     return {
-      items: PostModal.fromArray(posts),
+      data: PostModal.fromArray(posts),
       meta: {
         page,
         limit,
@@ -266,7 +266,7 @@ export class PostsService {
     ]);
 
     return {
-      items: PostModal.fromArray(posts),
+      data: PostModal.fromArray(posts),
       meta: {
         page,
         limit,

@@ -1,8 +1,8 @@
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -24,60 +24,18 @@ export class TransformInterceptor<T>
           return data;
         }
 
-        const transformedData = this.transformIds(data);
-        const { message, data: resData } = transformedData || {};
-
         return new ResponseDto({
           success: true,
           statusCode,
-          message: message || 'Request successful',
-          data: resData,
-          meta: transformedData?.meta,
+          message: data?.message || 'Request successful',
+          data:
+            data?.data !== undefined
+              ? data.data
+              : null,
+          meta: data?.meta || data?.metaData,
           path: request.url,
         });
       }),
     );
-  }
-
-  private transformIds(data: any): any {
-    if (!data) return data;
-
-    // 🔥 FIX: Kiểm tra nếu là Mongoose Document thì chuyển sang Object thường
-    if (typeof data === 'object' && typeof data.toObject === 'function') {
-      data = data.toObject();
-    }
-
-    if (Array.isArray(data)) {
-      return data.map((item) => this.transformIds(item));
-    }
-
-    if (typeof data === 'object' && data !== null) {
-      if (data instanceof Date || data._bsontype === 'ObjectId') {
-        return data;
-      }
-
-      const transformed: any = {};
-
-      for (const key in data) {
-        // Bỏ qua các key nội bộ của Mongoose bắt đầu bằng $ hoặc _ (trừ _id)
-        if (key.startsWith('$') || (key.startsWith('_') && key !== '_id')) {
-          continue;
-        }
-
-        if (key === '_id') {
-          transformed.id = data[key]?.toString() || data[key];
-        } else if (key === '__v') {
-          continue;
-        } else if (typeof data[key] === 'object' && data[key] !== null) {
-          transformed[key] = this.transformIds(data[key]);
-        } else {
-          transformed[key] = data[key];
-        }
-      }
-
-      return transformed;
-    }
-
-    return data;
   }
 }

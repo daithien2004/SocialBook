@@ -1,23 +1,23 @@
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import {
+  BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TextToSpeechDto } from './dto/textToSpeech.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { ChaptersService } from '../chapters/chapters.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { TextToSpeechDto } from './dto/textToSpeech.dto';
 import {
   TextToSpeech,
   TextToSpeechDocument,
   TTSStatus,
 } from './schemas/textToSpeech.schema';
-import { ErrorMessages } from '@/src/common/constants/error-messages';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { ChaptersService } from '../chapters/chapters.service';
 
 interface GenerateAudioOptions {
   voice?: string;

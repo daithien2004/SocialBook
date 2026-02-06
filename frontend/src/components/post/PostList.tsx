@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
 import PostCard from '@/src/components/post/PostCard';
 import { useGetPostsQuery } from '@/src/features/posts/api/postApi';
 import { Post } from '@/src/features/posts/types/post.interface';
+import { useEffect, useRef, useState } from 'react';
 
 interface PostListProps {
     currentUserId?: string;
@@ -23,7 +23,7 @@ const PostList: React.FC<PostListProps> = () => {
         }
     );
 
-    const items = data?.items ?? [];
+    const items = data?.data ?? [];
     const total = data?.meta?.total ?? 0;
     const prevTotalRef = useRef<number | null>(null);
 

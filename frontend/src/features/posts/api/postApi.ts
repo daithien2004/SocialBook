@@ -18,7 +18,7 @@ export const postApi = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.items.map(({ id }) => ({
+            ...result.data.map(({ id }) => ({
               type: 'Post' as const,
               id: id,
             })),
@@ -44,7 +44,7 @@ export const postApi = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.items.map(({ id }) => ({
+            ...result.data.map(({ id }) => ({
               type: 'Post' as const,
               id,
             })),
