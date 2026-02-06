@@ -6,32 +6,29 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Types, UpdateQuery } from 'mongoose';
 import { BooksRepository } from '../../data-access/repositories/books.repository';
-import { GenresRepository } from '../../data-access/repositories/genres.repository';
+import { Genre } from '../../domain/entities/genre.entity';
+import { IGenreRepository } from '../../domain/repositories/genre.repository.interface';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
-import { GenreModal, GenreSelectModal } from './modals/genre.modal';
-import { GenreDocument } from './schemas/genre.schema';
 
 @Injectable()
 export class GenresService {
   constructor(
-    private readonly genresRepository: GenresRepository,
+    private readonly genresRepository: IGenreRepository,
     private readonly booksRepository: BooksRepository,
   ) { }
 
   async findAll(query: Record<string, unknown>, current: number = 1, pageSize: number = 10) {
     const result = await this.genresRepository.findAll(query, current, pageSize);
     return {
-      data: GenreModal.fromArray(result.data),
+      data: result.data,
       meta: result.meta,
     };
   }
 
   async findAllSimple() {
-    const genres = await this.genresRepository.findAllSimple();
-    return GenreSelectModal.fromArray(genres);
+    return this.genresRepository.findAllSimple();
   }
 
   async create(createGenreDto: CreateGenreDto) {
@@ -39,21 +36,21 @@ export class GenresService {
       throw new BadRequestException('Tên thể loại không được để trống');
     }
 
-    const existingGenre = await this.genresRepository.existsByName(createGenreDto.name.trim());
+    const name = createGenreDto.name.trim();
+    const existingGenre = await this.genresRepository.existsByName(name);
 
     if (existingGenre) {
       throw new ConflictException(ErrorMessages.GENRE_EXISTS);
     }
 
-    const newGenre = await this.genresRepository.create({
-      name: createGenreDto.name.trim(),
+    return this.genresRepository.create({
+      name,
       description: createGenreDto.description?.trim() || '',
     });
-    return new GenreModal(newGenre);
   }
 
   async findOne(id: string) {
-    if (!id || !Types.ObjectId.isValid(id)) {
+    if (!id) {
       throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
@@ -63,11 +60,11 @@ export class GenresService {
       throw new NotFoundException(ErrorMessages.GENRE_NOT_FOUND);
     }
 
-    return new GenreModal(genre);
+    return genre;
   }
 
   async update(id: string, updateGenreDto: UpdateGenreDto) {
-    if (!id || !Types.ObjectId.isValid(id)) {
+    if (!id) {
       throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
@@ -91,7 +88,7 @@ export class GenresService {
       }
     }
 
-    const updateData: UpdateQuery<GenreDocument> = {};
+    const updateData: Partial<Genre> = {};
     if (updateGenreDto.name?.trim()) updateData.name = updateGenreDto.name.trim();
     if (updateGenreDto.description !== undefined)
       updateData.description = updateGenreDto.description.trim();
@@ -102,11 +99,11 @@ export class GenresService {
       throw new InternalServerErrorException('Cập nhật thể loại thất bại');
     }
 
-    return new GenreModal(updatedGenre);
+    return updatedGenre;
   }
 
   async remove(id: string) {
-    if (!id || !Types.ObjectId.isValid(id)) {
+    if (!id) {
       throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
@@ -129,3 +126,4 @@ export class GenresService {
     return { success: true };
   }
 }
+

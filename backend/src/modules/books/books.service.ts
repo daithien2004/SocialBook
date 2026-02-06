@@ -65,7 +65,7 @@ export class BooksService {
     if (genres) {
       const genreSlugs = genres.split(',').map((g) => g.trim());
       const genreDocs = await this.genresRepository.findBySlugs(genreSlugs);
-      genreIds = genreDocs.map(doc => doc._id);
+      genreIds = genreDocs.map(id => new Types.ObjectId(id));
 
       if (genreIds.length === 0) {
         return formatPaginatedResponse([], 0, page, validLimit);
@@ -315,7 +315,7 @@ export class BooksService {
 
     const [author, countGenres] = await Promise.all([
       this.authorsRepository.findById(authorId as string),
-      this.genresRepository.countByIds(genresId as Types.ObjectId[]),
+      this.genresRepository.countByIds(genresId.map(id => id.toString())),
     ]);
 
     if (!author) throw new BadRequestException(ErrorMessages.AUTHOR_NOT_FOUND);

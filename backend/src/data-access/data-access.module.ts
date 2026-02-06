@@ -11,6 +11,7 @@ import { Post, PostSchema } from '../modules/posts/schemas/post.schema';
 import { Review, ReviewSchema } from '../modules/reviews/schemas/review.schema';
 import { User, UserSchema } from '../modules/users/schemas/user.schema';
 
+import { IGenreRepository } from '../domain/repositories/genre.repository.interface';
 import { AuthorsRepository } from './repositories/authors.repository';
 import { BooksRepository } from './repositories/books.repository';
 import { ChaptersRepository } from './repositories/chapters.repository';
@@ -43,7 +44,10 @@ import { UsersRepository } from './repositories/users.repository';
         ChaptersRepository,
         CommentsRepository,
         FollowsRepository,
-        GenresRepository,
+        {
+            provide: IGenreRepository,
+            useClass: GenresRepository,
+        },
         LikesRepository,
         PostsRepository,
         ReviewsRepository,
@@ -56,7 +60,7 @@ import { UsersRepository } from './repositories/users.repository';
         ChaptersRepository,
         CommentsRepository,
         FollowsRepository,
-        GenresRepository,
+        IGenreRepository,
         LikesRepository,
         PostsRepository,
         ReviewsRepository,
@@ -64,3 +68,4 @@ import { UsersRepository } from './repositories/users.repository';
     ],
 })
 export class DataAccessModule { }
+
