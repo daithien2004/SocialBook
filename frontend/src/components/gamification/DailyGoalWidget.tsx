@@ -1,9 +1,9 @@
 'use client';
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { useGetDailyGoalQuery } from '@/src/features/gamification/api/gamificationApi';
 import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { Target, Trophy } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 export function DailyGoalWidget() {
   const { isAuthenticated } = useAppAuth();
