@@ -1,6 +1,15 @@
-import { X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/src/components/ui/button';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/src/components/ui/sheet';
 import { Chapter } from '@/src/features/chapters/types/chapter.interface';
+import { useRouter } from 'next/navigation';
 
 interface ChapterListDrawerProps {
   isOpen: boolean;
@@ -29,72 +38,55 @@ export default function ChapterListDrawer({
   };
 
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-          }`}
-        onClick={onClose}
-      />
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent side="right" className="w-80 p-0 flex flex-col gap-0 border-l border-border bg-background">
+        <SheetHeader className="p-5 border-b border-border bg-background">
+          <SheetTitle className="text-lg font-bold">Mục lục</SheetTitle>
+          <SheetDescription className="text-xs text-muted-foreground mt-0.5">
+            {totalChapters || chapters.length} chương
+          </SheetDescription>
+        </SheetHeader>
 
-      {/* Drawer Panel */}
-      <div
-        className={`fixed ${hasHeader ? 'top-14' : 'top-0'
-          } right-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-[#1a1a1a] border-l border-gray-300 dark:border-white/10 z-[61] shadow-2xl transform transition-all duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-      >
-        {/* Header */}
-        <div className="p-5 border-b border-gray-200 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1a1a1a] transition-colors duration-300">
-          <div>
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white transition-colors duration-300">
-              Mục lục
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 transition-colors duration-300">
-              {totalChapters || chapters.length} chương
-            </p>
+        <ScrollArea className="flex-1 p-2">
+          <div className="space-y-1">
+            {chapters.map((chap) => {
+              const isActive = chap.slug === currentChapterSlug;
+              return (
+                <Button
+                  key={chap.id}
+                  variant={isActive ? "secondary" : "ghost"}
+                  onClick={() => handleChapterSelect(chap.slug)}
+                  className={cn(
+                    "w-full justify-between h-auto py-3 px-4 rounded-xl transition-all",
+                    isActive
+                      ? "bg-blue-50 text-blue-900 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-500/30"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <div className="flex flex-col gap-0.5 items-start text-left w-full overflow-hidden">
+                    <span
+                      className={cn(
+                        "text-xs font-bold uppercase tracking-wider",
+                        isActive
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-muted-foreground group-hover:text-foreground"
+                      )}
+                    >
+                      Chương {chap.orderIndex}
+                    </span>
+                    <span className="text-sm font-medium line-clamp-1 w-full">
+                      {chap.title}
+                    </span>
+                  </div>
+                  {isActive && (
+                    <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(220,38,38,0.8)] shrink-0 ml-2" />
+                  )}
+                </Button>
+              );
+            })}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Chapter List */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {chapters.map((chap) => {
-            const isActive = chap.slug === currentChapterSlug;
-            return (
-              <button
-                key={chap.id}
-                onClick={() => handleChapterSelect(chap.slug)}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 border flex items-center justify-between group ${isActive
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-500/30 text-blue-900 dark:text-blue-100'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span
-                    className={`text-xs font-bold uppercase tracking-wider ${isActive
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-500 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400'
-                      }`}
-                  >
-                    Chương {chap.orderIndex}
-                  </span>
-                  <span className="text-sm font-medium line-clamp-1">
-                    {chap.title}
-                  </span>
-                </div>
-                {isActive && (
-                  <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 }

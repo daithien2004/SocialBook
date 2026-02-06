@@ -1,8 +1,14 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, BookOpen, Loader2 } from 'lucide-react';
+import { Bot, Loader2, MessageCircle, Send, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useAskChatbotMutation } from '../features/chatbot/api/chatBotApi';
+
+import { Avatar } from "@/src/components/ui/avatar";
+import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/src/components/ui/popover";
+import { ScrollArea } from "@/src/components/ui/scroll-area";
 
 interface Message {
   id: string;
@@ -12,7 +18,6 @@ interface Message {
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -23,7 +28,6 @@ export const ChatWidget = () => {
   ]);
 
   const [askChatbot, { isLoading }] = useAskChatbotMutation();
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const formatAIResponse = (text: string) => {
@@ -42,24 +46,14 @@ export const ChatWidget = () => {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isOpen]);
-
-  const handleToggle = () => {
-    if (isOpen) {
-      setIsAnimatingOut(true);
-      setTimeout(() => {
-        setIsOpen(false);
-        setIsAnimatingOut(false);
-      }, 200);
-    } else {
-      setIsOpen(true);
-    }
-  };
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -95,116 +89,111 @@ export const ChatWidget = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4 font-sans">
-      {isOpen && (
-        <div
-          className={`w-[360px] h-[520px] bg-white dark:bg-[#09090b] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 flex flex-col overflow-hidden transition-all duration-200 ease-out origin-bottom-right ${
-            isAnimatingOut
-              ? 'opacity-0 scale-95 translate-y-4'
-              : 'opacity-100 scale-100 translate-y-0'
-          }`}
+    <div className="fixed bottom-6 right-6 z-50">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            size="icon"
+            className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
+          >
+            {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-[360px] h-[520px] p-0 mr-6 mb-2 rounded-2xl shadow-2xl border-slate-200 dark:border-gray-800 overflow-hidden flex flex-col"
+          side="top"
+          align="end"
         >
-          {/* Header - Simple & Clean */}
-          <div className="bg-white dark:bg-[#09090b] p-4 flex items-center justify-between border-b border-gray-100 dark:border-white/5">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-900 border-b border-slate-100 dark:border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center">
-                <BookOpen size={16} className="text-white dark:text-black" />
-              </div>
+              <Avatar className="h-8 w-8 bg-black dark:bg-white items-center justify-center">
+                <Bot className="h-5 w-5 text-white dark:text-black" />
+              </Avatar>
               <div>
-                <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">Trợ lý Sách</div>
-                <div className="text-[11px] text-green-500 font-medium flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  Online
+                <h4 className="font-semibold text-sm">Trợ lý Sách</h4>
+                <div className="flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-medium">Online</span>
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleToggle}
-              className="text-gray-400 hover:text-gray-900 dark:hover:text-white p-2 rounded-lg transition-colors"
-            >
-              <X size={18} />
-            </button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen(false)}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-[#0c0c0c] space-y-4">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${
-                  msg.role === 'user' ? 'justify-end' : 'justify-start'
-                } animate-in fade-in slide-in-from-bottom-2 duration-200`}
-              >
+          {/* Messages */}
+          <ScrollArea className="flex-1 p-4 bg-white dark:bg-[#0c0c0c]">
+            <div className="space-y-4 pr-4">
+              {messages.map((msg) => (
                 <div
-                  className={`max-w-[85%] p-3.5 text-[14px] leading-relaxed rounded-2xl transition-all ${
-                    msg.role === 'user'
-                      ? 'bg-black dark:bg-white text-white dark:text-black rounded-br-sm'
-                      : 'bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-white/5 rounded-bl-sm shadow-sm'
-                  }`}
+                  key={msg.id}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'
+                    } animate-in fade-in slide-in-from-bottom-2 duration-300`}
                 >
-                  {msg.role === 'ai' ? (
-                    <div
-                      className="whitespace-pre-wrap break-words"
-                      dangerouslySetInnerHTML={{ __html: msg.content }}
-                    />
-                  ) : (
-                    <div className="whitespace-pre-wrap break-words">
-                      {msg.content}
-                    </div>
-                  )}
+                  <div
+                    className={`max-w-[85%] p-3 text-sm leading-relaxed rounded-2xl ${msg.role === 'user'
+                        ? 'bg-black dark:bg-white text-white dark:text-black rounded-br-sm'
+                        : 'bg-slate-100 dark:bg-gray-800 text-slate-800 dark:text-gray-200 rounded-bl-sm'
+                      }`}
+                  >
+                    {msg.role === 'ai' ? (
+                      <div
+                        className="whitespace-pre-wrap break-words"
+                        dangerouslySetInnerHTML={{ __html: msg.content }}
+                      />
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words">
+                        {msg.content}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {isLoading && (
-              <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-200">
-                <div className="bg-white dark:bg-[#1a1a1a] p-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-200 dark:border-white/5">
-                  <Loader2 className="animate-spin text-gray-400" size={16} />
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-slate-100 dark:bg-gray-800 p-3 rounded-2xl rounded-bl-sm">
+                    <Loader2 className="animate-spin text-slate-400" size={16} />
+                  </div>
                 </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
 
-          {/* Input Area - Minimal */}
-          <div className="p-3 bg-white dark:bg-[#09090b] border-t border-gray-100 dark:border-white/5">
-            <div className="flex gap-2 items-center bg-transparent px-2">
-              <input
-                type="text"
+          {/* Footer Input */}
+          <div className="p-3 bg-white dark:bg-[#09090b] border-t border-slate-100 dark:border-gray-800">
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+            >
+              <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder="Nhập câu hỏi..."
+                className="flex-1 bg-slate-50 dark:bg-gray-800/50 border-0 focus-visible:ring-1 focus-visible:ring-offset-0"
                 disabled={isLoading}
-                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400"
               />
-              <button
-                onClick={handleSendMessage}
+              <Button
+                type="submit"
+                size="icon"
                 disabled={isLoading || !input.trim()}
-                className={`p-2 rounded-lg transition-all flex items-center justify-center ${
-                  input.trim()
-                    ? 'text-black dark:text-white hover:bg-gray-100 dark:hover:bg-white/10'
-                    : 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
-                }`}
+                className={!input.trim() ? "opacity-50" : ""}
               >
-                <Send size={18} />
-              </button>
-            </div>
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
           </div>
-        </div>
-      )}
-
-      {/* Toggle Button - Simple Black Circle */}
-      <button
-        onClick={handleToggle}
-        className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 bg-black dark:bg-white text-white dark:text-black hover:shadow-xl`}
-      >
-         {isOpen ? (
-          <X size={24} />
-        ) : (
-          <MessageCircle size={24} />
-        )}
-      </button>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

@@ -3,8 +3,8 @@ import { BookCard } from './BookCard';
 import {
   BookGridSkeleton,
   EmptyBooksState,
-  LoadingMoreIndicator,
   EndOfListMessage,
+  LoadingMoreIndicator,
 } from './LoadingStates';
 
 interface BookGridProps {

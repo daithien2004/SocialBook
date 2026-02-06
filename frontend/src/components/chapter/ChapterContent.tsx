@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { getErrorMessage } from '@/src/lib/utils';
-import { useReadingSettings } from '@/src/store/useReadingSettings';
-import ListComments from '@/src/components/comment/ListComments';
-import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 import CreatePostModal, {
   CreatePostData,
 } from '@/src/components/post/CreatePostModal';
+import { Button } from '@/src/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip';
+import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
 import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { MessageSquarePlus, Share2, Send, X, Loader2 } from 'lucide-react';
+import { getErrorMessage } from '@/src/lib/utils';
+import { useReadingSettings } from '@/src/store/useReadingSettings';
+import { MessageSquarePlus, Share2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import ParagraphCommentDrawer from '../comment/ParagraphCommentDrawer';
 
 interface Paragraph {
@@ -39,41 +39,17 @@ export function ChapterContent({
   );
   const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
   const [activeParagraph, setActiveParagraph] = useState<Paragraph | null>(null);
-  const [commentText, setCommentText] = useState('');
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [selectedParagraph, setSelectedParagraph] = useState<Paragraph | null>(
     null
   );
 
-  const [createComment, { isLoading: isPostingComment }] =
-    usePostCreateMutation();
   const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
 
   const handleToggleComments = (paragraph: Paragraph) => {
     setActiveParagraphId(paragraph.id);
     setActiveParagraph(paragraph);
     setCommentDrawerOpen(true);
-  };
-
-
-  const handleSubmitComment = async (paragraphId: string) => {
-    const content = commentText.trim();
-    if (!content) return;
-
-    try {
-      await createComment({
-        targetType: 'paragraph',
-        targetId: paragraphId,
-        content,
-        parentId: null,
-      }).unwrap();
-
-      setCommentText('');
-      toast.success('Bình luận đã được gửi!');
-    } catch (e: any) {
-      // Display the error message from backend
-      toast.error(getErrorMessage(e));
-    }
   };
 
   const handleOpenPostModal = (paragraph: Paragraph) => {
@@ -108,9 +84,9 @@ export function ChapterContent({
   };
 
   return (
-    <>
+    <TooltipProvider>
       <main
-        className="flex-1 w-full antialiased relative transition-all duration-300 rounded-2xl p-10"
+        className="flex-1 w-full antialiased relative transition-all duration-300 rounded-2xl p-10 selection:bg-red-500/30"
         style={{
           backgroundColor: settings.backgroundColor,
           color: settings.textColor,
@@ -118,14 +94,13 @@ export function ChapterContent({
           paddingRight: `${settings.marginWidth}px`,
         }}
       >
-        <article className="space-y-2">
+        <article className="space-y-4">
           {paragraphs.map((para) => (
             <div key={para.id} className="group relative">
               <div className="flex items-start">
-                {/* Paragraph */}
                 <p
-                  className={`transition-colors duration-300 ${activeParagraphId === para.id
-                    ? 'text-slate-700 dark:text-indigo-700'
+                  className={`transition-colors duration-300 w-full ${activeParagraphId === para.id
+                    ? 'bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-2 -mx-2'
                     : ''
                     }`}
                   style={{
@@ -134,53 +109,54 @@ export function ChapterContent({
                     lineHeight: settings.lineHeight,
                     letterSpacing: `${settings.letterSpacing}px`,
                     textAlign: settings.textAlign as any,
-                    color:
-                      activeParagraphId === para.id
-                        ? undefined
-                        : settings.textColor,
                   }}
                 >
                   {para.content}
                 </p>
 
-                {/* Action buttons – FIX hover mất nút */}
+                {/* Action buttons */}
                 <div
                   className="
                           absolute
-                          right-[-48px]
-                          top-1/2 -translate-y-1/2
+                          -right-12
+                          top-0
                           flex flex-col gap-2
-
                           opacity-0
                           group-hover:opacity-100
-                          hover:opacity-100
-
-                          transition-opacity duration-200 ease-out
+                          transition-opacity duration-200
                         "
                 >
-                  <button
-                    onClick={() => handleToggleComments(para)}
-                    className={`p-2 rounded-full transition-all ${activeParagraphId === para.id
-                      ? 'bg-indigo-600 text-white scale-110'
-                      : 'bg-neutral-200 text-neutral-600 hover:bg-indigo-600 hover:text-white dark:bg-gray-700 dark:text-white dark:hover:bg-indigo-500 hover:scale-110'
-                      }`}
-                    title="Bình luận đoạn này"
-                  >
-                    <MessageSquarePlus size={18} />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        onClick={() => handleToggleComments(para)}
+                        className="h-8 w-8 rounded-full shadow-sm hover:scale-110 transition-transform"
+                      >
+                        <MessageSquarePlus size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Bình luận</p>
+                    </TooltipContent>
+                  </Tooltip>
 
-                  <button
-                    onClick={() => handleOpenPostModal(para)}
-                    className="
-                            p-2 rounded-full
-                            bg-gray-700 text-white
-                            hover:bg-green-600 hover:text-white hover:scale-110
-                            transition-all
-                          "
-                    title="Chia sẻ đoạn này"
-                  >
-                    <Share2 size={18} />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        onClick={() => handleOpenPostModal(para)}
+                        className="h-8 w-8 rounded-full shadow-sm hover:scale-110 transition-transform"
+                      >
+                        <Share2 size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>Chia sẻ</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </div>
@@ -199,7 +175,6 @@ export function ChapterContent({
         paragraphContent={activeParagraph?.content}
       />
 
-      {/* Create Post Modal */}
       <CreatePostModal
         isSubmitting={isCreatingPost}
         isOpen={postModalOpen}
@@ -210,6 +185,6 @@ export function ChapterContent({
         contentLabel="Nội dung trích dẫn"
         maxImages={10}
       />
-    </>
+    </TooltipProvider>
   );
 }

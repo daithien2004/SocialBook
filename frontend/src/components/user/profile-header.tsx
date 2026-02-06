@@ -1,7 +1,6 @@
 'use client'
-import { Avatar, AvatarImage } from "@/src/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import { FollowersModal } from "@/src/components/user/FollowersModal";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface PropsProfileHeader {
@@ -12,57 +11,79 @@ interface PropsProfileHeader {
     followersCount: number | undefined,
     profileUserId: string,
 }
+
 export function ProfileHeader(props: PropsProfileHeader) {
-    const router = useRouter();
-    const [open, setOpen] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
 
     return (
-        <>
-            <div className="relative w-full pt-8 pb-8 text-white">
+        <div className="relative w-full">
+            {/* Background Image Container */}
+            <div className="absolute inset-0 h-full w-full overflow-hidden">
                 <img
                     src="/background.jpg"
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover z-0"
+                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+            </div>
 
-                <div className="absolute inset-0 bg-black/40 dark:bg-black/60 z-0" />
+            {/* Content Container */}
+            <div className="relative z-10 container mx-auto max-w-4xl px-4 pt-16 pb-12 flex flex-col items-center text-center text-white">
 
-                <div className="relative z-10 container mx-auto flex flex-col items-center text-center">
-                    <Avatar className="h-28 w-28 border border-white/20 dark:border-gray-700">
+                {/* Avatar with Ring */}
+                <div className="relative mb-4 group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-500 to-indigo-500 rounded-full opacity-75 group-hover:opacity-100 transition duration-200 blur"></div>
+                    <Avatar className="h-32 w-32 border-4 border-black relative">
                         <AvatarImage
                             src={props.image ?? "/user.png"}
                             alt={props.username ?? "user"}
                             className="object-cover"
                         />
+                        <AvatarFallback className="bg-slate-800 text-3xl font-bold">
+                            {props.username?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
                     </Avatar>
-
-                    <h1 className="mt-2 text-2xl font-bold text-white">
-                        {props.username}
-                    </h1>
                 </div>
 
-                <div className="relative z-10 mt-3 flex justify-center gap-6 text-sm">
-                    <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold">{props.postCount}</span>
-                        <span className="text-xs text-white/70 uppercase">Bài đăng</span>
+                <h1 className="text-3xl font-bold tracking-tight mb-6 text-white drop-shadow-md">
+                    {props.username}
+                </h1>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-8 md:gap-12 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                    <div className="flex flex-col items-center group cursor-default">
+                        <span className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">
+                            {props.postCount ?? 0}
+                        </span>
+                        <span className="text-xs font-medium text-white/60 uppercase tracking-wider">
+                            Bài viết
+                        </span>
                     </div>
 
-                    <div className="flex flex-col items-center cursor-pointer hover:text-white/80">
-                        <span className="text-lg font-bold">{props.readingListCount}</span>
-                        <span className="text-xs text-white/70 uppercase">Danh sách đọc</span>
+                    <div className="flex flex-col items-center group cursor-pointer hover:bg-white/5 rounded-lg p-1 -m-1 transition-colors">
+                        <span className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">
+                            {props.readingListCount ?? 0}
+                        </span>
+                        <span className="text-xs font-medium text-white/60 uppercase tracking-wider">
+                            Danh sách đọc
+                        </span>
                     </div>
 
                     <div
-                        onClick={() => setOpen(true)}
-                        className="flex flex-col items-center cursor-pointer hover:text-white/80"
+                        onClick={() => setOpenModal(true)}
+                        className="flex flex-col items-center group cursor-pointer hover:bg-white/5 rounded-lg p-1 -m-1 transition-colors"
                     >
-                        <span className="text-lg font-bold">{props.followersCount}</span>
-                        <span className="text-xs text-white/70 uppercase">Người theo dõi</span>
+                        <span className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">
+                            {props.followersCount ?? 0}
+                        </span>
+                        <span className="text-xs font-medium text-white/60 uppercase tracking-wider">
+                            Người theo dõi
+                        </span>
                     </div>
                 </div>
-
-                <FollowersModal isOpen={open} onClose={() => setOpen(false)} />
             </div>
-        </>
+
+            <FollowersModal isOpen={openModal} onClose={() => setOpenModal(false)} />
+        </div>
     );
 }

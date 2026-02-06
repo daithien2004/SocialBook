@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { MessageCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { getErrorMessage } from '@/src/lib/utils';
-import CommentInput from './CommentInput';
 import ListComments from '@/src/components/comment/ListComments';
+import { Separator } from '@/src/components/ui/separator';
 import { useGetCommentCountQuery, usePostCreateMutation } from '@/src/features/comments/api/commentApi';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { getErrorMessage } from '@/src/lib/utils';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import CommentInput from './CommentInput';
 
 export interface Comment {
     id: string;
@@ -34,7 +34,7 @@ export default function CommentSection({
 }: CommentSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [createComment] = usePostCreateMutation();
-    const { theme, setTheme } = useTheme();
+    const { theme } = useTheme();
 
     const { data: commentCount } = useGetCommentCountQuery({
         targetId: targetId,
@@ -81,7 +81,7 @@ export default function CommentSection({
                 <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
                     Thảo luận chương ({commentCount?.count ?? 0})
                 </h3>
-                <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent dark:from-white/10" />
+                <Separator className="flex-1" />
             </div>
 
             <div className="mb-10">

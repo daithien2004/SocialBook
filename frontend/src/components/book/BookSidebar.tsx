@@ -1,8 +1,12 @@
+'use client';
+import { cn } from '@/lib/utils';
+import { Button } from '@/src/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Book } from '@/src/features/books/types/book.interface';
 import { Chapter } from '@/src/features/chapters/types/chapter.interface';
 import Link from 'next/link';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import ChapterListDrawer from './ChapterListDrawer';
 
 interface BookSidebarProps {
@@ -20,20 +24,17 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
 
   const allChapters = book.chapters ? [...book.chapters].reverse() : [];
 
-  const handleChapterSelect = (chapterSlug: string) => {
-    setShowAllChapters(false);
-    router.push(`/books/${bookSlug}/chapters/${chapterSlug}`);
-  };
-
   return (
     <>
       <div className="space-y-8">
         {/* Thông tin chi tiết */}
-        <div className="bg-white dark:bg-black/70 border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm dark:shadow-lg">
-          <h3 className="font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider text-sm border-b border-gray-100 dark:border-white/5 pb-2">
-            Thông tin chi tiết
-          </h3>
-          <div className="space-y-4 text-sm">
+        <Card className="border-border shadow-sm dark:shadow-lg bg-card text-card-foreground">
+          <CardHeader className="pb-2 border-b border-border">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider">
+              Thông tin chi tiết
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4 text-sm">
             <DetailRow
               label="Tình trạng"
               value={
@@ -47,55 +48,57 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
               label="Cập nhật cuối"
               value={new Date(book.updatedAt).toLocaleDateString('vi-VN')}
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Chương mới */}
-        <div className="bg-white dark:bg-black/70 border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm dark:shadow-lg">
-          <div className="flex items-center justify-between mb-6 pb-2 border-b border-gray-100 dark:border-white/5">
-            <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-sm">
+        <Card className="border-border shadow-sm dark:shadow-lg bg-card text-card-foreground">
+          <CardHeader className="pb-2 border-b border-border flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider">
               Chương mới
-            </h3>
-            <button
+            </CardTitle>
+            <Button
+              variant="link"
+              className="text-xs h-auto p-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
               onClick={() => setShowAllChapters(true)}
-              className="text-xs text-white hover:underline transition-colors"
             >
               Xem tất cả
-            </button>
-          </div>
+            </Button>
+          </CardHeader>
 
-          <div className="space-y-2">
-            {recentChapters.map((chapter) => (
-              <Link
-                key={chapter.id}
-                href={`/books/${bookSlug}/chapters/${chapter.slug}`}
-                className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent hover:border-gray-200 dark:hover:border-white/5 transition-all group"
-              >
-                <h4 className="font-medium text-gray-700 dark:text-gray-300 text-sm mb-1 group-hover:text-red-600 line-clamp-1">
-                  {chapter.title}
-                </h4>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>Chương {chapter.orderIndex}</span>
-                  <span>
-                    {new Date(chapter.createdAt).toLocaleDateString('vi-VN')}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+          <CardContent className="pt-2 px-2">
+            <div className="space-y-1">
+              {recentChapters.map((chapter) => (
+                <Link
+                  key={chapter.id}
+                  href={`/books/${bookSlug}/chapters/${chapter.slug}`}
+                  className="block p-3 rounded-md hover:bg-muted transition-all group"
+                >
+                  <h4 className="font-medium text-sm mb-1 group-hover:text-red-600 dark:group-hover:text-red-400 line-clamp-1 transition-colors">
+                    {chapter.title}
+                  </h4>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Chương {chapter.orderIndex}</span>
+                    <span>
+                      {new Date(chapter.createdAt).toLocaleDateString('vi-VN')}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* DRAWER MỤC LỤC (giống ChapterPage) */}
-      {/* Overlay */}
+      {/* DRAWER MỤC LỤC */}
       <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
+        className={cn(
+          "fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300",
           showAllChapters ? 'opacity-100 visible' : 'opacity-0 invisible'
-        }`}
+        )}
         onClick={() => setShowAllChapters(false)}
       />
 
-      {/* Drawer Panel */}
       <ChapterListDrawer
         isOpen={showAllChapters}
         onClose={() => setShowAllChapters(false)}
@@ -115,16 +118,17 @@ interface DetailRowProps {
 }
 
 const DetailRow = ({ label, value, highlight }: DetailRowProps) => (
-  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-white/5 last:border-0">
-    <span className="text-gray-500">{label}</span>
+  <div className="flex justify-between items-center py-2 border-b border-border last:border-0 hover:bg-muted/50 px-2 rounded-sm transition-colors">
+    <span className="text-muted-foreground">{label}</span>
     <span
-      className={`font-semibold ${
+      className={cn(
+        "font-semibold",
         highlight && value === 'Hoàn thành'
-          ? 'text-green-600'
+          ? 'text-green-600 dark:text-green-500'
           : highlight
-          ? 'text-yellow-600'
-          : 'text-gray-900 dark:text-white'
-      }`}
+            ? 'text-yellow-600 dark:text-yellow-500'
+            : 'text-foreground'
+      )}
     >
       {value}
     </span>

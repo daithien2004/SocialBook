@@ -1,14 +1,23 @@
 'use client';
 
-import { X, Send, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { toast } from 'sonner';
-import { getErrorMessage } from '@/src/lib/utils';
-import { useRouter } from 'next/navigation';
 import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { getErrorMessage } from '@/src/lib/utils';
+import { Loader2, MessageSquare, Send } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 import ListComments from '@/src/components/comment/ListComments';
+import { Button } from '@/src/components/ui/button';
+import { ScrollArea } from '@/src/components/ui/scroll-area';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/src/components/ui/sheet';
+import { Textarea } from '@/src/components/ui/textarea';
 import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
 
 interface ParagraphCommentDrawerProps {
@@ -27,16 +36,11 @@ export default function ParagraphCommentDrawer({
     hasHeader = false,
 }: ParagraphCommentDrawerProps) {
     const [commentText, setCommentText] = useState('');
-    const [mounted, setMounted] = useState(false);
 
     const [createComment, { isLoading }] = usePostCreateMutation();
 
     const { isAuthenticated } = useAppAuth();
     const router = useRouter();
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     const handleSubmit = async () => {
         if (!paragraphId || !commentText.trim()) return;
@@ -65,143 +69,59 @@ export default function ParagraphCommentDrawer({
         }
     };
 
-    if (!mounted) return null;
-
-    return createPortal(
-        <>
-            {/* Overlay */}
-            <div
-                className={`fixed inset-0 z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                    }`}
-                onClick={onClose}
-            />
-
-            {/* Drawer */}
-            <div
-                className={`fixed ${hasHeader ? 'top-15' : 'top-0'} right-0 bottom-0
-          w-[400px] max-w-[90vw]
-          bg-white dark:bg-[#1a1a1a]
-          border-l border-gray-300 dark:border-white/10
-          z-[61] shadow-2xl
-          transform transition-all duration-300 ease-in-out
-          flex flex-col
-          ${isOpen ? 'translate-x-0' : 'translate-x-full'}
-        `}
-            >
-                {/* Header */}
-                <div className="relative p-5 border-b border-gray-200 dark:border-white/5 shrink-0">
-                    {/* Close button */}
-                    <button
-                        onClick={onClose}
-                        className="
-              absolute top-4 right-4
-              p-2 rounded-full transition-colors
-              text-gray-600 hover:text-gray-900 hover:bg-gray-100
-              dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10
-            "
-                    >
-                        <X size={20} />
-                    </button>
-
-                    {/* Title */}
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white pr-10">
+    return (
+        <Sheet open={isOpen} onOpenChange={onClose}>
+            <SheetContent side="right" className="w-[400px] sm:w-[540px] p-0 flex flex-col gap-0 border-l border-border bg-background">
+                <SheetHeader className="p-5 border-b border-border bg-background shrink-0">
+                    <SheetTitle className="flex items-center gap-2 text-lg font-bold">
+                        <MessageSquare className="w-5 h-5" />
                         Thảo luận
-                    </h3>
-
-                    {/* Paragraph content – SCROLL */}
+                    </SheetTitle>
                     {paragraphContent && (
-                        <div
-                            className="
-                mt-2
-                max-h-[400px]
-                overflow-y-auto
-                pr-2
-                text-[15px]
-                text-gray-500 dark:text-gray-400
-                text-justify
-                thin-scrollbar
-                scrollbar-thumb-gray-300
-                dark:scrollbar-thumb-gray-600
-              "
-                        >
-                            {paragraphContent}
+                        <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-3 rounded-md border border-border italic border-l-4 border-l-primary/50">
+                            "{paragraphContent.length > 150 ? paragraphContent.substring(0, 150) + '...' : paragraphContent}"
                         </div>
                     )}
-                </div>
+                    <SheetDescription className="sr-only">
+                        Bình luận cho đoạn văn
+                    </SheetDescription>
+                </SheetHeader>
 
-                {/* Body */}
-                <div className="flex flex-col flex-1 overflow-hidden">
-                    {/* Input */}
-                    <div className="p-4 border-b border-gray-200 dark:border-white/5 shrink-0">
+                <div className="flex flex-col flex-1 overflow-hidden bg-muted/10">
+                    {/* Input Area */}
+                    <div className="p-4 border-b border-border bg-background shrink-0">
                         <div className="flex items-start gap-3">
-                            {/* Textarea */}
                             <div className="relative flex-1">
-                                <textarea
+                                <Textarea
                                     placeholder="Viết suy nghĩ của bạn..."
                                     value={commentText}
                                     onChange={(e) => setCommentText(e.target.value)}
-                                    className="
-                    w-full
-                    resize-none
-                    min-h-[44px]
-                    max-h-[120px]
-                    rounded-2xl
-                    px-4 py-3 pr-12
-                    text-sm
-                    bg-white dark:bg-[#1a1a1a]
-                    border border-gray-300 dark:border-white/15
-                    text-gray-900 dark:text-white
-                    placeholder:text-gray-400 dark:placeholder:text-gray-500
-                    focus:outline-none
-                    focus:ring-2 focus:ring-blue-500/30 dark:focus:ring-blue-400/30
-                    transition-all
-                  "
+                                    className="min-h-[44px] max-h-[120px] resize-none pr-12 bg-muted/30 focus:bg-background"
                                 />
-
                                 {commentText.length > 0 && (
-                                    <span
-                                        className="absolute right-3 bottom-2 text-[11px] text-gray-500 dark:text-gray-400">
+                                    <span className="absolute right-2 bottom-2 text-[10px] text-muted-foreground">
                                         {commentText.length}
                                     </span>
                                 )}
                             </div>
 
-                            {/* Send button */}
-                            <button
+                            <Button
                                 disabled={isLoading || !commentText.trim()}
                                 onClick={handleSubmit}
-                                className={`
-                  h-[44px] w-[44px]
-                  flex items-center justify-center
-                  rounded-full
-                  transition-all duration-200
-                  ${isLoading || !commentText.trim()
-                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                                        : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 text-white shadow-md hover:shadow-lg active:scale-95'
-                                    }
-                `}
-                                aria-label="Gửi bình luận"
+                                size="icon"
+                                className="h-10 w-10 shrink-0 rounded-full"
                             >
                                 {isLoading ? (
-                                    <Loader2 size={16} className="animate-spin" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
-                                    <Send size={16} />
+                                    <Send className="w-4 h-4" />
                                 )}
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
-                    {/* Comments list – SCROLL */}
-                    <div
-                        className="
-              flex-1
-              overflow-y-auto
-              p-4
-              scrollbar-thin
-              scrollbar-thumb-gray-300
-              dark:scrollbar-thumb-gray-600
-            "
-                    >
+                    {/* Comments List */}
+                    <ScrollArea className="flex-1 p-4">
                         {paragraphId && (
                             <ListComments
                                 targetId={paragraphId}
@@ -211,10 +131,9 @@ export default function ParagraphCommentDrawer({
                                 theme="dark"
                             />
                         )}
-                    </div>
+                    </ScrollArea>
                 </div>
-            </div>
-        </>,
-        document.body
+            </SheetContent>
+        </Sheet>
     );
 }

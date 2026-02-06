@@ -1,35 +1,47 @@
 'use client';
 
-import React, { useState } from 'react';
-import {
-    Heart,
-    MessageCircle,
-    Send,
-    MoreVertical,
-    Edit2,
-    Trash2,
-    X,
-    Loader2,
-    BookOpen,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { getErrorMessage } from '@/src/lib/utils';
-import { Post } from '@/src/features/posts/types/post.interface';
+import EditPostForm from '@/src/components/post/EditPostForm';
 import ModalPostComment from '@/src/components/post/ModalPostComment';
 import SharePostModal from '@/src/components/post/SharePostModal';
-import EditPostForm from '@/src/components/post/EditPostForm';
-import {
-    useDeletePostMutation,
-    useDeletePostImageMutation,
-} from '@/src/features/posts/api/postApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
 import {
     useGetCountQuery,
     useGetStatusQuery,
     usePostToggleLikeMutation,
 } from '@/src/features/likes/api/likeApi';
-import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
+import {
+    useDeletePostImageMutation,
+    useDeletePostMutation,
+} from '@/src/features/posts/api/postApi';
+import { Post } from '@/src/features/posts/types/post.interface';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { getErrorMessage } from '@/src/lib/utils';
+import {
+    BookOpen,
+    Edit2,
+    Heart,
+    Loader2,
+    MessageCircle,
+    MoreVertical,
+    Send,
+    Trash2,
+    X,
+} from 'lucide-react';
 import { useRouter } from "next/navigation";
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+
+// Shadcn UI
+import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
+import { Badge } from '@/src/components/ui/badge';
+import { Button } from '@/src/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/src/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/src/components/ui/dropdown-menu';
 
 interface PostCardProps {
     post: Post;
@@ -37,7 +49,6 @@ interface PostCardProps {
 
 const PostCard: React.FC<PostCardProps> = ({ post }) => {
     const [isCommentOpen, setIsCommentOpen] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -152,25 +163,22 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
     return (
         <>
-            <article
-                className="w-full bg-white/95 dark:bg-[#1a1a1a] rounded-3xl border border-slate-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200 mb-5 overflow-hidden">
+            <Card className="w-full mb-5 overflow-hidden transition-shadow duration-200 hover:shadow-md border-slate-100 dark:border-gray-700 bg-white/95 dark:bg-[#1a1a1a]">
                 {/* HEADER */}
-                <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+                <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
                     <div className="flex items-center gap-3 cursor-pointer"
                         onClick={() => route.push(`users/${post.userId.id}`)}>
                         <div className="relative">
-                            <img
-                                src={
-                                    post.userId?.image ||
-                                    post.userAvatar ||
-                                    '/abstract-book-pattern.png'
-                                }
-                                alt={post.userId?.username || 'User'}
-                                className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
-                            />
-                            {/* Chấm trạng thái online (optional) */}
-                            <span
-                                className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
+                            <Avatar className="h-10 w-10 border border-slate-200 dark:border-gray-700">
+                                <AvatarImage
+                                    src={post.userId?.image || post.userAvatar || '/abstract-book-pattern.png'}
+                                    alt={post.userId?.username || 'User'}
+                                    className="object-cover"
+                                />
+                                <AvatarFallback>{post.userId?.username?.charAt(0) || 'U'}</AvatarFallback>
+                            </Avatar>
+                            {/* Chấm trạng thái online (optional) - giữ nguyên logic cũ nếu cần */}
+                            <span className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
                         </div>
                         <div className="space-y-0.5">
                             <h2 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
@@ -183,131 +191,122 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                     </div>
 
                     {isOwner && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowMenu((prev) => !prev)}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                            >
-                                <MoreVertical className="w-5 h-5 text-slate-500 dark:text-gray-400" />
-                            </button>
-
-                            {showMenu && (
-                                <div
-                                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-slate-100 dark:border-gray-800 py-1 z-20">
-                                    <button
-                                        onClick={() => {
-                                            setShowEditForm(true);
-                                            setShowMenu(false);
-                                        }}
-                                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-800 transition"
-                                    >
-                                        <Edit2 className="w-4 h-4" />
-                                        <span>Chỉnh sửa bài viết</span>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setShowDeleteConfirm(true);
-                                            setShowMenu(false);
-                                        }}
-                                        className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                        <span>Xóa bài viết</span>
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-slate-100 dark:hover:bg-gray-800">
+                                    <MoreVertical className="w-4 h-4 text-slate-500 dark:text-gray-400" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => setShowEditForm(true)} className="cursor-pointer">
+                                    <Edit2 className="w-4 h-4 mr-2" />
+                                    <span>Chỉnh sửa bài viết</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    <span>Xóa bài viết</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     )}
-                </div>
+                </CardHeader>
 
                 {/* CONTENT */}
-                <div className="px-4 pb-3">
+                <CardContent className="p-4 pt-0">
                     <p className="text-[15px] leading-relaxed text-slate-800 dark:text-gray-200 whitespace-pre-wrap">
                         {post.content}
                     </p>
-                </div>
+                </CardContent>
 
                 {/* BOOK SECTION */}
                 {post.bookId && (
-                    <div
-                        className="mx-4 mb-3 mt-1 p-3 bg-slate-50 dark:bg-gray-900/40 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-start gap-3">
+                    <div className="px-4 pb-3">
                         <div
-                            className="shrink-0 w-16 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800">
-                            <img
-                                src={post.bookId.coverUrl || '/abstract-book-pattern.png'}
-                                alt={post.bookId.title}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-1">
-                            <div
-                                className="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded-full">
-                                <BookOpen size={13} />
-                                <span className="text-[10px] font-medium uppercase tracking-wide">
-                                    Đang đọc
-                                </span>
+                            className="p-3 bg-slate-50 dark:bg-gray-900/40 rounded-xl border border-slate-100 dark:border-gray-800 flex items-start gap-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-gray-800/60 transition-colors"
+                            onClick={() => route.push(`/books/${post.bookId.slug}`)} // Assuming slug exists
+                        >
+                            <div className="shrink-0 w-14 h-20 rounded-md overflow-hidden border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800">
+                                <img
+                                    src={post.bookId.coverUrl || '/abstract-book-pattern.png'}
+                                    alt={post.bookId.title}
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
-                            <h3
-                                className="font-semibold text-sm text-slate-900 dark:text-gray-100 truncate"
-                                title={post.bookId.title}
-                            >
-                                {post.bookId.title}
-                            </h3>
-                            <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
-                                {post.bookId.authorId?.name || 'Tác giả ẩn danh'}
-                            </p>
+                            <div className="flex-1 min-w-0 space-y-1">
+                                <Badge variant="secondary" className="px-1.5 py-0 h-5 text-[10px] font-medium uppercase tracking-wide gap-1 bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/50">
+                                    <BookOpen size={10} />
+                                    Đang đọc
+                                </Badge>
+                                <h3
+                                    className="font-semibold text-sm text-slate-900 dark:text-gray-100 truncate mt-1"
+                                    title={post.bookId.title}
+                                >
+                                    {post.bookId.title}
+                                </h3>
+                                <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
+                                    {post.bookId.authorId?.name || 'Tác giả ẩn danh'}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {/* IMAGES */}
                 {hasPostImages && (
-                    <div className="relative w-full bg-slate-50 dark:bg-gray-900/30 group">
-                        <div className="relative h-80 w-full overflow-hidden">
+                    <div className="relative w-full bg-slate-50 dark:bg-gray-900/30 group border-y border-slate-100 dark:border-gray-800">
+                        <div className="relative h-96 w-full overflow-hidden">
+                            {/* Improved Image Container */}
                             <img
                                 src={post.imageUrls![currentImageIndex]}
                                 alt={`Post image ${currentImageIndex + 1}`}
-                                className="w-full h-full object-contain bg-slate-900/5 dark:bg-white/5"
+                                className="w-full h-full object-contain bg-slate-100 dark:bg-black/20"
                             />
                         </div>
 
                         {isOwner && (
-                            <button
-                                onClick={() =>
-                                    handleDeleteImage(post.imageUrls![currentImageIndex])
-                                }
-                                className="absolute top-3 right-3 p-2 bg-slate-900/60 dark:bg-black/60 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                            <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => handleDeleteImage(post.imageUrls![currentImageIndex])}
+                                className="absolute top-3 right-3 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                                 title="Xóa ảnh này"
                             >
                                 <X className="w-4 h-4" />
-                            </button>
+                            </Button>
                         )}
 
                         {post.imageUrls!.length > 1 && (
                             <>
-                                <button
+                                <Button
+                                    variant="secondary"
+                                    size="icon"
                                     onClick={prevImage}
                                     disabled={currentImageIndex === 0}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 dark:bg-gray-900/80 dark:hover:bg-gray-900 dark:text-gray-100 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80"
                                 >
-                                    ‹
-                                </button>
-                                <button
+                                    <span className="text-lg leading-none pb-1">‹</span>
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    size="icon"
                                     onClick={nextImage}
                                     disabled={currentImageIndex === post.imageUrls!.length - 1}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-800 dark:bg-gray-900/80 dark:hover:bg-gray-900 dark:text-gray-100 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all disabled:hidden"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity disabled:hidden bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80"
                                 >
-                                    ›
-                                </button>
+                                    <span className="text-lg leading-none pb-1">›</span>
+                                </Button>
 
-                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 p-1 rounded-full bg-black/20 backdrop-blur-[2px]">
                                     {post.imageUrls!.map((_, index) => (
                                         <button
                                             key={index}
                                             onClick={() => setCurrentImageIndex(index)}
                                             className={`h-1.5 rounded-full transition-all shadow-sm ${index === currentImageIndex
-                                                    ? 'bg-white w-6'
-                                                    : 'bg-white/60 w-1.5'
+                                                ? 'bg-white w-6'
+                                                : 'bg-white/60 w-1.5 hover:bg-white/80'
                                                 }`}
                                         />
                                     ))}
@@ -318,60 +317,65 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 )}
 
                 {/* FOOTER ACTIONS */}
-                <div className="px-4 pb-3 pt-2">
-                    <div
-                        className="flex justify-between items-center border-t border-slate-100 dark:border-gray-800 pt-3">
-                        <div className="flex items-center gap-5">
-                            <button
+                <CardFooter className="p-0 flex flex-col">
+                    <div className="px-4 py-2 w-full flex items-center justify-between border-t border-slate-100 dark:border-gray-800">
+                        <div className="flex gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={handleLike}
                                 disabled={isLikeLoading || isLikeStatusLoading}
-                                className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-500 transition-colors group text-sm"
+                                className={`gap-2 px-3 text-slate-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 ${likeStatus?.isLiked ? 'text-rose-500 dark:text-rose-500' : ''}`}
                             >
                                 <Heart
-                                    size={20}
-                                    className={`transition-transform duration-150 group-hover:scale-110 ${likeStatus?.isLiked ? 'fill-rose-500 text-rose-500' : ''
-                                        }`}
+                                    size={18}
+                                    className={likeStatus?.isLiked ? 'fill-current' : ''}
                                 />
                                 <span className="hidden sm:inline">
                                     {likeStatus?.isLiked ? 'Đã thích' : 'Thích'}
                                 </span>
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={openCommentModal}
-                                className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors group text-sm"
+                                className="gap-2 px-3 text-slate-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/30"
                             >
-                                <MessageCircle
-                                    size={20}
-                                    className="transition-transform duration-150 group-hover:scale-110"
-                                />
+                                <MessageCircle size={18} />
                                 <span className="hidden sm:inline">Bình luận</span>
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => setShowShare((prev) => !prev)}
-                                className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors group text-sm"
+                                className="gap-2 px-3 text-slate-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                             >
-                                <Send
-                                    size={20}
-                                    className="transition-transform duration-150 group-hover:scale-110 -rotate-45 mt-0.5"
-                                />
+                                <Send size={18} className="-rotate-45 mt-0.5" />
                                 <span className="hidden sm:inline">Chia sẻ</span>
-                            </button>
+                            </Button>
                         </div>
-
-                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-gray-400">
-                            <span className="inline-flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                                <span>{likeCount?.count ?? 0} lượt thích</span>
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
-                                <span>{commentCount?.count ?? 0} bình luận</span>
-                            </span>
-                        </div>
+                        {/* Stats - Optional, keeping it simple or moving to top if preferred. Keeping as is for now but styled better. */}
                     </div>
-                </div>
+                    {/* Stats Bar */}
+                    {((likeCount?.count ?? 0) > 0 || (commentCount?.count ?? 0) > 0) && (
+                        <div className="px-4 py-2 w-full bg-slate-50/50 dark:bg-gray-900/30 text-xs text-slate-500 dark:text-gray-400 flex gap-4 border-t border-slate-100 dark:border-gray-800/50">
+                            {(likeCount?.count ?? 0) > 0 && (
+                                <span className="flex items-center gap-1">
+                                    <Heart size={12} className="fill-rose-400 text-rose-400" />
+                                    {likeCount?.count} lượt thích
+                                </span>
+                            )}
+                            {(commentCount?.count ?? 0) > 0 && (
+                                <span className="flex items-center gap-1">
+                                    <MessageCircle size={12} className="fill-sky-400 text-sky-400" />
+                                    {commentCount?.count} bình luận
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </CardFooter>
 
                 <SharePostModal
                     isOpen={showShare}
@@ -396,38 +400,42 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                     <EditPostForm post={post} onClose={() => setShowEditForm(false)} />
                 )}
 
+                {/* Styled Delete Confirm Dialog - Could use Shadcn AlertDialog here too, but simple conditional render is fine for now or I can reuse Dialog */}
                 {showDeleteConfirm && (
-                    <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
-                        <div
-                            className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl p-6 w-full max-w-sm border border-transparent dark:border-gray-700">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-1">
-                                Xóa bài viết?
-                            </h3>
-                            <p className="text-sm text-slate-600 dark:text-gray-300 mb-5">
-                                Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa bài
-                                viết này chứ?
-                            </p>
-                            <div className="flex gap-3">
-                                <button
+                    <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <Card className="w-full max-w-sm shadow-xl border-none">
+                            <CardHeader>
+                                <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
+                                    Xóa bài viết?
+                                </h3>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-slate-600 dark:text-gray-300">
+                                    Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa bài viết này chứ?
+                                </p>
+                            </CardContent>
+                            <CardFooter className="flex gap-3 justify-end bg-slate-50 dark:bg-gray-900/50 p-4 rounded-b-xl">
+                                <Button
+                                    variant="outline"
                                     onClick={() => setShowDeleteConfirm(false)}
-                                    className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 text-sm font-medium rounded-xl transition-colors"
                                     disabled={isDeleting}
                                 >
                                     Hủy
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    variant="destructive"
                                     onClick={handleDelete}
                                     disabled={isDeleting}
-                                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                                    className="gap-2"
                                 >
                                     {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
                                     Xóa
-                                </button>
-                            </div>
-                        </div>
+                                </Button>
+                            </CardFooter>
+                        </Card>
                     </div>
                 )}
-            </article>
+            </Card>
         </>
     );
 };

@@ -1,5 +1,7 @@
-import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { Button } from '@/src/components/ui/button';
 import { ChevronLeft, ChevronRight, List } from 'lucide-react';
+import Link from 'next/link';
 
 interface ChapterNavigationProps {
   hasPrevious: boolean;
@@ -20,64 +22,59 @@ export default function ChapterNavigation({
   tableOfContentsHref,
   onTableOfContentsClick,
 }: ChapterNavigationProps) {
-  const buttonClass = (disabled: boolean) => `
-    flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border
-    ${
-      disabled
-        ? 'border-transparent text-neutral-700 cursor-not-allowed'
-        : 'border-white/10 text-neutral-400 hover:text-white hover:border-white/30 hover:bg-white/5 active:scale-95'
-    }
-  `;
-
-  const primaryButtonClass = (disabled: boolean) => `
-    flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 shadow-lg
-    ${
-      disabled
-        ? 'bg-neutral-800 text-neutral-600 cursor-not-allowed'
-        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20 active:scale-95'
-    }
-  `;
-
   return (
     <nav className="flex justify-between items-center w-full">
       {/* Nút Previous */}
-      <button
+      <Button
+        variant="outline"
         onClick={onPrevious}
         disabled={!hasPrevious}
-        className={buttonClass(!hasPrevious)}
+        className={cn(
+          "rounded-full gap-2 border-white/10 text-neutral-400 hover:text-white hover:border-white/30 hover:bg-white/5",
+          !hasPrevious && "opacity-50 cursor-not-allowed"
+        )}
         aria-label="Chương trước"
       >
         <ChevronLeft className="w-4 h-4" />
         <span className="hidden sm:inline">Chương trước</span>
-      </button>
+      </Button>
 
       {showTableOfContents &&
         (onTableOfContentsClick ? (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onTableOfContentsClick}
-            className="text-neutral-500 hover:text-white transition-colors p-2"
+            className="text-neutral-500 hover:text-white hover:bg-white/5 rounded-full"
           >
             <List size={20} />
-          </button>
+          </Button>
         ) : (
-          <Link
-            href={tableOfContentsHref || '#'}
-            className="text-neutral-500 hover:text-white transition-colors p-2"
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="text-neutral-500 hover:text-white hover:bg-white/5 rounded-full"
           >
-            <List size={20} />
-          </Link>
+            <Link href={tableOfContentsHref || '#'}>
+              <List size={20} />
+            </Link>
+          </Button>
         ))}
 
-      <button
+      <Button
         onClick={onNext}
         disabled={!hasNext}
-        className={primaryButtonClass(!hasNext)}
+        className={cn(
+          "rounded-full gap-2 shadow-lg shadow-blue-900/20 bg-blue-600 hover:bg-blue-500 text-white",
+          !hasNext && "bg-neutral-800 text-neutral-600 shadow-none hover:bg-neutral-800 cursor-not-allowed"
+        )}
         aria-label="Chương sau"
       >
         <span className="hidden sm:inline">Chương sau</span>
         <span className="sm:hidden">Tiếp</span>
         <ChevronRight className="w-4 h-4" />
-      </button>
+      </Button>
     </nav>
   );
 }

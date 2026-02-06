@@ -5,6 +5,7 @@ import PostCard from '@/src/components/post/PostCard';
 import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert';
 import { Button } from '@/src/components/ui/button';
 import { Spinner } from '@/src/components/ui/spinner';
+import { ToggleGroup, ToggleGroupItem } from '@/src/components/ui/toggle-group';
 import { useGetPostsQuery } from '@/src/features/posts/api/postApi';
 import { Post } from '@/src/features/posts/types/post.interface';
 import { useUIStore } from '@/src/store/useUIStore';
@@ -21,7 +22,7 @@ const PostList: React.FC<PostListProps> = () => {
     const limit = 10;
 
     // Zustand Store
-    const { viewMode, toggleViewMode, setViewMode } = useUIStore();
+    const { viewMode, setViewMode } = useUIStore();
 
     const observerTarget = useRef<HTMLDivElement | null>(null);
 
@@ -36,8 +37,6 @@ const PostList: React.FC<PostListProps> = () => {
     const total = data?.meta?.total ?? 0;
     const prevTotalRef = useRef<number | null>(null);
 
-    // Initial persistence sync (optional, to ensure hydration match if needed, but Zustand persist handles usually fine)
-    // Note: Hydration mismatch can occur with persist. For strict correctness we might need a mounted check.
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
         setMounted(true);
@@ -127,10 +126,10 @@ const PostList: React.FC<PostListProps> = () => {
     if (!allPosts.length && !isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-10 space-y-2 text-center">
-                <p className="text-sm font-medium text-slate-800">
+                <p className="text-sm font-medium text-slate-800 dark:text-gray-200">
                     Chưa có bài viết nào.
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-gray-400">
                     Hãy là người đầu tiên chia sẻ cảm nhận về sách 📚
                 </p>
             </div>
@@ -138,34 +137,25 @@ const PostList: React.FC<PostListProps> = () => {
     }
 
     return (
-        <div className="space-y-4 relative">
+        <div className="space-y-6 relative">
             {/* View Mode Toggle */}
-            <div className="flex justify-end mb-4">
-                <div className="bg-slate-100 p-1 rounded-lg flex gap-1">
-                    <Button
-                        variant={viewMode === 'list' ? 'white' : 'ghost'}
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => setViewMode('list')}
-                    >
-                        <List className="h-4 w-4 text-slate-700" />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'grid' ? 'white' : 'ghost'}
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => setViewMode('grid')}
-                    >
-                        <LayoutGrid className="h-4 w-4 text-slate-700" />
-                    </Button>
-                </div>
+            <div className="flex justify-between items-center bg-white dark:bg-[#1a1a1a] p-2 rounded-xl border border-slate-100 dark:border-gray-800 shadow-sm">
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white px-2">Bảng tin</h2>
+                <ToggleGroup type="single" value={viewMode} onValueChange={(val) => val && setViewMode(val as 'grid' | 'list')}>
+                    <ToggleGroupItem value="list" aria-label="List view" className="h-8 w-8 p-0">
+                        <List className="h-4 w-4" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 w-8 p-0">
+                        <LayoutGrid className="h-4 w-4" />
+                    </ToggleGroupItem>
+                </ToggleGroup>
             </div>
 
             {/* Posts Grid/List */}
             <div className={cn(
                 mounted && viewMode === 'grid'
-                    ? "grid grid-cols-1 md:grid-cols-2 gap-4"
-                    : "space-y-4"
+                    ? "grid grid-cols-1 md:grid-cols-2 gap-5"
+                    : "space-y-6"
             )}>
                 {allPosts.map((post: Post) => (
                     <PostCard key={post.id} post={post} />
@@ -183,11 +173,11 @@ const PostList: React.FC<PostListProps> = () => {
             {allPosts.length > 5 && (
                 <Button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="fixed bottom-8 right-8 rounded-full shadow-lg z-40"
+                    className="fixed bottom-8 right-8 rounded-full shadow-lg z-40 w-12 h-12"
                     size="icon"
                     aria-label="Scroll to top"
                 >
-                    <ArrowUp className="h-4 w-4" />
+                    <ArrowUp className="h-5 w-5" />
                 </Button>
             )}
         </div>

@@ -1,7 +1,14 @@
 'use client';
-import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Button } from '@/src/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/src/components/ui/dropdown-menu';
+import { cn } from '@/src/lib/utils';
 import { SORT_OPTIONS } from '@/src/features/books/books.constants';
+import { ChevronDown } from 'lucide-react';
 
 interface SortDropdownProps {
   currentSort: string;
@@ -14,8 +21,6 @@ export const SortDropdown = ({
   currentOrder,
   onSortChange,
 }: SortDropdownProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
   const activeLabel =
     SORT_OPTIONS.find(
       (s) => s.value === currentSort && s.order === currentOrder
@@ -23,49 +28,36 @@ export const SortDropdown = ({
 
   return (
     <div className="lg:w-64 flex-shrink-0">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">
         Sắp xếp theo
       </h3>
-      <div className="relative">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between bg-white dark:bg-white/5 backdrop-blur-sm border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white rounded-lg px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/10 transition-all"
-        >
-          <span>{activeLabel}</span>
-          <ChevronDown
-            className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            size={18}
-          />
-        </button>
-
-        {isOpen && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setIsOpen(false)}
-            />
-            <div className="absolute top-full mt-2 w-full bg-white dark:bg-[#1a1a1a] border border-gray-300 dark:border-white/10 rounded-lg shadow-xl overflow-hidden z-20 animate-in fade-in slide-in-from-top-2">
-              {SORT_OPTIONS.map((option) => (
-                <button
-                  key={`${option.value}-${option.order}`}
-                  onClick={() => {
-                    onSortChange(option.value, option.order);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-3 transition-colors ${
-                    currentSort === option.value &&
-                    currentOrder === option.order
-                      ? 'bg-red-600 text-white font-semibold'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full justify-between bg-background border-input hover:bg-accent hover:text-accent-foreground font-normal"
+          >
+            {activeLabel}
+            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]" align="start">
+          {SORT_OPTIONS.map((option) => (
+            <DropdownMenuItem
+              key={`${option.value}-${option.order}`}
+              onClick={() => onSortChange(option.value, option.order)}
+              className={cn(
+                "cursor-pointer",
+                currentSort === option.value && currentOrder === option.order
+                  ? "bg-red-50 text-red-600 focus:bg-red-50 focus:text-red-600 dark:bg-red-900/20 dark:text-red-400 dark:focus:bg-red-900/30"
+                  : ""
+              )}
+            >
+              {option.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

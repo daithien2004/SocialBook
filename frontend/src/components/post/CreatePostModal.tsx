@@ -1,11 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { ImagePlus, Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { Button } from "@/src/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/components/ui/dialog";
+import { ScrollArea } from "@/src/components/ui/scroll-area";
+import { Separator } from "@/src/components/ui/separator";
+import { Textarea } from "@/src/components/ui/textarea";
 
 export interface CreatePostModalProps {
   isSubmitting: boolean;
@@ -38,7 +50,6 @@ export default function CreatePostModal({
   const [content, setContent] = useState(defaultContent);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { isAuthenticated } = useAppAuth();
@@ -57,14 +68,10 @@ export default function CreatePostModal({
   }, [isOpen, isAuthenticated, onClose, router]);
 
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
-
-  useEffect(() => {
     if (isOpen) {
       setContent(defaultContent);
     } else {
+      // Cleanup previews when modal closes
       setPreviewUrls((prevUrls) => {
         prevUrls.forEach((url) => URL.revokeObjectURL(url));
         return [];
@@ -81,29 +88,24 @@ export default function CreatePostModal({
     const totalImages = images.length + filesArray.length;
 
     if (totalImages > maxImages) {
-      alert(`Chỉ có thể thêm tối đa ${maxImages} ảnh`);
+      toast.error(`Chỉ có thể thêm tối đa ${maxImages} ảnh`);
       return;
     }
 
     const validFiles = filesArray.filter((file) => {
       const isValid = file.type.startsWith('image/');
       if (!isValid) {
-        alert(`File ${file.name} không phải là hình ảnh`);
+        toast.error(`File ${file.name} không phải là hình ảnh`);
       }
       return isValid;
     });
 
     if (validFiles.length > 0) {
       setImages([...images, ...validFiles]);
-
-      // Tạo preview URLs
-      const newPreviewUrls = validFiles.map((file) =>
-        URL.createObjectURL(file)
-      );
+      const newPreviewUrls = validFiles.map((file) => URL.createObjectURL(file));
       setPreviewUrls([...previewUrls, ...newPreviewUrls]);
     }
 
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -118,7 +120,7 @@ export default function CreatePostModal({
   const handleSubmit = async () => {
     const trimmedContent = content.trim();
     if (!trimmedContent) {
-      alert('Vui lòng nhập nội dung');
+      toast.error('Vui lòng nhập nội dung bài viết');
       return;
     }
 
@@ -130,7 +132,7 @@ export default function CreatePostModal({
       onClose();
     } catch (error) {
       console.error('Submit failed:', error);
-      alert('Có lỗi xảy ra khi đăng bài');
+      toast.error('Có lỗi xảy ra khi đăng bài');
     }
   };
 
@@ -138,72 +140,58 @@ export default function CreatePostModal({
     fileInputRef.current?.click();
   };
 
-  if (!isOpen || !mounted || !isAuthenticated) return null;
+  if (!isAuthenticated) return null;
 
   const totalImages = images.length;
   const canAddMore = totalImages < maxImages;
 
-  const modalContent = (
-    <div
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-[#1a1a1a] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-colors"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-white/10 flex items-center justify-between transition-colors">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">
-            {title}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
-            aria-label="Đóng"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden bg-white dark:bg-[#1a1a1a]">
+        <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+          <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
+          <DialogDescription className="hidden">
+            Create a new post to share with your friends
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {/* Content Input */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors">
-              {contentLabel}
-            </label>
-            <textarea
+        <div className="p-6 pb-2">
+          <div className="space-y-4">
+            <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={contentPlaceholder}
-              className="w-full border border-gray-300 dark:border-white/10 bg-white dark:bg-black/40 text-gray-900 dark:text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500"
-              rows={6}
+              className="min-h-[150px] resize-none border-none focus-visible:ring-0 px-0 text-lg shadow-none bg-transparent"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">
-              {content.length} ký tự
-            </p>
+
+            {previewUrls.length > 0 && (
+              <ScrollArea className="h-[200px] w-full rounded-md border p-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {previewUrls.map((url, index) => (
+                    <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border border-slate-200 dark:border-gray-700">
+                      <img
+                        src={url}
+                        alt={`Preview ${index}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </div>
+        </div>
 
-          {/* Images Section */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors">
-              Hình ảnh
-            </label>
-
-            {/* Hidden File Input */}
+        <div className="px-6 py-2">
+          <div className="flex items-center gap-2">
             <input
               ref={fileInputRef}
               type="file"
@@ -212,122 +200,41 @@ export default function CreatePostModal({
               onChange={handleFileSelect}
               className="hidden"
             />
-
-            {/* Upload Button */}
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2 text-slate-600 dark:text-gray-300"
               onClick={handleClickUpload}
               disabled={!canAddMore}
-              className="w-full mb-3 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-white/20 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-400 hover:border-indigo-500 dark:hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              {canAddMore
-                ? `Chọn ảnh (${totalImages}/${maxImages})`
-                : `Đã đạt giới hạn ${maxImages} ảnh`}
-            </button>
-
-            {/* Images Preview */}
-            {totalImages > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                {previewUrls.map((url, index) => (
-                  <div
-                    key={`upload-${index}`}
-                    className="relative group aspect-video bg-gray-100 dark:bg-white/5 rounded-lg overflow-hidden transition-colors"
-                  >
-                    <img
-                      src={url}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                      {images[index].name}
-                    </div>
-                    <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                      {(images[index].size / 1024 / 1024).toFixed(2)} MB
-                    </div>
-                    <button
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-2 left-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      aria-label="Xóa"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 dark:border-white/20 rounded-lg p-8 text-center transition-colors">
-                <svg
-                  className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-2 transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">
-                  Chưa có hình ảnh nào
-                </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 transition-colors">
-                  Click nút trên để chọn ảnh
-                </p>
-              </div>
-            )}
-
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 transition-colors">
-              Đã thêm {totalImages}/{maxImages} hình ảnh
-            </p>
+              <ImagePlus className="w-4 h-4" />
+              Thêm ảnh
+            </Button>
+            <span className="text-xs text-slate-500">
+              {totalImages}/{maxImages} ảnh
+            </span>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-white/10 flex items-center justify-end gap-3 transition-colors">
-          <button
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="px-4 py-2 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Hủy
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting || !content.trim()}
-            className="px-6 py-2 bg-indigo-600 dark:bg-indigo-500 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmitting ? 'Đang đăng...' : 'Đăng bài'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+        <Separator className="my-2" />
 
-  return createPortal(modalContent, document.body);
+        <DialogFooter className="px-6 py-4 pt-2">
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
+            Hủy
+          </Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className="min-w-[100px]">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Đang đăng...
+              </>
+            ) : (
+              'Đăng bài'
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

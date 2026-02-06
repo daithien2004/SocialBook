@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Book } from '@/src/features/books/types/book.interface';
 import { Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef, useEffect, ElementType } from 'react';
 import Link from 'next/link';
+import { ElementType, useEffect, useRef, useState } from 'react';
+
+import { cn, formatCompact } from '@/lib/utils';
 import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
-import { formatCompact } from '@/lib/utils';
+import { Badge } from '@/src/components/ui/badge';
+import { Button } from '@/src/components/ui/button';
+import { Card, CardContent } from '@/src/components/ui/card';
+import { Book } from '@/src/features/books/types/book.interface';
 
 export function BookCard({ book }: { book: Book }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,7 +26,7 @@ export function BookCard({ book }: { book: Book }) {
         href={`/books/${book.slug}`}
         className="group relative block w-full max-w-[220px]"
       >
-        <div className="relative flex flex-col overflow-hidden rounded-md bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 transition-all duration-500 hover:border-gray-400 dark:hover:border-white/30 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+        <Card className="overflow-hidden border-gray-200 dark:border-white/10 transition-all duration-500 hover:border-gray-400 dark:hover:border-white/30 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] bg-card text-card-foreground">
           <div className="relative aspect-[2/3] w-full overflow-hidden">
             <img
               src={book.coverUrl}
@@ -31,28 +34,28 @@ export function BookCard({ book }: { book: Book }) {
               className="h-full w-full object-cover opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-hover:contrast-125"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0a0a0a] via-transparent to-transparent opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
 
             <div className="absolute top-3 w-full text-center">
-              <span className="text-[9px] font-bold tracking-[0.3em] uppercase text-gray-600 dark:text-white/60 drop-shadow-md">
+              <Badge variant="secondary" className="text-[9px] font-bold tracking-[0.3em] uppercase bg-background/80 backdrop-blur-sm border-none shadow-sm">
                 {book.status === 'published' ? 'COMING SOON' : 'IN PRODUCTION'}
-              </span>
+              </Badge>
             </div>
           </div>
 
-          <div className="flex flex-col p-4 pt-2">
+          <CardContent className="flex flex-col p-4 pt-2">
             <div className="mb-1 text-center">
-              <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+              <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">
                 {book.authorId.name}
               </p>
             </div>
 
-            <h3 className="mb-4 text-center text-sm font-notosans text-gray-900 dark:text-gray-100 bg-clip-text group-hover:text-red-600 dark:group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all">
+            <h3 className="mb-4 text-center text-sm font-notosans font-semibold text-foreground bg-clip-text group-hover:text-red-600 dark:group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all line-clamp-2">
               {book.title}
             </h3>
 
-            <div className="mt-auto flex items-center justify-between border-t border-gray-200 dark:border-white/10 pt-3">
-              <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-gray-600 dark:text-gray-400">
+            <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
+              <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-muted-foreground">
                 <span>VOL {book.stats?.chapters || 0}</span>
 
                 <span className="relative flex h-2 w-2">
@@ -60,23 +63,27 @@ export function BookCard({ book }: { book: Book }) {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
                 </span>
 
-                <span>{formatCompact(book.views)}</span>
+                <span className="flex items-center gap-1">
+                  {formatCompact(book.views)}
+                </span>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleAddToLibrary}
-                className="group/btn text-gray-500 dark:text-gray-500 transition-colors hover:text-red-600 dark:hover:text-white"
+                className="h-8 w-8 text-muted-foreground hover:text-red-600 dark:hover:text-white hover:bg-transparent"
                 title="Save to Library"
               >
                 <Bookmark
                   size={16}
-                  className="transition-transform group-hover/btn:scale-110"
+                  className="transition-transform hover:scale-110"
                   fill={isModalOpen ? 'currentColor' : 'none'}
                 />
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </Link>
 
       <AddToLibraryModal
@@ -145,7 +152,7 @@ export function BookSection({
     <section className="w-full group/section py-4">
       <div className="flex items-center justify-between px-4 md:px-12 mb-4">
         {title && (
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white tracking-wide flex items-center gap-2 transition-colors duration-300">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-wide flex items-center gap-2 transition-colors duration-300">
             {IconComponent && (
               <IconComponent
                 size={24}
@@ -157,27 +164,33 @@ export function BookSection({
         )}
 
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className={`p-1.5 rounded-full border border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300 ${
-              !canScrollLeft ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
-            }`}
+            className={cn(
+              "rounded-full border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300",
+              !canScrollLeft && "opacity-30 cursor-not-allowed"
+            )}
             aria-label="Scroll left"
           >
             <ChevronLeft size={20} />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className={`p-1.5 rounded-full border border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300 ${
-              !canScrollRight ? 'opacity-30 cursor-not-allowed' : 'opacity-100'
-            }`}
+            className={cn(
+              "rounded-full border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300",
+              !canScrollRight && "opacity-30 cursor-not-allowed"
+            )}
             aria-label="Scroll right"
           >
             <ChevronRight size={20} />
-          </button>
+          </Button>
         </div>
       </div>
 

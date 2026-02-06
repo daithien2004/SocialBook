@@ -1,6 +1,10 @@
 'use client';
-import { Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/src/components/ui/badge';
+import { Button } from '@/src/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { FiltersData } from '@/src/features/books/types/book.interface';
+import { Filter } from 'lucide-react';
 
 interface FilterSectionProps {
   allGenres: FiltersData['genres'];
@@ -22,82 +26,97 @@ export const FilterSection = ({
   onClearGenres,
 }: FilterSectionProps) => {
   return (
-    <div className="flex-1 space-y-6">
-      {/* Genres */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
+    <Card className="border-gray-100 dark:border-white/10 shadow-sm">
+      <CardHeader className="pb-3 border-b border-gray-100 dark:border-white/5">
+        <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
           <Filter size={16} className="text-red-500" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-            Thể loại
-          </h3>
-          {selectedGenres.length > 0 && (
-            <span className="text-xs text-gray-500">
-              ({selectedGenres.length})
-            </span>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={onClearGenres}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
-              selectedGenres.length === 0
-                ? 'bg-red-600 border-red-600 text-white shadow-md'
-                : 'bg-white dark:bg-white/5 border-gray-300 dark:border-white/10 hover:border-red-400 dark:hover:border-white/30'
-            }`}
-          >
-            Tất cả
-          </button>
-          {allGenres?.map((genre) => (
-            <button
-              key={genre.id}
-              onClick={() => onToggleGenre(genre.slug)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
-                selectedGenres.includes(genre.slug)
-                  ? 'bg-red-600 border-red-600 text-white shadow-md'
-                  : 'bg-white dark:bg-white/5 border-gray-300 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
-              }`}
-            >
-              {genre.name}
-              {genre.count > 0 && (
-                <span
-                  className={`ml-1.5 text-xs ${
-                    selectedGenres.includes(genre.slug)
-                      ? 'opacity-80'
-                      : 'opacity-60'
-                  }`}
-                >
-                  ({genre.count})
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+          Bộ lọc
+        </CardTitle>
+      </CardHeader>
 
-      {/* Tags */}
-      {allTags?.length > 0 && (
+      <CardContent className="space-y-6 pt-4">
+        {/* Genres */}
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 mt-4">
-            Tags phổ biến
-          </h3>
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Thể loại
+            </h3>
+            {selectedGenres.length > 0 && (
+              <Badge variant="secondary" className="text-[10px] h-5 px-1.5">
+                {selectedGenres.length}
+              </Badge>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
-            {allTags.map((tag) => (
-              <button
-                key={tag.name}
-                onClick={() => onToggleTag(tag.name)}
-                className={`px-3 py-1 rounded-full text-xs transition-colors border ${
-                  selectedTags.includes(tag.name)
-                    ? 'bg-gray-900 dark:bg-white text-white dark:text-black border-gray-900 font-bold'
-                    : 'bg-transparent border-gray-300 dark:border-white/10 text-gray-500 hover:border-gray-500'
-                }`}
+            <Button
+              variant={selectedGenres.length === 0 ? "default" : "outline"}
+              size="sm"
+              onClick={onClearGenres}
+              className={cn(
+                "h-8 transition-all",
+                selectedGenres.length === 0
+                  ? "bg-red-600 hover:bg-red-700 text-white border-transparent"
+                  : "bg-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Tất cả
+            </Button>
+            {allGenres?.map((genre) => (
+              <Button
+                key={genre.id}
+                variant={selectedGenres.includes(genre.slug) ? "default" : "outline"}
+                size="sm"
+                onClick={() => onToggleGenre(genre.slug)}
+                className={cn(
+                  "h-8 transition-all",
+                  selectedGenres.includes(genre.slug)
+                    ? "bg-red-600 hover:bg-red-700 text-white border-transparent"
+                    : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent"
+                )}
               >
-                #{tag.name}{' '}
-                <span className="ml-1 opacity-60">({tag.count})</span>
-              </button>
+                {genre.name}
+                {genre.count > 0 && (
+                  <span
+                    className={cn(
+                      "ml-1.5 text-xs opacity-60",
+                      selectedGenres.includes(genre.slug) ? "text-white/80" : "text-muted-foreground"
+                    )}
+                  >
+                    ({genre.count})
+                  </span>
+                )}
+              </Button>
             ))}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Tags */}
+        {allTags?.length > 0 && (
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 border-t border-dashed border-gray-200 dark:border-white/10 pt-4">
+              Tags phổ biến
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {allTags.map((tag) => (
+                <Badge
+                  key={tag.name}
+                  variant={selectedTags.includes(tag.name) ? "default" : "outline"}
+                  onClick={() => onToggleTag(tag.name)}
+                  className={cn(
+                    "cursor-pointer px-3 py-1 text-xs transition-all hover:border-foreground/50",
+                    selectedTags.includes(tag.name)
+                      ? "bg-foreground text-background hover:bg-foreground/90 border-transparent"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  #{tag.name}{' '}
+                  <span className="ml-1 opacity-60">({tag.count})</span>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
