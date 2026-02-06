@@ -98,11 +98,11 @@ export class ChaptersService {
     const skip = (page - 1) * limit;
     const totalChapters = await this.chaptersRepository.count({ bookId: book._id });
     const chapters = await this.chaptersRepository.findChaptersWithInfo(book._id, { skip, limit });
-    const paginated = formatPaginatedResponse(ChapterListModal.fromArray(chapters), totalChapters, page, limit);
 
     return {
       book: new BookInfoModal(book),
-      ...paginated,
+      chapters: ChapterListModal.fromArray(chapters),
+      total: totalChapters,
     };
   }
 

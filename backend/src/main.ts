@@ -6,7 +6,6 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { configSwagger } from './config/swagger.config';
 
 async function bootstrap() {
@@ -54,7 +53,6 @@ async function bootstrap() {
   app.useWebSocketAdapter(new IoAdapter(app));
 
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new TransformInterceptor());
 
   configSwagger(app);
 

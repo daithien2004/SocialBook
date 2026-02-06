@@ -12,6 +12,7 @@ import {
   ReadingList,
   ReadingListDocument,
 } from './schemas/reading-list.schema';
+import { LibraryItemModal } from './modals/library-item.modal';
 
 import { CreateCollectionDto, UpdateCollectionDto } from './dto/collection.dto';
 import { ErrorMessages } from '@/src/common/constants/error-messages';
@@ -87,7 +88,7 @@ export class CollectionsService {
 
     return {
       folder: collection,
-      books: books,
+      books: LibraryItemModal.fromArray(books as any),
     };
   }
 

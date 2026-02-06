@@ -8,13 +8,10 @@ import { Chapter } from '../chapters/schemas/chapter.schema';
 import { Review } from '../reviews/schemas/review.schema';
 import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
 import { SearchQueryDto } from './dto/search-query.dto';
-<<<<<<< HEAD
 import { GeminiService } from '../gemini/gemini.service';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Redis } from 'ioredis';
-=======
 import { formatPaginatedResponse, PaginationMeta } from '@/src/utils/helpers';
->>>>>>> remotes/origin/dev_thien_refactor
 
 export interface BookStats {
     chapters: number;
@@ -72,7 +69,6 @@ export class SearchService {
         private readonly geminiService: GeminiService,
     ) { }
 
-<<<<<<< HEAD
     /**
      * Analyze query using LLM with Redis caching
      * Returns structured data: keywords, genre, tags, etc.
@@ -128,8 +124,6 @@ export class SearchService {
      * MAIN SEARCH ALGORITHM (với Pagination & Filters)
      * ============================================
      */
-=======
->>>>>>> remotes/origin/dev_thien_refactor
     async intelligentSearch(searchQueryDto: SearchQueryDto): Promise<PaginatedSearchResult> {
         const {
             query,
@@ -143,22 +137,12 @@ export class SearchService {
         } = searchQueryDto;
 
         try {
-<<<<<<< HEAD
             // ============================================
             // STEP 1: FUZZY + SEMANTIC + DESCRIPTION KEYWORD SEARCH
             // ============================================
-            // Perform AI Analysis (Parallel with other initializations if possible, but here we wait to use its output for filters)
-            // Ideally fire this first. For now, we call it here.
+            // Perform AI Analysis
             const aiAnalysis = await this.analyzeQueryWithAI(query);
 
-            // Refined Keywords from AI
-            let refinedQuery = query;
-            if (aiAnalysis && aiAnalysis.extractedKeywords && aiAnalysis.extractedKeywords.length > 0) {
-               
-            }
-
-=======
->>>>>>> remotes/origin/dev_thien_refactor
             const [fuzzyBookIds, semanticBookIds, descriptionBookIds] = await Promise.all([
                 this.fuzzySearchBookIds(query),
                 this.semanticSearchBookIds(query),
@@ -222,7 +206,6 @@ export class SearchService {
                 const tagsList = tags.split(',').map(t => t.trim());
                 filterQuery.tags = { $in: tagsList };
             }
-<<<<<<< HEAD
 
             // --- AI AUGMENTED FILTERS ---
             if (aiAnalysis) {
@@ -247,8 +230,6 @@ export class SearchService {
             }
 
             // STEP 3: Fetch books with full data
-=======
->>>>>>> remotes/origin/dev_thien_refactor
             const totalCount = await this.bookModel.countDocuments(filterQuery);
 
             let books = await this.bookModel
@@ -389,12 +370,9 @@ export class SearchService {
         return results;
     }
 
-<<<<<<< HEAD
+
     /** DESCRIPTION KEYWORD SEARCH - Search keywords in book descriptions */
     private async descriptionKeywordSearch(query: string, aiKeywords?: string[]): Promise<Array<{ id: string; score: number }>> {
-=======
-    private async descriptionKeywordSearch(query: string): Promise<Array<{ id: string; score: number }>> {
->>>>>>> remotes/origin/dev_thien_refactor
         const results: Array<{ id: string; score: number }> = [];
 
         try {
@@ -407,7 +385,6 @@ export class SearchService {
                     return w.length >= 4;
                 });
 
-<<<<<<< HEAD
             if (words.length === 0 && (!aiKeywords || aiKeywords.length === 0)) return results;
 
             // Combine manual words and AI keywords
@@ -415,10 +392,6 @@ export class SearchService {
 
             // Build regex pattern with word boundaries
             const regexPattern = searchTerms.map(w => `\\b${w}\\b`).join('|');
-=======
-            if (words.length === 0) return results;
-            const regexPattern = words.map(w => `\\b${w}\\b`).join('|');
->>>>>>> remotes/origin/dev_thien_refactor
             const regex = new RegExp(regexPattern, 'i');
 
             const books = await this.bookModel
@@ -433,13 +406,8 @@ export class SearchService {
 
             for (const book of books) {
                 const description = book.description?.toLowerCase() || '';
-
-<<<<<<< HEAD
                 // Calculate score based on how many words match
                 const matchedWords = searchTerms.filter(word =>
-=======
-                const matchedWords = words.filter(word =>
->>>>>>> remotes/origin/dev_thien_refactor
                     description.includes(word.toLowerCase())
                 );
 
@@ -617,3 +585,4 @@ export class SearchService {
         return 0.0;
     }
 }
+

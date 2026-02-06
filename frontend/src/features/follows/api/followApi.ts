@@ -1,5 +1,5 @@
-import {createApi} from "@reduxjs/toolkit/query/react";
-import {axiosBaseQuery} from "@/src/lib/nestjs-client-api";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { axiosBaseQuery } from "@/src/lib/nestjs-client-api";
 
 export interface FollowStateResponse {
     isOwner: boolean;
@@ -26,9 +26,9 @@ export const followApi = createApi({
                 url: `/follows/following?userId=${userId}`,
                 method: "GET",
             }),
-            transformResponse: (response: FollowingUser[]) => response ?? [],
+            transformResponse: (response: unknown): FollowingUser[] => Array.isArray(response) ? response : [],
             providesTags: () => [
-                {type: "Follow", id: `FOLLOWING_LIST`},
+                { type: "Follow", id: `FOLLOWING_LIST` },
             ],
         }),
 
@@ -37,9 +37,9 @@ export const followApi = createApi({
                 url: `/follows/following-stats?targetUserId=${targetUserId}`,
                 method: "GET",
             }),
-            transformResponse: (response: FollowingUser[]) => response ?? [],
+            transformResponse: (response: unknown): FollowingUser[] => Array.isArray(response) ? response : [],
             providesTags: () => [
-                {type: "Follow", id: `FOLLOWING_STATS_LIST`},
+                { type: "Follow", id: `FOLLOWING_STATS_LIST` },
             ],
         }),
 
@@ -48,9 +48,9 @@ export const followApi = createApi({
                 url: `/follows/followers?targetUserId=${targetUserId}`,
                 method: "GET",
             }),
-            transformResponse: (response: FollowingUser[]) => response ?? [],
+            transformResponse: (response: unknown): FollowingUser[] => Array.isArray(response) ? response : [],
             providesTags: () => [
-                {type: "Follow", id: `FOLLOWERS_LIST`},
+                { type: "Follow", id: `FOLLOWERS_LIST` },
             ],
         }),
 
@@ -60,9 +60,9 @@ export const followApi = createApi({
                 method: "POST",
             }),
             invalidatesTags: () => [
-                {type: "Follow", id: `FOLLOWING_LIST`},
-                {type: "Follow", id: `FOLLOWERS_LIST`},
-                {type: "Follow", id: `FOLLOWING_STATS_LIST`},
+                { type: "Follow", id: `FOLLOWING_LIST` },
+                { type: "Follow", id: `FOLLOWERS_LIST` },
+                { type: "Follow", id: `FOLLOWING_STATS_LIST` },
             ],
         }),
     }),

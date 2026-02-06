@@ -56,4 +56,4 @@ export interface CreateCollectionRequest {
   isPublic?: boolean;
 }
 
-export interface UpdateCollectionRequest extends CreateCollectionRequest {}
+export interface UpdateCollectionRequest extends CreateCollectionRequest { }

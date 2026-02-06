@@ -71,6 +71,8 @@ export class BookListModal {
     genres: { id: string; name: string; slug: string }[];
     description: string;
     createdAt: Date;
+    updatedAt: Date;
+    stats?: { chapters: number; views: number; likes: number; rating?: number; reviews?: number };
 
     constructor(book: BookDocument) {
         this.id = (book._id as Types.ObjectId).toString();
@@ -83,6 +85,12 @@ export class BookListModal {
 
         this.description = book.description;
         this.createdAt = book.createdAt;
+        this.updatedAt = book.updatedAt;
+
+        // Stats from aggregation pipeline
+        if ((book as any).stats) {
+            this.stats = (book as any).stats;
+        }
 
         if (book.authorId && typeof book.authorId === 'object') {
             const author = book.authorId as unknown as AuthorDocument;
@@ -95,14 +103,14 @@ export class BookListModal {
 
         this.genres = [];
         if (book.genres && Array.isArray(book.genres) && book.genres.length > 0) {
-             // Handle populated genres
-             if (typeof book.genres[0] === 'object') {
+            // Handle populated genres
+            if (typeof book.genres[0] === 'object') {
                 this.genres = (book.genres as unknown as GenreDocument[]).map(g => ({
                     id: (g._id as Types.ObjectId).toString(),
                     name: g.name,
                     slug: g.slug
                 }));
-             }
+            }
         }
     }
 

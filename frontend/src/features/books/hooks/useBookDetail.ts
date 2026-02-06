@@ -51,15 +51,18 @@ export const useBookDetail = (bookSlug: string) => {
 
   // 4. Computed Values
   const defaultShareContent = useMemo(() => {
-    if (!book) return '';
-    return `📚 ${book.title}
-✍️ Tác giả: ${book.authorId.name}
+    if (!book || !book.title) return '';
+    const authorName = book.authorId?.name || 'Không rõ';
+    const title = book.title || '';
+    const description = book.description || '';
+    return `📚 ${title}
+✍️ Tác giả: ${authorName}
 ⭐ Đánh giá: ${book.stats?.averageRating || 0}/5 (${book.stats?.totalRatings || 0} đánh giá)
-👁️ ${book.views?.toLocaleString()} lượt xem
+👁️ ${book.views?.toLocaleString() || 0} lượt xem
 
-${book.description}
+${description}
 
-#${book.title.replace(/\s+/g, '')} #${book.authorId.name.replace(/\s+/g, '')}`;
+#${title.replace(/\s+/g, '')} #${authorName.replace(/\s+/g, '')}`;
   }, [book]);
 
   return {

@@ -74,7 +74,8 @@ export class BooksController {
 
       return {
         message: 'Search completed successfully',
-        data: result,
+        data: result.data,
+        meta: result.meta,
       };
     }
 
@@ -91,7 +92,8 @@ export class BooksController {
 
     return {
       message: 'Get published books successfully',
-      data: result,
+      data: result.data,
+      meta: result.meta,
     };
   }
 
@@ -153,8 +155,8 @@ export class BooksController {
 
     return {
       message: 'Admin: Get all books successfully',
-      books: result.data,
-      pagination: result.meta,
+      data: result.data,
+      meta: result.meta,
     };
   }
 
