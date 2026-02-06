@@ -51,7 +51,7 @@ export class CommentsController {
 
     return {
       message: 'Get comments successfully',
-      data: result.items,
+      data: result.data,
       meta: result.meta,
     };
   }

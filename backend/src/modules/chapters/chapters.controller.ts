@@ -46,8 +46,7 @@ export class ChaptersController {
     const result = await this.chaptersService.getChaptersByBookSlug(bookSlug, page, limit);
     return {
       message: 'Get list chapters successfully',
-      data: result.data,
-      meta: result.meta,
+      data: result,
     };
   }
 
