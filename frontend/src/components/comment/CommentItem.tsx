@@ -28,6 +28,7 @@ import {
 
 import { CommentItem } from '@/src/features/comments/types/comment.interface';
 import { toast } from "sonner";
+import { getErrorMessage } from '@/src/lib/utils';
 
 interface CommentItemProps {
     comment: CommentItem;
@@ -46,9 +47,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content);
 
-    const {isAuthenticated} = useAppAuth();
+    const { isAuthenticated } = useAppAuth();
 
-    const {user} = useAppAuth();
+    const { user } = useAppAuth();
     const isOwner = comment.userId?.id === user?.id;
 
     const [editComment, { isLoading: isEditingComment }] =
@@ -60,11 +61,11 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const [createComment, { isLoading: isPostingReply }] =
         usePostCreateMutation();
 
-    const {data: replyCount, isLoading} = useGetReplyCountByParentQuery({
+    const { data: replyCount, isLoading } = useGetReplyCountByParentQuery({
         parentId: comment.id,
     });
 
-    const {data: likeCount} = useGetCountQuery({
+    const { data: likeCount } = useGetCountQuery({
         targetId: comment.id,
         targetType: 'comment',
     });
@@ -107,7 +108,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
             if (e?.status === 400 && e?.data?.message) {
                 toast.error(`Sửa thất bại: ${e.data.message}`);
             } else if (e?.status !== 401) {
-                toast.error('Sửa bình luận thất bại. Vui lòng thử lại.');
+                toast.error(getErrorMessage(e));
             }
         }
     };
@@ -127,7 +128,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         toast.success('Bình luận đã được xóa!');
                     } catch (e: any) {
                         if (e?.status !== 401) {
-                            toast.error('Xóa bình luận thất bại');
+                            toast.error(getErrorMessage(e));
                         }
                     }
                 },
@@ -173,9 +174,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
             setIsReplying(false);
         } catch (e: any) {
             console.log('Create reply failed:', e);
-            const errorMessage =
-                e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
-            toast.error(errorMessage);
+            toast.error(getErrorMessage(e));
         }
     };
 
@@ -298,8 +297,8 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                     <button
                         onClick={handleLikeComment}
                         className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${likeStatus?.isLiked
-                                ? 'text-red-500'
-                                : 'text-gray-500 hover:text-red-500 dark:text-neutral-500'
+                            ? 'text-red-500'
+                            : 'text-gray-500 hover:text-red-500 dark:text-neutral-500'
                             }`}
                     >
                         <Heart
@@ -314,7 +313,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         onClick={handleReplyClick}
                         className="flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-gray-900 dark:text-neutral-500 dark:hover:text-white"
                     >
-                        <MessageCircle size={12}/>
+                        <MessageCircle size={12} />
                         Trả lời ({replyCount?.count})
                     </button>
                 </div>

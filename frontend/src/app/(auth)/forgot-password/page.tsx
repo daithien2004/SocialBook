@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
         newPassword: data.newPassword,
       }).unwrap();
       setStep('success');
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleSendOtp = async () => {
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
     try {
       await forgotPassword({ email }).unwrap();
       setStep('otp');
-    } catch (err) {}
+    } catch (err) { }
   };
 
   // Xử lý gửi lại OTP
@@ -167,9 +167,8 @@ export default function ForgotPasswordPage() {
                         id="email"
                         type="email"
                         {...register('email')}
-                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black ${
-                          errors.email ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-black ${errors.email ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         placeholder="email@example.com"
                       />
                     </div>
@@ -220,9 +219,8 @@ export default function ForgotPasswordPage() {
                       id="otp"
                       type="text"
                       {...register('otp')}
-                      className={`w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                        errors.otp ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.otp ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       placeholder="000000"
                       maxLength={6}
                     />
@@ -258,11 +256,10 @@ export default function ForgotPasswordPage() {
                       id="newPassword"
                       type="password"
                       {...register('newPassword')}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                        errors.newPassword
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.newPassword
                           ? 'border-red-500'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                       placeholder="Nhập mật khẩu mới"
                     />
                     {errors.newPassword && (
@@ -282,11 +279,10 @@ export default function ForgotPasswordPage() {
                       id="confirmPassword"
                       type="password"
                       {...register('confirmPassword')}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                        errors.confirmPassword
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.confirmPassword
                           ? 'border-red-500'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                       placeholder="Xác nhận mật khẩu mới"
                     />
                     {errors.confirmPassword && (

@@ -48,7 +48,7 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
                     return [...prev, ...uniqueNewBooks];
                 });
             }
-            setHasMore(data.metaData.page < data.metaData.totalPages);
+            setHasMore(data.meta.current < data.meta.totalPages);
         } else if (!isLoading && !isFetching && page > 1) {
             setHasMore(false);
         }
@@ -77,6 +77,6 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
         isFetchingMore: isFetching && page > 1,
         hasMore,
         lastBookRef,
-        metaData: data?.metaData
+        metaData: data?.meta
     };
 };

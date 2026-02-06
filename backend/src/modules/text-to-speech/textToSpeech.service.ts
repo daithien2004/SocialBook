@@ -1,21 +1,23 @@
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import {
+  BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
-import { TextToSpeechDto } from './dto/textToSpeech.dto';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { ChaptersService } from '../chapters/chapters.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { TextToSpeechDto } from './dto/textToSpeech.dto';
 import {
   TextToSpeech,
   TextToSpeechDocument,
   TTSStatus,
 } from './schemas/textToSpeech.schema';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { ChaptersService } from '../chapters/chapters.service';
 
 interface GenerateAudioOptions {
   voice?: string;
@@ -32,6 +34,7 @@ export class TextToSpeechService {
     @InjectModel(TextToSpeech.name)
     private readonly ttsModel: Model<TextToSpeechDocument>,
     private cloudinaryService: CloudinaryService,
+    private configService: ConfigService,
     @Inject(forwardRef(() => ChaptersService))
     private chaptersService: ChaptersService,
   ) { }
@@ -75,20 +78,20 @@ export class TextToSpeechService {
   async generateAudioForChapter(
     chapterId: string,
     options: GenerateAudioOptions = {},
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     // Validation
     if (!Types.ObjectId.isValid(chapterId)) {
-      throw new BadRequestException('Invalid chapter ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     // Get chapter with full paragraphs first to analyze content
     const chapter = await this.chaptersService.findById(chapterId);
     if (!chapter) {
-      throw new NotFoundException(`Chapter with ID ${chapterId} not found`);
+      throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
     }
 
     // Combine paragraphs into single text
-    const text = chapter.paragraphs.map((p) => p.content).join('\n\n');
+    const text = (chapter.paragraphs as any[]).map((p) => p.content).join('\n\n');
 
     // Auto-detect language if not provided
     const detected = this.detectLanguage(text);
@@ -142,19 +145,12 @@ export class TextToSpeechService {
       );
     }
 
-    // Get bookId safely - book can be either populated (object) or unpopulated (ObjectId)
-    let bookId: any;
-    if (typeof chapter.bookId === 'object' && chapter.bookId !== null) {
-      // Populated case: could be { _id: ..., title: ..., slug: ... }
-      bookId = (chapter.bookId as any)._id || (chapter.bookId as any).id;
-    } else {
-      // Unpopulated case: is already an ObjectId
-      bookId = chapter.bookId;
-    }
+    // Get bookId safely from ChapterModal
+    const bookId = chapter.bookId;
 
     if (!bookId) {
       console.error('Cannot get bookId from chapter:', { chapter });
-      throw new BadRequestException('Chapter is missing book reference');
+      throw new BadRequestException(ErrorMessages.CHAPTER_MISSING_BOOK);
     }
 
     console.log(
@@ -203,7 +199,7 @@ export class TextToSpeechService {
         .lean();
 
       if (!updatedRecord) {
-        throw new InternalServerErrorException('Failed to update TTS record');
+        throw new InternalServerErrorException(ErrorMessages.TTS_UPDATE_FAILED);
       }
 
       return {
@@ -244,9 +240,9 @@ export class TextToSpeechService {
   async generateAudioForAllChapters(
     bookId: string,
     options: GenerateAudioOptions = {},
-  ): Promise<any> {
+  ): Promise<Record<string, unknown>> {
     if (!Types.ObjectId.isValid(bookId)) {
-      throw new BadRequestException('Invalid book ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     // Get all chapters for the book
@@ -261,23 +257,23 @@ export class TextToSpeechService {
           .sort({ orderIndex: 1 })
           .lean();
 
-        return { chapters: chaptersList.map((c) => ({ id: c._id })) };
+        return { chapters: chaptersList.map((c: any) => ({ id: c._id.toString() })) } as any;
       });
 
     if (!chapters.chapters || chapters.chapters.length === 0) {
-      throw new NotFoundException('No chapters found for this book');
+      throw new NotFoundException(ErrorMessages.NO_CHAPTERS_FOUND);
     }
 
     const results = {
       total: chapters.chapters.length,
       successful: 0,
       failed: 0,
-      errors: [] as any[],
-      generated: [] as any[],
+      errors: [] as Record<string, unknown>[],
+      generated: [] as Record<string, unknown>[],
     };
 
     // Generate audio for each chapter
-    for (const chapter of chapters.chapters) {
+    for (const chapter of (chapters.chapters as any[])) {
       try {
         const result = await this.generateAudioForChapter(chapter.id, options);
         results.successful++;
@@ -301,9 +297,9 @@ export class TextToSpeechService {
   /**
    * Get TTS by chapter ID
    */
-  async getAudioByChapterId(chapterId: string): Promise<any> {
+  async getAudioByChapterId(chapterId: string): Promise<Record<string, unknown> | null> {
     if (!Types.ObjectId.isValid(chapterId)) {
-      throw new BadRequestException('Invalid chapter ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const tts = await this.ttsModel
@@ -339,9 +335,9 @@ export class TextToSpeechService {
   /**
    * Delete TTS audio
    */
-  async deleteAudio(chapterId: string): Promise<any> {
+  async deleteAudio(chapterId: string): Promise<Record<string, unknown>> {
     if (!Types.ObjectId.isValid(chapterId)) {
-      throw new BadRequestException('Invalid chapter ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const result = await this.ttsModel.deleteMany({
@@ -387,10 +383,10 @@ export class TextToSpeechService {
     options: { voice: string; format: string },
   ): Promise<string> {
     const { voice, format } = options;
-    const apiKey = process.env.VOICERSS_API_KEY;
+    const apiKey = this.configService.get<string>('env.VOICERSS_API_KEY');
 
     if (!apiKey) {
-      throw new InternalServerErrorException('VoiceRSS API key not found');
+      throw new InternalServerErrorException(ErrorMessages.TTS_API_KEY_NOT_FOUND);
     }
 
     // VoiceRSS URL (base only)

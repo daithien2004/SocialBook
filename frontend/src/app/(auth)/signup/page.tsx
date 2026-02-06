@@ -13,6 +13,7 @@ import {
   SignupFormValues,
   signupSchema,
 } from '@/src/features/auth/types/auth.type';
+import { getErrorMessage } from '@/src/lib/utils';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -78,11 +79,10 @@ export default function SignupPage() {
             onSubmit={handleSubmit(onSubmit)}
             noValidate
           >
-            {error && 'data' in error && (
+            {error && (
               <div className="rounded-xl bg-red-50 p-4 border border-red-200 animate-fade-in">
                 <p className="text-sm text-red-800">
-                  {(error.data as { message: string }).message ||
-                    'Đã xảy ra lỗi không xác định'}
+                  {getErrorMessage(error)}
                 </p>
               </div>
             )}
@@ -99,9 +99,8 @@ export default function SignupPage() {
                 {...register('username')}
                 className={`block w-full px-4 pt-5 pb-3 border rounded-xl text-gray-900 
                 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
-                transition-all duration-200 shadow-sm placeholder-gray-400 ${
-                  formErrors.username ? 'border-red-500' : 'border-gray-300'
-                }`}
+                transition-all duration-200 shadow-sm placeholder-gray-400 ${formErrors.username ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="thungly123"
                 aria-invalid={!!formErrors.username}
                 aria-describedby={
@@ -131,9 +130,8 @@ export default function SignupPage() {
                 type="email"
                 className={`block w-full px-4 pt-5 pb-3 border rounded-xl text-gray-900 
                 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
-                transition-all duration-200 shadow-sm placeholder-gray-400 ${
-                  formErrors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                transition-all duration-200 shadow-sm placeholder-gray-400 ${formErrors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="thungly@gmail.com"
                 aria-invalid={!!formErrors.email}
                 aria-describedby={formErrors.email ? 'email-error' : undefined}
@@ -161,9 +159,8 @@ export default function SignupPage() {
                 type={showPassword ? 'text' : 'password'}
                 className={`block w-full px-4 pt-5 pb-3 pr-12 border rounded-xl text-gray-900 
                 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
-                transition-all duration-200 shadow-sm ${
-                  formErrors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
+                transition-all duration-200 shadow-sm ${formErrors.password ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="••••••••"
                 aria-invalid={!!formErrors.password}
                 aria-describedby={
@@ -234,11 +231,10 @@ export default function SignupPage() {
                 type={showConfirmPassword ? 'text' : 'password'}
                 className={`block w-full px-4 pt-5 pb-3 pr-12 border rounded-xl text-gray-900 
                 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
-                transition-all duration-200 shadow-sm ${
-                  formErrors.confirmPassword
+                transition-all duration-200 shadow-sm ${formErrors.confirmPassword
                     ? 'border-red-500'
                     : 'border-gray-300'
-                }`}
+                  }`}
                 placeholder="••••••••"
                 aria-invalid={!!formErrors.confirmPassword}
                 aria-describedby={

@@ -1,51 +1,53 @@
-import type { Response } from 'express';
+import { Public } from '@/src/common/decorators/customize';
+import { JwtRefreshAuthGuard } from '@/src/common/guards/jwt-refresh-auth.guard';
+import { LocalAuthGuard } from '@/src/common/guards/local-auth.guard';
+import { User } from '@/src/modules/users/schemas/user.schema';
 import {
   Body,
   Controller,
-  Post,
-  Res,
-  Req,
-  UseGuards,
-  Request,
   Get,
-  HttpStatus,
   HttpCode,
   HttpException,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
   ForgotPasswordDto,
+  LoginDto,
+  RefreshTokenDto,
+  ResendOtpDto,
   ResetPasswordDto,
+  SignupGoogleDto,
   SignupLocalDto,
+  VerifyOtpDto,
 } from './dto/auth.dto';
-import { LocalAuthGuard } from '@/src/common/guards/local-auth.guard';
-import { JwtRefreshAuthGuard } from '@/src/common/guards/jwt-refresh-auth.guard';
-import { Public } from '@/src/common/decorators/customize';
-import { LoginDto } from './dto/auth.dto';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
 
   @Public()
+  @ApiOperation({ summary: 'Login with Google' })
+  @ApiBody({ type: SignupGoogleDto })
+  @ApiResponse({ status: 200, description: 'Login successful' })
   @Post('google/login')
-  async handleGoogleLogin(
-    @Body()
-    data: {
-      username: string;
-      email: string;
-      googleId: string;
-      image: string;
-    },
-  ) {
+  async handleGoogleLogin(@Body() data: SignupGoogleDto) {
     return this.authService.googleAuth(data);
   }
 
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiBody({ type: LoginDto })
   @HttpCode(HttpStatus.OK)
-  async login(@Request() req: any, @Body() dto: LoginDto) {
+  async login(@Req() req: { user: User }, @Body() dto: LoginDto) {
     const result = await this.authService.login(req.user);
 
     return {
@@ -59,26 +61,31 @@ export class AuthController {
   }
 
   @Get('profile')
-  getProfile(@Request() req: any) {
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user profile' })
+  getProfile(@Req() req: { user: User }) {
     return req.user;
   }
 
   @Public()
   @Post('signup')
+  @ApiOperation({ summary: 'Register a new account' })
+  @ApiResponse({ status: 201, description: 'OTP sent to email' })
   async signup(@Body() dto: SignupLocalDto) {
     const otp = await this.authService.signup(dto);
 
     return {
       message: 'Mã OTP đã được gửi đến email của bạn',
-      data: {
-        otp: otp,
-      },
     };
   }
 
   @Public()
   @Post('verify-otp')
-  async verifyOtp(@Body() body: { email: string; otp: string }) {
+  @ApiOperation({ summary: 'Verify OTP and activate account' })
+  @ApiBody({ type: VerifyOtpDto })
+  @ApiResponse({ status: 200, description: 'Account activated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid OTP or email' })
+  async verifyOtp(@Body() body: VerifyOtpDto) {
     try {
       const result = await this.authService.verifyOtpAndActivate(
         body.email,
@@ -92,13 +99,16 @@ export class AuthController {
 
   @Public()
   @Post('resend-otp')
-  async resendOtp(@Body('email') email: string) {
+  @ApiOperation({ summary: 'Resend OTP' })
+  @ApiBody({ type: ResendOtpDto })
+  @ApiResponse({ status: 200, description: 'OTP resent successfully' })
+  async resendOtp(@Body() body: ResendOtpDto) {
     try {
-      const result = await this.authService.resendOtp(email);
+      const result = await this.authService.resendOtp(body.email);
       return {
         message: 'Gửi lại mã OTP thành công',
         data: {
-          remainingTime: result.remainingTime,
+          resendCooldown: result.resendCooldown,
         },
       };
     } catch (error) {
@@ -109,7 +119,12 @@ export class AuthController {
   @UseGuards(JwtRefreshAuthGuard)
   @Public()
   @Post('refresh')
-  async refresh(@Body('refreshToken') refreshToken: string) {
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'Result token invalid' })
+  async refresh(@Body() body: RefreshTokenDto) {
+    const { refreshToken } = body;
     if (!refreshToken) {
       throw new HttpException(
         'Vui lòng cung cấp Refresh token',
@@ -137,6 +152,7 @@ export class AuthController {
 
   @Public()
   @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset via email' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto.email);
     return {
@@ -146,6 +162,7 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with OTP' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     const result = await this.authService.resetPassword(
       dto.email,

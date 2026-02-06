@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Loader2, Upload, Check, X, Eye } from 'lucide-react';
 import { useImportChaptersPreviewMutation } from '@/src/features/chapters/api/chaptersApi';
+import { getErrorMessage } from '@/src/lib/utils';
+import { toast } from 'sonner';
 
 interface FileImportModalProps {
     isOpen: boolean;
@@ -74,8 +76,7 @@ export function FileImportModal({
             setSelectedChapterIndex(0);
         } catch (error: any) {
             console.error('Error parsing file:', JSON.stringify(error, null, 2));
-            const errorMessage = error?.data?.message || error?.message || 'Không thể phân tích tập tin. Vui lòng thử lại.';
-            alert(errorMessage);
+            toast.error(getErrorMessage(error));
         }
     };
 

@@ -19,7 +19,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly jwt: JwtService,
-  ) {}
+  ) { }
 
   afterInit() {
     this.notificationsService.setServer(this.server);
@@ -27,8 +27,8 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
   async handleConnection(socket: Socket) {
     try {
-      const auth = socket.handshake.auth as any;
-      const query = socket.handshake.query as any;
+      const auth = socket.handshake.auth as { token?: string };
+      const query = socket.handshake.query as { token?: string };
 
       let token = auth?.token ?? query?.token;
       if (Array.isArray(token)) {
@@ -42,9 +42,13 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
         return;
       }
 
-      const payload: any = this.jwt.verify(token);
+      const payload = this.jwt.verify(token) as { sub?: string; id?: string };
       const userId = payload.sub || payload.id;
-      (socket.data as any).userId = userId;
+      if (!userId) {
+        socket.disconnect(true);
+        return;
+      }
+      socket.data.userId = userId;
       socket.join(`user:${userId}`);
     } catch (e) {
       console.error('WS error in handleConnection:', e);
@@ -60,14 +64,14 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   // Cho phép client chủ động yêu cầu data
   @SubscribeMessage('notification:list')
   async list(@ConnectedSocket() socket: Socket) {
-    const userId = (socket.data as any).userId;
+    const userId = socket.data.userId as string;
     return this.notificationsService.findAllByUser(userId);
 
   }
 
   @SubscribeMessage('notification:markRead')
   async markRead(@ConnectedSocket() socket: Socket, @MessageBody() body: { id: string }) {
-    const userId = (socket.data as any).userId;
+    const userId = socket.data.userId as string;
     return this.notificationsService.markRead(userId, body.id);
   }
 

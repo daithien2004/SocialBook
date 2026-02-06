@@ -2,36 +2,40 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 
-import { Comment, CommentDocument } from './schemas/comment.schema';
+import { CommentsRepository } from '../../data-access/repositories/comments.repository';
 import { CommentTargetType, TARGET_TYPES } from './constants/targetType.constant';
+import { CommentDocument } from './schemas/comment.schema';
 
 import { LikesService } from '@/src/modules/likes/likes.service';
 
-import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentCountDto } from '@/src/modules/comments/dto/create-comment.dto';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
-import { ContentModerationService } from '../content-moderation/content-moderation.service';
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
-import { Post, PostDocument } from '@/src/modules/posts/schemas/post.schema';
-import { Chapter, ChapterDocument } from '@/src/modules/chapters/schemas/chapter.schema';
-import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
-import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
+
+import { BooksRepository } from '../../data-access/repositories/books.repository';
+import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
+import { ContentModerationService } from '../content-moderation/content-moderation.service';
+import { PostsRepository } from '@/src/data-access/repositories/posts.repository';
+import { UsersRepository } from '@/src/data-access/repositories/users.repository';
+import { CommentModal } from './modals/comment.modal';
 
 @Injectable()
 export class CommentsService {
   constructor(
     private readonly likesService: LikesService,
-    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+    private readonly commentsRepository: CommentsRepository,
     private readonly contentModerationService: ContentModerationService,
-    @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
-    @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
-    @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly postsRepository: PostsRepository,
+    private readonly chaptersRepository: ChaptersRepository,
+    private readonly booksRepository: BooksRepository,
+    private readonly usersRepository: UsersRepository,
     private readonly notifications: NotificationsService,
   ) { }
 
@@ -44,6 +48,8 @@ export class CommentsService {
   ) {
     if (!targetId) throw new BadRequestException('Target ID is required');
 
+    if (!targetId) throw new BadRequestException('Target ID is required');
+
     const filter: FilterQuery<CommentDocument> = {
       targetId: new Types.ObjectId(targetId),
       parentId: parentId ? new Types.ObjectId(parentId) : null,
@@ -54,12 +60,7 @@ export class CommentsService {
       filter._id = { $lt: new Types.ObjectId(cursor) };
     }
 
-    const commentsRaw = await this.commentModel
-      .find(filter)
-      .sort({ _id: -1 })
-      .limit(limit + 1)
-      .populate('userId', 'username image')
-      .lean();
+    const commentsRaw = await this.commentsRepository.findByTargetRaw(filter, limit);
 
     const hasMore = commentsRaw.length > limit;
     const comments = hasMore ? commentsRaw.slice(0, limit) : commentsRaw;
@@ -75,12 +76,12 @@ export class CommentsService {
 
     const replyMap = this.createCountMap(repliesGroup);
 
-    const items = comments.map((c) => ({
+    const items = CommentModal.fromArray(comments).map((c, idx) => ({
       ...c,
-      repliesCount: replyMap[c._id.toString()] || 0,
+      repliesCount: replyMap[comments[idx]._id.toString()] || 0,
     }));
 
-    return {
+    const result = {
       items,
       meta: {
         nextCursor: hasMore
@@ -90,6 +91,10 @@ export class CommentsService {
         limit,
       },
     };
+
+
+
+    return result;
   }
 
   async resolveParentId(
@@ -99,12 +104,9 @@ export class CommentsService {
   ) {
     if (!parentId) return { parentId: null, level: 1 };
 
-    const parent = await this.commentModel
-      .findById(parentId)
-      .select('_id targetId targetType parentId')
-      .lean() as any;
+    const parent = await this.commentsRepository.findByIdSelected(parentId, '_id targetId targetType parentId');
 
-    if (!parent) throw new NotFoundException('Parent comment not found');
+    if (!parent) throw new NotFoundException(ErrorMessages.PARENT_COMMENT_NOT_FOUND);
 
     if (parent.targetId.toString() !== targetId.toString()) {
       throw new ForbiddenException(
@@ -119,10 +121,7 @@ export class CommentsService {
       return { parentId: parent._id, level: 2 };
     }
 
-    const grandParent = await this.commentModel
-      .findById(parent.parentId)
-      .select('_id parentId')
-      .lean();
+    const grandParent = await this.commentsRepository.findByIdSelected(parent.parentId, '_id parentId');
 
     if (!grandParent || !grandParent.parentId) {
       return { parentId: parent._id, level: 2 };
@@ -134,12 +133,12 @@ export class CommentsService {
   async create(userId: string, dto: CreateCommentDto) {
     const { targetType, targetId, content, parentId } = dto;
 
-    if (!Object.values(TARGET_TYPES).includes(targetType as any)) {
+    if (!Object.values(TARGET_TYPES).includes(targetType as CommentTargetType)) {
       throw new BadRequestException('Invalid target type');
     }
     if (!content?.trim()) throw new BadRequestException('Content is required');
     if (!Types.ObjectId.isValid(targetId))
-      throw new BadRequestException('Invalid Target ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
     const moderationResult = await this.contentModerationService.checkContent(content);
 
@@ -163,7 +162,7 @@ export class CommentsService {
       parentId,
     );
 
-    const newComment = await this.commentModel.create({
+    const newComment = await this.commentsRepository.createComment({
       userId: userObjectId,
       targetType,
       targetId: targetObjectId,
@@ -171,12 +170,16 @@ export class CommentsService {
       content: content.trim(),
     });
 
+    if (!newComment) {
+      throw new InternalServerErrorException('Failed to create comment');
+    }
+
     try {
       await this.createCommentNotification(
         userId,
         targetType,
         targetId,
-        finalParentId ?? null,
+        finalParentId ? finalParentId.toString() : null,
         content.trim(),
         newComment._id.toString(),
       );
@@ -184,25 +187,21 @@ export class CommentsService {
       console.log('createCommentNotification failed', e);
     }
 
-    return this.commentModel
-      .findById(newComment._id)
-      .populate('userId', 'username image')
-      .lean();
+
+
+    return new CommentModal(newComment);
   }
 
   private async aggregateReplyCounts(parentIds: Types.ObjectId[]) {
     if (parentIds.length === 0) return [];
-    return this.commentModel.aggregate([
-      { $match: { parentId: { $in: parentIds } } },
-      { $group: { _id: '$parentId', count: { $sum: 1 } } },
-    ]);
+    return this.commentsRepository.aggregateReplyCounts(parentIds);
   }
 
-  private createCountMap(groupData: any[]): Record<string, number> {
+  private createCountMap(groupData: { _id: Types.ObjectId; count: number }[]): Record<string, number> {
     return groupData.reduce((acc, curr) => {
       acc[curr._id.toString()] = curr.count;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
   }
 
   async getCommentCount(dto: CommentCountDto) {
@@ -210,10 +209,7 @@ export class CommentsService {
       return { count: 0 };
     }
 
-    const count = await this.commentModel.countDocuments({
-      targetId: new Types.ObjectId(dto.targetId),
-      targetType: dto.targetType.toLowerCase(),
-    });
+    const count = await this.commentsRepository.countByTarget(dto.targetId, dto.targetType);
 
     return { count };
   }
@@ -231,22 +227,16 @@ export class CommentsService {
     let message = `Bạn có một bình luận mới: "${commentContent}"`;
     let actionUrl = '';
 
-    const actor = await this.userModel
-      .findById(actorId)
-      .select('_id username image')
-      .lean();
+    const actor = await this.usersRepository.findById(actorId, '_id username image');
 
     if (!actor) return;
 
     if (parentId) {
-      const parent = await this.commentModel
-        .findById(parentId)
-        .select('userId targetId targetType')
-        .lean();
+      const parent = await this.commentsRepository.findByIdSelected(parentId, 'userId targetId targetType');
 
       if (!parent) return;
 
-      ownerId = parent.userId?.toString();
+      ownerId = parent.userId ? parent.userId.toString() : null;
       title = `${actor.username} đã trả lời bình luận của bạn`;
       message = `Bình luận của bạn vừa có phản hồi: "${commentContent}"`;
 
@@ -259,11 +249,7 @@ export class CommentsService {
 
     else {
       if (targetType === 'post') {
-        const post = await this.postModel
-          .findById(targetId)
-          .select('_id userId content')
-          .lean();
-
+        const post = await this.postsRepository.findById(targetId, '_id userId content');
         if (!post) return;
 
         ownerId = post.userId?.toString();
@@ -278,7 +264,7 @@ export class CommentsService {
 
     if (!ownerId || ownerId === actorId) return;
     await this.notifications.create({
-      userId: ownerId,
+      userId: ownerId as string,
       title,
       message,
       type: parentId ? 'reply' : 'comment',
@@ -302,35 +288,24 @@ export class CommentsService {
     }
 
     if (targetType === 'chapter') {
-      const chapter = await this.chapterModel
-        .findById(targetId)
-        .select('bookId slug')
-        .lean();
-
+      const chapter = await this.chaptersRepository.findById(targetId, 'bookId slug');
       if (!chapter) return null;
 
-      const book = await this.bookModel
-        .findById(chapter.bookId)
-        .select('slug')
-        .lean();
-
+      const book = await this.booksRepository.findById(chapter.bookId, 'slug');
       if (!book) return null;
 
       return `/books/${book.slug}/chapters/${chapter.slug}`;
     }
 
     if (targetType === 'paragraph') {
-      const chapter = await this.chapterModel
-        .findOne({ 'paragraphs._id': targetId })
-        .select('bookId slug')
-        .lean();
+      const chapter = await this.chaptersRepository.findOne(
+        { 'paragraphs._id': new Types.ObjectId(targetId) },
+        'bookId slug'
+      );
 
       if (!chapter) return null;
 
-      const book = await this.bookModel
-        .findById(chapter.bookId)
-        .select('slug')
-        .lean();
+      const book = await this.booksRepository.findById(chapter.bookId, 'slug');
 
       if (!book) return null;
 
@@ -346,18 +321,18 @@ export class CommentsService {
     content: string,
   ) {
     if (!Types.ObjectId.isValid(commentId)) {
-      throw new BadRequestException('ID bình luận không hợp lệ');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
-    const comment = await this.commentModel.findById(commentId);
-    if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+    const comment = await this.commentsRepository.findById(commentId);
+    if (!comment) throw new NotFoundException(ErrorMessages.COMMENT_NOT_FOUND);
 
     if (comment.isDelete) {
       throw new BadRequestException('Bình luận đã được xóa');
     }
 
     if (comment.userId.toString() !== userId) {
-      throw new ForbiddenException('Bạn không được phép chỉnh sửa bình luận này');
+      throw new ForbiddenException(ErrorMessages.COMMENT_UPDATE_FORBIDDEN);
     }
 
     const moderationResult =
@@ -367,47 +342,42 @@ export class CommentsService {
       throw new BadRequestException('bình luận không hợp lệ');
     }
 
-    comment.content = content.trim();
-    comment.updatedAt = new Date();
+    // Invalidate Cache
+    const parentId = comment.parentId ? comment.parentId.toString() : 'root';
 
-    await comment.save();
-
-    return this.commentModel
-      .findById(comment._id)
-      .populate('userId', 'username image')
-      .lean();
+    const updated = await this.commentsRepository.update(comment._id, {
+      content: content.trim(),
+      updatedAt: new Date()
+    }, 'Bình luận không tồn tại');
+    return new CommentModal(updated);
   }
 
   async deleteComment(userId: string, commentId: string) {
     if (!Types.ObjectId.isValid(commentId)) {
-      throw new BadRequestException('Invalid comment ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
-    const comment = await this.commentModel.findById(commentId);
-    if (!comment) throw new NotFoundException('Comment not found');
+    const comment = await this.commentsRepository.findById(commentId);
+    if (!comment) throw new NotFoundException(ErrorMessages.COMMENT_NOT_FOUND);
 
     if (comment.userId.toString() !== userId) {
-      throw new ForbiddenException('You are not allowed to delete this comment');
+      throw new ForbiddenException(ErrorMessages.COMMENT_DELETE_FORBIDDEN);
     }
 
     if (comment.isDelete) return;
 
-    comment.isDelete = true;
-    comment.content = 'Bình luận đã bị xóa';
-    comment.updatedAt = new Date();
+    // Invalidate Cache
+    const parentId = comment.parentId ? comment.parentId.toString() : 'root';
 
-    await comment.save();
+    await this.commentsRepository.softDelete(comment._id);
   }
 
   async countByParentId(parentId: string) {
     if (!Types.ObjectId.isValid(parentId)) {
-      throw new BadRequestException('Invalid parentId');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
-    const count = await this.commentModel.countDocuments({
-      parentId: new Types.ObjectId(parentId),
-      isDelete: false,
-    });
+    const count = await this.commentsRepository.countByParentId(parentId);
 
     return count;
   }

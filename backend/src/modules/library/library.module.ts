@@ -9,6 +9,7 @@ import { CollectionsController } from './collections.controller';
 // Services
 import { LibraryService } from './library.service';
 import { CollectionsService } from './collections.service';
+import { ReadingListRepository } from './reading-list.repository';
 
 // Schemas
 import { ReadingList, ReadingListSchema } from './schemas/reading-list.schema';
@@ -30,7 +31,7 @@ import { GamificationModule } from '../gamification/gamification.module';
     GamificationModule,
   ],
   controllers: [LibraryController, CollectionsController],
-  providers: [LibraryService, CollectionsService],
-  exports: [LibraryService]
+  providers: [LibraryService, CollectionsService, ReadingListRepository],
+  exports: [LibraryService, ReadingListRepository]
 })
 export class LibraryModule { }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { HydratedDocument, Model, Types } from 'mongoose';
 import { UserGamification } from './schemas/user-gamification.schema';
 import { Achievement } from './schemas/achievement.schema';
 import { UserAchievement } from './schemas/user-achievement.schema';
@@ -17,7 +17,7 @@ export class GamificationService {
     @InjectModel(UserOnboarding.name) private userOnboardingModel: Model<UserOnboarding>,
   ) { }
 
-  async getDailyGoal(userId: string) {
+  async getDailyGoal(userId: string): Promise<HydratedDocument<DailyGoal>> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -48,7 +48,7 @@ export class GamificationService {
     let dailyGoal = await this.dailyGoalModel.findOne({ userId, date: today });
 
     if (!dailyGoal) {
-      dailyGoal = (await this.getDailyGoal(userId)) as any;
+      dailyGoal = await this.getDailyGoal(userId);
     }
 
     if (dailyGoal) {
@@ -93,8 +93,8 @@ export class GamificationService {
     }
 
     const oneDayMs = 24 * 60 * 60 * 1000;
-    
-    let diffDays = 1; 
+
+    let diffDays = 1;
     if (lastRead) {
       const diffTime = today.getTime() - lastRead.getTime();
       diffDays = Math.floor(diffTime / oneDayMs);
@@ -108,10 +108,10 @@ export class GamificationService {
       userGamification.currentStreak += 1;
     } else if (diffDays > 1) {
       const missedDays = diffDays - 1;
-      
+
       if (userGamification.streakFreezeCount >= missedDays) {
         userGamification.streakFreezeCount -= missedDays;
-        userGamification.currentStreak += 1; 
+        userGamification.currentStreak += 1;
         freezeUsed = missedDays;
       } else {
         userGamification.currentStreak = 1;
@@ -149,7 +149,7 @@ export class GamificationService {
     };
   }
 
-  async checkStreakAchievements(userGamification: any, userId: string) {
+  async checkStreakAchievements(userGamification: HydratedDocument<UserGamification> | UserGamification, userId: string) {
     const streak = userGamification.currentStreak;
     const milestones = [10, 20, 50, 100];
 
@@ -207,15 +207,15 @@ export class GamificationService {
   }
 
   async getUserAchievements(userId: string) {
-  return this.userAchievementModel
-    .find({ userId: new Types.ObjectId(userId) })
-    .populate('achievementId', 'name description')
-    .exec();
-}
+    return this.userAchievementModel
+      .find({ userId: new Types.ObjectId(userId) })
+      .populate('achievementId', 'name description')
+      .exec();
+  }
 
   async debugSetStreak(userId: string, streak: number) {
     let userGamification = await this.userGamificationModel.findOne({ userId: new Types.ObjectId(userId) });
-    
+
     if (!userGamification) {
       userGamification = await this.userGamificationModel.create({
         userId: new Types.ObjectId(userId),
@@ -233,7 +233,7 @@ export class GamificationService {
     }
 
     await userGamification.save();
-    
+
     // Force check achievements
     await this.checkStreakAchievements(userGamification, userId);
 

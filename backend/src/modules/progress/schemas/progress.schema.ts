@@ -2,10 +2,12 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { ReadingStatus } from '../../library/schemas/reading-list.schema';
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 export type ProgressDocument = HydratedDocument<Progress>;
 
 @Schema({ timestamps: true, collection: 'progresses' })
-export class Progress {
+export class Progress extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 

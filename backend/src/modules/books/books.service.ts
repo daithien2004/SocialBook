@@ -1,40 +1,38 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
-  InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { Types, UpdateQuery } from 'mongoose';
 
-// Schemas
-import { Book, BookDocument } from './schemas/book.schema';
-import { Chapter, ChapterDocument } from '../chapters/schemas/chapter.schema';
-import { Review, ReviewDocument } from '../reviews/schemas/review.schema';
-import { Author, AuthorDocument } from '../authors/schemas/author.schema';
-import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
+import { BooksRepository } from '../../data-access/repositories/books.repository';
+import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
+import { GenresRepository } from '../../data-access/repositories/genres.repository';
+import { AuthorsRepository } from '@/src/data-access/repositories/authors.repository';
+import { ReviewsRepository } from '@/src/data-access/repositories/reviews.repository';
+import { BookListModal, BookModal } from './modals/book.modal';
+import { BookDocument } from './schemas/book.schema';
 
-// Utils & DTOs
+import { formatPaginatedResponse } from '@/src/utils/helpers';
 import { slugify } from '@/src/utils/slugify';
-import { CreateBookDto } from './dto/create-book.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import {
-  ReadingList,
-  ReadingListDocument,
-} from '@/src/modules/library/schemas/reading-list.schema';
+import { CreateBookDto } from './dto/create-book.dto';
+
+import { ErrorMessages } from '@/src/common/constants/error-messages';
+
 
 @Injectable()
 export class BooksService {
+  private readonly logger = new Logger(BooksService.name);
+
   constructor(
-    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-    @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
-    @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
-    @InjectModel(Author.name) private authorModel: Model<AuthorDocument>,
-    @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
-    @InjectModel(ReadingList.name)
-    private readingListModel: Model<ReadingListDocument>,
-    private cloudinaryService: CloudinaryService,
+    private readonly booksRepository: BooksRepository,
+    private readonly chaptersRepository: ChaptersRepository,
+    private readonly authorsRepository: AuthorsRepository,
+    private readonly reviewsRepository: ReviewsRepository,
+    private readonly genresRepository: GenresRepository,
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
   async findAll(query: {
@@ -63,283 +61,66 @@ export class BooksService {
     const validLimit = Math.min(Math.max(limit, 1), 100);
     const skip = (page - 1) * validLimit;
 
-    const matchStage: any = { isDeleted: false };
-
-    if (status) matchStage.status = status;
-
+    let genreIds: Types.ObjectId[] = [];
     if (genres) {
       const genreSlugs = genres.split(',').map((g) => g.trim());
+      const genreDocs = await this.genresRepository.findBySlugs(genreSlugs);
+      genreIds = genreDocs.map(doc => doc._id);
 
-      const genreDocs = await this.genreModel.find({
-        slug: { $in: genreSlugs }
-      }).select('_id');
-
-      const genreIds = genreDocs.map(doc => doc._id);
-
-      if (genreIds.length > 0) {
-        matchStage.genres = { $in: genreIds };
-      } else {
-        return {
-          data: [],
-          metaData: {
-            page,
-            limit: validLimit,
-            total: 0,
-            totalPages: 0,
-          },
-        };
+      if (genreIds.length === 0) {
+        return formatPaginatedResponse([], 0, page, validLimit);
       }
     }
 
-    if (author) {
-      matchStage.authorId = new Types.ObjectId(author);
-    }
-
-    if (tags) {
-      const tagsList = tags.split(',').map((t) => t.trim());
-      matchStage.tags = { $in: tagsList };
-    }
-
     const sortOrder = order === 'asc' ? 1 : -1;
-    let sortStage: any = {};
+    let sort: Record<string, 1 | -1> = {};
 
     switch (sortBy) {
       case 'views':
-        sortStage = { views: sortOrder, _id: 1 };
+        sort = { views: sortOrder, _id: 1 };
         break;
       case 'likes':
-        sortStage = { likes: sortOrder, _id: 1 };
+        sort = { likes: sortOrder, _id: 1 };
         break;
       case 'rating':
-        sortStage = { computedRating: sortOrder, _id: 1 };
+        sort = { computedRating: sortOrder, _id: 1 };
         break;
       case 'popular':
-        sortStage = { reviewsCount: sortOrder, _id: 1 };
+        sort = { reviewsCount: sortOrder, _id: 1 };
         break;
       case 'createdAt':
-        sortStage = { createdAt: sortOrder, _id: 1 };
+        sort = { createdAt: sortOrder, _id: 1 };
         break;
       case 'updatedAt':
       default:
-        sortStage = { updatedAt: sortOrder, _id: 1 };
+        sort = { updatedAt: sortOrder, _id: 1 };
         break;
     }
 
-    const pipeline: any[] = [];
-
-    if (search) {
-      pipeline.push(
-        {
-          $lookup: {
-            from: 'authors',
-            localField: 'authorId',
-            foreignField: '_id',
-            as: 'authorData',
-          },
-        },
-        {
-          $addFields: {
-            authorName: { $arrayElemAt: ['$authorData.name', 0] }
-          }
-        },
-        {
-          $match: {
-            ...matchStage,
-            $or: [
-              { title: { $regex: search, $options: 'i' } },
-              { slug: { $regex: search, $options: 'i' } },
-              { authorName: { $regex: search, $options: 'i' } },
-            ]
-          }
-        }
-      );
-    } else {
-      pipeline.push({ $match: matchStage });
-    }
-
-    if (sortBy === 'rating' || sortBy === 'popular') {
-      pipeline.push(
-        {
-          $lookup: {
-            from: 'reviews',
-            localField: '_id',
-            foreignField: 'bookId',
-            as: 'reviewsData',
-          },
-        },
-        {
-          $addFields: {
-            computedRating: { $avg: '$reviewsData.rating' },
-            reviewsCount: { $size: '$reviewsData' },
-          },
-        }
-      );
-    }
-
-    pipeline.push({ $sort: sortStage });
-
-    pipeline.push({
-      $facet: {
-        data: [
-          { $skip: skip },
-          { $limit: validLimit },
-
-          ...(search ? [] : [
-            {
-              $lookup: {
-                from: 'authors',
-                localField: 'authorId',
-                foreignField: '_id',
-                as: 'authorId',
-              },
-            },
-            {
-              $unwind: {
-                path: '$authorId',
-                preserveNullAndEmptyArrays: true
-              },
-            },
-          ]),
-
-          ...(search ? [
-            {
-              $addFields: {
-                authorId: { $arrayElemAt: ['$authorData', 0] }
-              }
-            }
-          ] : []),
-
-          {
-            $lookup: {
-              from: 'genres',
-              localField: 'genres',
-              foreignField: '_id',
-              as: 'genres',
-            },
-          },
-
-          {
-            $lookup: {
-              from: 'chapters',
-              localField: '_id',
-              foreignField: 'bookId',
-              as: 'chaptersData',
-            },
-          },
-
-          ...(sortBy !== 'rating' && sortBy !== 'popular'
-            ? [
-              {
-                $lookup: {
-                  from: 'reviews',
-                  localField: '_id',
-                  foreignField: 'bookId',
-                  as: 'reviewsData',
-                },
-              },
-            ]
-            : []),
-
-          {
-            $addFields: {
-              stats: {
-                chapters: { $size: '$chaptersData' },
-                views: { $ifNull: ['$views', 0] },
-                likes: { $ifNull: ['$likes', 0] },
-                rating: {
-                  $ifNull: [
-                    {
-                      $cond: {
-                        if: { $gt: [{ $size: '$reviewsData' }, 0] },
-                        then: { $avg: '$reviewsData.rating' },
-                        else: 0
-                      }
-                    },
-                    0
-                  ]
-                },
-                reviews: { $size: '$reviewsData' },
-              },
-            },
-          },
-          {
-            $project: {
-              reviewsData: 0,
-              chaptersData: 0,
-              computedRating: 0,
-              reviewsCount: 0,
-              password: 0,
-              authorData: 0,
-              authorName: 0,
-            }
-          },
-        ],
-
-        totalCount: [{ $count: 'count' }],
+    const { data, total } = await this.booksRepository.findWithAdvancedFilters(
+      {
+        status,
+        search,
+        genreIds,
+        authorId: author ? new Types.ObjectId(author) : undefined,
+        tags: tags ? tags.split(',').map((t) => t.trim()) : undefined,
       },
-    });
-
-    const [result] = await this.bookModel.aggregate(pipeline);
-
-    const books = result.data;
-    const total = result.totalCount[0]?.count || 0;
-
-    return {
-      data: books,
-      metaData: {
-        page,
+      {
+        skip,
         limit: validLimit,
-        total,
-        totalPages: Math.ceil(total / validLimit),
-      },
-    };
+        sort,
+        sortBy,
+      }
+    );
+
+    const items = BookListModal.fromArray(data as BookDocument[]);
+    return formatPaginatedResponse(items, total, page, validLimit);
   }
 
   async getFilters() {
-    const genresAggregation = await this.genreModel.aggregate([
-      {
-        $lookup: {
-          from: 'books',
-          let: { genreId: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $in: ['$$genreId', '$genres'] },
-                    { $eq: ['$isDeleted', false] },
-                    { $in: ['$status', ['published', 'completed']] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: 'books'
-        }
-      },
-      {
-        $addFields: {
-          count: { $size: '$books' }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          name: 1,
-          slug: 1,
-          count: 1
-        }
-      },
-      { $sort: { name: 1 } }
-    ]);
+    const genresAggregation = await this.genresRepository.getGenreBookCounts();
 
-    const tagsAggregation = await this.bookModel.aggregate([
-      { $match: { isDeleted: false, status: { $in: ['published', 'completed'] } } },
-      { $unwind: '$tags' },
-      { $group: { _id: '$tags', count: { $sum: 1 } } },
-      { $sort: { count: -1, _id: 1 } },
-      { $project: { _id: 0, name: '$_id', count: 1 } },
-    ]);
+    const tagsAggregation = await this.booksRepository.getTagStats();
 
     return {
       genres: genresAggregation.map((g) => ({
@@ -356,70 +137,64 @@ export class BooksService {
   }
 
   async findBySlug(slug: string, userId?: string) {
-    const book = await this.bookModel
-      .findOne({ slug, isDeleted: false })
-      .populate('authorId', 'name avatar')
-      .populate('genres', 'name')
-      .lean();
+    this.logger.log(`Fetching book with slug: ${slug}`);
 
-    if (!book) throw new NotFoundException(`Book not found`);
+    const book = await this.booksRepository.findBySlugWithPopulate(slug);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
-    this.bookModel.updateOne({ _id: book._id }, { $inc: { views: 1 } }).exec();
-    book.views = (book.views || 0) + 1;
+    const bookCallback = await this.enrichBookDetails(book);
 
-    return this.enrichBookDetails(book, userId);
+    this.booksRepository.incrementViews(new Types.ObjectId(bookCallback._id));
+
+    if (userId) {
+      const isLiked = bookCallback.likedBy?.some(
+        (id: any) => id.toString() === userId,
+      );
+      return { ...bookCallback, isLiked };
+    }
+
+    return bookCallback;
   }
 
   async findById(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const book = await this.bookModel
-      .findOne({ _id: id, isDeleted: false })
-      .populate('authorId', 'name avatar')
-      .populate('genres', 'name')
-      .lean();
+    const book = await this.booksRepository.findByIdWithPopulate(id);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+    const bookDetails = await this.enrichBookDetails(book);
 
-    if (!book) throw new NotFoundException(`Book not found`);
-
-    return this.enrichBookDetails(book);
+    return bookDetails;
   }
 
   async create(dto: CreateBookDto, coverFile?: Express.Multer.File) {
-    // 1. Validate Author & Genres
     await this.validateReferences(dto.authorId, dto.genres);
 
-    // 2. Upload Image
     const coverUrl = coverFile
       ? await this.cloudinaryService.uploadImage(coverFile)
       : null;
 
-    // 3. Generate Slug
     const baseSlug = dto.slug?.trim() || slugify(dto.title);
     const uniqueSlug = await this.generateUniqueSlug(baseSlug);
 
-    // 4. Convert string to ObjectId explicitly (spread operator prevents auto-conversion)
     const authorIdObj = new Types.ObjectId(dto.authorId);
     const genresObj = dto.genres.map(g => new Types.ObjectId(g));
 
-    // 5. Create Book
-    const newBook = await this.bookModel.create({
+    const newBook = await this.booksRepository.create({
       ...dto,
       authorId: authorIdObj,
       genres: genresObj,
       title: dto.title.trim(),
       description: dto.description?.trim(),
       slug: uniqueSlug,
-      coverUrl,
+      coverUrl: coverUrl ?? undefined,
       views: 0,
       likes: 0,
       likedBy: [],
     });
 
-    return await this.bookModel
-      .findById(newBook._id)
-      .populate('authorId', 'name avatar')
-      .populate('genres', 'name');
+    const populatedBook = await this.booksRepository.findByIdWithPopulate(newBook._id);
+    return populatedBook ? new BookModal(populatedBook as BookDocument) : null;
   }
 
   async update(
@@ -428,12 +203,11 @@ export class BooksService {
     coverFile?: Express.Multer.File,
   ) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const book = await this.bookModel.findById(id);
-    if (!book) throw new NotFoundException('Book not found');
+    const book = await this.booksRepository.findById(id);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
-    // 1. Validate References if changed
     if (dto.authorId || dto.genres) {
       await this.validateReferences(
         dto.authorId || book.authorId.toString(),
@@ -441,14 +215,12 @@ export class BooksService {
       );
     }
 
-    // 2. Handle Slug Update
     let slug = book.slug;
     if (dto.title && dto.title !== book.title) {
       const baseSlug = dto.slug?.trim() || slugify(dto.title);
       slug = await this.generateUniqueSlug(baseSlug, id);
     }
 
-    // 3. Handle Cover Update
     let coverUrl = book.coverUrl;
     if (coverFile) {
       if (book.coverUrl)
@@ -456,8 +228,7 @@ export class BooksService {
       coverUrl = await this.cloudinaryService.uploadImage(coverFile);
     }
 
-    // 4. Convert string to ObjectId if provided
-    const updateData: any = { ...dto, slug, coverUrl };
+    const updateData: UpdateQuery<BookDocument> = { ...dto, slug, coverUrl };
     if (dto.authorId) {
       updateData.authorId = new Types.ObjectId(dto.authorId);
     }
@@ -465,41 +236,37 @@ export class BooksService {
       updateData.genres = dto.genres.map(g => new Types.ObjectId(g));
     }
 
-    // 5. Update
-    const updatedBook = await this.bookModel
-      .findByIdAndUpdate(id, updateData, { new: true })
-      .populate('authorId', 'name avatar')
-      .populate('genres', 'name');
+    const updatedBook = await this.booksRepository.updateAndPopulate(id, updateData);
 
-    return updatedBook;
+
+
+    return updatedBook ? new BookModal(updatedBook as BookDocument) : null;
   }
 
   async delete(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const book = await this.bookModel.findById(id);
-    if (!book || book.isDeleted) throw new NotFoundException('Book not found');
+    const book = await this.booksRepository.findById(id);
+    if (!book || book.isDeleted) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
-    await this.bookModel.findByIdAndUpdate(id, { isDeleted: true });
+    await this.booksRepository.update(id, { isDeleted: true });
+
+
 
     return { message: 'Book deleted successfully' };
   }
 
   async toggleLike(slug: string, userId: string) {
-    const book = await this.bookModel.findOne({ slug, isDeleted: false });
-    if (!book) throw new NotFoundException('Book not found');
+    const book = await this.booksRepository.findBySlugWithPopulate(slug);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
     const uid = new Types.ObjectId(userId);
-    const isLiked = book.likedBy?.some((id) => id.equals(uid));
+    const isLiked = book.likedBy?.some((id: any) => id.toString() === userId);
 
-    const update = isLiked
-      ? { $pull: { likedBy: uid }, $inc: { likes: -1 } }
-      : { $addToSet: { likedBy: uid }, $inc: { likes: 1 } };
+    const updatedBook = await this.booksRepository.toggleLike(book._id, uid, isLiked);
 
-    const updatedBook = await this.bookModel
-      .findByIdAndUpdate(book._id, update, { new: true })
-      .select('slug likes likedBy');
+
 
     return {
       slug: updatedBook?.slug,
@@ -511,15 +278,11 @@ export class BooksService {
   private async enrichBookDetails(book: any, userId?: string) {
     const bookId = book._id;
 
-    const [chapters, reviews, ratingStats, distribution] = await Promise.all([
-      this.chapterModel.find({ bookId }).sort({ orderIndex: 1 }).lean(),
-      this.reviewModel
-        .find({ bookId })
-        .populate('userId', 'username image')
-        .sort({ createdAt: -1 })
-        .lean(),
-      this.getReviewAggregates(bookId),
-      this.getRatingDistribution(bookId),
+    const [{ data: chapters }, reviews, ratingStats, distribution] = await Promise.all([
+      this.chaptersRepository.findMany({ filter: { bookId }, sort: { orderIndex: 1 } }),
+      this.reviewsRepository.findByBookId(bookId),
+      this.reviewsRepository.getAggregates(bookId),
+      this.reviewsRepository.getRatingDistribution(bookId),
     ]);
 
     const isLiked =
@@ -545,19 +308,19 @@ export class BooksService {
     genresId: string[] | Types.ObjectId[],
   ) {
     if (authorId && !Types.ObjectId.isValid(authorId))
-      throw new BadRequestException('Invalid Author ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
     if (genresId && genresId.some((id) => !Types.ObjectId.isValid(id)))
-      throw new BadRequestException('Invalid Genre ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
     const [author, countGenres] = await Promise.all([
-      this.authorModel.findById(authorId),
-      this.genreModel.countDocuments({ _id: { $in: genresId } }),
+      this.authorsRepository.findById(authorId as string),
+      this.genresRepository.countByIds(genresId as Types.ObjectId[]),
     ]);
 
-    if (!author) throw new BadRequestException('Author not found');
+    if (!author) throw new BadRequestException(ErrorMessages.AUTHOR_NOT_FOUND);
     if (countGenres !== genresId.length)
-      throw new BadRequestException('One or more genres not found');
+      throw new BadRequestException(ErrorMessages.GENRE_NOT_FOUND);
   }
 
   private async generateUniqueSlug(
@@ -568,10 +331,7 @@ export class BooksService {
     let counter = 1;
 
     while (true) {
-      const query: any = { slug };
-      if (excludeId) query._id = { $ne: excludeId };
-
-      const exists = await this.bookModel.exists(query);
+      const exists = await this.booksRepository.existsBySlug(slug, excludeId);
       if (!exists) break;
 
       slug = `${baseSlug}-${counter}`;
@@ -580,59 +340,24 @@ export class BooksService {
     return slug;
   }
 
-  private async getReviewAggregates(bookId: Types.ObjectId) {
-    const stats = await this.reviewModel.aggregate([
-      { $match: { bookId: new Types.ObjectId(bookId) } },
-      {
-        $group: {
-          _id: null,
-          averageRating: { $avg: '$rating' },
-          totalRatings: { $sum: 1 },
-        },
-      },
-    ]);
-
-    const data = stats[0] || {};
-    return {
-      averageRating: data.averageRating
-        ? Math.round(data.averageRating * 10) / 10
-        : 0,
-      totalRatings: data.totalRatings || 0,
-    };
-  }
-
-  private async getRatingDistribution(bookId: Types.ObjectId) {
-    const distribution = await this.reviewModel.aggregate([
-      { $match: { bookId: new Types.ObjectId(bookId) } },
-      { $group: { _id: '$rating', count: { $sum: 1 } } },
-    ]);
-
-    const result = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    distribution.forEach((item) => (result[item._id] = item.count));
-    return result;
-  }
-
   async getBookStats(id: string) {
     if (!id) {
-      throw new BadRequestException('Book ID is required');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Invalid book ID format');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
-    const book = await this.bookModel
-      .findOne({ _id: id, isDeleted: false })
-      .select('views likes')
-      .lean();
+    const book = (await this.booksRepository.findById(id)) as any;
 
     if (!book) {
-      throw new NotFoundException(`Book with ID "${id}" not found`);
+      throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
     }
 
-    const chaptersCount = await this.chapterModel.countDocuments({
-      bookId: new Types.ObjectId(id),
-    });
+    const chaptersCount = await this.chaptersRepository.countByBookId(
+      new Types.ObjectId(id),
+    );
 
     return {
       id,

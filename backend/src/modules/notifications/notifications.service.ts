@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { Notification } from './schemas/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Server } from 'socket.io';
+import { NotificationModal } from './modals/notification.modal';
 
 @Injectable()
 export class NotificationsService {
@@ -14,7 +15,7 @@ export class NotificationsService {
   constructor(
     @InjectModel(Notification.name)
     private readonly notifModel: Model<Notification>,
-  ) {}
+  ) { }
 
   private userRoom(userId: string) {
     return `user:${userId}`;
@@ -32,25 +33,15 @@ export class NotificationsService {
       meta: dto.meta
     });
 
-    const payload = {
-      id: (doc as any).id,
-      userId: dto.userId,
-      title: doc.title,
-      message: doc.message,
-      type: doc.type,
-      isRead: doc.isRead,
-      createdAt: doc.createdAt,
-      actionUrl: doc.actionUrl,
-      meta: doc.meta,
-    };
+    const modal = new NotificationModal(doc);
 
     if (this.server) {
       this.server
         .to(this.userRoom(dto.userId))
-        .emit('notification:new', payload);
+        .emit('notification:new', modal);
     }
 
-    return payload;
+    return modal;
   }
 
   async findAllByUser(userId: string, limit = 50) {
@@ -58,8 +49,9 @@ export class NotificationsService {
       .find({ userId: new Types.ObjectId(userId) })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .lean();
-    return rows.map((r: any) => ({ id: r._id.toString(), ...r }));
+      .lean()
+      .exec();
+    return NotificationModal.fromArray(rows);
   }
 
   async markRead(userId: string, id: string) {

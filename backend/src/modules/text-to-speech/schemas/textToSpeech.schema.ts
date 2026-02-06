@@ -14,8 +14,10 @@ export enum TTSVoiceType {
   NEUTRAL = 'neutral',
 }
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class TextToSpeech extends Document {
+export class TextToSpeech extends BaseSchema {
   // References
   @Prop({ type: Types.ObjectId, required: true, ref: 'Chapter', index: true })
   chapterId: Types.ObjectId;
@@ -107,9 +109,6 @@ export class TextToSpeech extends Document {
 
   @Prop({ type: Object })
   metadata?: Record<string, any>; // Additional flexible metadata
-
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 export type TextToSpeechDocument = TextToSpeech & Document;

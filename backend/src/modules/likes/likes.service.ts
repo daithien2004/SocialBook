@@ -1,36 +1,32 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-
-// Schemas
-import { Like, LikeDocument } from './schemas/like.schema';
+import { Types } from 'mongoose';
 
 // DTOs
 import { ToggleLikeDto } from './dto/create-like.dto';
 import { NotificationsService } from '@/src/modules/notifications/notifications.service';
-import { Post, PostDocument } from '../posts/schemas/post.schema';
 import { CommentTargetType } from '@/src/modules/comments/constants/targetType.constant';
-import { Comment, CommentDocument } from '@/src/modules/comments/schemas/comment.schema';
-import { User, UserDocument } from '@/src/modules/users/schemas/user.schema';
+
+import { UsersRepository } from '@/src/data-access/repositories/users.repository';
+import { PostsRepository } from '@/src/data-access/repositories/posts.repository';
+import { CommentsRepository } from '@/src/data-access/repositories/comments.repository';
+import { LikesRepository } from '@/src/data-access/repositories/likes.repository';
 
 @Injectable()
 export class LikesService {
-  constructor(@InjectModel(Like.name) private readonly likeModel: Model<LikeDocument>,
-              @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
-              @InjectModel(Comment.name) private readonly commentModel: Model<CommentDocument>,
-              @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-              private readonly notifications: NotificationsService,) {}
+  constructor(
+    private readonly likesRepository: LikesRepository,
+    private readonly postsRepository: PostsRepository,
+    private readonly commentsRepository: CommentsRepository,
+    private readonly usersRepository: UsersRepository,
+    private readonly notifications: NotificationsService,
+  ) { }
 
   async getCount(dto: ToggleLikeDto) {
     const { targetId, targetType } = dto;
 
     if (!Types.ObjectId.isValid(targetId)) return { count: 0 };
 
-    const count = await this.likeModel.countDocuments({
-      targetType: targetType.toLowerCase(),
-      targetId: new Types.ObjectId(targetId),
-      status: true,
-    });
+    const count = await this.likesRepository.countLikes(targetId, targetType);
 
     return { count };
   }
@@ -44,16 +40,7 @@ export class LikesService {
 
     const normalizedType = targetType.toLowerCase();
 
-    const like = await this.likeModel
-      .findOne(
-        {
-          userId: new Types.ObjectId(userId),
-          targetType: normalizedType,
-          targetId: new Types.ObjectId(targetId),
-        },
-        { _id: 0, status: 1 }
-      )
-      .lean();
+    const like = await this.likesRepository.findStatus(userId, targetId, targetType);
 
     return { isLiked: like?.status };
   }
@@ -63,10 +50,7 @@ export class LikesService {
   async aggregateLikeCounts(targetIds: Types.ObjectId[], targetType: string) {
     if (!targetIds.length) return [];
 
-    return this.likeModel.aggregate([
-      { $match: { targetType, targetId: { $in: targetIds } } },
-      { $group: { _id: '$targetId', count: { $sum: 1 } } },
-    ]);
+    return this.likesRepository.aggregateLikeCounts(targetIds, targetType);
   }
 
   async getLikedTargets(
@@ -76,14 +60,7 @@ export class LikesService {
   ): Promise<Set<string>> {
     if (!userId || targetIds.length === 0) return new Set();
 
-    const likes = await this.likeModel
-      .find({
-        userId: new Types.ObjectId(userId),
-        targetType,
-        targetId: { $in: targetIds },
-      })
-      .select('targetId')
-      .lean();
+    const likes = await this.likesRepository.findLikedTargets(userId, targetIds, targetType);
 
     return new Set(likes.map((like) => like.targetId.toString()));
   }
@@ -104,10 +81,10 @@ export class LikesService {
     };
 
     // Tìm like hiện tại (nếu có)
-    const existing = await this.likeModel.findOne(filter);
+    const existing = await this.likesRepository.findByUserAndTarget(userId, targetId, normalizedType);
 
     if (!existing) {
-      await this.likeModel.create({
+      await this.likesRepository.create({
         ...filter,
         status: true,
         createdAt: new Date(),
@@ -121,9 +98,7 @@ export class LikesService {
 
     const updatedStatus = !existing.status;
 
-    existing.status = updatedStatus;
-    existing.updatedAt = new Date();
-    await existing.save();
+    await this.likesRepository.updateStatus(existing._id, updatedStatus);
     return { isLiked: updatedStatus };
   }
 
@@ -138,18 +113,12 @@ export class LikesService {
     let actionUrl = '';
 
     // 🔹 Lấy thông tin người hành động
-    const actor = await this.userModel
-      .findById(actorId)
-      .select('_id username image')
-      .lean();
+    const actor = await this.usersRepository.findByIdSelected(actorId, '_id username image') as { _id: Types.ObjectId; username: string; image?: string } | null;
 
     if (!actor) return;
 
     if (targetType === 'post') {
-      const post = await this.postModel
-        .findById(targetId)
-        .select('_id userId content')
-        .lean();
+      const post = await this.postsRepository.findByIdSelected(targetId, '_id userId content') as { _id: Types.ObjectId; userId: Types.ObjectId; content: string } | null;
 
       if (!post) return;
 
@@ -159,10 +128,7 @@ export class LikesService {
       actionUrl = `/posts/${post._id}`;
 
     } else if (targetType === 'comment') {
-      const comment = await this.commentModel
-        .findById(targetId)
-        .select('_id userId content targetId')
-        .lean();
+      const comment = await this.commentsRepository.findByIdSelected(targetId, '_id userId content targetId') as { _id: Types.ObjectId; userId: Types.ObjectId; content: string; targetId: Types.ObjectId } | null;
 
       if (!comment) return;
 

@@ -1,24 +1,24 @@
 'use client';
 
-import {useAppAuth} from '@/src/hooks/useAppAuth';
-import {useGetPersonalizedRecommendationsQuery} from '@/src/features/recommendations/api/recommendationsApi';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useGetPersonalizedRecommendationsQuery } from '@/src/features/recommendations/api/recommendationsApi';
 import Image from 'next/image';
-import {useRouter} from 'next/navigation';
-import {useGetBooksQuery} from "@/src/features/books/api/bookApi";
-import {PAGINATION} from "@/src/features/books/books.constants";
+import { useRouter } from 'next/navigation';
+import { useGetBooksQuery } from "@/src/features/books/api/bookApi";
+import { PAGINATION } from "@/src/features/books/books.constants";
 
 export default function RecommendedBooks() {
-    const {isAuthenticated} = useAppAuth();
+    const { isAuthenticated } = useAppAuth();
     const router = useRouter();
 
     const limit = 12;
 
-    const {data, isLoading, error} = useGetPersonalizedRecommendationsQuery(
-        {page: 1, limit},
-        {skip: !isAuthenticated}
+    const { data, isLoading, error } = useGetPersonalizedRecommendationsQuery(
+        { page: 1, limit },
+        { skip: !isAuthenticated }
     );
 
-    const {data: dataBook, isLoading: isLoadingBook, isFetching} = useGetBooksQuery({
+    const { data: dataBook, isLoading: isLoadingBook, isFetching } = useGetBooksQuery({
         page: 1,
         limit: PAGINATION.BOOKS_PER_PAGE,
         sortBy: 'views',
@@ -39,11 +39,11 @@ export default function RecommendedBooks() {
                 <div className="p-4 space-y-3">
                     {[...Array(4)].map((_, i) => (
                         <div key={i} className="flex gap-3 animate-pulse">
-                            <div className="w-20 h-28 bg-slate-200 dark:bg-white/5 rounded-lg"/>
+                            <div className="w-20 h-28 bg-slate-200 dark:bg-white/5 rounded-lg" />
                             <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-slate-200 dark:bg-white/5 rounded w-3/4"/>
-                                <div className="h-3 bg-slate-200 dark:bg-white/5 rounded w-1/2"/>
-                                <div className="h-3 bg-slate-200 dark:bg-white/5 rounded w-full"/>
+                                <div className="h-4 bg-slate-200 dark:bg-white/5 rounded w-3/4" />
+                                <div className="h-3 bg-slate-200 dark:bg-white/5 rounded w-1/2" />
+                                <div className="h-3 bg-slate-200 dark:bg-white/5 rounded w-full" />
                             </div>
                         </div>
                     ))}
@@ -112,7 +112,7 @@ export default function RecommendedBooks() {
                                             className="object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-slate-200 dark:bg-gray-700"/>
+                                        <div className="w-full h-full bg-slate-200 dark:bg-gray-700" />
                                     )}
                                 </div>
 

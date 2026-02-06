@@ -2,21 +2,25 @@ import {
   Controller,
   Get,
   Query,
-  Request,
+  Req,
   ParseIntPipe,
   DefaultValuePipe,
+  UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { RecommendationsService } from './recommendations.service';
+import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
 @Controller('recommendations')
 export class RecommendationsController {
   constructor(
     private readonly recommendationsService: RecommendationsService,
-  ) {}
+  ) { }
 
   @Get('personalized')
+  @UseGuards(JwtAuthGuard)
   async getPersonalizedRecommendations(
-    @Request() req,
+    @Req() req: Request & { user: { id: string } },
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {

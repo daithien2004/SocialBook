@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Date, Document, Types } from 'mongoose';
+import { Document, Types } from 'mongoose';
+
+import { BaseSoftDeleteSchema } from '@/src/shared/schemas/base.schema';
 
 export type BookDocument = Book & Document;
 
 @Schema({ timestamps: true }) // tự sinh createdAt, updatedAt
-export class Book {
-  _id: Types.ObjectId;
-
+export class Book extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'Author', required: true })
   authorId: Types.ObjectId;
 
@@ -45,12 +45,6 @@ export class Book {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   likedBy: Types.ObjectId[];
-
-  @Prop({ default: false })
-  isDeleted: boolean;
-
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);

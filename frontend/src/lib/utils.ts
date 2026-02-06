@@ -28,9 +28,18 @@ export function formatNumber(num?: number): string {
   return num.toString();
 }
 
-export const getErrorMessage = (err: any) => {
-  const raw = err?.data?.message ?? err?.message;
-  return Array.isArray(raw) ? raw.join('\n') : (raw || 'Update failed');
+export const getErrorMessage = (error: any): string => {
+  if (typeof error === 'string') return error;
+
+  if (Array.isArray(error?.data?.message)) {
+    return error.data.message.join(', ');
+  }
+
+  return (
+    error?.data?.message ||
+    error?.message ||
+    'Đã có lỗi xảy ra. Vui lòng thử lại.'
+  );
 };
 
 export function timeAgo(dateString: string) {

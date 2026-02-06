@@ -7,6 +7,7 @@ import {
   useResendOtpMutation,
   useVerifyOtpMutation,
 } from '@/src/features/auth/api/authApi';
+import { getErrorMessage } from '@/src/lib/utils';
 
 export default function VerifyOtpPage() {
   const router = useRouter();
@@ -77,7 +78,7 @@ export default function VerifyOtpPage() {
       setSuccess(true);
       setTimeout(() => router.push('/login'), 2000);
     } catch (err: any) {
-      setErrorMsg(err.data?.message || 'Mã OTP không đúng hoặc đã hết hạn');
+      setErrorMsg(getErrorMessage(err));
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     }
@@ -87,11 +88,11 @@ export default function VerifyOtpPage() {
     setResendMsg('');
     setErrorMsg('');
     try {
-      await resendOtp({ email }).unwrap();
+      const result = await resendOtp({ email }).unwrap();
       setResendMsg('Đã gửi lại mã OTP mới!');
-      setCountdown(60);
+      setCountdown(result.data?.resendCooldown || 60);
     } catch (err: any) {
-      setErrorMsg('Gửi lại thất bại. Vui lòng thử lại sau.');
+      setErrorMsg(getErrorMessage(err));
     }
   };
 
@@ -199,8 +200,8 @@ export default function VerifyOtpPage() {
                   {countdown > 0
                     ? `Gửi lại sau ${countdown}s`
                     : isResending
-                    ? 'Đang gửi lại...'
-                    : 'Gửi Lại Mã'}
+                      ? 'Đang gửi lại...'
+                      : 'Gửi Lại Mã'}
                 </button>
               </div>
             </div>

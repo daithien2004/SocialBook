@@ -1,3 +1,4 @@
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 import {
   BadRequestException,
   ConflictException,
@@ -5,72 +6,62 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-
-import { Review, ReviewDocument } from './schemas/review.schema';
+import { Types } from 'mongoose';
+import { ReviewsRepository } from '../../data-access/repositories/reviews.repository';
 
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 
 import { ContentModerationService } from '../content-moderation/content-moderation.service';
+import { ReviewModal } from './modals/review.modal';
 
 @Injectable()
 export class ReviewsService {
   constructor(
-    @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
+    private readonly reviewsRepository: ReviewsRepository,
     private readonly contentModerationService: ContentModerationService,
   ) { }
 
   async findAllByBook(bookId: string, userId?: string) {
     if (!Types.ObjectId.isValid(bookId)) {
-      throw new BadRequestException('Invalid Book ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
-    const reviews = await this.reviewModel
-      .find({ bookId: new Types.ObjectId(bookId) })
-      .populate('userId', 'username image email')
-      .sort({ createdAt: -1 })
-      .lean() as any[];
+    const reviews = await this.reviewsRepository.findByBookId(bookId);
+    const modals = ReviewModal.fromArray(reviews);
 
     if (userId) {
-      return reviews.map((review) => ({
+      return modals.map((review, idx) => ({
         ...review,
-        isLiked: review.likedBy?.some((id) => id.toString() === userId),
+        isLiked: reviews[idx].likedBy?.some((id: Types.ObjectId) => id.toString() === userId),
       }));
     }
 
-    return reviews;
+    return modals;
   }
 
   async findOne(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Review ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const review = await this.reviewModel
-      .findById(id)
-      .populate('userId', 'username image')
-      .lean() as any;
+    const review = await this.reviewsRepository.findByIdWithUser(id);
 
-    if (!review) throw new NotFoundException('Review not found');
-    return review;
+    if (!review) throw new NotFoundException(ErrorMessages.REVIEW_NOT_FOUND);
+    return new ReviewModal(review);
   }
 
   async create(userId: string, dto: CreateReviewDto) {
     if (!Types.ObjectId.isValid(dto.bookId)) {
-      throw new BadRequestException('Invalid Book ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const userObjectId = new Types.ObjectId(userId);
     const bookObjectId = new Types.ObjectId(dto.bookId);
 
-    const existingReview = await this.reviewModel.exists({
-      userId: userObjectId,
-      bookId: bookObjectId,
-    });
+    const existingReview = await this.reviewsRepository.existsByUserAndBook(userObjectId, bookObjectId);
 
     if (existingReview) {
-      throw new ConflictException('Bạn đã đánh giá cuốn sách này rồi.');
+      throw new ConflictException(ErrorMessages.REVIEW_ALREADY_EXISTS);
     }
 
     // Content Moderation
@@ -89,64 +80,56 @@ export class ReviewsService {
     }
 
     try {
-      const newReview = await this.reviewModel.create({
+      const newReview = await this.reviewsRepository.createReview({
         ...dto,
         userId: userObjectId,
-        bookId: bookObjectId,
       });
-
-      return await this.reviewModel
-        .findById(newReview._id)
-        .populate('userId', 'username image')
-        .lean() as any;
+      return new ReviewModal(newReview);
     } catch (error) {
-      throw new BadRequestException('Không thể tạo đánh giá.');
+      throw new BadRequestException(ErrorMessages.REVIEW_CREATE_FAILED);
     }
   }
 
   async update(id: string, userId: string, dto: UpdateReviewDto) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Review ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const review = await this.reviewModel.findById(id);
+    const review = await this.reviewsRepository.findById(id);
 
-    if (!review) throw new NotFoundException('Review not found');
+    if (!review) throw new NotFoundException(ErrorMessages.REVIEW_NOT_FOUND);
 
     if (review.userId.toString() !== userId) {
-      throw new ForbiddenException('Bạn không có quyền sửa đánh giá này');
+      throw new ForbiddenException(ErrorMessages.REVIEW_UPDATE_FORBIDDEN);
     }
 
-    const updatedReview = await this.reviewModel
-      .findByIdAndUpdate(id, dto, { new: true })
-      .populate('userId', 'username image')
-      .lean() as any;
+    const updatedReview = await this.reviewsRepository.updateReview(id, dto);
 
-    return updatedReview;
+    return new ReviewModal(updatedReview!);
   }
 
   async remove(id: string, userId: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid Review ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const review = await this.reviewModel.findById(id);
+    const review = await this.reviewsRepository.findById(id);
 
-    if (!review) throw new NotFoundException('Review not found');
+    if (!review) throw new NotFoundException(ErrorMessages.REVIEW_NOT_FOUND);
 
     if (review.userId.toString() !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xóa đánh giá này');
+      throw new ForbiddenException(ErrorMessages.REVIEW_DELETE_FORBIDDEN);
     }
 
-    await this.reviewModel.findByIdAndDelete(id);
+    await this.reviewsRepository.delete(id);
 
     return { success: true };
   }
 
   async toggleLike(reviewId: string, userId: string) {
     if (!Types.ObjectId.isValid(reviewId))
-      throw new BadRequestException('Invalid Review ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const review = await this.reviewModel.findById(reviewId);
-    if (!review) throw new NotFoundException('Review not found');
+    const review = await this.reviewsRepository.findById(reviewId);
+    if (!review) throw new NotFoundException(ErrorMessages.REVIEW_NOT_FOUND);
 
     const uid = new Types.ObjectId(userId);
     const isLiked = review.likedBy?.some((id) => id.equals(uid));
@@ -155,9 +138,7 @@ export class ReviewsService {
       ? { $pull: { likedBy: uid }, $inc: { likesCount: -1 } }
       : { $addToSet: { likedBy: uid }, $inc: { likesCount: 1 } };
 
-    const updatedReview = await this.reviewModel
-      .findByIdAndUpdate(reviewId, update, { new: true })
-      .select('likesCount likedBy');
+    const updatedReview = await this.reviewsRepository.toggleLike(reviewId, uid, isLiked);
 
     return {
       likesCount: updatedReview?.likesCount,

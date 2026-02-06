@@ -49,7 +49,7 @@ export class AuthorsController {
     async findAll(
         @Query('current') current: string = '1',
         @Query('pageSize') pageSize: string = '10',
-        @Query() query: any,
+        @Query() query: Record<string, unknown>,
     ) {
         const data = await this.authorsService.findAll(query, +current, +pageSize);
         return {

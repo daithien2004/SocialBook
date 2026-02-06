@@ -1,14 +1,15 @@
 'use client';
 
-import React, {Fragment, useState, useLayoutEffect, useRef} from 'react';
-import {Dialog, Transition} from '@headlessui/react';
-import {Heart, MessageCircle, Send, X} from 'lucide-react';
-import {toast} from 'sonner';
-import {Post} from '@/src/features/posts/types/post.interface';
+import React, { Fragment, useState, useLayoutEffect, useRef } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
+import { Heart, MessageCircle, Send, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/src/lib/utils';
+import { Post } from '@/src/features/posts/types/post.interface';
 import ListComments from '@/src/components/comment/ListComments';
-import {usePostCreateMutation} from '@/src/features/comments/api/commentApi';
+import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
 import SharePostModal from './SharePostModal';
-import {useTheme} from 'next-themes';
+import { useTheme } from 'next-themes';
 
 interface ModalPostCommentProps {
     post: Post;
@@ -21,11 +22,11 @@ interface ModalPostCommentProps {
 }
 
 const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
-    const {post, isCommentOpen, closeCommentModal} = props;
+    const { post, isCommentOpen, closeCommentModal } = props;
 
-    const {theme} = useTheme();
+    const { theme } = useTheme();
     const [commentText, setCommentText] = useState('');
-    const [createComment, {isLoading: isPosting}] = usePostCreateMutation();
+    const [createComment, { isLoading: isPosting }] = usePostCreateMutation();
     const commentInputRef = useRef<HTMLInputElement>(null);
     const [showShare, setShowShare] = useState(false);
 
@@ -46,9 +47,7 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
             commentInputRef.current?.focus();
         } catch (e: any) {
             console.log('Create comment failed:', e);
-            const errorMessage =
-                e?.data?.message || 'Có lỗi xảy ra khi gửi bình luận.';
-            toast.error(errorMessage);
+            toast.error(getErrorMessage(e));
         }
     };
 
@@ -80,7 +79,7 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-slate-900/15 dark:bg-black/40 backdrop-blur-[2px]"/>
+                    <div className="fixed inset-0 bg-slate-900/15 dark:bg-black/40 backdrop-blur-[2px]" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 overflow-y-auto">
@@ -125,7 +124,7 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                                     className="absolute top-3 right-3 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 transition-colors"
                                     aria-label="Close"
                                 >
-                                    <X size={18}/>
+                                    <X size={18} />
                                 </button>
 
                                 {/* Trái: ảnh lớn */}
@@ -202,7 +201,7 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                                                         className={`transition-transform duration-150 group-hover:scale-110 ${props.likeStatus
                                                             ? 'fill-rose-500 text-rose-500'
                                                             : 'text-slate-700 dark:text-gray-300'
-                                                        }`}
+                                                            }`}
                                                     />
                                                 </button>
                                                 <button

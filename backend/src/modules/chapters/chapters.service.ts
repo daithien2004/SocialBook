@@ -1,369 +1,199 @@
+import { slugify } from '@/src/utils/slugify';
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { slugify } from '@/src/utils/slugify';
+import { Types } from 'mongoose';
 
-import { Chapter, ChapterDocument } from './schemas/chapter.schema';
-import { Book, BookDocument } from '../books/schemas/book.schema';
+import { BooksRepository } from '../../data-access/repositories/books.repository';
+import { ChaptersRepository } from '../../data-access/repositories/chapters.repository';
 
+import { ErrorMessages } from '@/src/common/constants/error-messages';
+
+import { formatPaginatedResponse } from '@/src/utils/helpers';
+import { BookInfoModal } from '../books/modals/book.modal';
+import { BookDocument } from '../books/schemas/book.schema';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
+import { ChapterListModal, ChapterModal, ChapterNavModal } from './modals/chapter.modal';
+
+export interface ChapterDetailResult {
+  book: BookInfoModal;
+  chapter: ChapterModal;
+  navigation: {
+    previous: ChapterNavModal | null;
+    next: ChapterNavModal | null;
+  };
+}
 
 @Injectable()
 export class ChaptersService {
   constructor(
-    @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
-    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
+    private readonly chaptersRepository: ChaptersRepository,
+    private readonly booksRepository: BooksRepository,
   ) { }
 
   async findByBookSlug(bookSlug: string) {
     if (!bookSlug) throw new BadRequestException('Book slug is required');
 
-    const book = await this.bookModel
-      .findOne({ slug: bookSlug, isDeleted: false })
-      .select('_id title slug')
-      .lean();
+    const book = await this.booksRepository.findBySlugSelect(bookSlug, '_id title slug');
 
-    if (!book) throw new NotFoundException(`Book not found`);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
-    // Use aggregation to join TTS data (same pattern as getChaptersByBookSlug)
-    const chaptersWithTTS = await this.chapterModel.aggregate([
-      { $match: { bookId: book._id } },
-      { $sort: { orderIndex: 1 } },
-      {
-        $lookup: {
-          from: 'texttospeeches',
-          localField: '_id',
-          foreignField: 'chapterId',
-          as: 'ttsData',
-        },
-      },
-      {
-        $addFields: {
-          latestTTS: {
-            $arrayElemAt: [
-              {
-                $filter: {
-                  input: '$ttsData',
-                  as: 'tts',
-                  cond: { $ne: ['$$tts.status', 'failed'] },
-                },
-              },
-              0,
-            ],
-          },
-        },
-      },
-      {
-        $project: {
-          title: 1,
-          slug: 1,
-          orderIndex: 1,
-          viewsCount: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          paragraphsCount: { $size: { $ifNull: ['$paragraphs', []] } },
-          ttsStatus: { $ifNull: ['$latestTTS.status', null] },
-          audioUrl: { $ifNull: ['$latestTTS.audioUrl', null] },
-        },
-      },
-    ]);
+    const chaptersWithTTS = await this.chaptersRepository.findChaptersWithInfo(book._id);
 
     return {
-      book,
+      book: new BookInfoModal(book),
       total: chaptersWithTTS.length,
-      chapters: chaptersWithTTS,
+      chapters: ChapterListModal.fromArray(chaptersWithTTS),
     };
   }
 
-  async findBySlug(bookSlug: string, chapterSlug: string) {
-    const book = await this.bookModel
-      .findOne({ slug: bookSlug, isDeleted: false })
-      .select('_id title slug description authorId')
-      .populate({
-        path: 'authorId',
-        select: 'name',
-      })
-      .lean();
+  async findBySlug(bookSlug: string, chapterSlug: string): Promise<ChapterDetailResult> {
+    const book = await this.booksRepository.findBySlugWithPopulate(bookSlug);
 
-    if (!book) throw new NotFoundException(`Book "${bookSlug}" not found`);
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
-    const chapter = await this.chapterModel
-      .findOne({ slug: chapterSlug, bookId: book._id })
-      .lean();
+    const chapter = await this.chaptersRepository.findBySlug(book._id, chapterSlug);
 
-    if (!chapter)
-      throw new NotFoundException(`Chapter "${chapterSlug}" not found`);
+    if (!chapter) throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
 
     const [prevChapter, nextChapter] = await Promise.all([
-      this.chapterModel
-        .findOne({ bookId: book._id, orderIndex: { $lt: chapter.orderIndex } })
-        .select('title slug orderIndex')
-        .sort({ orderIndex: -1 })
-        .lean(),
-      this.chapterModel
-        .findOne({ bookId: book._id, orderIndex: { $gt: chapter.orderIndex } })
-        .select('title slug orderIndex')
-        .sort({ orderIndex: 1 })
-        .lean(),
-      // Increment View (Fire & Forget, nhưng await để đảm bảo logic)
-      this.chapterModel.updateOne(
-        { _id: chapter._id },
-        { $inc: { viewsCount: 1 } },
-      ),
+      this.chaptersRepository.findPreviousChapter(book._id, chapter.orderIndex),
+      this.chaptersRepository.findNextChapter(book._id, chapter.orderIndex),
     ]);
 
-    return {
-      book,
-      chapter: {
+    this.chaptersRepository.incrementViews(chapter._id);
+
+    const result: ChapterDetailResult = {
+      book: new BookInfoModal(book),
+      chapter: new ChapterModal({
         ...chapter,
         viewsCount: (chapter.viewsCount || 0) + 1,
-      },
+      }),
       navigation: {
-        previous: prevChapter
-          ? {
-            id: prevChapter._id.toString(),
-            title: prevChapter.title,
-            slug: prevChapter.slug,
-            orderIndex: prevChapter.orderIndex,
-          }
-          : null,
-        next: nextChapter
-          ? {
-            id: nextChapter._id.toString(),
-            title: nextChapter.title,
-            slug: nextChapter.slug,
-            orderIndex: nextChapter.orderIndex,
-          }
-          : null,
+        previous: ChapterNavModal.fromChapter(prevChapter),
+        next: ChapterNavModal.fromChapter(nextChapter),
       },
     };
+
+
+
+    return result;
   }
 
   async getChaptersByBookSlug(bookSlug: string, page: number, limit: number) {
-    // VALIDATION
     if (!bookSlug?.trim()) {
       throw new BadRequestException('Book slug là bắt buộc');
     }
 
-    const book = await this.bookModel
-      .findOne({ slug: bookSlug, isDeleted: false })
-      .lean();
+    const book = await this.booksRepository.findBySlugSelect(bookSlug, '_id title slug');
 
     if (!book) {
-      throw new NotFoundException(`Không tìm thấy sách với slug: ${bookSlug}`);
+      throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
     }
 
     const skip = (page - 1) * limit;
+    const totalChapters = await this.chaptersRepository.count({ bookId: book._id });
+    const chapters = await this.chaptersRepository.findChaptersWithInfo(book._id, { skip, limit });
+    const paginated = formatPaginatedResponse(ChapterListModal.fromArray(chapters), totalChapters, page, limit);
 
-    // EXECUTION - Get Total Count
-    const totalChapters = await this.chapterModel.countDocuments({ bookId: book._id });
-
-    // EXECUTION - Lấy danh sách chương + TTS mới nhất with Pagination
-    const chapters = await this.chapterModel.aggregate([
-      { $match: { bookId: book._id } },
-      { $sort: { orderIndex: 1 } },
-      { $skip: skip },
-      { $limit: Number(limit) },
-      {
-        $lookup: {
-          from: 'texttospeeches',
-          localField: '_id',
-          foreignField: 'chapterId',
-          as: 'ttsData',
-        },
-      },
-      {
-        $addFields: {
-          latestTTS: {
-            $arrayElemAt: [
-              {
-                $filter: {
-                  input: '$ttsData',
-                  as: 'tts',
-                  cond: { $ne: ['$$tts.status', 'failed'] },
-                },
-              },
-              0,
-            ],
-          },
-        },
-      },
-      {
-        $project: {
-          title: 1,
-          slug: 1,
-          orderIndex: 1,
-          viewsCount: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          paragraphsCount: { $size: { $ifNull: ['$paragraphs', []] } },
-          ttsStatus: { $ifNull: ['$latestTTS.status', null] },
-          audioUrl: { $ifNull: ['$latestTTS.audioUrl', null] },
-        },
-      },
-    ]);
-
-    // RETURN
     return {
-      book: {
-        id: book._id.toString(),
-        title: book.title,
-        slug: book.slug,
-      },
-      meta: {
-        current: Number(page),
-        pageSize: Number(limit),
-        pages: Math.ceil(totalChapters / limit),
-        total: totalChapters,
-      },
-      chapters: chapters.map((chapter: any) => ({
-        id: chapter._id.toString(),
-        title: chapter.title,
-        slug: chapter.slug,
-        orderIndex: chapter.orderIndex,
-        viewsCount: chapter.viewsCount || 0,
-        createdAt: chapter.createdAt,
-        updatedAt: chapter.updatedAt,
-        paragraphsCount: chapter.paragraphsCount,
-        ttsStatus: chapter.ttsStatus,
-        audioUrl: chapter.audioUrl,
-      })),
+      book: new BookInfoModal(book),
+      ...paginated,
     };
   }
 
-  async createChapter(bookIdOrSlug: string, dto: CreateChapterDto, user: any) {
-    // 1. Kiểm tra sách tồn tại (support both ID and Slug)
-    let book;
+  async createChapter(bookIdOrSlug: string, dto: CreateChapterDto) {
+    let book: BookDocument | null;
     if (Types.ObjectId.isValid(bookIdOrSlug)) {
-      book = await this.bookModel.findById(bookIdOrSlug).lean();
+      book = await this.booksRepository.findById(bookIdOrSlug);
     } else {
-      book = await this.bookModel.findOne({ slug: bookIdOrSlug, isDeleted: false }).lean();
+      book = await this.booksRepository.findBySlugSelect(bookIdOrSlug, '_id');
     }
 
-    if (!book) throw new NotFoundException('Sách không tồn tại');
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
     const bookId = book._id;
 
-    // 2. Tính orderIndex tự động
-    const lastChapter = await this.chapterModel
-      .findOne({ bookId: new Types.ObjectId(bookId) })
-      .sort({ orderIndex: -1 })
-      .select('orderIndex')
-      .lean();
-
+    const lastChapter = await this.chaptersRepository.findLastChapter(bookId);
     const orderIndex = lastChapter ? lastChapter.orderIndex + 1 : 1;
 
-    // 3. Tạo slug duy nhất trong sách
     const baseSlug = dto.slug?.trim() || slugify(dto.title.trim());
     let slug = baseSlug;
     let counter = 1;
 
     while (
-      await this.chapterModel.exists({
-        bookId: new Types.ObjectId(bookId),
-        slug,
-      })
+      await this.chaptersRepository.existsBySlug(bookId, slug)
     ) {
       slug = `${baseSlug}-${counter++}`;
     }
 
-    // 4. Tạo chapter
-    const createdChapter = await this.chapterModel.create({
+    const paragraphs = (dto.paragraphs || []).map((p) => ({
+      content: p.content,
+    }));
+
+    const createdChapter = await this.chaptersRepository.create({
       bookId: new Types.ObjectId(bookId),
       title: dto.title.trim(),
       slug,
-      paragraphs: dto.paragraphs || [],
+      paragraphs: paragraphs as any,
       orderIndex,
       viewsCount: 0,
     });
 
-    // 5. Lấy lại dữ liệu đầy đủ (populate book)
-    const populated = await this.chapterModel
-      .findById(createdChapter._id)
-      .populate('bookId', 'title slug')
-      .lean();
+    const populated = await this.chaptersRepository.findById(createdChapter._id, 'bookId');
 
     if (!populated) {
       throw new InternalServerErrorException('Tạo chương thất bại');
     }
 
-    // 6. Trả về response đẹp, chuẩn frontend
-    const bookData = populated.bookId as any;
-    return {
-      id: populated._id.toString(),
-      title: populated.title,
-      slug: populated.slug,
-      orderIndex: populated.orderIndex,
-      viewsCount: populated.viewsCount,
-      paragraphs: populated.paragraphs,
-      book: {
-        id: bookData._id.toString(),
-        title: bookData.title,
-        slug: bookData.slug,
-      },
-      createdAt: populated.createdAt,
-      updatedAt: populated.updatedAt,
-    };
+    return new ChapterModal(populated);
   }
 
   async findById(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const chapter = await this.chapterModel
-      .findById(id)
-      .populate('bookId', 'title slug')
-      .lean();
+    const chapter = await this.chaptersRepository.findById(id, 'bookId');
 
-    if (!chapter) throw new NotFoundException(`Chapter not found`);
+    if (!chapter) throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
 
-    return chapter;
+    return new ChapterModal(chapter);
   }
 
-  async create(bookSlug: string, dto: CreateChapterDto, userId: string) {
-    const book = await this.bookModel
-      .findOne({ slug: bookSlug, isDeleted: false })
-      .select('_id')
-      .lean();
+  async create(bookSlug: string, dto: CreateChapterDto) {
+    const book = await this.booksRepository.findBySlugSelect(bookSlug, '_id');
 
-    if (!book) throw new NotFoundException('Book not found');
+    if (!book) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
 
-    const lastChapter = await this.chapterModel
-      .findOne({ bookId: book._id })
-      .sort({ orderIndex: -1 })
-      .select('orderIndex')
-      .lean();
+    const lastChapter = await this.chaptersRepository.findLastChapter(book._id);
 
     const orderIndex = (lastChapter?.orderIndex ?? 0) + 1;
 
     const baseSlug = dto.slug?.trim() || slugify(dto.title);
     const slug = await this.generateUniqueSlug(book._id, baseSlug);
 
-    const newChapter = await this.chapterModel.create({
+    const newChapter = await this.chaptersRepository.create({
       ...dto,
       bookId: book._id,
       title: dto.title.trim(),
       slug,
       orderIndex,
       viewsCount: 0,
-    });
+    } as any);
 
-    return await this.chapterModel
-      .findById(newChapter._id)
-      .populate('bookId', 'title slug');
+    const populated = await this.chaptersRepository.findById(newChapter._id, 'bookId');
+    return new ChapterModal(populated!);
   }
 
   async update(id: string, dto: UpdateChapterDto) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const existingChapter = await this.chapterModel.findById(id);
-    if (!existingChapter) throw new NotFoundException('Chapter not found');
+    const existingChapter = await this.chaptersRepository.findById(id);
+    if (!existingChapter) throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
 
     let slug = existingChapter.slug;
     if (dto.title && dto.title !== existingChapter.title) {
@@ -375,19 +205,30 @@ export class ChaptersService {
       );
     }
 
-    const updatedChapter = await this.chapterModel
-      .findByIdAndUpdate(id, { ...dto, slug }, { new: true })
-      .populate('bookId', 'title slug');
+    const chapterWithBook = await this.chaptersRepository.findById(id, 'bookId');
+    if (chapterWithBook && chapterWithBook.bookId) {
+      const book = await this.booksRepository.findById(chapterWithBook.bookId.toString());
+      if (book) {
+    if (chapterWithBook && chapterWithBook.bookId) {
+      const book = await this.booksRepository.findById(chapterWithBook.bookId.toString());
+    }
+      }
+    }
 
-    return updatedChapter;
+    const updatedChapter = await this.chaptersRepository.findById(id, 'bookId');
+    return new ChapterModal(updatedChapter!);
   }
 
   async delete(id: string) {
     if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
 
-    const result = await this.chapterModel.findByIdAndDelete(id);
-    if (!result) throw new NotFoundException('Chapter not found');
+    const chapter = await this.chaptersRepository.findById(id);
+    if (!chapter) throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
+
+    await this.chaptersRepository.delete(id);
+
+    const book = await this.booksRepository.findById(chapter.bookId.toString());
 
     return { message: 'Chapter deleted successfully' };
   }
@@ -401,10 +242,7 @@ export class ChaptersService {
     let counter = 1;
 
     while (true) {
-      const query: any = { bookId, slug };
-      if (excludeId) query._id = { $ne: excludeId };
-
-      const exists = await this.chapterModel.exists(query);
+      const exists = await this.chaptersRepository.existsBySlug(bookId, slug, excludeId);
       if (!exists) break;
 
       slug = `${baseSlug}-${counter}`;

@@ -6,6 +6,7 @@ import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
 import { useAppAuth } from '@/src/hooks/useAppAuth';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/src/lib/utils';
 
 interface CreatePostFormProps {
   onClose: () => void;
@@ -75,7 +76,7 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
       onClose();
     } catch (error: any) {
       console.log('Failed to create post:', error);
-      console.log(error?.data?.message || 'Lỗi khi đăng bài viết');
+      toast.error(getErrorMessage(error));
     }
   };
 

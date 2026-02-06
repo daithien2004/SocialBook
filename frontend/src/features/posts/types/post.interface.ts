@@ -47,7 +47,7 @@ export interface PaginationParamsByUser {
 }
 
 export interface PaginatedPostsResponse {
-  items: Post[];
+  data: Post[];
   meta: {
     page: number;
     limit: number;

@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { LikesService } from './likes.service';
 import { ToggleLikeDto } from './dto/create-like.dto';
 
@@ -17,12 +18,12 @@ import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 
 @Controller('likes')
 export class LikesController {
-  constructor(private readonly likesService: LikesService) {}
+  constructor(private readonly likesService: LikesService) { }
 
   @Post('toggle')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async toggle(@Req() req: any, @Body() dto: ToggleLikeDto) {
+  async toggle(@Req() req: Request & { user: { id: string } }, @Body() dto: ToggleLikeDto) {
     const result = await this.likesService.toggle(req.user.id, dto);
 
     return {
@@ -45,7 +46,7 @@ export class LikesController {
   @Get('status')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async getStatus(@Req() req: any, @Query() dto: ToggleLikeDto) {
+  async getStatus(@Req() req: Request & { user: { id: string } }, @Query() dto: ToggleLikeDto) {
     const data = await this.likesService.checkStatus(req.user.id, dto);
     return {
       message: 'Get like status successfully',

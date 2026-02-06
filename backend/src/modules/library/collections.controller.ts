@@ -12,6 +12,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { CollectionsService } from './collections.service';
 import { CreateCollectionDto, UpdateCollectionDto } from './dto/collection.dto';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
@@ -20,11 +21,11 @@ import { Public } from '@/src/common/decorators/customize';
 @Controller('collections')
 @UseGuards(JwtAuthGuard)
 export class CollectionsController {
-  constructor(private readonly collectionsService: CollectionsService) {}
+  constructor(private readonly collectionsService: CollectionsService) { }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Req() req: any, @Body() dto: CreateCollectionDto) {
+  async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateCollectionDto) {
     const data = await this.collectionsService.create(req.user.id, dto);
     return {
       message: 'Create collection successfully',
@@ -60,7 +61,7 @@ export class CollectionsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Req() req: any, @Param('id') id: string) {
+  async findOne(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
     const data = await this.collectionsService.findOneWithBooks(
       req.user.id,
       id,
@@ -74,7 +75,7 @@ export class CollectionsController {
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   async update(
-    @Req() req: any,
+    @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
     @Body() dto: UpdateCollectionDto,
   ) {
@@ -87,7 +88,7 @@ export class CollectionsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async remove(@Req() req: any, @Param('id') id: string) {
+  async remove(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
     await this.collectionsService.remove(req.user.id, id);
     return {
       message: 'Delete collection successfully',

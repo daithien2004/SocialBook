@@ -49,7 +49,7 @@ export const authApi = createApi({
       providesTags: ['User'],
     }),
 
-    resendOtp: builder.mutation<string, ResendOtpRequest>({
+    resendOtp: builder.mutation<{ message: string; data: { resendCooldown: number } }, ResendOtpRequest>({
       query: (data) => ({
         url: NESTJS_AUTH_ENDPOINTS.resendOtp,
         method: 'POST',

@@ -1,14 +1,15 @@
 'use client';
 
-import {X, Send, Loader2} from 'lucide-react';
-import {useEffect, useState} from 'react';
-import {createPortal} from 'react-dom';
-import {toast} from 'sonner';
-import {useRouter} from 'next/navigation';
-import {useAppAuth} from '@/src/hooks/useAppAuth';
+import { X, Send, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/src/lib/utils';
+import { useRouter } from 'next/navigation';
+import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 import ListComments from '@/src/components/comment/ListComments';
-import {usePostCreateMutation} from '@/src/features/comments/api/commentApi';
+import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
 
 interface ParagraphCommentDrawerProps {
     isOpen: boolean;
@@ -19,18 +20,18 @@ interface ParagraphCommentDrawerProps {
 }
 
 export default function ParagraphCommentDrawer({
-                                                   isOpen,
-                                                   onClose,
-                                                   paragraphId,
-                                                   paragraphContent,
-                                                   hasHeader = false,
-                                               }: ParagraphCommentDrawerProps) {
+    isOpen,
+    onClose,
+    paragraphId,
+    paragraphContent,
+    hasHeader = false,
+}: ParagraphCommentDrawerProps) {
     const [commentText, setCommentText] = useState('');
     const [mounted, setMounted] = useState(false);
 
-    const [createComment, {isLoading}] = usePostCreateMutation();
+    const [createComment, { isLoading }] = usePostCreateMutation();
 
-    const {isAuthenticated} = useAppAuth();
+    const { isAuthenticated } = useAppAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -42,7 +43,7 @@ export default function ParagraphCommentDrawer({
 
         if (!isAuthenticated) {
             toast.info('Vui lòng đăng nhập để bình luận', {
-                action: {label: 'Đăng nhập', onClick: () => router.push('/login')},
+                action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
             });
             return;
         }
@@ -59,7 +60,7 @@ export default function ParagraphCommentDrawer({
             toast.success('Bình luận đã được gửi!');
         } catch (e: any) {
             if (e?.status !== 401) {
-                toast.error(e?.data?.message || 'Không thể gửi bình luận');
+                toast.error(getErrorMessage(e));
             }
         }
     };
@@ -70,9 +71,8 @@ export default function ParagraphCommentDrawer({
         <>
             {/* Overlay */}
             <div
-                className={`fixed inset-0 z-[60] transition-opacity duration-300 ${
-                    isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                }`}
+                className={`fixed inset-0 z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
                 onClick={onClose}
             />
 
@@ -100,7 +100,7 @@ export default function ParagraphCommentDrawer({
               dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/10
             "
                     >
-                        <X size={20}/>
+                        <X size={20} />
                     </button>
 
                     {/* Title */}
@@ -136,11 +136,11 @@ export default function ParagraphCommentDrawer({
                         <div className="flex items-start gap-3">
                             {/* Textarea */}
                             <div className="relative flex-1">
-                <textarea
-                    placeholder="Viết suy nghĩ của bạn..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    className="
+                                <textarea
+                                    placeholder="Viết suy nghĩ của bạn..."
+                                    value={commentText}
+                                    onChange={(e) => setCommentText(e.target.value)}
+                                    className="
                     w-full
                     resize-none
                     min-h-[44px]
@@ -156,13 +156,13 @@ export default function ParagraphCommentDrawer({
                     focus:ring-2 focus:ring-blue-500/30 dark:focus:ring-blue-400/30
                     transition-all
                   "
-                />
+                                />
 
                                 {commentText.length > 0 && (
                                     <span
                                         className="absolute right-3 bottom-2 text-[11px] text-gray-500 dark:text-gray-400">
-                    {commentText.length}
-                  </span>
+                                        {commentText.length}
+                                    </span>
                                 )}
                             </div>
 
@@ -175,18 +175,17 @@ export default function ParagraphCommentDrawer({
                   flex items-center justify-center
                   rounded-full
                   transition-all duration-200
-                  ${
-                                    isLoading || !commentText.trim()
+                  ${isLoading || !commentText.trim()
                                         ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
                                         : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400 text-white shadow-md hover:shadow-lg active:scale-95'
-                                }
+                                    }
                 `}
                                 aria-label="Gửi bình luận"
                             >
                                 {isLoading ? (
-                                    <Loader2 size={16} className="animate-spin"/>
+                                    <Loader2 size={16} className="animate-spin" />
                                 ) : (
-                                    <Send size={16}/>
+                                    <Send size={16} />
                                 )}
                             </button>
                         </div>

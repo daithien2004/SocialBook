@@ -74,7 +74,7 @@ export class ChatGateway {
     console.log(`Client connected: ${client.id}`);
     this.server.emit(
       'userList',
-      Array.from((this.server.sockets as any).keys()),
+      Array.from(this.server.sockets.sockets.keys()),
     ); // Broadcast danh sách user
   }
 
@@ -82,7 +82,7 @@ export class ChatGateway {
     console.log(`Client disconnected: ${client.id}`);
     this.server.emit(
       'userList',
-      Array.from((this.server.sockets as any).keys()),
+      Array.from(this.server.sockets.sockets.keys()),
     ); // Cập nhật danh sách
   }
 

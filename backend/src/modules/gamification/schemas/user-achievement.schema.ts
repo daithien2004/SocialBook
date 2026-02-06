@@ -3,8 +3,10 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type UserAchievementDocument = HydratedDocument<UserAchievement>;
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class UserAchievement {
+export class UserAchievement extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 

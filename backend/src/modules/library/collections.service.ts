@@ -14,6 +14,7 @@ import {
 } from './schemas/reading-list.schema';
 
 import { CreateCollectionDto, UpdateCollectionDto } from './dto/collection.dto';
+import { ErrorMessages } from '@/src/common/constants/error-messages';
 
 @Injectable()
 export class CollectionsService {
@@ -22,7 +23,7 @@ export class CollectionsService {
     private collectionModel: Model<CollectionDocument>,
     @InjectModel(ReadingList.name)
     private readingListModel: Model<ReadingListDocument>,
-  ) {}
+  ) { }
 
   async create(userId: string, dto: CreateCollectionDto) {
     const newCollection = await this.collectionModel.create({
@@ -34,7 +35,7 @@ export class CollectionsService {
 
   async findAll(userId: string) {
     if (!userId || !Types.ObjectId.isValid(userId)) {
-      throw new BadRequestException('Invalid User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const collections = await this.collectionModel
@@ -47,11 +48,11 @@ export class CollectionsService {
 
   async findOneWithBooks(userId: string, collectionId: string) {
     if (!Types.ObjectId.isValid(collectionId)) {
-      throw new BadRequestException('Invalid Collection ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     if (!userId || !Types.ObjectId.isValid(userId)) {
-      throw new BadRequestException('Invalid User ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const userObjectId = new Types.ObjectId(userId);
@@ -81,7 +82,7 @@ export class CollectionsService {
     ]);
 
     if (!collection) {
-      throw new NotFoundException('Collection not found');
+      throw new NotFoundException(ErrorMessages.COLLECTION_NOT_FOUND);
     }
 
     return {
@@ -92,7 +93,7 @@ export class CollectionsService {
 
   async update(userId: string, collectionId: string, dto: UpdateCollectionDto) {
     if (!Types.ObjectId.isValid(collectionId)) {
-      throw new BadRequestException('Invalid Collection ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const updated = await this.collectionModel
@@ -103,13 +104,13 @@ export class CollectionsService {
       )
       .lean();
 
-    if (!updated) throw new NotFoundException('Collection not found');
+    if (!updated) throw new NotFoundException(ErrorMessages.COLLECTION_NOT_FOUND);
     return updated;
   }
 
   async remove(userId: string, collectionId: string) {
     if (!Types.ObjectId.isValid(collectionId)) {
-      throw new BadRequestException('Invalid Collection ID');
+      throw new BadRequestException(ErrorMessages.INVALID_ID);
     }
 
     const collectionObjectId = new Types.ObjectId(collectionId);
@@ -120,7 +121,7 @@ export class CollectionsService {
       userId: userObjectId,
     });
 
-    if (!deleted) throw new NotFoundException('Collection not found');
+    if (!deleted) throw new NotFoundException(ErrorMessages.COLLECTION_NOT_FOUND);
 
     await this.readingListModel.updateMany(
       { userId: userObjectId, collectionIds: collectionObjectId },

@@ -7,4 +7,4 @@ import { MailerModule } from '@nestjs-modules/mailer';
   providers: [OtpService],
   exports: [OtpService],
 })
-export class OtpModule {}
+export class OtpModule { }

@@ -3,8 +3,10 @@ import { HydratedDocument, Types } from 'mongoose';
 
 export type UserGamificationDocument = HydratedDocument<UserGamification>;
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class UserGamification {
+export class UserGamification extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, unique: true })
   userId: Types.ObjectId;
 

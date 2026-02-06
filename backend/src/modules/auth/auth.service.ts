@@ -1,20 +1,20 @@
+import { Logger } from '@/src/shared/logger';
 import {
-  Injectable,
-  UnauthorizedException,
-  ForbiddenException,
-  InternalServerErrorException,
-  ConflictException,
   BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/users.service';
-import { ConfigService } from '@nestjs/config';
 import { OtpService } from '../otp/otp.service';
+import { RolesRepository } from '../roles/roles.repository';
+import { User } from '../users/schemas/user.schema';
+import { UsersService } from '../users/users.service';
 import { SignupGoogleDto, SignupLocalDto } from './dto/auth.dto';
-import { Role, RoleDocument } from '../roles/schemas/role.schema';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -23,10 +23,13 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private otpService: OtpService,
-    @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
-  ) { }
+    private readonly rolesRepository: RolesRepository,
+    private readonly logger: Logger,
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
-  async login(user: any) {
+  async login(user: User) {
     if (!user) {
       throw new UnauthorizedException('Người dùng không tồn tại');
     }
@@ -83,14 +86,21 @@ export class AuthService {
     const user = await this.usersService.findByEmail(dto.email);
     if (user) {
       if (!user.isVerified) {
+        // Cập nhật lại thông tin user (username, password)
+        await this.usersService.updateUnverifiedUser(user.id.toString(), {
+          username: dto.username,
+          password: dto.password,
+        });
+        
         return await this.sendOtp(dto.email);
       }
       throw new ConflictException('Email này đã được sử dụng');
     }
 
-    const userRole = await this.roleModel.findOne({ name: 'user' });
+    const userRole = await this.rolesRepository.findByName('user');
     if (!userRole) {
-      throw new InternalServerErrorException('Không tìm thấy role mặc định cho user');
+      this.logger.error('User role not found in database during signup - role may not be seeded');
+      throw new InternalServerErrorException('Đã có lỗi xảy ra trong quá trình đăng ký');
     }
 
     await this.usersService.create({
@@ -105,15 +115,17 @@ export class AuthService {
   }
 
   async googleAuth(dto: SignupGoogleDto) {
-    let user = await this.usersService.findByEmail(dto.email);
+    const existingUser = await this.usersService.findByEmail(dto.email);
 
-    if (!user) {
-      const userRole = await this.roleModel.findOne({ name: 'user' });
+    // Handle new user registration
+    if (!existingUser) {
+      const userRole = await this.rolesRepository.findByName('user');
       if (!userRole) {
-        throw new InternalServerErrorException('Không tìm thấy role mặc định cho user');
+        this.logger.error('User role not found in database during Google signup - role may not be seeded');
+        throw new InternalServerErrorException('Đã có lỗi xảy ra trong quá trình đăng ký');
       }
 
-      user = await this.usersService.create({
+      const newUser = await this.usersService.create({
         username: dto.username || dto.name || dto.email.split('@')[0],
         email: dto.email,
         provider: 'google',
@@ -122,27 +134,48 @@ export class AuthService {
         isVerified: true,
         roleId: userRole._id,
       });
-    } else {
-      if (!user.isVerified) {
-        throw new UnauthorizedException('Tài khoản chưa được xác thực');
-      }
 
-      if (user.isBanned) {
-        throw new ForbiddenException({
-          statusCode: 403,
-          message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
-          error: 'USER_BANNED',
-        });
-      }
+      const tokens = await this.signTokens(
+        newUser.id,
+        newUser.email,
+        'user',
+      );
 
-      if (user.provider === 'local') {
-        throw new ConflictException(
-          'Email đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng mật khẩu hoặc liên kết tài khoản Google trước.',
-        );
-      }
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          username: newUser.username,
+          image: newUser.image,
+          role: 'user',
+          onboardingCompleted: newUser.onboardingCompleted,
+          onboardingId: undefined,
+        },
+      };
     }
 
-    const userWithRole = await this.usersService.findById(user.id.toString());
+    // Handle existing user login
+    if (!existingUser.isVerified) {
+      throw new UnauthorizedException('Tài khoản chưa được xác thực');
+    }
+
+    if (existingUser.isBanned) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+        error: 'USER_BANNED',
+      });
+    }
+
+    if (existingUser.provider === 'local') {
+      throw new ConflictException(
+        'Email đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng mật khẩu hoặc liên kết tài khoản Google trước.',
+      );
+    }
+
+    const userWithRole = await this.usersService.findById(existingUser.id.toString());
     let roleName = 'user';
     if (
       userWithRole?.roleId &&
@@ -153,21 +186,22 @@ export class AuthService {
     }
 
     const tokens = await this.signTokens(
-      user.id.toString(),
-      user.email,
+      existingUser.id.toString(),
+      existingUser.email,
       roleName,
     );
+
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       user: {
-        id: user.id.toString(),
-        email: user.email,
-        username: user.username,
-        image: user.image,
+        id: existingUser.id.toString(),
+        email: existingUser.email,
+        username: existingUser.username,
+        image: existingUser.image,
         role: roleName,
-        onboardingCompleted: user.onboardingCompleted,
-        onboardingId: user.onboardingId,
+        onboardingCompleted: existingUser.onboardingCompleted,
+        onboardingId: existingUser.onboardingId,
       },
     };
   }
@@ -265,14 +299,14 @@ export class AuthService {
     }
 
     if (!user.isVerified) {
-      const otp = await this.otpService.generateOTP(email);
-      return otp;
+      await this.otpService.generateOTP(email);
+      return 'Mã OTP đã được gửi đến email của bạn';
     }
 
     throw new BadRequestException('Tài khoản đã được kích hoạt');
   }
 
-  async resendOtp(email: string): Promise<{ remainingTime: number }> {
+  async resendOtp(email: string): Promise<{ resendCooldown: number }> {
     const ttl = await this.otpService.getOtpTTL(email);
 
     if (ttl === -2) {
@@ -292,17 +326,18 @@ export class AuthService {
     await this.otpService.generateOTP(email);
 
     return {
-      remainingTime: 300,
+      resendCooldown: RESEND_COOLDOWN,
     };
   }
 
   async signTokens(userId: string, email: string, role: string) {
     const payload = { sub: userId, email, role };
 
-    const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
-    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    const accessSecret = this.configService.get<string>('env.JWT_ACCESS_SECRET');
+    const refreshSecret = this.configService.get<string>('env.JWT_REFRESH_SECRET');
 
     if (!accessSecret || !refreshSecret) {
+      this.logger.error('JWT secrets not configured - check JWT_ACCESS_SECRET and JWT_REFRESH_SECRET environment variables');
       throw new InternalServerErrorException('JWT secrets chưa được cấu hình');
     }
 
@@ -324,7 +359,7 @@ export class AuthService {
   }
 
   async refresh(userId: string, refreshToken: string) {
-    const user = await this.usersService.findById(userId);
+    const user = await this.usersService.findForRefreshToken(userId);
     if (!user || !user.hashedRt) {
       throw new ForbiddenException('Từ chối truy cập');
     }
@@ -347,7 +382,7 @@ export class AuthService {
   async validateRefreshToken(token: string) {
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.configService.get<string>('env.JWT_REFRESH_SECRET'),
       });
 
       const isValid = await this.usersService.checkRefreshTokenInDB(

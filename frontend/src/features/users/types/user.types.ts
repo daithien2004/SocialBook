@@ -15,11 +15,11 @@ export interface User {
 }
 
 export interface UserListResponse {
-    items: User[];
-    pagination: {
+    data: User[];
+    meta: {
         current: number;
         pageSize: number;
-        totalItems: number;
+        total: number;
         totalPages: number;
     };
 }
@@ -52,17 +52,17 @@ export interface SearchUsersParams {
 
 export interface SearchUsersResponse {
     message: string;
-    items: {
+    data: {
         id: string;
         username: string;
         image?: string;
         bio?: string;
         createdAt: string;
     }[];
-    pagination: {
+    meta: {
         current: number;
         pageSize: number;
-        totalItems: number;
+        total: number;
         totalPages: number;
     };
 }

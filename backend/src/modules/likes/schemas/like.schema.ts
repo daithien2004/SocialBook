@@ -2,8 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { TARGET_TYPES } from '@/src/modules/comments/constants/targetType.constant';
 
+import { BaseSchema } from '@/src/shared/schemas/base.schema';
+
 @Schema({ timestamps: true })
-export class Like {
+export class Like extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
@@ -13,14 +15,8 @@ export class Like {
   @Prop({ type: Types.ObjectId, required: true })
   targetId: Types.ObjectId;
 
-  @Prop({required: true })
+  @Prop({ required: true })
   status: boolean;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ type: Date, default: Date.now })
-  updatedAt: Date;
 }
 
 export type LikeDocument = HydratedDocument<Like>;
