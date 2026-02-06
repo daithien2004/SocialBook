@@ -99,6 +99,7 @@ function ActiveUsersCard() {
 // ============ Reading Heatmap Component ============
 function ReadingHeatmapCard() {
     const { data, isLoading, error } = useGetReadingHeatmapQuery();
+    const heatmapData = Array.isArray(data) ? data : [];
 
     return (
         <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -114,15 +115,15 @@ function ReadingHeatmapCard() {
             <CardContent className="pt-6">
                 {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>}
                 {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Error loading data</div>}
-                {data && (
+                {heatmapData.length > 0 && (
                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={data}>
+                        <BarChart data={heatmapData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                             <XAxis dataKey="hour" label={{ value: 'Giờ trong ngày', position: 'insideBottom', offset: -5 }} stroke="#9ca3af" />
                             <YAxis label={{ value: 'Lượt đọc', angle: -90, position: 'insideLeft' }} stroke="#9ca3af" />
                             <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
                             <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                                {data.map((entry, index) => (
+                                {heatmapData.map((entry: any, index: number) => (
                                     <Cell key={`cell-${index}`} fill={`hsl(${(entry.hour / 24) * 360}, 75%, 55%)`} />
                                 ))}
                             </Bar>
@@ -137,6 +138,7 @@ function ReadingHeatmapCard() {
 // ============ Chapter Engagement Component ============
 function ChapterEngagementCard() {
     const { data, isLoading, error } = useGetChapterEngagementQuery({ limit: 5 });
+    const engagementData = Array.isArray(data) ? data : [];
 
     return (
         <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -152,10 +154,10 @@ function ChapterEngagementCard() {
             <CardContent className="pt-6">
                 {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Đang tải...</div>}
                 {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
-                {data && data.length === 0 && <div className="h-64 flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>}
-                {data && data.length > 0 && (
+                {engagementData.length === 0 && !isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>}
+                {engagementData.length > 0 && (
                     <div className="space-y-4">
-                        {data.map((chapter, idx) => (
+                        {engagementData.map((chapter: any, idx: number) => (
                             <div key={chapter.chapterId} className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 hover:bg-gray-50 transition-all duration-200">
                                 <div className="flex items-start justify-between mb-3">
                                     <div className="flex-1">
@@ -185,6 +187,7 @@ function ChapterEngagementCard() {
 // ============ Geographic Distribution Component ============
 function GeographicCard() {
     const { data, isLoading, error } = useGetGeographicDistributionQuery();
+    const geoData = Array.isArray(data) ? data : [];
 
     return (
         <Card className="col-span-1 lg:col-span-2 bg-white border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -200,11 +203,11 @@ function GeographicCard() {
             <CardContent className="pt-6">
                 {isLoading && <div className="h-[400px] flex items-center justify-center text-gray-400">Đang tải...</div>}
                 {error && <div className="h-[400px] flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
-                {data && (
+                {geoData.length > 0 && (
                     <div className="w-full">
-                        <WorldMap data={data} />
+                        <WorldMap data={geoData} />
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {data.slice(0, 4).map((country, idx) => (
+                            {geoData.slice(0, 4).map((country: any, idx: number) => (
                                 <div key={idx} className="flex flex-col items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200">
                                     <span className="font-semibold text-sm text-gray-900">{country.country}</span>
                                     <span className="text-sm font-bold bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full mt-2">{country.userCount} người dùng</span>

@@ -85,11 +85,6 @@ export const ttsApi = createApi({
                 url: NESTJS_TTS_ENDPOINTS.getByChapter(chapterId),
                 method: 'GET',
             }),
-            transformResponse: (response: any) => {
-                // Handle case where response might be null or have nested data
-                if (!response) return null;
-                return response.data || response;
-            },
             providesTags: (result, error, chapterId) => [
                 { type: 'TTS', id: chapterId },
             ],

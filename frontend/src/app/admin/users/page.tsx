@@ -13,9 +13,9 @@ const UsersPage = () => {
         `current=${page}&pageSize=${pageSize}`
     );
     const [banUser, { isLoading: isBanning }] = useBanUserMutation();
-    const users = data?.items || [];
-    const total = data?.pagination?.totalItems || 0;
-    const totalPages = Math.ceil(total / pageSize);
+    const users = data?.data || [];
+    const total = data?.meta?.total || 0;
+    const totalPages = data?.meta?.totalPages || Math.ceil(total / pageSize);
 
     const handleBan = async (id: string) => {
         try {

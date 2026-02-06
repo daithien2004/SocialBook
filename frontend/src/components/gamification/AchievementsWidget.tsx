@@ -6,18 +6,21 @@ import { useAppAuth } from '@/src/hooks/useAppAuth';
 
 export function AchievementsWidget() {
   const { isAuthenticated } = useAppAuth();
-  const { data: achievements = [], isLoading } = useGetUserAchievementsQuery(
+  const { data: achievementsData, isLoading } = useGetUserAchievementsQuery(
     undefined,
     {
       skip: !isAuthenticated,
     }
   );
 
+  // Handle both array and object response formats
+  const achievements = Array.isArray(achievementsData)
+    ? achievementsData
+    : achievementsData?.data ?? [];
+
   if (isLoading || achievements.length === 0) return null;
 
   const displayList = achievements.slice(0, 3);
-
-  console.log(achievements)
 
   return (
     <div className="bg-white dark:bg-[#1f1f1f] rounded-2xl p-5 border border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">

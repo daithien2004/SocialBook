@@ -8,6 +8,9 @@ import { Chapter } from '../chapters/schemas/chapter.schema';
 import { Review } from '../reviews/schemas/review.schema';
 import { Genre, GenreDocument } from '../genres/schemas/genre.schema';
 import { SearchQueryDto } from './dto/search-query.dto';
+import { GeminiService } from '../gemini/gemini.service';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Redis } from 'ioredis';
 import { formatPaginatedResponse, PaginationMeta } from '@/src/utils/helpers';
 
 export interface BookStats {
@@ -62,8 +65,64 @@ export class SearchService {
         @InjectModel(Chapter.name) private chapterModel: Model<Chapter>,
         @InjectModel(Review.name) private reviewModel: Model<Review>,
         @InjectModel(Genre.name) private genreModel: Model<Genre>,
+        @InjectRedis() private readonly redis: Redis,
+        private readonly geminiService: GeminiService,
     ) { }
 
+    /**
+     * Analyze query using LLM with Redis caching
+     * Returns structured data: keywords, genre, tags, etc.
+     */
+    private async analyzeQueryWithAI(query: string): Promise<any> {
+        if (!query || query.length < 5) return null;
+
+        const CACHE_KEY = `search_analysis:${this.normalizeText(query)}`;
+        const cached = await this.redis.get(CACHE_KEY);
+
+        if (cached) {
+            this.logger.debug(`✅ Query Analysis Cache HIT: ${query}`);
+            return JSON.parse(cached);
+        }
+
+        this.logger.debug(`🤖 Query Analysis Cache MISS, calling Gemini: ${query}`);
+
+        const prompt = `
+            Analyze this book search query: "${query}"
+            Return ONLY a JSON object with this structure (no markdown):
+            {
+                "extractedKeywords": ["keyword1", "keyword2"],
+                "targetGenres": ["exact_genre_name_in_vietnamese"],
+                "targetTags": ["tag1", "tag2"],
+                "excludeTags": ["tag_to_exclude"],
+                "sentiment": "positive" | "negative",
+                "isQuestion": boolean
+            }
+            If the user is looking for specific elements (e.g. "không main nữ"), put "main nữ" in excludeTags.
+            If the query implies a genre (e.g. "tiên hiệp", "ngôn tình"), key it in targetGenres.
+        `;
+
+        try {
+            // Set 1.5s timeout for AI to ensure speed
+            const result = await Promise.race([
+                this.geminiService.generateJSON(prompt),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('AI Timeout')), 1500))
+            ]);
+
+            if (result) {
+                await this.redis.set(CACHE_KEY, JSON.stringify(result), 'EX', 86400); // Cache 24h
+                return result;
+            }
+        } catch (error) {
+            this.logger.warn(`⚠️ AI Analysis failed/timeout: ${error.message}`);
+        }
+        return null;
+    }
+
+    /**
+     * ============================================
+     * MAIN SEARCH ALGORITHM (với Pagination & Filters)
+     * ============================================
+     */
     async intelligentSearch(searchQueryDto: SearchQueryDto): Promise<PaginatedSearchResult> {
         const {
             query,
@@ -77,10 +136,16 @@ export class SearchService {
         } = searchQueryDto;
 
         try {
+            // ============================================
+            // STEP 1: FUZZY + SEMANTIC + DESCRIPTION KEYWORD SEARCH
+            // ============================================
+            // Perform AI Analysis
+            const aiAnalysis = await this.analyzeQueryWithAI(query);
+
             const [fuzzyBookIds, semanticBookIds, descriptionBookIds] = await Promise.all([
                 this.fuzzySearchBookIds(query),
                 this.semanticSearchBookIds(query),
-                this.descriptionKeywordSearch(query),
+                this.descriptionKeywordSearch(query, aiAnalysis?.extractedKeywords), // Pass AI keywords
             ]);
 
             const bookScoreMap = new Map<string, { score: number; matchType: string }>();
@@ -140,6 +205,30 @@ export class SearchService {
                 const tagsList = tags.split(',').map(t => t.trim());
                 filterQuery.tags = { $in: tagsList };
             }
+
+            // --- AI AUGMENTED FILTERS ---
+            if (aiAnalysis) {
+                // 1. AI Genre Detection (Only apply if user didn't explicitly select genres)
+                if (!genres && aiAnalysis.targetGenres && aiAnalysis.targetGenres.length > 0) {
+                    const genreDocs = await this.genreModel.find({
+                        name: { $in: aiAnalysis.targetGenres.map(g => new RegExp(g, 'i')) }
+                    }).select('_id');
+                    const genreIds = genreDocs.map(doc => doc._id);
+                    if (genreIds.length > 0) {
+                        filterQuery.genres = { $in: genreIds };
+                    }
+                }
+
+                // 2. AI Exclude Tags
+                if (aiAnalysis.excludeTags && aiAnalysis.excludeTags.length > 0) {
+                    const excludeRegex = aiAnalysis.excludeTags.map(t => new RegExp(t, 'i'));
+                    // Assuming 'tags' field contains strings
+                    if (!filterQuery.tags) filterQuery.tags = {};
+                    filterQuery.tags['$nin'] = excludeRegex;
+                }
+            }
+
+            // STEP 3: Fetch books with full data
             const totalCount = await this.bookModel.countDocuments(filterQuery);
 
             let books = await this.bookModel
@@ -280,7 +369,8 @@ export class SearchService {
         return results;
     }
 
-    private async descriptionKeywordSearch(query: string): Promise<Array<{ id: string; score: number }>> {
+    /** DESCRIPTION KEYWORD SEARCH - Search keywords in book descriptions */
+    private async descriptionKeywordSearch(query: string, aiKeywords?: string[]): Promise<Array<{ id: string; score: number }>> {
         const results: Array<{ id: string; score: number }> = [];
 
         try {
@@ -293,8 +383,13 @@ export class SearchService {
                     return w.length >= 4;
                 });
 
-            if (words.length === 0) return results;
-            const regexPattern = words.map(w => `\\b${w}\\b`).join('|');
+            if (words.length === 0 && (!aiKeywords || aiKeywords.length === 0)) return results;
+
+            // Combine manual words and AI keywords
+            const searchTerms = [...new Set([...words, ...(aiKeywords || [])])];
+
+            // Build regex pattern with word boundaries
+            const regexPattern = searchTerms.map(w => `\\b${w}\\b`).join('|');
             const regex = new RegExp(regexPattern, 'i');
 
             const books = await this.bookModel
@@ -309,8 +404,8 @@ export class SearchService {
 
             for (const book of books) {
                 const description = book.description?.toLowerCase() || '';
-
-                const matchedWords = words.filter(word =>
+                // Calculate score based on how many words match
+                const matchedWords = searchTerms.filter(word =>
                     description.includes(word.toLowerCase())
                 );
 
@@ -488,3 +583,4 @@ export class SearchService {
         return 0.0;
     }
 }
+

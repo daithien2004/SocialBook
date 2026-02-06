@@ -173,7 +173,7 @@ export const libraryApi = createApi({
         body,
       }),
       invalidatesTags: (result, error, { bookId }) => [
-         { type: 'Library', id: 'LIST_ALL' }
+        { type: 'Library', id: 'LIST_ALL' }
       ]
     }),
   }),

@@ -60,9 +60,10 @@ export class UsersController {
     return {
       message: 'Get users successfully',
       data: result.data,
-      pagination: {
+      meta: {
         ...result.meta,
-        totalItems: result.meta.total,
+        total: result.meta.total,
+        totalPages: Math.ceil(result.meta.total / +pageSize),
       },
     };
   }
@@ -79,9 +80,10 @@ export class UsersController {
     return {
       message: 'Get users successfully',
       data: result.data,
-      pagination: {
+      meta: {
         ...result.meta,
-        totalItems: result.meta.total,
+        total: result.meta.total,
+        totalPages: Math.ceil(result.meta.total / +pageSize),
       },
     };
   }
@@ -217,7 +219,11 @@ export class UsersController {
     return {
       message: 'Search users successfully',
       data: result.data,
-      meta: result.meta,
+      meta: {
+        ...result.meta,
+        total: result.meta.total,
+        totalPages: Math.ceil(result.meta.total / +pageSize),
+      },
     };
   }
 

@@ -87,8 +87,10 @@ export function ReadingSidebar() {
     );
   }
 
+  const booksArray = Array.isArray(books) ? books : [];
+
   // Không có sách đang đọc
-  if (books.length === 0) {
+  if (booksArray.length === 0) {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
@@ -130,8 +132,8 @@ export function ReadingSidebar() {
     );
   }
 
-  const displayBooks = books.slice(0, 5);
-  const hasMore = books.length > 5;
+  const displayBooks = booksArray.slice(0, 5);
+  const hasMore = booksArray.length > 5;
 
   return (
     <aside className="hidden xl:block xl:w-64 flex-shrink-0">
@@ -158,8 +160,8 @@ export function ReadingSidebar() {
           </div>
 
           <div className="space-y-4">
-            {displayBooks.filter(item => item.bookId).map((item) => (
-              <div key={item.id} className="flex gap-3 group">
+            {displayBooks.filter(item => item.bookId).map((item, index) => (
+              <div key={item.id || (item as any)._id || item.bookId?.slug || `book-${index}`} className="flex gap-3 group">
                 {/* Book Cover */}
                 <Link
                   href={`/books/${item.bookId.slug}`}
