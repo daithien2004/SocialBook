@@ -1,26 +1,26 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Put,
-    Param,
-    Delete,
-    Query,
-    UseGuards,
-    HttpCode,
-    HttpStatus,
-    UseInterceptors,
-    UploadedFile,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthorsService } from './authors.service';
 import { Public } from '@/src/common/decorators/customize';
-import { CreateAuthorDto } from './dto/create-author.dto';
-import { UpdateAuthorDto } from './dto/update-author.dto';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/src/common/guards/roles.guard';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    Put,
+    Query,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthorsService } from './authors.service';
+import { CreateAuthorDto } from './dto/create-author.dto';
+import { UpdateAuthorDto } from './dto/update-author.dto';
 
 @Controller('authors')
 export class AuthorsController {
@@ -51,10 +51,11 @@ export class AuthorsController {
         @Query('pageSize') pageSize: string = '10',
         @Query() query: Record<string, unknown>,
     ) {
-        const data = await this.authorsService.findAll(query, +current, +pageSize);
+        const result = await this.authorsService.findAll(query, +current, +pageSize);
         return {
             message: 'Lấy danh sách tác giả thành công',
-            data,
+            data: result.data,
+            meta: result.meta,
         };
     }
 

@@ -37,7 +37,10 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Login successful' })
   @Post('google/login')
   async handleGoogleLogin(@Body() data: SignupGoogleDto) {
-    return this.authService.googleAuth(data);
+    const result = await this.authService.googleAuth(data);
+    return {
+      data: result
+    }
   }
 
   @Public()

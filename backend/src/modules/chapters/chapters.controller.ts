@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,11 +10,9 @@ import {
   Post,
   Put,
   Query,
-  Request,
-  UseGuards,
-  UseInterceptors,
   UploadedFile,
-  BadRequestException,
+  UseGuards,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChaptersService } from './chapters.service';
@@ -47,7 +46,8 @@ export class ChaptersController {
     const result = await this.chaptersService.getChaptersByBookSlug(bookSlug, page, limit);
     return {
       message: 'Get list chapters successfully',
-      data: result,
+      data: result.data,
+      meta: result.meta,
     };
   }
 

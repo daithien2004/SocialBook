@@ -59,7 +59,7 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Get users successfully',
-      items: result.items,
+      data: result.data,
       pagination: {
         ...result.meta,
         totalItems: result.meta.total,
@@ -78,7 +78,7 @@ export class UsersController {
     const result = await this.usersService.findAll(query, +current, +pageSize);
     return {
       message: 'Get users successfully',
-      items: result.items,
+      data: result.data,
       pagination: {
         ...result.meta,
         totalItems: result.meta.total,
@@ -161,7 +161,10 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     const result = await this.usersService.updateUserImage(req.user.id, file);
-    return { result };
+    return {
+      message: 'Update avatar successfully',
+      data: result
+    };
   }
 
   // Cá nhân hóa trải nghiệm đọc
@@ -213,11 +216,8 @@ export class UsersController {
 
     return {
       message: 'Search users successfully',
-      items: result.items,
-      pagination: {
-        ...result.meta,
-        totalItems: result.meta.total,
-      },
+      data: result.data,
+      meta: result.meta,
     };
   }
 

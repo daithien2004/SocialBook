@@ -91,7 +91,7 @@ export class AuthService {
           username: dto.username,
           password: dto.password,
         });
-        
+
         return await this.sendOtp(dto.email);
       }
       throw new ConflictException('Email này đã được sử dụng');
@@ -115,95 +115,118 @@ export class AuthService {
   }
 
   async googleAuth(dto: SignupGoogleDto) {
-    const existingUser = await this.usersService.findByEmail(dto.email);
+    try {
+      const existingUser = await this.usersService.findByEmail(dto.email);
 
-    // Handle new user registration
-    if (!existingUser) {
-      const userRole = await this.rolesRepository.findByName('user');
-      if (!userRole) {
-        this.logger.error('User role not found in database during Google signup - role may not be seeded');
-        throw new InternalServerErrorException('Đã có lỗi xảy ra trong quá trình đăng ký');
+      // Handle new user registration
+      if (!existingUser) {
+        const userRole = await this.rolesRepository.findByName('user');
+        if (!userRole) {
+          this.logger.error(
+            'User role not found in database during Google signup - role may not be seeded',
+          );
+          throw new InternalServerErrorException(
+            'Đã có lỗi xảy ra trong quá trình đăng ký',
+          );
+        }
+
+        const newUser = await this.usersService.create({
+          username: dto.username || dto.name || dto.email.split('@')[0],
+          email: dto.email,
+          provider: 'google',
+          providerId: dto.googleId,
+          image: dto.image,
+          isVerified: true,
+          roleId: userRole._id,
+        });
+
+        const tokens = await this.signTokens(newUser.id, newUser.email, 'user');
+
+        return {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            username: newUser.username,
+            image: newUser.image,
+            role: 'user',
+            onboardingCompleted: newUser.onboardingCompleted,
+            onboardingId: undefined,
+          },
+        };
       }
 
-      const newUser = await this.usersService.create({
-        username: dto.username || dto.name || dto.email.split('@')[0],
-        email: dto.email,
-        provider: 'google',
-        providerId: dto.googleId,
-        image: dto.image,
-        isVerified: true,
-        roleId: userRole._id,
-      });
+      // Handle existing user login
+      if (!existingUser.isVerified) {
+        this.logger.warn(`Google login failed: Account not verified for ${dto.email}`);
+        throw new UnauthorizedException('Tài khoản chưa được xác thực');
+      }
+
+      if (existingUser.isBanned) {
+        this.logger.warn(`Google login failed: Account banned for ${dto.email}`);
+        throw new ForbiddenException({
+          statusCode: 403,
+          message:
+            'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+          error: 'USER_BANNED',
+        });
+      }
+
+      if (existingUser.provider === 'local') {
+        this.logger.warn(
+          `Google login failed: Email already registered with password for ${dto.email}`,
+        );
+        throw new ConflictException(
+          'Email đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng mật khẩu hoặc liên kết tài khoản Google trước.',
+        );
+      }
+
+      const userWithRole = await this.usersService.findById(
+        existingUser.id.toString(),
+      );
+      let roleName = 'user';
+      if (
+        userWithRole?.roleId &&
+        typeof userWithRole.roleId === 'object' &&
+        'name' in userWithRole.roleId
+      ) {
+        roleName = (userWithRole.roleId as any).name || 'user';
+      }
 
       const tokens = await this.signTokens(
-        newUser.id,
-        newUser.email,
-        'user',
+        existingUser.id.toString(),
+        existingUser.email,
+        roleName,
       );
 
       return {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         user: {
-          id: newUser.id,
-          email: newUser.email,
-          username: newUser.username,
-          image: newUser.image,
-          role: 'user',
-          onboardingCompleted: newUser.onboardingCompleted,
-          onboardingId: undefined,
+          id: existingUser.id.toString(),
+          email: existingUser.email,
+          username: existingUser.username,
+          image: existingUser.image,
+          role: roleName,
+          onboardingCompleted: existingUser.onboardingCompleted,
+          onboardingId: existingUser.onboardingId,
         },
       };
+    } catch (error) {
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof ForbiddenException ||
+        error instanceof ConflictException ||
+        error instanceof InternalServerErrorException
+      ) {
+
+        throw error;
+      }
+
+      this.logger.error(`Unexpected error during Google login for ${dto.email}: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Đã có lỗi xảy ra khi đăng nhập bằng Google');
     }
-
-    // Handle existing user login
-    if (!existingUser.isVerified) {
-      throw new UnauthorizedException('Tài khoản chưa được xác thực');
-    }
-
-    if (existingUser.isBanned) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
-        error: 'USER_BANNED',
-      });
-    }
-
-    if (existingUser.provider === 'local') {
-      throw new ConflictException(
-        'Email đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng mật khẩu hoặc liên kết tài khoản Google trước.',
-      );
-    }
-
-    const userWithRole = await this.usersService.findById(existingUser.id.toString());
-    let roleName = 'user';
-    if (
-      userWithRole?.roleId &&
-      typeof userWithRole.roleId === 'object' &&
-      'name' in userWithRole.roleId
-    ) {
-      roleName = (userWithRole.roleId as any).name || 'user';
-    }
-
-    const tokens = await this.signTokens(
-      existingUser.id.toString(),
-      existingUser.email,
-      roleName,
-    );
-
-    return {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      user: {
-        id: existingUser.id.toString(),
-        email: existingUser.email,
-        username: existingUser.username,
-        image: existingUser.image,
-        role: roleName,
-        onboardingCompleted: existingUser.onboardingCompleted,
-        onboardingId: existingUser.onboardingId,
-      },
-    };
   }
 
   async verifyOtpAndActivate(email: string, otp: string): Promise<string> {

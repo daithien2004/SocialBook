@@ -10,8 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { CommentsService } from './comments.service';
 import { Types } from 'mongoose';
+import { CommentsService } from './comments.service';
 
 import { Public } from '@/src/common/decorators/customize';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
@@ -51,7 +51,8 @@ export class CommentsController {
 
     return {
       message: 'Get comments successfully',
-      ...result,
+      data: result.items,
+      meta: result.meta,
     };
   }
 

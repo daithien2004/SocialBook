@@ -1,23 +1,23 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Put,
-  Param,
-  Delete,
-  Query,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
-import { GenresService } from './genres.service';
 import { Public } from '@/src/common/decorators/customize';
-import { CreateGenreDto } from './dto/create-genre.dto';
-import { UpdateGenreDto } from './dto/update-genre.dto';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/src/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/src/common/guards/roles.guard';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { CreateGenreDto } from './dto/create-genre.dto';
+import { UpdateGenreDto } from './dto/update-genre.dto';
+import { GenresService } from './genres.service';
 
 @Controller('genres')
 export class GenresController {
@@ -43,10 +43,11 @@ export class GenresController {
     @Query('pageSize') pageSize: string = '10',
     @Query() query: any,
   ) {
-    const data = await this.genresService.findAll(query, +current, +pageSize);
+    const result = await this.genresService.findAll(query, +current, +pageSize);
     return {
       message: 'Lấy danh sách thể loại thành công',
-      data,
+      data: result.data,
+      meta: result.meta,
     };
   }
 

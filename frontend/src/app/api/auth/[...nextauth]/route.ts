@@ -1,11 +1,11 @@
 import NextAuth from 'next-auth';
 
-import { NextAuthOptions } from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
-import CredentialsProvider from 'next-auth/providers/credentials';
 import serverApi from '@/src/lib/server-api';
 import { jwtDecode } from 'jwt-decode';
+import { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 
 async function refreshAccessToken(token: JWT) {
   try {
@@ -97,6 +97,7 @@ export const authOptions: NextAuthOptions = {
             googleId: user.id,
             image: user.image,
           });
+
           const authData = response.data.data;
           user.id = authData.user.id;
           user.accessToken = authData.accessToken;
@@ -197,3 +198,4 @@ export const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
+
