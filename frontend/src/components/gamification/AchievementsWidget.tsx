@@ -40,11 +40,11 @@ export function AchievementsWidget() {
             Chưa có thành tựu nào. Hãy đọc sách để mở khóa!
           </div>
         ) : (
-          displayList.map((item: any) => {
+          displayList.map((item: any, index: number) => {
             const achievement = item.achievementId;
             return (
               <div
-                key={item.id}
+                key={item._id || item.id || index}
                 className="flex items-start gap-3 p-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 transition-colors"
               >
                 <div className="p-2 bg-yellow-100 dark:bg-yellow-500/20 rounded-full shrink-0">

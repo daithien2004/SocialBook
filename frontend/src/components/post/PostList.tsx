@@ -1,10 +1,10 @@
 'use client';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import PostCard from '@/src/components/post/PostCard';
+import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert';
+import { Button } from '@/src/components/ui/button';
+import { Spinner } from '@/src/components/ui/spinner';
 import { useGetPostsQuery } from '@/src/features/posts/api/postApi';
 import { Post } from '@/src/features/posts/types/post.interface';
 import { useUIStore } from '@/src/store/useUIStore';

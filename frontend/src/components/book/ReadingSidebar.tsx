@@ -1,11 +1,13 @@
 'use client';
 
-import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Button } from '@/src/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { useGetLibraryBooksQuery } from '@/src/features/library/api/libraryApi';
 import { LibraryStatus } from '@/src/features/library/types/library.interface';
 import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 export function ReadingSidebar() {
   const { isAuthenticated, isGuest } = useAppAuth();
@@ -19,36 +21,33 @@ export function ReadingSidebar() {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen
-                className="text-blue-600 dark:text-blue-400"
-                size={20}
-              />
-              <h2 className="font-bold text-lg text-gray-900 dark:text-white">
+          <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
                 Sách đang đọc
-              </h2>
-            </div>
-
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
-                <LogIn size={28} className="text-blue-600 dark:text-blue-400" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
+                  <LogIn size={28} className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">
+                  Đăng nhập để tiếp tục đọc
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+                  Theo dõi tiến trình đọc sách và tiếp tục từ nơi bạn dừng lại
+                </p>
+                <Button asChild className="rounded-full shadow-sm hover:shadow-md bg-blue-600 hover:bg-blue-700">
+                  <Link href="/login" className="flex items-center gap-2">
+                    Đăng nhập ngay
+                    <ChevronRight size={16} />
+                  </Link>
+                </Button>
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                Đăng nhập để tiếp tục đọc
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-xs">
-                Theo dõi tiến trình đọc sách và tiếp tục từ nơi bạn dừng lại
-              </p>
-              <Link
-                href="/login"
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
-              >
-                Đăng nhập ngay
-                <ChevronRight size={16} />
-              </Link>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </aside>
     );
@@ -59,29 +58,26 @@ export function ReadingSidebar() {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen
-                className="text-blue-600 dark:text-blue-400"
-                size={20}
-              />
-              <h2 className="font-bold text-lg text-gray-900 dark:text-white">
+          <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
                 Sách đang đọc
-              </h2>
-            </div>
-            <div className="space-y-4">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex gap-3 animate-pulse">
-                  <div className="w-16 h-24 bg-gray-200 dark:bg-white/5 rounded-lg flex-shrink-0" />
+                  <div className="w-16 h-24 bg-gray-200 dark:bg-accent/10 rounded-lg flex-shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gray-200 dark:bg-white/5 rounded w-full" />
-                    <div className="h-3 bg-gray-200 dark:bg-white/5 rounded w-3/4" />
-                    <div className="h-8 bg-gray-200 dark:bg-white/5 rounded w-full mt-2" />
+                    <div className="h-4 bg-gray-200 dark:bg-accent/10 rounded w-full" />
+                    <div className="h-3 bg-gray-200 dark:bg-accent/10 rounded w-3/4" />
+                    <div className="h-8 bg-gray-200 dark:bg-accent/10 rounded w-full mt-2" />
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </aside>
     );
@@ -94,39 +90,33 @@ export function ReadingSidebar() {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen
-                className="text-blue-600 dark:text-blue-400"
-                size={20}
-              />
-              <h2 className="font-bold text-lg text-gray-900 dark:text-white">
+          <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
                 Sách đang đọc
-              </h2>
-            </div>
-
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
-                <BookOpen
-                  size={28}
-                  className="text-gray-400 dark:text-gray-500"
-                />
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-16 h-16 bg-gray-50 dark:bg-accent/10 rounded-full flex items-center justify-center mb-4">
+                  <BookOpen size={28} className="text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">
+                  Chưa có sách nào
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+                  Khám phá và bắt đầu đọc sách yêu thích của bạn
+                </p>
+                <Button asChild className="rounded-full shadow-sm hover:shadow-md bg-blue-600 hover:bg-blue-700">
+                  <Link href="/books" className="flex items-center gap-2">
+                    Khám phá ngay
+                    <ChevronRight size={16} />
+                  </Link>
+                </Button>
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                Chưa có sách nào
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-xs">
-                Khám phá và bắt đầu đọc sách yêu thích của bạn
-              </p>
-              <Link
-                href="/books"
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
-              >
-                Khám phá ngay
-                <ChevronRight size={16} />
-              </Link>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </aside>
     );
@@ -138,31 +128,22 @@ export function ReadingSidebar() {
   return (
     <aside className="hidden xl:block xl:w-64 flex-shrink-0">
       <div className="sticky top-8">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <BookOpen
-                className="text-blue-600 dark:text-blue-400"
-                size={20}
-              />
-              <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-                Sách đang đọc
-              </h2>
-            </div>
+        <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
+              Sách đang đọc
+            </CardTitle>
             {hasMore && (
-              <Link
-                href="/library"
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
-              >
-                Xem tất cả
-              </Link>
+              <Button variant="link" size="sm" asChild className="text-blue-600 dark:text-blue-400 p-0 h-auto">
+                <Link href="/library">Xem tất cả</Link>
+              </Button>
             )}
-          </div>
+          </CardHeader>
 
-          <div className="space-y-4">
+          <CardContent className="space-y-4">
             {displayBooks.filter(item => item.bookId).map((item, index) => (
               <div key={item.id || (item as any)._id || item.bookId?.slug || `book-${index}`} className="flex gap-3 group">
-                {/* Book Cover */}
                 <Link
                   href={`/books/${item.bookId.slug}`}
                   className="relative w-16 h-24 rounded-lg overflow-hidden shadow-sm flex-shrink-0 hover:shadow-md transition-shadow"
@@ -175,51 +156,45 @@ export function ReadingSidebar() {
                   />
                 </Link>
 
-                {/* Book Info */}
                 <div className="flex-1 min-w-0 flex flex-col">
                   <Link
                     href={`/books/${item.bookId.slug}`}
-                    className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-1"
+                    className="font-semibold text-sm text-foreground line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-1"
                   >
                     {item.bookId.title}
                   </Link>
 
                   {item.lastReadChapterId ? (
                     <>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      <p className="text-xs text-muted-foreground mb-2">
                         Chương {item.lastReadChapterId.orderIndex}
                       </p>
-                      <Link
-                        href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
-                        className="mt-auto w-full flex items-center justify-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20 text-xs font-semibold py-1.5 rounded-lg transition-all"
-                      >
-                        <BookOpen size={12} />
-                        Đọc tiếp
-                      </Link>
+                      <Button asChild size="sm" variant="outline" className="mt-auto w-full h-8 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-500/20 gap-1.5">
+                        <Link href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}>
+                          <BookOpen size={12} />
+                          Đọc tiếp
+                        </Link>
+                      </Button>
                     </>
                   ) : (
-                    <Link
-                      href={`/books/${item.bookId.slug}`}
-                      className="mt-auto w-full flex items-center justify-center gap-1.5 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10 text-xs font-semibold py-1.5 rounded-lg transition-all"
-                    >
-                      Bắt đầu đọc
-                    </Link>
+                    <Button asChild size="sm" variant="outline" className="mt-auto w-full h-8 bg-accent/5 hover:bg-accent/10 border-border gap-1.5">
+                      <Link href={`/books/${item.bookId.slug}`}>Bắt đầu đọc</Link>
+                    </Button>
                   )}
                 </div>
               </div>
             ))}
-          </div>
 
-          {hasMore && (
-            <Link
-              href="/library"
-              className="mt-4 w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
-            >
-              Xem thêm {books.length - 5} sách
-              <ChevronRight size={16} />
-            </Link>
-          )}
-        </div>
+            {hasMore && (
+              <Button asChild variant="ghost" className="w-full mt-2 text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400">
+                <Link href="/library" className="flex items-center gap-2">
+                  Xem thêm {books.length - 5} sách
+                  <ChevronRight size={16} />
+                </Link>
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </aside>
   );

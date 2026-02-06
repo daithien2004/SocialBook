@@ -1,13 +1,13 @@
 'use client'
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { UserCheck, UserPlus } from "lucide-react";
+import { Button } from "@/src/components/ui/button";
 import {
     FollowingUser,
     useToggleFollowMutation,
 } from "@/src/features/follows/api/followApi";
-import { useState } from "react";
+import { UserCheck, UserPlus } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const FollowingItem = (props: FollowingUser) => {
     const [isFollowing, setIsFollowing] = useState(
@@ -93,8 +93,7 @@ const FollowingItem = (props: FollowingUser) => {
                     disabled={isToggling}
                     onClick={handleToggleFollow}
                     className={`w-full rounded-md text-xs font-medium tracking-wide transition-all
-            ${
-                        isFollowing
+            ${isFollowing
                             ? `
                   bg-teal-600 text-white
                   hover:bg-teal-500
@@ -107,7 +106,7 @@ const FollowingItem = (props: FollowingUser) => {
                   text-slate-700 dark:text-gray-200
                   hover:bg-neutral-100 dark:hover:bg-gray-800
                 `
-                    }`}
+                        }`}
                 >
                     {isFollowing ? (
                         <>
@@ -133,30 +132,30 @@ const FollowingItem = (props: FollowingUser) => {
         "
             >
                 <div className="w-1/3 flex flex-col items-center">
-          <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
-            {props.postCount}
-          </span>
+                    <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
+                        {props.postCount}
+                    </span>
                     <span className="text-[9px] text-slate-500 dark:text-gray-400 uppercase">
-            Bài viết
-          </span>
+                        Bài viết
+                    </span>
                 </div>
 
                 <div className="w-1/3 flex flex-col items-center">
-          <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
-            {props.readingListCount}
-          </span>
+                    <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
+                        {props.readingListCount}
+                    </span>
                     <span className="text-[9px] text-slate-500 dark:text-gray-400 uppercase">
-            Danh sách
-          </span>
+                        Danh sách
+                    </span>
                 </div>
 
                 <div className="w-1/3 flex flex-col items-center">
-          <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
-            {props.followersCount}
-          </span>
+                    <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
+                        {props.followersCount}
+                    </span>
                     <span className="text-[9px] text-slate-500 dark:text-gray-400 uppercase">
-            Người theo dõi
-          </span>
+                        Người theo dõi
+                    </span>
                 </div>
             </div>
         </div>

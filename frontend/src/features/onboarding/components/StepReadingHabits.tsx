@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Button } from '@/src/components/ui/button';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function StepReadingHabits({ onSubmit, initialData }: any) {
   const [times, setTimes] = useState(initialData.readingTime || {});
@@ -36,7 +36,7 @@ export default function StepReadingHabits({ onSubmit, initialData }: any) {
             onClick={() => toggleTime(opt.key)}
             className={`p-4 rounded-xl border-2 text-left transition-all
               ${times[opt.key]
-                 ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400'
+                ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400'
                 : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
               }`}
           >
@@ -48,7 +48,7 @@ export default function StepReadingHabits({ onSubmit, initialData }: any) {
         ))}
       </div>
 
-      <Button 
+      <Button
         className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500"
         onClick={() => onSubmit({ readingTime: times })}
       >

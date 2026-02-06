@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Button } from '@/src/components/ui/button';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { useGetFiltersQuery } from '../../books/api/bookApi';
 
 export default function StepGenreSelection({ onSubmit, initialData }: any) {
@@ -36,10 +36,9 @@ export default function StepGenreSelection({ onSubmit, initialData }: any) {
             key={genre.id}
             onClick={() => toggleGenre(genre.id)}
             className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2
-              ${
-                selected.includes(genre.id)
-                  ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
+              ${selected.includes(genre.id)
+                ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
               }
             `}
           >

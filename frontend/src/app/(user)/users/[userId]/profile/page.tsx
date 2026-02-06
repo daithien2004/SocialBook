@@ -1,18 +1,17 @@
 'use client';
 
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {Button} from '@/components/ui/button';
-import {Camera} from 'lucide-react';
+import { Button } from '@/src/components/ui/button';
 import {
     useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
     usePatchUpdateUserProfileOverviewMutation,
 } from '@/src/features/users/api/usersApi';
-import {useParams} from 'next/navigation';
-import {getErrorMessage} from "@/src/lib/utils";
-import {toast} from "sonner";
+import { getErrorMessage } from "@/src/lib/utils";
+import { useParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from "sonner";
 
 const UserProfilePage = () => {
-    const {userId} = useParams<{ userId: string }>();
+    const { userId } = useParams<{ userId: string }>();
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -34,7 +33,7 @@ const UserProfilePage = () => {
         setPreviewUrl(url);
     };
 
-// dọn URL tránh leak bộ nhớ
+    // dọn URL tránh leak bộ nhớ
     useEffect(() => {
         return () => {
             if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -48,13 +47,13 @@ const UserProfilePage = () => {
         if (fileInputRef.current) fileInputRef.current.value = ''; // quan trọng
     };
 
-    const {data: overview, isLoading: isOverviewLoading} =
-        useGetUserOverviewQuery(userId, {skip: !userId});
+    const { data: overview, isLoading: isOverviewLoading } =
+        useGetUserOverviewQuery(userId, { skip: !userId });
 
-    const [updateOverview, {isLoading: isSaving}] =
+    const [updateOverview, { isLoading: isSaving }] =
         usePatchUpdateUserProfileOverviewMutation();
 
-    const [updateAvatar, {isLoading: isSavingAvatarApi}] =
+    const [updateAvatar, { isLoading: isSavingAvatarApi }] =
         usePatchUpdateUserAvatarMutation();
 
     // form state
@@ -111,8 +110,8 @@ const UserProfilePage = () => {
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
-        const {name, value} = e.target;
-        setForm((prev) => ({...prev, [name]: value}));
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
@@ -189,8 +188,8 @@ const UserProfilePage = () => {
               bg-black/40
               text-white text-xs font-medium
             ">
-              Đổi ảnh
-            </span>
+                                Đổi ảnh
+                            </span>
                         </button>
 
                         {selectedFile && (

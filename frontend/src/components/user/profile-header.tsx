@@ -1,8 +1,8 @@
 'use client'
-import { Avatar, AvatarImage } from "@/components/ui/avatar"
-import {useRouter} from "next/navigation";
-import { FollowersModal} from "@/src/components/user/FollowersModal";
-import {useState} from "react";
+import { Avatar, AvatarImage } from "@/src/components/ui/avatar";
+import { FollowersModal } from "@/src/components/user/FollowersModal";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface PropsProfileHeader {
     username: string | undefined,

@@ -1,9 +1,9 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
+import { Button } from '@/src/components/ui/button';
 import confetti from 'canvas-confetti';
+import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 export default function StepCompletion({ onSubmit }: any) {
   useEffect(() => {

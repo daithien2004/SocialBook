@@ -1,13 +1,13 @@
-import {UserCheck, UserPlus} from "lucide-react";
+import { Button } from "@/src/components/ui/button";
 import {
     FollowingUser,
     useToggleFollowMutation,
 } from "@/src/features/follows/api/followApi";
-import {useState} from "react";
-import {Button} from "@/components/ui/button";
-import {useSelector} from "react-redux";
-import {RootState} from "@/src/store/store";
-import {useRouter} from "next/navigation";
+import { RootState } from "@/src/store/store";
+import { UserCheck, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 
 const FollowerItem = (props: FollowingUser) => {
     const auth = useSelector((state: RootState) => state.auth);
@@ -16,7 +16,7 @@ const FollowerItem = (props: FollowingUser) => {
         props.isFollowedByCurrentUser
     );
     const route = useRouter();
-    const [toggleFollow, {isLoading: isToggling}] =
+    const [toggleFollow, { isLoading: isToggling }] =
         useToggleFollowMutation();
 
     const handleToggleFollow = async () => {
@@ -50,19 +50,19 @@ const FollowerItem = (props: FollowingUser) => {
                 />
 
                 <div className="flex flex-col">
-          <span className="font-semibold text-slate-800 dark:text-gray-100">
-            {props.username}
-          </span>
+                    <span className="font-semibold text-slate-800 dark:text-gray-100">
+                        {props.username}
+                    </span>
 
                     <span className="text-xs text-slate-500 dark:text-gray-400">
-            {props.readingListCount > 0 &&
-                `${props.readingListCount} Danh sách đọc`}
+                        {props.readingListCount > 0 &&
+                            `${props.readingListCount} Danh sách đọc`}
                         {props.readingListCount > 0 &&
                             props.followersCount > 0 &&
                             " • "}
                         {props.followersCount > 0 &&
                             `Người theo dõi ${props.followersCount}`}
-          </span>
+                    </span>
                 </div>
             </div>
 
@@ -89,8 +89,7 @@ const FollowerItem = (props: FollowingUser) => {
                     onClick={handleToggleFollow}
                     className={`rounded-md text-xs font-medium tracking-wide
             transition-all
-            ${
-                        isFollowing
+            ${isFollowing
                             ? `
                   bg-teal-600 text-white
                   hover:bg-teal-500
@@ -103,16 +102,16 @@ const FollowerItem = (props: FollowingUser) => {
                   text-slate-700 dark:text-gray-200
                   hover:bg-slate-100 dark:hover:bg-gray-800
                 `
-                    }`}
+                        }`}
                 >
                     {isFollowing ? (
                         <>
-                            <UserCheck className="mr-2 h-3.5 w-3.5"/>
+                            <UserCheck className="mr-2 h-3.5 w-3.5" />
                             Đang theo dõi
                         </>
                     ) : (
                         <>
-                            <UserPlus className="mr-2 h-3.5 w-3.5"/>
+                            <UserPlus className="mr-2 h-3.5 w-3.5" />
                             Theo dõi
                         </>
                     )}

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Button } from '@/src/components/ui/button';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function StepReadingGoals({ onSubmit, initialData }: any) {
   const [goal, setGoal] = useState(
@@ -52,10 +52,9 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
                   })
                 }
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all
-                  ${
-                    goal.unit === option.value
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
+                  ${goal.unit === option.value
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                    : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
                   }`}
               >
                 {option.label}
@@ -74,10 +73,9 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
                 key={amount}
                 onClick={() => setGoal({ ...goal, amount })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all
-                  ${
-                    goal.amount === amount
-                     ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
+                  ${goal.amount === amount
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                    : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
                   }`}
               >
                 {amount} {goal.unit === 'minutes' ? 'phút' : goal.unit === 'pages' ? 'trang' : 'cuốn'}
@@ -100,10 +98,9 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
                 key={type.id}
                 onClick={() => setGoal({ ...goal, type: type.id })}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold capitalize transition-all
-                  ${
-                    goal.type === type.id
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                      : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
+                  ${goal.type === type.id
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
+                    : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
                   }`}
               >
                 {type.label}

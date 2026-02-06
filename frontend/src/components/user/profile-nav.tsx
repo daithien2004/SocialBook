@@ -1,23 +1,23 @@
 "use client";
 
-import {Ellipsis, Settings, UserPlus} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import Link from "next/link";
-import {useSelectedLayoutSegment, useRouter} from "next/navigation";
+import { Button } from "@/src/components/ui/button";
 import {
     useToggleFollowMutation,
     type FollowStateResponse,
 } from "@/src/features/follows/api/followApi";
-import {useState} from "react";
-import {useDispatch} from "react-redux";
-import {usersApi} from "@/src/features/users/api/usersApi";
+import { usersApi } from "@/src/features/users/api/usersApi";
+import { Settings, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSelectedLayoutSegment } from "next/navigation";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 
 interface ProfileNavProps {
     profileUserId: string;
     initialFollowState: FollowStateResponse | null;
 }
 
-export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps) {
+export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProps) {
     const segment = useSelectedLayoutSegment();
     const router = useRouter();
     const dispatch = useDispatch();
@@ -26,7 +26,7 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
         initialFollowState
     );
 
-    const [toggleFollow, {isLoading: isToggling}] = useToggleFollowMutation();
+    const [toggleFollow, { isLoading: isToggling }] = useToggleFollowMutation();
 
     const isAuthenticated = !!followState;
     const isOwner = followState?.isOwner === true;
@@ -47,7 +47,7 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
                 );
                 dispatch(
                     usersApi.util.invalidateTags([
-                        {type: 'Users', id: `OVERVIEW_${profileUserId}`},
+                        { type: 'Users', id: `OVERVIEW_${profileUserId}` },
                     ])
                 );
             }
@@ -57,9 +57,9 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
     };
 
     const tabs = [
-        {label: "Giới thiệu", href: `/users/${profileUserId}`, segment: null},
-        {label: "Bài đăng", href: `/users/${profileUserId}/posts`, segment: "posts"},
-        {label: "Đang theo dõi", href: `/users/${profileUserId}/following`, segment: "following"},
+        { label: "Giới thiệu", href: `/users/${profileUserId}`, segment: null },
+        { label: "Bài đăng", href: `/users/${profileUserId}/posts`, segment: "posts" },
+        { label: "Đang theo dõi", href: `/users/${profileUserId}/following`, segment: "following" },
     ];
 
     return (
@@ -101,7 +101,7 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
                 border-slate-200 dark:border-gray-700
                 hover:bg-slate-100 dark:hover:bg-gray-800"
                             >
-                                <Settings className="h-5 w-5"/>
+                                <Settings className="h-5 w-5" />
                                 Sửa hồ sơ
                             </Button>
                         ) : (
@@ -117,7 +117,7 @@ export function ProfileNav({profileUserId, initialFollowState}: ProfileNavProps)
                   border-slate-200 dark:border-gray-700
                   hover:bg-slate-100 dark:hover:bg-gray-800"
                                 >
-                                    <UserPlus className="h-4 w-4"/>
+                                    <UserPlus className="h-4 w-4" />
                                     {isAuthenticated && isFollowing ? "Đang theo dõi" : "Theo dõi"}
                                 </Button>
                             </div>
