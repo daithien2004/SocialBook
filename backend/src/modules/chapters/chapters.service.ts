@@ -209,9 +209,9 @@ export class ChaptersService {
     if (chapterWithBook && chapterWithBook.bookId) {
       const book = await this.booksRepository.findById(chapterWithBook.bookId.toString());
       if (book) {
-    if (chapterWithBook && chapterWithBook.bookId) {
-      const book = await this.booksRepository.findById(chapterWithBook.bookId.toString());
-    }
+        if (chapterWithBook && chapterWithBook.bookId) {
+          const book = await this.booksRepository.findById(chapterWithBook.bookId.toString());
+        }
       }
     }
 
