@@ -4,20 +4,23 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   Author,
   AuthorSchema,
-} from '@/src/modules/authors/schemas/author.schema';
-import { Book, BookSchema } from '@/src/modules/books/schemas/book.schema';
-import { Genre, GenreSchema } from '@/src/modules/genres/schemas/genre.schema';
+} from '@/src/modules/authors/infrastructure/schemas/author.schema';
+import { Book, BookSchema } from '@/src/modules/books/infrastructure/schemas/book.schema';
+import { Genre, GenreSchema } from '@/src/modules/genres/infrastructure/schemas/genre.schema';
+import { Review, ReviewSchema } from '@/src/modules/reviews/infrastructure/schemas/review.schema';
+import { Chapter, ChapterSchema } from '@/src/modules/chapters/infrastructure/schemas/chapter.schema';
+import { User, UserSchema } from '@/src/modules/users/infrastructure/schemas/user.schema';
+import { Role, RoleSchema } from '@/src/modules/roles/infrastructure/schemas/role.schema';
+import { TextToSpeech } from '@/src/modules/text-to-speech/domain/entities/text-to-speech.entity';
+import { Post, PostSchema } from '@/src/modules/posts/infrastructure/schemas/post.schema';
+import { Notification, NotificationSchema } from '@/src/modules/notifications/schemas/notification.schema';
+import { Progress, ProgressSchema } from '@/src/modules/progress/schemas/progress.schema';
+import { Follow, FollowSchema } from '@/src/modules/follows/infrastructure/schemas/follow.schema';
+import { Like, LikeSchema } from '@/src/modules/likes/infrastructure/schemas/like.schema';
 import {
-  Review,
-  ReviewSchema,
-} from '@/src/modules/reviews/schemas/review.schema'; // Update this path to the correct location of review.schema
-import {
-  Chapter,
-  ChapterSchema,
-} from '@/src/modules/chapters/schemas/chapter.schema';
-import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
-import { Role, RoleSchema } from '@/src/modules/roles/schemas/role.schema';
-import { TextToSpeech, TextToSpeechSchema } from '@/src/modules/text-to-speech/schemas/textToSpeech.schema';
+  Comment,
+  CommentSchema,
+} from '@/src/modules/comments/infrastructure/schemas/comment.schema';
 
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
@@ -27,12 +30,9 @@ import { ChaptersSeed } from './chapters.seeder';
 import { SeederService } from './seeder.service';
 import { UsersSeed } from './users.seeder';
 import { CommentsSeed } from './comments.seeder';
-import {
-  Comment,
-  CommentSchema,
-} from '@/src/modules/comments/schemas/comment.schema';
 import { RolesSeed } from './roles.seed';
 import { TextToSpeechSeed } from './textToSpeech.seeder';
+import { TextToSpeechSchema } from '@/src/modules/text-to-speech/infrastructure/schemas/text-to-speech.schema';
 
 @Module({
   imports: [
@@ -54,42 +54,34 @@ import { TextToSpeechSeed } from './textToSpeech.seeder';
     }),
     // Register các schema
     MongooseModule.forFeature([
-      { name: Role.name, schema: RoleSchema },
-
       { name: Author.name, schema: AuthorSchema },
-      { name: Genre.name, schema: GenreSchema },
       { name: Book.name, schema: BookSchema },
+      { name: Genre.name, schema: GenreSchema },
       { name: Review.name, schema: ReviewSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
+      { name: Role.name, schema: RoleSchema },
       { name: TextToSpeech.name, schema: TextToSpeechSchema },
+      { name: Post.name, schema: PostSchema },
+      { name: Notification.name, schema: NotificationSchema },
+      { name: Progress.name, schema: ProgressSchema },
+      { name: Follow.name, schema: FollowSchema },
+      { name: Like.name, schema: LikeSchema },
     ]),
   ],
   providers: [
-    RolesSeed,
-
-    UsersSeed,
+    SeederService,
     AuthorsSeed,
     GenresSeed,
     BooksSeed,
     ReviewsSeed,
     ChaptersSeed,
-    CommentsSeed,
-    TextToSpeechSeed,
-    SeederService,
-  ],
-  exports: [
-    RolesSeed,
     UsersSeed,
-    AuthorsSeed,
-    GenresSeed,
-    BooksSeed,
-    ReviewsSeed,
-    ChaptersSeed,
     CommentsSeed,
+    RolesSeed,
     TextToSpeechSeed,
-    SeederService,
   ],
+  exports: [SeederService],
 })
 export class DatabaseSeedModule { }

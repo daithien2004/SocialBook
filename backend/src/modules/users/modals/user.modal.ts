@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { UserDocument } from '../schemas/user.schema';
+import { UserDocument } from '../infrastructure/schemas/user.schema';
 
 export class UserModal {
     id: string;

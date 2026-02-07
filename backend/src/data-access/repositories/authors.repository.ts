@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { Author, AuthorDocument } from '../../modules/authors/schemas/author.schema';
+import { Author, AuthorDocument } from '../../modules/authors/infrastructure/schemas/author.schema';
 import { GenericRepository } from '../../shared/repository/generic.repository';
 
 @Injectable()

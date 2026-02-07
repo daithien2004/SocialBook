@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { ReadingStatus } from '../../library/schemas/reading-list.schema';
+import { ReadingStatus } from '../../library/infrastructure/schemas/reading-list.schema';
 
-import { BaseSchema } from '@/src/shared/schemas/base.schema';
+import { BaseSchema } from '../../../shared/schemas/base.schema';
 
 export type ProgressDocument = HydratedDocument<Progress>;
 

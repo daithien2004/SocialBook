@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { GenreDocument } from '../schemas/genre.schema';
+import { GenreDocument } from '../infrastructure/schemas/genre.schema';
 
 export class GenreModal {
     id: string;

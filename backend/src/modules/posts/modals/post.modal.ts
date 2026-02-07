@@ -1,4 +1,4 @@
-import { PostDocument } from '../schemas/post.schema';
+import { PostDocument } from '../infrastructure/schemas/post.schema';
 
 const toIdString = (id: any): string => {
     if (!id) return '';

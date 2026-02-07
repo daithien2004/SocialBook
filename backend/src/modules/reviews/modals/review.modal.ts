@@ -1,4 +1,4 @@
-import { ReviewDocument } from '../schemas/review.schema';
+import { ReviewDocument } from '../infrastructure/schemas/review.schema';
 
 const toIdString = (id: any): string => {
     if (!id) return '';

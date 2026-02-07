@@ -22,7 +22,7 @@ export class NotificationModal {
     updatedAt: Date;
 
     constructor(notification: NotificationDocument | any) {
-        this.id = toIdString(notification._id);
+        this.id = toIdString(notification.id || notification._id);
         this.title = notification.title;
         this.message = notification.message;
         this.type = notification.type;

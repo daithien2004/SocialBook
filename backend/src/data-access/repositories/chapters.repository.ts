@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';
-import { Chapter, ChapterDocument } from '../../modules/chapters/schemas/chapter.schema';
+import { Chapter, ChapterDocument } from '../../modules/chapters/infrastructure/schemas/chapter.schema';
 import { GenericRepository } from '../../shared/repository/generic.repository';
 
 @Injectable()

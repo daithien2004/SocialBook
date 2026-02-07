@@ -1,28 +1,61 @@
-import { DataAccessModule } from '@/src/data-access/data-access.module';
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthorsModule } from '../authors/authors.module';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { SearchModule } from '../search/search.module';
-import { BooksController } from './books.controller';
-import { BooksService } from './books.service';
-import { Book, BookSchema } from './schemas/book.schema';
+import { Book, BookSchema } from './infrastructure/schemas/book.schema';
+
+// Domain layer imports (for interfaces and entities)
+import { IBookRepository } from './domain/repositories/book.repository.interface';
+
+// Infrastructure layer imports
+import { BookRepository } from './infrastructure/repositories/book.repository';
+
+// Application layer imports - Use Cases
+import { CreateBookUseCase } from './application/use-cases/create-book/create-book.use-case';
+import { UpdateBookUseCase } from './application/use-cases/update-book/update-book.use-case';
+import { GetBooksUseCase } from './application/use-cases/get-books/get-books.use-case';
+import { GetBookByIdUseCase } from './application/use-cases/get-book-by-id/get-book-by-id.use-case';
+import { DeleteBookUseCase } from './application/use-cases/delete-book/delete-book.use-case';
+
+// Presentation layer imports
+import { BooksController } from './presentation/books.controller';
 
 import { ReviewsModule } from '../reviews/reviews.module';
 
 @Module({
   imports: [
-    DataAccessModule,
     CloudinaryModule,
-    SearchModule,
+    forwardRef(() => SearchModule),
     AuthorsModule,
     ReviewsModule,
     MongooseModule.forFeature([
       { name: Book.name, schema: BookSchema },
     ]),
   ],
-  providers: [BooksService],
   controllers: [BooksController],
-  exports: [BooksService, MongooseModule, DataAccessModule],
+  providers: [
+    // Repository implementation
+    {
+      provide: IBookRepository,
+      useClass: BookRepository,
+    },
+    // Use cases
+    CreateBookUseCase,
+    UpdateBookUseCase,
+    GetBooksUseCase,
+    GetBookByIdUseCase,
+    DeleteBookUseCase,
+    // External services
+  ],
+  exports: [
+    IBookRepository,
+    CreateBookUseCase,
+    UpdateBookUseCase,
+    GetBooksUseCase,
+    GetBookByIdUseCase,
+    DeleteBookUseCase,
+    MongooseModule,
+  ],
 })
-export class BooksModule { }
+export class BooksModule {}

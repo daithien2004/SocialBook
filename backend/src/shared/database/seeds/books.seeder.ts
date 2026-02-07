@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
+import { Book, BookDocument } from '@/src/modules/books/infrastructure/schemas/book.schema';
 import {
   Author,
   AuthorDocument,
-} from '@/src/modules/authors/schemas/author.schema';
+} from '@/src/modules/authors/infrastructure/schemas/author.schema';
 import {
   Genre,
   GenreDocument,
-} from '@/src/modules/genres/schemas/genre.schema';
+} from '@/src/modules/genres/infrastructure/schemas/genre.schema';
 
 @Injectable()
 export class BooksSeed {

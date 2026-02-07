@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { AuthorDocument } from '../schemas/author.schema';
+import { AuthorDocument } from '../infrastructure/schemas/author.schema';
 
 export class AuthorModal {
     id: string;

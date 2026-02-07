@@ -1,16 +1,30 @@
-import { DataAccessModule } from '@/src/data-access/data-access.module';
 import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Book, BookSchema } from '../books/schemas/book.schema';
+import { Book, BookSchema } from '../books/infrastructure/schemas/book.schema';
 import { TextToSpeechModule } from '../text-to-speech/text-to-speech.module';
-import { ChaptersController } from './chapters.controller';
-import { ChaptersService } from './chapters.service';
-import { FileImportService } from './file-import.service';
-import { Chapter, ChapterSchema } from './schemas/chapter.schema';
+import { Chapter, ChapterSchema } from './infrastructure/schemas/chapter.schema';
+
+// Domain layer imports (for interfaces and entities)
+import { IChapterRepository } from './domain/repositories/chapter.repository.interface';
+
+// Infrastructure layer imports
+import { ChapterRepository } from './infrastructure/repositories/chapter.repository';
+
+// Application layer imports - Use Cases
+import { CreateChapterUseCase } from './application/use-cases/create-chapter/create-chapter.use-case';
+import { UpdateChapterUseCase } from './application/use-cases/update-chapter/update-chapter.use-case';
+import { GetChaptersUseCase } from './application/use-cases/get-chapters/get-chapters.use-case';
+import { GetChapterByIdUseCase } from './application/use-cases/get-chapter-by-id/get-chapter-by-id.use-case';
+import { DeleteChapterUseCase } from './application/use-cases/delete-chapter/delete-chapter.use-case';
+
+// Presentation layer imports
+import { ChaptersController } from './presentation/chapters.controller';
+
+// Legacy services (keep for now)
+import { FileImportService } from './infrastructure/services/file-import.service';
 
 @Module({
   imports: [
-    DataAccessModule,
     MongooseModule.forFeature([
       { name: Chapter.name, schema: ChapterSchema },
       { name: Book.name, schema: BookSchema },
@@ -18,7 +32,29 @@ import { Chapter, ChapterSchema } from './schemas/chapter.schema';
     forwardRef(() => TextToSpeechModule),
   ],
   controllers: [ChaptersController],
-  providers: [ChaptersService, FileImportService],
-  exports: [ChaptersService, DataAccessModule],
+  providers: [
+    // Repository implementation
+    {
+      provide: IChapterRepository,
+      useClass: ChapterRepository,
+    },
+    // Use cases
+    CreateChapterUseCase,
+    UpdateChapterUseCase,
+    GetChaptersUseCase,
+    GetChapterByIdUseCase,
+    DeleteChapterUseCase,
+    // Legacy services
+    FileImportService,
+  ],
+  exports: [
+    IChapterRepository,
+    CreateChapterUseCase,
+    UpdateChapterUseCase,
+    GetChaptersUseCase,
+    GetChapterByIdUseCase,
+    DeleteChapterUseCase,
+    MongooseModule,
+  ],
 })
-export class ChaptersModule { }
+export class ChaptersModule {}

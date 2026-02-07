@@ -1,4 +1,4 @@
-import { ChapterDocument } from '../schemas/chapter.schema';
+import { ChapterDocument } from '../infrastructure/schemas/chapter.schema';
 
 // Helper function to convert _id to string
 const toIdString = (id: any): string => {

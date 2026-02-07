@@ -1,12 +1,10 @@
-import { IsString, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsEnum, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
-/**
- * Main search query DTO with pagination, filters, and sorting
- */
 export class SearchQueryDto {
     @IsString()
-    query: string;
+    @IsOptional()
+    query: string = '';
 
     @IsOptional()
     @Type(() => Number)
@@ -18,28 +16,25 @@ export class SearchQueryDto {
     @Type(() => Number)
     @IsNumber()
     @Min(1)
-    @Max(100)
     limit?: number = 12;
 
-    // Filters
     @IsOptional()
     @IsString()
-    genres?: string; // comma-separated genre slugs
+    genres?: string;
 
     @IsOptional()
     @IsString()
-    author?: string; // author ID
+    author?: string;
 
     @IsOptional()
     @IsString()
-    tags?: string; // comma-separated tags
-
-    // Sorting
-    @IsOptional()
-    @IsString()
-    sortBy?: string = 'score'; // score, updatedAt, views, rating, popular
+    tags?: string;
 
     @IsOptional()
-    @IsString()
-    order?: string = 'desc'; // asc, desc
+    @IsEnum(['views', 'likes', 'rating', 'popular', 'createdAt', 'updatedAt', 'score'])
+    sortBy?: 'views' | 'likes' | 'rating' | 'popular' | 'createdAt' | 'updatedAt' | 'score' = 'score';
+
+    @IsOptional()
+    @IsEnum(['asc', 'desc'])
+    order?: 'asc' | 'desc' = 'desc';
 }

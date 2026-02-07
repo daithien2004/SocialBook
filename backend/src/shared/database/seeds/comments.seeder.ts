@@ -1,16 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+
 import {
   Comment,
   CommentDocument,
-} from '@/src/modules/comments/schemas/comment.schema';
-import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
+} from '@/src/modules/comments/infrastructure/schemas/comment.schema';
+import { Book, BookDocument } from '@/src/modules/books/infrastructure/schemas/book.schema';
 import {
   Chapter,
   ChapterDocument,
   ParagraphDocument,
-} from '@/src/modules/chapters/schemas/chapter.schema';
+} from '@/src/modules/chapters/infrastructure/schemas/chapter.schema';
 
 @Injectable()
 export class CommentsSeed {

@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import {
   Genre,
   GenreDocument,
-} from '@/src/modules/genres/schemas/genre.schema';
+} from '@/src/modules/genres/infrastructure/schemas/genre.schema';
 
 @Injectable()
 export class GenresSeed {

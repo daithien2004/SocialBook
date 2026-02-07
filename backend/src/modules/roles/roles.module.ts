@@ -1,18 +1,23 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { RolesController } from './roles.controller';
-import { RolesRepository } from './roles.repository';
-import { RolesService } from './roles.service';
-import { Role, RoleSchema } from './schemas/role.schema';
+import { Role, RoleSchema } from './infrastructure/schemas/role.schema';
+import { RoleRepository } from './infrastructure/repositories/role.repository';
+import { GetRoleByNameUseCase } from './application/use-cases/get-role-by-name.use-case';
+import { IRoleRepository } from './domain/repositories/role.repository.interface';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Role.name, schema: RoleSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Role.name, schema: RoleSchema }]),
   ],
-  controllers: [RolesController],
-  providers: [RolesService, RolesRepository],
-  exports: [RolesService, RolesRepository, MongooseModule],
+  providers: [
+    RoleRepository,
+    { provide: IRoleRepository, useClass: RoleRepository },
+    GetRoleByNameUseCase,
+  ],
+  exports: [
+    IRoleRepository,
+    RoleRepository,
+    GetRoleByNameUseCase
+  ],
 })
 export class RolesModule { }

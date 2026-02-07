@@ -1,10 +1,18 @@
 import { Module } from '@nestjs/common';
-import { OtpService } from './otp.service';
-import { MailerModule } from '@nestjs-modules/mailer';
+import { SendOtpUseCase } from './application/use-cases/send-otp.use-case';
+import { VerifyOtpUseCase } from './application/use-cases/verify-otp.use-case';
+import { OtpRepository } from './infrastructure/repositories/otp.repository';
+import { IOtpRepository } from './domain/repositories/otp.repository.interface';
 
 @Module({
-  imports: [MailerModule],
-  providers: [OtpService],
-  exports: [OtpService],
+  providers: [
+    SendOtpUseCase,
+    VerifyOtpUseCase,
+    {
+      provide: IOtpRepository,
+      useClass: OtpRepository,
+    },
+  ],
+  exports: [SendOtpUseCase, VerifyOtpUseCase, IOtpRepository],
 })
-export class OtpModule { }
+export class OtpModule {}

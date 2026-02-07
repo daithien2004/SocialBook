@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
-import { BookDocument } from '../schemas/book.schema';
-import { AuthorDocument } from '../../authors/schemas/author.schema';
-import { GenreDocument } from '../../genres/schemas/genre.schema';
+import { Model, Types } from 'mongoose';
+import { BookDocument } from '../infrastructure/schemas/book.schema';
+import { AuthorDocument } from '../../authors/infrastructure/schemas/author.schema';
+import { GenreDocument } from '../../genres/infrastructure/schemas/genre.schema';
 
 export class BookModal {
     id: string;

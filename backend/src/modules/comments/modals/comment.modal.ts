@@ -1,4 +1,4 @@
-import { CommentDocument } from '../schemas/comment.schema';
+import { CommentDocument } from '../infrastructure/schemas/comment.schema';
 
 const toIdString = (id: any): string => {
     if (!id) return '';
