@@ -20,10 +20,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 
-import { CreateAuthorDto } from '@/application/authors/dto/create-author.dto';
-import { UpdateAuthorDto } from '@/application/authors/dto/update-author.dto';
-import { FilterAuthorDto } from '@/application/authors/dto/filter-author.dto';
-import { AuthorResponseDto } from '@/application/authors/dto/author.response.dto';
+import { CreateAuthorDto } from '@/presentation/authors/dto/create-author.dto';
+import { UpdateAuthorDto } from '@/presentation/authors/dto/update-author.dto';
+import { FilterAuthorDto } from '@/presentation/authors/dto/filter-author.dto';
+import { AuthorResponseDto } from '@/presentation/authors/dto/author.response.dto';
 
 import { CreateAuthorUseCase } from '@/application/authors/use-cases/create-author/create-author.use-case';
 import { UpdateAuthorUseCase } from '@/application/authors/use-cases/update-author/update-author.use-case';

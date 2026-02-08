@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from '../../../application/notifications/dto/create-notification.dto';
+import { CreateNotificationDto } from '../../presentation/notification/dto/create-notification.dto';
 import { Server } from 'socket.io';
-import { NotificationResponseDto } from '../../../application/notifications/dto/notification.response.dto';
-import { CreateNotificationUseCase } from '../../../application/notifications/use-cases/create-notification.use-case';
-import { GetUserNotificationsUseCase } from '../../../application/notifications/use-cases/get-user-notifications.use-case';
-import { MarkNotificationReadUseCase } from '../../../application/notifications/use-cases/mark-notification-read.use-case';
+import { NotificationResponseDto } from '../../presentation/notification/dto/notification.response.dto';
+import { CreateNotificationUseCase } from '../../application/notifications/use-cases/create-notification.use-case';
+import { GetUserNotificationsUseCase } from '../../application/notifications/use-cases/get-user-notifications.use-case';
+import { MarkNotificationReadUseCase } from '../../application/notifications/use-cases/mark-notification-read.use-case';
 
 @Injectable()
 export class NotificationsService {

@@ -21,10 +21,10 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { CreateChapterDto } from '@/application/chapters/dto/create-chapter.dto';
-import { UpdateChapterDto } from '@/application/chapters/dto/update-chapter.dto';
-import { FilterChapterDto } from '@/application/chapters/dto/filter-chapter.dto';
-import { ChapterResponseDto } from '@/application/chapters/dto/chapter.response.dto';
+import { CreateChapterDto } from '@/presentation/chapters/dto/create-chapter.dto';
+import { UpdateChapterDto } from '@/presentation/chapters/dto/update-chapter.dto';
+import { FilterChapterDto } from '@/presentation/chapters/dto/filter-chapter.dto';
+import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response.dto';
 
 import { CreateChapterUseCase } from '@/application/chapters/use-cases/create-chapter/create-chapter.use-case';
 import { UpdateChapterUseCase } from '@/application/chapters/use-cases/update-chapter/update-chapter.use-case';

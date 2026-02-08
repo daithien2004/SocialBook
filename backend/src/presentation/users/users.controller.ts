@@ -23,9 +23,9 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { CreateUserDto, UpdateUserOverviewDto } from '@/application/users/dto/user.dto';
-import { UpdateReadingPreferencesDto } from '@/application/users/dto/update-reading-preferences.dto';
-import { UserResponseDto } from '@/application/users/dto/user.response.dto';
+import { CreateUserDto, UpdateUserOverviewDto } from '@/presentation/users/dto/user.dto';
+import { UpdateReadingPreferencesDto } from '@/presentation/users/dto/update-reading-preferences.dto';
+import { UserResponseDto } from '@/presentation/users/dto/user.response.dto';
 
 import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';

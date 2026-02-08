@@ -18,13 +18,16 @@ import { OtpRepositoryModule } from './database/repositories/otp/otp-repository.
 import { ProgressRepositoryModule } from './database/repositories/progress/progress-repository.module';
 import { GeminiRepositoryModule } from './database/repositories/gemini/gemini-repository.module';
 import { TextToSpeechRepositoryModule } from './database/repositories/text-to-speech/text-to-speech-repository.module';
-import { DatabaseServicesModule } from './database/services/database-services.module';
+import { ExternalServicesModule } from './external/external-services.module';
+import { ApplicationServicesModule } from './external/application-services.module';
 import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
-import { ProvidersModule } from './providers/providers.module';
+import { ProvidersModule } from './external/providers.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
+import { AuthInfrastructureModule } from './auth/auth-infrastructure.module';
 
 @Module({
   imports: [
+    AuthInfrastructureModule,
     UsersRepositoryModule,
     BooksRepositoryModule,
     AuthorsRepositoryModule,
@@ -44,12 +47,14 @@ import { RecommendationsInfrastructureModule } from './recommendations/recommend
     ProgressRepositoryModule,
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
-    DatabaseServicesModule,
+    ExternalServicesModule,
+    ApplicationServicesModule,
     ScraperInfrastructureModule,
     ProvidersModule,
     RecommendationsInfrastructureModule,
   ],
   exports: [
+    AuthInfrastructureModule,
     UsersRepositoryModule,
     BooksRepositoryModule,
     AuthorsRepositoryModule,
@@ -69,7 +74,8 @@ import { RecommendationsInfrastructureModule } from './recommendations/recommend
     ProgressRepositoryModule,
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
-    DatabaseServicesModule,
+    ExternalServicesModule,
+    ApplicationServicesModule,
     ScraperInfrastructureModule,
     ProvidersModule,
     RecommendationsInfrastructureModule,

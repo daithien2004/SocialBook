@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
-import { CreateReviewDto } from '@/application/reviews/dto/create-review.dto';
+import { CreateReviewDto } from '@/presentation/reviews/dto/create-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 import { Review } from '@/domain/reviews/entities/review.entity';
 

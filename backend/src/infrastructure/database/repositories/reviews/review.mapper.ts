@@ -1,5 +1,5 @@
 import { Review } from '@/domain/reviews/entities/review.entity';
-import { ReviewDocument } from '../database/schemas/review.schema';
+import { ReviewDocument } from '../../schemas/review.schema';
 import { Types } from 'mongoose';
 
 export class ReviewMapper {

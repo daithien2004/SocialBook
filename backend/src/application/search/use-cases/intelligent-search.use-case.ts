@@ -8,7 +8,7 @@ import { IReviewRepository } from '@/domain/reviews/repositories/review.reposito
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { SearchQuery as VectorSearchQuery } from '@/domain/chroma/entities/search-query.entity';
-import { GeminiService } from '@/infrastructure/database/services/gemini.service';
+import { GeminiService } from '@/infrastructure/external/gemini.service';
 import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 

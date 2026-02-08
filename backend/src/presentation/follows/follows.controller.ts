@@ -17,9 +17,9 @@ import { ApiTags, ApiBody, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swag
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
-import { CreateFollowDto } from '@/application/follows/dto/create-follow.dto';
-import { FilterFollowDto } from '@/application/follows/dto/create-follow.dto';
-import { FollowResponseDto, FollowStatusResponseDto, FollowStatsResponseDto } from '@/application/follows/dto/follow.response.dto';
+import { CreateFollowDto } from '@/presentation/follows/dto/create-follow.dto';
+import { FilterFollowDto } from '@/presentation/follows/dto/create-follow.dto';
+import { FollowResponseDto, FollowStatusResponseDto, FollowStatsResponseDto } from '@/presentation/follows/dto/follow.response.dto';
 
 import { CreateFollowUseCase } from '@/application/follows/use-cases/create-follow/create-follow.use-case';
 import { GetFollowsUseCase } from '@/application/follows/use-cases/get-follows/get-follows.use-case';

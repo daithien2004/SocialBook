@@ -6,10 +6,10 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { IndexDocumentDto } from '@/application/chroma/dto/index-document.dto';
-import { SearchQueryDto } from '@/application/chroma/dto/search-query.dto';
-import { BatchIndexDto } from '@/application/chroma/dto/batch-index.dto';
-import { SearchResponseDto } from '@/application/chroma/dto/search.response.dto';
+import { IndexDocumentDto } from '@/presentation/chroma/dto/index-document.dto';
+import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
+import { BatchIndexDto } from '@/presentation/chroma/dto/batch-index.dto';
+import { SearchResponseDto } from '@/presentation/chroma/dto/search.response.dto';
 
 import { IndexDocumentUseCase } from '@/application/chroma/use-cases/index-document/index-document.use-case';
 import { SearchUseCase } from '@/application/chroma/use-cases/search/search.use-case';

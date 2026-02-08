@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
-import { UpdateReviewDto } from '@/application/reviews/dto/update-review.dto';
+import { UpdateReviewDto } from '@/presentation/reviews/dto/update-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 
 @Injectable()

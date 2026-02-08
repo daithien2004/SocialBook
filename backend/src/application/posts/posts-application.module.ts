@@ -11,14 +11,14 @@ import { RemovePostImageUseCase } from './use-cases/remove-post-image.use-case';
 import { UpdatePostUseCase } from './use-cases/update-post.use-case';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
-import { DatabaseServicesModule } from '@/infrastructure/database/services/database-services.module';
+import { ExternalServicesModule } from '@/infrastructure/external/external-services.module';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
 
 @Module({
   imports: [
     PostsRepositoryModule,
     BooksRepositoryModule,
-    DatabaseServicesModule,
+    ExternalServicesModule,
     ContentModerationModule,
   ],
   providers: [

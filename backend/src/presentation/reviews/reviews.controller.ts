@@ -12,8 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { CreateReviewDto } from '@/application/reviews/dto/create-review.dto';
-import { UpdateReviewDto } from '@/application/reviews/dto/update-review.dto';
+import { CreateReviewDto } from '@/presentation/reviews/dto/create-review.dto';
+import { UpdateReviewDto } from '@/presentation/reviews/dto/update-review.dto';
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CreateReviewUseCase } from '@/application/reviews/use-cases/create-review.use-case';
@@ -22,7 +22,7 @@ import { UpdateReviewUseCase } from '@/application/reviews/use-cases/update-revi
 import { DeleteReviewUseCase } from '@/application/reviews/use-cases/delete-review.use-case';
 import { ToggleReviewLikeUseCase } from '@/application/reviews/use-cases/toggle-review-like.use-case';
 import { Review } from '@/domain/reviews/entities/review.entity';
-import { ReviewResponseDto } from '@/application/reviews/dto/review.response.dto';
+import { ReviewResponseDto } from '@/presentation/reviews/dto/review.response.dto';
 
 @Controller('reviews')
 export class ReviewsController {

@@ -22,10 +22,10 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { CreateBookDto } from '@/application/books/dto/create-book.dto';
-import { UpdateBookDto } from '@/application/books/dto/update-book.dto';
-import { FilterBookDto } from '@/application/books/dto/filter-book.dto';
-import { BookResponseDto } from '@/application/books/dto/book.response.dto';
+import { CreateBookDto } from '@/presentation/books/dto/create-book.dto';
+import { UpdateBookDto } from '@/presentation/books/dto/update-book.dto';
+import { FilterBookDto } from '@/presentation/books/dto/filter-book.dto';
+import { BookResponseDto } from '@/presentation/books/dto/book.response.dto';
 
 import { CreateBookUseCase } from '@/application/books/use-cases/create-book/create-book.use-case';
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
@@ -49,7 +49,6 @@ export class BooksController {
     private readonly createBookUseCase: CreateBookUseCase,
     private readonly updateBookUseCase: UpdateBookUseCase,
     private readonly getBooksUseCase: GetBooksUseCase,
-    private readonly getBookByIdUseCase: GetBookByIdUseCase,
     private readonly getBookBySlugUseCase: GetBookBySlugUseCase,
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,

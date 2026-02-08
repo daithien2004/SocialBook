@@ -35,7 +35,7 @@ import {
   SignupGoogleDto,
   SignupLocalDto,
   VerifyOtpDto,
-} from '@/application/auth/dto/auth.dto';
+} from '@/presentation/auth/dto/auth.dto';
 
 @ApiTags('Auth')
 @Controller('auth')

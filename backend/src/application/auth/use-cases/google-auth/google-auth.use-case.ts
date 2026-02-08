@@ -6,7 +6,7 @@ import { CreateUserCommand } from '@/application/users/use-cases/create-user/cre
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { TokenService } from '../../services/token.service';
-import { SignupGoogleDto } from '../../dto/auth.dto';
+import { SignupGoogleDto } from '../../../../presentation/auth/dto/auth.dto';
 import { Logger } from '@/shared/logger';
 
 @Injectable()

@@ -15,7 +15,7 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/follows/follows-repository.module';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
-import { DatabaseServicesModule } from '@/infrastructure/database/services/database-services.module';
+import { ExternalServicesModule } from '@/infrastructure/external/external-services.module';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { DatabaseServicesModule } from '@/infrastructure/database/services/datab
     PostsRepositoryModule,
     FollowsRepositoryModule,
     LibraryRepositoryModule,
-    DatabaseServicesModule,
+    ExternalServicesModule,
   ],
   providers: [
     CheckUserExistUseCase,

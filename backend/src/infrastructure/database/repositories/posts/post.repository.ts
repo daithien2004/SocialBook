@@ -4,7 +4,7 @@ import { Model, FilterQuery } from 'mongoose';
 import { Post, PostDocument } from '../../schemas/post.schema';
 import { IPostRepository, FindAllOptions, PaginatedResult } from '@/domain/posts/repositories/post.repository.interface';
 import { Post as PostEntity } from '@/domain/posts/entities/post.entity';
-import { PostMapper } from '@/infrastructure/mappers/post.mapper';
+import { PostMapper } from '@/infrastructure/database/repositories/posts/post.mapper';
 
 @Injectable()
 export class PostRepository implements IPostRepository {

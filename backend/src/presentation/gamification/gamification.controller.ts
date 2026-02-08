@@ -15,7 +15,7 @@ import { ApiTags, ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
-import { RecordReadingDto } from '@/application/gamification/dto/user-gamification.dto';
+import { RecordReadingDto } from '@/presentation/gamification/dto/user-gamification.dto';
 
 import { RecordReadingUseCase } from '@/application/gamification/use-cases/record-reading/record-reading.use-case';
 import { GetGamificationStatsUseCase } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.use-case';

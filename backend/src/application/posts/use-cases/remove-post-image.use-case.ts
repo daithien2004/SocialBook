@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { CloudinaryService } from '@/infrastructure/database/services/cloudinary.service';
+import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()

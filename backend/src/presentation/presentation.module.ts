@@ -5,7 +5,7 @@ import { BooksController } from './books/books.controller';
 import { ChaptersController } from './chapters/chapters.controller';
 import { ChromaController } from './chroma/chroma.controller';
 import { CommentsController } from './comments/comments.controller';
-import { CollectionsController } from './library/collections.controller';
+import { CollectionsController } from './collections/collections.controller';
 import { FollowsController } from './follows/follows.controller';
 import { GamificationController } from './gamification/gamification.controller';
 import { GeminiController } from './gemini/gemini.controller';

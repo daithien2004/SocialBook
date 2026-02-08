@@ -18,7 +18,7 @@ import { GetAllCollectionsUseCase } from '@/application/library/use-cases/get-al
 import { GetCollectionByIdUseCase } from '@/application/library/use-cases/get-collection-by-id/get-collection-by-id.use-case';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { Public } from '@/common/decorators/customize';
-import { CreateCollectionDto, UpdateCollectionDto } from '@/application/library/dto/collection.dto';
+import { CreateCollectionDto, UpdateCollectionDto } from '@/presentation/library/dto/collection.dto';
 
 @Controller('collections')
 @UseGuards(JwtAuthGuard)

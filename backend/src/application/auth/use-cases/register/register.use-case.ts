@@ -7,7 +7,7 @@ import { CreateUserCommand } from '@/application/users/use-cases/create-user/cre
 import { GetRoleByNameUseCase } from '@/application/roles/use-cases/get-role-by-name.use-case';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { SendOtpUseCase } from '@/application/otp/use-cases/send-otp.use-case';
-import { SignupLocalDto } from '../../dto/auth.dto';
+import { SignupLocalDto } from '../../../../presentation/auth/dto/auth.dto';
 import { Logger } from '@/shared/logger';
 
 @Injectable()

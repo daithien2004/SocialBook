@@ -20,9 +20,9 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { CreateCommentDto, UpdateCommentDto, CommentCountDto, ModerateCommentDto, FlagCommentDto } from '@/application/comments/dto/create-comment.dto';
-import { FilterCommentDto, GetCommentsDto } from '@/application/comments/dto/filter-comment.dto';
-import { CommentResponseDto, CommentWithRepliesDto, CommentStatsDto } from '@/application/comments/dto/comment.response.dto';
+import { CreateCommentDto, UpdateCommentDto, CommentCountDto, ModerateCommentDto, FlagCommentDto } from '@/presentation/comments/dto/create-comment.dto';
+import { FilterCommentDto, GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
+import { CommentResponseDto, CommentWithRepliesDto, CommentStatsDto } from '@/presentation/comments/dto/comment.response.dto';
 
 import { CreateCommentUseCase } from '@/application/comments/use-cases/create-comment/create-comment.use-case';
 import { GetCommentsUseCase } from '@/application/comments/use-cases/get-comments/get-comments.use-case';

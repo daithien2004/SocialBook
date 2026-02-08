@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import { Role, RoleDocument } from '../../schemas/role.schema';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { Role as RoleEntity } from '@/domain/roles/entities/role.entity';
-import { RoleMapper } from '@/infrastructure/mappers/role.mapper';
+import { RoleMapper } from '@/infrastructure/database/repositories/roles/role.mapper';
 
 @Injectable()
 export class RoleRepository implements IRoleRepository {

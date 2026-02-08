@@ -1,9 +1,9 @@
 import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { CloudinaryService } from '@/infrastructure/database/services/cloudinary.service';
+import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
-import { CreatePostDto } from '../dto/create-post.dto';
+import { CreatePostDto } from '../../../presentation/posts/dto/create-post.dto';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
 

@@ -7,8 +7,8 @@ import { Progress, ProgressDocument } from '@/infrastructure/database/schemas/pr
 import { Review, ReviewDocument } from '@/infrastructure/database/schemas/review.schema';
 import { Like, LikeDocument } from '@/infrastructure/database/schemas/like.schema';
 import { UserOnboarding, UserOnboardingDocument } from '@/infrastructure/database/schemas/user-onboarding.schema';
-import { AIRecommendationStrategy } from '@/infrastructure/strategies/ai-recommendation.strategy';
-import { FallbackRecommendationStrategy } from '@/infrastructure/strategies/fallback-recommendation.strategy';
+import { AIRecommendationStrategy } from '@/infrastructure/recommendations/strategies/ai-recommendation.strategy';
+import { FallbackRecommendationStrategy } from '@/infrastructure/recommendations/strategies/fallback-recommendation.strategy';
 import { UserProfile } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
 import { RecommendationResponse, PaginatedRecommendationResponse } from '@/domain/recommendations/interfaces/recommendation.interface';
 

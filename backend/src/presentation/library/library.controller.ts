@@ -28,7 +28,7 @@ import {
   UpdateLibraryStatusDto,
   UpdateProgressDto,
   UpdateReadingTimeDto,
-} from '@/application/library/dto/library.dto';
+} from '@/presentation/library/dto/library.dto';
 import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
 
 @Controller('library')

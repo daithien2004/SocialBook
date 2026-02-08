@@ -21,9 +21,9 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
-import { CreatePostDto } from '@/application/posts/dto/create-post.dto';
-import { PaginationDto, PaginationUserDto } from '@/application/posts/dto/pagination.dto';
-import { UpdatePostDto } from '@/application/posts/dto/update-post.dto';
+import { CreatePostDto } from '@/presentation/posts/dto/create-post.dto';
+import { PaginationDto, PaginationUserDto } from '@/presentation/posts/dto/pagination.dto';
+import { UpdatePostDto } from '@/presentation/posts/dto/update-post.dto';
 
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -39,7 +39,7 @@ import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-pos
 import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
 import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
 import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
-import { PostResponseDto } from '@/application/posts/dto/post.response.dto'; 
+import { PostResponseDto } from '@/presentation/posts/dto/post.response.dto'; 
 
 @ApiTags('Posts')
 @ApiBearerAuth()

@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Review, ReviewDocument } from '../../schemas/review.schema';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { Review as ReviewEntity } from '@/domain/reviews/entities/review.entity';
-import { ReviewMapper } from '@/infrastructure/mappers/review.mapper';
+import { ReviewMapper } from '@/infrastructure/database/repositories/reviews/review.mapper';
 
 @Injectable()
 export class ReviewRepository implements IReviewRepository {

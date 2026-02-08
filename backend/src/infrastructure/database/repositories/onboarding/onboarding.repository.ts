@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { IOnboardingRepository } from '@/domain/onboarding/repositories/onboarding.repository.interface';
 import { Onboarding } from '@/domain/onboarding/entities/onboarding.entity';
-import { OnboardingMapper } from '@/infrastructure/mappers/onboarding.mapper';
+import { OnboardingMapper } from '@/infrastructure/database/repositories/onboarding/onboarding.mapper';
 import { UserOnboarding, UserOnboardingDocument } from '../../schemas/user-onboarding.schema';
 
 @Injectable()
