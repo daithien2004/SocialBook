@@ -3,6 +3,16 @@ import { BookDocument } from '../schemas/book.schema';
 import { AuthorDocument } from '../../authors/schemas/author.schema';
 import { GenreDocument } from '../../genres/schemas/genre.schema';
 
+interface BookWithStats extends BookDocument {
+    stats?: {
+        chapters: number;
+        views: number;
+        likes: number;
+        rating?: number;
+        reviews?: number;
+    };
+}
+
 export class BookModal {
     id: string;
     title: string;
@@ -85,12 +95,12 @@ export class BookListModal {
 
         this.description = book.description;
         this.createdAt = book.createdAt;
-
         this.updatedAt = book.updatedAt;
 
         // Stats from aggregation pipeline
-        if ((book as any).stats) {
-            this.stats = (book as any).stats;
+        const bookWithStats = book as BookWithStats;
+        if (bookWithStats.stats) {
+            this.stats = bookWithStats.stats;
         }
 
         if (book.authorId && typeof book.authorId === 'object') {
@@ -104,7 +114,6 @@ export class BookListModal {
 
         this.genres = [];
         if (book.genres && Array.isArray(book.genres) && book.genres.length > 0) {
-
             // Handle populated genres
             if (typeof book.genres[0] === 'object') {
                 this.genres = (book.genres as unknown as GenreDocument[]).map(g => ({
@@ -121,6 +130,15 @@ export class BookListModal {
     }
 }
 
+export interface BookInfoInput {
+    _id?: Types.ObjectId | string;
+    id?: string;
+    title: string;
+    slug: string;
+    description?: string;
+    authorId?: { _id?: Types.ObjectId | string; name?: string } | Types.ObjectId | string;
+}
+
 export class BookInfoModal {
     id: string;
     title: string;
@@ -128,16 +146,16 @@ export class BookInfoModal {
     description?: string;
     authorId?: { id: string; name: string };
 
-    constructor(book: any) {
-        this.id = book._id?.toString() || book.id;
+    constructor(book: BookInfoInput) {
+        this.id = book._id?.toString() || book.id || '';
         this.title = book.title;
         this.slug = book.slug;
         this.description = book.description;
 
         const authorData = book.authorId;
-        if (authorData && typeof authorData === 'object' && authorData.name) {
+        if (authorData && typeof authorData === 'object' && 'name' in authorData && authorData.name) {
             this.authorId = {
-                id: authorData._id?.toString(),
+                id: (authorData._id as Types.ObjectId)?.toString() || '',
                 name: authorData.name,
             };
         }
