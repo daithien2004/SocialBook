@@ -15,12 +15,12 @@ export class BookRepository implements IBookRepository {
     constructor(@InjectModel(Book.name) private readonly bookModel: Model<BookDocument>) {}
 
     async findById(id: BookId): Promise<BookEntity | null> {
-        const document = await this.bookModel.findById(id.toString()).lean().exec();
+        const document = await this.bookModel.findById(id.toString()).populate('genres').lean().exec();
         return document ? this.mapToEntity(document) : null;
     }
 
     async findBySlug(slug: string): Promise<BookEntity | null> {
-        const document = await this.bookModel.findOne({ slug, isDeleted: false }).lean().exec();
+        const document = await this.bookModel.findOne({ slug, isDeleted: false }).populate('genres').lean().exec();
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -80,6 +80,7 @@ export class BookRepository implements IBookRepository {
         const documents = await query
             .skip(skip)
             .limit(pagination.limit)
+            .populate('genres')
             .lean()
             .exec();
 
@@ -268,8 +269,8 @@ export class BookRepository implements IBookRepository {
             id: document._id.toString(),
             title: document.title,
             slug: document.slug,
-            authorId: document.authorId?.toString() || '',
-            genres: (document.genres || []).map((g: any) => g.toString()),
+            authorId: (document.authorId && document.authorId._id ? document.authorId._id.toString() : document.authorId?.toString()) || '',
+            genres: (document.genres || []).map((g: any) => (g && g._id ? g._id.toString() : g.toString())),
             description: document.description || '',
             publishedYear: document.publishedYear || '',
             coverUrl: document.coverUrl || '',
@@ -280,6 +281,16 @@ export class BookRepository implements IBookRepository {
             likedBy: (document.likedBy || []).map((id: any) => id.toString()),
             createdAt: document.createdAt,
             updatedAt: document.updatedAt,
+            genreObjects: (document.genres || []).map((g: any) => {
+                if (typeof g === 'object' && g._id) {
+                    return {
+                        id: g._id.toString(),
+                        name: g.name,
+                        slug: g.slug
+                    };
+                }
+                return null;
+            }).filter((g: any) => g !== null)
         });
     }
 

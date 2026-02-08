@@ -21,7 +21,8 @@ export class Book {
         private _likes: number,
         private _likedBy: string[],
         public readonly createdAt: Date,
-        private _updatedAt: Date
+        private _updatedAt: Date,
+        public readonly genreObjects?: { id: string; name: string; slug: string; }[]
     ) {}
 
     static create(props: {
@@ -55,7 +56,8 @@ export class Book {
             0,
             [],
             new Date(),
-            new Date()
+            new Date(),
+            undefined
         );
     }
 
@@ -75,6 +77,7 @@ export class Book {
         likedBy: string[];
         createdAt: Date;
         updatedAt: Date;
+        genreObjects?: { id: string; name: string; slug: string; }[];
     }): Book {
         return new Book(
             BookId.create(props.id),
@@ -91,7 +94,8 @@ export class Book {
             props.likes,
             props.likedBy,
             props.createdAt,
-            props.updatedAt
+            props.updatedAt,
+            props.genreObjects
         );
     }
 

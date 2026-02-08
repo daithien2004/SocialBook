@@ -1,15 +1,11 @@
-import { Module, forwardRef } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common';
 import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
-import { UsersModule } from '@/src/modules/users/users.module';
 import { LikesModule } from '../likes/likes.module';
-import { Follow, FollowSchema } from './infrastructure/schemas/follow.schema';
+import { FollowsInfrastructureModule } from './infrastructure/follows.infrastructure.module';
+import { UsersInfrastructureModule } from '../users/infrastructure/users.infrastructure.module';
 
 // Domain layer imports (for interfaces and entities)
 import { IFollowRepository } from './domain/repositories/follow.repository.interface';
-
-// Infrastructure layer imports
-import { FollowRepository } from './infrastructure/repositories/follow.repository';
 
 // Application layer imports - Use Cases
 import { CreateFollowUseCase } from './application/use-cases/create-follow/create-follow.use-case';
@@ -22,20 +18,13 @@ import { FollowsController } from './presentation/follows.controller';
 
 @Module({
   imports: [
-    forwardRef(() => UsersModule),
-    MongooseModule.forFeature([
-      { name: Follow.name, schema: FollowSchema },
-    ]),
+    FollowsInfrastructureModule,
+    UsersInfrastructureModule,
     NotificationsModule,
     LikesModule,
   ],
   controllers: [FollowsController],
   providers: [
-    // Repository implementation
-    {
-      provide: IFollowRepository,
-      useClass: FollowRepository,
-    },
     // Use cases
     CreateFollowUseCase,
     GetFollowsUseCase,
@@ -43,7 +32,7 @@ import { FollowsController } from './presentation/follows.controller';
     DeleteFollowUseCase,
   ],
   exports: [
-    IFollowRepository,
+    FollowsInfrastructureModule,
     CreateFollowUseCase,
     GetFollowsUseCase,
     GetFollowStatusUseCase,

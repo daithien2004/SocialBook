@@ -1,14 +1,12 @@
-import { Module, forwardRef } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { FollowsModule } from '../follows/follows.module';
+import { Module } from '@nestjs/common';
 import { CloudinaryModule } from '@/src/modules/cloudinary/cloudinary.module';
 import { LibraryModule } from '../library/library.module';
 import { PostsModule } from '../posts/posts.module';
+import { UsersInfrastructureModule } from './infrastructure/users.infrastructure.module';
+import { FollowsInfrastructureModule } from '../follows/infrastructure/follows.infrastructure.module';
 
 import { UsersController } from './presentation/users.controller';
 
-import { User, UserSchema } from './infrastructure/schemas/user.schema';
-import { UsersRepository } from './infrastructure/repositories/users.repository';
 import { IUserRepository } from './domain/repositories/user.repository.interface';
 
 // Use Cases
@@ -27,18 +25,14 @@ import { SearchUsersUseCase } from './application/use-cases/search-users/search-
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    forwardRef(() => FollowsModule),
+    UsersInfrastructureModule,
+    FollowsInfrastructureModule,
     CloudinaryModule,
     PostsModule,
     LibraryModule,
   ],
   controllers: [UsersController],
   providers: [
-    {
-      provide: IUserRepository,
-      useClass: UsersRepository,
-    },
     CreateUserUseCase,
     GetUsersUseCase,
     GetUserByIdUseCase,
@@ -53,7 +47,7 @@ import { SearchUsersUseCase } from './application/use-cases/search-users/search-
     SearchUsersUseCase,
   ],
   exports: [
-    IUserRepository,
+    UsersInfrastructureModule,
     CreateUserUseCase,
   ],
 })

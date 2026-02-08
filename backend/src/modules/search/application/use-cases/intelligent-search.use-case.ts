@@ -9,12 +9,15 @@ import { IGenreRepository } from '@/src/modules/genres/domain/repositories/genre
 import { IVectorRepository } from '@/src/modules/chroma/domain/repositories/vector.repository.interface'; 
 import { SearchQuery as VectorSearchQuery } from '@/src/modules/chroma/domain/entities/search-query.entity';
 import { GeminiService } from '@/src/modules/gemini/infrastructure/services/gemini.service';
+import { INFRASTRUCTURE_TOKENS } from '@/src/modules/gemini/domain/tokens/gemini.tokens';
 import { BookId } from '@/src/modules/books/domain/value-objects/book-id.vo';
 import { AuthorId as BookAuthorId } from '@/src/modules/books/domain/value-objects/author-id.vo';
 import { GenreName } from '@/src/modules/genres/domain/value-objects/genre-name.vo';
 
 @Injectable()
 export class IntelligentSearchUseCase {
+    private readonly logger = new Logger(IntelligentSearchUseCase.name);
+
     constructor(
         private readonly bookRepository: IBookRepository,
         private readonly authorRepository: IAuthorRepository,
@@ -22,8 +25,8 @@ export class IntelligentSearchUseCase {
         private readonly reviewRepository: IReviewRepository,
         private readonly genreRepository: IGenreRepository,
         private readonly vectorRepository: IVectorRepository,
+        @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
         private readonly geminiService: GeminiService,
-        private readonly logger: Logger,
     ) {}
 
     async execute(queryDto: AppSearchQuery): Promise<PaginatedSearchResult> {

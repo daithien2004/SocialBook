@@ -128,8 +128,8 @@ export function BannerSlider({ books }: BannerSliderProps) {
             key={index}
             onClick={() => setCurrentSlide(index)}
             className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide
-                ? 'w-8 bg-red-600 dark:bg-primary'
-                : 'w-2 bg-gray-400/50 hover:bg-gray-400'
+              ? 'w-8 bg-red-600 dark:bg-primary'
+              : 'w-2 bg-gray-400/50 hover:bg-gray-400'
               }`}
             aria-label={`Go to slide ${index + 1}`}
           />

@@ -1,23 +1,23 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { SearchController } from './presentation/search.controller';
 import { IntelligentSearchUseCase } from './application/use-cases/intelligent-search.use-case';
 import { ChromaModule } from '../chroma/chroma.module';
 import { GeminiModule } from '../gemini/gemini.module';
-import { BooksModule } from '../books/books.module';
-import { AuthorsModule } from '../authors/authors.module';
-import { ChaptersModule } from '../chapters/chapters.module';
-import { ReviewsModule } from '../reviews/reviews.module';
-import { GenresModule } from '../genres/genres.module';
+import { BooksInfrastructureModule } from '../books/infrastructure/books.infrastructure.module';
+import { AuthorsInfrastructureModule } from '../authors/infrastructure/authors.infrastructure.module';
+import { ChaptersInfrastructureModule } from '../chapters/infrastructure/chapters.infrastructure.module';
+import { ReviewsInfrastructureModule } from '../reviews/infrastructure/reviews.infrastructure.module';
+import { GenresInfrastructureModule } from '../genres/infrastructure/genres.infrastructure.module';
 
 @Module({
     imports: [
         ChromaModule,
         GeminiModule,
-        forwardRef(() => BooksModule),
-        AuthorsModule,
-        ChaptersModule,
-        ReviewsModule,
-        forwardRef(() => GenresModule),
+        BooksInfrastructureModule,
+        AuthorsInfrastructureModule,
+        ChaptersInfrastructureModule,
+        ReviewsInfrastructureModule,
+        GenresInfrastructureModule,
     ],
     controllers: [SearchController],
     providers: [IntelligentSearchUseCase],

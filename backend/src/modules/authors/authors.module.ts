@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { CloudinaryModule } from '@/src/modules/cloudinary/cloudinary.module';
+import { AuthorsInfrastructureModule } from './infrastructure/authors.infrastructure.module';
 import { CloudinaryService } from '../cloudinary/infrastructure/services/cloudinary.service';
-import { Author, AuthorSchema } from './infrastructure/schemas/author.schema';
 
 // Domain layer imports (for interfaces and entities)
 import { IAuthorRepository } from './domain/repositories/author.repository.interface';
 
 // Infrastructure layer imports
-import { AuthorRepository } from './infrastructure/repositories/author.repository';
+// The AuthorRepository import is removed from here as per instruction,
+// as it's now likely provided by AuthorsInfrastructureModule.
 
 // Application layer imports - Use Cases
 import { CreateAuthorUseCase } from './application/use-cases/create-author/create-author.use-case';
@@ -22,16 +22,11 @@ import { AuthorsController } from './presentation/authors.controller';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Author.name, schema: AuthorSchema }]),
+    AuthorsInfrastructureModule,
     CloudinaryModule,
   ],
   controllers: [AuthorsController],
   providers: [
-    // Repository implementation
-    {
-      provide: IAuthorRepository,
-      useClass: AuthorRepository,
-    },
     // Use cases
     CreateAuthorUseCase,
     UpdateAuthorUseCase,
@@ -42,7 +37,7 @@ import { AuthorsController } from './presentation/authors.controller';
     CloudinaryService,
   ],
   exports: [
-    IAuthorRepository,
+    AuthorsInfrastructureModule,
     CreateAuthorUseCase,
     UpdateAuthorUseCase,
     GetAuthorsUseCase,

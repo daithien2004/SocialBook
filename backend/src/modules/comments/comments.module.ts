@@ -1,18 +1,12 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { LikesModule } from '@/src/modules/likes/likes.module';
 import { NotificationsModule } from '@/src/modules/notifications/notifications.module';
 import { BooksModule } from '../books/books.module';
 import { ChaptersModule } from '../chapters/chapters.module';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
-import { PostsModule } from '../posts/posts.module';
+import { PostsInfrastructureModule } from '../posts/infrastructure/posts.infrastructure.module';
 import { UsersModule } from '../users/users.module';
-
-// Domain layer imports (for interfaces and entities)
-import { ICommentRepository } from './domain/repositories/comment.repository.interface';
-
-// Infrastructure layer imports
-import { CommentRepository } from './infrastructure/repositories/comment.repository';
+import { CommentsInfrastructureModule } from './infrastructure/comments.infrastructure.module';
 
 // Application layer imports - Use Cases
 import { CreateCommentUseCase } from './application/use-cases/create-comment/create-comment.use-case';
@@ -26,24 +20,17 @@ import { CommentsController } from './presentation/comments.controller';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: 'Comment', schema: require('./infrastructure/schemas/comment.schema').CommentSchema }
-    ]),
+    CommentsInfrastructureModule,
     forwardRef(() => LikesModule),
     ContentModerationModule,
     NotificationsModule,
-    PostsModule,
+    PostsInfrastructureModule, // Use Infrastructure Module to break circular dependency
     UsersModule,
     ChaptersModule,
     BooksModule,
   ],
   controllers: [CommentsController],
   providers: [
-    // Repository implementation
-    {
-      provide: ICommentRepository,
-      useClass: CommentRepository,
-    },
     // Use cases
     CreateCommentUseCase,
     GetCommentsUseCase,
@@ -52,7 +39,7 @@ import { CommentsController } from './presentation/comments.controller';
     ModerateCommentUseCase,
   ],
   exports: [
-    ICommentRepository,
+    CommentsInfrastructureModule,
     CreateCommentUseCase,
     GetCommentsUseCase,
     UpdateCommentUseCase,

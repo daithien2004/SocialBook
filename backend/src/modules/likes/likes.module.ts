@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { LikesInfrastructureModule } from './infrastructure/likes.infrastructure.module';
 
 // Presentation layer imports
 import { LikesController } from './presentation/likes.controller';
@@ -8,37 +8,22 @@ import { LikesController } from './presentation/likes.controller';
 import { ToggleLikeUseCase } from './application/use-cases/toggle-like/toggle-like.use-case';
 import { GetLikeCountUseCase } from './application/use-cases/get-like-count/get-like-count.use-case';
 import { GetLikeStatusUseCase } from './application/use-cases/get-like-status/get-like-status.use-case';
-
-// Infrastructure layer imports
-import { LikeRepository } from './infrastructure/repositories/like.repository';
-
-// Schemas
-import { LikeSchema } from './infrastructure/schemas/like.schema';
-
-import { ILikeRepository } from './domain/repositories/like.repository.interface';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: 'Like', schema: LikeSchema }
-    ])
+    LikesInfrastructureModule,
+    CloudinaryModule,
   ],
   controllers: [LikesController],
   providers: [
-    // Repository implementations
-    {
-      provide: ILikeRepository,
-      useClass: LikeRepository,
-    },
-    LikeRepository,
     // Use cases
     ToggleLikeUseCase,
     GetLikeCountUseCase,
     GetLikeStatusUseCase,
   ],
   exports: [
-    ILikeRepository,
-    LikeRepository,
+    LikesInfrastructureModule,
     ToggleLikeUseCase,
     GetLikeCountUseCase,
     GetLikeStatusUseCase,

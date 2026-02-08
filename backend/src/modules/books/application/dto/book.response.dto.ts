@@ -6,7 +6,7 @@ export class BookResponseDto {
         this.title = book.title.toString();
         this.slug = book.slug;
         this.authorId = book.authorId.toString();
-        this.genres = book.genres.map(genre => genre.toString());
+        this.genres = book.genreObjects ? book.genreObjects : book.genres.map(genre => genre.toString());
         this.description = book.description;
         this.publishedYear = book.publishedYear;
         this.coverUrl = book.coverUrl;
@@ -23,7 +23,7 @@ export class BookResponseDto {
     title: string;
     slug: string;
     authorId: string;
-    genres: string[];
+    genres: any[];
     description: string;
     publishedYear: string;
     coverUrl: string;

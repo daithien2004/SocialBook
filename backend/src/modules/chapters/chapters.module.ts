@@ -1,8 +1,8 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Book, BookSchema } from '../books/infrastructure/schemas/book.schema';
 import { TextToSpeechModule } from '../text-to-speech/text-to-speech.module';
-import { Chapter, ChapterSchema } from './infrastructure/schemas/chapter.schema';
+import { ChaptersInfrastructureModule } from './infrastructure/chapters.infrastructure.module';
 
 // Domain layer imports (for interfaces and entities)
 import { IChapterRepository } from './domain/repositories/chapter.repository.interface';
@@ -22,22 +22,15 @@ import { ChaptersController } from './presentation/chapters.controller';
 
 // Legacy services (keep for now)
 import { FileImportService } from './infrastructure/services/file-import.service';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Chapter.name, schema: ChapterSchema },
-      { name: Book.name, schema: BookSchema },
-    ]),
-    forwardRef(() => TextToSpeechModule),
+    ChaptersInfrastructureModule,
+    CloudinaryModule,
   ],
   controllers: [ChaptersController],
   providers: [
-    // Repository implementation
-    {
-      provide: IChapterRepository,
-      useClass: ChapterRepository,
-    },
     // Use cases
     CreateChapterUseCase,
     UpdateChapterUseCase,
@@ -48,13 +41,12 @@ import { FileImportService } from './infrastructure/services/file-import.service
     FileImportService,
   ],
   exports: [
-    IChapterRepository,
+    ChaptersInfrastructureModule,
     CreateChapterUseCase,
     UpdateChapterUseCase,
     GetChaptersUseCase,
     GetChapterByIdUseCase,
     DeleteChapterUseCase,
-    MongooseModule,
   ],
 })
 export class ChaptersModule {}

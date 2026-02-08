@@ -31,14 +31,15 @@ import { CreateBookUseCase } from '../application/use-cases/create-book/create-b
 import { UpdateBookUseCase } from '../application/use-cases/update-book/update-book.use-case';
 import { GetBooksUseCase } from '../application/use-cases/get-books/get-books.use-case';
 import { GetBookByIdUseCase } from '../application/use-cases/get-book-by-id/get-book-by-id.use-case';
+import { GetBookBySlugUseCase } from '../application/use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { DeleteBookUseCase } from '../application/use-cases/delete-book/delete-book.use-case';
+import { Types } from 'mongoose';
 
 import { CreateBookCommand } from '../application/use-cases/create-book/create-book.command';
 import { UpdateBookCommand } from '../application/use-cases/update-book/update-book.command';
 import { GetBooksQuery } from '../application/use-cases/get-books/get-books.query';
 import { DeleteBookCommand } from '../application/use-cases/delete-book/delete-book.command';
 
-import { CloudinaryService } from '@/src/modules/cloudinary/infrastructure/services/cloudinary.service';
 import { IMediaService } from '@/src/modules/cloudinary/domain/interfaces/media.service.interface';
 
 @ApiTags('Books')
@@ -49,6 +50,7 @@ export class BooksController {
     private readonly updateBookUseCase: UpdateBookUseCase,
     private readonly getBooksUseCase: GetBooksUseCase,
     private readonly getBookByIdUseCase: GetBookByIdUseCase,
+    private readonly getBookBySlugUseCase: GetBookBySlugUseCase,
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,
   ) {}
@@ -132,14 +134,15 @@ export class BooksController {
   }
 
   /**
-   * GET /books/:id - Get book by ID
+   * GET /books/:slug - Get book by Slug
    */
-  @Get(':id')
+  @Get(':slug')
   @Public()
-  @ApiOperation({ summary: 'Get book by ID' })
-  @ApiParam({ name: 'id', description: 'Book ID' })
-  async findOne(@Param('id') id: string) {
-    const book = await this.getBookByIdUseCase.execute(id);
+  @ApiOperation({ summary: 'Get book by Slug' })
+  @ApiParam({ name: 'slug', description: 'Book Slug' })
+  async findOne(@Param('slug') slug: string) {
+    const book = await this.getBookBySlugUseCase.execute(slug);
+
     return {
       message: 'Lấy thông tin sách thành công',
       data: new BookResponseDto(book),
