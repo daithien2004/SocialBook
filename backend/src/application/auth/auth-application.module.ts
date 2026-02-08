@@ -22,6 +22,9 @@ import { OtpApplicationModule } from '../otp/otp-application.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { RolesRepositoryModule } from '@/infrastructure/database/repositories/roles/roles-repository.module';
 import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/otp-repository.module';
+import { JwtStrategy } from '@/infrastructure/strategies/jwt.strategy';
+import { JwtRefreshStrategy } from '@/infrastructure/strategies/jwt-refresh.strategy';
+import { LocalStrategy } from '@/infrastructure/strategies/local.strategy';
 
 @Module({
   imports: [
@@ -55,6 +58,9 @@ import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/
     VerifyOtpUseCase,
     ResendOtpUseCase,
     ValidateUserUseCase,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    LocalStrategy,
   ],
   exports: [
     LoginUseCase,
