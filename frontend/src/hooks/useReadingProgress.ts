@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   useUpdateReadingProgressMutation,
   useGetChapterProgressQuery,
-} from '@/src/features/library/api/libraryApi';
+} from '@/features/library/api/libraryApi';
 import { throttle } from 'lodash';
 
 export function useReadingProgress(

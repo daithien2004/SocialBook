@@ -5,13 +5,13 @@ import { Model, Types } from 'mongoose';
 import {
   Comment,
   CommentDocument,
-} from '@/src/modules/comments/infrastructure/schemas/comment.schema';
-import { Book, BookDocument } from '@/src/modules/books/infrastructure/schemas/book.schema';
+} from '@/infrastructure/database/schemas/comment.schema';
+import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
 import {
   Chapter,
   ChapterDocument,
   ParagraphDocument,
-} from '@/src/modules/chapters/infrastructure/schemas/chapter.schema';
+} from '@/infrastructure/database/schemas/chapter.schema';
 
 @Injectable()
 export class CommentsSeed {

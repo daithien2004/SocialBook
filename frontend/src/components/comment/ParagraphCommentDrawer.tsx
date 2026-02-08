@@ -1,24 +1,24 @@
 'use client';
 
-import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { getErrorMessage } from '@/src/lib/utils';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { getErrorMessage } from '@/lib/utils';
 import { Loader2, MessageSquare, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import ListComments from '@/src/components/comment/ListComments';
-import { Button } from '@/src/components/ui/button';
-import { ScrollArea } from '@/src/components/ui/scroll-area';
+import ListComments from '@/components/comment/ListComments';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
     Sheet,
     SheetContent,
     SheetDescription,
     SheetHeader,
     SheetTitle,
-} from '@/src/components/ui/sheet';
-import { Textarea } from '@/src/components/ui/textarea';
-import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
+} from '@/components/ui/sheet';
+import { Textarea } from '@/components/ui/textarea';
+import { usePostCreateMutation } from '@/features/comments/api/commentApi';
 
 interface ParagraphCommentDrawerProps {
     isOpen: boolean;

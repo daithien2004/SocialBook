@@ -4,11 +4,11 @@ import { Bot, Loader2, MessageCircle, Send, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useAskChatbotMutation } from '../features/chatbot/api/chatBotApi';
 
-import { Avatar } from "@/src/components/ui/avatar";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/src/components/ui/popover";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
+import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Message {
   id: string;

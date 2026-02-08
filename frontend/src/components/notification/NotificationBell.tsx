@@ -1,21 +1,21 @@
 'use client';
 
-import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { timeAgo } from '@/src/lib/utils';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { timeAgo } from '@/lib/utils';
 import { Bell, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useNotifications } from './useNotifications';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/src/components/ui/popover';
-import { ScrollArea } from '@/src/components/ui/scroll-area';
+} from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function NotificationBell() {
   const { accessToken } = useAppAuth();

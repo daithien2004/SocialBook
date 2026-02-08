@@ -1,9 +1,9 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import {
     NESTJS_COMMENTS_ENDPOINTS,
     NESTJS_LIKES_ENDPOINTS,
-} from '@/src/constants/server-endpoints';
+} from '@/constants/server-endpoints';
 import {
     GetCommentsResponse,
     GetCommentsRequest,

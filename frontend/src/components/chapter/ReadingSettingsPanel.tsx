@@ -1,7 +1,7 @@
 'use client';
 // Cá nhân hóa trải nghiệm đọc
 import { cn } from '@/lib/utils';
-import { Button } from '@/src/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -9,27 +9,27 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/src/components/ui/dialog';
+} from '@/components/ui/dialog';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/src/components/ui/select';
+} from '@/components/ui/select';
 import {
     Sheet,
     SheetContent,
     SheetHeader,
     SheetTitle,
-} from '@/src/components/ui/sheet';
-import { Slider } from '@/src/components/ui/slider';
+} from '@/components/ui/sheet';
+import { Slider } from '@/components/ui/slider';
 import {
     useGetReadingPreferencesQuery,
     useUpdateReadingPreferencesMutation,
-} from '@/src/features/users/api/usersApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { useReadingSettings } from '@/src/store/useReadingSettings';
+} from '@/features/users/api/usersApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { useReadingSettings } from '@/store/useReadingSettings';
 import { AlertTriangle, Layout, Palette, RotateCcw, Type } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

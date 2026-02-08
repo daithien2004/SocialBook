@@ -2,16 +2,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetAdminBooksQuery, useDeleteBookMutation } from '@/src/features/books/api/bookApi';
+import { useGetAdminBooksQuery, useDeleteBookMutation } from '@/features/books/api/bookApi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Search, Plus, Eye, Heart, BookOpen, Filter, ChevronLeft, ChevronRight, Loader2, Edit, Trash2, BookText } from 'lucide-react';
-import { BookForAdmin, BackendPagination } from '@/src/features/books/types/book.interface';
+import { BookForAdmin, BackendPagination } from '@/features/books/types/book.interface';
 import { toast } from 'sonner';
-import { useDebounce } from '@/src/hooks/useDebounce';
-import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
+import { useDebounce } from '@/hooks/useDebounce';
+import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 
 type BookStatus = 'draft' | 'published' | 'completed';
 type StatusFilter = BookStatus | 'all';

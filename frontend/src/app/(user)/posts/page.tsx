@@ -1,13 +1,13 @@
 'use client';
 
 import {useState} from 'react';
-import PostList from '@/src/components/post/PostList';
-import CreatePostForm from '@/src/components/post/CreatePostForm';
-import {useAppAuth} from '@/src/hooks/useAppAuth';
+import PostList from '@/components/post/PostList';
+import CreatePostForm from '@/components/post/CreatePostForm';
+import {useAppAuth} from '@/hooks/useAppAuth';
 import {BookOpen, Users, Library, Quote, ImageIcon, PenSquare} from 'lucide-react';
-import RecommendedBooks from "@/src/components/post/RecommendedBooks";
+import RecommendedBooks from "@/components/post/RecommendedBooks";
 import {useRouter} from "next/navigation";
-import UserSearchSidebar from "@/src/components/post/UserSearchSidebar";
+import UserSearchSidebar from "@/components/post/UserSearchSidebar";
 
 export default function Post() {
     const [showCreateForm, setShowCreateForm] = useState(false);

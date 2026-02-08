@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useRecordReadingTimeMutation } from '@/src/features/library/api/libraryApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useRecordReadingTimeMutation } from '@/features/library/api/libraryApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { useDispatch } from 'react-redux';
-import { gamificationApi } from '@/src/features/gamification/api/gamificationApi';
+import { gamificationApi } from '@/features/gamification/api/gamificationApi';
 
 interface ReadingTimeTrackerProps {
   bookId: string;

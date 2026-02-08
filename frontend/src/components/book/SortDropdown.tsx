@@ -1,13 +1,13 @@
 'use client';
-import { Button } from '@/src/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
-import { cn } from '@/src/lib/utils';
-import { SORT_OPTIONS } from '@/src/features/books/books.constants';
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { SORT_OPTIONS } from '@/features/books/books.constants';
 import { ChevronDown } from 'lucide-react';
 
 interface SortDropdownProps {

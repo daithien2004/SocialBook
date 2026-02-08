@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useGetGenreQuery, useUpdateGenreMutation } from '@/src/features/genres/api/genreApi';
+import { useGetGenreQuery, useUpdateGenreMutation } from '@/features/genres/api/genreApi';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { getErrorMessage } from '@/src/lib/utils';
+import { getErrorMessage } from '@/lib/utils';
 
 export default function EditGenrePage() {
     const router = useRouter();

@@ -1,14 +1,14 @@
 import { cn } from '@/lib/utils';
-import { Button } from '@/src/components/ui/button';
-import { ScrollArea } from '@/src/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/src/components/ui/sheet';
-import { Chapter } from '@/src/features/chapters/types/chapter.interface';
+} from '@/components/ui/sheet';
+import { Chapter } from '@/features/chapters/types/chapter.interface';
 import { useRouter } from 'next/navigation';
 
 interface ChapterListDrawerProps {

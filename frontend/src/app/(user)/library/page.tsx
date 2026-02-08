@@ -19,10 +19,10 @@ import {
   useGetLibraryBooksQuery,
   useGetCollectionsQuery,
   useCreateCollectionMutation,
-} from '@/src/features/library/api/libraryApi';
-import { LibraryStatus } from '@/src/features/library/types/library.interface';
+} from '@/features/library/api/libraryApi';
+import { LibraryStatus } from '@/features/library/types/library.interface';
 import { toast } from 'sonner';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 export default function LibraryPage() {
   const [activeTab, setActiveTab] = useState<LibraryStatus>(

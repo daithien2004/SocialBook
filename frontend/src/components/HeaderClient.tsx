@@ -1,12 +1,12 @@
 'use client';
 
-import { NotificationBell } from '@/src/components/notification/NotificationBell';
+import { NotificationBell } from '@/components/notification/NotificationBell';
 import {
   useCheckInStreakMutation,
   useGetDailyGoalQuery,
   useGetStreakQuery,
-} from '@/src/features/gamification/api/gamificationApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+} from '@/features/gamification/api/gamificationApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import {
   BookOpen,
   Flame,
@@ -31,8 +31,8 @@ import { toast } from 'sonner';
 import { logout } from '../features/auth/slice/authSlice';
 import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Button } from '@/src/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,8 +40,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/src/components/ui/sheet';
+} from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export function HeaderClient() {
   const router = useRouter();

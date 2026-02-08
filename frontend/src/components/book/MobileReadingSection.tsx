@@ -3,9 +3,9 @@
 import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useGetLibraryBooksQuery } from '@/src/features/library/api/libraryApi';
-import { LibraryStatus } from '@/src/features/library/types/library.interface';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
+import { LibraryStatus } from '@/features/library/types/library.interface';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 export function MobileReadingSection() {
   const { isAuthenticated, isGuest } = useAppAuth();

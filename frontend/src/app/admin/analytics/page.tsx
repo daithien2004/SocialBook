@@ -1,8 +1,8 @@
 'use client';
 
-import WorldMap from '@/src/components/admin/analyst/WorldMap';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { useGetActiveUsersQuery, useGetChapterEngagementQuery, useGetGeographicDistributionQuery, useGetReadingHeatmapQuery } from '@/src/features/admin/api/analyticsApi';
+import WorldMap from '@/components/admin/analyst/WorldMap';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGetActiveUsersQuery, useGetChapterEngagementQuery, useGetGeographicDistributionQuery, useGetReadingHeatmapQuery } from '@/features/admin/api/analyticsApi';
 import { Activity, Globe, TrendingUp, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import PostCard from '@/src/components/post/PostCard';
-import {useGetPostsByUserQuery} from '@/src/features/posts/api/postApi';
-import { Post } from '@/src/features/posts/types/post.interface';
+import PostCard from '@/components/post/PostCard';
+import {useGetPostsByUserQuery} from '@/features/posts/api/postApi';
+import { Post } from '@/features/posts/types/post.interface';
 
 interface PostListProps {
   userId: string;

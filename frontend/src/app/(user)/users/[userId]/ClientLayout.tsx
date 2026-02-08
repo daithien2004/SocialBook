@@ -1,11 +1,11 @@
 "use client"
 
-import { ProfileHeader } from "@/src/components/user/profile-header";
-import { ProfileNav } from "@/src/components/user/profile-nav";
+import { ProfileHeader } from "@/components/user/profile-header";
+import { ProfileNav } from "@/components/user/profile-nav";
 import React, { ReactNode } from "react";
-import { ProfileSidebar } from "@/src/components/user/profile-sidebar";
-import { FollowStateResponse } from "@/src/features/follows/api/followApi";
-import {useGetUserOverviewQuery} from "@/src/features/users/api/usersApi";
+import { ProfileSidebar } from "@/components/user/profile-sidebar";
+import { FollowStateResponse } from "@/features/follows/api/followApi";
+import {useGetUserOverviewQuery} from "@/features/users/api/usersApi";
 
 interface ClientLayoutProps {
     children: ReactNode;

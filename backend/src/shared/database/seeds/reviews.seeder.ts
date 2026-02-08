@@ -4,9 +4,9 @@ import { Model } from 'mongoose';
 import {
   Review,
   ReviewDocument,
-} from '@/src/modules/reviews/infrastructure/schemas/review.schema';
-import { User, UserDocument } from '@/src/modules/users/infrastructure/schemas/user.schema';
-import { Book, BookDocument } from '@/src/modules/books/infrastructure/schemas/book.schema';
+} from '@/infrastructure/database/schemas/review.schema';
+import { User, UserDocument } from '@/infrastructure/database/schemas/user.schema';
+import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
 
 @Injectable()
 export class ReviewsSeed {

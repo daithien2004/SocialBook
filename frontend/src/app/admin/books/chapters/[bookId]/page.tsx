@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useGetBookByIdQuery } from '@/src/features/books/api/bookApi';
+import { useGetBookByIdQuery } from '@/features/books/api/bookApi';
 import {
   useGetAdminChaptersQuery,
   useCreateChapterMutation,
@@ -10,17 +10,17 @@ import {
   useDeleteChapterMutation,
   useGetChapterByIdQuery,
   useLazyGetChapterByIdQuery,
-} from '@/src/features/chapters/api/chaptersApi';
+} from '@/features/chapters/api/chaptersApi';
 import {
   useGenerateChapterAudioMutation,
   useGenerateBookAudioMutation,
   useGetChapterAudioQuery,
-} from '@/src/features/tts/api/ttsApi';
-import { Chapter, Paragraph } from '@/src/features/chapters/types/chapter.interface';
+} from '@/features/tts/api/ttsApi';
+import { Chapter, Paragraph } from '@/features/chapters/types/chapter.interface';
 import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { FileImportModal } from '@/src/components/chapter/FileImportModal';
+import { FileImportModal } from '@/components/chapter/FileImportModal';
 
 export default function ChapterManagementPage() {
   const params = useParams();

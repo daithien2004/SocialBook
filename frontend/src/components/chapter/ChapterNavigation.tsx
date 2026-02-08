@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Button } from '@/src/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, List } from 'lucide-react';
 import Link from 'next/link';
 

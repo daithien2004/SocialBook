@@ -1,4 +1,4 @@
-import { axiosBaseQuery } from "@/src/lib/nestjs-client-api";
+import { axiosBaseQuery } from "@/lib/nestjs-client-api";
 import { createApi } from "@reduxjs/toolkit/query/react";
 
 export interface SearchSource {

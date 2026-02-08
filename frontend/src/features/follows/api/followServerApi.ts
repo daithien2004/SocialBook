@@ -1,5 +1,5 @@
-import { getAuthenticatedServerApi } from "@/src/lib/auth-server-api";
-import type { FollowStateResponse } from "@/src/features/follows/api/followApi";
+import { getAuthenticatedServerApi } from "@/lib/auth-server-api";
+import type { FollowStateResponse } from "@/features/follows/api/followApi";
 
 export async function followServerApi() {
     const api = await getAuthenticatedServerApi();

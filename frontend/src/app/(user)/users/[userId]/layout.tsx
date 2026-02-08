@@ -1,10 +1,10 @@
 import ClientLayout from './ClientLayout';
 import { ReactNode } from 'react';
-import type { FollowStateResponse } from '@/src/features/follows/api/followApi';
-import { followServerApi } from '@/src/features/follows/api/followServerApi';
+import type { FollowStateResponse } from '@/features/follows/api/followApi';
+import { followServerApi } from '@/features/follows/api/followServerApi';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
-import { userServerApi } from '@/src/features/users/api/usersServerApi';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { userServerApi } from '@/features/users/api/usersServerApi';
 
 export default async function UserLayout({
   children,

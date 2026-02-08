@@ -2,9 +2,9 @@
 
 import type React from "react"
 import { Facebook, Twitter, Mail } from "lucide-react"
-import {useGetFollowingListQuery} from "@/src/features/follows/api/followApi";
+import {useGetFollowingListQuery} from "@/features/follows/api/followApi";
 import {useRouter} from "next/navigation";
-import {formatDate} from "@/src/lib/utils";
+import {formatDate} from "@/lib/utils";
 
 // ⬇️ THÊM: import các button share từ next-share
 import {

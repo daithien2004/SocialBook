@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { TabType, TABS } from "@/src/features/books/books.constants";
+import { TabType, TABS } from "@/features/books/books.constants";
 
 interface TabNavigationProps {
   activeTab: TabType;

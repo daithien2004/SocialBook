@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Sparkles, Loader2, RefreshCw } from 'lucide-react';
-import { useSummarizeChapterMutation } from '@/src/features/gemini/api/geminiApi';
+import { useSummarizeChapterMutation } from '@/features/gemini/api/geminiApi';
 import { toast } from 'sonner';
 
 interface ChapterSummaryModalProps {

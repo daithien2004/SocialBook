@@ -1,9 +1,9 @@
 'use client';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { FiltersData } from '@/src/features/books/types/book.interface';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FiltersData } from '@/features/books/types/book.interface';
 import { Filter } from 'lucide-react';
 
 interface FilterSectionProps {

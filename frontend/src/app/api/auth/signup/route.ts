@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
-import serverApi from '@/src/lib/server-api';
-import { NESTJS_AUTH_ENDPOINTS } from '@/src/constants/server-endpoints';
+import serverApi from '@/lib/server-api';
+import { NESTJS_AUTH_ENDPOINTS } from '@/constants/server-endpoints';
 
 export async function POST(request: NextRequest) {
   try {

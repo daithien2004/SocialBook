@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { useDispatch } from 'react-redux';
 import { logout, setCredentials } from '../features/auth/slice/authSlice';
 

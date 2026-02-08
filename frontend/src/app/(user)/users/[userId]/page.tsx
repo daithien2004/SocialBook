@@ -1,6 +1,6 @@
 "use client"
 
-import { ReadingLists } from "@/src/components/user/reading-lists"
+import { ReadingLists } from "@/components/user/reading-lists"
 
 export default function ProfilePage() {
     return (

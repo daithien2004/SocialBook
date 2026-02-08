@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { toast } from 'sonner';
-import { getErrorMessage } from '@/src/lib/utils';
+import { getErrorMessage } from '@/lib/utils';
 
 interface CreatePostFormProps {
   onClose: () => void;

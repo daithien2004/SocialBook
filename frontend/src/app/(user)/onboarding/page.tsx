@@ -1,4 +1,4 @@
-import OnboardingWizard from '@/src/features/onboarding/components/OnboardingWizard';
+import OnboardingWizard from '@/features/onboarding/components/OnboardingWizard';
 
 export const metadata = {
   title: 'Welcome to SocialBook',

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/src/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useGetFiltersQuery } from '../../books/api/bookApi';

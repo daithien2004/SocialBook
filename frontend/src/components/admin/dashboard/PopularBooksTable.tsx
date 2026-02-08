@@ -1,6 +1,6 @@
 'use client';
 
-import { BookStats } from '@/src/features/admin/types/dashboard.types';
+import { BookStats } from '@/features/admin/types/dashboard.types';
 import { Eye, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
 

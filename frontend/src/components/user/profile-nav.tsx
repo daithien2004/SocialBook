@@ -1,18 +1,18 @@
 "use client";
 
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     useToggleFollowMutation,
     type FollowStateResponse,
-} from "@/src/features/follows/api/followApi";
-import { usersApi } from "@/src/features/users/api/usersApi";
-import { cn } from "@/src/lib/utils";
+} from "@/features/follows/api/followApi";
+import { usersApi } from "@/features/users/api/usersApi";
+import { cn } from "@/lib/utils";
 import { Check, MessageSquare, Settings, UserPlus } from "lucide-react"; // Import MessageSquare
 import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 
-import { Tabs, TabsList, TabsTrigger } from "@/src/components/ui/tabs"; // Shadcn Tabs
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Shadcn Tabs
 
 interface ProfileNavProps {
     profileUserId: string;

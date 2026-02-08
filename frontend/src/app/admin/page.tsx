@@ -2,15 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { Users, BookOpen, FileText, MessageSquare, BarChart2, Download } from 'lucide-react';
-import { StatCard } from '@/src/components/admin/dashboard/StatCard';
-import { UserGrowthChart } from '@/src/components/admin/dashboard/UserGrowthChart';
-import { TimeRangeSelector } from '@/src/components/admin/dashboard/TimeRangeSelector';
-import { ViewTypeSelector, ViewType } from '@/src/components/admin/dashboard/ViewTypeSelector';
-import { useDashboardData, useExportStatistics } from '@/src/features/admin/hooks/useDashboard';
-import { PopularBooksTable } from '@/src/components/admin/dashboard/PopularBooksTable';
-import { GenreDistributionChart } from '@/src/components/admin/dashboard/GenreDistributionChart';
+import { StatCard } from '@/components/admin/dashboard/StatCard';
+import { UserGrowthChart } from '@/components/admin/dashboard/UserGrowthChart';
+import { TimeRangeSelector } from '@/components/admin/dashboard/TimeRangeSelector';
+import { ViewTypeSelector, ViewType } from '@/components/admin/dashboard/ViewTypeSelector';
+import { useDashboardData, useExportStatistics } from '@/features/admin/hooks/useDashboard';
+import { PopularBooksTable } from '@/components/admin/dashboard/PopularBooksTable';
+import { GenreDistributionChart } from '@/components/admin/dashboard/GenreDistributionChart';
 
 export default function AdminPage() {
   const router = useRouter();

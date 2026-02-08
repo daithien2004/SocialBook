@@ -1,9 +1,9 @@
 'use client';
 import { cn } from '@/lib/utils';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Book } from '@/src/features/books/types/book.interface';
-import { Chapter } from '@/src/features/chapters/types/chapter.interface';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Book } from '@/features/books/types/book.interface';
+import { Chapter } from '@/features/chapters/types/chapter.interface';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';

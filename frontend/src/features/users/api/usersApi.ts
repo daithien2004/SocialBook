@@ -1,5 +1,5 @@
-import { NESTJS_USERS_ENDPOINTS } from '@/src/constants/server-endpoints';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_USERS_ENDPOINTS } from '@/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import { createApi } from '@reduxjs/toolkit/query/react';
 import {
     SearchUsersParams,

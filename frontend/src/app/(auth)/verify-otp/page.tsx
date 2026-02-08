@@ -6,8 +6,8 @@ import { Mail, CheckCircle, ArrowLeft } from 'lucide-react';
 import {
   useResendOtpMutation,
   useVerifyOtpMutation,
-} from '@/src/features/auth/api/authApi';
-import { getErrorMessage } from '@/src/lib/utils';
+} from '@/features/auth/api/authApi';
+import { getErrorMessage } from '@/lib/utils';
 
 export default function VerifyOtpPage() {
   const router = useRouter();

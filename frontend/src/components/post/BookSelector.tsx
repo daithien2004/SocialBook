@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useGetBooksQuery } from '@/src/features/books/api/bookApi';
-import { Book, BookOrderField } from '@/src/features/books/types/book.interface';
+import { useGetBooksQuery } from '@/features/books/api/bookApi';
+import { Book, BookOrderField } from '@/features/books/types/book.interface';
 import { ChevronDown, Search, X, Loader2 } from 'lucide-react';
 
 interface BookSelectorProps {

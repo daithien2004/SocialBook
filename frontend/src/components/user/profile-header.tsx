@@ -1,6 +1,6 @@
 'use client'
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import { FollowersModal } from "@/src/components/user/FollowersModal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FollowersModal } from "@/components/user/FollowersModal";
 import { useState } from "react";
 
 interface PropsProfileHeader {

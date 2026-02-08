@@ -4,23 +4,23 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   Author,
   AuthorSchema,
-} from '@/src/modules/authors/infrastructure/schemas/author.schema';
-import { Book, BookSchema } from '@/src/modules/books/infrastructure/schemas/book.schema';
-import { Genre, GenreSchema } from '@/src/modules/genres/infrastructure/schemas/genre.schema';
-import { Review, ReviewSchema } from '@/src/modules/reviews/infrastructure/schemas/review.schema';
-import { Chapter, ChapterSchema } from '@/src/modules/chapters/infrastructure/schemas/chapter.schema';
-import { User, UserSchema } from '@/src/modules/users/infrastructure/schemas/user.schema';
-import { Role, RoleSchema } from '@/src/modules/roles/infrastructure/schemas/role.schema';
-import { TextToSpeech } from '@/src/modules/text-to-speech/domain/entities/text-to-speech.entity';
-import { Post, PostSchema } from '@/src/modules/posts/infrastructure/schemas/post.schema';
-import { Notification, NotificationSchema } from '@/src/modules/notifications/schemas/notification.schema';
-import { Progress, ProgressSchema } from '@/src/modules/progress/schemas/progress.schema';
-import { Follow, FollowSchema } from '@/src/modules/follows/infrastructure/schemas/follow.schema';
-import { Like, LikeSchema } from '@/src/modules/likes/infrastructure/schemas/like.schema';
+} from '@/infrastructure/database/schemas/author.schema';
+import { Book, BookSchema } from '@/infrastructure/database/schemas/book.schema';
+import { Genre, GenreSchema } from '@/infrastructure/database/schemas/genre.schema';
+import { Review, ReviewSchema } from '@/infrastructure/database/schemas/review.schema';
+import { Chapter, ChapterSchema } from '@/infrastructure/database/schemas/chapter.schema';
+import { User, UserSchema } from '@/infrastructure/database/schemas/user.schema';
+import { Role, RoleSchema } from '@/infrastructure/database/schemas/role.schema';
+import { TextToSpeech } from '@/domain/text-to-speech/entities/text-to-speech.entity';
+import { Post, PostSchema } from '@/infrastructure/database/schemas/post.schema';
+import { Notification, NotificationSchema } from '@/infrastructure/database/schemas/notification.schema';
+import { Progress, ProgressSchema } from '@/infrastructure/database/schemas/progress.schema';
+import { Follow, FollowSchema } from '@/infrastructure/database/schemas/follow.schema';
+import { Like, LikeSchema } from '@/infrastructure/database/schemas/like.schema';
 import {
   Comment,
   CommentSchema,
-} from '@/src/modules/comments/infrastructure/schemas/comment.schema';
+} from '@/infrastructure/database/schemas/comment.schema';
 
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
@@ -32,7 +32,7 @@ import { UsersSeed } from './users.seeder';
 import { CommentsSeed } from './comments.seeder';
 import { RolesSeed } from './roles.seed';
 import { TextToSpeechSeed } from './textToSpeech.seeder';
-import { TextToSpeechSchema } from '@/src/modules/text-to-speech/infrastructure/schemas/text-to-speech.schema';
+import { TextToSpeechSchema } from '@/infrastructure/database/schemas/text-to-speech.schema';
 
 @Module({
   imports: [
@@ -85,3 +85,4 @@ import { TextToSpeechSchema } from '@/src/modules/text-to-speech/infrastructure/
   exports: [SeederService],
 })
 export class DatabaseSeedModule { }
+

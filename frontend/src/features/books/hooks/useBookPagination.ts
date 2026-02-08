@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useGetBooksQuery } from '@/src/features/books/api/bookApi';
+import { useGetBooksQuery } from '@/features/books/api/bookApi';
 
 interface UseBookPaginationProps {
     search?: string;

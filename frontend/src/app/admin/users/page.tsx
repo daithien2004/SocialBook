@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetUsersQuery, useBanUserMutation } from '@/src/features/users/api/usersApi';
+import { useGetUsersQuery, useBanUserMutation } from '@/features/users/api/usersApi';
 import { toast } from 'sonner';
 import { Loader2, ChevronLeft, ChevronRight, Lock, Unlock, Mail, Shield, CheckCircle, XCircle } from 'lucide-react';
-import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
+import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 
 const UsersPage = () => {
     const [page, setPage] = useState(1);

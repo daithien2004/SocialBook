@@ -1,11 +1,11 @@
 'use client';
 
-import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { useGetPersonalizedRecommendationsQuery } from '@/src/features/recommendations/api/recommendationsApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { useGetPersonalizedRecommendationsQuery } from '@/features/recommendations/api/recommendationsApi';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useGetBooksQuery } from "@/src/features/books/api/bookApi";
-import { PAGINATION } from "@/src/features/books/books.constants";
+import { useGetBooksQuery } from "@/features/books/api/bookApi";
+import { PAGINATION } from "@/features/books/books.constants";
 
 export default function RecommendedBooks() {
     const { isAuthenticated } = useAppAuth();

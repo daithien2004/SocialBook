@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 
-import serverApi from '@/src/lib/server-api';
+import serverApi from '@/lib/server-api';
 import { jwtDecode } from 'jwt-decode';
 import { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';

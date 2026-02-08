@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_ANALYTICS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_ANALYTICS_ENDPOINTS } from '@/constants/server-endpoints';
 import { ReadingHeatmapData, ChapterEngagementData, ReadingSpeedData, GeographicData, ActiveUsersData } from '../types/admin.interface';
 
 export const analyticsApi = createApi({

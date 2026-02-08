@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
-import { useLazySearchUsersQuery } from '@/src/features/users/api/usersApi';
+import { useLazySearchUsersQuery } from '@/features/users/api/usersApi';
 import { useRouter } from "next/navigation";
 
 interface User {

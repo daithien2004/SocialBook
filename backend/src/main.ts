@@ -1,4 +1,4 @@
-import { Logger } from '@/src/shared/logger/logger.service';
+import { Logger } from '@/shared/logger/logger.service';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';

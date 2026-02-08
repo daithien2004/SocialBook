@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { ElementType, useEffect, useRef, useState } from 'react';
 
 import { cn, formatCompact } from '@/lib/utils';
-import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Book } from '@/src/features/books/types/book.interface';
+import AddToLibraryModal from '@/components/library/AddToLibraryModal';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Book } from '@/features/books/types/book.interface';
 
 export function BookCard({ book }: { book: Book }) {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Post } from '@/src/features/posts/types/post.interface';
-import { useUpdatePostMutation } from '@/src/features/posts/api/postApi';
+import { Post } from '@/features/posts/types/post.interface';
+import { useUpdatePostMutation } from '@/features/posts/api/postApi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
 import { toast } from "sonner";
-import { getErrorMessage } from '@/src/lib/utils';
+import { getErrorMessage } from '@/lib/utils';
 
 interface EditPostFormProps {
     post: Post;

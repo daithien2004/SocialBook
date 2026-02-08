@@ -3,8 +3,8 @@
 import {
   LoginFormValues,
   loginSchema,
-} from '@/src/features/auth/types/auth.type';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+} from '@/features/auth/types/auth.type';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
 import Image from 'next/image';
@@ -13,8 +13,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -22,8 +22,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/src/components/ui/form';
-import { Input } from '@/src/components/ui/input';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {

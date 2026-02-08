@@ -20,21 +20,21 @@ import {
   useGetBookLibraryInfoQuery,
   useGetCollectionsQuery,
   useUpdateLibraryStatusMutation,
-} from '@/src/features/library/api/libraryApi';
-import { LibraryStatus } from '@/src/features/library/types/library.interface';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+} from '@/features/library/api/libraryApi';
+import { LibraryStatus } from '@/features/library/types/library.interface';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/src/components/ui/dialog";
-import { Input } from "@/src/components/ui/input";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
-import { Separator } from "@/src/components/ui/separator";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 interface AddToLibraryModalProps {
   isOpen: boolean;

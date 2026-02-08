@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Eye, Heart, List } from "lucide-react";
-import { useGetBookStatsQuery } from "@/src/features/books/api/bookApi";
-import { formatNumber } from "@/src/lib/utils";
+import { useGetBookStatsQuery } from "@/features/books/api/bookApi";
+import { formatNumber } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 interface BookItemProps {

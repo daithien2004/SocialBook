@@ -1,21 +1,21 @@
 'use client';
 
-import EditPostForm from '@/src/components/post/EditPostForm';
-import ModalPostComment from '@/src/components/post/ModalPostComment';
-import SharePostModal from '@/src/components/post/SharePostModal';
-import { useGetCommentCountQuery } from '@/src/features/comments/api/commentApi';
+import EditPostForm from '@/components/post/EditPostForm';
+import ModalPostComment from '@/components/post/ModalPostComment';
+import SharePostModal from '@/components/post/SharePostModal';
+import { useGetCommentCountQuery } from '@/features/comments/api/commentApi';
 import {
     useGetCountQuery,
     useGetStatusQuery,
     usePostToggleLikeMutation,
-} from '@/src/features/likes/api/likeApi';
+} from '@/features/likes/api/likeApi';
 import {
     useDeletePostImageMutation,
     useDeletePostMutation,
-} from '@/src/features/posts/api/postApi';
-import { Post } from '@/src/features/posts/types/post.interface';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { getErrorMessage } from '@/src/lib/utils';
+} from '@/features/posts/api/postApi';
+import { Post } from '@/features/posts/types/post.interface';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { getErrorMessage } from '@/lib/utils';
 import {
     BookOpen,
     Edit2,
@@ -32,16 +32,16 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 // Shadcn UI
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/src/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 
 interface PostCardProps {
     post: Post;

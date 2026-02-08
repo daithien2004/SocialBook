@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_CHAPTERS_ENDPOINTS } from '@/constants/server-endpoints';
 import { Chapter, ChapterDetailData, ChapterPreview, ChaptersListData, CreateChapterParams, DeleteChapterParams, GetChapterByIdParams, GetChapterParams, GetChaptersParams, ImportChaptersParams, UpdateChapterParams } from '../types/chapter.interface';
 
 export const CHAPTER_TAGS = {

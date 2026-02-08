@@ -1,9 +1,9 @@
 'use client'
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     FollowingUser,
     useToggleFollowMutation,
-} from "@/src/features/follows/api/followApi";
+} from "@/features/follows/api/followApi";
 import { UserCheck, UserPlus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";

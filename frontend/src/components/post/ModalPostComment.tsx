@@ -1,25 +1,25 @@
 'use client';
 
-import ListComments from '@/src/components/comment/ListComments';
-import { usePostCreateMutation } from '@/src/features/comments/api/commentApi';
-import { Post } from '@/src/features/posts/types/post.interface';
-import { getErrorMessage } from '@/src/lib/utils';
+import ListComments from '@/components/comment/ListComments';
+import { usePostCreateMutation } from '@/features/comments/api/commentApi';
+import { Post } from '@/features/posts/types/post.interface';
+import { getErrorMessage } from '@/lib/utils';
 import { Heart, MessageCircle, Send, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import React, { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import SharePostModal from './SharePostModal';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import { Button } from "@/src/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "@/src/components/ui/dialog";
-import { Input } from "@/src/components/ui/input";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface ModalPostCommentProps {
     post: Post;

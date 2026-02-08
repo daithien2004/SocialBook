@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Role, RoleDocument } from '@/src/modules/roles/infrastructure/schemas/role.schema';
+import { Role, RoleDocument } from '@/infrastructure/database/schemas/role.schema';
 
 @Injectable()
 export class RolesSeed {

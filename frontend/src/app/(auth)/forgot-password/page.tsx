@@ -10,11 +10,11 @@ import {
   useForgotPasswordMutation,
   useResendOtpMutation,
   useResetPasswordMutation,
-} from '@/src/features/auth/api/authApi';
+} from '@/features/auth/api/authApi';
 import {
   ForgotPasswordFormValues,
   forgotPasswordSchema,
-} from '@/src/features/auth/types/auth.type';
+} from '@/features/auth/types/auth.type';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();

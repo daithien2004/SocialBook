@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import serverApi from '@/src/lib/server-api';
+import serverApi from '@/lib/server-api';
 import { authOptions } from '../app/api/auth/[...nextauth]/route';
 
 export async function getAuthenticatedServerApi() {

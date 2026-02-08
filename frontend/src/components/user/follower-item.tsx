@@ -1,9 +1,9 @@
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     FollowingUser,
     useToggleFollowMutation,
-} from "@/src/features/follows/api/followApi";
-import { RootState } from "@/src/store/store";
+} from "@/features/follows/api/followApi";
+import { RootState } from "@/store/store";
 import { UserCheck, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

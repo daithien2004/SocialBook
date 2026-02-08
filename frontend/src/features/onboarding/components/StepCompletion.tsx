@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/src/components/ui/button';
+import { Button } from '@/components/ui/button';
 import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';

@@ -1,9 +1,9 @@
 'use client';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent } from '@/src/components/ui/card';
-import { Book } from '@/src/features/books/types/book.interface';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Book } from '@/features/books/types/book.interface';
 import { BookOpen, Bookmark, Heart, Share2, Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

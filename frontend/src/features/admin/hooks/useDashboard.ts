@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { OverviewStats, GrowthMetric, BookStats } from '../types/dashboard.types';
 import { toast } from 'sonner';
-import { ViewType } from '@/src/components/admin/dashboard/ViewTypeSelector';
-import { NESTJS_STATISTICS_ENDPOINTS, NESTJS_ANALYTICS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { ViewType } from '@/components/admin/dashboard/ViewTypeSelector';
+import { NESTJS_STATISTICS_ENDPOINTS, NESTJS_ANALYTICS_ENDPOINTS } from '@/constants/server-endpoints';
 
-import clientApi from '@/src/lib/nestjs-client-api';
+import clientApi from '@/lib/nestjs-client-api';
 
 export function useDashboardData(timeRange: string, viewType: ViewType = 'day') {
     const [stats, setStats] = useState<OverviewStats | null>(null);

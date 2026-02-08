@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useCallback, ChangeEvent } from 'react';
-import { useCreateAuthorMutation } from '@/src/features/authors/api/authorApi';
+import { useCreateAuthorMutation } from '@/features/authors/api/authorApi';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Upload, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { getErrorMessage } from '@/src/lib/utils';
+import { getErrorMessage } from '@/lib/utils';
 
 const DEFAULT_AVATAR = '/default-avatar.png';
 

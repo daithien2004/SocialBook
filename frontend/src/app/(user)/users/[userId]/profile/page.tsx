@@ -1,11 +1,11 @@
 'use client';
 
-import { Button } from '@/src/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
     useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
     usePatchUpdateUserProfileOverviewMutation,
-} from '@/src/features/users/api/usersApi';
-import { getErrorMessage } from "@/src/lib/utils";
+} from '@/features/users/api/usersApi';
+import { getErrorMessage } from "@/lib/utils";
 import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from "sonner";

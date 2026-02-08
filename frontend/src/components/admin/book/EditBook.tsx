@@ -15,9 +15,9 @@ import {
     ChevronDown,
     Save,
 } from 'lucide-react';
-import { useUpdateBookMutation, useGetBookByIdQuery } from '@/src/features/books/api/bookApi';
-import { useGetAuthorsQuery, useGetGenresQuery } from '@/src/features/admin/api/bookRelationApi';
-import { getErrorMessage } from '@/src/lib/utils';
+import { useUpdateBookMutation, useGetBookByIdQuery } from '@/features/books/api/bookApi';
+import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
+import { getErrorMessage } from '@/lib/utils';
 
 const DEFAULT_COVER = '/abstract-book-pattern.png';
 

@@ -1,16 +1,16 @@
 'use client';
 
-import { useGetFiltersQuery } from '@/src/features/books/api/bookApi';
-import { BookCard } from '@/src/components/book/BookCard';
+import { useGetFiltersQuery } from '@/features/books/api/bookApi';
+import { BookCard } from '@/components/book/BookCard';
 import { Search } from 'lucide-react';
 
-import { useBookParams } from '@/src/features/books/hooks/useBookParams';
-import { useBookPagination } from '@/src/features/books/hooks/useBookPagination';
+import { useBookParams } from '@/features/books/hooks/useBookParams';
+import { useBookPagination } from '@/features/books/hooks/useBookPagination';
 
-import { SearchBar } from '@/src/components/book/SearchBar';
-import { FilterSection } from '@/src/components/book/FilterSection';
-import { SortDropdown } from '@/src/components/book/SortDropdown';
-import { ActiveFilters } from '@/src/components/book/ActiveFilters';
+import { SearchBar } from '@/components/book/SearchBar';
+import { FilterSection } from '@/components/book/FilterSection';
+import { SortDropdown } from '@/components/book/SortDropdown';
+import { ActiveFilters } from '@/components/book/ActiveFilters';
 
 export default function BooksPage() {
   const {

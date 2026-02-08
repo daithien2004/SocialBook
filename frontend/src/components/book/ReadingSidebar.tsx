@@ -1,10 +1,10 @@
 'use client';
 
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { useGetLibraryBooksQuery } from '@/src/features/library/api/libraryApi';
-import { LibraryStatus } from '@/src/features/library/types/library.interface';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
+import { LibraryStatus } from '@/features/library/types/library.interface';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

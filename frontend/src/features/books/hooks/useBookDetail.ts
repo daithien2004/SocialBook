@@ -1,10 +1,10 @@
 'use client';
 
-import { useGetBookBySlugQuery, useLikeBookMutation } from '@/src/features/books/api/bookApi';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
+import { useGetBookBySlugQuery, useLikeBookMutation } from '@/features/books/api/bookApi';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { toast } from 'sonner';
 import { useMemo } from 'react';
-import { getErrorMessage } from '@/src/lib/utils';
+import { getErrorMessage } from '@/lib/utils';
 
 export const useBookDetail = (bookSlug: string) => {
   const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });

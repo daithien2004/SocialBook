@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetFlaggedPostsQuery, useApprovePostMutation, useRejectPostMutation } from '@/src/features/admin/api/moderationApi';
+import { useGetFlaggedPostsQuery, useApprovePostMutation, useRejectPostMutation } from '@/features/admin/api/moderationApi';
 import { toast } from 'sonner';
 import { Loader2, ChevronLeft, ChevronRight, Check, X, AlertTriangle, User, BookOpen } from 'lucide-react';
-import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
+import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 
 const ModerationQueuePage = () => {
     const [page, setPage] = useState(1);

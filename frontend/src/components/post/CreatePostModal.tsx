@@ -1,12 +1,12 @@
 'use client';
 
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,10 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/src/components/ui/dialog";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
-import { Separator } from "@/src/components/ui/separator";
-import { Textarea } from "@/src/components/ui/textarea";
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface CreatePostModalProps {
   isSubmitting: boolean;

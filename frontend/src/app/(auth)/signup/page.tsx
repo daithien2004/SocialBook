@@ -1,6 +1,6 @@
 'use client';
 
-import { useSignupMutation } from '@/src/features/auth/api/authApi';
+import { useSignupMutation } from '@/features/auth/api/authApi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,13 +9,13 @@ import { useState } from 'react';
 import {
   SignupFormValues,
   signupSchema,
-} from '@/src/features/auth/types/auth.type';
-import { getErrorMessage } from '@/src/lib/utils';
+} from '@/features/auth/types/auth.type';
+import { getErrorMessage } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -23,8 +23,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/src/components/ui/form';
-import { Input } from '@/src/components/ui/input';
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignupPage() {

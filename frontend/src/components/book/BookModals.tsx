@@ -1,6 +1,6 @@
-import { Book } from '@/src/features/books/types/book.interface';
-import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
-import CreatePostModal from '@/src/components/post/CreatePostModal';
+import { Book } from '@/features/books/types/book.interface';
+import AddToLibraryModal from '@/components/library/AddToLibraryModal';
+import CreatePostModal from '@/components/post/CreatePostModal';
 
 interface BookModalsProps {
   book: Book;

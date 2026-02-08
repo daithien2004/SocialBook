@@ -1,8 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { useGetDailyGoalQuery } from '@/src/features/gamification/api/gamificationApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGetDailyGoalQuery } from '@/features/gamification/api/gamificationApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { Target, Trophy } from 'lucide-react';
 
 export function DailyGoalWidget() {

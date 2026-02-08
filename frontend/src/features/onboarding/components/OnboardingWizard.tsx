@@ -9,9 +9,9 @@ import {
   useCompleteOnboardingMutation,
   useStartOnboardingMutation,
 } from '../api/onboardingApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { useDispatch } from 'react-redux';
-import { gamificationApi } from '@/src/features/gamification/api/gamificationApi';
+import { gamificationApi } from '@/features/gamification/api/gamificationApi';
 import StepGenreSelection from './StepGenreSelection';
 import StepReadingGoals from './StepReadingGoals';
 import StepReadingHabits from './StepReadingHabits';

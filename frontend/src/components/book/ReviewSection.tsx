@@ -1,17 +1,17 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Button } from '@/src/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Textarea } from '@/src/components/ui/textarea';
-import { BOOK_TAGS, booksApi } from '@/src/features/books/api/bookApi';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { BOOK_TAGS, booksApi } from '@/features/books/api/bookApi';
 import {
   useCreateReviewMutation,
   useGetReviewsByBookQuery,
   useToggleLikeReviewMutation,
-} from '@/src/features/reviews/api/reviewApi';
-import { getErrorMessage } from '@/src/lib/utils';
+} from '@/features/reviews/api/reviewApi';
+import { getErrorMessage } from '@/lib/utils';
 import { Heart, MessageCircle, Send, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';

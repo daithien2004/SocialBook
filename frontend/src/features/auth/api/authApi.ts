@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_AUTH_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_AUTH_ENDPOINTS } from '@/constants/server-endpoints';
 import { User } from 'next-auth';
 import { SignupRequest, VerifyOtpRequest, ForgotPasswordRequest, ResetPasswordRequest, ResendOtpRequest } from '../types/auth.type';
 

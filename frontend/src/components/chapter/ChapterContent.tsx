@@ -2,13 +2,13 @@
 
 import CreatePostModal, {
   CreatePostData,
-} from '@/src/components/post/CreatePostModal';
-import { Button } from '@/src/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/src/components/ui/tooltip';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { getErrorMessage } from '@/src/lib/utils';
-import { useReadingSettings } from '@/src/store/useReadingSettings';
+} from '@/components/post/CreatePostModal';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { getErrorMessage } from '@/lib/utils';
+import { useReadingSettings } from '@/store/useReadingSettings';
 import { MessageSquarePlus, Share2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';

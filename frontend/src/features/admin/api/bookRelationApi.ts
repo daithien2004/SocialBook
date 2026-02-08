@@ -1,5 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import { AuthorOption, GenreOption } from '../types/bookRelation.interface';
 
 export const bookRelationApi = createApi({

@@ -1,9 +1,9 @@
 'use client';
 
 import { formatCompact } from '@/lib/utils';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Book } from '@/src/features/books/types/book.interface';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Book } from '@/features/books/types/book.interface';
 import { BookOpen, ChevronLeft, ChevronRight, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';

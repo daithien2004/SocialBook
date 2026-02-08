@@ -1,10 +1,10 @@
 'use client';
 
-import ListComments from '@/src/components/comment/ListComments';
-import { Separator } from '@/src/components/ui/separator';
-import { useGetCommentCountQuery, usePostCreateMutation } from '@/src/features/comments/api/commentApi';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
-import { getErrorMessage } from '@/src/lib/utils';
+import ListComments from '@/components/comment/ListComments';
+import { Separator } from '@/components/ui/separator';
+import { useGetCommentCountQuery, usePostCreateMutation } from '@/features/comments/api/commentApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import { getErrorMessage } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';

@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { HeaderClient } from '@/src/components/HeaderClient';
+import { HeaderClient } from '@/components/HeaderClient';
 
-import { useBookDetail } from '@/src/features/books/hooks/useBookDetail';
+import { useBookDetail } from '@/features/books/hooks/useBookDetail';
 import { BookHero } from './BookHero';
 import { BookDescription } from './BookDescription';
 import { BookSidebar } from './BookSidebar';

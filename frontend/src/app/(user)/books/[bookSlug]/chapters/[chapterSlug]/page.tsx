@@ -16,26 +16,26 @@ import {
 } from 'lucide-react';
 
 // --- IMPORTS THƯ VIỆN & COMPONENT ---
-import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
+import AddToLibraryModal from '@/components/library/AddToLibraryModal';
 import {
   useGetChapterQuery,
   useGetChaptersQuery,
-} from '@/src/features/chapters/api/chaptersApi';
+} from '@/features/chapters/api/chaptersApi';
 import CreatePostModal, {
   CreatePostData,
-} from '@/src/components/post/CreatePostModal';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
-import ChapterNavigation from '@/src/components/chapter/ChapterNavigation';
-import CommentSection from '@/src/components/chapter/CommentSection';
-import ChapterHeader from '@/src/components/chapter/ChapterHeader';
-import { ChapterContent } from '@/src/components/chapter/ChapterContent';
-import { useReadingProgress } from '@/src/hooks/useReadingProgress';
-import AudiobookView from '@/src/components/chapter/AudiobookView';
-import ChapterSummaryModal from '@/src/components/chapter/ChapterSummaryModal';
-import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
-import ChapterListDrawer from '@/src/components/book/ChapterListDrawer';
-import { ReadingTimeTracker } from '@/src/features/books/components/ReadingTimeTracker';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+} from '@/components/post/CreatePostModal';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
+import ChapterNavigation from '@/components/chapter/ChapterNavigation';
+import CommentSection from '@/components/chapter/CommentSection';
+import ChapterHeader from '@/components/chapter/ChapterHeader';
+import { ChapterContent } from '@/components/chapter/ChapterContent';
+import { useReadingProgress } from '@/hooks/useReadingProgress';
+import AudiobookView from '@/components/chapter/AudiobookView';
+import ChapterSummaryModal from '@/components/chapter/ChapterSummaryModal';
+import ReadingSettingsPanel from '@/components/chapter/ReadingSettingsPanel';
+import ChapterListDrawer from '@/components/book/ChapterListDrawer';
+import { ReadingTimeTracker } from '@/features/books/components/ReadingTimeTracker';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 interface ChapterPageProps {
   params: Promise<{

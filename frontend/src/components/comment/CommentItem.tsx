@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import {
     CornerDownRight,
     Heart,
@@ -17,26 +17,26 @@ import {
     useEditCommentMutation, useGetReplyCountByParentQuery,
     useLazyGetResolveParentQuery,
     usePostCreateMutation,
-} from '@/src/features/comments/api/commentApi';
+} from '@/features/comments/api/commentApi';
 
 import {
     useGetCountQuery,
     useGetStatusQuery,
     usePostToggleLikeMutation,
-} from '@/src/features/likes/api/likeApi';
+} from '@/features/likes/api/likeApi';
 
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
-import { Button } from '@/src/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '@/src/components/ui/dropdown-menu';
-import { Input } from '@/src/components/ui/input';
-import { CommentItem } from '@/src/features/comments/types/comment.interface';
-import { getErrorMessage } from '@/src/lib/utils';
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { CommentItem } from '@/features/comments/types/comment.interface';
+import { getErrorMessage } from '@/lib/utils';
 import { toast } from "sonner";
 
 interface CommentItemProps {

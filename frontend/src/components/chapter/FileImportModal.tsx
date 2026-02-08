@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Loader2, Upload, Check, X, Eye } from 'lucide-react';
-import { useImportChaptersPreviewMutation } from '@/src/features/chapters/api/chaptersApi';
-import { getErrorMessage } from '@/src/lib/utils';
+import { useImportChaptersPreviewMutation } from '@/features/chapters/api/chaptersApi';
+import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface FileImportModalProps {

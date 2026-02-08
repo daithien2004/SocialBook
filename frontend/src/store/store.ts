@@ -1,12 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../features/auth/slice/authSlice';
 import { authApi } from '../features/auth/api/authApi';
-import { postApi } from '@/src/features/posts/api/postApi';
+import { postApi } from '@/features/posts/api/postApi';
 import { booksApi } from '../features/books/api/bookApi';
-import { commentApi } from '@/src/features/comments/api/commentApi';
+import { commentApi } from '@/features/comments/api/commentApi';
 import { chaptersApi } from '../features/chapters/api/chaptersApi';
 import { bookRelationApi } from '../features/admin/api/bookRelationApi';
-import { followApi } from '@/src/features/follows/api/followApi';
+import { followApi } from '@/features/follows/api/followApi';
 import { reviewApi } from '../features/reviews/api/reviewApi';
 import { libraryApi } from '../features/library/api/libraryApi';
 import { usersApi } from '../features/users/api/usersApi';
@@ -15,7 +15,7 @@ import { authorApi } from '../features/authors/api/authorApi';
 import { genreApi } from '../features/genres/api/genreApi';
 import { analyticsApi } from '../features/admin/api/analyticsApi';
 import { setupListeners } from '@reduxjs/toolkit/query';
-import { likeApi } from '@/src/features/likes/api/likeApi';
+import { likeApi } from '@/features/likes/api/likeApi';
 import { geminiApi } from '../features/gemini/api/geminiApi';
 import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
 import {

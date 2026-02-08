@@ -1,6 +1,6 @@
 'use client';
 
-import { Book } from '@/src/features/books/types/book.interface';
+import { Book } from '@/features/books/types/book.interface';
 import { BookCard } from './BookCard';
 import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';

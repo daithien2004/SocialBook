@@ -5,10 +5,10 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from "@/src/components/ui/dialog";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
-import FollowerItem from "@/src/components/user/follower-item";
-import { useGetFollowersListQuery } from "@/src/features/follows/api/followApi";
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import FollowerItem from "@/components/user/follower-item";
+import { useGetFollowersListQuery } from "@/features/follows/api/followApi";
 import { useParams } from "next/navigation";
 
 type FollowersModalProps = {

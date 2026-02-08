@@ -1,14 +1,14 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import PostCard from '@/src/components/post/PostCard';
-import { Alert, AlertDescription, AlertTitle } from '@/src/components/ui/alert';
-import { Button } from '@/src/components/ui/button';
-import { Spinner } from '@/src/components/ui/spinner';
-import { ToggleGroup, ToggleGroupItem } from '@/src/components/ui/toggle-group';
-import { useGetPostsQuery } from '@/src/features/posts/api/postApi';
-import { Post } from '@/src/features/posts/types/post.interface';
-import { useUIStore } from '@/src/store/useUIStore';
+import PostCard from '@/components/post/PostCard';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useGetPostsQuery } from '@/features/posts/api/postApi';
+import { Post } from '@/features/posts/types/post.interface';
+import { useUIStore } from '@/store/useUIStore';
 import { AlertCircle, ArrowUp, LayoutGrid, List } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 

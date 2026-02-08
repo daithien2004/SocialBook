@@ -1,5 +1,5 @@
-import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { NESTJS_BOOKS_ENDPOINTS } from '@/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { buildLikeBookInvalidationTags, buildListTags, buildUpdateBookInvalidationTags } from '../books.helpers';
 import { AdminBooksData, Book, BookForAdmin, BookStats, FiltersData, GetAdminBooksParams, GetBookParams, GetBooksParams, PaginatedData, UpdateBookParams } from '../types/book.interface';
