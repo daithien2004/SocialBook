@@ -45,6 +45,9 @@ export class UserOnboarding {
 
   @Prop()
   completedAt: Date;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const UserOnboardingSchema = SchemaFactory.createForClass(UserOnboarding);

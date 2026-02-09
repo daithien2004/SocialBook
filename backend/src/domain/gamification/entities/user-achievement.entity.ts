@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Entity } from '@/shared/domain/entity.base';
 import { AchievementId } from '../value-objects/achievement-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { XP } from '../value-objects/xp.vo';
@@ -14,14 +14,11 @@ export class UserAchievementId {
         if (!id || id.trim().length === 0) {
             throw new Error('UserAchievement ID cannot be empty');
         }
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid UserAchievement ID format');
-        }
         return new UserAchievementId(id);
     }
 
     static generate(): UserAchievementId {
-        return new UserAchievementId(new Types.ObjectId().toString());
+        return new UserAchievementId(crypto.randomUUID());
     }
 
     toString(): string {
@@ -33,18 +30,20 @@ export class UserAchievementId {
     }
 }
 
-export class UserAchievement {
+export class UserAchievement extends Entity<UserAchievementId> {
     private constructor(
-        public readonly id: UserAchievementId,
+        id: UserAchievementId,
         private _userId: UserId,
         private _achievementId: AchievementId,
         private _progress: number,
         private _isUnlocked: boolean,
         private _unlockedAt: Date | null,
         private _rewardXP: XP,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -58,9 +57,7 @@ export class UserAchievement {
             0,
             false,
             null,
-            XP.create(props.rewardXP || 0),
-            new Date(),
-            new Date()
+            XP.create(props.rewardXP || 0)
         );
     }
 
@@ -112,25 +109,21 @@ export class UserAchievement {
         return this._rewardXP;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     updateProgress(progress: number): void {
         this._progress = Math.max(0, progress);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     incrementProgress(amount: number = 1): void {
         this._progress += amount;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     unlock(): void {
         if (!this._isUnlocked) {
             this._isUnlocked = true;
             this._unlockedAt = new Date();
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 

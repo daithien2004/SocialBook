@@ -7,6 +7,7 @@ import { Achievement as AchievementEntity } from '@/domain/gamification/entities
 import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
 import { AchievementCode } from '@/domain/gamification/value-objects/achievement-code.vo';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { AchievementMapper } from './achievement.mapper';
 
 @Injectable()
 export class AchievementRepository implements IAchievementRepository {
@@ -116,29 +117,11 @@ export class AchievementRepository implements IAchievementRepository {
     }
 
     private mapToEntity(document: any): AchievementEntity {
-        return AchievementEntity.reconstitute({
-            id: document._id.toString(),
-            code: document.code,
-            name: document.name,
-            description: document.description,
-            category: document.category,
-            requirement: document.requirement,
-            isActive: document.isActive,
-            createdAt: document.createdAt,
-            updatedAt: document.updatedAt
-        });
+        return AchievementMapper.toDomain(document);
     }
 
     private mapToDocument(achievement: AchievementEntity): Partial<AchievementDocument> {
-        return {
-            code: achievement.code.toString(),
-            name: achievement.name,
-            description: achievement.description,
-            category: achievement.category,
-            requirement: achievement.requirement,
-            isActive: achievement.isActive,
-            updatedAt: achievement.updatedAt
-        };
+        return AchievementMapper.toPersistence(achievement);
     }
 }
 

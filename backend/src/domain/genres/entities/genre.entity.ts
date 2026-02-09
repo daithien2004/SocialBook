@@ -1,16 +1,19 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { GenreId } from '../value-objects/genre-id.vo';
 import { GenreName } from '../value-objects/genre-name.vo';
 import slugify from 'slugify';
 
-export class Genre {
+export class Genre extends Entity<GenreId> {
     private constructor(
-        public readonly id: GenreId,           
+        id: GenreId,           
         private _name: GenreName,              
         private _slug: string,                
         private _description: string,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         name: string;
@@ -23,9 +26,7 @@ export class Genre {
             GenreId.generate(),
             name,
             slug,
-            props.description?.trim() || '',
-            new Date(),
-            new Date()
+            props.description?.trim() || ''
         );
     }
 
@@ -59,20 +60,16 @@ export class Genre {
         return this._description;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     changeName(newName: string): void {
         const name = GenreName.create(newName);
         this._name = name;
         this._slug = Genre.generateSlug(newName);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateDescription(description: string): void {
         this._description = description.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     private static generateSlug(name: string): string {

@@ -1,3 +1,4 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { CommentId } from '../value-objects/comment-id.vo';
 import { CommentContent } from '../value-objects/comment-content.vo';
 import { UserId } from '../value-objects/user-id.vo';
@@ -5,9 +6,9 @@ import { TargetId } from '../value-objects/target-id.vo';
 import { CommentTargetType } from '../value-objects/comment-target-type.vo';
 import { ModerationStatus } from '../value-objects/moderation-status.vo';
 
-export class Comment {
+export class Comment extends Entity<CommentId> {
     private constructor(
-        public readonly id: CommentId,
+        id: CommentId,
         private _userId: UserId,
         private _targetType: CommentTargetType,
         private _targetId: TargetId,
@@ -17,9 +18,11 @@ export class Comment {
         private _isFlagged: boolean,
         private _moderationReason: string,
         private _moderationStatus: ModerationStatus,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -50,9 +53,7 @@ export class Comment {
             props.likesCount || 0,
             props.isFlagged || false,
             props.moderationReason || '',
-            moderationStatus,
-            new Date(),
-            new Date()
+            moderationStatus
         );
     }
 
@@ -123,73 +124,69 @@ export class Comment {
         return this._moderationStatus;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     // Business methods
     updateContent(newContent: string): void {
         this._content = CommentContent.create(newContent);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateLikesCount(newLikesCount: number): void {
         this._likesCount = Math.max(0, newLikesCount);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     incrementLikes(): void {
         this._likesCount += 1;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     decrementLikes(): void {
         if (this._likesCount > 0) {
             this._likesCount -= 1;
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 
     flag(reason: string): void {
         this._isFlagged = true;
         this._moderationReason = reason.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     unflag(): void {
         this._isFlagged = false;
         this._moderationReason = '';
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     approve(): void {
         this._moderationStatus = ModerationStatus.approved();
         this._isFlagged = false;
         this._moderationReason = '';
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     reject(reason: string): void {
         this._moderationStatus = ModerationStatus.rejected();
         this._isFlagged = true;
         this._moderationReason = reason.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     setParent(parentId: string): void {
         this._parentId = CommentId.create(parentId);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     removeParent(): void {
         this._parentId = null;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     changeTarget(newTargetType: string, newTargetId: string): void {
         this._targetType = CommentTargetType.create(newTargetType);
         this._targetId = TargetId.create(newTargetId);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     getContentPreview(maxLength: number = 200): string {

@@ -26,10 +26,7 @@ export class UpdatePostUseCase {
             const reason = moderationResult.reason || 'Nội dung không phù hợp';
             post.flag(reason);
         } else {
-            post.approve();
-            post.isFlagged = false;
-            post.moderationReason = undefined;
-            post.moderationStatus = undefined;
+            post.clearModeration();
         }
         post.updateContent(dto.content);
     }
@@ -37,7 +34,7 @@ export class UpdatePostUseCase {
     if (dto.bookId) {
         const bookExists = await this.bookRepository.existsById(dto.bookId);
         if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
-        post.bookId = dto.bookId;
+        post.updateBookId(dto.bookId);
     }
 
     if (files && files.length > 0) {

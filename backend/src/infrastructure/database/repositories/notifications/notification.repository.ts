@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { INotificationRepository } from '@/domain/notifications/repositories/notification.repository.interface';
 import { Notification } from '@/domain/notifications/entities/notification.entity';
 import { NotificationDocument, Notification as NotificationSchemaClass } from '../../schemas/notification.schema';
+import { NotificationMapper } from './notification.mapper';
 
 @Injectable()
 export class NotificationRepository implements INotificationRepository {
@@ -58,33 +59,11 @@ export class NotificationRepository implements INotificationRepository {
   }
 
   private mapToDomain(doc: any): Notification {
-    return new Notification(
-      doc._id.toString(),
-      doc.userId.toString(),
-      doc.title,
-      doc.message,
-      doc.type,
-      doc.isRead,
-      doc.sentAt,
-      doc.actionUrl,
-      doc.meta,
-      doc.createdAt,
-      doc.updatedAt,
-    );
+    return NotificationMapper.toDomain(doc);
   }
 
   private mapToPersistence(entity: Notification): any {
-    return {
-      _id: entity.id && Types.ObjectId.isValid(entity.id) ? new Types.ObjectId(entity.id) : undefined,
-      userId: new Types.ObjectId(entity.userId),
-      title: entity.title,
-      message: entity.message,
-      type: entity.type,
-      isRead: entity.isRead,
-      sentAt: entity.sentAt,
-      actionUrl: entity.actionUrl,
-      meta: entity.meta,
-    };
+    return NotificationMapper.toPersistence(entity);
   }
 }
 

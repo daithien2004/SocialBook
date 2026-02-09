@@ -1,3 +1,4 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
@@ -8,17 +9,19 @@ export enum ReadingStatus {
     ARCHIVED = 'ARCHIVED',
 }
 
-export class ReadingList {
+export class ReadingList extends Entity<string> {
     private constructor(
-        public readonly id: string,
+        id: string,
         private _userId: UserId,
         private _bookId: BookId,
         private _status: ReadingStatus,
         private _lastReadChapterId: ChapterId | null,
         private _collectionIds: string[],
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -33,9 +36,7 @@ export class ReadingList {
             BookId.create(props.bookId),
             props.status || ReadingStatus.READING,
             props.lastReadChapterId ? ChapterId.create(props.lastReadChapterId) : null,
-            props.collectionIds || [],
-            new Date(),
-            new Date()
+            props.collectionIds || []
         );
     }
 
@@ -81,29 +82,25 @@ export class ReadingList {
         return [...this._collectionIds];
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     updateStatus(status: ReadingStatus): void {
         this._status = status;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateLastReadChapter(chapterId: string): void {
         this._lastReadChapterId = ChapterId.create(chapterId);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateCollections(collectionIds: string[]): void {
         this._collectionIds = [...collectionIds];
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     addCollection(collectionId: string): void {
         if (!this._collectionIds.includes(collectionId)) {
             this._collectionIds.push(collectionId);
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 
@@ -111,7 +108,7 @@ export class ReadingList {
         const index = this._collectionIds.indexOf(collectionId);
         if (index > -1) {
             this._collectionIds.splice(index, 1);
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 

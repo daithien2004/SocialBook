@@ -7,6 +7,7 @@ import { UserAchievement as UserAchievementEntity, UserAchievementId } from '@/d
 import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
 import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { UserAchievementMapper } from './user-achievement.mapper';
 
 @Injectable()
 export class UserAchievementRepository implements IUserAchievementRepository {
@@ -172,29 +173,11 @@ export class UserAchievementRepository implements IUserAchievementRepository {
     }
 
     private mapToEntity(document: any): UserAchievementEntity {
-        return UserAchievementEntity.reconstitute({
-            id: document._id.toString(),
-            userId: document.userId?.toString() || '',
-            achievementId: document.achievementId?.toString() || '',
-            progress: document.progress || 0,
-            isUnlocked: document.isUnlocked || false,
-            unlockedAt: document.unlockedAt || null,
-            rewardXP: document.rewardXP || 0,
-            createdAt: document.createdAt,
-            updatedAt: document.updatedAt
-        });
+        return UserAchievementMapper.toDomain(document);
     }
 
     private mapToDocument(userAchievement: UserAchievementEntity): Partial<UserAchievementDocument> {
-        return {
-            userId: new Types.ObjectId(userAchievement.userId.toString()),
-            achievementId: new Types.ObjectId(userAchievement.achievementId.toString()),
-            progress: userAchievement.progress,
-            isUnlocked: userAchievement.isUnlocked,
-            unlockedAt: userAchievement.unlockedAt || undefined,
-            rewardXP: userAchievement.rewardXP.getValue(),
-            updatedAt: userAchievement.updatedAt
-        };
+        return UserAchievementMapper.toPersistence(userAchievement);
     }
 }
 

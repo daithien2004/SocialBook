@@ -7,6 +7,7 @@ import { UserGamification as UserGamificationEntity } from '@/domain/gamificatio
 import { UserGamificationId } from '@/domain/gamification/value-objects/user-gamification-id.vo';
 import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { UserGamificationMapper } from './user-gamification.mapper';
 
 @Injectable()
 export class UserGamificationRepository implements IUserGamificationRepository {
@@ -122,29 +123,11 @@ export class UserGamificationRepository implements IUserGamificationRepository {
     }
 
     private mapToEntity(document: any): UserGamificationEntity {
-        return UserGamificationEntity.reconstitute({
-            id: document._id.toString(),
-            userId: document.userId?.toString() || '',
-            currentStreak: document.currentStreak || 0,
-            longestStreak: document.longestStreak || 0,
-            lastReadDate: document.lastReadDate || null,
-            streakFreezeCount: document.streakFreezeCount || 2,
-            totalXP: document.totalXP || 0,
-            createdAt: document.createdAt,
-            updatedAt: document.updatedAt
-        });
+        return UserGamificationMapper.toDomain(document);
     }
 
     private mapToDocument(gamification: UserGamificationEntity): Partial<UserGamificationDocument> {
-        return {
-            userId: new Types.ObjectId(gamification.userId.toString()),
-            currentStreak: gamification.streak.getCurrent(),
-            longestStreak: gamification.streak.getLongest(),
-            lastReadDate: gamification.lastReadDate ?? undefined,
-            streakFreezeCount: gamification.streakFreezeCount,
-            totalXP: gamification.totalXP.getValue(),
-            updatedAt: gamification.updatedAt
-        };
+        return UserGamificationMapper.toPersistence(gamification);
     }
 }
 

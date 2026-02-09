@@ -8,6 +8,7 @@ import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { IReadingPreferences } from '@/domain/users/value-objects/reading-preferences.vo';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { UserMapper } from './user.mapper';
 
 interface UserPersistence {
     _id: Types.ObjectId;
@@ -35,49 +36,11 @@ export class UsersRepository implements IUserRepository {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
     private toDomain(doc: UserDocument): UserEntity {
-        return UserEntity.reconstitute({
-            id: doc._id.toString(),
-            roleId: doc.roleId.toString(),
-            username: doc.username,
-            email: doc.email,
-            password: doc.password,
-            isVerified: doc.isVerified,
-            isBanned: doc.isBanned,
-            provider: doc.provider,
-            providerId: doc.providerId,
-            image: doc.image,
-            bio: doc.bio,
-            location: doc.location,
-            website: doc.website,
-            hashedRt: doc.hashedRt,
-            onboardingCompleted: doc.onboardingCompleted,
-            readingPreferences: doc.readingPreferences,
-            createdAt: doc.createdAt,
-            updatedAt: doc.updatedAt,
-        });
+        return UserMapper.toDomain(doc);
     }
 
     private toPersistence(entity: UserEntity): UserPersistence {
-        return {
-            _id: new Types.ObjectId(entity.id.toString()),
-            roleId: new Types.ObjectId(entity.roleId),
-            username: entity.username,
-            email: entity.email.toString(),
-            password: entity.password,
-            isVerified: entity.isVerified,
-            isBanned: entity.isBanned,
-            provider: entity.provider,
-            providerId: entity.providerId,
-            image: entity.image,
-            bio: entity.bio,
-            location: entity.location,
-            website: entity.website,
-            hashedRt: entity.hashedRt,
-            onboardingCompleted: entity.onboardingCompleted,
-            readingPreferences: entity.readingPreferences,
-            createdAt: entity.createdAt,
-            updatedAt: entity.updatedAt,
-        };
+        return UserMapper.toPersistence(entity);
     }
 
     async findById(id: UserId): Promise<UserEntity | null> {
