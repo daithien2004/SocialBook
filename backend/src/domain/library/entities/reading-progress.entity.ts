@@ -1,3 +1,4 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
@@ -8,9 +9,9 @@ export enum ChapterStatus {
     COMPLETED = 'COMPLETED',
 }
 
-export class ReadingProgress {
+export class ReadingProgress extends Entity<string> {
     private constructor(
-        public readonly id: string,
+        id: string,
         private _userId: UserId,
         private _bookId: BookId,
         private _chapterId: ChapterId,
@@ -18,9 +19,11 @@ export class ReadingProgress {
         private _status: ChapterStatus,
         private _timeSpent: number,
         private _lastReadAt: Date | null,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -38,9 +41,7 @@ export class ReadingProgress {
             props.progress || 0,
             props.status || ChapterStatus.NOT_STARTED,
             props.timeSpent || 0,
-            null,
-            new Date(),
-            new Date()
+            null
         );
     }
 
@@ -98,28 +99,24 @@ export class ReadingProgress {
         return this._lastReadAt;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     updateProgress(progress: number): void {
         this._progress = Math.max(0, Math.min(100, progress));
         this._status = this._progress >= 80 ? ChapterStatus.COMPLETED : 
                       this._progress > 0 ? ChapterStatus.IN_PROGRESS : ChapterStatus.NOT_STARTED;
         this._lastReadAt = new Date();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     addTimeSpent(seconds: number): void {
         this._timeSpent += Math.max(0, seconds);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     markAsCompleted(): void {
         this._progress = 100;
         this._status = ChapterStatus.COMPLETED;
         this._lastReadAt = new Date();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     isCompleted(): boolean {

@@ -1,19 +1,22 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { UserGamificationId } from '../value-objects/user-gamification-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { Streak } from '../value-objects/streak.vo';
 import { XP } from '../value-objects/xp.vo';
 
-export class UserGamification {
+export class UserGamification extends Entity<UserGamificationId> {
     private constructor(
-        public readonly id: UserGamificationId,
+        id: UserGamificationId,
         private _userId: UserId,
         private _streak: Streak,
         private _lastReadDate: Date | null,
         private _streakFreezeCount: number,
         private _totalXP: XP,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -27,9 +30,7 @@ export class UserGamification {
             Streak.create(props.currentStreak || 0, props.longestStreak || 0),
             null,
             props.streakFreezeCount || 2,
-            XP.zero(),
-            new Date(),
-            new Date()
+            XP.zero()
         );
     }
 
@@ -76,10 +77,6 @@ export class UserGamification {
         return this._totalXP;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     recordReading(date: Date = new Date()): void {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -113,18 +110,18 @@ export class UserGamification {
         }
 
         this._lastReadDate = date;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     addXP(xp: number): void {
         this._totalXP = this._totalXP.add(XP.create(xp));
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     useStreakFreeze(): boolean {
         if (this._streakFreezeCount > 0) {
             this._streakFreezeCount--;
-            this._updatedAt = new Date();
+            this.markAsUpdated();
             return true;
         }
         return false;
@@ -132,7 +129,7 @@ export class UserGamification {
 
     replenishStreakFreeze(count: number = 1): void {
         this._streakFreezeCount += count;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     getLevel(): number {

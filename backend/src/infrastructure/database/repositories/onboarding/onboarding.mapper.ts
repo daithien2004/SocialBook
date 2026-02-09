@@ -1,28 +1,41 @@
-import { Onboarding } from '@/domain/onboarding/entities/onboarding.entity';
-import { UserOnboardingDocument } from '@/infrastructure/database/schemas/user-onboarding.schema';
+import { Onboarding, ReadingTime } from '@/domain/onboarding/entities/onboarding.entity';
+import { UserOnboardingDocument, UserOnboarding } from '@/infrastructure/database/schemas/user-onboarding.schema';
 import { Types } from 'mongoose';
+
+interface OnboardingPersistence {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  isCompleted: boolean;
+  currentStep: number;
+  favoriteGenres: Types.ObjectId[];
+  readingGoalType: string;
+  readingGoalTarget: number;
+  readingGoalUnit: string;
+  readingTime: ReadingTime;
+  completedAt?: Date;
+}
 
 export class OnboardingMapper {
   static toDomain(document: UserOnboardingDocument | null): Onboarding | null {
     if (!document) return null;
     
-    return new Onboarding(
-      document._id.toString(),
-      document.userId.toString(),
-      document.isCompleted,
-      document.currentStep,
-      document.favoriteGenres ? document.favoriteGenres.map(id => id.toString()) : [],
-      document.readingGoalType,
-      document.readingGoalTarget,
-      document.readingGoalUnit,
-      document.readingTime,
-      document.completedAt,
-      (document as any).createdAt,
-      (document as any).updatedAt
-    );
+    return Onboarding.reconstitute({
+      id: document._id.toString(),
+      userId: document.userId.toString(),
+      isCompleted: document.isCompleted,
+      currentStep: document.currentStep,
+      favoriteGenres: document.favoriteGenres ? document.favoriteGenres.map(id => id.toString()) : [],
+      readingGoalType: document.readingGoalType,
+      readingGoalTarget: document.readingGoalTarget,
+      readingGoalUnit: document.readingGoalUnit,
+      readingTime: document.readingTime,
+      completedAt: document.completedAt,
+      createdAt: document.createdAt,
+      updatedAt: document.updatedAt
+    });
   }
 
-  static toPersistence(entity: Onboarding): any {
+  static toPersistence(entity: Onboarding): OnboardingPersistence {
     return {
       _id: new Types.ObjectId(entity.id),
       userId: new Types.ObjectId(entity.userId),

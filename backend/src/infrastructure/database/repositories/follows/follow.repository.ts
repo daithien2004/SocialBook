@@ -8,6 +8,7 @@ import { FollowId } from '@/domain/follows/value-objects/follow-id.vo';
 import { UserId } from '@/domain/follows/value-objects/user-id.vo';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { FollowMapper } from './follow.mapper';
 
 @Injectable()
 export class FollowRepository implements IFollowRepository {
@@ -292,23 +293,11 @@ export class FollowRepository implements IFollowRepository {
     }
 
     private mapToEntity(document: any): FollowEntity {
-        return FollowEntity.reconstitute({
-            id: document._id.toString(),
-            userId: document.userId?.toString() || '',
-            targetId: document.targetId?.toString() || '',
-            status: document.status,
-            createdAt: document.createdAt,
-            updatedAt: document.updatedAt,
-        });
+        return FollowMapper.toDomain(document);
     }
 
     private mapToDocument(follow: FollowEntity): Partial<FollowDocument> {
-        return {
-            userId: new Types.ObjectId(follow.userId.toString()),
-            targetId: new Types.ObjectId(follow.targetId.toString()),
-            status: follow.status.getValue(),
-            updatedAt: follow.updatedAt,
-        };
+        return FollowMapper.toPersistence(follow);
     }
 }
 
