@@ -6,11 +6,13 @@ import { GetGenresUseCase } from './use-cases/get-genres/get-genres.use-case';
 import { UpdateGenreUseCase } from './use-cases/update-genre/update-genre.use-case';
 import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
     GenresRepositoryModule,
     BooksRepositoryModule,
+    IdGeneratorModule,
   ],
   providers: [
     CreateGenreUseCase,

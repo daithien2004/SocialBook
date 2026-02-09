@@ -29,6 +29,7 @@ export class Book extends Entity<BookId> {
     }
 
     static create(props: {
+        id: BookId;
         title: string;
         authorId: string;
         genres: string[];
@@ -45,7 +46,7 @@ export class Book extends Entity<BookId> {
         const status = props.status ? BookStatus.create(props.status) : BookStatus.draft();
         
         return new Book(
-            BookId.generate(),
+            props.id,
             title,
             slug,
             authorId,

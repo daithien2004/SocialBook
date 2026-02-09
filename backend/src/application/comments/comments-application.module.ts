@@ -5,10 +5,12 @@ import { GetCommentsUseCase } from './use-cases/get-comments/get-comments.use-ca
 import { ModerateCommentUseCase } from './use-cases/moderate-comment/moderate-comment.use-case';
 import { UpdateCommentUseCase } from './use-cases/update-comment/update-comment.use-case';
 import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
     CommentsRepositoryModule,
+    IdGeneratorModule,
   ],
   providers: [
     CreateCommentUseCase,

@@ -1,6 +1,8 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Chapter } from '@/domain/chapters/entities/chapter.entity';
+import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ChapterTitle } from '@/domain/chapters/value-objects/chapter-title.vo';
 import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { CreateChapterCommand } from './create-chapter.command';
@@ -9,7 +11,8 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 @Injectable()
 export class CreateChapterUseCase {
     constructor(
-        private readonly chapterRepository: IChapterRepository
+        private readonly chapterRepository: IChapterRepository,
+        private readonly idGenerator: IIdGenerator
     ) {}
 
     async execute(command: CreateChapterCommand): Promise<Chapter> {
@@ -37,11 +40,13 @@ export class CreateChapterUseCase {
         }
 
         const chapter = Chapter.create({
+            id: ChapterId.create(this.idGenerator.generate()),
             title: command.title,
             bookId: command.bookId,
             paragraphs: command.paragraphs,
             orderIndex: orderIndex
         });
+
 
         await this.chapterRepository.save(chapter);
 

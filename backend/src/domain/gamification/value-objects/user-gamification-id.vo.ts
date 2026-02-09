@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class UserGamificationId {
     private readonly value: string;
 
@@ -11,14 +9,7 @@ export class UserGamificationId {
         if (!id || id.trim().length === 0) {
             throw new Error('UserGamification ID cannot be empty');
         }
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid UserGamification ID format');
-        }
-        return new UserGamificationId(id);
-    }
-
-    static generate(): UserGamificationId {
-        return new UserGamificationId(new Types.ObjectId().toString());
+        return new UserGamificationId(id.trim());
     }
 
     toString(): string {
@@ -26,6 +17,7 @@ export class UserGamificationId {
     }
 
     equals(other: UserGamificationId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 }

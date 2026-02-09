@@ -1,13 +1,16 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Book } from '@/domain/books/entities/book.entity';
+import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { CreateBookCommand } from './create-book.command';
 
 @Injectable()
 export class CreateBookUseCase {
   constructor(
-    private readonly bookRepository: IBookRepository
+    private readonly bookRepository: IBookRepository,
+    private readonly idGenerator: IIdGenerator
   ) { }
 
   async execute(command: CreateBookCommand): Promise<Book> {
@@ -30,6 +33,7 @@ export class CreateBookUseCase {
     }
 
     const book = Book.create({
+      id: BookId.create(this.idGenerator.generate()),
       title: command.title,
       authorId: command.authorId,
       genres: command.genres,
@@ -39,6 +43,7 @@ export class CreateBookUseCase {
       status: command.status,
       tags: command.tags
     });
+
 
     await this.bookRepository.save(book);
 

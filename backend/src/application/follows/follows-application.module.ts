@@ -4,9 +4,13 @@ import { DeleteFollowUseCase } from './use-cases/delete-follow/delete-follow.use
 import { GetFollowStatusUseCase } from './use-cases/get-follow-status/get-follow-status.use-case';
 import { GetFollowsUseCase } from './use-cases/get-follows/get-follows.use-case';
 import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/follows/follows-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [FollowsRepositoryModule],
+  imports: [
+    FollowsRepositoryModule,
+    IdGeneratorModule,
+  ],
   providers: [
     CreateFollowUseCase,
     DeleteFollowUseCase,

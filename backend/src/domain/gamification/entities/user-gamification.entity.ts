@@ -19,13 +19,14 @@ export class UserGamification extends Entity<UserGamificationId> {
     }
 
     static create(props: {
+        id: UserGamificationId;
         userId: string;
         currentStreak?: number;
         longestStreak?: number;
         streakFreezeCount?: number;
     }): UserGamification {
         return new UserGamification(
-            UserGamificationId.generate(),
+            props.id,
             UserId.create(props.userId),
             Streak.create(props.currentStreak || 0, props.longestStreak || 0),
             null,

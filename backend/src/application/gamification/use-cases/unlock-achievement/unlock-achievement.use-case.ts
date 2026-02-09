@@ -2,7 +2,8 @@ import { Injectable, Logger, NotFoundException, ConflictException } from '@nestj
 import { IUserAchievementRepository } from '@/domain/gamification/repositories/user-achievement.repository.interface';
 import { IAchievementRepository } from '@/domain/gamification/repositories/achievement.repository.interface';
 import { IUserGamificationRepository } from '@/domain/gamification/repositories/user-gamification.repository.interface';
-import { UserAchievement } from '@/domain/gamification/entities/user-achievement.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+import { UserAchievement, UserAchievementId } from '@/domain/gamification/entities/user-achievement.entity';
 import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
 import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
 import { UnlockAchievementCommand } from './unlock-achievement.command';
@@ -14,7 +15,8 @@ export class UnlockAchievementUseCase {
     constructor(
         private readonly userAchievementRepository: IUserAchievementRepository,
         private readonly achievementRepository: IAchievementRepository,
-        private readonly userGamificationRepository: IUserGamificationRepository
+        private readonly userGamificationRepository: IUserGamificationRepository,
+        private readonly idGenerator: IIdGenerator
     ) {}
 
     async execute(command: UnlockAchievementCommand): Promise<UserAchievement> {
@@ -40,6 +42,7 @@ export class UnlockAchievementUseCase {
                 }
             } else {
                 userAchievement = UserAchievement.create({
+                    id: UserAchievementId.create(this.idGenerator.generate()),
                     userId: command.userId,
                     achievementId: command.achievementId,
                     rewardXP: achievement.requirement.value

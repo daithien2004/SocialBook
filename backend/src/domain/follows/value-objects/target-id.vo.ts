@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class TargetId {
     private readonly value: string;
 
@@ -11,13 +9,7 @@ export class TargetId {
         if (!id || id.trim().length === 0) {
             throw new Error('Target ID cannot be empty');
         }
-
-        // Validate MongoDB ObjectId format
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid Target ID format');
-        }
-
-        return new TargetId(id);
+        return new TargetId(id.trim());
     }
 
     toString(): string {
@@ -25,6 +17,7 @@ export class TargetId {
     }
 
     equals(other: TargetId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 

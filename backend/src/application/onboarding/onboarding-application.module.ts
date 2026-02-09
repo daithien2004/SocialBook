@@ -7,6 +7,7 @@ import { OnboardingRepositoryModule } from '@/infrastructure/database/repositori
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { GamificationRepositoryModule } from '@/infrastructure/database/repositories/gamification/gamification-repository.module';
 import { GamificationApplicationModule } from '../gamification/gamification-application.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { GamificationApplicationModule } from '../gamification/gamification-appl
     UsersRepositoryModule,
     GamificationRepositoryModule,
     GamificationApplicationModule,
+    IdGeneratorModule,
   ],
   providers: [
     CompleteOnboardingUseCase,

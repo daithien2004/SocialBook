@@ -5,10 +5,12 @@ import { GetChapterByIdUseCase } from './use-cases/get-chapter-by-id/get-chapter
 import { GetChaptersUseCase } from './use-cases/get-chapters/get-chapters.use-case';
 import { UpdateChapterUseCase } from './use-cases/update-chapter/update-chapter.use-case';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
     ChaptersRepositoryModule,
+    IdGeneratorModule,
   ],
   providers: [
     CreateChapterUseCase,

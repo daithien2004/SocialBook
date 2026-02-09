@@ -28,6 +28,7 @@ export class User extends Entity<UserId> {
     }
 
     static create(props: {
+        id: UserId;
         roleId: string;
         username: string;
         email: string;
@@ -39,7 +40,7 @@ export class User extends Entity<UserId> {
         const emailVO = UserEmail.create(props.email);
         
         return new User(
-            UserId.generate(),
+            props.id,
             props.roleId,
             props.username.trim(),
             emailVO,

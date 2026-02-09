@@ -24,6 +24,7 @@ import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.mo
 import { ProvidersModule } from './external/providers.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
 import { AuthInfrastructureModule } from './auth/auth-infrastructure.module';
+import { IdGeneratorModule } from './database/id/id-generator.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AuthInfrastructureModule } from './auth/auth-infrastructure.module';
     ScraperInfrastructureModule,
     ProvidersModule,
     RecommendationsInfrastructureModule,
+    IdGeneratorModule,
   ],
   exports: [
     AuthInfrastructureModule,
@@ -79,6 +81,7 @@ import { AuthInfrastructureModule } from './auth/auth-infrastructure.module';
     ScraperInfrastructureModule,
     ProvidersModule,
     RecommendationsInfrastructureModule,
+    IdGeneratorModule,
   ],
 })
 export class InfrastructureModule {}

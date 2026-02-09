@@ -25,6 +25,7 @@ export class Comment extends Entity<CommentId> {
     }
 
     static create(props: {
+        id: CommentId;
         userId: string;
         targetType: 'book' | 'chapter' | 'post' | 'author';
         targetId: string;
@@ -44,7 +45,7 @@ export class Comment extends Entity<CommentId> {
             ModerationStatus.pending();
 
         return new Comment(
-            CommentId.generate(),
+            props.id,
             userId,
             targetType,
             targetId,
@@ -220,8 +221,9 @@ export class Comment extends Entity<CommentId> {
     }
 
     // Static methods for common operations
-    static createBookComment(userId: string, targetId: string, content: string, parentId?: string): Comment {
+    static createBookComment(id: CommentId, userId: string, targetId: string, content: string, parentId?: string): Comment {
         return Comment.create({
+            id,
             userId,
             targetType: 'book',
             targetId,
@@ -230,8 +232,9 @@ export class Comment extends Entity<CommentId> {
         });
     }
 
-    static createChapterComment(userId: string, targetId: string, content: string, parentId?: string): Comment {
+    static createChapterComment(id: CommentId, userId: string, targetId: string, content: string, parentId?: string): Comment {
         return Comment.create({
+            id,
             userId,
             targetType: 'chapter',
             targetId,
@@ -240,8 +243,9 @@ export class Comment extends Entity<CommentId> {
         });
     }
 
-    static createPostComment(userId: string, targetId: string, content: string, parentId?: string): Comment {
+    static createPostComment(id: CommentId, userId: string, targetId: string, content: string, parentId?: string): Comment {
         return Comment.create({
+            id,
             userId,
             targetType: 'post',
             targetId,
@@ -250,8 +254,9 @@ export class Comment extends Entity<CommentId> {
         });
     }
 
-    static createAuthorComment(userId: string, targetId: string, content: string, parentId?: string): Comment {
+    static createAuthorComment(id: CommentId, userId: string, targetId: string, content: string, parentId?: string): Comment {
         return Comment.create({
+            id,
             userId,
             targetType: 'author',
             targetId,

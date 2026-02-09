@@ -22,6 +22,7 @@ export class Chapter extends Entity<ChapterId> {
     }
 
     static create(props: {
+        id: ChapterId;
         title: string;
         bookId: string;
         paragraphs: Array<{ id?: string; content: string }>;
@@ -41,7 +42,7 @@ export class Chapter extends Entity<ChapterId> {
         }
 
         return new Chapter(
-            ChapterId.generate(),
+            props.id,
             title,
             slug,
             bookId,

@@ -26,6 +26,7 @@ export class Achievement extends Entity<AchievementId> {
     }
 
     static create(props: {
+        id: AchievementId;
         code: string;
         name: string;
         description: string;
@@ -33,7 +34,7 @@ export class Achievement extends Entity<AchievementId> {
         requirement: AchievementRequirement;
     }): Achievement {
         return new Achievement(
-            AchievementId.generate(),
+            props.id,
             AchievementCode.create(props.code),
             props.name.trim(),
             props.description.trim(),

@@ -17,6 +17,7 @@ export class Follow extends Entity<FollowId> {
     }
 
     static create(props: {
+        id: FollowId;
         userId: string;
         targetId: string;
         status?: boolean;
@@ -30,7 +31,7 @@ export class Follow extends Entity<FollowId> {
         }
 
         return new Follow(
-            FollowId.generate(),
+            props.id,
             userId,
             targetId,
             status
@@ -108,16 +109,18 @@ export class Follow extends Entity<FollowId> {
     }
 
     // Static methods for common operations
-    static createFollow(userId: string, targetId: string): Follow {
+    static createFollow(id: FollowId, userId: string, targetId: string): Follow {
         return Follow.create({
+            id,
             userId,
             targetId,
             status: true
         });
     }
 
-    static createUnfollow(userId: string, targetId: string): Follow {
+    static createUnfollow(id: FollowId, userId: string, targetId: string): Follow {
         return Follow.create({
+            id,
             userId,
             targetId,
             status: false
