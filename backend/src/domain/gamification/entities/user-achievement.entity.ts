@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { AchievementId } from '../value-objects/achievement-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { XP } from '../value-objects/xp.vo';
+import { Entity } from '../../../shared/domain/entity.base';
 
 export class UserAchievementId {
     private readonly value: string;
@@ -33,18 +34,20 @@ export class UserAchievementId {
     }
 }
 
-export class UserAchievement {
+export class UserAchievement extends Entity<UserAchievementId> {
     private constructor(
-        public readonly id: UserAchievementId,
+        id: UserAchievementId,
         private _userId: UserId,
         private _achievementId: AchievementId,
         private _progress: number,
         private _isUnlocked: boolean,
         private _unlockedAt: Date | null,
         private _rewardXP: XP,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -88,6 +91,7 @@ export class UserAchievement {
         );
     }
 
+    // Getters
     get userId(): UserId {
         return this._userId;
     }
@@ -112,25 +116,22 @@ export class UserAchievement {
         return this._rewardXP;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
+    // Business methods
     updateProgress(progress: number): void {
         this._progress = Math.max(0, progress);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     incrementProgress(amount: number = 1): void {
         this._progress += amount;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     unlock(): void {
         if (!this._isUnlocked) {
             this._isUnlocked = true;
             this._unlockedAt = new Date();
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 
@@ -142,3 +143,4 @@ export class UserAchievement {
         return !this._isUnlocked && this._progress >= targetValue * 0.8;
     }
 }
+

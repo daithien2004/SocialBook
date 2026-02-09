@@ -1,6 +1,8 @@
+import { ReadingProgressId } from '../value-objects/reading-progress-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
+import { Entity } from '../../../shared/domain/entity.base';
 
 export enum ChapterStatus {
     NOT_STARTED = 'NOT_STARTED',
@@ -8,9 +10,9 @@ export enum ChapterStatus {
     COMPLETED = 'COMPLETED',
 }
 
-export class ReadingProgress {
+export class ReadingProgress extends Entity<ReadingProgressId> {
     private constructor(
-        public readonly id: string,
+        id: ReadingProgressId,
         private _userId: UserId,
         private _bookId: BookId,
         private _chapterId: ChapterId,
@@ -18,9 +20,11 @@ export class ReadingProgress {
         private _status: ChapterStatus,
         private _timeSpent: number,
         private _lastReadAt: Date | null,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -31,7 +35,7 @@ export class ReadingProgress {
         timeSpent?: number;
     }): ReadingProgress {
         return new ReadingProgress(
-            crypto.randomUUID(),
+            ReadingProgressId.generate(),
             UserId.create(props.userId),
             BookId.create(props.bookId),
             ChapterId.create(props.chapterId),
@@ -57,7 +61,7 @@ export class ReadingProgress {
         updatedAt: Date;
     }): ReadingProgress {
         return new ReadingProgress(
-            props.id,
+            ReadingProgressId.create(props.id),
             UserId.create(props.userId),
             BookId.create(props.bookId),
             ChapterId.create(props.chapterId),
@@ -70,6 +74,7 @@ export class ReadingProgress {
         );
     }
 
+    // Getters
     get userId(): UserId {
         return this._userId;
     }
@@ -98,28 +103,25 @@ export class ReadingProgress {
         return this._lastReadAt;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
+    // Business methods
     updateProgress(progress: number): void {
         this._progress = Math.max(0, Math.min(100, progress));
-        this._status = this._progress >= 80 ? ChapterStatus.COMPLETED : 
-                      this._progress > 0 ? ChapterStatus.IN_PROGRESS : ChapterStatus.NOT_STARTED;
+        this._status = this._progress >= 80 ? ChapterStatus.COMPLETED :
+            this._progress > 0 ? ChapterStatus.IN_PROGRESS : ChapterStatus.NOT_STARTED;
         this._lastReadAt = new Date();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     addTimeSpent(seconds: number): void {
         this._timeSpent += Math.max(0, seconds);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     markAsCompleted(): void {
         this._progress = 100;
         this._status = ChapterStatus.COMPLETED;
         this._lastReadAt = new Date();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     isCompleted(): boolean {
@@ -142,3 +144,4 @@ export class ReadingProgress {
         return Math.round(this._timeSpent / 3600 * 100) / 100;
     }
 }
+

@@ -25,13 +25,13 @@ export class RegisterUseCase {
   async execute(dto: SignupLocalDto): Promise<string> {
     const emailVO = UserEmail.create(dto.email);
     const user = await this.userRepository.findByEmail(emailVO);
-    
+
     if (user) {
       if (!user.isVerified) {
         user.updateProfile({ username: dto.username });
         if (dto.password) {
-             const hash = await bcrypt.hash(dto.password, 10);
-             user.updatePassword(hash);
+          const hash = await bcrypt.hash(dto.password, 10);
+          user.updatePassword(hash);
         }
         await this.userRepository.save(user);
 
@@ -47,12 +47,12 @@ export class RegisterUseCase {
     }
 
     const command = new CreateUserCommand(
-        dto.username,
-        dto.email,
-        dto.password,
-        userRole.id,
-        undefined,
-        'local'
+      dto.username,
+      dto.email,
+      dto.password,
+      userRole.id.toString(),
+      undefined,
+      'local'
     );
     await this.createUserUseCase.execute(command);
 

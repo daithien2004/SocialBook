@@ -38,7 +38,7 @@ export class UpdateCollectionsUseCase {
         await this.readingListRepository.save(readingList);
 
         return {
-            id: readingList.id,
+            id: readingList.id.toString(),
             bookId: readingList.bookId.toString(),
             collectionIds: readingList.collectionIds,
             updatedAt: readingList.updatedAt

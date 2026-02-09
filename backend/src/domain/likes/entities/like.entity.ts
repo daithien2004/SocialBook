@@ -1,17 +1,21 @@
+import { LikeId } from '../value-objects/like-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { TargetType } from '../value-objects/target-type.vo';
+import { Entity } from '../../../shared/domain/entity.base';
 
-export class Like {
+export class Like extends Entity<LikeId> {
     private constructor(
-        public readonly id: string,
+        id: LikeId,
         private _userId: UserId,
         private _targetId: TargetId,
         private _targetType: TargetType,
         private _status: boolean,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -20,7 +24,7 @@ export class Like {
         status?: boolean;
     }): Like {
         return new Like(
-            crypto.randomUUID(),
+            LikeId.generate(),
             UserId.create(props.userId),
             TargetId.create(props.targetId),
             props.targetType,
@@ -40,7 +44,7 @@ export class Like {
         updatedAt: Date;
     }): Like {
         return new Like(
-            props.id,
+            LikeId.create(props.id),
             UserId.create(props.userId),
             TargetId.create(props.targetId),
             props.targetType,
@@ -50,6 +54,7 @@ export class Like {
         );
     }
 
+    // Getters
     get userId(): UserId {
         return this._userId;
     }
@@ -66,26 +71,24 @@ export class Like {
         return this._status;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
+    // Business methods
     toggle(): void {
         this._status = !this._status;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     like(): void {
         this._status = true;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     unlike(): void {
         this._status = false;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     isLiked(): boolean {
         return this._status;
     }
 }
+

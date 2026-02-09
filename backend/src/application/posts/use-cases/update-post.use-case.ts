@@ -14,35 +14,32 @@ export class UpdatePostUseCase {
     private readonly cloudinaryService: CloudinaryService,
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
-  ) {}
+  ) { }
 
   async execute(id: string, userId: string, dto: UpdatePostDto, files?: Express.Multer.File[]): Promise<Post> {
     const post = await this.postRepository.findById(id);
     if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
 
     if (dto.content) {
-        const moderationResult = await this.checkContentUseCase.execute(dto.content);
-        if (!moderationResult.isSafe) {
-            const reason = moderationResult.reason || 'Nội dung không phù hợp';
-            post.flag(reason);
-        } else {
-            post.approve();
-            post.isFlagged = false;
-            post.moderationReason = undefined;
-            post.moderationStatus = undefined;
-        }
-        post.updateContent(dto.content);
+      const moderationResult = await this.checkContentUseCase.execute(dto.content);
+      if (!moderationResult.isSafe) {
+        const reason = moderationResult.reason || 'Nội dung không phù hợp';
+        post.flag(reason);
+      } else {
+        post.approve();
+      }
+      post.updateContent(dto.content);
     }
 
     if (dto.bookId) {
-        const bookExists = await this.bookRepository.existsById(dto.bookId);
-        if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
-        post.bookId = dto.bookId;
+      const bookExists = await this.bookRepository.existsById(dto.bookId);
+      if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+      post.updateBookId(dto.bookId);
     }
 
     if (files && files.length > 0) {
-        const newImageUrls = await this.cloudinaryService.uploadMultipleImages(files);
-        post.updateImages([...post.imageUrls, ...newImageUrls]);
+      const newImageUrls = await this.cloudinaryService.uploadMultipleImages(files);
+      post.updateImages([...post.imageUrls, ...newImageUrls]);
     }
 
     return this.postRepository.update(post);

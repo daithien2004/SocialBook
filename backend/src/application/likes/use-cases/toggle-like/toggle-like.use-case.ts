@@ -26,8 +26,8 @@ export class ToggleLikeUseCase {
 
         // Find existing like
         const existingLike = await this.likeRepository.findByUserAndTarget(
-            userId, 
-            targetId, 
+            userId,
+            targetId,
             request.targetType
         );
 
@@ -35,10 +35,10 @@ export class ToggleLikeUseCase {
             // Unlike
             existingLike.unlike();
             await this.likeRepository.save(existingLike);
-            
+
             return {
                 isLiked: false,
-                likeId: existingLike.id
+                likeId: existingLike.id.toString()
             };
         } else {
             // Like
@@ -48,12 +48,12 @@ export class ToggleLikeUseCase {
                 targetType: request.targetType,
                 status: true
             });
-            
+
             await this.likeRepository.save(newLike);
-            
+
             return {
                 isLiked: true,
-                likeId: newLike.id
+                likeId: newLike.id.toString()
             };
         }
     }

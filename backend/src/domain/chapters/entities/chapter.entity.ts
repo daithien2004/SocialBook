@@ -3,20 +3,23 @@ import { ChapterTitle } from '../value-objects/chapter-title.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterOrderIndex } from '../value-objects/chapter-order-index.vo';
 import { Paragraph } from '../value-objects/paragraph.vo';
+import { Entity } from '../../../shared/domain/entity.base';
 import slugify from 'slugify';
 
-export class Chapter {
+export class Chapter extends Entity<ChapterId> {
     private constructor(
-        public readonly id: ChapterId,
+        id: ChapterId,
         private _title: ChapterTitle,
         private _slug: string,
         private _bookId: BookId,
         private _paragraphs: Paragraph[],
         private _viewsCount: number,
         private _orderIndex: ChapterOrderIndex,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         title: string;
@@ -28,8 +31,8 @@ export class Chapter {
         const slug = Chapter.generateSlug(props.title);
         const bookId = BookId.create(props.bookId);
         const orderIndex = ChapterOrderIndex.create(props.orderIndex);
-        
-        const paragraphs = props.paragraphs.map(p => 
+
+        const paragraphs = props.paragraphs.map(p =>
             p.id ? Paragraph.create(p.id, p.content) : Paragraph.createWithoutId(p.content)
         );
 
@@ -62,7 +65,7 @@ export class Chapter {
         updatedAt: Date;
     }): Chapter {
         const paragraphs = props.paragraphs.map(p => Paragraph.create(p.id, p.content));
-        
+
         return new Chapter(
             ChapterId.create(props.id),
             ChapterTitle.create(props.title),
@@ -101,48 +104,44 @@ export class Chapter {
         return this._orderIndex;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     // Business methods
     changeTitle(newTitle: string): void {
         const title = ChapterTitle.create(newTitle);
         this._title = title;
         this._slug = Chapter.generateSlug(newTitle);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     changeBook(newBookId: string): void {
         this._bookId = BookId.create(newBookId);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateOrderIndex(newOrderIndex: number): void {
         this._orderIndex = ChapterOrderIndex.create(newOrderIndex);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     addParagraph(content: string): void {
         const paragraph = Paragraph.createWithoutId(content);
         this._paragraphs.push(paragraph);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateParagraph(paragraphId: string, newContent: string): void {
         const paragraphIndex = this._paragraphs.findIndex(p => p.id === paragraphId);
-        
+
         if (paragraphIndex === -1) {
             throw new Error('Paragraph not found');
         }
 
         this._paragraphs[paragraphIndex].updateContent(newContent);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     removeParagraph(paragraphId: string): void {
         const paragraphIndex = this._paragraphs.findIndex(p => p.id === paragraphId);
-        
+
         if (paragraphIndex === -1) {
             throw new Error('Paragraph not found');
         }
@@ -152,12 +151,12 @@ export class Chapter {
         }
 
         this._paragraphs.splice(paragraphIndex, 1);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     reorderParagraphs(newOrder: string[]): void {
         const reorderedParagraphs: Paragraph[] = [];
-        
+
         for (const id of newOrder) {
             const paragraph = this._paragraphs.find(p => p.id === id);
             if (!paragraph) {
@@ -171,12 +170,12 @@ export class Chapter {
         }
 
         this._paragraphs = reorderedParagraphs;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     incrementViews(): void {
         this._viewsCount += 1;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     getWordCount(): number {
@@ -207,3 +206,4 @@ export class Chapter {
         });
     }
 }
+

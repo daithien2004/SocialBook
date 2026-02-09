@@ -1,6 +1,8 @@
+import { ReadingListId } from '../value-objects/reading-list-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
+import { Entity } from '../../../shared/domain/entity.base';
 
 export enum ReadingStatus {
     READING = 'READING',
@@ -8,17 +10,19 @@ export enum ReadingStatus {
     ARCHIVED = 'ARCHIVED',
 }
 
-export class ReadingList {
+export class ReadingList extends Entity<ReadingListId> {
     private constructor(
-        public readonly id: string,
+        id: ReadingListId,
         private _userId: UserId,
         private _bookId: BookId,
         private _status: ReadingStatus,
         private _lastReadChapterId: ChapterId | null,
         private _collectionIds: string[],
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -28,7 +32,7 @@ export class ReadingList {
         collectionIds?: string[];
     }): ReadingList {
         return new ReadingList(
-            crypto.randomUUID(),
+            ReadingListId.generate(),
             UserId.create(props.userId),
             BookId.create(props.bookId),
             props.status || ReadingStatus.READING,
@@ -50,7 +54,7 @@ export class ReadingList {
         updatedAt: Date;
     }): ReadingList {
         return new ReadingList(
-            props.id,
+            ReadingListId.create(props.id),
             UserId.create(props.userId),
             BookId.create(props.bookId),
             props.status,
@@ -61,6 +65,7 @@ export class ReadingList {
         );
     }
 
+    // Getters
     get userId(): UserId {
         return this._userId;
     }
@@ -81,29 +86,26 @@ export class ReadingList {
         return [...this._collectionIds];
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
+    // Business methods
     updateStatus(status: ReadingStatus): void {
         this._status = status;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateLastReadChapter(chapterId: string): void {
         this._lastReadChapterId = ChapterId.create(chapterId);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateCollections(collectionIds: string[]): void {
         this._collectionIds = [...collectionIds];
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     addCollection(collectionId: string): void {
         if (!this._collectionIds.includes(collectionId)) {
             this._collectionIds.push(collectionId);
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 
@@ -111,7 +113,7 @@ export class ReadingList {
         const index = this._collectionIds.indexOf(collectionId);
         if (index > -1) {
             this._collectionIds.splice(index, 1);
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 
@@ -127,3 +129,4 @@ export class ReadingList {
         return this._status === ReadingStatus.ARCHIVED;
     }
 }
+

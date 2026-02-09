@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class NotificationMetaDto {
+export class NotificationMetaDto {
   @IsOptional()
   @IsMongoId()
   actorId: string;
@@ -20,11 +20,14 @@ class NotificationMetaDto {
 
   @IsOptional()
   @IsString()
-  image?: string;
+  avatar?: string;
 
   @IsOptional()
   @IsMongoId()
-  targetId: string;
+  targetId?: string;
+
+  // Index signature for compatibility with NotificationMeta
+  [key: string]: unknown;
 }
 
 export class CreateNotificationDto {
@@ -52,5 +55,5 @@ export class CreateNotificationDto {
   @IsObject()
   @ValidateNested()
   @Type(() => NotificationMetaDto)
-  meta: NotificationMetaDto;
+  meta?: NotificationMetaDto;
 }

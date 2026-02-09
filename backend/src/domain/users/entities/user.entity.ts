@@ -1,10 +1,11 @@
 import { UserId } from '../value-objects/user-id.vo';
 import { UserEmail } from '../value-objects/user-email.vo';
 import { ReadingPreferences, IReadingPreferences } from '../value-objects/reading-preferences.vo';
+import { Entity } from '../../../shared/domain/entity.base';
 
-export class User {
+export class User extends Entity<UserId> {
     private constructor(
-        public readonly id: UserId,
+        id: UserId,
         public readonly roleId: string,
         private _username: string,
         private _email: UserEmail,
@@ -20,9 +21,11 @@ export class User {
         private _hashedRt: string | undefined,
         private _onboardingCompleted: boolean,
         private _readingPreferences: ReadingPreferences | undefined,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         roleId: string;
@@ -34,7 +37,7 @@ export class User {
         image?: string;
     }): User {
         const emailVO = UserEmail.create(props.email);
-        
+
         return new User(
             UserId.generate(),
             props.roleId,
@@ -46,9 +49,9 @@ export class User {
             props.provider || 'local',
             props.providerId,
             props.image,
-            undefined, 
-            undefined, 
-            undefined, 
+            undefined,
+            undefined,
+            undefined,
             undefined,
             false, // onboardingCompleted
             undefined, // readingPreferences (default or none)
@@ -111,7 +114,6 @@ export class User {
     get hashedRt(): string | undefined { return this._hashedRt; }
     get onboardingCompleted(): boolean { return this._onboardingCompleted; }
     get readingPreferences(): ReadingPreferences | undefined { return this._readingPreferences; }
-    get updatedAt(): Date { return this._updatedAt; }
 
     updateProfile(props: {
         username?: string;
@@ -125,8 +127,8 @@ export class User {
         if (props.location !== undefined) this._location = props.location?.trim();
         if (props.website !== undefined) this._website = props.website?.trim();
         if (props.image !== undefined) this._image = props.image;
-        
-        this._updatedAt = new Date();
+
+        this.markAsUpdated();
     }
 
     updateReadingPreferences(props: Partial<IReadingPreferences>): void {
@@ -135,36 +137,37 @@ export class User {
             ...current,
             ...props
         });
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     completeOnboarding(): void {
         this._onboardingCompleted = true;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     verify(): void {
         this._isVerified = true;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     ban(): void {
         this._isBanned = true;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     unban(): void {
         this._isBanned = false;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
-    
+
     updateHashedRt(hashedRt: string | null): void {
         this._hashedRt = hashedRt || undefined;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updatePassword(password: string): void {
         this._password = password;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 }
+

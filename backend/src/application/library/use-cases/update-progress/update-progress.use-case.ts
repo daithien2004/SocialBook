@@ -77,8 +77,8 @@ export class UpdateProgressUseCase {
         ]);
 
         return {
-            readingListId: readingList.id,
-            progressId: readingProgress.id,
+            readingListId: readingList.id.toString(),
+            progressId: readingProgress.id.toString(),
             bookStatus: readingList.status,
             chapterProgress: readingProgress.progress,
             chapterStatus: readingProgress.status

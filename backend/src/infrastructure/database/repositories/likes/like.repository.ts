@@ -21,7 +21,7 @@ interface LikePersistence {
 @Injectable()
 export class LikeRepository implements ILikeRepository {
     constructor(
-        @InjectModel('Like') 
+        @InjectModel('Like')
         private readonly likeModel: Model<LikeDocument>
     ) {}
 
@@ -39,7 +39,7 @@ export class LikeRepository implements ILikeRepository {
 
     private toPersistence(like: Like): LikePersistence {
         return {
-            _id: new Types.ObjectId(like.id),
+            _id: new Types.ObjectId(like.id.toString()),
             userId: new Types.ObjectId(like.userId.toString()),
             targetId: new Types.ObjectId(like.targetId.toString()),
             targetType: like.targetType,
@@ -51,9 +51,9 @@ export class LikeRepository implements ILikeRepository {
 
     async save(like: Like): Promise<void> {
         const persistenceData = this.toPersistence(like);
-        
+
         await this.likeModel.findOneAndUpdate(
-            { 
+            {
                 userId: persistenceData.userId,
                 targetId: persistenceData.targetId,
                 targetType: persistenceData.targetType
@@ -69,7 +69,7 @@ export class LikeRepository implements ILikeRepository {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType
         }).exec();
-        
+
         return doc ? this.toDomain(doc) : null;
     }
 
@@ -78,7 +78,7 @@ export class LikeRepository implements ILikeRepository {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType
         }).exec();
-        
+
         return docs.map(doc => this.toDomain(doc));
     }
 
@@ -97,7 +97,7 @@ export class LikeRepository implements ILikeRepository {
             targetType,
             status: true
         }).select('targetId').exec();
-        
+
         return docs.map(doc => doc.targetId.toString());
     }
 
@@ -111,7 +111,7 @@ export class LikeRepository implements ILikeRepository {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType
         });
-        
+
         return !!result;
     }
 }

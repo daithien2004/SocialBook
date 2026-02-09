@@ -23,7 +23,7 @@ interface ReadingListPersistence {
 @Injectable()
 export class ReadingListRepository implements IReadingListRepository {
     constructor(
-        @InjectModel(ReadingListSchemaClass.name) 
+        @InjectModel(ReadingListSchemaClass.name)
         private readonly readingListModel: Model<ReadingListDocument>
     ) {}
 
@@ -42,12 +42,12 @@ export class ReadingListRepository implements IReadingListRepository {
 
     private toPersistence(readingList: ReadingList): ReadingListPersistence {
         return {
-            _id: new Types.ObjectId(readingList.id),
+            _id: new Types.ObjectId(readingList.id.toString()),
             userId: new Types.ObjectId(readingList.userId.toString()),
             bookId: new Types.ObjectId(readingList.bookId.toString()),
             status: readingList.status,
-            lastReadChapterId: readingList.lastReadChapterId 
-                ? new Types.ObjectId(readingList.lastReadChapterId.toString()) 
+            lastReadChapterId: readingList.lastReadChapterId
+                ? new Types.ObjectId(readingList.lastReadChapterId.toString())
                 : null,
             collectionIds: readingList.collectionIds.map(id => new Types.ObjectId(id)),
             createdAt: readingList.createdAt,
@@ -57,7 +57,7 @@ export class ReadingListRepository implements IReadingListRepository {
 
     async save(readingList: ReadingList): Promise<void> {
         const persistenceData = this.toPersistence(readingList);
-        
+
         await this.readingListModel.findOneAndUpdate(
             { _id: persistenceData._id },
             { $set: persistenceData },
@@ -70,7 +70,7 @@ export class ReadingListRepository implements IReadingListRepository {
             userId: new Types.ObjectId(userId.toString()),
             bookId: new Types.ObjectId(bookId.toString())
         }).exec();
-        
+
         return doc ? this.toDomain(doc) : null;
     }
 
@@ -92,8 +92,8 @@ export class ReadingListRepository implements IReadingListRepository {
     }
 
     async findByUserIdWithPagination(
-        userId: UserId, 
-        status: ReadingStatus, 
+        userId: UserId,
+        status: ReadingStatus,
         pagination: { page: number; limit: number }
     ): Promise<PaginatedResult<ReadingList>> {
         const query: FilterQuery<ReadingListDocument> = {
@@ -136,7 +136,7 @@ export class ReadingListRepository implements IReadingListRepository {
             userId: new Types.ObjectId(userId.toString()),
             bookId: new Types.ObjectId(bookId.toString())
         });
-        
+
         return !!result;
     }
 

@@ -29,7 +29,7 @@ export class GetLibraryUseCase {
         const readingLists = await this.readingListRepository.findByUserId(userId, status);
 
         return readingLists.map(readingList => ({
-            id: readingList.id,
+            id: readingList.id.toString(),
             bookId: readingList.bookId.toString(),
             status: readingList.status,
             lastReadChapterId: readingList.lastReadChapterId?.toString() || null,

@@ -2,16 +2,19 @@ import { FollowId } from '../value-objects/follow-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { FollowStatus } from '../value-objects/follow-status.vo';
+import { Entity } from '../../../shared/domain/entity.base';
 
-export class Follow {
+export class Follow extends Entity<FollowId> {
     private constructor(
-        public readonly id: FollowId,
+        id: FollowId,
         private _userId: UserId,
         private _targetId: TargetId,
         private _status: FollowStatus,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -67,35 +70,31 @@ export class Follow {
         return this._status;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     // Business methods
     activate(): void {
         this._status = FollowStatus.active();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     deactivate(): void {
         this._status = FollowStatus.inactive();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     toggleStatus(): void {
         this._status = this._status.toggle();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateTarget(newTargetId: string): void {
         const targetId = TargetId.create(newTargetId);
-        
+
         if (this._userId.getValue() === targetId.getValue()) {
             throw new Error('User cannot follow themselves');
         }
 
         this._targetId = targetId;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     isActive(): boolean {
@@ -141,7 +140,8 @@ export class Follow {
             status: this._status.getValue(),
             isActive: this.isActive(),
             createdAt: this.createdAt,
-            updatedAt: this._updatedAt
+            updatedAt: this.updatedAt
         };
     }
 }
+

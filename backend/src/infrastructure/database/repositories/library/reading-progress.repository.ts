@@ -25,13 +25,13 @@ interface ReadingProgressPersistence {
 @Injectable()
 export class ReadingProgressRepository implements IReadingProgressRepository {
     constructor(
-        @InjectModel(Progress.name) 
+        @InjectModel(Progress.name)
         private readonly progressModel: Model<ProgressDocument>
     ) {}
 
     private toDomain(doc: ProgressDocument): ReadingProgress {
         const status = this.mapStatusToChapterStatus(doc.status);
-        
+
         return ReadingProgress.reconstitute({
             id: doc._id.toString(),
             userId: doc.userId.toString(),
@@ -48,7 +48,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
 
     private toPersistence(readingProgress: ReadingProgress): ReadingProgressPersistence {
         return {
-            _id: new Types.ObjectId(readingProgress.id),
+            _id: new Types.ObjectId(readingProgress.id.toString()),
             userId: new Types.ObjectId(readingProgress.userId.toString()),
             bookId: new Types.ObjectId(readingProgress.bookId.toString()),
             chapterId: new Types.ObjectId(readingProgress.chapterId.toString()),
@@ -85,7 +85,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
 
     async save(readingProgress: ReadingProgress): Promise<void> {
         const persistenceData = this.toPersistence(readingProgress);
-        
+
         await this.progressModel.findOneAndUpdate(
             { _id: persistenceData._id },
             { $set: persistenceData },
@@ -98,7 +98,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
             userId: new Types.ObjectId(userId.toString()),
             chapterId: new Types.ObjectId(chapterId.toString())
         }).exec();
-        
+
         return doc ? this.toDomain(doc) : null;
     }
 
@@ -107,7 +107,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
             userId: new Types.ObjectId(userId.toString()),
             bookId: new Types.ObjectId(bookId.toString())
         }).exec();
-        
+
         return docs.map(doc => this.toDomain(doc));
     }
 
@@ -115,7 +115,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
         const docs = await this.progressModel.find({
             userId: new Types.ObjectId(userId.toString())
         }).exec();
-        
+
         return docs.map(doc => this.toDomain(doc));
     }
 
@@ -131,7 +131,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
             userId: new Types.ObjectId(userId.toString()),
             chapterId: new Types.ObjectId(chapterId.toString())
         });
-        
+
         return !!result;
     }
 }

@@ -40,7 +40,7 @@ export class UpdateStatusUseCase {
         await this.readingListRepository.save(readingList);
 
         return {
-            id: readingList.id,
+            id: readingList.id.toString(),
             bookId: readingList.bookId.toString(),
             status: readingList.status,
             updatedAt: readingList.updatedAt
