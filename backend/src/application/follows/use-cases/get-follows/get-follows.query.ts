@@ -1,4 +1,4 @@
-export class GetFollowsCommand {
+export class GetFollowsQuery {
     constructor(
         public readonly userId?: string,
         public readonly targetId?: string,
@@ -6,5 +6,5 @@ export class GetFollowsCommand {
         public readonly limit?: number,
         public readonly sortBy?: 'createdAt' | 'updatedAt',
         public readonly order?: 'asc' | 'desc'
-    ) {}
+    ) { }
 }

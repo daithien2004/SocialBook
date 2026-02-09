@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CreateNotificationUseCase } from './use-cases/create-notification.use-case';
-import { GetUserNotificationsUseCase } from './use-cases/get-user-notifications.use-case';
-import { MarkNotificationReadUseCase } from './use-cases/mark-notification-read.use-case';
+import { CreateNotificationUseCase } from './use-cases/create-notification/create-notification.use-case';
+import { GetUserNotificationsUseCase } from './use-cases/get-user-notification/get-user-notifications.use-case';
+import { MarkNotificationReadUseCase } from './use-cases/mark-notification/mark-notification-read.use-case';
 import { NotificationsRepositoryModule } from '@/infrastructure/database/repositories/notifications/notifications-repository.module';
 
 @Module({
@@ -19,4 +19,4 @@ import { NotificationsRepositoryModule } from '@/infrastructure/database/reposit
     MarkNotificationReadUseCase,
   ],
 })
-export class NotificationsApplicationModule {}
+export class NotificationsApplicationModule { }

@@ -1,8 +1,8 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { UserId } from '@/domain/follows/value-objects/user-id.vo';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
-import { GetFollowsCommand } from './get-follows.command';
+import { GetFollowsQuery } from './get-follows.query';
 
 @Injectable()
 export class GetFollowsUseCase {
@@ -10,27 +10,27 @@ export class GetFollowsUseCase {
 
     constructor(
         private readonly followRepository: IFollowRepository
-    ) {}
+    ) { }
 
-    async execute(command: GetFollowsCommand) {
+    async execute(query: GetFollowsQuery) {
         try {
             const pagination = {
-                page: command.page || 1,
-                limit: command.limit || 10
+                page: query.page || 1,
+                limit: query.limit || 10
             };
 
             const sort = {
-                sortBy: command.sortBy || 'createdAt',
-                order: command.order || 'desc'
+                sortBy: query.sortBy || 'createdAt',
+                order: query.order || 'desc'
             };
 
             let result;
 
-            if (command.userId) {
-                const userId = UserId.create(command.userId);
+            if (query.userId) {
+                const userId = UserId.create(query.userId);
                 result = await this.followRepository.findByUser(userId, pagination, sort);
-            } else if (command.targetId) {
-                const targetId = TargetId.create(command.targetId);
+            } else if (query.targetId) {
+                const targetId = TargetId.create(query.targetId);
                 result = await this.followRepository.findByTarget(targetId, pagination, sort);
             } else {
                 result = await this.followRepository.findAll({}, pagination, sort);
@@ -45,5 +45,3 @@ export class GetFollowsUseCase {
         }
     }
 }
-
-

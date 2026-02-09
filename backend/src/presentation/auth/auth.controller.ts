@@ -17,14 +17,23 @@ import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nes
 
 // Use Cases
 import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
+import { LoginCommand } from '@/application/auth/use-cases/login/login.command';
 import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
+import { RegisterCommand } from '@/application/auth/use-cases/register/register.command';
 import { GoogleAuthUseCase } from '@/application/auth/use-cases/google-auth/google-auth.use-case';
+import { GoogleAuthCommand } from '@/application/auth/use-cases/google-auth/google-auth.command';
 import { RefreshTokenUseCase } from '@/application/auth/use-cases/refresh-token/refresh-token.use-case';
+import { RefreshTokenCommand } from '@/application/auth/use-cases/refresh-token/refresh-token.command';
 import { LogoutUseCase } from '@/application/auth/use-cases/logout/logout.use-case';
+import { LogoutCommand } from '@/application/auth/use-cases/logout/logout.command';
 import { ForgotPasswordUseCase } from '@/application/auth/use-cases/forgot-password/forgot-password.use-case';
+import { ForgotPasswordCommand } from '@/application/auth/use-cases/forgot-password/forgot-password.command';
 import { ResetPasswordUseCase } from '@/application/auth/use-cases/reset-password/reset-password.use-case';
+import { ResetPasswordCommand } from '@/application/auth/use-cases/reset-password/reset-password.command';
 import { VerifyOtpUseCase } from '@/application/auth/use-cases/verify-otp/verify-otp.use-case';
+import { VerifyOtpCommand } from '@/application/auth/use-cases/verify-otp/verify-otp.command';
 import { ResendOtpUseCase } from '@/application/auth/use-cases/resend-otp/resend-otp.use-case';
+import { ResendOtpCommand } from '@/application/auth/use-cases/resend-otp/resend-otp.command';
 
 import {
   ForgotPasswordDto,
@@ -55,10 +64,17 @@ export class AuthController {
   @Public()
   @ApiOperation({ summary: 'Login with Google' })
   @ApiBody({ type: SignupGoogleDto })
-  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 200, description: 'Login successfuk' })
   @Post('google/login')
   async handleGoogleLogin(@Body() data: SignupGoogleDto) {
-    const result = await this.googleAuthUseCase.execute(data);
+    const command = new GoogleAuthCommand(
+      data.email,
+      data.googleId,
+      data.name,
+      data.image,
+      data.name
+    );
+    const result = await this.googleAuthUseCase.execute(command);
     return {
       data: result
     }
@@ -72,7 +88,8 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @HttpCode(HttpStatus.OK)
   async login(@Req() req: { user: User }, @Body() dto: LoginDto) {
-    const result = await this.loginUseCase.execute(req.user);
+    const command = new LoginCommand(req.user);
+    const result = await this.loginUseCase.execute(command);
 
     return {
       message: 'Đăng nhập thành công',
@@ -95,7 +112,8 @@ export class AuthController {
   @Post('logout')
   @ApiOperation({ summary: 'Logout' })
   async logout(@Req() req: { user: { id: string } }) {
-      return await this.logoutUseCase.execute(req.user.id);
+    const command = new LogoutCommand(req.user.id);
+    return await this.logoutUseCase.execute(command);
   }
 
   @Public()
@@ -103,7 +121,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new account' })
   @ApiResponse({ status: 201, description: 'OTP sent to email' })
   async signup(@Body() dto: SignupLocalDto) {
-    const otp = await this.registerUseCase.execute(dto);
+    const command = new RegisterCommand(dto.username, dto.email, dto.password);
+    const otp = await this.registerUseCase.execute(command);
 
     return {
       message: 'Mã OTP đã được gửi đến email của bạn',
@@ -118,10 +137,8 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid OTP or email' })
   async verifyOtp(@Body() body: VerifyOtpDto) {
     try {
-      const result = await this.verifyOtpUseCase.execute(
-        body.email,
-        body.otp,
-      );
+      const command = new VerifyOtpCommand(body.email, body.otp);
+      const result = await this.verifyOtpUseCase.execute(command);
       return { message: result };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
@@ -135,7 +152,8 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'OTP resent successfully' })
   async resendOtp(@Body() body: ResendOtpDto) {
     try {
-      const result = await this.resendOtpUseCase.execute(body.email);
+      const command = new ResendOtpCommand(body.email);
+      const result = await this.resendOtpUseCase.execute(command);
       return {
         message: 'Gửi lại mã OTP thành công',
         data: {
@@ -166,8 +184,9 @@ export class AuthController {
     try {
       const payload = await this.refreshTokenUseCase.validateRefreshToken(refreshToken);
 
+      const command = new RefreshTokenCommand(payload.sub, refreshToken);
       const { accessToken, refreshToken: newRefreshToken } =
-        await this.refreshTokenUseCase.execute(payload.sub, refreshToken);
+        await this.refreshTokenUseCase.execute(command);
 
       return {
         message: 'Làm mới token thành công',
@@ -185,7 +204,8 @@ export class AuthController {
   @Post('forgot-password')
   @ApiOperation({ summary: 'Request password reset via email' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    await this.forgotPasswordUseCase.execute(dto.email);
+    const command = new ForgotPasswordCommand(dto.email);
+    await this.forgotPasswordUseCase.execute(command);
     return {
       message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
     };
@@ -195,11 +215,8 @@ export class AuthController {
   @Post('reset-password')
   @ApiOperation({ summary: 'Reset password with OTP' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    const result = await this.resetPasswordUseCase.execute(
-      dto.email,
-      dto.otp,
-      dto.newPassword,
-    );
+    const command = new ResetPasswordCommand(dto.email, dto.otp, dto.newPassword);
+    const result = await this.resetPasswordUseCase.execute(command);
     return { message: result };
   }
 }

@@ -27,8 +27,8 @@ import { GetFollowStatusUseCase } from '@/application/follows/use-cases/get-foll
 import { DeleteFollowUseCase } from '@/application/follows/use-cases/delete-follow/delete-follow.use-case';
 
 import { CreateFollowCommand } from '@/application/follows/use-cases/create-follow/create-follow.command';
-import { GetFollowsCommand } from '@/application/follows/use-cases/get-follows/get-follows.command';
-import { GetFollowStatusCommand } from '@/application/follows/use-cases/get-follow-status/get-follow-status.command';
+import { GetFollowsQuery } from '@/application/follows/use-cases/get-follows/get-follows.query';
+import { GetFollowStatusQuery } from '@/application/follows/use-cases/get-follow-status/get-follow-status.query';
 import { DeleteFollowCommand } from '@/application/follows/use-cases/delete-follow/delete-follow.command';
 
 @ApiTags('Follows')
@@ -39,7 +39,7 @@ export class FollowsController {
     private readonly getFollowsUseCase: GetFollowsUseCase,
     private readonly getFollowStatusUseCase: GetFollowStatusUseCase,
     private readonly deleteFollowUseCase: DeleteFollowUseCase,
-  ) {}
+  ) { }
 
   @Public()
   @Get('following')
@@ -47,8 +47,8 @@ export class FollowsController {
   @ApiOperation({ summary: 'Get following list for a user' })
   @ApiQuery({ name: 'userId', description: 'User ID', required: true })
   async getFollowingList(@Query('userId') userId: string) {
-    const command = new GetFollowsCommand(userId, undefined, 1, 100);
-    const result = await this.getFollowsUseCase.execute(command);
+    const query = new GetFollowsQuery(userId, undefined, 1, 100);
+    const result = await this.getFollowsUseCase.execute(query);
 
     return {
       message: 'Get following list successfully',
@@ -66,8 +66,8 @@ export class FollowsController {
     @Req() req: Request & { user: { id: string } },
     @Query('targetUserId') targetUserId: string,
   ) {
-    const command = new GetFollowsCommand(undefined, targetUserId, 1, 100);
-    const result = await this.getFollowsUseCase.execute(command);
+    const query = new GetFollowsQuery(undefined, targetUserId, 1, 100);
+    const result = await this.getFollowsUseCase.execute(query);
 
     return {
       message: 'Get followers list successfully',
@@ -85,8 +85,8 @@ export class FollowsController {
     @Req() req: Request & { user: { id: string } },
     @Query('targetId') targetId: string,
   ) {
-    const command = new GetFollowStatusCommand(req.user.id, targetId);
-    const result = await this.getFollowStatusUseCase.execute(command);
+    const query = new GetFollowStatusQuery(req.user.id, targetId);
+    const result = await this.getFollowStatusUseCase.execute(query);
 
     return {
       message: 'Get follow status successfully',
@@ -159,13 +159,13 @@ export class FollowsController {
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
   ) {
-    const command = new GetFollowsCommand(
+    const query = new GetFollowsQuery(
       filter.userId,
       filter.targetId,
       Number(page),
       Number(limit)
     );
-    const result = await this.getFollowsUseCase.execute(command);
+    const result = await this.getFollowsUseCase.execute(query);
 
     return {
       message: 'Get all follows successfully',

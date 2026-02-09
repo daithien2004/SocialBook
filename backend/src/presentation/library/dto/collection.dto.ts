@@ -1,4 +1,3 @@
-// src/modules/library/dto/collection.dto.ts
 import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateCollectionDto {

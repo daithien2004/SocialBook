@@ -1,4 +1,3 @@
-
 import { Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -7,6 +6,7 @@ import { IUserRepository } from '@/domain/users/repositories/user.repository.int
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
+import { RefreshTokenCommand } from './refresh-token.command';
 
 @Injectable()
 export class RefreshTokenUseCase {
@@ -16,12 +16,13 @@ export class RefreshTokenUseCase {
     private readonly tokenService: TokenService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
-  async execute(userId: string, refreshToken: string) {
+  async execute(command: RefreshTokenCommand) {
+    const { userId, refreshToken } = command;
     const id = UserId.create(userId);
     const user = await this.userRepository.findById(id);
-    
+
     if (!user || !user.hashedRt) {
       throw new ForbiddenException('Từ chối truy cập');
     }
@@ -32,32 +33,32 @@ export class RefreshTokenUseCase {
 
     let roleName = 'user';
     if (user.roleId) {
-        const role = await this.rolesRepository.findById(user.roleId);
-        if (role) roleName = role.name;
+      const role = await this.rolesRepository.findById(user.roleId);
+      if (role) roleName = role.name;
     }
     return this.tokenService.signTokens(user.id.toString(), user.email.value, roleName);
   }
 
   async validateRefreshToken(token: string) {
-     try {
-       const payload = this.jwtService.verify(token, {
-         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-       });
- 
-       // Check DB
-       const id = UserId.create(payload.sub);
-       const user = await this.userRepository.findById(id);
-       if (!user || !user.hashedRt) return false;
- 
-       const isMatch = await bcrypt.compare(token, user.hashedRt);
-       
-       if (!isMatch) {
-          throw new UnauthorizedException('Refresh token không hợp lệ');
-       }
- 
-       return payload;
-     } catch (error) {
-       throw new UnauthorizedException('Refresh token không hợp lệ');
-     }
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+
+      // Check DB
+      const id = UserId.create(payload.sub);
+      const user = await this.userRepository.findById(id);
+      if (!user || !user.hashedRt) return false;
+
+      const isMatch = await bcrypt.compare(token, user.hashedRt);
+
+      if (!isMatch) {
+        throw new UnauthorizedException('Refresh token không hợp lệ');
+      }
+
+      return payload;
+    } catch (error) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
   }
 }

@@ -3,48 +3,32 @@ import { IReadingProgressRepository } from '@/domain/library/repositories/readin
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
-
-export interface RemoveFromLibraryRequest {
-    userId: string;
-    bookId: string;
-}
-
-export interface RemoveFromLibraryResponse {
-    success: boolean;
-}
+import { RemoveFromLibraryCommand } from './remove-from-library.command';
 
 export class RemoveFromLibraryUseCase {
     constructor(
         private readonly readingListRepository: IReadingListRepository,
         private readonly readingProgressRepository: IReadingProgressRepository
-    ) {}
+    ) { }
 
-    async execute(request: RemoveFromLibraryRequest): Promise<RemoveFromLibraryResponse> {
-        const userId = UserId.create(request.userId);
-        const bookId = BookId.create(request.bookId);
+    async execute(command: RemoveFromLibraryCommand): Promise<void> {
+        const userId = UserId.create(command.userId);
+        const bookId = BookId.create(command.bookId);
 
-        // Check if reading list entry exists
         const exists = await this.readingListRepository.exists(userId, bookId);
-        
+
         if (!exists) {
-            return { success: true }; // Already removed or never existed
+            return;
         }
 
-        // Get all reading progress for this book to remove them as well
         const readingProgresses = await this.readingProgressRepository.findByUserIdAndBookId(userId, bookId);
 
-        // Remove all reading progress entries for this book
         await Promise.all(
-            readingProgresses.map(progress => 
+            readingProgresses.map(progress =>
                 this.readingProgressRepository.remove(userId, ChapterId.create(progress.chapterId.toString()))
             )
         );
 
-        // Remove the reading list entry
         await this.readingListRepository.remove(userId, bookId);
-
-        return { success: true };
     }
 }
-
-

@@ -63,4 +63,15 @@ export class UpdateReadingPreferencesDto {
     @Min(0)
     @Max(100)
     marginWidth?: number;
+
+    @ApiProperty({ example: ['Fiction', 'Science Fiction'], required: false })
+    @IsOptional()
+    @IsString({ each: true })
+    preferredGenres?: string[];
+
+    @ApiProperty({ example: 30, minimum: 0, required: false })
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    dailyReadingGoal?: number;
 }

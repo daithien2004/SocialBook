@@ -1,21 +1,25 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { SendOtpUseCase } from '@/application/otp/use-cases/send-otp.use-case';
+import { SendOtpCommand } from '@/application/otp/use-cases/send-otp.command';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
+import { ResendOtpCommand } from './resend-otp.command';
 
 @Injectable()
 export class ResendOtpUseCase {
   constructor(
     private readonly sendOtpUseCase: SendOtpUseCase,
     private readonly otpRepository: IOtpRepository,
-  ) {}
+  ) { }
 
-  async execute(email: string): Promise<{ resendCooldown: number }> {
+  async execute(command: ResendOtpCommand): Promise<{ resendCooldown: number }> {
+    const { email } = command;
     const ttl = await this.otpRepository.getTtl(email);
 
     if (ttl === -2) {
-       // Not found, generate new
-       await this.sendOtpUseCase.execute(email);
-       return { resendCooldown: 60 };
+      // Not found, generate new
+      const sendOtpCommand = new SendOtpCommand(email);
+      await this.sendOtpUseCase.execute(sendOtpCommand);
+      return { resendCooldown: 60 };
     }
 
     const RESEND_COOLDOWN = 60;
@@ -26,7 +30,8 @@ export class ResendOtpUseCase {
       );
     }
 
-    await this.sendOtpUseCase.execute(email);
+    const sendOtpCommand = new SendOtpCommand(email);
+    await this.sendOtpUseCase.execute(sendOtpCommand);
 
     return {
       resendCooldown: RESEND_COOLDOWN,

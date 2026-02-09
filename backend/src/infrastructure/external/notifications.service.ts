@@ -2,9 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { CreateNotificationDto } from '../../presentation/notification/dto/create-notification.dto';
 import { Server } from 'socket.io';
 import { NotificationResponseDto } from '../../presentation/notification/dto/notification.response.dto';
-import { CreateNotificationUseCase } from '../../application/notifications/use-cases/create-notification.use-case';
-import { GetUserNotificationsUseCase } from '../../application/notifications/use-cases/get-user-notifications.use-case';
-import { MarkNotificationReadUseCase } from '../../application/notifications/use-cases/mark-notification-read.use-case';
+import { CreateNotificationUseCase } from '../../application/notifications/use-cases/create-notification/create-notification.use-case';
+import { GetUserNotificationsUseCase } from '../../application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
+import { GetUserNotificationsQuery } from '../../application/notifications/use-cases/get-user-notification/get-user-notifications.query';
+import { MarkNotificationReadUseCase } from '../../application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
+import { MarkNotificationReadCommand } from '../../application/notifications/use-cases/mark-notification/mark-notification-read.command';
+import { CreateNotificationCommand } from '../../application/notifications/use-cases/create-notification/create-notification.command';
 
 @Injectable()
 export class NotificationsService {
@@ -22,14 +25,15 @@ export class NotificationsService {
   }
 
   async create(dto: CreateNotificationDto) {
-    const notification = await this.createNotificationUseCase.execute(
-        dto.userId,
-        dto.title,
-        dto.message,
-        dto.type,
-        dto.meta,
-        dto.actionUrl
+    const command = new CreateNotificationCommand(
+      dto.userId,
+      dto.title,
+      dto.message,
+      dto.type,
+      dto.meta,
+      dto.actionUrl
     );
+    const notification = await this.createNotificationUseCase.execute(command);
 
     const responseDto = new NotificationResponseDto(notification);
 
@@ -43,12 +47,14 @@ export class NotificationsService {
   }
 
   async findAllByUser(userId: string, limit = 50) {
-    const notifications = await this.getUserNotificationsUseCase.execute(userId, limit);
+    const query = new GetUserNotificationsQuery(userId, 1, limit);
+    const notifications = await this.getUserNotificationsUseCase.execute(query);
     return NotificationResponseDto.fromArray(notifications);
   }
 
   async markRead(userId: string, id: string) {
-    await this.markNotificationReadUseCase.execute(userId, id);
+    const command = new MarkNotificationReadCommand(userId, id);
+    await this.markNotificationReadUseCase.execute(command);
     if (this.server) {
       this.server.to(this.userRoom(userId)).emit('notification:read', { id });
     }

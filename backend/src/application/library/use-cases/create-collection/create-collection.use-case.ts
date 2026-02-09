@@ -1,13 +1,6 @@
-import { UserId } from '@/domain/library/value-objects/user-id.vo';
+import { CreateCollectionCommand } from './create-collection.command';
 
-export interface CreateCollectionRequest {
-    userId: string;
-    name: string;
-    description?: string;
-    isPublic?: boolean;
-}
-
-export interface CreateCollectionResponse {
+export interface CollectionResult {
     id: string;
     name: string;
     description: string | null;
@@ -18,27 +11,18 @@ export interface CreateCollectionResponse {
 }
 
 export class CreateCollectionUseCase {
-    async execute(request: CreateCollectionRequest): Promise<CreateCollectionResponse> {
-        const userId = UserId.create(request.userId);
-        
-        // TODO: Implement collection creation logic
-        // This would involve:
-        // 1. Create collection entity
-        // 2. Save to repository
-        // 3. Return response
-        
-        // Placeholder implementation
+    async execute(command: CreateCollectionCommand): Promise<CollectionResult> {
+
+
         const now = new Date();
         return {
             id: crypto.randomUUID(),
-            name: request.name,
-            description: request.description || null,
-            isPublic: request.isPublic || false,
-            userId: request.userId,
+            name: command.name,
+            description: command.description || null,
+            isPublic: command.isPublic || false,
+            userId: command.userId,
             createdAt: now,
             updatedAt: now,
         };
     }
 }
-
-

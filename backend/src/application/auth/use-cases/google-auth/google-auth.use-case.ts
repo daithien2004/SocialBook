@@ -1,29 +1,26 @@
-
-import { Injectable, UnauthorizedException, ForbiddenException, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException, ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { TokenService } from '../../services/token.service';
-import { SignupGoogleDto } from '../../../../presentation/auth/dto/auth.dto';
-import { Logger } from '@/shared/logger';
+import { GoogleAuthCommand } from './google-auth.command';
 
 @Injectable()
 export class GoogleAuthUseCase {
+  private readonly logger = new Logger(GoogleAuthUseCase.name);
+
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly rolesRepository: IRoleRepository,
     private readonly tokenService: TokenService,
-    private readonly logger: Logger,
-  ) {
-    this.logger.setContext(GoogleAuthUseCase.name);
-  }
+  ) { }
 
-  async execute(dto: SignupGoogleDto) {
+  async execute(command: GoogleAuthCommand) {
     try {
-      const emailVO = UserEmail.create(dto.email);
+      const emailVO = UserEmail.create(command.email);
       const existingUser = await this.userRepository.findByEmail(emailVO);
 
       if (!existingUser) {
@@ -37,16 +34,16 @@ export class GoogleAuthUseCase {
           );
         }
 
-        const command = new CreateUserCommand(
-            dto.username || dto.name || dto.email.split('@')[0],
-            dto.email,
-            undefined, // No password
-            userRole.id.toString(),
-            dto.image,
-            'google',
-            dto.googleId
+        const createCommand = new CreateUserCommand(
+          command.username || command.name || command.email.split('@')[0],
+          command.email,
+          undefined, // No password
+          userRole.id.toString(),
+          command.image,
+          'google',
+          command.googleId
         );
-        const newUser = await this.createUserUseCase.execute(command);
+        const newUser = await this.createUserUseCase.execute(createCommand);
         // Verify automatically for Google
         newUser.verify();
         await this.userRepository.save(newUser);
@@ -70,12 +67,12 @@ export class GoogleAuthUseCase {
 
       // Handle existing user login
       if (!existingUser.isVerified) {
-        this.logger.warn(`Google login failed: Account not verified for ${dto.email}`);
+        this.logger.warn(`Google login failed: Account not verified for ${command.email}`);
         throw new UnauthorizedException('Tài khoản chưa được xác thực');
       }
 
       if (existingUser.isBanned) {
-        this.logger.warn(`Google login failed: Account banned for ${dto.email}`);
+        this.logger.warn(`Google login failed: Account banned for ${command.email}`);
         throw new ForbiddenException({
           statusCode: 403,
           message:
@@ -86,7 +83,7 @@ export class GoogleAuthUseCase {
 
       if (existingUser.provider === 'local') {
         this.logger.warn(
-          `Google login failed: Email already registered with password for ${dto.email}`,
+          `Google login failed: Email already registered with password for ${command.email}`,
         );
         throw new ConflictException(
           'Email đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng mật khẩu hoặc liên kết tài khoản Google trước.',
@@ -95,8 +92,8 @@ export class GoogleAuthUseCase {
 
       let roleName = 'user';
       if (existingUser.roleId) {
-          const role = await this.rolesRepository.findById(existingUser.roleId);
-          if (role) roleName = role.name;
+        const role = await this.rolesRepository.findById(existingUser.roleId);
+        if (role) roleName = role.name;
       }
 
       const tokens = await this.tokenService.signTokens(
@@ -119,7 +116,7 @@ export class GoogleAuthUseCase {
         },
       };
     } catch (error) {
-       if (
+      if (
         error instanceof UnauthorizedException ||
         error instanceof ForbiddenException ||
         error instanceof ConflictException ||
@@ -127,7 +124,7 @@ export class GoogleAuthUseCase {
       ) {
         throw error;
       }
-      this.logger.error(`Unexpected error during Google login for ${dto.email}: ${error.message}`, error.stack);
+      this.logger.error(`Unexpected error during Google login for ${command.email}: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Đã có lỗi xảy ra khi đăng nhập bằng Google');
     }
   }

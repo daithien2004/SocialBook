@@ -35,6 +35,7 @@ import { CreateAuthorCommand } from '@/application/authors/use-cases/create-auth
 import { UpdateAuthorCommand } from '@/application/authors/use-cases/update-author/update-author.command';
 import { GetAuthorsQuery } from '@/application/authors/use-cases/get-authors/get-authors.query';
 import { DeleteAuthorCommand } from '@/application/authors/use-cases/delete-author/delete-author.command';
+import { GetAuthorByIdQuery } from '@/application/authors/use-cases/get-author-by-id/get-author-by-id.query';
 
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
@@ -48,7 +49,7 @@ export class AuthorsController {
         private readonly getAuthorByIdUseCase: GetAuthorByIdUseCase,
         private readonly deleteAuthorUseCase: DeleteAuthorUseCase,
         private readonly mediaService: IMediaService,
-    ) {}
+    ) { }
 
     @Post()
     @Roles('admin')
@@ -64,7 +65,7 @@ export class AuthorsController {
             createAuthorDto.bio,
             file ? await this.uploadFile(file) : createAuthorDto.photoUrl
         );
-        
+
         const author = await this.createAuthorUseCase.execute(command);
         return {
             message: 'Tạo tác giả thành công',
@@ -86,9 +87,9 @@ export class AuthorsController {
             filter.name,
             filter.bio
         );
-        
+
         const result = await this.getAuthorsUseCase.execute(query);
-        
+
         return {
             message: 'Lấy danh sách tác giả thành công',
             data: result.data.map(author => new AuthorResponseDto(author)),
@@ -99,7 +100,8 @@ export class AuthorsController {
     @Get(':id')
     @Public()
     async findOne(@Param('id') id: string) {
-        const author = await this.getAuthorByIdUseCase.execute(id);
+        const query = new GetAuthorByIdQuery(id);
+        const author = await this.getAuthorByIdUseCase.execute(query);
         return {
             message: 'Lấy thông tin tác giả thành công',
             data: new AuthorResponseDto(author),
@@ -121,7 +123,7 @@ export class AuthorsController {
             updateAuthorDto.bio,
             file ? await this.uploadFile(file) : updateAuthorDto.photoUrl
         );
-        
+
         const author = await this.updateAuthorUseCase.execute(command);
         return {
             message: 'Cập nhật tác giả thành công',
@@ -140,14 +142,22 @@ export class AuthorsController {
         };
     }
 
+    // @Get() needs to be handled carefully as routes can conflict. 
+    // Here it's assumed '/authors' (without admin or :id) maps to this if not matched by above.
+    // However, NestJS route matching order matters. 'admin' is specific string, ':id' is param.
+    // If 'getForSelect' is not decorated with path, it maps to root '/authors'.
+    // If findAll maps to 'admin', and findOne maps to ':id', then getForSelect at root will conflict if not careful or should be moved.
+    // Assuming the original intention was to have a simplified list for selects.
+    // But wait, the original code had `@Get()` for `getForSelect` at the end.
+    // If a request comes to `/authors` with no params, it might hit `findOne` if `id` is optional? No, `id` is required in path.
+    // So request to `/authors` will hit `getForSelect`.
+
     @Get()
     @Public()
     async getForSelect() {
-        // This would need a separate use case for getting authors for select
-        // For now, we'll use the existing getAuthorsUseCase with no filters
-        const query = new GetAuthorsQuery(1, 1000); // Get all authors for select
+        const query = new GetAuthorsQuery(1, 1000);
         const result = await this.getAuthorsUseCase.execute(query);
-        
+
         return {
             message: 'Lấy danh sách tác giả thành công',
             data: result.data.map(author => ({

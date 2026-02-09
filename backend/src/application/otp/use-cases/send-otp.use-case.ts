@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/otp/entities/otp.entity';
+import { SendOtpCommand } from './send-otp.command';
 
 @Injectable()
 export class SendOtpUseCase {
@@ -11,16 +12,18 @@ export class SendOtpUseCase {
     constructor(
         private readonly otpRepository: IOtpRepository,
         private readonly mailerService: MailerService,
-    ) {}
+    ) { }
 
-    async execute(email: string): Promise<string> {
+    async execute(command: SendOtpCommand): Promise<string> {
+        const { email } = command;
+
         // 1. Check Rate Limit
         await this.otpRepository.checkRateLimit(email);
 
         // 2. Generate OTP
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         const expiredAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
-        
+
         const otp = new Otp(email, otpCode, expiredAt);
 
         // 3. Save OTP
@@ -51,11 +54,10 @@ export class SendOtpUseCase {
               `,
             });
         } catch (error) {
-             this.logger.error(`Error sending email to ${email}: ${error.message}`);
-             throw new InternalServerErrorException('Failed to send OTP email');
+            this.logger.error(`Error sending email to ${email}: ${error.message}`);
+            throw new InternalServerErrorException('Failed to send OTP email');
         }
 
         return otpCode;
     }
 }
-

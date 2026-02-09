@@ -1,4 +1,4 @@
-export class GetCommentsCommand {
+export class GetCommentsQuery {
     constructor(
         public readonly targetId: string,
         public readonly targetType: 'book' | 'chapter' | 'post' | 'author',
@@ -8,5 +8,5 @@ export class GetCommentsCommand {
         public readonly cursor?: string,
         public readonly sortBy?: 'createdAt' | 'updatedAt' | 'likesCount',
         public readonly order?: 'asc' | 'desc'
-    ) {}
+    ) { }
 }

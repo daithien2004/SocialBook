@@ -10,20 +10,20 @@ export class NotificationRepository implements INotificationRepository {
   constructor(
     @InjectModel(NotificationSchemaClass.name)
     private readonly notificationModel: Model<NotificationDocument>,
-  ) {}
+  ) { }
 
   async save(notification: Notification): Promise<Notification> {
     const persistenceModel = this.mapToPersistence(notification);
     if (notification.id && Types.ObjectId.isValid(notification.id)) {
-        await this.notificationModel.findByIdAndUpdate(
-            notification.id,
-            persistenceModel,
-            { upsert: true, new: true }
-        ).exec();
-        return notification;
+      await this.notificationModel.findByIdAndUpdate(
+        notification.id,
+        persistenceModel,
+        { upsert: true, new: true }
+      ).exec();
+      return notification;
     } else {
-        const created = await this.notificationModel.create(persistenceModel);
-        return this.mapToDomain(created);
+      const created = await this.notificationModel.create(persistenceModel);
+      return this.mapToDomain(created);
     }
   }
 
@@ -32,9 +32,13 @@ export class NotificationRepository implements INotificationRepository {
     return doc ? this.mapToDomain(doc) : null;
   }
 
-  async findAllByUser(userId: string, limit = 50, offset = 0): Promise<Notification[]> {
+  async findAllByUser(userId: string, limit = 50, offset = 0, isRead?: boolean): Promise<Notification[]> {
+    const query: any = { userId: new Types.ObjectId(userId) };
+    if (isRead !== undefined) {
+      query.isRead = isRead;
+    }
     const docs = await this.notificationModel
-      .find({ userId: new Types.ObjectId(userId) })
+      .find(query)
       .sort({ createdAt: -1 })
       .skip(offset)
       .limit(limit)

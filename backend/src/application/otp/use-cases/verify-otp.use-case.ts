@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
+import { VerifyOtpCommand } from './verify-otp.command';
 
 @Injectable()
 export class VerifyOtpUseCase {
@@ -7,9 +8,11 @@ export class VerifyOtpUseCase {
 
     constructor(
         private readonly otpRepository: IOtpRepository,
-    ) {}
+    ) { }
 
-    async execute(email: string, inputOtp: string): Promise<boolean> {
+    async execute(command: VerifyOtpCommand): Promise<boolean> {
+        const { email, otp: inputOtp } = command;
+
         try {
             const otp = await this.otpRepository.findByEmail(email);
 
@@ -32,4 +35,3 @@ export class VerifyOtpUseCase {
         }
     }
 }
-

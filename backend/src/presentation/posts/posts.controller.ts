@@ -27,19 +27,31 @@ import { UpdatePostDto } from '@/presentation/posts/dto/update-post.dto';
 
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { RolesGuard } from '@/common/guards/roles.guard';
 
 // Use Cases
 import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
+import { CreatePostCommand } from '@/application/posts/use-cases/create-post.command';
 import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
+import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
 import { GetPostsByUserUseCase } from '@/application/posts/use-cases/get-posts-by-user.use-case';
+import { GetPostsByUserQuery } from '@/application/posts/use-cases/get-posts-by-user.query';
 import { GetPostUseCase } from '@/application/posts/use-cases/get-post.use-case';
+import { GetPostQuery } from '@/application/posts/use-cases/get-post.query';
 import { UpdatePostUseCase } from '@/application/posts/use-cases/update-post.use-case';
+import { UpdatePostCommand } from '@/application/posts/use-cases/update-post.command';
 import { DeletePostUseCase } from '@/application/posts/use-cases/delete-post.use-case';
+import { DeletePostCommand } from '@/application/posts/use-cases/delete-post.command';
 import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-post-image.use-case';
+import { RemovePostImageCommand } from '@/application/posts/use-cases/remove-post-image.command';
 import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
+import { GetFlaggedPostsQuery } from '@/application/posts/use-cases/get-flagged-posts.query';
 import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
+import { ApprovePostCommand } from '@/application/posts/use-cases/approve-post.command';
 import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
-import { PostResponseDto } from '@/presentation/posts/dto/post.response.dto'; 
+import { RejectPostCommand } from '@/application/posts/use-cases/reject-post.command';
+import { PostResponseDto } from '@/presentation/posts/dto/post.response.dto';
 
 @ApiTags('Posts')
 @ApiBearerAuth()
@@ -64,7 +76,8 @@ export class PostsController {
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() query: PaginationDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
-    const result = await this.getPostsUseCase.execute(query.page, limit);
+    const postsQuery = new GetPostsQuery(query.page, limit);
+    const result = await this.getPostsUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data), // Response DTO handles Post Entity mapping
@@ -83,7 +96,8 @@ export class PostsController {
   @HttpCode(HttpStatus.OK)
   async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
-    const result = await this.getPostsByUserUseCase.execute(query.userId, query.page, limit);
+    const postsQuery = new GetPostsByUserQuery(query.userId, query.page, limit);
+    const result = await this.getPostsByUserUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
@@ -102,7 +116,8 @@ export class PostsController {
   @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
-    const data = await this.getPostUseCase.execute(id);
+    const query = new GetPostQuery(id);
+    const data = await this.getPostUseCase.execute(query);
     return {
       message: 'Get post detail successfully',
       data: new PostResponseDto(data),
@@ -145,14 +160,15 @@ export class PostsController {
     if (files && files.length > 10) {
       throw new BadRequestException('Maximum 10 images allowed');
     }
-    const data = await this.createPostUseCase.execute(req.user.id, dto, files);
-    
+    const command = new CreatePostCommand(req.user.id, dto.bookId, dto.content);
+    const data = await this.createPostUseCase.execute(command, files);
+
     const responseDto = new PostResponseDto(data);
     if (data.isFlagged) {
-         return {
-            ...responseDto,
-            warning: `Bài viết phát hiện nội dung vi phạm cần quản trị viên phê duyệt: ${data.moderationReason}`,
-         }
+      return {
+        ...responseDto,
+        warning: `Bài viết phát hiện nội dung vi phạm cần quản trị viên phê duyệt: ${data.moderationReason}`,
+      }
     }
 
     return {
@@ -194,14 +210,15 @@ export class PostsController {
       }),
     )
     files?: Express.Multer.File[],
-    @Req() req?: Request & { user: { id: string } } 
+    @Req() req?: Request & { user: { id: string } }
   ) {
     if (files && files.length > 10) {
       throw new BadRequestException('Maximum 10 images allowed');
     }
 
-    const userId = req?.user?.id || ''; 
-    const data = await this.updatePostUseCase.execute(id, userId, dto, files);
+    const userId = req?.user?.id || '';
+    const command = new UpdatePostCommand(userId, id, dto.content, dto.bookId, dto.imageUrls);
+    const data = await this.updatePostUseCase.execute(command, files);
     return {
       message: 'Update post successfully',
       data: new PostResponseDto(data),
@@ -213,20 +230,25 @@ export class PostsController {
   @ApiOperation({ summary: 'Delete a post (Soft delete)' })
   @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string) {
-    await this.deletePostUseCase.execute(id, true);
+  async remove(@Param('id') id: string, @Req() req: Request & { user: { id: string } }) {
+    const userId = req.user.id;
+    const command = new DeletePostCommand(userId, id, false, false); // isHardDelete=false, isAdmin=false (assuming user delete own post)
+    await this.deletePostUseCase.execute(command);
     return {
       message: 'Delete post successfully',
     };
   }
 
   @Delete(':id/permanent')
-  @UseGuards(JwtAuthGuard) // Nên thêm Role Admin guard ở đây
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Delete a post permanently' })
   @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
-  async removeHard(@Param('id') id: string) {
-    await this.deletePostUseCase.execute(id, false);
+  async removeHard(@Param('id') id: string, @Req() req: Request & { user: { id: string } }) {
+    const userId = req.user.id;
+    const command = new DeletePostCommand(userId, id, true, true); // isHardDelete=true, isAdmin=true
+    await this.deletePostUseCase.execute(command);
     return {
       message: 'Permanently deleted post',
     };
@@ -241,10 +263,13 @@ export class PostsController {
   async removeImage(
     @Param('id') id: string,
     @Body('imageUrl') imageUrl: string,
+    @Req() req: Request & { user: { id: string } }
   ) {
     if (!imageUrl) throw new BadRequestException('imageUrl is required');
 
-    const data = await this.removePostImageUseCase.execute(id, imageUrl);
+    // We pass userId for potential ownership check in future
+    const command = new RemovePostImageCommand(req.user.id, id, imageUrl, false);
+    const data = await this.removePostImageUseCase.execute(command);
     return {
       message: 'Image removed successfully',
       data,
@@ -254,12 +279,14 @@ export class PostsController {
   // ===== ADMIN ENDPOINTS =====
 
   @Get('admin/flagged')
-  @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Get flagged posts (Admin)' })
   @HttpCode(HttpStatus.OK)
   async getFlaggedPosts(@Query() query: PaginationDto) {
     const limit = query.limit > 100 ? 100 : query.limit;
-    const result = await this.getFlaggedPostsUseCase.execute(query.page, limit);
+    const flaggedQuery = new GetFlaggedPostsQuery(query.page, limit);
+    const result = await this.getFlaggedPostsUseCase.execute(flaggedQuery);
     return {
       data: PostResponseDto.fromArray(result.data),
       meta: {
@@ -273,24 +300,29 @@ export class PostsController {
   }
 
   @Patch('admin/:id/approve')
-  @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Approve a post (Admin)' })
   @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async approvePost(@Param('id') id: string) {
-    const result = await this.approvePostUseCase.execute(id);
+    const command = new ApprovePostCommand(id);
+    const result = await this.approvePostUseCase.execute(command);
     return {
       message: result.message,
     };
   }
 
   @Delete('admin/:id/reject')
-  @UseGuards(JwtAuthGuard) // TODO: Add AdminGuard
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Reject a post (Admin)' })
   @ApiParam({ name: 'id', type: 'string' })
   @HttpCode(HttpStatus.OK)
   async rejectPost(@Param('id') id: string) {
-    const result = await this.rejectPostUseCase.execute(id);
+    // For reject, maybe we want a reason?
+    const command = new RejectPostCommand(id, 'Rejected by admin');
+    const result = await this.rejectPostUseCase.execute(command);
     return {
       message: result.message,
     };

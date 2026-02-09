@@ -21,7 +21,7 @@ import { RecordReadingUseCase } from '@/application/gamification/use-cases/recor
 import { GetGamificationStatsUseCase } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.use-case';
 
 import { RecordReadingCommand } from '@/application/gamification/use-cases/record-reading/record-reading.command';
-import { GetGamificationStatsCommand } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.command';
+import { GetGamificationStatsQuery } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.query';
 
 @ApiTags('Gamification')
 @Controller('gamification')
@@ -29,7 +29,7 @@ export class GamificationController {
   constructor(
     private readonly recordReadingUseCase: RecordReadingUseCase,
     private readonly getGamificationStatsUseCase: GetGamificationStatsUseCase,
-  ) {}
+  ) { }
 
   @Post('record-reading')
   @UseGuards(JwtAuthGuard)
@@ -60,8 +60,8 @@ export class GamificationController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get gamification stats for current user' })
   async getMyStats(@Req() req: Request & { user: { id: string } }) {
-    const command = new GetGamificationStatsCommand(req.user.id);
-    const stats = await this.getGamificationStatsUseCase.execute(command);
+    const query = new GetGamificationStatsQuery(req.user.id);
+    const stats = await this.getGamificationStatsUseCase.execute(query);
 
     return {
       message: 'Stats retrieved successfully',
@@ -75,8 +75,8 @@ export class GamificationController {
   @ApiOperation({ summary: 'Get gamification stats for a user' })
   @ApiQuery({ name: 'userId', description: 'User ID' })
   async getUserStats(@Query('userId') userId: string) {
-    const command = new GetGamificationStatsCommand(userId);
-    const stats = await this.getGamificationStatsUseCase.execute(command);
+    const query = new GetGamificationStatsQuery(userId);
+    const stats = await this.getGamificationStatsUseCase.execute(query);
 
     return {
       message: 'Stats retrieved successfully',
@@ -89,50 +89,12 @@ export class GamificationController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get global gamification statistics' })
   async getGlobalStats() {
-    const command = new GetGamificationStatsCommand();
-    const stats = await this.getGamificationStatsUseCase.execute(command);
+    const query = new GetGamificationStatsQuery();
+    const stats = await this.getGamificationStatsUseCase.execute(query);
 
     return {
       message: 'Global stats retrieved successfully',
       data: stats,
-    };
-  }
-
-  @Post('use-streak-freeze')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Use a streak freeze' })
-  async useStreakFreeze(@Req() req: Request & { user: { id: string } }) {
-    // This would need a specific use case
-    return {
-      message: 'Streak freeze used successfully',
-      data: { streakFreezeUsed: true },
-    };
-  }
-
-  @Get('leaderboard/streak')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get top users by streak' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  async getStreakLeaderboard(@Query('limit') limit: string = '10') {
-    // This would need a specific use case
-    return {
-      message: 'Streak leaderboard retrieved successfully',
-      data: [],
-    };
-  }
-
-  @Get('leaderboard/xp')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get top users by XP' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  async getXPLeaderboard(@Query('limit') limit: string = '10') {
-    // This would need a specific use case
-    return {
-      message: 'XP leaderboard retrieved successfully',
-      data: [],
     };
   }
 }

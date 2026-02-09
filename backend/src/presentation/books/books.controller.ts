@@ -39,6 +39,7 @@ import { CreateBookCommand } from '@/application/books/use-cases/create-book/cre
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
 import { DeleteBookCommand } from '@/application/books/use-cases/delete-book/delete-book.command';
+import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query'; // Import Query
 
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
@@ -52,7 +53,7 @@ export class BooksController {
     private readonly getBookBySlugUseCase: GetBookBySlugUseCase,
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,
-  ) {}
+  ) { }
 
   /**
    * POST /books - Create new book (admin only)
@@ -79,11 +80,57 @@ export class BooksController {
       createBookDto.status,
       createBookDto.tags
     );
-    
+
     const book = await this.createBookUseCase.execute(command);
     return {
       message: 'Tạo sách thành công',
       data: new BookResponseDto(book),
+    };
+  }
+
+  /**
+   * GET /books/admin/all - Get all books (admin only)
+   */
+  @Get('admin/all')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Get all books (admin only)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'genres', required: false, type: String })
+  @ApiQuery({ name: 'tags', required: false, type: String })
+  @ApiQuery({ name: 'author', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'sortBy', required: false, type: String })
+  @ApiQuery({ name: 'order', required: false, type: String })
+  async findAllAdmin(
+    @Query() filter: FilterBookDto,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
+  ) {
+    const query = new GetBooksQuery(
+      Number(page),
+      Number(limit),
+      filter.title,
+      filter.authorId,
+      filter.genres,
+      filter.tags,
+      filter.status,
+      filter.search,
+      filter.publishedYear,
+      sortBy as any,
+      order as any
+    );
+
+    const result = await this.getBooksUseCase.execute(query);
+
+    return {
+      message: 'Lấy danh sách sách (Admin) thành công',
+      data: result.data.map(book => new BookResponseDto(book)),
+      meta: result.meta,
     };
   }
 
@@ -122,9 +169,9 @@ export class BooksController {
       sortBy as any,
       order as any
     );
-    
+
     const result = await this.getBooksUseCase.execute(query);
-    
+
     return {
       message: 'Lấy danh sách sách thành công',
       data: result.data.map(book => new BookResponseDto(book)),
@@ -140,7 +187,8 @@ export class BooksController {
   @ApiOperation({ summary: 'Get book by Slug' })
   @ApiParam({ name: 'slug', description: 'Book Slug' })
   async findOne(@Param('slug') slug: string) {
-    const book = await this.getBookBySlugUseCase.execute(slug);
+    const query = new GetBookBySlugQuery(slug); // Use Query object
+    const book = await this.getBookBySlugUseCase.execute(query);
 
     return {
       message: 'Lấy thông tin sách thành công',
@@ -175,7 +223,7 @@ export class BooksController {
       updateBookDto.status,
       updateBookDto.tags
     );
-    
+
     const book = await this.updateBookUseCase.execute(command);
     return {
       message: 'Cập nhật sách thành công',
