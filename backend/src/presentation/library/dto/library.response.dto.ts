@@ -1,5 +1,5 @@
 import { ReadingList, ReadingStatus } from "@/domain/library/entities/reading-list.entity";
-import { ChapterStatus } from "@/domain/library/entities/reading-progress.entity";
+import { ReadingProgress, ChapterStatus } from "@/domain/library/entities/reading-progress.entity";
 
 export class ReadingListResponseDto {
     id: string;
@@ -20,49 +20,51 @@ export class ReadingListResponseDto {
         this.updatedAt = readingList.updatedAt;
     }
 
+    static fromEntity(readingList: ReadingList): ReadingListResponseDto {
+        return new ReadingListResponseDto(readingList);
+    }
+
     static fromArray(readingLists: ReadingList[]): ReadingListResponseDto[] {
         return readingLists.map(readingList => new ReadingListResponseDto(readingList));
     }
 }
 
-export class UpdateStatusResponseDto {
-    id: string;
-    bookId: string;
-    status: ReadingStatus;
-    updatedAt: Date;
+export class BookLibraryInfoResponseDto {
+    status: ReadingStatus | null;
+    collections: string[];
 
-    constructor(readingList: ReadingList) {
-        this.id = readingList.id.toString();
-        this.bookId = readingList.bookId.toString();
-        this.status = readingList.status;
-        this.updatedAt = readingList.updatedAt;
+    constructor(readingList: ReadingList | null) {
+        if (readingList) {
+            this.status = readingList.status;
+            this.collections = readingList.collectionIds;
+        } else {
+            this.status = null;
+            this.collections = [];
+        }
+    }
+
+    static fromEntity(readingList: ReadingList | null): BookLibraryInfoResponseDto {
+        return new BookLibraryInfoResponseDto(readingList);
     }
 }
 
-export interface UpdateProgressResponseDto {
+export class UpdateProgressResponseDto {
     readingListId: string;
     progressId: string;
     bookStatus: ReadingStatus;
     chapterProgress: number;
     chapterStatus: ChapterStatus;
-}
 
-export interface BookLibraryInfoResponseDto {
-    status: ReadingStatus | null;
-    collections: string[];
-}
+    constructor(readingList: ReadingList, readingProgress: ReadingProgress) {
+        this.readingListId = readingList.id;
+        this.progressId = readingProgress.id;
+        this.bookStatus = readingList.status;
+        this.chapterProgress = readingProgress.progress;
+        this.chapterStatus = readingProgress.status;
+    }
 
-export class UpdateCollectionsResponseDto {
-    id: string;
-    bookId: string;
-    collectionIds: string[];
-    updatedAt: Date;
-
-    constructor(readingList: ReadingList) {
-        this.id = readingList.id.toString();
-        this.bookId = readingList.bookId.toString();
-        this.collectionIds = readingList.collectionIds;
-        this.updatedAt = readingList.updatedAt;
+    static fromEntities(readingList: ReadingList, readingProgress: ReadingProgress): UpdateProgressResponseDto {
+        return new UpdateProgressResponseDto(readingList, readingProgress);
     }
 }
 
@@ -87,4 +89,3 @@ export interface BookInCollectionDto {
     coverUrl: string;
     authorId: string;
 }
-

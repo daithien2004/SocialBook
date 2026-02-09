@@ -5,13 +5,11 @@ import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
 import { ReadingStatus, ReadingList } from '@/domain/library/entities/reading-list.entity';
 import { ReadingProgress } from '@/domain/library/entities/reading-progress.entity';
-import { UpdateProgressResponseDto } from '@/presentation/library/dto/library.response.dto';
+import { UpdateProgressCommand } from './update-progress.command';
 
-export interface UpdateProgressRequest {
-    userId: string;
-    bookId: string;
-    chapterId: string;
-    progress: number;
+export interface UpdateProgressResult {
+    readingList: ReadingList;
+    readingProgress: ReadingProgress;
 }
 
 export class UpdateProgressUseCase {
@@ -20,17 +18,17 @@ export class UpdateProgressUseCase {
         private readonly readingProgressRepository: IReadingProgressRepository
     ) { }
 
-    async execute(request: UpdateProgressRequest): Promise<UpdateProgressResponseDto> {
-        const userId = UserId.create(request.userId);
-        const bookId = BookId.create(request.bookId);
-        const chapterId = ChapterId.create(request.chapterId);
+    async execute(command: UpdateProgressCommand): Promise<UpdateProgressResult> {
+        const userId = UserId.create(command.userId);
+        const bookId = BookId.create(command.bookId);
+        const chapterId = ChapterId.create(command.chapterId);
 
         // Get or create reading list entry
         let readingList = await this.readingListRepository.findByUserIdAndBookId(userId, bookId);
         if (!readingList) {
             readingList = ReadingList.create({
-                userId: request.userId,
-                bookId: request.bookId,
+                userId: command.userId,
+                bookId: command.bookId,
                 status: ReadingStatus.READING
             });
         }
@@ -39,25 +37,24 @@ export class UpdateProgressUseCase {
         let readingProgress = await this.readingProgressRepository.findByUserIdAndChapterId(userId, chapterId);
         if (!readingProgress) {
             readingProgress = ReadingProgress.create({
-                userId: request.userId,
-                bookId: request.bookId,
-                chapterId: request.chapterId,
-                progress: request.progress
+                userId: command.userId,
+                bookId: command.bookId,
+                chapterId: command.chapterId,
+                progress: command.progress
             });
         } else {
-            readingProgress.updateProgress(request.progress);
+            readingProgress.updateProgress(command.progress);
         }
 
         // Update reading list with last read chapter
-        readingList.updateLastReadChapter(request.chapterId);
+        readingList.updateLastReadChapter(command.chapterId);
 
         // Determine book status based on progress
-        const isChapterCompleted = request.progress >= 80;
+        const isChapterCompleted = command.progress >= 80;
         let bookStatus = readingList.status;
 
         if (!readingList.isCompleted() && isChapterCompleted) {
-            // In a real implementation, you'd check if this is the last chapter
-            // For now, we'll keep the current status
+
             bookStatus = ReadingStatus.READING;
         }
 
@@ -70,12 +67,8 @@ export class UpdateProgressUseCase {
         ]);
 
         return {
-            readingListId: readingList.id,
-            progressId: readingProgress.id,
-            bookStatus: readingList.status,
-            chapterProgress: readingProgress.progress,
-            chapterStatus: readingProgress.status
+            readingList,
+            readingProgress
         };
     }
 }
-

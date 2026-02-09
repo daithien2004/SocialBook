@@ -29,7 +29,17 @@ import {
   UpdateProgressDto,
   UpdateReadingTimeDto,
 } from '@/presentation/library/dto/library.dto';
+import {
+  ReadingListResponseDto,
+  BookLibraryInfoResponseDto,
+  UpdateProgressResponseDto,
+} from '@/presentation/library/dto/library.response.dto';
 import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get-library.query';
+import { UpdateStatusCommand } from '@/application/library/use-cases/update-status/update-status.command';
+import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
+import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
+import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
 
 @Controller('library')
 export class LibraryController {
@@ -51,27 +61,24 @@ export class LibraryController {
     @Req() req: Request & { user: { id: string } },
     @Query('status') status: ReadingStatus = ReadingStatus.READING,
   ) {
-    const data = await this.getLibraryUseCase.execute({
-      userId: req.user.id,
-      status,
-    });
+    const query = new GetLibraryQuery(req.user.id, status);
+    const readingLists = await this.getLibraryUseCase.execute(query);
+
     return {
       message: 'Get library list successfully',
-      data,
+      data: ReadingListResponseDto.fromArray(readingLists),
     };
   }
 
   @Post('status')
   @HttpCode(HttpStatus.OK)
   async updateStatus(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateLibraryStatusDto) {
-    const data = await this.updateStatusUseCase.execute({
-      userId: req.user.id,
-      bookId: dto.bookId,
-      status: dto.status,
-    });
+    const command = new UpdateStatusCommand(req.user.id, dto.bookId, dto.status);
+    const readingList = await this.updateStatusUseCase.execute(command);
+
     return {
       message: 'Update library status successfully',
-      data,
+      data: ReadingListResponseDto.fromEntity(readingList),
     };
   }
 
@@ -96,15 +103,17 @@ export class LibraryController {
   @Patch('progress')
   @HttpCode(HttpStatus.OK)
   async updateProgress(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateProgressDto) {
-    const data = await this.updateProgressUseCase.execute({
-      userId: req.user.id,
-      bookId: dto.bookId,
-      chapterId: dto.chapterId,
-      progress: dto.progress || 0,
-    });
+    const command = new UpdateProgressCommand(
+      req.user.id,
+      dto.bookId,
+      dto.chapterId,
+      dto.progress || 0
+    );
+    const result = await this.updateProgressUseCase.execute(command);
+
     return {
       message: 'Update reading progress successfully',
-      data,
+      data: UpdateProgressResponseDto.fromEntities(result.readingList, result.readingProgress),
     };
   }
 
@@ -136,14 +145,12 @@ export class LibraryController {
   @Patch('collections')
   @HttpCode(HttpStatus.OK)
   async updateCollections(@Req() req: Request & { user: { id: string } }, @Body() dto: AddToCollectionsDto) {
-    const data = await this.updateCollectionsUseCase.execute({
-      userId: req.user.id,
-      bookId: dto.bookId,
-      collectionIds: dto.collectionIds,
-    });
+    const command = new UpdateCollectionsCommand(req.user.id, dto.bookId, dto.collectionIds);
+    const readingList = await this.updateCollectionsUseCase.execute(command);
+
     return {
       message: 'Update book collections successfully',
-      data,
+      data: ReadingListResponseDto.fromEntity(readingList),
     };
   }
 
@@ -162,13 +169,12 @@ export class LibraryController {
   @Get('book/:bookId')
   @HttpCode(HttpStatus.OK)
   async getBookLibraryInfo(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
-    const data = await this.getBookLibraryInfoUseCase.execute({
-      userId: req.user.id,
-      bookId,
-    });
+    const query = new GetBookLibraryInfoQuery(req.user.id, bookId);
+    const readingList = await this.getBookLibraryInfoUseCase.execute(query);
+
     return {
       message: 'Get book library info successfully',
-      data,
+      data: BookLibraryInfoResponseDto.fromEntity(readingList),
     };
   }
 }

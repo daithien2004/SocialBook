@@ -2,37 +2,29 @@ import { IReadingListRepository } from '@/domain/library/repositories/reading-li
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ReadingList } from '@/domain/library/entities/reading-list.entity';
-import { UpdateCollectionsResponseDto } from '@/presentation/library/dto/library.response.dto';
-
-export interface UpdateCollectionsRequest {
-    userId: string;
-    bookId: string;
-    collectionIds: string[];
-}
+import { UpdateCollectionsCommand } from './update-collections.command';
 
 export class UpdateCollectionsUseCase {
     constructor(
         private readonly readingListRepository: IReadingListRepository
     ) { }
 
-    async execute(request: UpdateCollectionsRequest): Promise<UpdateCollectionsResponseDto> {
-        const userId = UserId.create(request.userId);
-        const bookId = BookId.create(request.bookId);
+    async execute(command: UpdateCollectionsCommand): Promise<ReadingList> {
+        const userId = UserId.create(command.userId);
+        const bookId = BookId.create(command.bookId);
 
         let readingList = await this.readingListRepository.findByUserIdAndBookId(userId, bookId);
 
         if (!readingList) {
             readingList = ReadingList.create({
-                userId: request.userId,
-                bookId: request.bookId
+                userId: command.userId,
+                bookId: command.bookId
             });
         }
 
-        readingList.updateCollections(request.collectionIds);
+        readingList.updateCollections(command.collectionIds);
         await this.readingListRepository.save(readingList);
 
-        return new UpdateCollectionsResponseDto(readingList);
+        return readingList;
     }
 }
-
-
