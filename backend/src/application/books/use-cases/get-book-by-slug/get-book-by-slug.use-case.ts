@@ -7,7 +7,7 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 export class GetBookBySlugUseCase {
     constructor(
         private readonly bookRepository: IBookRepository
-    ) {}
+    ) { }
 
     async execute(slug: string): Promise<Book> {
         if (!slug) {
@@ -20,7 +20,6 @@ export class GetBookBySlugUseCase {
             throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
         }
 
-        // Increment views
         await this.bookRepository.incrementViews(book.id);
 
         return book;

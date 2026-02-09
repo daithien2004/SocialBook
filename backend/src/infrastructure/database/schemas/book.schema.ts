@@ -16,6 +16,12 @@ export class Book extends BaseSoftDeleteSchema {
   })
   genres: Types.ObjectId[];
 
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: 'Chapter' }],
+    default: [],
+  })
+  chapters: Types.ObjectId[];
+
   @Prop({ required: true })
   title: string;
 

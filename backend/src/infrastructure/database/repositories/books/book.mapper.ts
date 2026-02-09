@@ -7,6 +7,7 @@ interface BookPersistence {
   slug: string;
   authorId: Types.ObjectId;
   genres: Types.ObjectId[];
+  chapters: Types.ObjectId[];
   description: string;
   publishedYear: string;
   coverUrl: string;
@@ -26,6 +27,7 @@ export class BookMapper {
       slug: document.slug,
       authorId: (document.authorId && document.authorId._id ? document.authorId._id.toString() : document.authorId?.toString()) || '',
       genres: (document.genres || []).map((g: any) => (g && g._id ? g._id.toString() : g.toString())),
+      // chapterIds removed
       description: document.description || '',
       publishedYear: document.publishedYear || '',
       coverUrl: document.coverUrl || '',
@@ -45,7 +47,8 @@ export class BookMapper {
           };
         }
         return null;
-      }).filter((g: any) => g !== null)
+      }).filter((g: any) => g !== null),
+      chapters: [], // Mapper cannot reliably reconstruct full Chapter entities from potentially partial/missing data.
     });
   }
 
@@ -55,6 +58,7 @@ export class BookMapper {
       slug: book.slug,
       authorId: new Types.ObjectId(book.authorId.toString()),
       genres: book.genres.map(genre => new Types.ObjectId(genre.toString())),
+      chapters: book.chapters.map(chapter => new Types.ObjectId(chapter.id.toString())),
       description: book.description,
       publishedYear: book.publishedYear,
       coverUrl: book.coverUrl,

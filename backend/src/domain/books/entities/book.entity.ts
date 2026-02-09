@@ -5,6 +5,7 @@ import { BookStatus } from '../value-objects/book-status.vo';
 import { AuthorId } from '../value-objects/author-id.vo';
 import { GenreId } from '../value-objects/genre-id.vo';
 import slugify from 'slugify';
+import { Chapter } from '@/domain/chapters/entities/chapter.entity';
 
 export class Book extends Entity<BookId> {
     private constructor(
@@ -13,6 +14,7 @@ export class Book extends Entity<BookId> {
         private _slug: string,
         private _authorId: AuthorId,
         private _genres: GenreId[],
+        private _chapters: Chapter[],
         private _description: string,
         private _publishedYear: string,
         private _coverUrl: string,
@@ -23,7 +25,8 @@ export class Book extends Entity<BookId> {
         private _likedBy: string[],
         createdAt?: Date,
         updatedAt?: Date,
-        public readonly genreObjects?: { id: string; name: string; slug: string; }[]
+        public readonly genreObjects?: { id: string; name: string; slug: string; }[],
+        public readonly chapterObjects?: { id: string; title: string; slug: string; orderIndex: number; }[]
     ) {
         super(id, createdAt, updatedAt);
     }
@@ -43,13 +46,14 @@ export class Book extends Entity<BookId> {
         const authorId = AuthorId.create(props.authorId);
         const genres = props.genres.map(id => GenreId.create(id));
         const status = props.status ? BookStatus.create(props.status) : BookStatus.draft();
-        
+
         return new Book(
             BookId.generate(),
             title,
             slug,
             authorId,
             genres,
+            [], 
             props.description?.trim() || '',
             props.publishedYear?.trim() || '',
             props.coverUrl?.trim() || '',
@@ -58,6 +62,7 @@ export class Book extends Entity<BookId> {
             0,
             0,
             [],
+            undefined,
             undefined,
             undefined,
             undefined
@@ -70,6 +75,7 @@ export class Book extends Entity<BookId> {
         slug: string;
         authorId: string;
         genres: string[];
+        chapters: Chapter[];
         description: string;
         publishedYear: string;
         coverUrl: string;
@@ -88,6 +94,7 @@ export class Book extends Entity<BookId> {
             props.slug,
             AuthorId.create(props.authorId),
             props.genres.map(id => GenreId.create(id)),
+            props.chapters,
             props.description,
             props.publishedYear,
             props.coverUrl,
@@ -98,7 +105,7 @@ export class Book extends Entity<BookId> {
             props.likedBy,
             props.createdAt,
             props.updatedAt,
-            props.genreObjects
+            props.genreObjects,
         );
     }
 
@@ -117,6 +124,10 @@ export class Book extends Entity<BookId> {
 
     get genres(): GenreId[] {
         return [...this._genres];
+    }
+
+    get chapters(): Chapter[] {
+        return [...this._chapters];
     }
 
     get description(): string {
@@ -151,7 +162,6 @@ export class Book extends Entity<BookId> {
         return [...this._likedBy];
     }
 
-    // Business methods
     changeTitle(newTitle: string): void {
         const title = BookTitle.create(newTitle);
         this._title = title;

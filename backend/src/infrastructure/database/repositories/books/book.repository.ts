@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
+import { Chapter, ChapterDocument } from '../../schemas/chapter.schema';
+import { Chapter as ChapterEntity } from '@/domain/chapters/entities/chapter.entity';
 import { IBookRepository, BookFilter, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
 import { Book as BookEntity } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
@@ -12,16 +14,44 @@ import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 
 @Injectable()
 export class BookRepository implements IBookRepository {
-    constructor(@InjectModel(Book.name) private readonly bookModel: Model<BookDocument>) {}
+    constructor(
+        @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
+        @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
+    ) { }
 
     async findById(id: BookId): Promise<BookEntity | null> {
-        const document = await this.bookModel.findById(id.toString()).populate('genres').lean().exec();
+        const document = await this.bookModel.findById(id.toString())
+            .populate('genres')
+            .populate('chapters', 'title slug orderIndex viewsCount')
+            .lean()
+            .exec();
         return document ? this.mapToEntity(document) : null;
     }
 
     async findBySlug(slug: string): Promise<BookEntity | null> {
-        const document = await this.bookModel.findOne({ slug, isDeleted: false }).populate('genres').lean().exec();
-        return document ? this.mapToEntity(document) : null;
+        const document = await this.bookModel.findOne({ slug, isDeleted: false })
+            .populate('genres')
+            .lean()
+            .exec();
+
+        if (!document) return null;
+
+        const chapters = await this.chapterModel.find({ bookId: document._id })
+            .sort({ orderIndex: 1 })
+            .select('title bookId slug orderIndex viewsCount paragraphs createdAt updatedAt')
+            .lean()
+            .exec();
+        const chapterEntities = chapters.map(chap => ChapterEntity.reconstitute({
+            id: chap._id.toString(),
+            title: chap.title,
+            slug: chap.slug,
+            bookId: chap.bookId.toString(),
+            viewsCount: chap.viewsCount,
+            orderIndex: chap.orderIndex,
+            createdAt: chap.createdAt,
+            updatedAt: chap.updatedAt,
+        }));
+        return this.mapToEntity(document, chapterEntities);
     }
 
     async findByTitle(title: BookTitle): Promise<BookEntity | null> {
@@ -31,31 +61,31 @@ export class BookRepository implements IBookRepository {
 
     async findAll(filter: BookFilter, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<BookEntity>> {
         const queryFilter: FilterQuery<BookDocument> = { isDeleted: false };
-        
+
         if (filter.title) {
             queryFilter.title = { $regex: filter.title, $options: 'i' };
         }
-        
+
         if (filter.authorId) {
             queryFilter.authorId = filter.authorId;
         }
-        
+
         if (filter.genres && filter.genres.length > 0) {
             queryFilter.genres = { $in: filter.genres };
         }
-        
+
         if (filter.tags && filter.tags.length > 0) {
             queryFilter.tags = { $in: filter.tags };
         }
-        
+
         if (filter.status) {
             queryFilter.status = filter.status;
         }
-        
+
         if (filter.search) {
             queryFilter.$text = { $search: filter.search };
         }
-        
+
         if (filter.publishedYear) {
             queryFilter.publishedYear = filter.publishedYear;
         }
@@ -66,9 +96,9 @@ export class BookRepository implements IBookRepository {
 
         const skip = (pagination.page - 1) * pagination.limit;
         const total = await this.bookModel.countDocuments(queryFilter).exec();
-        
+
         let query = this.bookModel.find(queryFilter);
-        
+
         // Apply sorting
         if (sort?.sortBy) {
             const sortOrder = sort.order === 'desc' ? -1 : 1;
@@ -76,7 +106,7 @@ export class BookRepository implements IBookRepository {
         } else {
             query = query.sort({ createdAt: -1 });
         }
-        
+
         const documents = await query
             .skip(skip)
             .limit(pagination.limit)
@@ -132,29 +162,29 @@ export class BookRepository implements IBookRepository {
     }
 
     async existsByTitle(title: BookTitle, excludeId?: BookId): Promise<boolean> {
-        const query: FilterQuery<BookDocument> = { 
-            title: title.toString(), 
-            isDeleted: false 
+        const query: FilterQuery<BookDocument> = {
+            title: title.toString(),
+            isDeleted: false
         };
-        
+
         if (excludeId) {
             query._id = { $ne: excludeId.toString() };
         }
-        
+
         const count = await this.bookModel.countDocuments(query).exec();
         return count > 0;
     }
 
     async existsBySlug(slug: string, excludeId?: BookId): Promise<boolean> {
-        const query: FilterQuery<BookDocument> = { 
-            slug, 
-            isDeleted: false 
+        const query: FilterQuery<BookDocument> = {
+            slug,
+            isDeleted: false
         };
-        
+
         if (excludeId) {
             query._id = { $ne: excludeId.toString() };
         }
-        
+
         const count = await this.bookModel.countDocuments(query).exec();
         return count > 0;
     }
@@ -174,7 +204,7 @@ export class BookRepository implements IBookRepository {
     async addLike(id: BookId, userId: string): Promise<void> {
         await this.bookModel.findByIdAndUpdate(
             id.toString(),
-            { 
+            {
                 $inc: { likes: 1 },
                 $addToSet: { likedBy: userId },
                 updatedAt: new Date()
@@ -185,7 +215,7 @@ export class BookRepository implements IBookRepository {
     async removeLike(id: BookId, userId: string): Promise<void> {
         await this.bookModel.findByIdAndUpdate(
             id.toString(),
-            { 
+            {
                 $inc: { likes: -1 },
                 $pull: { likedBy: userId },
                 updatedAt: new Date()
@@ -194,23 +224,23 @@ export class BookRepository implements IBookRepository {
     }
 
     async countByAuthor(authorId: AuthorId): Promise<number> {
-        return await this.bookModel.countDocuments({ 
-            authorId: authorId.toString(), 
-            isDeleted: false 
+        return await this.bookModel.countDocuments({
+            authorId: authorId.toString(),
+            isDeleted: false
         }).exec();
     }
 
     async countByGenre(genreId: string): Promise<number> {
-        return await this.bookModel.countDocuments({ 
-            genres: { $in: [genreId] }, 
-            isDeleted: false 
+        return await this.bookModel.countDocuments({
+            genres: { $in: [genreId] },
+            isDeleted: false
         }).exec();
     }
 
     async countByStatus(status: 'draft' | 'published' | 'completed'): Promise<number> {
-        return await this.bookModel.countDocuments({ 
-            status, 
-            isDeleted: false 
+        return await this.bookModel.countDocuments({
+            status,
+            isDeleted: false
         }).exec();
     }
 
@@ -246,7 +276,7 @@ export class BookRepository implements IBookRepository {
 
     async getGrowthMetrics(startDate: Date, groupBy: 'day' | 'month' | 'year'): Promise<Array<{ _id: string; count: number }>> {
         let dateFormat: string;
-         switch (groupBy) {
+        switch (groupBy) {
             case 'month': dateFormat = '%Y-%m'; break;
             case 'year': dateFormat = '%Y'; break;
             case 'day': default: dateFormat = '%Y-%m-%d'; break;
@@ -264,13 +294,14 @@ export class BookRepository implements IBookRepository {
         ]).exec();
     }
 
-    private mapToEntity(document: any): BookEntity {
+    private mapToEntity(document: any, chapters: ChapterEntity[] = []): BookEntity {
         return BookEntity.reconstitute({
             id: document._id.toString(),
             title: document.title,
             slug: document.slug,
             authorId: (document.authorId && document.authorId._id ? document.authorId._id.toString() : document.authorId?.toString()) || '',
             genres: (document.genres || []).map((g: any) => (g && g._id ? g._id.toString() : g.toString())),
+            // chapterIds removed as we now use full Chapter entities via the chapters property below
             description: document.description || '',
             publishedYear: document.publishedYear || '',
             coverUrl: document.coverUrl || '',
@@ -281,6 +312,7 @@ export class BookRepository implements IBookRepository {
             likedBy: (document.likedBy || []).map((id: any) => id.toString()),
             createdAt: document.createdAt,
             updatedAt: document.updatedAt,
+            // genreObjects: ... (keep existing)
             genreObjects: (document.genres || []).map((g: any) => {
                 if (typeof g === 'object' && g._id) {
                     return {
@@ -290,7 +322,8 @@ export class BookRepository implements IBookRepository {
                     };
                 }
                 return null;
-            }).filter((g: any) => g !== null)
+            }).filter((g: any) => g !== null),
+            chapters: chapters.length > 0 ? chapters : [],
         });
     }
 
@@ -300,6 +333,7 @@ export class BookRepository implements IBookRepository {
             slug: book.slug,
             authorId: new Types.ObjectId(book.authorId.toString()),
             genres: book.genres.map(genre => new Types.ObjectId(genre.toString())),
+            chapters: book.chapters.map(chapter => new Types.ObjectId(chapter.id.toString())),
             description: book.description,
             publishedYear: book.publishedYear,
             coverUrl: book.coverUrl,
@@ -314,13 +348,13 @@ export class BookRepository implements IBookRepository {
 
     async findByIds(ids: BookId[]): Promise<BookEntity[]> {
         const objectIds = ids.map(id => id.toString());
-        const documents = await this.bookModel.find({ 
+        const documents = await this.bookModel.find({
             _id: { $in: objectIds },
-            isDeleted: false 
+            isDeleted: false
         }).populate('authorId', 'name avatar') // Minimal population if needed, or rely on IDs
-          .lean()
-          .exec();
-        
+            .lean()
+            .exec();
+
         return documents.map(doc => this.mapToEntity(doc));
     }
 
@@ -381,7 +415,7 @@ export class BookRepository implements IBookRepository {
         if (!keywords || keywords.length === 0) return results;
 
         try {
-             // Build regex pattern with word boundaries
+            // Build regex pattern with word boundaries
             const regexPattern = keywords.map(w => `\\b${w}\\b`).join('|');
             const regex = new RegExp(regexPattern, 'i');
 
@@ -422,7 +456,7 @@ export class BookRepository implements IBookRepository {
                 }
             }
         } catch (error) {
-             console.error(`Description search error: ${error.message}`);
+            console.error(`Description search error: ${error.message}`);
         }
         return results;
     }

@@ -56,20 +56,20 @@ export class Chapter extends Entity<ChapterId> {
         title: string;
         slug: string;
         bookId: string;
-        paragraphs: Array<{ id: string; content: string }>;
+        paragraphs?: Array<{ id: string; content: string }>;
         viewsCount: number;
         orderIndex: number;
         createdAt: Date;
         updatedAt: Date;
     }): Chapter {
-        const paragraphs = props.paragraphs.map(p => Paragraph.create(p.id, p.content));
+        const paragraphs = props.paragraphs?.map(p => Paragraph.create(p.id, p.content));
         
         return new Chapter(
             ChapterId.create(props.id),
             ChapterTitle.create(props.title),
             props.slug,
             BookId.create(props.bookId),
-            paragraphs,
+            paragraphs || [],
             props.viewsCount,
             ChapterOrderIndex.create(props.orderIndex),
             props.createdAt,
