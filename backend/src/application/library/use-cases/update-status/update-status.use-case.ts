@@ -2,6 +2,7 @@ import { IReadingListRepository } from '@/domain/library/repositories/reading-li
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ReadingStatus, ReadingList } from '@/domain/library/entities/reading-list.entity';
+import { ReadingListMapper, ReadingListStatusDto } from '../../mappers/reading-list.mapper';
 
 export interface UpdateStatusRequest {
     userId: string;
@@ -9,17 +10,13 @@ export interface UpdateStatusRequest {
     status: ReadingStatus;
 }
 
-export interface UpdateStatusResponse {
-    id: string;
-    bookId: string;
-    status: ReadingStatus;
-    updatedAt: Date;
-}
+// Re-export DTO type for external use
+export type UpdateStatusResponse = ReadingListStatusDto;
 
 export class UpdateStatusUseCase {
     constructor(
         private readonly readingListRepository: IReadingListRepository
-    ) {}
+    ) { }
 
     async execute(request: UpdateStatusRequest): Promise<UpdateStatusResponse> {
         const userId = UserId.create(request.userId);
@@ -39,12 +36,7 @@ export class UpdateStatusUseCase {
 
         await this.readingListRepository.save(readingList);
 
-        return {
-            id: readingList.id.toString(),
-            bookId: readingList.bookId.toString(),
-            status: readingList.status,
-            updatedAt: readingList.updatedAt
-        };
+        return ReadingListMapper.toStatusDto(readingList);
     }
 }
 

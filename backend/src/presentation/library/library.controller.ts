@@ -43,7 +43,7 @@ export class LibraryController {
     private readonly removeFromLibraryUseCase: RemoveFromLibraryUseCase,
     private readonly getBookLibraryInfoUseCase: GetBookLibraryInfoUseCase,
     private readonly getChapterProgressUseCase: GetChapterProgressUseCase,
-  ) {}
+  ) { }
 
   @Get()
   @HttpCode(HttpStatus.OK)
