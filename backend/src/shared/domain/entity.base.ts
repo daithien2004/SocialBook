@@ -21,28 +21,6 @@ export abstract class Entity<ID> {
         return this._updatedAt;
     }
 
-    public equals(other?: Entity<ID>): boolean {
-        if (other === null || other === undefined) {
-            return false;
-        }
-
-        if (this === other) {
-            return true;
-        }
-
-        if (!(other instanceof Entity)) {
-            return false;
-        }
-
-        // Support Value Objects with equals method or primitive comparison
-        const thisId = this._id as { equals?: (other: ID) => boolean };
-        if (typeof thisId.equals === 'function') {
-            return thisId.equals(other._id);
-        }
-
-        return this._id === other._id;
-    }
-
     protected markAsUpdated(): void {
         this._updatedAt = new Date();
     }

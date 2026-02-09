@@ -1,118 +1,138 @@
-import { Types } from 'mongoose';
+import { Entity } from '@/shared/domain/entity.base';
 
-export class Post {
-  constructor(
-    public readonly id: string,
-    public readonly userId: string,
-    public bookId: string | null, 
-    public content: string,
-    public imageUrls: string[],
-    public isDelete: boolean,
-    public isFlagged: boolean,
-    public moderationReason: string | undefined,
-    public moderationStatus: string | undefined,
-    public readonly createdAt: Date,
-    public updatedAt: Date,
-    public author?: { id: string; username: string; email: string; image: string },
-    public book?: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } },
-  ) {}
+export class Post extends Entity<string> {
+    private constructor(
+        id: string,
+        public readonly userId: string,
+        private _bookId: string | null, 
+        private _content: string,
+        private _imageUrls: string[],
+        private _isDelete: boolean,
+        private _isFlagged: boolean,
+        private _moderationReason: string | undefined,
+        private _moderationStatus: string | undefined,
+        createdAt?: Date,
+        updatedAt?: Date,
+        public author?: { id: string; username: string; email: string; image: string },
+        public book?: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } },
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
-  static create(props: {
-    userId: string;
-    bookId?: string;
-    content: string;
-    imageUrls?: string[];
-    author?: { id: string; username: string; email: string; image: string };
-    book?: { id: string; title: string; coverUrl: string };
-  }): Post {
-    return new Post(
-      new Types.ObjectId().toString(), // Helper for ID generation or let Repo handle? Usually Entity has ID.
-      props.userId,
-      props.bookId || null,
-      props.content,
-      props.imageUrls || [],
-      false,
-      false,
-      undefined,
-      'pending', // Default schema
-      new Date(),
-      new Date(),
-    );
-  }
+    static create(props: {
+        userId: string;
+        bookId?: string;
+        content: string;
+        imageUrls?: string[];
+        author?: { id: string; username: string; email: string; image: string };
+        book?: { id: string; title: string; coverUrl: string };
+    }): Post {
+        return new Post(
+            crypto.randomUUID(),
+            props.userId,
+            props.bookId || null,
+            props.content,
+            props.imageUrls || [],
+            false,
+            false,
+            undefined,
+            'pending'
+        );
+    }
 
-  static reconstitute(props: {
-    id: string;
-    userId: string;
-    bookId: string | null;
-    content: string;
-    imageUrls: string[];
-    isDelete: boolean;
-    isFlagged: boolean;
-    moderationReason?: string;
-    moderationStatus?: string;
-    createdAt: Date;
-    updatedAt: Date;
-    author?: { id: string; username: string; email: string; image: string };
-    book?: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } };
-  }): Post {
-    return new Post(
-      props.id,
-      props.userId,
-      props.bookId,
-      props.content,
-      props.imageUrls,
-      props.isDelete,
-      props.isFlagged,
-      props.moderationReason,
-      props.moderationStatus,
-      props.createdAt,
-      props.updatedAt,
-      props.author,
-      props.book,
-    );
-  }
+    static reconstitute(props: {
+        id: string;
+        userId: string;
+        bookId: string | null;
+        content: string;
+        imageUrls: string[];
+        isDelete: boolean;
+        isFlagged: boolean;
+        moderationReason?: string;
+        moderationStatus?: string;
+        createdAt: Date;
+        updatedAt: Date;
+        author?: { id: string; username: string; email: string; image: string };
+        book?: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } };
+    }): Post {
+        return new Post(
+            props.id,
+            props.userId,
+            props.bookId,
+            props.content,
+            props.imageUrls,
+            props.isDelete,
+            props.isFlagged,
+            props.moderationReason,
+            props.moderationStatus,
+            props.createdAt,
+            props.updatedAt,
+            props.author,
+            props.book,
+        );
+    }
 
-  updateContent(content: string): void {
-    this.content = content;
-    this.updatedAt = new Date();
-  }
+    get bookId(): string | null { return this._bookId; }
+    get content(): string { return this._content; }
+    get imageUrls(): string[] { return [...this._imageUrls]; }
+    get isDelete(): boolean { return this._isDelete; }
+    get isFlagged(): boolean { return this._isFlagged; }
+    get moderationReason(): string | undefined { return this._moderationReason; }
+    get moderationStatus(): string | undefined { return this._moderationStatus; }
 
-  updateImages(imageUrls: string[]): void {
-    this.imageUrls = imageUrls;
-    this.updatedAt = new Date();
-  }
+    updateContent(content: string): void {
+        this._content = content;
+        this.markAsUpdated();
+    }
 
-  addImage(url: string): void {
-    this.imageUrls.push(url);
-    this.updatedAt = new Date();
-  }
+    updateImages(imageUrls: string[]): void {
+        this._imageUrls = imageUrls;
+        this.markAsUpdated();
+    }
 
-  removeImage(url: string): void {
-    this.imageUrls = this.imageUrls.filter(img => img !== url);
-    this.updatedAt = new Date();
-  }
+    addImage(url: string): void {
+        this._imageUrls.push(url);
+        this.markAsUpdated();
+    }
 
-  delete(): void {
-    this.isDelete = true;
-    this.updatedAt = new Date();
-  }
+    removeImage(url: string): void {
+        this._imageUrls = this._imageUrls.filter(img => img !== url);
+        this.markAsUpdated();
+    }
 
-  flag(reason: string): void {
-    this.isFlagged = true;
-    this.moderationReason = reason;
-    this.moderationStatus = 'pending';
-    this.updatedAt = new Date();
-  }
+    delete(): void {
+        this._isDelete = true;
+        this.markAsUpdated();
+    }
 
-  approve(): void {
-    this.isFlagged = false;
-    this.moderationStatus = 'approved';
-    this.updatedAt = new Date();
-  }
+    flag(reason: string): void {
+        this._isFlagged = true;
+        this._moderationReason = reason;
+        this._moderationStatus = 'pending';
+        this.markAsUpdated();
+    }
 
-  reject(): void {
-    this.moderationStatus = 'rejected';
-    this.isDelete = true; // Rejecting often implies hiding/deleting
-    this.updatedAt = new Date();
-  }
+    approve(): void {
+        this._isFlagged = false;
+        this._moderationStatus = 'approved';
+        this.markAsUpdated();
+    }
+
+    clearModeration(): void {
+        this._isFlagged = false;
+        this._moderationReason = undefined;
+        this._moderationStatus = undefined;
+        this.markAsUpdated();
+    }
+
+    updateBookId(bookId: string): void {
+        this._bookId = bookId;
+        this.markAsUpdated();
+    }
+
+    reject(): void {
+        this._moderationStatus = 'rejected';
+        this._isDelete = true;
+        this.markAsUpdated();
+    }
 }

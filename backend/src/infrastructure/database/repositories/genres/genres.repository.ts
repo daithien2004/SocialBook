@@ -7,6 +7,7 @@ import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 import { Genre, GenreDocument } from '../../schemas/genre.schema';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { GenreMapper } from './genre.mapper';
 
 interface GenrePersistence {
     _id: Types.ObjectId;
@@ -22,25 +23,11 @@ export class GenresRepository implements IGenreRepository {
     constructor(@InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>) {}
 
     private toDomain(doc: GenreDocument): GenreEntity {
-        return GenreEntity.reconstitute({
-            id: doc._id.toString(),
-            name: doc.name,
-            slug: doc.slug,
-            description: doc.description,
-            createdAt: doc.createdAt,
-            updatedAt: doc.updatedAt,
-        });
+        return GenreMapper.toDomain(doc);
     }
 
     private toPersistence(entity: GenreEntity): GenrePersistence {
-        return {
-            _id: new Types.ObjectId(entity.id.toString()),
-            name: entity.name.toString(),
-            slug: entity.slug,
-            description: entity.description,
-            createdAt: entity.createdAt,
-            updatedAt: entity.updatedAt,
-        };
+        return GenreMapper.toPersistence(entity);
     }
 
     async findById(id: GenreId): Promise<GenreEntity | null> {

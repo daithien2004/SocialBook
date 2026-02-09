@@ -9,6 +9,7 @@ import { UserId } from '@/domain/comments/value-objects/user-id.vo';
 import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
 import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { CommentMapper } from './comment.mapper';
 
 @Injectable()
 export class CommentRepository implements ICommentRepository {
@@ -410,32 +411,11 @@ export class CommentRepository implements ICommentRepository {
     }
 
     private mapToEntity(document: any): CommentEntity {
-        return CommentEntity.reconstitute({
-            id: document._id.toString(),
-            userId: document.userId?.toString() || '',
-            targetType: document.targetType,
-            targetId: document.targetId?.toString() || '',
-            parentId: document.parentId?.toString() || null,
-            content: document.content,
-            likesCount: document.likesCount || 0,
-            isFlagged: document.isFlagged || false,
-            moderationReason: document.moderationReason || '',
-            moderationStatus: document.moderationStatus || 'pending',
-            createdAt: document.createdAt,
-            updatedAt: document.updatedAt,
-        });
+        return CommentMapper.toDomain(document);
     }
 
     private mapToDocument(comment: CommentEntity): Partial<CommentDocument> {
-        return {
-            userId: new Types.ObjectId(comment.userId.toString()),
-            targetType: comment.targetType.toString(),
-            targetId: new Types.ObjectId(comment.targetId.toString()),
-            parentId: comment.parentId ? new Types.ObjectId(comment.parentId.toString()) : null,
-            content: comment.content.toString(),
-            likesCount: comment.likesCount,
-            isFlagged: comment.isFlagged,
-        };
+        return CommentMapper.toPersistence(comment);
     }
 
     // Statistics

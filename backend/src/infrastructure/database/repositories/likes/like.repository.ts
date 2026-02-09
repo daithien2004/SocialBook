@@ -7,6 +7,7 @@ import { UserId } from '@/domain/likes/value-objects/user-id.vo';
 import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { LikeDocument } from '../../schemas/like.schema';
+import { LikeMapper } from './like.mapper';
 
 interface LikePersistence {
     _id: Types.ObjectId;
@@ -26,27 +27,11 @@ export class LikeRepository implements ILikeRepository {
     ) {}
 
     private toDomain(doc: LikeDocument): Like {
-        return Like.reconstitute({
-            id: doc._id.toString(),
-            userId: doc.userId.toString(),
-            targetId: doc.targetId.toString(),
-            targetType: doc.targetType as TargetType,
-            status: doc.status,
-            createdAt: doc.createdAt as Date,
-            updatedAt: doc.updatedAt as Date as Date
-        });
+        return LikeMapper.toDomain(doc);
     }
 
     private toPersistence(like: Like): LikePersistence {
-        return {
-            _id: new Types.ObjectId(like.id),
-            userId: new Types.ObjectId(like.userId.toString()),
-            targetId: new Types.ObjectId(like.targetId.toString()),
-            targetType: like.targetType,
-            status: like.status,
-            createdAt: like.createdAt,
-            updatedAt: like.updatedAt
-        };
+        return LikeMapper.toPersistence(like);
     }
 
     async save(like: Like): Promise<void> {

@@ -1,18 +1,21 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { VectorId } from '../value-objects/vector-id.vo';
 import { EmbeddingVector } from '../value-objects/embedding-vector.vo';
 import { ContentType } from '../value-objects/content-type.vo';
 
-export class VectorDocument {
+export class VectorDocument extends Entity<VectorId> {
     private constructor(
-        public readonly id: VectorId,
+        id: VectorId,
         private _contentId: string,
         private _contentType: ContentType,
         private _content: string,
         private _metadata: Record<string, any>,
         private _embedding: EmbeddingVector,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         contentId: string;
@@ -35,9 +38,7 @@ export class VectorDocument {
             ContentType.create(props.contentType),
             props.content.trim(),
             props.metadata || {},
-            EmbeddingVector.create(props.embedding),
-            new Date(),
-            new Date()
+            EmbeddingVector.create(props.embedding)
         );
     }
 
@@ -84,10 +85,6 @@ export class VectorDocument {
         return this._embedding;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     // Business methods
     updateContent(newContent: string): void {
         if (!newContent || newContent.trim().length === 0) {
@@ -95,27 +92,27 @@ export class VectorDocument {
         }
 
         this._content = newContent.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateMetadata(newMetadata: Record<string, any>): void {
         this._metadata = { ...newMetadata };
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateEmbedding(newEmbedding: number[]): void {
         this._embedding = EmbeddingVector.create(newEmbedding);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     addMetadata(key: string, value: any): void {
         this._metadata[key] = value;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     removeMetadata(key: string): void {
         delete this._metadata[key];
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     calculateSimilarity(other: VectorDocument): number {

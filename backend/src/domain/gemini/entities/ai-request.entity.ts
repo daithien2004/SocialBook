@@ -1,17 +1,20 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { AIRequestId } from '../value-objects/ai-request-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 
-export class AIRequest {
+export class AIRequest extends Entity<AIRequestId> {
     private constructor(
-        public readonly id: AIRequestId,
+        id: AIRequestId,
         private _prompt: string,
         private _response: string | null,
         private _type: AIRequestType,
         private _userId: UserId,
         private _metadata: Record<string, any>,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         prompt: string;
@@ -25,9 +28,7 @@ export class AIRequest {
             null,
             props.type,
             UserId.create(props.userId),
-            props.metadata || {},
-            new Date(),
-            new Date()
+            props.metadata || {}
         );
     }
 
@@ -73,18 +74,14 @@ export class AIRequest {
         return this._metadata;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     setResponse(response: string): void {
         this._response = response.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateMetadata(metadata: Record<string, any>): void {
         this._metadata = { ...this._metadata, ...metadata };
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     isCompleted(): boolean {

@@ -1,17 +1,20 @@
+import { Entity } from '@/shared/domain/entity.base';
 import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { TargetType } from '../value-objects/target-type.vo';
 
-export class Like {
+export class Like extends Entity<string> {
     private constructor(
-        public readonly id: string,
+        id: string,
         private _userId: UserId,
         private _targetId: TargetId,
         private _targetType: TargetType,
         private _status: boolean,
-        public readonly createdAt: Date,
-        private _updatedAt: Date
-    ) {}
+        createdAt?: Date,
+        updatedAt?: Date
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
         userId: string;
@@ -24,9 +27,7 @@ export class Like {
             UserId.create(props.userId),
             TargetId.create(props.targetId),
             props.targetType,
-            props.status ?? true,
-            new Date(),
-            new Date()
+            props.status ?? true
         );
     }
 
@@ -66,23 +67,19 @@ export class Like {
         return this._status;
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     toggle(): void {
         this._status = !this._status;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     like(): void {
         this._status = true;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     unlike(): void {
         this._status = false;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     isLiked(): boolean {
