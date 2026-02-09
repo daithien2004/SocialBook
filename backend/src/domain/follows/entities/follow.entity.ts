@@ -2,19 +2,16 @@ import { FollowId } from '../value-objects/follow-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { FollowStatus } from '../value-objects/follow-status.vo';
-import { Entity } from '../../../shared/domain/entity.base';
 
-export class Follow extends Entity<FollowId> {
+export class Follow {
     private constructor(
-        id: FollowId,
+        public readonly id: FollowId,
         private _userId: UserId,
         private _targetId: TargetId,
         private _status: FollowStatus,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+        public readonly createdAt: Date,
+        private _updatedAt: Date
+    ) {}
 
     static create(props: {
         userId: string;
@@ -70,31 +67,35 @@ export class Follow extends Entity<FollowId> {
         return this._status;
     }
 
+    get updatedAt(): Date {
+        return this._updatedAt;
+    }
+
     // Business methods
     activate(): void {
         this._status = FollowStatus.active();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     deactivate(): void {
         this._status = FollowStatus.inactive();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     toggleStatus(): void {
         this._status = this._status.toggle();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateTarget(newTargetId: string): void {
         const targetId = TargetId.create(newTargetId);
-
+        
         if (this._userId.getValue() === targetId.getValue()) {
             throw new Error('User cannot follow themselves');
         }
 
         this._targetId = targetId;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     isActive(): boolean {
@@ -140,8 +141,7 @@ export class Follow extends Entity<FollowId> {
             status: this._status.getValue(),
             isActive: this.isActive(),
             createdAt: this.createdAt,
-            updatedAt: this.updatedAt
+            updatedAt: this._updatedAt
         };
     }
 }
-

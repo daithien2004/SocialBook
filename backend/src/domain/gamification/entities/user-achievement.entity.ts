@@ -2,7 +2,6 @@ import { Types } from 'mongoose';
 import { AchievementId } from '../value-objects/achievement-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { XP } from '../value-objects/xp.vo';
-import { Entity } from '../../../shared/domain/entity.base';
 
 export class UserAchievementId {
     private readonly value: string;
@@ -34,20 +33,18 @@ export class UserAchievementId {
     }
 }
 
-export class UserAchievement extends Entity<UserAchievementId> {
+export class UserAchievement {
     private constructor(
-        id: UserAchievementId,
+        public readonly id: UserAchievementId,
         private _userId: UserId,
         private _achievementId: AchievementId,
         private _progress: number,
         private _isUnlocked: boolean,
         private _unlockedAt: Date | null,
         private _rewardXP: XP,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+        public readonly createdAt: Date,
+        private _updatedAt: Date
+    ) {}
 
     static create(props: {
         userId: string;
@@ -91,7 +88,6 @@ export class UserAchievement extends Entity<UserAchievementId> {
         );
     }
 
-    // Getters
     get userId(): UserId {
         return this._userId;
     }
@@ -116,22 +112,25 @@ export class UserAchievement extends Entity<UserAchievementId> {
         return this._rewardXP;
     }
 
-    // Business methods
+    get updatedAt(): Date {
+        return this._updatedAt;
+    }
+
     updateProgress(progress: number): void {
         this._progress = Math.max(0, progress);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     incrementProgress(amount: number = 1): void {
         this._progress += amount;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     unlock(): void {
         if (!this._isUnlocked) {
             this._isUnlocked = true;
             this._unlockedAt = new Date();
-            this.markAsUpdated();
+            this._updatedAt = new Date();
         }
     }
 
@@ -143,4 +142,3 @@ export class UserAchievement extends Entity<UserAchievementId> {
         return !this._isUnlocked && this._progress >= targetValue * 0.8;
     }
 }
-

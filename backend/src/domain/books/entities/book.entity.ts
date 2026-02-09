@@ -3,12 +3,11 @@ import { BookTitle } from '../value-objects/book-title.vo';
 import { BookStatus } from '../value-objects/book-status.vo';
 import { AuthorId } from '../value-objects/author-id.vo';
 import { GenreId } from '../value-objects/genre-id.vo';
-import { Entity } from '../../../shared/domain/entity.base';
 import slugify from 'slugify';
 
-export class Book extends Entity<BookId> {
+export class Book {
     private constructor(
-        id: BookId,
+        public readonly id: BookId,
         private _title: BookTitle,
         private _slug: string,
         private _authorId: AuthorId,
@@ -21,12 +20,10 @@ export class Book extends Entity<BookId> {
         private _views: number,
         private _likes: number,
         private _likedBy: string[],
-        createdAt: Date,
-        updatedAt: Date,
+        public readonly createdAt: Date,
+        private _updatedAt: Date,
         public readonly genreObjects?: { id: string; name: string; slug: string; }[]
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+    ) {}
 
     static create(props: {
         title: string;
@@ -43,7 +40,7 @@ export class Book extends Entity<BookId> {
         const authorId = AuthorId.create(props.authorId);
         const genres = props.genres.map(id => GenreId.create(id));
         const status = props.status ? BookStatus.create(props.status) : BookStatus.draft();
-
+        
         return new Book(
             BookId.generate(),
             title,
@@ -151,17 +148,21 @@ export class Book extends Entity<BookId> {
         return [...this._likedBy];
     }
 
+    get updatedAt(): Date {
+        return this._updatedAt;
+    }
+
     // Business methods
     changeTitle(newTitle: string): void {
         const title = BookTitle.create(newTitle);
         this._title = title;
         this._slug = Book.generateSlug(newTitle);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     changeAuthor(newAuthorId: string): void {
         this._authorId = AuthorId.create(newAuthorId);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateGenres(newGenres: string[]): void {
@@ -172,48 +173,48 @@ export class Book extends Entity<BookId> {
             throw new Error('Book cannot have more than 5 genres');
         }
         this._genres = newGenres.map(id => GenreId.create(id));
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateDescription(description: string): void {
         this._description = description.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updatePublishedYear(publishedYear: string): void {
         this._publishedYear = publishedYear.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateCoverUrl(coverUrl: string): void {
         this._coverUrl = coverUrl.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     changeStatus(newStatus: 'draft' | 'published' | 'completed'): void {
         this._status = BookStatus.create(newStatus);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateTags(tags: string[]): void {
         this._tags = tags;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     incrementViews(): void {
         this._views += 1;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     incrementLikes(): void {
         this._likes += 1;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     decrementLikes(): void {
         if (this._likes > 0) {
             this._likes -= 1;
-            this.markAsUpdated();
+            this._updatedAt = new Date();
         }
     }
 
@@ -240,4 +241,3 @@ export class Book extends Entity<BookId> {
         });
     }
 }
-

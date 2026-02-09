@@ -1,20 +1,17 @@
 import { AuthorId } from '../value-objects/author-id.vo';
 import { AuthorName } from '../value-objects/author-name.vo';
-import { Entity } from '../../../shared/domain/entity.base';
 import slugify from 'slugify';
 
-export class Author extends Entity<AuthorId> {
+export class Author {
     private constructor(
-        id: AuthorId,
+        public readonly id: AuthorId,
         private _name: AuthorName,
         private _slug: string,
         private _bio: string,
         private _photoUrl: string,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+        public readonly createdAt: Date,
+        private _updatedAt: Date
+    ) {}
 
     static create(props: {
         name: string;
@@ -23,7 +20,7 @@ export class Author extends Entity<AuthorId> {
     }): Author {
         const name = AuthorName.create(props.name);
         const slug = Author.generateSlug(props.name);
-
+        
         return new Author(
             AuthorId.generate(),
             name,
@@ -71,21 +68,25 @@ export class Author extends Entity<AuthorId> {
         return this._photoUrl;
     }
 
+    get updatedAt(): Date {
+        return this._updatedAt;
+    }
+
     changeName(newName: string): void {
         const name = AuthorName.create(newName);
         this._name = name;
         this._slug = Author.generateSlug(newName);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateBio(bio: string): void {
         this._bio = bio.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updatePhotoUrl(photoUrl: string): void {
         this._photoUrl = photoUrl.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     private static generateSlug(name: string): string {

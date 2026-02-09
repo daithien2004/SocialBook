@@ -14,17 +14,16 @@ export class NotificationRepository implements INotificationRepository {
 
   async save(notification: Notification): Promise<Notification> {
     const persistenceModel = this.mapToPersistence(notification);
-    const idString = notification.id.toString();
-    if (idString && Types.ObjectId.isValid(idString)) {
-      await this.notificationModel.findByIdAndUpdate(
-        idString,
-        persistenceModel,
-        { upsert: true, new: true }
-      ).exec();
-      return notification;
+    if (notification.id && Types.ObjectId.isValid(notification.id)) {
+        await this.notificationModel.findByIdAndUpdate(
+            notification.id,
+            persistenceModel,
+            { upsert: true, new: true }
+        ).exec();
+        return notification;
     } else {
-      const created = await this.notificationModel.create(persistenceModel);
-      return this.mapToDomain(created);
+        const created = await this.notificationModel.create(persistenceModel);
+        return this.mapToDomain(created);
     }
   }
 
@@ -58,27 +57,25 @@ export class NotificationRepository implements INotificationRepository {
     }).exec();
   }
 
-  private mapToDomain(doc: NotificationDocument | Record<string, unknown>): Notification {
-    const docTyped = doc as Record<string, unknown>;
-    return Notification.reconstitute({
-      id: String(docTyped._id),
-      userId: String(docTyped.userId),
-      title: docTyped.title as string,
-      message: docTyped.message as string,
-      type: docTyped.type as string,
-      isRead: docTyped.isRead as boolean,
-      sentAt: docTyped.sentAt as Date,
-      actionUrl: docTyped.actionUrl as string | undefined,
-      meta: docTyped.meta as Record<string, unknown> | undefined,
-      createdAt: docTyped.createdAt as Date,
-      updatedAt: docTyped.updatedAt as Date,
-    });
+  private mapToDomain(doc: any): Notification {
+    return new Notification(
+      doc._id.toString(),
+      doc.userId.toString(),
+      doc.title,
+      doc.message,
+      doc.type,
+      doc.isRead,
+      doc.sentAt,
+      doc.actionUrl,
+      doc.meta,
+      doc.createdAt,
+      doc.updatedAt,
+    );
   }
 
-  private mapToPersistence(entity: Notification): Record<string, unknown> {
-    const idString = entity.id.toString();
+  private mapToPersistence(entity: Notification): any {
     return {
-      _id: idString && Types.ObjectId.isValid(idString) ? new Types.ObjectId(idString) : undefined,
+      _id: entity.id && Types.ObjectId.isValid(entity.id) ? new Types.ObjectId(entity.id) : undefined,
       userId: new Types.ObjectId(entity.userId),
       title: entity.title,
       message: entity.message,
@@ -90,5 +87,4 @@ export class NotificationRepository implements INotificationRepository {
     };
   }
 }
-
 

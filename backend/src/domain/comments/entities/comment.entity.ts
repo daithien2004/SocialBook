@@ -4,11 +4,10 @@ import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { CommentTargetType } from '../value-objects/comment-target-type.vo';
 import { ModerationStatus } from '../value-objects/moderation-status.vo';
-import { Entity } from '../../../shared/domain/entity.base';
 
-export class Comment extends Entity<CommentId> {
+export class Comment {
     private constructor(
-        id: CommentId,
+        public readonly id: CommentId,
         private _userId: UserId,
         private _targetType: CommentTargetType,
         private _targetId: TargetId,
@@ -18,11 +17,9 @@ export class Comment extends Entity<CommentId> {
         private _isFlagged: boolean,
         private _moderationReason: string,
         private _moderationStatus: ModerationStatus,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+        public readonly createdAt: Date,
+        private _updatedAt: Date
+    ) {}
 
     static create(props: {
         userId: string;
@@ -39,8 +36,8 @@ export class Comment extends Entity<CommentId> {
         const targetType = CommentTargetType.create(props.targetType);
         const targetId = TargetId.create(props.targetId);
         const content = CommentContent.create(props.content);
-        const moderationStatus = props.moderationStatus ?
-            ModerationStatus.create(props.moderationStatus) :
+        const moderationStatus = props.moderationStatus ? 
+            ModerationStatus.create(props.moderationStatus) : 
             ModerationStatus.pending();
 
         return new Comment(
@@ -126,69 +123,73 @@ export class Comment extends Entity<CommentId> {
         return this._moderationStatus;
     }
 
+    get updatedAt(): Date {
+        return this._updatedAt;
+    }
+
     // Business methods
     updateContent(newContent: string): void {
         this._content = CommentContent.create(newContent);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateLikesCount(newLikesCount: number): void {
         this._likesCount = Math.max(0, newLikesCount);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     incrementLikes(): void {
         this._likesCount += 1;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     decrementLikes(): void {
         if (this._likesCount > 0) {
             this._likesCount -= 1;
-            this.markAsUpdated();
+            this._updatedAt = new Date();
         }
     }
 
     flag(reason: string): void {
         this._isFlagged = true;
         this._moderationReason = reason.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     unflag(): void {
         this._isFlagged = false;
         this._moderationReason = '';
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     approve(): void {
         this._moderationStatus = ModerationStatus.approved();
         this._isFlagged = false;
         this._moderationReason = '';
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     reject(reason: string): void {
         this._moderationStatus = ModerationStatus.rejected();
         this._isFlagged = true;
         this._moderationReason = reason.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     setParent(parentId: string): void {
         this._parentId = CommentId.create(parentId);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     removeParent(): void {
         this._parentId = null;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     changeTarget(newTargetType: string, newTargetId: string): void {
         this._targetType = CommentTargetType.create(newTargetType);
         this._targetId = TargetId.create(newTargetId);
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     getContentPreview(maxLength: number = 200): string {
@@ -212,13 +213,13 @@ export class Comment extends Entity<CommentId> {
     }
 
     canBeEdited(userId: string): boolean {
-        return this._userId.toString() === userId &&
-            this._moderationStatus.isPending();
+        return this._userId.toString() === userId && 
+               this._moderationStatus.isPending();
     }
 
     canBeDeleted(userId: string): boolean {
-        return this._userId.toString() === userId ||
-            this._moderationStatus.isRejected();
+        return this._userId.toString() === userId || 
+               this._moderationStatus.isRejected();
     }
 
     // Static methods for common operations
@@ -262,4 +263,3 @@ export class Comment extends Entity<CommentId> {
         });
     }
 }
-

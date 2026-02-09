@@ -1,6 +1,5 @@
 import { AchievementId } from '../value-objects/achievement-id.vo';
 import { AchievementCode } from '../value-objects/achievement-code.vo';
-import { Entity } from '../../../shared/domain/entity.base';
 
 export type AchievementCategory = 'reading' | 'streak' | 'social' | 'special' | 'onboarding';
 
@@ -10,20 +9,18 @@ export interface AchievementRequirement {
     condition?: string;
 }
 
-export class Achievement extends Entity<AchievementId> {
+export class Achievement {
     private constructor(
-        id: AchievementId,
+        public readonly id: AchievementId,
         private _code: AchievementCode,
         private _name: string,
         private _description: string,
         private _category: AchievementCategory,
         private _requirement: AchievementRequirement,
         private _isActive: boolean,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+        public readonly createdAt: Date,
+        private _updatedAt: Date
+    ) {}
 
     static create(props: {
         code: string;
@@ -69,7 +66,6 @@ export class Achievement extends Entity<AchievementId> {
         );
     }
 
-    // Getters
     get code(): AchievementCode {
         return this._code;
     }
@@ -94,30 +90,33 @@ export class Achievement extends Entity<AchievementId> {
         return this._isActive;
     }
 
-    // Business methods
+    get updatedAt(): Date {
+        return this._updatedAt;
+    }
+
     updateName(name: string): void {
         this._name = name.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateDescription(description: string): void {
         this._description = description.trim();
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updateRequirement(requirement: AchievementRequirement): void {
         this._requirement = requirement;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     activate(): void {
         this._isActive = true;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     deactivate(): void {
         this._isActive = false;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     checkUnlockCondition(progress: number): boolean {
@@ -128,4 +127,3 @@ export class Achievement extends Entity<AchievementId> {
         return Math.min(100, (currentValue / this._requirement.value) * 100);
     }
 }
-

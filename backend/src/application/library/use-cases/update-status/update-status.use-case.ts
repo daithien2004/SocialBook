@@ -2,6 +2,7 @@ import { IReadingListRepository } from '@/domain/library/repositories/reading-li
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ReadingStatus, ReadingList } from '@/domain/library/entities/reading-list.entity';
+import { UpdateStatusResponseDto } from '@/presentation/library/dto/library.response.dto';
 
 export interface UpdateStatusRequest {
     userId: string;
@@ -9,19 +10,12 @@ export interface UpdateStatusRequest {
     status: ReadingStatus;
 }
 
-export interface UpdateStatusResponse {
-    id: string;
-    bookId: string;
-    status: ReadingStatus;
-    updatedAt: Date;
-}
-
 export class UpdateStatusUseCase {
     constructor(
         private readonly readingListRepository: IReadingListRepository
-    ) {}
+    ) { }
 
-    async execute(request: UpdateStatusRequest): Promise<UpdateStatusResponse> {
+    async execute(request: UpdateStatusRequest): Promise<UpdateStatusResponseDto> {
         const userId = UserId.create(request.userId);
         const bookId = BookId.create(request.bookId);
 
@@ -39,12 +33,7 @@ export class UpdateStatusUseCase {
 
         await this.readingListRepository.save(readingList);
 
-        return {
-            id: readingList.id.toString(),
-            bookId: readingList.bookId.toString(),
-            status: readingList.status,
-            updatedAt: readingList.updatedAt
-        };
+        return new UpdateStatusResponseDto(readingList);
     }
 }
 

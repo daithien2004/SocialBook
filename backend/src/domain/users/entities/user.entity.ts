@@ -1,11 +1,10 @@
 import { UserId } from '../value-objects/user-id.vo';
 import { UserEmail } from '../value-objects/user-email.vo';
 import { ReadingPreferences, IReadingPreferences } from '../value-objects/reading-preferences.vo';
-import { Entity } from '../../../shared/domain/entity.base';
 
-export class User extends Entity<UserId> {
+export class User {
     private constructor(
-        id: UserId,
+        public readonly id: UserId,
         public readonly roleId: string,
         private _username: string,
         private _email: UserEmail,
@@ -21,11 +20,9 @@ export class User extends Entity<UserId> {
         private _hashedRt: string | undefined,
         private _onboardingCompleted: boolean,
         private _readingPreferences: ReadingPreferences | undefined,
-        createdAt: Date,
-        updatedAt: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+        public readonly createdAt: Date,
+        private _updatedAt: Date
+    ) {}
 
     static create(props: {
         roleId: string;
@@ -37,7 +34,7 @@ export class User extends Entity<UserId> {
         image?: string;
     }): User {
         const emailVO = UserEmail.create(props.email);
-
+        
         return new User(
             UserId.generate(),
             props.roleId,
@@ -49,9 +46,9 @@ export class User extends Entity<UserId> {
             props.provider || 'local',
             props.providerId,
             props.image,
-            undefined,
-            undefined,
-            undefined,
+            undefined, 
+            undefined, 
+            undefined, 
             undefined,
             false, // onboardingCompleted
             undefined, // readingPreferences (default or none)
@@ -114,6 +111,7 @@ export class User extends Entity<UserId> {
     get hashedRt(): string | undefined { return this._hashedRt; }
     get onboardingCompleted(): boolean { return this._onboardingCompleted; }
     get readingPreferences(): ReadingPreferences | undefined { return this._readingPreferences; }
+    get updatedAt(): Date { return this._updatedAt; }
 
     updateProfile(props: {
         username?: string;
@@ -127,8 +125,8 @@ export class User extends Entity<UserId> {
         if (props.location !== undefined) this._location = props.location?.trim();
         if (props.website !== undefined) this._website = props.website?.trim();
         if (props.image !== undefined) this._image = props.image;
-
-        this.markAsUpdated();
+        
+        this._updatedAt = new Date();
     }
 
     updateReadingPreferences(props: Partial<IReadingPreferences>): void {
@@ -137,37 +135,36 @@ export class User extends Entity<UserId> {
             ...current,
             ...props
         });
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     completeOnboarding(): void {
         this._onboardingCompleted = true;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     verify(): void {
         this._isVerified = true;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     ban(): void {
         this._isBanned = true;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     unban(): void {
         this._isBanned = false;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
-
+    
     updateHashedRt(hashedRt: string | null): void {
         this._hashedRt = hashedRt || undefined;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 
     updatePassword(password: string): void {
         this._password = password;
-        this.markAsUpdated();
+        this._updatedAt = new Date();
     }
 }
-

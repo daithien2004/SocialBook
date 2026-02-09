@@ -1,22 +1,17 @@
-import { RoleId } from '../value-objects/role-id.vo';
-import { Entity } from '../../../shared/domain/entity.base';
-
-export class Role extends Entity<RoleId> {
-  private constructor(
-    id: RoleId,
-    private _name: string,
-    createdAt: Date,
-    updatedAt: Date
-  ) {
-    super(id, createdAt, updatedAt);
-  }
+export class Role {
+  constructor(
+    public readonly id: string,
+    public name: string,
+    public readonly createdAt: Date,
+    public readonly updatedAt: Date,
+  ) {}
 
   static create(name: string): Role {
     return new Role(
-      RoleId.generate(),
+      '',
       name,
       new Date(),
-      new Date()
+      new Date(),
     );
   }
 
@@ -27,22 +22,10 @@ export class Role extends Entity<RoleId> {
     updatedAt: Date;
   }): Role {
     return new Role(
-      RoleId.create(props.id),
+      props.id,
       props.name,
       props.createdAt,
-      props.updatedAt
+      props.updatedAt,
     );
   }
-
-  // Getters
-  get name(): string {
-    return this._name;
-  }
-
-  // Business methods
-  updateName(name: string): void {
-    this._name = name;
-    this.markAsUpdated();
-  }
 }
-

@@ -1,24 +1,19 @@
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
-import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import { BookLibraryInfoResponseDto } from '@/presentation/library/dto/library.response.dto';
 
 export interface GetBookLibraryInfoRequest {
     userId: string;
     bookId: string;
 }
 
-export interface GetBookLibraryInfoResponse {
-    status: ReadingStatus | null;
-    collections: string[];
-}
-
 export class GetBookLibraryInfoUseCase {
     constructor(
         private readonly readingListRepository: IReadingListRepository
-    ) {}
+    ) { }
 
-    async execute(request: GetBookLibraryInfoRequest): Promise<GetBookLibraryInfoResponse> {
+    async execute(request: GetBookLibraryInfoRequest): Promise<BookLibraryInfoResponseDto> {
         const userId = UserId.create(request.userId);
         const bookId = BookId.create(request.bookId);
 

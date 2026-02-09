@@ -7,23 +7,23 @@ export class PostMapper {
     if (!postDoc) return null;
 
     const id = postDoc._id.toString();
-
+    
     // Handle userId: could be ObjectId or populated User object
     let userId: string;
     let author: { id: string; username: string; email: string; image: string } | undefined;
 
     if (postDoc.userId && typeof postDoc.userId === 'object' && 'username' in postDoc.userId) {
-      // Populated
-      const userObj = postDoc.userId as any;
-      userId = userObj._id.toString();
-      author = {
-        id: userObj._id.toString(),
-        username: userObj.username,
-        email: userObj.email,
-        image: userObj.image
-      };
+        // Populated
+        const userObj = postDoc.userId as any;
+        userId = userObj._id.toString();
+        author = {
+            id: userObj._id.toString(),
+            username: userObj.username,
+            email: userObj.email,
+            image: userObj.image
+        };
     } else {
-      userId = postDoc.userId?.toString() || '';
+        userId = postDoc.userId?.toString() || '';
     }
 
     // Handle bookId: could be ObjectId or populated Book object
@@ -31,19 +31,19 @@ export class PostMapper {
     let book: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } } | undefined;
 
     if (postDoc.bookId) {
-      if (typeof postDoc.bookId === 'object' && 'title' in postDoc.bookId) {
-        // Populated
-        const bookObj = postDoc.bookId as any;
-        bookId = bookObj._id.toString();
-        book = {
-          id: bookObj._id.toString(),
-          title: bookObj.title,
-          coverUrl: bookObj.coverUrl,
-          authorId: bookObj.authorId // Keep as is if populated further
-        };
-      } else {
-        bookId = postDoc.bookId.toString();
-      }
+        if (typeof postDoc.bookId === 'object' && 'title' in postDoc.bookId) {
+             // Populated
+             const bookObj = postDoc.bookId as any;
+             bookId = bookObj._id.toString();
+             book = {
+                 id: bookObj._id.toString(),
+                 title: bookObj.title,
+                 coverUrl: bookObj.coverUrl,
+                 authorId: bookObj.authorId // Keep as is if populated further
+             };
+        } else {
+             bookId = postDoc.bookId.toString();
+        }
     }
 
     return Post.reconstitute({
@@ -65,7 +65,7 @@ export class PostMapper {
 
   static toPersistence(post: Post): any {
     return {
-      _id: new Types.ObjectId(post.id.toString()),
+      _id: new Types.ObjectId(post.id),
       userId: new Types.ObjectId(post.userId),
       bookId: post.bookId ? new Types.ObjectId(post.bookId) : undefined,
       content: post.content,
