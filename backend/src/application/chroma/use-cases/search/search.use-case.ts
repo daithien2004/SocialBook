@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { SearchQuery } from '@/domain/chroma/entities/search-query.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { SearchCommand } from './search.command';
 
 @Injectable()
@@ -8,13 +9,15 @@ export class SearchUseCase {
     private readonly logger = new Logger(SearchUseCase.name);
 
     constructor(
-        private readonly vectorRepository: IVectorRepository
+        private readonly vectorRepository: IVectorRepository,
+        private readonly idGenerator: IIdGenerator,
     ) {}
 
     async execute(command: SearchCommand) {
         try {
             // Create search query
             const searchQuery = SearchQuery.create({
+                id: this.idGenerator.generate(),
                 query: command.query,
                 embedding: command.embedding || [],
                 contentType: command.contentType,

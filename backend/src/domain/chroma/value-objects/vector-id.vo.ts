@@ -13,10 +13,6 @@ export class VectorId {
         return new VectorId(id.trim());
     }
 
-    static generate(): VectorId {
-        return new VectorId(Math.random().toString(36).substr(2, 9) + Date.now().toString(36));
-    }
-
     toString(): string {
         return this.value;
     }

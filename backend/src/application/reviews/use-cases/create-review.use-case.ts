@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, ConflictException } from '@nestjs/comm
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { CreateReviewDto } from '@/presentation/reviews/dto/create-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Review } from '@/domain/reviews/entities/review.entity';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class CreateReviewUseCase {
   constructor(
     private readonly reviewRepository: IReviewRepository,
     private readonly checkContentUseCase: CheckContentUseCase,
+    private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(userId: string, dto: CreateReviewDto): Promise<Review> {
@@ -26,6 +28,7 @@ export class CreateReviewUseCase {
     }
 
     const review = Review.create({
+      id: this.idGenerator.generate(),
       userId,
       bookId: dto.bookId,
       content: dto.content,

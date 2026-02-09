@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { GetAllCollectionsQuery } from './get-all-collections.query';
 
 export interface CollectionWithBookCount {
@@ -11,6 +12,7 @@ export interface CollectionWithBookCount {
     updatedAt: Date;
 }
 
+@Injectable()
 export class GetAllCollectionsUseCase {
     async execute(query: GetAllCollectionsQuery): Promise<CollectionWithBookCount[]> {
         // TODO: Implement get all collections logic

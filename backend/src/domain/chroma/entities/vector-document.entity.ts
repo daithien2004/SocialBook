@@ -18,6 +18,7 @@ export class VectorDocument extends Entity<VectorId> {
     }
 
     static create(props: {
+        id: string;
         contentId: string;
         contentType: 'book' | 'author' | 'chapter';
         content: string;
@@ -33,7 +34,7 @@ export class VectorDocument extends Entity<VectorId> {
         }
 
         return new VectorDocument(
-            VectorId.generate(),
+            VectorId.create(props.id),
             props.contentId.trim(),
             ContentType.create(props.contentType),
             props.content.trim(),
@@ -147,8 +148,9 @@ export class VectorDocument extends Entity<VectorId> {
     }
 
     // Static methods for common operations
-    static createBookDocument(contentId: string, content: string, metadata: Record<string, any>, embedding: number[]): VectorDocument {
+    static createBookDocument(id: string, contentId: string, content: string, metadata: Record<string, any>, embedding: number[]): VectorDocument {
         return VectorDocument.create({
+            id,
             contentId,
             contentType: 'book',
             content,
@@ -157,8 +159,9 @@ export class VectorDocument extends Entity<VectorId> {
         });
     }
 
-    static createAuthorDocument(contentId: string, content: string, metadata: Record<string, any>, embedding: number[]): VectorDocument {
+    static createAuthorDocument(id: string, contentId: string, content: string, metadata: Record<string, any>, embedding: number[]): VectorDocument {
         return VectorDocument.create({
+            id,
             contentId,
             contentType: 'author',
             content,
@@ -167,8 +170,9 @@ export class VectorDocument extends Entity<VectorId> {
         });
     }
 
-    static createChapterDocument(contentId: string, content: string, metadata: Record<string, any>, embedding: number[]): VectorDocument {
+    static createChapterDocument(id: string, contentId: string, content: string, metadata: Record<string, any>, embedding: number[]): VectorDocument {
         return VectorDocument.create({
+            id,
             contentId,
             contentType: 'chapter',
             content,

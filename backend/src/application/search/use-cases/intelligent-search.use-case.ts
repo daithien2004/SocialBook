@@ -8,6 +8,7 @@ import { IReviewRepository } from '@/domain/reviews/repositories/review.reposito
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { SearchQuery as VectorSearchQuery } from '@/domain/chroma/entities/search-query.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { GeminiService } from '@/infrastructure/external/gemini.service';
 import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
@@ -25,6 +26,7 @@ export class IntelligentSearchUseCase {
         private readonly vectorRepository: IVectorRepository,
         @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
         private readonly geminiService: GeminiService,
+        private readonly idGenerator: IIdGenerator,
     ) {}
 
     async execute(queryDto: AppSearchQuery): Promise<PaginatedSearchResult> {
@@ -160,6 +162,7 @@ export class IntelligentSearchUseCase {
             
             // Using VectorSearchQuery factory or constructor
             const searchQuery = VectorSearchQuery.create({
+                id: this.idGenerator.generate(),
                 query: query,
                 embedding: embedding,
                 limit: 30,

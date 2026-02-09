@@ -5,9 +5,13 @@ import { BatchIndexUseCase } from './use-cases/batch-index/batch-index.use-case'
 import { IndexDocumentUseCase } from './use-cases/index-document/index-document.use-case';
 import { SearchUseCase } from './use-cases/search/search.use-case';
 import { ChromaRepositoryModule } from '../../infrastructure/database/repositories/chroma/chroma-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [ChromaRepositoryModule],
+  imports: [
+    ChromaRepositoryModule,
+    IdGeneratorModule,
+  ],
   providers: [
     GetCollectionStatsUseCase,
     ClearCollectionUseCase,

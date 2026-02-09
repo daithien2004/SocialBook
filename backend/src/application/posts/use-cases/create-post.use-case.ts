@@ -3,6 +3,7 @@ import { IPostRepository } from '@/domain/posts/repositories/post.repository.int
 import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { CreatePostCommand } from './create-post.command';
@@ -14,6 +15,7 @@ export class CreatePostUseCase {
     private readonly cloudinaryService: CloudinaryService,
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
+    private readonly idGenerator: IIdGenerator,
   ) { }
 
   async execute(command: CreatePostCommand, files?: Express.Multer.File[]): Promise<Post> {
@@ -32,6 +34,7 @@ export class CreatePostUseCase {
 
     // Prepare Post Entity
     const post = Post.create({
+      id: this.idGenerator.generate(),
       userId: command.userId,
       bookId: command.bookId,
       content: command.content,

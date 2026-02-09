@@ -17,13 +17,14 @@ export class AIRequest extends Entity<AIRequestId> {
     }
 
     static create(props: {
+        id: string;
         prompt: string;
         type: AIRequestType;
         userId: string;
         metadata?: Record<string, any>;
     }): AIRequest {
         return new AIRequest(
-            AIRequestId.generate(),
+            AIRequestId.create(props.id),
             props.prompt.trim(),
             null,
             props.type,

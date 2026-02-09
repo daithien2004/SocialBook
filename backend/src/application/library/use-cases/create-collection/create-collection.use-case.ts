@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { CreateCollectionCommand } from './create-collection.command';
 
 export interface CollectionResult {
@@ -10,6 +11,7 @@ export interface CollectionResult {
     updatedAt: Date;
 }
 
+@Injectable()
 export class CreateCollectionUseCase {
     async execute(command: CreateCollectionCommand): Promise<CollectionResult> {
 

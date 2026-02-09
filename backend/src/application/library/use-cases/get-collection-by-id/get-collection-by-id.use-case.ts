@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { GetCollectionByIdQuery } from './get-collection-by-id.query';
 
 // TODO: Create Collection entity in domain layer when implementing this feature
@@ -17,6 +18,7 @@ export interface CollectionWithBooks {
     updatedAt: Date;
 }
 
+@Injectable()
 export class GetCollectionByIdUseCase {
     async execute(query: GetCollectionByIdQuery): Promise<CollectionWithBooks | null> {
         // TODO: Implement get collection by id logic

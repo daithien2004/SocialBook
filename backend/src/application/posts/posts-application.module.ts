@@ -13,6 +13,7 @@ import { PostsRepositoryModule } from '@/infrastructure/database/repositories/po
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { ExternalServicesModule } from '@/infrastructure/external/external-services.module';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ContentModerationModule } from '../content-moderation/content-moderatio
     BooksRepositoryModule,
     ExternalServicesModule,
     ContentModerationModule,
+    IdGeneratorModule,
   ],
   providers: [
     ApprovePostUseCase,

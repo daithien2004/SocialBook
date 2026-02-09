@@ -3,6 +3,7 @@ import { UserId } from '@/domain/likes/value-objects/user-id.vo';
 import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { Like } from '@/domain/likes/entities/like.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
 export interface ToggleLikeRequest {
     userId: string;
@@ -17,7 +18,8 @@ export interface ToggleLikeResponse {
 
 export class ToggleLikeUseCase {
     constructor(
-        private readonly likeRepository: ILikeRepository
+        private readonly likeRepository: ILikeRepository,
+        private readonly idGenerator: IIdGenerator,
     ) {}
 
     async execute(request: ToggleLikeRequest): Promise<ToggleLikeResponse> {
@@ -43,6 +45,7 @@ export class ToggleLikeUseCase {
         } else {
             // Like
             const newLike = Like.create({
+                id: this.idGenerator.generate(),
                 userId: request.userId,
                 targetId: request.targetId,
                 targetType: request.targetType,

@@ -7,11 +7,13 @@ import { ToggleReviewLikeUseCase } from './use-cases/toggle-review-like.use-case
 import { UpdateReviewUseCase } from './use-cases/update-review.use-case';
 import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/reviews/reviews-repository.module';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
     ReviewsRepositoryModule,
     ContentModerationModule,
+    IdGeneratorModule,
   ],
   providers: [
     CreateReviewUseCase,

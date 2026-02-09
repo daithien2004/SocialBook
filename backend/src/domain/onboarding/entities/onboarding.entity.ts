@@ -35,9 +35,9 @@ export class Onboarding extends Entity<string> {
     get readingTime(): ReadingTime { return { ...this._readingTime }; }
     get completedAt(): Date | undefined { return this._completedAt; }
 
-    public static create(userId: string): Onboarding {
+    public static create(id: string, userId: string): Onboarding {
         return new Onboarding(
-            crypto.randomUUID(),
+            id,
             userId,
             false,
             1,

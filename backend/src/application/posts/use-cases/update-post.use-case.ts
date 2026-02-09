@@ -32,9 +32,7 @@ export class UpdatePostUseCase {
         post.flag(reason);
       } else {
         post.approve();
-        post.isFlagged = false;
-        post.moderationReason = undefined;
-        post.moderationStatus = undefined;
+        post.clearModeration();
       }
       post.updateContent(command.content);
     }
@@ -42,7 +40,7 @@ export class UpdatePostUseCase {
     if (command.bookId) {
       const bookExists = await this.bookRepository.existsById(command.bookId);
       if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
-      post.bookId = command.bookId;
+      post.updateBookId(command.bookId);
     }
 
     if (files && files.length > 0) {

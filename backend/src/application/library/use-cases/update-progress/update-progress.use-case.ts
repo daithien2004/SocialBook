@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
@@ -5,6 +6,7 @@ import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
 import { ReadingStatus, ReadingList } from '@/domain/library/entities/reading-list.entity';
 import { ReadingProgress } from '@/domain/library/entities/reading-progress.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { UpdateProgressCommand } from './update-progress.command';
 
 export interface UpdateProgressResult {
@@ -12,10 +14,12 @@ export interface UpdateProgressResult {
     readingProgress: ReadingProgress;
 }
 
+@Injectable()
 export class UpdateProgressUseCase {
     constructor(
         private readonly readingListRepository: IReadingListRepository,
-        private readonly readingProgressRepository: IReadingProgressRepository
+        private readonly readingProgressRepository: IReadingProgressRepository,
+        private readonly idGenerator: IIdGenerator,
     ) { }
 
     async execute(command: UpdateProgressCommand): Promise<UpdateProgressResult> {
@@ -27,6 +31,7 @@ export class UpdateProgressUseCase {
         let readingList = await this.readingListRepository.findByUserIdAndBookId(userId, bookId);
         if (!readingList) {
             readingList = ReadingList.create({
+                id: this.idGenerator.generate(),
                 userId: command.userId,
                 bookId: command.bookId,
                 status: ReadingStatus.READING
@@ -37,6 +42,7 @@ export class UpdateProgressUseCase {
         let readingProgress = await this.readingProgressRepository.findByUserIdAndChapterId(userId, chapterId);
         if (!readingProgress) {
             readingProgress = ReadingProgress.create({
+                id: this.idGenerator.generate(),
                 userId: command.userId,
                 bookId: command.bookId,
                 chapterId: command.chapterId,

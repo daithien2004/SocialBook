@@ -20,6 +20,7 @@ export class Review extends Entity<string> {
     }
 
     static create(props: {
+        id: string;
         userId: string;
         bookId: string;
         content: string;
@@ -27,7 +28,7 @@ export class Review extends Entity<string> {
         moderationStatus?: string;
     }): Review {
         return new Review(
-            crypto.randomUUID(),
+            props.id,
             props.userId,
             props.bookId,
             props.content,

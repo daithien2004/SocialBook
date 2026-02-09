@@ -1,8 +1,10 @@
+import { Injectable } from '@nestjs/common';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { ReadingStatus, ReadingList } from '@/domain/library/entities/reading-list.entity';
 import { GetLibraryQuery } from './get-library.query';
 
+@Injectable()
 export class GetLibraryUseCase {
     constructor(
         private readonly readingListRepository: IReadingListRepository

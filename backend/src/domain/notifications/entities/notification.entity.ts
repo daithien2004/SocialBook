@@ -52,6 +52,7 @@ export class Notification extends Entity<string> {
     }
 
     public static create(
+        id: string,
         userId: string,
         title: string,
         message: string,
@@ -60,7 +61,7 @@ export class Notification extends Entity<string> {
         actionUrl?: string,
     ): Notification {
         return new Notification(
-            crypto.randomUUID(),
+            id,
             userId,
             title,
             message,

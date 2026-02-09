@@ -1,8 +1,10 @@
+import { Injectable } from '@nestjs/common';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
 import { ReadingProgress } from '@/domain/library/entities/reading-progress.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { RecordReadingTimeCommand } from './record-reading-time.command';
 
 export interface RecordReadingTimeResult {
@@ -10,9 +12,11 @@ export interface RecordReadingTimeResult {
     timeSpentMinutes: number;
 }
 
+@Injectable()
 export class RecordReadingTimeUseCase {
     constructor(
-        private readonly readingProgressRepository: IReadingProgressRepository
+        private readonly readingProgressRepository: IReadingProgressRepository,
+        private readonly idGenerator: IIdGenerator,
     ) { }
 
     async execute(command: RecordReadingTimeCommand): Promise<RecordReadingTimeResult> {
@@ -24,6 +28,7 @@ export class RecordReadingTimeUseCase {
 
         if (!readingProgress) {
             readingProgress = ReadingProgress.create({
+                id: this.idGenerator.generate(),
                 userId: command.userId,
                 bookId: command.bookId,
                 chapterId: command.chapterId,
