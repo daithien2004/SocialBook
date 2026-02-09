@@ -12,6 +12,7 @@ import { GeminiController } from './gemini/gemini.controller';
 import { GenresController } from './genres/genres.controller';
 import { LibraryController } from './library/library.controller';
 import { LikesController } from './likes/likes.controller';
+import { NotificationController } from './notification/notification.controller';
 import { OnboardingController } from './onboarding/onboarding.controller';
 import { PostsController } from './posts/posts.controller';
 import { RecommendationsController } from './recommendations/recommendations.controller';
@@ -86,6 +87,7 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     GenresController,
     LibraryController,
     LikesController,
+    NotificationController,
     OnboardingController,
     PostsController,
     RecommendationsController,
@@ -97,4 +99,4 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     UsersController,
   ],
 })
-export class PresentationModule {}
+export class PresentationModule { }

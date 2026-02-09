@@ -1,16 +1,19 @@
-
 import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
+import { LoginCommand } from './login.command';
+import { User } from '@/domain/users/entities/user.entity';
 
 @Injectable()
 export class LoginUseCase {
   constructor(
     private readonly tokenService: TokenService,
     private readonly rolesRepository: IRoleRepository,
-  ) {}
+  ) { }
 
-  async execute(user: any) {
+  async execute(command: LoginCommand) {
+    const user = command.user as User;
+
     if (!user) {
       throw new UnauthorizedException('Người dùng không tồn tại');
     }
@@ -18,9 +21,8 @@ export class LoginUseCase {
     if (!user.isVerified) {
       throw new UnauthorizedException('Tài khoản chưa được xác thực');
     }
-    
-    // Check banned status again just in case (already checked in ValidateUser but good for safety)
-     if (user.isBanned) {
+
+    if (user.isBanned) {
       throw new ForbiddenException({
         statusCode: 403,
         message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
@@ -30,8 +32,8 @@ export class LoginUseCase {
 
     let roleName = 'user';
     if (user.roleId) {
-        const role = await this.rolesRepository.findById(user.roleId);
-        if (role) roleName = role.name;
+      const role = await this.rolesRepository.findById(user.roleId);
+      if (role) roleName = role.name;
     }
 
     const tokens = await this.tokenService.signTokens(
@@ -50,7 +52,6 @@ export class LoginUseCase {
         image: user.image,
         role: roleName,
         onboardingCompleted: user.onboardingCompleted,
-        onboardingId: undefined, // Add logic if needed
       },
     };
   }

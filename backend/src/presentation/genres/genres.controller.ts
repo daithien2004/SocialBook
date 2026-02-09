@@ -14,6 +14,7 @@ import { GenreResponseDto } from '@/presentation/genres/dto/genre.response.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 import { GetGenreByIdUseCase } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.use-case';
+import { GetGenreByIdQuery } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.query';
 
 @ApiTags('Genres')
 @Controller('genres')
@@ -24,7 +25,7 @@ export class GenresController {
     private readonly getGenresUseCase: GetGenresUseCase,
     private readonly deleteGenreUseCase: DeleteGenreUseCase,
     private readonly getGenreByIdUseCase: GetGenreByIdUseCase,
-  ) {}
+  ) { }
 
   @Post()
   async create(@Body() createGenreDto: CreateGenreDto) {
@@ -36,22 +37,23 @@ export class GenresController {
   @Get()
   async findAll(
     @Query() filter: FilterGenreDto,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
   ) {
     const query = new GetGenresQuery(Number(page), Number(limit), filter.name);
     const result = await this.getGenresUseCase.execute(query);
-    
+
     return {
-        data: result.data.map(genre => new GenreResponseDto(genre)),
-        meta: result.meta,
+      data: result.data.map(genre => new GenreResponseDto(genre)),
+      meta: result.meta,
     };
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-      const genre = await this.getGenreByIdUseCase.execute(id);
-      return new GenreResponseDto(genre);
+    const query = new GetGenreByIdQuery(id);
+    const genre = await this.getGenreByIdUseCase.execute(query);
+    return new GenreResponseDto(genre);
   }
 
   @Patch(':id')

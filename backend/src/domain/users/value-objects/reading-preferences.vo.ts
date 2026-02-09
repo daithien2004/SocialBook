@@ -8,6 +8,8 @@ export interface IReadingPreferences {
     textColor: string;
     textAlign: string;
     marginWidth: number;
+    preferredGenres?: string[];
+    dailyReadingGoal?: number;
 }
 
 export class ReadingPreferences {
@@ -20,8 +22,10 @@ export class ReadingPreferences {
         public readonly backgroundColor: string,
         public readonly textColor: string,
         public readonly textAlign: string,
-        public readonly marginWidth: number
-    ) {}
+        public readonly marginWidth: number,
+        public readonly preferredGenres: string[] = [],
+        public readonly dailyReadingGoal: number = 0
+    ) { }
 
     static createDefault(): ReadingPreferences {
         return new ReadingPreferences(
@@ -33,6 +37,8 @@ export class ReadingPreferences {
             '#1a1a1a',
             '#e5e5e5',
             'justify',
+            0,
+            [],
             0
         );
     }
@@ -48,7 +54,9 @@ export class ReadingPreferences {
             props.backgroundColor || defaults.backgroundColor,
             props.textColor || defaults.textColor,
             props.textAlign || defaults.textAlign,
-            props.marginWidth || defaults.marginWidth
+            props.marginWidth || defaults.marginWidth,
+            props.preferredGenres ?? defaults.preferredGenres,
+            props.dailyReadingGoal ?? defaults.dailyReadingGoal
         );
     }
 }

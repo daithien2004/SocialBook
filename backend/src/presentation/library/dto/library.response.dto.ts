@@ -68,6 +68,32 @@ export class UpdateProgressResponseDto {
     }
 }
 
+export class ChapterProgressResponseDto {
+    progress: number;
+
+    constructor(readingProgress: ReadingProgress | null) {
+        this.progress = readingProgress?.progress || 0;
+    }
+
+    static fromEntity(readingProgress: ReadingProgress | null): ChapterProgressResponseDto {
+        return new ChapterProgressResponseDto(readingProgress);
+    }
+}
+
+export class RecordReadingTimeResponseDto {
+    success: boolean;
+    timeSpentMinutes: number;
+
+    constructor(timeSpentMinutes: number) {
+        this.success = true;
+        this.timeSpentMinutes = timeSpentMinutes;
+    }
+
+    static fromResult(timeSpentMinutes: number): RecordReadingTimeResponseDto {
+        return new RecordReadingTimeResponseDto(timeSpentMinutes);
+    }
+}
+
 export interface CollectionResponseDto {
     id: string;
     name: string;
@@ -89,3 +115,4 @@ export interface BookInCollectionDto {
     coverUrl: string;
     authorId: string;
 }
+

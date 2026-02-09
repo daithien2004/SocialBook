@@ -1,5 +1,5 @@
-export class GetGamificationStatsCommand {
+export class GetAllCollectionsQuery {
     constructor(
         public readonly userId?: string
-    ) {}
+    ) { }
 }

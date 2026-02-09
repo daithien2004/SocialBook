@@ -3,30 +3,28 @@ import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repos
 import { Chapter } from '@/domain/chapters/entities/chapter.entity';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ErrorMessages } from '@/common/constants/error-messages';
+import { GetChapterByIdQuery } from './get-chapter-by-id.query';
 
 @Injectable()
 export class GetChapterByIdUseCase {
     constructor(
         private readonly chapterRepository: IChapterRepository
-    ) {}
+    ) { }
 
-    async execute(id: string): Promise<Chapter> {
-        if (!id) {
+    async execute(query: GetChapterByIdQuery): Promise<Chapter> {
+        if (!query.id) {
             throw new BadRequestException(ErrorMessages.INVALID_ID);
         }
 
-        const chapterId = ChapterId.create(id);
+        const chapterId = ChapterId.create(query.id);
         const chapter = await this.chapterRepository.findById(chapterId);
 
         if (!chapter) {
             throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
         }
 
-        // Increment views
         await this.chapterRepository.incrementViews(chapterId);
 
         return chapter;
     }
 }
-
-

@@ -36,6 +36,7 @@ import { CreateChapterCommand } from '@/application/chapters/use-cases/create-ch
 import { UpdateChapterCommand } from '@/application/chapters/use-cases/update-chapter/update-chapter.command';
 import { GetChaptersQuery } from '@/application/chapters/use-cases/get-chapters/get-chapters.query';
 import { DeleteChapterCommand } from '@/application/chapters/use-cases/delete-chapter/delete-chapter.command';
+import { GetChapterByIdQuery } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.query';
 
 @ApiTags('Chapters')
 @Controller('books/:bookSlug/chapters')
@@ -46,7 +47,7 @@ export class ChaptersController {
     private readonly getChaptersUseCase: GetChaptersUseCase,
     private readonly getChapterByIdUseCase: GetChapterByIdUseCase,
     private readonly deleteChapterUseCase: DeleteChapterUseCase,
-  ) {}
+  ) { }
 
   /**
    * GET /books/:bookSlug/chapters - Get chapters by book slug
@@ -77,9 +78,9 @@ export class ChaptersController {
       sortBy as any,
       order as any
     );
-    
+
     const result = await this.getChaptersUseCase.execute(query);
-    
+
     return {
       message: 'Get list chapters successfully',
       data: result.data.map(chapter => new ChapterResponseDto(chapter)),
@@ -95,9 +96,9 @@ export class ChaptersController {
   @ApiOperation({ summary: 'Get all chapters by book slug (no pagination)' })
   async getAllChapters(@Param('bookSlug') bookSlug: string) {
     const query = new GetChaptersQuery(1, 1000, undefined, undefined, bookSlug);
-    
+
     const result = await this.getChaptersUseCase.execute(query);
-    
+
     return {
       message: 'Get all chapters successfully',
       data: result.data.map(chapter => new ChapterResponseDto(chapter)),
@@ -112,7 +113,8 @@ export class ChaptersController {
   @ApiOperation({ summary: 'Get chapter by ID' })
   @ApiParam({ name: 'chapterId', description: 'Chapter ID' })
   async getChapterById(@Param('chapterId') chapterId: string) {
-    const chapter = await this.getChapterByIdUseCase.execute(chapterId);
+    const query = new GetChapterByIdQuery(chapterId);
+    const chapter = await this.getChapterByIdUseCase.execute(query);
     return {
       message: 'Get chapter successfully',
       data: new ChapterResponseDto(chapter),
@@ -136,7 +138,7 @@ export class ChaptersController {
       createChapterDto.slug,
       createChapterDto.orderIndex
     );
-    
+
     const chapter = await this.createChapterUseCase.execute(command);
     return {
       message: 'Tạo chương thành công',
@@ -165,7 +167,7 @@ export class ChaptersController {
       updateChapterDto.slug,
       updateChapterDto.orderIndex
     );
-    
+
     const chapter = await this.updateChapterUseCase.execute(command);
     return {
       message: 'Cập nhật chương thành công',
@@ -221,9 +223,9 @@ export class ChaptersController {
       sortBy as any,
       order as any
     );
-    
+
     const result = await this.getChaptersUseCase.execute(query);
-    
+
     return {
       message: 'Get all chapters successfully',
       data: result.data.map(chapter => new ChapterResponseDto(chapter)),

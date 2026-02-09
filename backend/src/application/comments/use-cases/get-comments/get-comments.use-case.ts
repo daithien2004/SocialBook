@@ -1,9 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
 import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
-import { GetCommentsCommand } from './get-comments.command';
+import { GetCommentsQuery } from './get-comments.query';
 
 @Injectable()
 export class GetCommentsUseCase {
@@ -11,34 +11,29 @@ export class GetCommentsUseCase {
 
     constructor(
         private readonly commentRepository: ICommentRepository
-    ) {}
+    ) { }
 
-    async execute(command: GetCommentsCommand) {
+    async execute(query: GetCommentsQuery) {
         try {
-            // Validate target
-            const targetId = TargetId.create(command.targetId);
-            const targetType = CommentTargetType.create(command.targetType);
+            const targetId = TargetId.create(query.targetId);
+            const targetType = CommentTargetType.create(query.targetType);
 
-            // Handle parent ID
             let parentId: CommentId | null = null;
-            if (command.parentId) {
-                parentId = CommentId.create(command.parentId);
+            if (query.parentId) {
+                parentId = CommentId.create(query.parentId);
             }
 
-            // Set up pagination
             const pagination = {
-                page: command.page || 1,
-                limit: command.limit || 10,
-                cursor: command.cursor
+                page: query.page || 1,
+                limit: query.limit || 10,
+                cursor: query.cursor
             };
 
-            // Set up sorting
             const sort = {
-                sortBy: command.sortBy || 'createdAt',
-                order: command.order || 'desc'
+                sortBy: query.sortBy || 'createdAt',
+                order: query.order || 'desc'
             };
 
-            // Get comments based on whether we want top-level or replies
             let result;
             if (parentId) {
                 result = await this.commentRepository.findByParent(parentId, pagination, sort);
@@ -46,14 +41,12 @@ export class GetCommentsUseCase {
                 result = await this.commentRepository.findTopLevel(targetId, targetType, pagination, sort);
             }
 
-            this.logger.log(`Retrieved ${result.data.length} comments for target ${command.targetId}`);
+            this.logger.log(`Retrieved ${result.data.length} comments for target ${query.targetId}`);
 
             return result;
         } catch (error) {
-            this.logger.error(`Failed to get comments for target ${command.targetId}`, error);
+            this.logger.error(`Failed to get comments for target ${query.targetId}`, error);
             throw error;
         }
     }
 }
-
-

@@ -22,7 +22,7 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 
 import { CreateCommentDto, UpdateCommentDto, CommentCountDto, ModerateCommentDto, FlagCommentDto } from '@/presentation/comments/dto/create-comment.dto';
 import { FilterCommentDto, GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
-import { CommentResponseDto, CommentWithRepliesDto, CommentStatsDto } from '@/presentation/comments/dto/comment.response.dto';
+import { CommentResponseDto, CommentStatsDto } from '@/presentation/comments/dto/comment.response.dto';
 
 import { CreateCommentUseCase } from '@/application/comments/use-cases/create-comment/create-comment.use-case';
 import { GetCommentsUseCase } from '@/application/comments/use-cases/get-comments/get-comments.use-case';
@@ -31,7 +31,7 @@ import { DeleteCommentUseCase } from '@/application/comments/use-cases/delete-co
 import { ModerateCommentUseCase } from '@/application/comments/use-cases/moderate-comment/moderate-comment.use-case';
 
 import { CreateCommentCommand } from '@/application/comments/use-cases/create-comment/create-comment.command';
-import { GetCommentsCommand } from '@/application/comments/use-cases/get-comments/get-comments.command';
+import { GetCommentsQuery } from '@/application/comments/use-cases/get-comments/get-comments.query';
 import { UpdateCommentCommand } from '@/application/comments/use-cases/update-comment/update-comment.command';
 import { DeleteCommentCommand } from '@/application/comments/use-cases/delete-comment/delete-comment.command';
 import { ModerateCommentCommand } from '@/application/comments/use-cases/moderate-comment/moderate-comment.command';
@@ -45,7 +45,7 @@ export class CommentsController {
     private readonly updateCommentUseCase: UpdateCommentUseCase,
     private readonly deleteCommentUseCase: DeleteCommentUseCase,
     private readonly moderateCommentUseCase: ModerateCommentUseCase,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -60,9 +60,9 @@ export class CommentsController {
       dto.content,
       dto.parentId
     );
-    
+
     const comment = await this.createCommentUseCase.execute(command);
-    
+
     return {
       message: 'Comment created successfully',
       data: new CommentResponseDto(comment),
@@ -79,7 +79,7 @@ export class CommentsController {
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'order', required: false, type: String })
   async getByTarget(@Query() query: GetCommentsDto) {
-    const command = new GetCommentsCommand(
+    const getQuery = new GetCommentsQuery(
       query.targetId,
       query.targetType,
       query.parentId,
@@ -89,9 +89,9 @@ export class CommentsController {
       query.sortBy as any,
       query.order as any
     );
-    
-    const result = await this.getCommentsUseCase.execute(command);
-    
+
+    const result = await this.getCommentsUseCase.execute(getQuery);
+
     return {
       message: 'Comments retrieved successfully',
       data: {
@@ -126,9 +126,9 @@ export class CommentsController {
     @Body() dto: UpdateCommentDto
   ) {
     const command = new UpdateCommentCommand(id, req.user.id, dto.content);
-    
+
     const comment = await this.updateCommentUseCase.execute(command);
-    
+
     return {
       message: 'Comment updated successfully',
       data: new CommentResponseDto(comment),
@@ -142,13 +142,14 @@ export class CommentsController {
   @ApiParam({ name: 'id', description: 'Comment ID' })
   async remove(
     @Param('id') id: string,
-    @Req() req: Request & { user: { id: string; roles?: string[] }
-  }) {
+    @Req() req: Request & {
+      user: { id: string; roles?: string[] }
+    }) {
     const isAdmin = req.user.roles?.includes('admin') || false;
     const command = new DeleteCommentCommand(id, req.user.id, isAdmin);
-    
+
     await this.deleteCommentUseCase.execute(command);
-    
+
     return {
       message: 'Comment deleted successfully',
     };
@@ -177,9 +178,9 @@ export class CommentsController {
   @ApiBody({ type: ModerateCommentDto })
   async moderate(@Param('id') id: string, @Body() dto: ModerateCommentDto) {
     const command = new ModerateCommentCommand(id, dto.status, dto.reason);
-    
+
     await this.moderateCommentUseCase.execute(command);
-    
+
     return {
       message: `Comment ${dto.status} successfully`,
     };

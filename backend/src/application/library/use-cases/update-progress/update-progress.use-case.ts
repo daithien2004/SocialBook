@@ -54,7 +54,6 @@ export class UpdateProgressUseCase {
         let bookStatus = readingList.status;
 
         if (!readingList.isCompleted() && isChapterCompleted) {
-
             bookStatus = ReadingStatus.READING;
         }
 
