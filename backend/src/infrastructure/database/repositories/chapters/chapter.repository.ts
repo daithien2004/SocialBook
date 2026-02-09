@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Chapter, ChapterDocument } from '@/infrastructure/database/schemas/chapter.schema';
+import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
 import { IChapterRepository, ChapterFilter, PaginationOptions, SortOptions } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { Chapter as ChapterEntity } from '@/domain/chapters/entities/chapter.entity';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
@@ -11,7 +12,10 @@ import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 
 @Injectable()
 export class ChapterRepository implements IChapterRepository {
-    constructor(@InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>) {}
+    constructor(
+        @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
+        @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
+    ) { }
 
     async findById(id: ChapterId): Promise<ChapterEntity | null> {
         const document = await this.chapterModel.findById(id.toString()).lean().exec();
@@ -19,39 +23,39 @@ export class ChapterRepository implements IChapterRepository {
     }
 
     async findBySlug(slug: string, bookId: BookId): Promise<ChapterEntity | null> {
-        const document = await this.chapterModel.findOne({ 
-            slug, 
-            bookId: new Types.ObjectId(bookId.toString()) 
+        const document = await this.chapterModel.findOne({
+            slug,
+            bookId: new Types.ObjectId(bookId.toString())
         }).lean().exec();
         return document ? this.mapToEntity(document) : null;
     }
 
     async findByTitle(title: ChapterTitle, bookId: BookId): Promise<ChapterEntity | null> {
-        const document = await this.chapterModel.findOne({ 
-            title: title.toString(), 
-            bookId: new Types.ObjectId(bookId.toString()) 
+        const document = await this.chapterModel.findOne({
+            title: title.toString(),
+            bookId: new Types.ObjectId(bookId.toString())
         }).lean().exec();
         return document ? this.mapToEntity(document) : null;
     }
 
     async findAll(filter: ChapterFilter, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<ChapterEntity>> {
         const queryFilter: FilterQuery<ChapterDocument> = {};
-        
+
         if (filter.title) {
             queryFilter.title = { $regex: filter.title, $options: 'i' };
         }
-        
+
         if (filter.bookId) {
             queryFilter.bookId = new Types.ObjectId(filter.bookId);
         }
-        
+
         if (filter.orderIndex !== undefined) {
             queryFilter.orderIndex = filter.orderIndex;
         }
 
         // Word count filtering (aggregation pipeline)
         let pipeline: any[] = [];
-        
+
         if (filter.minWordCount !== undefined || filter.maxWordCount !== undefined) {
             const wordCountMatch: any = {};
             if (filter.minWordCount !== undefined) {
@@ -60,7 +64,7 @@ export class ChapterRepository implements IChapterRepository {
             if (filter.maxWordCount !== undefined) {
                 wordCountMatch.$lte = filter.maxWordCount;
             }
-            
+
             pipeline.push({
                 $addFields: {
                     wordCount: {
@@ -77,7 +81,7 @@ export class ChapterRepository implements IChapterRepository {
                     }
                 }
             });
-            
+
             pipeline.push({
                 $match: { wordCount: wordCountMatch }
             });
@@ -103,7 +107,7 @@ export class ChapterRepository implements IChapterRepository {
         // Get total count
         const countPipeline = pipeline.slice(0, -2); // Remove skip and limit for count
         countPipeline.push({ $count: 'total' });
-        
+
         const [countResult, documents] = await Promise.all([
             this.chapterModel.aggregate(countPipeline).exec(),
             this.chapterModel.aggregate(pipeline).exec()
@@ -127,17 +131,23 @@ export class ChapterRepository implements IChapterRepository {
     }
 
     async findByBookSlug(bookSlug: string, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<ChapterEntity>> {
-        // This would require joining with books collection - for now, return empty
-        // In a real implementation, you'd use $lookup or a separate query
-        return {
-            data: [],
-            meta: {
-                current: pagination.page,
-                pageSize: pagination.limit,
-                total: 0,
-                totalPages: 0,
-            },
-        };
+        // Find book by slug first
+        const book = await this.bookModel.findOne({ slug: bookSlug, isDeleted: false }).select('_id').lean().exec();
+
+        if (!book) {
+            return {
+                data: [],
+                meta: {
+                    current: pagination.page,
+                    pageSize: pagination.limit,
+                    total: 0,
+                    totalPages: 0,
+                },
+            };
+        }
+
+        // Query chapters by bookId
+        return this.findAll({ bookId: book._id.toString() }, pagination, sort);
     }
 
     async findNextChapter(bookId: BookId, currentOrderIndex: number): Promise<ChapterEntity | null> {
@@ -145,7 +155,7 @@ export class ChapterRepository implements IChapterRepository {
             bookId: new Types.ObjectId(bookId.toString()),
             orderIndex: { $gt: currentOrderIndex }
         }).sort({ orderIndex: 1 }).lean().exec();
-        
+
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -154,7 +164,7 @@ export class ChapterRepository implements IChapterRepository {
             bookId: new Types.ObjectId(bookId.toString()),
             orderIndex: { $lt: currentOrderIndex }
         }).sort({ orderIndex: -1 }).lean().exec();
-        
+
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -162,7 +172,7 @@ export class ChapterRepository implements IChapterRepository {
         const document = await this.chapterModel.findOne({
             bookId: new Types.ObjectId(bookId.toString())
         }).sort({ orderIndex: 1 }).lean().exec();
-        
+
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -170,7 +180,7 @@ export class ChapterRepository implements IChapterRepository {
         const document = await this.chapterModel.findOne({
             bookId: new Types.ObjectId(bookId.toString())
         }).sort({ orderIndex: -1 }).lean().exec();
-        
+
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -188,43 +198,43 @@ export class ChapterRepository implements IChapterRepository {
     }
 
     async existsByTitle(title: ChapterTitle, bookId: BookId, excludeId?: ChapterId): Promise<boolean> {
-        const query: FilterQuery<ChapterDocument> = { 
-            title: title.toString(), 
+        const query: FilterQuery<ChapterDocument> = {
+            title: title.toString(),
             bookId: new Types.ObjectId(bookId.toString())
         };
-        
+
         if (excludeId) {
             query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
         }
-        
+
         const count = await this.chapterModel.countDocuments(query).exec();
         return count > 0;
     }
 
     async existsBySlug(slug: string, bookId: BookId, excludeId?: ChapterId): Promise<boolean> {
-        const query: FilterQuery<ChapterDocument> = { 
-            slug, 
+        const query: FilterQuery<ChapterDocument> = {
+            slug,
             bookId: new Types.ObjectId(bookId.toString())
         };
-        
+
         if (excludeId) {
             query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
         }
-        
+
         const count = await this.chapterModel.countDocuments(query).exec();
         return count > 0;
     }
 
     async existsByOrderIndex(orderIndex: number, bookId: BookId, excludeId?: ChapterId): Promise<boolean> {
-        const query: FilterQuery<ChapterDocument> = { 
-            orderIndex, 
+        const query: FilterQuery<ChapterDocument> = {
+            orderIndex,
             bookId: new Types.ObjectId(bookId.toString())
         };
-        
+
         if (excludeId) {
             query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
         }
-        
+
         const count = await this.chapterModel.countDocuments(query).exec();
         return count > 0;
     }
@@ -237,8 +247,8 @@ export class ChapterRepository implements IChapterRepository {
     }
 
     async countByBook(bookId: BookId): Promise<number> {
-        return await this.chapterModel.countDocuments({ 
-            bookId: new Types.ObjectId(bookId.toString()) 
+        return await this.chapterModel.countDocuments({
+            bookId: new Types.ObjectId(bookId.toString())
         }).exec();
     }
 
@@ -265,7 +275,7 @@ export class ChapterRepository implements IChapterRepository {
             { $match: { bookId: new Types.ObjectId(bookId.toString()) } },
             { $group: { _id: null, totalViews: { $sum: '$viewsCount' } } }
         ]).exec();
-        
+
         return result.length > 0 ? result[0].totalViews : 0;
     }
 
@@ -276,7 +286,7 @@ export class ChapterRepository implements IChapterRepository {
             { $project: { wordCount: { $size: { $split: [{ $trim: { input: '$paragraphs.content' } }, ' '] } } } },
             { $group: { _id: null, totalWords: { $sum: '$wordCount' } } }
         ]).exec();
-        
+
         return result.length > 0 ? result[0].totalWords : 0;
     }
 
@@ -284,7 +294,7 @@ export class ChapterRepository implements IChapterRepository {
         const chapter = await this.chapterModel.findOne({
             bookId: new Types.ObjectId(bookId.toString())
         }).sort({ orderIndex: -1 }).select('orderIndex').lean().exec();
-        
+
         return chapter ? chapter.orderIndex : 0;
     }
 

@@ -22,8 +22,11 @@ export class Book {
         private _likedBy: string[],
         public readonly createdAt: Date,
         private _updatedAt: Date,
-        public readonly genreObjects?: { id: string; name: string; slug: string; }[]
-    ) {}
+        public readonly genreObjects?: { id: string; name: string; slug: string; }[],
+        private _authorName?: string,
+        public readonly author?: { id: string; name: string; },
+        private _chapterCount?: number
+    ) { }
 
     static create(props: {
         title: string;
@@ -40,7 +43,7 @@ export class Book {
         const authorId = AuthorId.create(props.authorId);
         const genres = props.genres.map(id => GenreId.create(id));
         const status = props.status ? BookStatus.create(props.status) : BookStatus.draft();
-        
+
         return new Book(
             BookId.generate(),
             title,
@@ -57,7 +60,10 @@ export class Book {
             [],
             new Date(),
             new Date(),
-            undefined
+            undefined,
+            undefined,
+            undefined,
+            0
         );
     }
 
@@ -78,6 +84,9 @@ export class Book {
         createdAt: Date;
         updatedAt: Date;
         genreObjects?: { id: string; name: string; slug: string; }[];
+        authorName?: string;
+        author?: { id: string; name: string; };
+        chapterCount?: number;
     }): Book {
         return new Book(
             BookId.create(props.id),
@@ -95,7 +104,10 @@ export class Book {
             props.likedBy,
             props.createdAt,
             props.updatedAt,
-            props.genreObjects
+            props.genreObjects,
+            props.authorName,
+            props.author,
+            props.chapterCount
         );
     }
 
@@ -150,6 +162,14 @@ export class Book {
 
     get updatedAt(): Date {
         return this._updatedAt;
+    }
+
+    get authorName(): string | undefined {
+        return this._authorName;
+    }
+
+    get chapterCount(): number | undefined {
+        return this._chapterCount;
     }
 
     // Business methods

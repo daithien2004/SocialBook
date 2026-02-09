@@ -106,6 +106,24 @@ export class ChaptersController {
   }
 
   /**
+   * GET /books/:bookSlug/chapters/id/:chapterId - Get chapter by ID (with id/ prefix)
+   */
+  @Public()
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('id/:chapterId')
+  @ApiOperation({ summary: 'Get chapter by ID (with id/ prefix)' })
+  @ApiParam({ name: 'chapterId', description: 'Chapter ID' })
+  async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
+    const query = new GetChapterByIdQuery(chapterId);
+    const chapter = await this.getChapterByIdUseCase.execute(query);
+    return {
+      message: 'Get chapter successfully',
+      data: new ChapterResponseDto(chapter),
+    };
+  }
+
+  /**
    * GET /books/:bookSlug/chapters/:chapterId - Get chapter by ID
    */
   @Public()

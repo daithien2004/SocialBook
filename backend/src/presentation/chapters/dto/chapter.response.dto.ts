@@ -6,6 +6,7 @@ export class ChapterResponseDto {
     slug: string;
     bookId: string;
     paragraphs: Array<{ id: string; content: string }>;
+    paragraphsCount: number;
     viewsCount: number;
     orderIndex: number;
     wordCount: number;
@@ -23,6 +24,7 @@ export class ChapterResponseDto {
             id: p.id,
             content: p.content
         }));
+        this.paragraphsCount = chapter.paragraphs.length;
         this.viewsCount = chapter.viewsCount;
         this.orderIndex = chapter.orderIndex.getValue();
         this.wordCount = chapter.getWordCount();

@@ -40,6 +40,7 @@ import { UpdateBookCommand } from '@/application/books/use-cases/update-book/upd
 import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
 import { DeleteBookCommand } from '@/application/books/use-cases/delete-book/delete-book.command';
 import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query'; // Import Query
+import { GetBookByIdQuery } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.query';
 
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
@@ -53,6 +54,7 @@ export class BooksController {
     private readonly getBookBySlugUseCase: GetBookBySlugUseCase,
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,
+    private readonly getBookByIdUseCase: GetBookByIdUseCase,
   ) { }
 
   /**
@@ -189,6 +191,23 @@ export class BooksController {
   async findOne(@Param('slug') slug: string) {
     const query = new GetBookBySlugQuery(slug); // Use Query object
     const book = await this.getBookBySlugUseCase.execute(query);
+
+    return {
+      message: 'Lấy thông tin sách thành công',
+      data: new BookResponseDto(book),
+    };
+  }
+
+  /**
+   * GET /books/id/:id - Get book by ID
+   */
+  @Get('id/:id')
+  @Public()
+  @ApiOperation({ summary: 'Get book by ID' })
+  @ApiParam({ name: 'id', description: 'Book ID' })
+  async findOneById(@Param('id') id: string) {
+    const query = new GetBookByIdQuery(id);
+    const book = await this.getBookByIdUseCase.execute(query);
 
     return {
       message: 'Lấy thông tin sách thành công',

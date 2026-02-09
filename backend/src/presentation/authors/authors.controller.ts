@@ -142,16 +142,6 @@ export class AuthorsController {
         };
     }
 
-    // @Get() needs to be handled carefully as routes can conflict. 
-    // Here it's assumed '/authors' (without admin or :id) maps to this if not matched by above.
-    // However, NestJS route matching order matters. 'admin' is specific string, ':id' is param.
-    // If 'getForSelect' is not decorated with path, it maps to root '/authors'.
-    // If findAll maps to 'admin', and findOne maps to ':id', then getForSelect at root will conflict if not careful or should be moved.
-    // Assuming the original intention was to have a simplified list for selects.
-    // But wait, the original code had `@Get()` for `getForSelect` at the end.
-    // If a request comes to `/authors` with no params, it might hit `findOne` if `id` is optional? No, `id` is required in path.
-    // So request to `/authors` will hit `getForSelect`.
-
     @Get()
     @Public()
     async getForSelect() {

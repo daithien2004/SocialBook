@@ -49,6 +49,33 @@ export const chaptersApi = createApi({
           limit: params.limit
         }
       }),
+      transformResponse: (response: unknown): ChaptersListData => {
+        // Response từ axiosBaseQuery khi có meta: { data: Chapter[], meta: PaginationMeta }
+        const paginatedResponse = response as {
+          data: Chapter[];
+          meta: { current: number; pageSize: number; total: number; totalPages: number }
+        };
+
+        if (paginatedResponse?.data && Array.isArray(paginatedResponse.data)) {
+          return {
+            chapters: paginatedResponse.data,
+            total: paginatedResponse.meta?.total ?? paginatedResponse.data.length,
+            book: {}
+          };
+        }
+
+        // Fallback: response là array trực tiếp
+        if (Array.isArray(response)) {
+          return {
+            chapters: response as Chapter[],
+            total: (response as Chapter[]).length,
+            book: {}
+          };
+        }
+
+        // Default empty state
+        return { chapters: [], total: 0, book: {} };
+      },
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
