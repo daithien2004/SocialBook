@@ -1,3 +1,34 @@
+import { RecordReadingUseCase } from '@/application/gamification/use-cases/record-reading/record-reading.use-case';
+import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
+import { GetBookLibraryInfoUseCase } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case';
+import { GetChapterProgressQuery } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.query';
+import { GetChapterProgressUseCase } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.use-case';
+import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get-library.query';
+import { GetLibraryUseCase } from '@/application/library/use-cases/get-library/get-library.use-case';
+import { RecordReadingTimeCommand } from '@/application/library/use-cases/record-reading-time/record-reading-time.command';
+import { RecordReadingTimeUseCase } from '@/application/library/use-cases/record-reading-time/record-reading-time.use-case';
+import { RemoveFromLibraryCommand } from '@/application/library/use-cases/remove-from-library/remove-from-library.command';
+import { RemoveFromLibraryUseCase } from '@/application/library/use-cases/remove-from-library/remove-from-library.use-case';
+import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
+import { UpdateCollectionsUseCase } from '@/application/library/use-cases/update-collections/update-collections.use-case';
+import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
+import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
+import { UpdateStatusCommand } from '@/application/library/use-cases/update-status/update-status.command';
+import { UpdateStatusUseCase } from '@/application/library/use-cases/update-status/update-status.use-case';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import {
+  AddToCollectionsDto,
+  UpdateLibraryStatusDto,
+  UpdateProgressDto,
+  UpdateReadingTimeDto,
+} from '@/presentation/library/dto/library.dto';
+import {
+  BookLibraryInfoResponseDto,
+  ChapterProgressResponseDto,
+  LibraryItemResponseDto,
+  RecordReadingTimeResponseDto
+} from '@/presentation/library/dto/library.response.dto';
 import {
   Body,
   Controller,
@@ -13,38 +44,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { GetLibraryUseCase } from '@/application/library/use-cases/get-library/get-library.use-case';
-import { UpdateStatusUseCase } from '@/application/library/use-cases/update-status/update-status.use-case';
-import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
-import { RecordReadingTimeUseCase } from '@/application/library/use-cases/record-reading-time/record-reading-time.use-case';
-import { UpdateCollectionsUseCase } from '@/application/library/use-cases/update-collections/update-collections.use-case';
-import { RemoveFromLibraryUseCase } from '@/application/library/use-cases/remove-from-library/remove-from-library.use-case';
-import { GetBookLibraryInfoUseCase } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case';
-import { GetChapterProgressUseCase } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.use-case';
-import { RecordReadingUseCase } from '@/application/gamification/use-cases/record-reading/record-reading.use-case';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import {
-  AddToCollectionsDto,
-  UpdateLibraryStatusDto,
-  UpdateProgressDto,
-  UpdateReadingTimeDto,
-} from '@/presentation/library/dto/library.dto';
-import {
-  ReadingListResponseDto,
-  BookLibraryInfoResponseDto,
-  UpdateProgressResponseDto,
-  ChapterProgressResponseDto,
-  RecordReadingTimeResponseDto,
-} from '@/presentation/library/dto/library.response.dto';
-import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
-import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get-library.query';
-import { UpdateStatusCommand } from '@/application/library/use-cases/update-status/update-status.command';
-import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
-import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
-import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
-import { GetChapterProgressQuery } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.query';
-import { RecordReadingTimeCommand } from '@/application/library/use-cases/record-reading-time/record-reading-time.command';
-import { RemoveFromLibraryCommand } from '@/application/library/use-cases/remove-from-library/remove-from-library.command';
 
 @Controller('library')
 export class LibraryController {
@@ -71,7 +70,7 @@ export class LibraryController {
 
     return {
       message: 'Get library list successfully',
-      data: ReadingListResponseDto.fromArray(readingLists),
+      data: readingLists.map(rl => LibraryItemResponseDto.fromReadModel(rl)),
     };
   }
 
@@ -83,7 +82,7 @@ export class LibraryController {
 
     return {
       message: 'Update library status successfully',
-      data: ReadingListResponseDto.fromEntity(readingList),
+      data: LibraryItemResponseDto.fromReadModel(readingList),
     };
   }
 
@@ -116,7 +115,7 @@ export class LibraryController {
 
     return {
       message: 'Update reading progress successfully',
-      data: UpdateProgressResponseDto.fromEntities(result.readingList, result.readingProgress),
+      data: LibraryItemResponseDto.fromReadModel(result.readingList),
     };
   }
 
@@ -152,7 +151,7 @@ export class LibraryController {
 
     return {
       message: 'Update book collections successfully',
-      data: ReadingListResponseDto.fromEntity(readingList),
+      data: LibraryItemResponseDto.fromReadModel(readingList),
     };
   }
 
@@ -171,11 +170,11 @@ export class LibraryController {
   @HttpCode(HttpStatus.OK)
   async getBookLibraryInfo(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
     const query = new GetBookLibraryInfoQuery(req.user.id, bookId);
-    const readingList = await this.getBookLibraryInfoUseCase.execute(query);
+    const result = await this.getBookLibraryInfoUseCase.execute(query);
 
     return {
       message: 'Get book library info successfully',
-      data: BookLibraryInfoResponseDto.fromEntity(readingList),
+      data: BookLibraryInfoResponseDto.fromResult(result),
     };
   }
 }

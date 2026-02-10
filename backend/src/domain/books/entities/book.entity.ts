@@ -1,10 +1,10 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { BookId } from '../value-objects/book-id.vo';
-import { BookTitle } from '../value-objects/book-title.vo';
-import { BookStatus } from '../value-objects/book-status.vo';
-import { AuthorId } from '../value-objects/author-id.vo';
-import { GenreId } from '../value-objects/genre-id.vo';
 import slugify from 'slugify';
+import { AuthorId } from '../value-objects/author-id.vo';
+import { BookId } from '../value-objects/book-id.vo';
+import { BookStatus } from '../value-objects/book-status.vo';
+import { BookTitle } from '../value-objects/book-title.vo';
+import { GenreId } from '../value-objects/genre-id.vo';
 
 export class Book extends Entity<BookId> {
     private constructor(
@@ -23,7 +23,6 @@ export class Book extends Entity<BookId> {
         private _likedBy: string[],
         createdAt?: Date,
         updatedAt?: Date,
-        public readonly genreObjects?: { id: string; name: string; slug: string; }[]
     ) {
         super(id, createdAt, updatedAt);
     }
@@ -44,7 +43,7 @@ export class Book extends Entity<BookId> {
         const authorId = AuthorId.create(props.authorId);
         const genres = props.genres.map(id => GenreId.create(id));
         const status = props.status ? BookStatus.create(props.status) : BookStatus.draft();
-        
+
         return new Book(
             props.id,
             title,
@@ -58,10 +57,7 @@ export class Book extends Entity<BookId> {
             props.tags || [],
             0,
             0,
-            [],
-            undefined,
-            undefined,
-            undefined
+            []
         );
     }
 
@@ -81,7 +77,6 @@ export class Book extends Entity<BookId> {
         likedBy: string[];
         createdAt: Date;
         updatedAt: Date;
-        genreObjects?: { id: string; name: string; slug: string; }[];
     }): Book {
         return new Book(
             BookId.create(props.id),
@@ -98,8 +93,7 @@ export class Book extends Entity<BookId> {
             props.likes,
             props.likedBy,
             props.createdAt,
-            props.updatedAt,
-            props.genreObjects
+            props.updatedAt
         );
     }
 

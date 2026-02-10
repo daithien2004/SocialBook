@@ -1,3 +1,10 @@
+import { CreateCollectionUseCase } from '@/application/library/use-cases/create-collection/create-collection.use-case';
+import { GetAllCollectionsUseCase } from '@/application/library/use-cases/get-all-collections/get-all-collections.use-case';
+import { GetCollectionByIdUseCase } from '@/application/library/use-cases/get-collection-by-id/get-collection-by-id.use-case';
+import { Public } from '@/common/decorators/customize';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { CreateCollectionDto, UpdateCollectionDto } from '@/presentation/library/dto/collection.dto';
+import { CollectionDetailResponseDto, CollectionResponseDto } from '@/presentation/library/dto/library.response.dto';
 import {
   Body,
   Controller,
@@ -13,12 +20,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { CreateCollectionUseCase } from '@/application/library/use-cases/create-collection/create-collection.use-case';
-import { GetAllCollectionsUseCase } from '@/application/library/use-cases/get-all-collections/get-all-collections.use-case';
-import { GetCollectionByIdUseCase } from '@/application/library/use-cases/get-collection-by-id/get-collection-by-id.use-case';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { Public } from '@/common/decorators/customize';
-import { CreateCollectionDto, UpdateCollectionDto } from '@/presentation/library/dto/collection.dto';
 
 @Controller('collections')
 @UseGuards(JwtAuthGuard)
@@ -27,12 +28,12 @@ export class CollectionsController {
     private readonly createCollectionUseCase: CreateCollectionUseCase,
     private readonly getAllCollectionsUseCase: GetAllCollectionsUseCase,
     private readonly getCollectionByIdUseCase: GetCollectionByIdUseCase,
-  ) {}
+  ) { }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateCollectionDto) {
-    const data = await this.createCollectionUseCase.execute({
+    const collection = await this.createCollectionUseCase.execute({
       userId: req.user.id,
       name: dto.name,
       description: dto.description,
@@ -40,7 +41,7 @@ export class CollectionsController {
     });
     return {
       message: 'Collection created successfully',
-      data,
+      data: CollectionResponseDto.fromEntity(collection),
     };
   }
 
@@ -48,10 +49,10 @@ export class CollectionsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(@Query('userId') userId?: string) {
-    const data = await this.getAllCollectionsUseCase.execute({ userId });
+    const results = await this.getAllCollectionsUseCase.execute({ userId: userId || '' });
     return {
       message: 'Get collections successfully',
-      data,
+      data: results.map(r => CollectionResponseDto.fromEntity(r.collection, r.bookCount)),
     };
   }
 
@@ -62,26 +63,26 @@ export class CollectionsController {
     @Query('userId') userId: string,
     @Query('id') id: string,
   ) {
-    const data = await this.getCollectionByIdUseCase.execute({
+    const result = await this.getCollectionByIdUseCase.execute({
       userId,
       collectionId: id,
     });
     return {
       message: 'Get collection successfully',
-      data,
+      data: result ? CollectionDetailResponseDto.fromResult(result.collection, result.books) : null,
     };
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
-    const data = await this.getCollectionByIdUseCase.execute({
+    const result = await this.getCollectionByIdUseCase.execute({
       userId: req.user.id,
       collectionId: id,
     });
     return {
       message: 'Get collection successfully',
-      data,
+      data: result ? CollectionDetailResponseDto.fromResult(result.collection, result.books) : null,
     };
   }
 

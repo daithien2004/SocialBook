@@ -1,3 +1,6 @@
+import { Collection } from '@/domain/library/entities/collection.entity';
+import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Injectable } from '@nestjs/common';
 import { CreateCollectionCommand } from './create-collection.command';
 
@@ -13,18 +16,22 @@ export interface CollectionResult {
 
 @Injectable()
 export class CreateCollectionUseCase {
-    async execute(command: CreateCollectionCommand): Promise<CollectionResult> {
+    constructor(
+        private readonly collectionRepository: ICollectionRepository,
+        private readonly idGenerator: IIdGenerator
+    ) { }
 
-
-        const now = new Date();
-        return {
-            id: crypto.randomUUID(),
-            name: command.name,
-            description: command.description || null,
-            isPublic: command.isPublic || false,
+    async execute(command: CreateCollectionCommand): Promise<Collection> {
+        const collection = Collection.create({
+            id: this.idGenerator.generate(),
             userId: command.userId,
-            createdAt: now,
-            updatedAt: now,
-        };
+            name: command.name,
+            description: command.description || '',
+            isPublic: command.isPublic || false
+        });
+
+        await this.collectionRepository.save(collection);
+
+        return collection;
     }
 }

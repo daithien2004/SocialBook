@@ -1,3 +1,7 @@
+import { Public } from '@/common/decorators/customize';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
 import {
   Body,
   Controller,
@@ -6,40 +10,33 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  Patch,
   Post,
   Put,
   Query,
-  Request,
   UploadedFile,
   UseGuards,
-  UseInterceptors,
+  UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Public } from '@/common/decorators/customize';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
+import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { CreateBookDto } from '@/presentation/books/dto/create-book.dto';
-import { UpdateBookDto } from '@/presentation/books/dto/update-book.dto';
-import { FilterBookDto } from '@/presentation/books/dto/filter-book.dto';
+import { BookDetailResponseDto } from '@/presentation/books/dto/book-detail.response.dto';
 import { BookResponseDto } from '@/presentation/books/dto/book.response.dto';
+import { CreateBookDto } from '@/presentation/books/dto/create-book.dto';
+import { FilterBookDto } from '@/presentation/books/dto/filter-book.dto';
+import { UpdateBookDto } from '@/presentation/books/dto/update-book.dto';
 
 import { CreateBookUseCase } from '@/application/books/use-cases/create-book/create-book.use-case';
-import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
-import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
-import { GetBookByIdUseCase } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.use-case';
-import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { DeleteBookUseCase } from '@/application/books/use-cases/delete-book/delete-book.use-case';
-import { Types } from 'mongoose';
+import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
+import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
+import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 
 import { CreateBookCommand } from '@/application/books/use-cases/create-book/create-book.command';
-import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
-import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
 import { DeleteBookCommand } from '@/application/books/use-cases/delete-book/delete-book.command';
 import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query'; // Import Query
+import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
+import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
@@ -84,7 +81,7 @@ export class BooksController {
     const book = await this.createBookUseCase.execute(command);
     return {
       message: 'Tạo sách thành công',
-      data: new BookResponseDto(book),
+      data: BookResponseDto.fromEntity(book),
     };
   }
 
@@ -129,7 +126,7 @@ export class BooksController {
 
     return {
       message: 'Lấy danh sách sách (Admin) thành công',
-      data: result.data.map(book => new BookResponseDto(book)),
+      data: result.data.map(readModel => new BookResponseDto(readModel)),
       meta: result.meta,
     };
   }
@@ -174,7 +171,7 @@ export class BooksController {
 
     return {
       message: 'Lấy danh sách sách thành công',
-      data: result.data.map(book => new BookResponseDto(book)),
+      data: result.data.map(readModel => new BookResponseDto(readModel)),
       meta: result.meta,
     };
   }
@@ -192,7 +189,7 @@ export class BooksController {
 
     return {
       message: 'Lấy thông tin sách thành công',
-      data: new BookResponseDto(book),
+      data: new BookDetailResponseDto(book),
     };
   }
 
@@ -227,7 +224,7 @@ export class BooksController {
     const book = await this.updateBookUseCase.execute(command);
     return {
       message: 'Cập nhật sách thành công',
-      data: new BookResponseDto(book),
+      data: BookResponseDto.fromEntity(book),
     };
   }
 

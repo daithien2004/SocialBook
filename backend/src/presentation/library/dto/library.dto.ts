@@ -1,11 +1,12 @@
+import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
 import {
+  IsArray,
   IsEnum,
   IsMongoId,
   IsNumber,
   IsOptional,
-  IsArray,
+  IsString,
 } from 'class-validator';
-import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
 
 export class UpdateProgressDto {
   @IsMongoId()
@@ -32,7 +33,8 @@ export class AddToCollectionsDto {
   bookId: string;
 
   @IsArray()
-  @IsMongoId({ each: true })
+  @IsString({ each: true })
+  @IsMongoId({ each: true, message: 'Each value in collectionIds must be a valid 24-character hexadecimal MongoDB ID' })
   collectionIds: string[];
 }
 

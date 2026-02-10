@@ -6,6 +6,7 @@ import { GetChaptersUseCase } from './use-cases/get-chapters/get-chapters.use-ca
 import { UpdateChapterUseCase } from './use-cases/update-chapter/update-chapter.use-case';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     CreateChapterUseCase,
     DeleteChapterUseCase,
     GetChapterByIdUseCase,
+    GetChapterBySlugUseCase,
     GetChaptersUseCase,
     UpdateChapterUseCase,
   ],
@@ -23,6 +25,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     CreateChapterUseCase,
     DeleteChapterUseCase,
     GetChapterByIdUseCase,
+    GetChapterBySlugUseCase,
     GetChaptersUseCase,
     UpdateChapterUseCase,
   ],

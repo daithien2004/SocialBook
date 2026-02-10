@@ -56,7 +56,6 @@ export const libraryApi = createApi({
       keepUnusedDataFor: 0,
     }),
 
-    // 3. Update tiến độ đọc (Scroll / Next Chapter)
     updateReadingProgress: builder.mutation<LibraryItem, UpdateProgressRequest>(
       {
         query: (data) => ({
@@ -133,7 +132,6 @@ export const libraryApi = createApi({
       ],
     }),
 
-    // 8. Tạo Folder mới
     createCollection: builder.mutation<Collection, CreateCollectionRequest>({
       query: (data) => ({
         url: NESTJS_LIBRARY_ENDPOINTS.collections,

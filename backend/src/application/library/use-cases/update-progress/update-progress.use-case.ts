@@ -1,16 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { ReadingList, ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import { ReadingProgress } from '@/domain/library/entities/reading-progress.entity';
+import { LibraryItemReadModel } from '@/domain/library/read-models/library-item.read-model';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
-import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
-import { ReadingStatus, ReadingList } from '@/domain/library/entities/reading-list.entity';
-import { ReadingProgress } from '@/domain/library/entities/reading-progress.entity';
+import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+import { Injectable } from '@nestjs/common';
 import { UpdateProgressCommand } from './update-progress.command';
 
 export interface UpdateProgressResult {
-    readingList: ReadingList;
+    readingList: LibraryItemReadModel;
     readingProgress: ReadingProgress;
 }
 
@@ -27,7 +28,6 @@ export class UpdateProgressUseCase {
         const bookId = BookId.create(command.bookId);
         const chapterId = ChapterId.create(command.chapterId);
 
-        // Get or create reading list entry
         let readingList = await this.readingListRepository.findByUserIdAndBookId(userId, bookId);
         if (!readingList) {
             readingList = ReadingList.create({
@@ -38,7 +38,6 @@ export class UpdateProgressUseCase {
             });
         }
 
-        // Get or create reading progress
         let readingProgress = await this.readingProgressRepository.findByUserIdAndChapterId(userId, chapterId);
         if (!readingProgress) {
             readingProgress = ReadingProgress.create({
@@ -52,10 +51,8 @@ export class UpdateProgressUseCase {
             readingProgress.updateProgress(command.progress);
         }
 
-        // Update reading list with last read chapter
         readingList.updateLastReadChapter(command.chapterId);
 
-        // Determine book status based on progress
         const isChapterCompleted = command.progress >= 80;
         let bookStatus = readingList.status;
 
@@ -65,14 +62,18 @@ export class UpdateProgressUseCase {
 
         readingList.updateStatus(bookStatus);
 
-        // Save both entities
         await Promise.all([
             this.readingListRepository.save(readingList),
             this.readingProgressRepository.save(readingProgress)
         ]);
 
+        const detail = await this.readingListRepository.findDetailByUserIdAndBookId(userId, bookId);
+        if (!detail) {
+            throw new Error('Failed to retrieve updated reading list detail');
+        }
+
         return {
-            readingList,
+            readingList: detail,
             readingProgress
         };
     }
