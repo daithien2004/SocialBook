@@ -1,17 +1,17 @@
-import { ReadingList, ReadingStatus } from "@/domain/library/entities/reading-list.entity";
-import { ReadingProgress } from "@/domain/library/entities/reading-progress.entity";
+import { ReadingListResult, ReadingProgressResult, ReadingStatusResult } from "@/application/library/mappers/library.results";
+import { CollectionResult } from "@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case";
 
 export class BookLibraryInfoResponseDto {
-    status: ReadingStatus | null;
+    status: ReadingStatusResult | null;
     collections: CollectionResponseDto[];
 
-    constructor(readingList: ReadingList | null, collections: CollectionResponseDto[]) {
+    constructor(readingList: ReadingListResult | null, collections: CollectionResponseDto[]) {
         this.status = readingList?.status || null;
         this.collections = collections;
     }
 
-    static fromResult(result: { readingList: ReadingList | null, collections: any[] }): BookLibraryInfoResponseDto {
-        const collectionDtos = result.collections.map(c => CollectionResponseDto.fromEntity(c));
+    static fromResult(result: { readingList: ReadingListResult | null, collections: any[] }): BookLibraryInfoResponseDto {
+        const collectionDtos = result.collections.map(c => CollectionResponseDto.fromResult(c));
         return new BookLibraryInfoResponseDto(result.readingList, collectionDtos);
     }
 }
@@ -19,11 +19,11 @@ export class BookLibraryInfoResponseDto {
 export class ChapterProgressResponseDto {
     progress: number;
 
-    constructor(readingProgress: ReadingProgress | null) {
+    constructor(readingProgress: ReadingProgressResult | null) {
         this.progress = readingProgress?.progress || 0;
     }
 
-    static fromEntity(readingProgress: ReadingProgress | null): ChapterProgressResponseDto {
+    static fromResult(readingProgress: ReadingProgressResult | null): ChapterProgressResponseDto {
         return new ChapterProgressResponseDto(readingProgress);
     }
 }
@@ -72,7 +72,7 @@ export class CollectionResponseDto {
         this.updatedAt = props.updatedAt;
     }
 
-    static fromEntity(entity: any, bookCount?: number): CollectionResponseDto {
+    static fromResult(entity: any, bookCount?: number): CollectionResponseDto {
         return new CollectionResponseDto({
             id: entity.id,
             name: entity.name,
@@ -103,7 +103,7 @@ export class CollectionDetailResponseDto extends CollectionResponseDto {
         this.books = props.books;
     }
 
-    static fromResult(collection: any, books: any[]): CollectionDetailResponseDto {
+    static fromResultDetail(collection: any, books: any[]): CollectionDetailResponseDto {
         return new CollectionDetailResponseDto({
             id: collection.id,
             name: collection.name,
@@ -127,7 +127,7 @@ export class LibraryItemResponseDto {
         coverUrl: string;
         authorId: string;
     };
-    status: ReadingStatus;
+    status: ReadingStatusResult;
     lastReadChapterId: {
         id: string;
         title: string;

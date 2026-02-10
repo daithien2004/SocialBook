@@ -6,6 +6,8 @@ import { ChapterTitle } from '@/domain/chapters/value-objects/chapter-title.vo';
 import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { UpdateChapterCommand } from './update-chapter.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
+import { ChapterResult } from '../get-chapters/get-chapters.result';
+import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
 @Injectable()
 export class UpdateChapterUseCase {
@@ -13,7 +15,7 @@ export class UpdateChapterUseCase {
         private readonly chapterRepository: IChapterRepository
     ) {}
 
-    async execute(command: UpdateChapterCommand): Promise<Chapter> {
+    async execute(command: UpdateChapterCommand): Promise<ChapterResult> {
         const chapterId = ChapterId.create(command.id);
         
         const chapter = await this.chapterRepository.findById(chapterId);
@@ -83,7 +85,7 @@ export class UpdateChapterUseCase {
 
         await this.chapterRepository.save(chapter);
 
-        return chapter;
+        return ChapterApplicationMapper.toResult(chapter);
     }
 }
 

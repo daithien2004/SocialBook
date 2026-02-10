@@ -6,7 +6,8 @@ import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ChapterTitle } from '@/domain/chapters/value-objects/chapter-title.vo';
 import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { CreateChapterCommand } from './create-chapter.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ChapterResult } from '../get-chapters/get-chapters.result';
+import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
 @Injectable()
 export class CreateChapterUseCase {
@@ -15,7 +16,7 @@ export class CreateChapterUseCase {
         private readonly idGenerator: IIdGenerator
     ) {}
 
-    async execute(command: CreateChapterCommand): Promise<Chapter> {
+    async execute(command: CreateChapterCommand): Promise<ChapterResult> {
         const title = ChapterTitle.create(command.title);
         const bookId = BookId.create(command.bookId);
         
@@ -50,7 +51,7 @@ export class CreateChapterUseCase {
 
         await this.chapterRepository.save(chapter);
 
-        return chapter;
+        return ChapterApplicationMapper.toResult(chapter);
     }
 }
 

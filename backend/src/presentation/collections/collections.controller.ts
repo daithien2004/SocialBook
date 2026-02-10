@@ -41,7 +41,7 @@ export class CollectionsController {
     });
     return {
       message: 'Collection created successfully',
-      data: CollectionResponseDto.fromEntity(collection),
+      data: CollectionResponseDto.fromResult(collection),
     };
   }
 
@@ -52,7 +52,7 @@ export class CollectionsController {
     const results = await this.getAllCollectionsUseCase.execute({ userId: userId || '' });
     return {
       message: 'Get collections successfully',
-      data: results.map(r => CollectionResponseDto.fromEntity(r.collection, r.bookCount)),
+      data: results.map(r => CollectionResponseDto.fromResult(r.collection, r.bookCount)),
     };
   }
 
@@ -69,7 +69,7 @@ export class CollectionsController {
     });
     return {
       message: 'Get collection successfully',
-      data: result ? CollectionDetailResponseDto.fromResult(result.collection, result.books) : null,
+      data: result ? CollectionDetailResponseDto.fromResultDetail(result.collection, result.books) : null,
     };
   }
 
@@ -82,7 +82,7 @@ export class CollectionsController {
     });
     return {
       message: 'Get collection successfully',
-      data: result ? CollectionDetailResponseDto.fromResult(result.collection, result.books) : null,
+      data: result ? CollectionDetailResponseDto.fromResultDetail(result.collection, result.books) : null,
     };
   }
 

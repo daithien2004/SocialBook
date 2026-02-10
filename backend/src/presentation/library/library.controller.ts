@@ -16,7 +16,6 @@ import { UpdateProgressUseCase } from '@/application/library/use-cases/update-pr
 import { UpdateStatusCommand } from '@/application/library/use-cases/update-status/update-status.command';
 import { UpdateStatusUseCase } from '@/application/library/use-cases/update-status/update-status.use-case';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
 import {
   AddToCollectionsDto,
   UpdateLibraryStatusDto,
@@ -43,9 +42,13 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ReadingStatusResult } from '@/application/library/mappers/library.results';
 import { Request } from 'express';
 
 @Controller('library')
+@ApiTags('Library')
+@UseGuards(JwtAuthGuard)
 export class LibraryController {
   constructor(
     private readonly getLibraryUseCase: GetLibraryUseCase,
@@ -63,9 +66,9 @@ export class LibraryController {
   @HttpCode(HttpStatus.OK)
   async getLibrary(
     @Req() req: Request & { user: { id: string } },
-    @Query('status') status: ReadingStatus = ReadingStatus.READING,
+    @Query('status') status: ReadingStatusResult = ReadingStatusResult.READING,
   ) {
-    const query = new GetLibraryQuery(req.user.id, status);
+    const query = new GetLibraryQuery(req.user.id, status as any);
     const readingLists = await this.getLibraryUseCase.execute(query);
 
     return {
@@ -94,28 +97,32 @@ export class LibraryController {
     @Query('chapterId') chapterId: string,
   ) {
     const query = new GetChapterProgressQuery(req.user.id, bookId, chapterId);
-    const readingProgress = await this.getChapterProgressUseCase.execute(query);
-
+    const result = await this.getChapterProgressUseCase.execute(query);
     return {
-      message: 'Get reading progress successfully',
-      data: ChapterProgressResponseDto.fromEntity(readingProgress),
+      message: 'Get chapter progress successfully',
+      data: ChapterProgressResponseDto.fromResult(result),
     };
   }
 
-  @Patch('progress')
-  @HttpCode(HttpStatus.OK)
-  async updateProgress(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateProgressDto) {
+  @Post('progress')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update chapter reading progress' })
+  @ApiBody({ type: UpdateProgressDto })
+  async updateProgress(@Req() req: Request & { user: { id: string } }, @Body() updateProgressDto: UpdateProgressDto) {
     const command = new UpdateProgressCommand(
       req.user.id,
-      dto.bookId,
-      dto.chapterId,
-      dto.progress || 0
+      updateProgressDto.bookId,
+      updateProgressDto.chapterId,
+      updateProgressDto.progress || 0
     );
-    const result = await this.updateProgressUseCase.execute(command);
 
+    const result = await this.updateProgressUseCase.execute(command);
     return {
-      message: 'Update reading progress successfully',
-      data: LibraryItemResponseDto.fromReadModel(result.readingList),
+      message: 'Update progress successfully',
+      data: {
+        readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
+        readingProgress: ChapterProgressResponseDto.fromResult(result.readingProgress),
+      },
     };
   }
 

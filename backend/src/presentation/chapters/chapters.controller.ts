@@ -19,7 +19,6 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { Chapter } from '@/domain/chapters/entities/chapter.entity';
 import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response.dto';
 import { CreateChapterDto } from '@/presentation/chapters/dto/create-chapter.dto';
 import { FilterChapterDto } from '@/presentation/chapters/dto/filter-chapter.dto';
@@ -117,10 +116,10 @@ export class ChaptersController {
       createChapterDto.orderIndex
     );
 
-    const chapter = await this.createChapterUseCase.execute(command);
+    const chapterResult = await this.createChapterUseCase.execute(command);
     return {
       message: 'Tạo chương thành công',
-      data: new ChapterResponseDto(chapter),
+      data: ChapterResponseDto.fromResult(chapterResult),
     };
   }
 
@@ -143,10 +142,10 @@ export class ChaptersController {
       updateChapterDto.orderIndex
     );
 
-    const chapter = await this.updateChapterUseCase.execute(command);
+    const chapterResult = await this.updateChapterUseCase.execute(command);
     return {
       message: 'Cập nhật chương thành công',
-      data: new ChapterResponseDto(chapter),
+      data: ChapterResponseDto.fromResult(chapterResult),
     };
   }
 
@@ -202,10 +201,10 @@ export class ChaptersController {
       };
     }
 
-    const paginatedResult = result as unknown as PaginatedResult<Chapter>;
+    const paginatedResult = result as any;
     return {
       message: 'Get all chapters successfully',
-      data: paginatedResult.data.map(chapter => new ChapterResponseDto(chapter)),
+      data: ChapterResponseDto.fromArray(paginatedResult.data),
       meta: paginatedResult.meta,
     };
   }

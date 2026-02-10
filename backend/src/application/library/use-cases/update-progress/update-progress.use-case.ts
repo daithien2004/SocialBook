@@ -9,10 +9,12 @@ import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Injectable } from '@nestjs/common';
 import { UpdateProgressCommand } from './update-progress.command';
+import { ReadingProgressResult } from '../../mappers/library.results';
+import { LibraryApplicationMapper } from '../../mappers/library.mapper';
 
 export interface UpdateProgressResult {
     readingList: LibraryItemReadModel;
-    readingProgress: ReadingProgress;
+    readingProgress: ReadingProgressResult;
 }
 
 @Injectable()
@@ -74,7 +76,7 @@ export class UpdateProgressUseCase {
 
         return {
             readingList: detail,
-            readingProgress
+            readingProgress: LibraryApplicationMapper.toProgressResult(readingProgress)
         };
     }
 }
