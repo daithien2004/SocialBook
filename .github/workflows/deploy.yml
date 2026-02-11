@@ -1,0 +1,72 @@
+name: Deploy Dev Branch
+
+on:
+  push:
+    branches:
+      - dev_thien_refactor-clean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout source
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Login Docker Hub
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 3️⃣ Build & Push Image
+      - name: Build and Push Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: daithien/socialbook:dev
+
+      # 4️⃣ SSH Deploy to Droplet
+      - name: Deploy to Droplet
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            echo "Pull latest image..."
+            docker pull daithien/socialbook:dev
+
+            echo "Stop old container..."
+            docker stop socialbook || true
+            docker rm socialbook || true
+
+            echo "Run new container..."
+            docker run -d \
+              --name socialbook \
+              --restart always \
+              -p 5000:5000 \
+              -e PORT='${{ secrets.PORT }}' \
+              -e MONGO_URI='${{ secrets.MONGO_URI }}' \
+              -e JWT_ACCESS_SECRET='${{ secrets.JWT_ACCESS_SECRET }}' \
+              -e JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
+              -e ACCESS_TOKEN_EXPIRES_IN='${{ secrets.ACCESS_TOKEN_EXPIRES_IN }}' \
+              -e REFRESH_TOKEN_EXPIRES_IN='${{ secrets.REFRESH_TOKEN_EXPIRES_IN }}' \
+              -e FRONTEND_URL='${{ secrets.FRONTEND_URL }}' \
+              -e NODE_ENV='${{ secrets.NODE_ENV }}' \
+              -e EMAIL_USER='${{ secrets.EMAIL_USER }}' \
+              -e EMAIL_PASS='${{ secrets.EMAIL_PASS }}' \
+              -e CLOUDINARY_CLOUD_NAME='${{ secrets.CLOUDINARY_CLOUD_NAME }}' \
+              -e CLOUDINARY_API_KEY='${{ secrets.CLOUDINARY_API_KEY }}' \
+              -e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
+              -e GOOGLE_API_KEY='${{ secrets.GOOGLE_API_KEY }}' \
+              -e RAPID_MODER_API_KEY='${{ secrets.RAPID_MODER_API_KEY }}' \
+              -e RAPID_API_HOST='${{ secrets.RAPID_API_HOST }}' \
+              -e RAPID_API_URL='${{ secrets.RAPID_API_URL }}' \
+              -e GEMINI_API_KEY='${{ secrets.GEMINI_API_KEY }}' \
+              daithien/socialbook:dev
+
+            echo "Deploy completed!"
