@@ -56,4 +56,3 @@ jobs:
             docker compose up -d
 
             echo "Deploy completed!"
-            
