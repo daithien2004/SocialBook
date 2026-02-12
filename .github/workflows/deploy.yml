@@ -45,13 +45,12 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            script: |
-              cd ~/socialbook
-            
-              echo "Pull latest images..."
-              docker compose pull
-            
-              echo "Restart containers..."
-              docker compose up -d --remove-orphans
-            
-              echo "Deploy completed!"
+            cd ~/socialbook
+          
+            echo "Pull latest images..."
+            docker compose pull
+          
+            echo "Restart containers..."
+            docker compose up -d --remove-orphans
+          
+            echo "Deploy completed!"
