@@ -45,7 +45,7 @@ jobs:
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            cd ~/socialbook
+            cd ~/SocialBook
           
             echo "Pull latest images..."
             docker compose pull
