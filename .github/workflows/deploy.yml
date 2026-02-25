@@ -36,6 +36,9 @@ jobs:
           context: ./frontend
           push: true
           tags: daithien/socialbook-fe:dev
+          build-args: |
+              NEXT_PUBLIC_NEST_API_URL=/api
+              NEXT_PUBLIC_SOCKET_URL=/
 
       # 5️⃣ Deploy to Droplet
       - name: Deploy to Droplet
