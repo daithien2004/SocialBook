@@ -1,4 +1,3 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import {
   Body,
   Controller,
