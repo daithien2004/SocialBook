@@ -59,7 +59,7 @@ async function bootstrap() {
   configSwagger(app);
 
   // Khởi động server
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`Backend running on ${await app.getUrl()}`);
 }
 bootstrap();
