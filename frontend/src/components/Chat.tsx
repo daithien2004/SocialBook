@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
 import debounce from 'lodash.debounce';
 
-const SOCKET_URL = (process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000') + '/chat';
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL + '/chat';
 
 export default function Chat() {
   const [socket, setSocket] = useState<Socket | null>(null);
