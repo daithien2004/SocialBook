@@ -2,73 +2,7 @@ import { Book as BookEntity } from '@/domain/books/entities/book.entity';
 import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 import { Types } from 'mongoose';
-
-// ─── Raw Types ────────────────────────────────────────────────────────────────
-
-export interface BookPersistence {
-  title: string;
-  slug: string;
-  authorId: Types.ObjectId;
-  genres: Types.ObjectId[];
-  description: string;
-  publishedYear: string;
-  coverUrl: string;
-  status: string;
-  tags: string[];
-  views: number;
-  likes: number;
-  likedBy: Types.ObjectId[];
-  updatedAt: Date;
-}
-
-export interface RawGenre {
-  _id: Types.ObjectId;
-  name: string;
-  slug: string;
-}
-
-export interface RawParagraph {
-  _id: Types.ObjectId;
-  content: string;
-}
-
-export interface RawChapter {
-  _id: Types.ObjectId;
-  title: string;
-  slug: string;
-  paragraphs: RawParagraph[];
-  orderIndex: number;
-  viewsCount: number;
-  createdAt: Date;
-  updatedAt?: Date;
-}
-
-export interface RawBookDocument {
-  _id: Types.ObjectId;
-  title: string;
-  slug: string;
-  authorId: Types.ObjectId | { _id: Types.ObjectId; name: string };
-  genres: (Types.ObjectId | RawGenre)[];
-  description?: string;
-  publishedYear?: string;
-  coverUrl?: string;
-  status?: string;
-  tags?: string[];
-  views?: number;
-  likes?: number;
-  likedBy?: Types.ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
-  chapterCount?: number;
-}
-
-export interface RawBookDetailAggregation extends Omit<RawBookDocument, 'genres'> {
-  genres: Types.ObjectId[];
-  genreDetails: RawGenre[];
-  chapters: RawChapter[];
-}
-
-// ─── Mapper ───────────────────────────────────────────────────────────────────
+import { BookPersistence, RawBookDetailAggregation, RawBookDocument, RawGenre } from './book.raw-types';
 
 export class BookMapper {
   static toDomain(document: RawBookDocument): BookEntity {
@@ -101,7 +35,7 @@ export class BookMapper {
     });
   }
 
-  static toListReadModel(document: RawBookDocument): BookListReadModel {
+ static toListReadModel(document: RawBookDocument): BookListReadModel {
     const author = document.authorId as any;
     const authorName = (typeof author === 'object' && 'name' in author) ? author.name : undefined;
     const authorIdStr = (typeof author === 'object' && '_id' in author) ? author._id.toString() : document.authorId.toString();
@@ -124,15 +58,17 @@ export class BookMapper {
       coverUrl: document.coverUrl || '',
       status: document.status || 'draft',
       tags: document.tags || [],
-      views: document.views || 0,
-      likes: document.likes || 0,
       likedBy: (document.likedBy || []).map((id) => id.toString()),
+      stats: {
+        views: document.views || 0,
+        likes: document.likes || 0,
+        chapterCount: document.chapterCount ?? 0,
+      },
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
       chapterCount: document.chapterCount || 0,
     };
   }
-
   static toPersistence(book: BookEntity): BookPersistence {
     return {
       title: book.title.toString(),
@@ -167,9 +103,12 @@ export class BookMapper {
       coverUrl: doc.coverUrl || '',
       status: doc.status || 'draft',
       tags: doc.tags || [],
-      views: doc.views || 0,
-      likes: doc.likes || 0,
       likedBy: (doc.likedBy || []).map((id) => id.toString()),
+      stats: {
+        views: doc.views || 0,
+        likes: doc.likes || 0,
+        chapterCount: (doc.chapters || []).length,
+      },
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
       chapters: (doc.chapters || []).map((ch) => ({

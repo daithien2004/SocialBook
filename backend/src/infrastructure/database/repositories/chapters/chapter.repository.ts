@@ -12,7 +12,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
 import { BookMapper } from '../books/book.mapper';
-import { RawBookDocument } from '../books/book.mapper';
+import { RawBookDocument } from '../books/book.raw-types';
 import { RawChapterDocument, RawChapterPersistence } from './chapter.mapper';
 
 @Injectable()

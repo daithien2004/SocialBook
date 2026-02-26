@@ -1,8 +1,6 @@
 import { Chapter as ChapterEntity } from '@/domain/chapters/entities/chapter.entity';
 import { Types } from 'mongoose';
-import { RawParagraph } from '../books/book.mapper';
-
-// ─── Raw Types ────────────────────────────────────────────────────────────────
+import { RawParagraph } from '../books/book.raw-types';
 
 export type RawParagraphDocument = RawParagraph;
 
@@ -27,8 +25,6 @@ export interface RawChapterPersistence {
   orderIndex: number;
   updatedAt: Date | undefined;
 }
-
-// ─── Mapper ───────────────────────────────────────────────────────────────────
 
 export class ChapterMapper {
   static toDomain(document: RawChapterDocument): ChapterEntity {

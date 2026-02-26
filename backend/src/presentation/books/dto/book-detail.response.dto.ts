@@ -33,9 +33,14 @@ export class BookDetailResponseDto {
     coverUrl: string;
     status: string;
     tags: string[];
-    views: number;
-    likes: number;
     likedBy: string[];
+    stats: {
+        views: number;
+        likes: number;
+        chapterCount: number;
+        averageRating: number;
+        totalRatings: number;
+    };
     createdAt: Date;
     updatedAt: Date;
     chapters: ChapterResponseDto[];
@@ -51,9 +56,14 @@ export class BookDetailResponseDto {
         this.coverUrl = readModel.coverUrl;
         this.status = readModel.status;
         this.tags = readModel.tags;
-        this.views = readModel.views;
-        this.likes = readModel.likes;
         this.likedBy = readModel.likedBy;
+        this.stats = {
+            views: readModel.stats.views,
+            likes: readModel.stats.likes,
+            chapterCount: readModel.stats.chapterCount,
+            averageRating: 0,
+            totalRatings: 0
+        };
         this.createdAt = readModel.createdAt;
         this.updatedAt = readModel.updatedAt;
         this.chapters = readModel.chapters.map(ch => new ChapterResponseDto(ch));

@@ -11,8 +11,6 @@ export interface Book {
   coverUrl: string;
   status: 'draft' | 'published' | 'completed';
   tags: string[];
-  views: number;
-  likes: number;
   isLiked: boolean;
   isDeleted: boolean;
   createdAt: string;
@@ -24,7 +22,7 @@ export interface Book {
   stats: {
     averageRating: number;
     totalRatings: number;
-    chapters: number;
+    chapterCount: number;
     views: number;
     likes: number;
   };
@@ -83,13 +81,11 @@ export interface BookForAdmin {
   coverUrl: string;
   status: 'draft' | 'published' | 'completed';
   tags: string[];
-  views: number;
-  likes: number;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
   stats: {
-    chapters: number;
+    chapterCount: number;
     views: number;
     likes: string; // backend trả về string
   };
@@ -150,7 +146,7 @@ export interface UpdateBookParams {
 export interface BookStats {
   views: number;
   likes: number;
-  chapters: number;
+  chapterCount: number;
 }
 
 export interface AdminBooksData {

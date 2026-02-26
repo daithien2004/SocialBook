@@ -13,14 +13,14 @@ export class BookResponseDto {
     coverUrl: string;
     status: string;
     tags: string[];
-    views: number;
-    likes: number;
+    likedBy: string[];
     stats: {
-        chapters: number;
         views: number;
         likes: number;
+        chapterCount: number;
+        averageRating: number;
+        totalRatings: number;
     };
-    likedBy: string[];
     createdAt: Date;
     updatedAt: Date;
 
@@ -39,14 +39,14 @@ export class BookResponseDto {
         this.coverUrl = readModel.coverUrl;
         this.status = readModel.status;
         this.tags = readModel.tags;
-        this.views = readModel.views;
-        this.likes = readModel.likes;
-        this.stats = {
-            chapters: readModel.chapterCount || 0,
-            views: readModel.views || 0,
-            likes: readModel.likes || 0
-        };
         this.likedBy = readModel.likedBy;
+        this.stats = {
+            views: readModel.stats.views,
+            likes: readModel.stats.likes,
+            chapterCount: readModel.stats.chapterCount,
+            averageRating: 0,
+            totalRatings: 0
+        };
         this.createdAt = readModel.createdAt;
         this.updatedAt = readModel.updatedAt;
     }
@@ -67,9 +67,12 @@ export class BookResponseDto {
             coverUrl: book.coverUrl,
             status: book.status.toString(),
             tags: book.tags,
-            views: book.views,
-            likes: book.likes,
             likedBy: book.likedBy,
+            stats: {
+                views: book.views,
+                likes: book.likes,
+                chapterCount: 0
+            },
             createdAt: book.createdAt,
             updatedAt: book.updatedAt,
             authorName: book.authorName,

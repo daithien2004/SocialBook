@@ -20,9 +20,12 @@ export interface BookDetailReadModel {
     coverUrl: string;
     status: string;
     tags: string[];
-    views: number;
-    likes: number;
     likedBy: string[];
+    stats: {
+        views: number;
+        likes: number;
+        chapterCount: number;
+    };
     createdAt: Date;
     updatedAt: Date;
     chapters: ChapterSummary[];

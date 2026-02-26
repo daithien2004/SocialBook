@@ -12,7 +12,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
 import { BookMapper } from './book.mapper';
-import { RawBookDocument } from './book.mapper';
+import { RawBookDocument } from './book.raw-types';
 
 @Injectable()
 export class BookRepository implements IBookRepository {
@@ -100,23 +100,53 @@ export class BookRepository implements IBookRepository {
         const skip = (pagination.page - 1) * pagination.limit;
         const total = await this.bookModel.countDocuments(queryFilter).exec();
 
-        let query = this.bookModel.find(queryFilter);
+        const sortStage: Record<string, 1 | -1> = sort?.sortBy
+            ? { [sort.sortBy]: (sort.order === 'desc' ? -1 : 1) as 1 | -1 }
+            : { createdAt: -1 };
 
-        if (sort?.sortBy) {
-            const sortOrder = sort.order === 'desc' ? -1 : 1;
-            query = query.sort({ [sort.sortBy]: sortOrder });
-        } else {
-            query = query.sort({ createdAt: -1 });
-        }
-
-        const documents = await query
-            .skip(skip)
-            .limit(pagination.limit)
-            .populate('genres')
-            .populate('authorId', 'name')
-            .populate('chapterCount') 
-            .lean()
-            .exec() as unknown as RawBookDocument[];
+        const documents = await this.bookModel.aggregate([
+            { $match: queryFilter },
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: pagination.limit },
+            {
+                $lookup: {
+                    from: 'genres',
+                    localField: 'genres',
+                    foreignField: '_id',
+                    as: 'genres',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'authorId',
+                    foreignField: '_id',
+                    pipeline: [{ $project: { _id: 1, name: 1 } }],
+                    as: '_authorArr',
+                },
+            },
+            {
+                $addFields: {
+                    authorId: { $arrayElemAt: ['$_authorArr', 0] },
+                },
+            },
+            {
+                $lookup: {
+                    from: 'chapters',
+                    localField: '_id',
+                    foreignField: 'bookId',
+                    pipeline: [{ $project: { _id: 1 } }],
+                    as: '_chapters',
+                },
+            },
+            {
+                $addFields: {
+                    chapterCount: { $size: '$_chapters' },
+                },
+            },
+            { $project: { _chapters: 0, _authorArr: 0 } },
+        ]).exec();
 
         return {
             data: documents.map(doc => BookMapper.toListReadModel(doc)),

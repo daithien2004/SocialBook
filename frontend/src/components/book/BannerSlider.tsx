@@ -1,9 +1,9 @@
 'use client';
 
-import { formatCompact } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Book } from '@/features/books/types/book.interface';
+import { formatCompact } from '@/lib/utils';
 import { BookOpen, ChevronLeft, ChevronRight, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -78,11 +78,11 @@ export function BannerSlider({ books }: BannerSliderProps) {
               </Badge>
             </div>
             <div className="flex items-center gap-2 font-medium">
-              <Eye size={16} /> {formatCompact(currentBook.views)}
+              <Eye size={16} /> {formatCompact(currentBook.stats?.views || 0)}
             </div>
             <div className="flex items-center gap-2 font-medium">
               <Heart size={16} className="mb-[3px]" />
-              {formatCompact(currentBook.likes)}
+              {formatCompact(currentBook.stats?.likes || 0)}
             </div>
           </div>
 

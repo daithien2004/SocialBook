@@ -56,6 +56,11 @@ export interface RawBookDocument {
     updatedAt: Date;
 }
 
+export interface RawBookListAggregation extends Omit<RawBookDocument, 'genres'> {
+    genres: RawGenre[];
+    chapterCount: number;
+}
+
 export interface RawBookDetailAggregation extends Omit<RawBookDocument, 'genres'> {
     genres: Types.ObjectId[];
     genreDetails: RawGenre[];
