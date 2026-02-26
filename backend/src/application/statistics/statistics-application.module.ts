@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GetBookStatsUseCase } from './use-cases/get-book-stats.use-case';
 import { GetEngagementStatsUseCase } from './use-cases/get-engagement-stats.use-case';
+import { GetGrowthStatsUseCase } from './use-cases/get-growth-stats.use-case';
 import { GetOverviewStatsUseCase } from './use-cases/get-overview-stats.use-case';
 import { GetUserStatsUseCase } from './use-cases/get-user-stats.use-case';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
@@ -24,14 +25,16 @@ import { ProgressRepositoryModule } from '@/infrastructure/database/repositories
   providers: [
     GetBookStatsUseCase,
     GetEngagementStatsUseCase,
+    GetGrowthStatsUseCase,
     GetOverviewStatsUseCase,
     GetUserStatsUseCase,
   ],
   exports: [
     GetBookStatsUseCase,
     GetEngagementStatsUseCase,
+    GetGrowthStatsUseCase,
     GetOverviewStatsUseCase,
     GetUserStatsUseCase,
   ],
 })
-export class StatisticsApplicationModule {}
+export class StatisticsApplicationModule { }

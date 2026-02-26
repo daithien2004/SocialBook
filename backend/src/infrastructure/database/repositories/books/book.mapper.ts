@@ -47,7 +47,7 @@ export interface RawBookDocument {
   _id: Types.ObjectId;
   title: string;
   slug: string;
-  authorId: Types.ObjectId;
+  authorId: Types.ObjectId | { _id: Types.ObjectId; name: string };
   genres: (Types.ObjectId | RawGenre)[];
   description?: string;
   publishedYear?: string;
@@ -59,6 +59,7 @@ export interface RawBookDocument {
   likedBy?: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
+  chapterCount?: number;
 }
 
 export interface RawBookDetailAggregation extends Omit<RawBookDocument, 'genres'> {
@@ -76,11 +77,15 @@ export class BookMapper {
       return g.toString();
     });
 
+    const author = document.authorId as any;
+    const authorName = (typeof author === 'object' && 'name' in author) ? author.name : undefined;
+    const authorIdStr = (typeof author === 'object' && '_id' in author) ? author._id.toString() : document.authorId.toString();
+
     return BookEntity.reconstitute({
       id: document._id.toString(),
       title: document.title,
       slug: document.slug,
-      authorId: document.authorId.toString(),
+      authorId: authorIdStr,
       genres,
       description: document.description || '',
       publishedYear: document.publishedYear || '',
@@ -92,15 +97,21 @@ export class BookMapper {
       likedBy: (document.likedBy || []).map((id) => id.toString()),
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
+      authorName,
     });
   }
 
   static toListReadModel(document: RawBookDocument): BookListReadModel {
+    const author = document.authorId as any;
+    const authorName = (typeof author === 'object' && 'name' in author) ? author.name : undefined;
+    const authorIdStr = (typeof author === 'object' && '_id' in author) ? author._id.toString() : document.authorId.toString();
+
     return {
       id: document._id.toString(),
       title: document.title,
       slug: document.slug,
-      authorId: document.authorId.toString(),
+      authorId: authorIdStr,
+      authorName,
       genres: (document.genres || [])
         .filter((g): g is RawGenre => typeof g === 'object' && 'name' in g)
         .map((g) => ({
@@ -118,6 +129,7 @@ export class BookMapper {
       likedBy: (document.likedBy || []).map((id) => id.toString()),
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
+      chapterCount: document.chapterCount || 0,
     };
   }
 

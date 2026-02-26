@@ -14,7 +14,7 @@ const ModerationQueuePage = () => {
     const [approvePost, { isLoading: isApproving }] = useApprovePostMutation();
     const [rejectPost, { isLoading: isRejecting }] = useRejectPostMutation();
 
-    const posts = data?.items || [];
+    const posts = data?.data || [];
     const meta = data?.meta;
 
     return (
@@ -54,14 +54,11 @@ const ModerationQueuePage = () => {
                                         <div className="space-y-2 flex-1">
                                             <div className="flex items-center gap-2 text-sm">
                                                 <User className="h-4 w-4 text-gray-500" />
-                                                <span className="font-semibold text-gray-900">{post.userId.username}</span>
-                                                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">
-                                                    {post.userId.email}
-                                                </span>
+                                                <span className="font-semibold text-gray-900">{post.user?.username || 'Người dùng ẩn danh'}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-sm text-gray-600">
                                                 <BookOpen className="h-4 w-4" />
-                                                <span>{post.bookId.title}</span>
+                                                <span>{post.book?.title || 'Kho sách lỗi'}</span>
                                             </div>
                                             <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-700 rounded-md text-sm font-medium mt-2">
                                                 <AlertTriangle className="h-3 w-3" />

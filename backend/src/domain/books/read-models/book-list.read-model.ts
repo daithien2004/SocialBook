@@ -9,6 +9,7 @@ export interface BookListReadModel {
     title: string;
     slug: string;
     authorId: string;
+    authorName?: string;
     genres: GenreSummary[];
     description: string;
     publishedYear: string;
@@ -20,4 +21,5 @@ export interface BookListReadModel {
     likedBy: string[];
     createdAt: Date;
     updatedAt: Date;
+    chapterCount?: number;
 }

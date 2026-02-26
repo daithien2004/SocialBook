@@ -5,8 +5,7 @@ export class BookResponseDto {
     id: string;
     title: string;
     slug: string;
-    authorId: string;
-    authorName?: string;
+    authorId: { id: string; name: string };
     chapterCount?: number;
     genres: GenreSummary[];
     description: string;
@@ -16,6 +15,11 @@ export class BookResponseDto {
     tags: string[];
     views: number;
     likes: number;
+    stats: {
+        chapters: number;
+        views: number;
+        likes: number;
+    };
     likedBy: string[];
     createdAt: Date;
     updatedAt: Date;
@@ -24,8 +28,10 @@ export class BookResponseDto {
         this.id = readModel.id;
         this.title = readModel.title;
         this.slug = readModel.slug;
-        this.authorId = readModel.authorId;
-        this.authorName = readModel.authorName;
+        this.authorId = {
+            id: readModel.authorId,
+            name: readModel.authorName || '—'
+        };
         this.chapterCount = readModel.chapterCount;
         this.genres = readModel.genres;
         this.description = readModel.description;
@@ -35,6 +41,11 @@ export class BookResponseDto {
         this.tags = readModel.tags;
         this.views = readModel.views;
         this.likes = readModel.likes;
+        this.stats = {
+            chapters: readModel.chapterCount || 0,
+            views: readModel.views || 0,
+            likes: readModel.likes || 0
+        };
         this.likedBy = readModel.likedBy;
         this.createdAt = readModel.createdAt;
         this.updatedAt = readModel.updatedAt;

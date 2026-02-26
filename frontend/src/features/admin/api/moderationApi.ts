@@ -3,16 +3,14 @@ import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 
 export interface FlaggedPost {
     id: string; // Backend TransformInterceptor converts _id → id
-    userId: {
+    user: {
         id: string;
         username: string;
-        email: string;
         image?: string;
     };
-    bookId: {
+    book: {
         id: string;
         title: string;
-        coverUrl?: string;
     };
     content: string;
     imageUrls: string[];
@@ -24,7 +22,7 @@ export interface FlaggedPost {
 }
 
 export interface FlaggedPostsResponse {
-    items: FlaggedPost[];
+    data: FlaggedPost[];
     meta: {
         page: number;
         limit: number;

@@ -18,6 +18,7 @@ import { GetOverviewStatsUseCase } from '@/application/statistics/use-cases/get-
 import { GetUserStatsUseCase } from '@/application/statistics/use-cases/get-user-stats.use-case';
 import { GetBookStatsUseCase } from '@/application/statistics/use-cases/get-book-stats.use-case';
 import { GetEngagementStatsUseCase } from '@/application/statistics/use-cases/get-engagement-stats.use-case';
+import { GetGrowthStatsUseCase } from '@/application/statistics/use-cases/get-growth-stats.use-case';
 
 @ApiTags('Statistics')
 @Controller('statistics')
@@ -30,6 +31,7 @@ export class StatisticsController {
     private readonly getUserStatsUseCase: GetUserStatsUseCase,
     private readonly getBookStatsUseCase: GetBookStatsUseCase,
     private readonly getEngagementStatsUseCase: GetEngagementStatsUseCase,
+    private readonly getGrowthStatsUseCase: GetGrowthStatsUseCase,
     private readonly locationCheckService: LocationCheckService,
   ) { }
 
@@ -65,6 +67,25 @@ export class StatisticsController {
     const data = await this.getBookStatsUseCase.execute();
     return {
       message: 'Get book statistics successfully',
+      data,
+    };
+  }
+
+  @Get('growth')
+  @ApiOperation({ summary: 'Get growth metrics over time' })
+  @ApiResponse({ status: 200, description: 'Return growth metrics' })
+  @ApiQuery({ name: 'days', required: false, type: Number, description: 'Number of days to look back (default: 30)' })
+  @ApiQuery({ name: 'groupBy', required: false, enum: ['day', 'week', 'month'], description: 'Group by period (default: day)' })
+  @HttpCode(HttpStatus.OK)
+  async getGrowth(
+    @Query('days') days?: string,
+    @Query('groupBy') groupBy?: string,
+  ) {
+    const numDays = days ? parseInt(days, 10) : 30;
+    const groupByValue = groupBy ?? 'day';
+    const data = await this.getGrowthStatsUseCase.execute(numDays, groupByValue);
+    return {
+      message: 'Get growth statistics successfully',
       data,
     };
   }
@@ -117,6 +138,18 @@ export class StatisticsController {
     const data = await this.getEngagementStatsUseCase.getActiveUsers();
     return {
       message: 'Get active users successfully',
+      data,
+    };
+  }
+
+  @Get('analytics/geographic')
+  @ApiOperation({ summary: 'Get geographic distribution data' })
+  @ApiResponse({ status: 200, description: 'Return geographic distribution data' })
+  @HttpCode(HttpStatus.OK)
+  async getGeographicDistribution() {
+    const data = await this.getEngagementStatsUseCase.getGeographicDistribution();
+    return {
+      message: 'Get geographic distribution successfully',
       data,
     };
   }

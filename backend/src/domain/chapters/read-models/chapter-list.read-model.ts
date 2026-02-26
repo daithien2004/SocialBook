@@ -4,6 +4,7 @@ export interface ChapterSummary {
     slug: string;
     orderIndex: number;
     viewsCount: number;
+    paragraphsCount: number;
     createdAt: Date;
     updatedAt: Date;
 }

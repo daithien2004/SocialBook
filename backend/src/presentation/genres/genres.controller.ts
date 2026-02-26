@@ -49,6 +49,22 @@ export class GenresController {
     };
   }
 
+  @Get('admin')
+  async findAllAdmin(
+    @Query() filter: FilterGenreDto,
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '15',
+  ) {
+    // Nếu ProTable gửi current/pageSize thì map nó, không thì dùng mặc định
+    const query = new GetGenresQuery(Number(current), Number(pageSize), filter.name);
+    const result = await this.getGenresUseCase.execute(query);
+
+    return {
+      data: result.data.map((genre) => new GenreResponseDto(genre)),
+      meta: result.meta,
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const query = new GetGenreByIdQuery(id);

@@ -1,10 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
 @Injectable()
-export class CloudinaryService implements IMediaService {
+export class CloudinaryService implements IMediaService, OnModuleInit {
+  constructor(private configService: ConfigService) { }
+
+  onModuleInit() {
+    cloudinary.config({
+      cloud_name: this.configService.get<string>('env.CLOUDINARY_CLOUD_NAME') || this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+      api_key: this.configService.get<string>('env.CLOUDINARY_API_KEY') || this.configService.get<string>('CLOUDINARY_API_KEY'),
+      api_secret: this.configService.get<string>('env.CLOUDINARY_API_SECRET') || this.configService.get<string>('CLOUDINARY_API_SECRET'),
+    });
+  }
+
   async uploadImage(file: Express.Multer.File): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
@@ -33,10 +44,10 @@ export class CloudinaryService implements IMediaService {
 
   async deleteImage(publicId: string): Promise<void> {
     try {
-        await cloudinary.uploader.destroy(publicId);
+      await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-        // Log error but generally we might not want to throw if deletion fails on cloud
-        console.error('Failed to delete image from Cloudinary', error);
+      // Log error but generally we might not want to throw if deletion fails on cloud
+      console.error('Failed to delete image from Cloudinary', error);
     }
   }
 

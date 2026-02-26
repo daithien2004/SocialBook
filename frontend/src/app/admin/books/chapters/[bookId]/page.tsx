@@ -189,31 +189,46 @@ export default function ChapterManagementPage() {
     setParagraphs: (p: Paragraph[]) => void,
     onPaste?: () => void
   ) => {
-    if (content.includes('\n')) {
-      const lines = content.split('\n');
-      const newParagraphs = paragraphs.map(p => ({ ...p }));
+    // Tự động phân tách thành từng câu dựa trên dấu câu (. ! ?) và xuống dòng
+    // Chỉ phân tách nếu user paste một đoạn văn dài có tính chất đa câu/xuống dòng
+    // Tránh việc đang type dấu chấm (.) thì bị nhảy ô ngay lập tức gây khó chịu 
+    const isPaste = content.length - paragraphs[index].content.length > 5;
 
-      // First line goes to current paragraph
-      newParagraphs[index].content = lines[0];
+    if (content.includes('\n') || (isPaste && /[.!?]\s/.test(content))) {
+      // Phân tách bằng newline VÀ dấu câu (dấu chấm/hỏi/chấm than tiếp nối khoảng trắng)
+      // Dùng regex để tách nhưng giữ lại text, ví dụ: "Câu 1. Câu 2" -> ["Câu 1.", "Câu 2"]
+      const segments = content
+        .split(/(?<=[.!?])\s+|\n+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
 
-      // Subsequent lines become new paragraphs
-      const newItems = lines.slice(1).map(line => ({
-        id: uuidv4(),
-        content: line
-      }));
+      if (segments.length > 1) {
+        const newParagraphs = paragraphs.map(p => ({ ...p }));
 
-      newParagraphs.splice(index + 1, 0, ...newItems);
-      setParagraphs(newParagraphs);
+        // Đoạn đầu tiên vào current index
+        newParagraphs[index].content = segments[0];
 
-      // Scroll to bottom if pasting multiple lines
-      if (lines.length > 1 && onPaste) {
-        setTimeout(onPaste, 100);
+        // Các đoạn tiếp theo tạo ô mới
+        const newItems = segments.slice(1).map(line => ({
+          id: uuidv4(),
+          content: line
+        }));
+
+        newParagraphs.splice(index + 1, 0, ...newItems);
+        setParagraphs(newParagraphs);
+
+        // Scroll to bottom if pasting
+        if (onPaste) {
+          setTimeout(onPaste, 100);
+        }
+        return;
       }
-    } else {
-      const newParagraphs = paragraphs.map(p => ({ ...p }));
-      newParagraphs[index].content = content;
-      setParagraphs(newParagraphs);
     }
+
+    // Nếu chỉ gõ bình thường hoặc không có đoạn nào tách được
+    const newParagraphs = paragraphs.map(p => ({ ...p }));
+    newParagraphs[index].content = content;
+    setParagraphs(newParagraphs);
   };
 
   const handleParagraphKeyDown = (
@@ -377,11 +392,15 @@ export default function ChapterManagementPage() {
 
     for (const chapter of importedChapters) {
       try {
-        // Split content into paragraphs
-        const paragraphs = chapter.content.split('\n').filter(p => p.trim()).map(p => ({
-          id: uuidv4(),
-          content: p.trim()
-        }));
+        // Tách câu và đoạn (phân tách mảng lớn theo \n hoặc câu)
+        const paragraphs = chapter.content
+          .split(/(?<=[.!?])\s+|\n+/)
+          .map(p => p.trim())
+          .filter(p => p.length > 0)
+          .map(p => ({
+            id: uuidv4(),
+            content: p
+          }));
 
         if (!book?.slug) {
           toast.error('Book information missing');

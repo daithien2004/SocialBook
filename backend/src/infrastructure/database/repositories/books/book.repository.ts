@@ -114,6 +114,7 @@ export class BookRepository implements IBookRepository {
             .limit(pagination.limit)
             .populate('genres')
             .populate('authorId', 'name')
+            .populate('chapterCount') 
             .lean()
             .exec() as unknown as RawBookDocument[];
 

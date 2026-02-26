@@ -44,7 +44,7 @@ export const genreApi = createApi({
         updateGenre: builder.mutation<Genre, UpdateGenreRequest>({
             query: ({ id, data }) => ({
                 url: NESTJS_GENRES_ENDPOINTS.update(id),
-                method: 'PUT',
+                method: 'PATCH',
                 body: data,
             }),
             invalidatesTags: (result, error, { id }) => [

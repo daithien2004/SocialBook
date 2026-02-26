@@ -37,6 +37,35 @@ export const chaptersApi = createApi({
           limit: params.limit
         }
       }),
+      transformResponse: (response: unknown): ChaptersListData => {
+        const objResponse = response as { book?: any, chapters?: Chapter[], data?: Chapter[], meta?: any };
+
+        if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
+          return {
+            chapters: objResponse.chapters,
+            total: objResponse.meta?.total ?? objResponse.chapters.length,
+            book: objResponse.book || {}
+          };
+        }
+
+        if (objResponse?.data && Array.isArray(objResponse.data)) {
+          return {
+            chapters: objResponse.data,
+            total: objResponse.meta?.total ?? objResponse.data.length,
+            book: {}
+          };
+        }
+
+        if (Array.isArray(response)) {
+          return {
+            chapters: response as Chapter[],
+            total: (response as Chapter[]).length,
+            book: {}
+          };
+        }
+
+        return { chapters: [], total: 0, book: {} };
+      },
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
@@ -50,16 +79,22 @@ export const chaptersApi = createApi({
         }
       }),
       transformResponse: (response: unknown): ChaptersListData => {
-        // Response từ axiosBaseQuery khi có meta: { data: Chapter[], meta: PaginationMeta }
-        const paginatedResponse = response as {
-          data: Chapter[];
-          meta: { current: number; pageSize: number; total: number; totalPages: number }
-        };
+        // AxiosBaseQuery extracts response.data. In case of { book, chapters }
+        const objResponse = response as { book?: any, chapters?: Chapter[], data?: Chapter[], meta?: any };
 
-        if (paginatedResponse?.data && Array.isArray(paginatedResponse.data)) {
+        if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
           return {
-            chapters: paginatedResponse.data,
-            total: paginatedResponse.meta?.total ?? paginatedResponse.data.length,
+            chapters: objResponse.chapters,
+            total: objResponse.meta?.total ?? objResponse.chapters.length,
+            book: objResponse.book || {}
+          };
+        }
+
+        // Response từ axiosBaseQuery khi có meta: { data: Chapter[], meta: PaginationMeta }
+        if (objResponse?.data && Array.isArray(objResponse.data)) {
+          return {
+            chapters: objResponse.data,
+            total: objResponse.meta?.total ?? objResponse.data.length,
             book: {}
           };
         }

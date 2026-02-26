@@ -59,3 +59,13 @@ BookSchema.index({ createdAt: -1 });
 BookSchema.index({ views: -1 });
 BookSchema.index({ slug: 1 });
 BookSchema.index({ likes: -1 });
+
+BookSchema.virtual('chapterCount', {
+  ref: 'Chapter',
+  localField: '_id',
+  foreignField: 'bookId',
+  count: true,
+});
+
+BookSchema.set('toJSON', { virtuals: true });
+BookSchema.set('toObject', { virtuals: true });

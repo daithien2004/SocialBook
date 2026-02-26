@@ -171,6 +171,7 @@ export class ChapterRepository implements IChapterRepository {
                 slug: chapter.slug,
                 orderIndex: chapter.orderIndex.getValue(),
                 viewsCount: chapter.viewsCount,
+                paragraphsCount: chapter.paragraphs ? chapter.paragraphs.length : 0,
                 createdAt: chapter.createdAt || new Date(),
                 updatedAt: chapter.updatedAt || new Date()
             })),

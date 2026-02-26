@@ -3,7 +3,7 @@ import { IsString, IsOptional, MaxLength } from 'class-validator';
 export class UpdateGenreDto {
     @IsString()
     @IsOptional()
-    @MaxLength(20, { message: 'Tên thể loại không được vượt quá 20 ký tự' })
+    @MaxLength(100, { message: 'Tên thể loại không được vượt quá 100 ký tự' })
     name?: string;
 
     @IsString()

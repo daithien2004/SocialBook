@@ -9,6 +9,22 @@ import { getErrorMessage } from "@/lib/utils";
 import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from "sonner";
+const COUNTRIES = [
+    "Việt Nam",
+    "Hoa Kỳ (USA)",
+    "Vương Quốc Anh (Anh)",
+    "Nhật Bản",
+    "Hàn Quốc",
+    "Trung Quốc",
+    "Đài Loan",
+    "Singapore",
+    "Thái Lan",
+    "Pháp",
+    "Đức",
+    "Nga",
+    "Úc",
+    "Canada"
+];
 
 const UserProfilePage = () => {
     const { userId } = useParams<{ userId: string }>();
@@ -108,7 +124,7 @@ const UserProfilePage = () => {
     }, [overview, form.website, form.location, form.bio, form.displayName]);
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
@@ -293,25 +309,30 @@ const UserProfilePage = () => {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-gray-300">
-                            Địa điểm
+                            Quốc gia / Lãnh thổ
                         </label>
-                        <input
-                            type="text"
+                        <select
                             name="location"
                             value={form.location}
                             onChange={handleChange}
-                            placeholder="TP. Hồ Chí Minh, Việt Nam"
                             className="
               mt-1 w-full rounded-lg
               border border-slate-200 dark:border-gray-700
               bg-slate-50 dark:bg-neutral-900
               px-3 py-2 text-sm
               text-slate-800 dark:text-gray-100
-              outline-none
+              outline-none appearance-none
               focus:border-teal-500
               focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
             "
-                        />
+                        >
+                            <option value="">-- Chọn quốc gia --</option>
+                            {COUNTRIES.map((ct) => (
+                                <option key={ct} value={ct}>
+                                    {ct}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {isDirty && (
