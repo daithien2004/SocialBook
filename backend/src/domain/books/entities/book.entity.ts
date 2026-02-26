@@ -1,13 +1,14 @@
-import { BookId } from '../value-objects/book-id.vo';
-import { BookTitle } from '../value-objects/book-title.vo';
-import { BookStatus } from '../value-objects/book-status.vo';
-import { AuthorId } from '../value-objects/author-id.vo';
-import { GenreId } from '../value-objects/genre-id.vo';
 import slugify from 'slugify';
+import { AuthorId } from '../value-objects/author-id.vo';
+import { BookId } from '../value-objects/book-id.vo';
+import { BookStatus } from '../value-objects/book-status.vo';
+import { BookTitle } from '../value-objects/book-title.vo';
+import { GenreId } from '../value-objects/genre-id.vo';
+import { Entity } from '@/shared/domain/entity.base';
 
-export class Book {
+export class Book extends Entity<BookId> {
     private constructor(
-        public readonly id: BookId,
+        id: BookId,
         private _title: BookTitle,
         private _slug: string,
         private _authorId: AuthorId,
@@ -20,15 +21,18 @@ export class Book {
         private _views: number,
         private _likes: number,
         private _likedBy: string[],
-        public readonly createdAt: Date,
-        private _updatedAt: Date,
+        createdAt?: Date,
+        updatedAt?: Date,
         public readonly genreObjects?: { id: string; name: string; slug: string; }[],
         private _authorName?: string,
         public readonly author?: { id: string; name: string; },
         private _chapterCount?: number
-    ) { }
+    ) {
+        super(id, createdAt, updatedAt);
+    }
 
     static create(props: {
+        id: BookId;
         title: string;
         authorId: string;
         genres: string[];
@@ -45,7 +49,7 @@ export class Book {
         const status = props.status ? BookStatus.create(props.status) : BookStatus.draft();
 
         return new Book(
-            BookId.generate(),
+            props.id,
             title,
             slug,
             authorId,
@@ -58,8 +62,8 @@ export class Book {
             0,
             0,
             [],
-            new Date(),
-            new Date(),
+            undefined,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -160,10 +164,6 @@ export class Book {
         return [...this._likedBy];
     }
 
-    get updatedAt(): Date {
-        return this._updatedAt;
-    }
-
     get authorName(): string | undefined {
         return this._authorName;
     }
@@ -177,12 +177,12 @@ export class Book {
         const title = BookTitle.create(newTitle);
         this._title = title;
         this._slug = Book.generateSlug(newTitle);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     changeAuthor(newAuthorId: string): void {
         this._authorId = AuthorId.create(newAuthorId);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateGenres(newGenres: string[]): void {
@@ -193,48 +193,48 @@ export class Book {
             throw new Error('Book cannot have more than 5 genres');
         }
         this._genres = newGenres.map(id => GenreId.create(id));
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateDescription(description: string): void {
         this._description = description.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updatePublishedYear(publishedYear: string): void {
         this._publishedYear = publishedYear.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateCoverUrl(coverUrl: string): void {
         this._coverUrl = coverUrl.trim();
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     changeStatus(newStatus: 'draft' | 'published' | 'completed'): void {
         this._status = BookStatus.create(newStatus);
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     updateTags(tags: string[]): void {
         this._tags = tags;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     incrementViews(): void {
         this._views += 1;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     incrementLikes(): void {
         this._likes += 1;
-        this._updatedAt = new Date();
+        this.markAsUpdated();
     }
 
     decrementLikes(): void {
         if (this._likes > 0) {
             this._likes -= 1;
-            this._updatedAt = new Date();
+            this.markAsUpdated();
         }
     }
 

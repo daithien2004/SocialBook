@@ -1,12 +1,12 @@
+import { BookFilter, IBookRepository, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
 import { Injectable } from '@nestjs/common';
-import { IBookRepository, BookFilter, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
 import { GetBooksQuery } from './get-books.query';
 
 @Injectable()
 export class GetBooksUseCase {
     constructor(
         private readonly bookRepository: IBookRepository
-    ) {}
+    ) { }
 
     async execute(query: GetBooksQuery) {
         const filter: BookFilter = {
@@ -29,7 +29,7 @@ export class GetBooksUseCase {
             order: query.order
         };
 
-        return await this.bookRepository.findAll(filter, pagination, sort);
+        return await this.bookRepository.findAllList(filter, pagination, sort);
     }
 }
 

@@ -1,30 +1,38 @@
+import { Collection } from '@/domain/library/entities/collection.entity';
+import { LibraryItemReadModel } from '@/domain/library/read-models/library-item.read-model';
+import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
+import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { GetCollectionByIdQuery } from './get-collection-by-id.query';
 
-// TODO: Create Collection entity in domain layer when implementing this feature
-export interface CollectionWithBooks {
-    id: string;
-    name: string;
-    description: string | null;
-    isPublic: boolean;
-    userId: string;
-    books: Array<{
-        id: string;
-        title: string;
-        coverUrl: string;
-        authorId: string;
-    }>;
-    createdAt: Date;
-    updatedAt: Date;
+export interface GetCollectionByIdResult {
+    collection: Collection;
+    books: LibraryItemReadModel[];
 }
 
+@Injectable()
 export class GetCollectionByIdUseCase {
-    async execute(query: GetCollectionByIdQuery): Promise<CollectionWithBooks | null> {
-        // TODO: Implement get collection by id logic
-        // 1. Find collection by id
-        // 2. Check user permissions
-        // 3. Include associated books
-        // 4. Return collection or null if not found
+    constructor(
+        private readonly collectionRepository: ICollectionRepository,
+        private readonly readingListRepository: IReadingListRepository,
+    ) { }
 
-        return null;
+    async execute(query: GetCollectionByIdQuery): Promise<GetCollectionByIdResult | null> {
+        const collection = await this.collectionRepository.findById(query.collectionId);
+
+        if (!collection) {
+            return null;
+        }
+
+        if (!collection.isPublic && collection.userId.toString() !== query.userId) {
+            throw new ForbiddenException('You do not have permission to view this collection');
+        }
+
+        const books = await this.readingListRepository.findByCollectionId(collection.id);
+
+        return {
+            collection,
+            books
+        };
     }
 }

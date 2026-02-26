@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class GenreId {
     private readonly value: string;
 
@@ -11,17 +9,7 @@ export class GenreId {
         if (!id || id.trim().length === 0) {
             throw new Error('Genre ID cannot be empty');
         }
-
-        // Validate MongoDB ObjectId format
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid Genre ID format');
-        }
-
-        return new GenreId(id);
-    }
-
-    static generate(): GenreId {
-        return new GenreId(new Types.ObjectId().toString());
+        return new GenreId(id.trim());
     }
 
     toString(): string {
@@ -29,6 +17,7 @@ export class GenreId {
     }
 
     equals(other: GenreId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 }

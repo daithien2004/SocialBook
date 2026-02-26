@@ -12,9 +12,9 @@ export class Role extends Entity<string> {
 
     get name(): string { return this._name; }
 
-    static create(name: string): Role {
+    static create(id: string, name: string): Role {
         return new Role(
-            crypto.randomUUID(),
+            id,
             name
         );
     }

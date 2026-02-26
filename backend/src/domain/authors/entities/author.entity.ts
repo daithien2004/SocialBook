@@ -17,6 +17,7 @@ export class Author extends Entity<AuthorId> {
     }
 
     static create(props: {
+        id: AuthorId;
         name: string;
         bio?: string;
         photoUrl?: string;
@@ -25,7 +26,7 @@ export class Author extends Entity<AuthorId> {
         const slug = Author.generateSlug(props.name);
         
         return new Author(
-            AuthorId.generate(),
+            props.id,
             name,
             slug,
             props.bio?.trim() || '',

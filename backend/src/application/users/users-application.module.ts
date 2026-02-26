@@ -16,6 +16,7 @@ import { PostsRepositoryModule } from '@/infrastructure/database/repositories/po
 import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/follows/follows-repository.module';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
 import { ExternalServicesModule } from '@/infrastructure/external/external-services.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ExternalServicesModule } from '@/infrastructure/external/external-servi
     FollowsRepositoryModule,
     LibraryRepositoryModule,
     ExternalServicesModule,
+    IdGeneratorModule,
   ],
   providers: [
     CheckUserExistUseCase,

@@ -1,6 +1,8 @@
 import { Injectable, Logger, BadRequestException, ConflictException } from '@nestjs/common';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Follow } from '@/domain/follows/entities/follow.entity';
+import { FollowId } from '@/domain/follows/value-objects/follow-id.vo';
 import { UserId } from '@/domain/follows/value-objects/user-id.vo';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
 import { CreateFollowCommand } from './create-follow.command';
@@ -11,7 +13,8 @@ export class CreateFollowUseCase {
     private readonly logger = new Logger(CreateFollowUseCase.name);
 
     constructor(
-        private readonly followRepository: IFollowRepository
+        private readonly followRepository: IFollowRepository,
+        private readonly idGenerator: IIdGenerator
     ) {}
 
     async execute(command: CreateFollowCommand): Promise<Follow> {
@@ -34,6 +37,7 @@ export class CreateFollowUseCase {
 
             // Create the follow
             const follow = Follow.create({
+                id: FollowId.create(this.idGenerator.generate()),
                 userId: command.userId,
                 targetId: command.targetId,
                 status: command.status !== undefined ? command.status : true

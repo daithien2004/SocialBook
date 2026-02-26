@@ -1,11 +1,13 @@
+import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
+import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
+import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
+import { Collection, CollectionSchema } from '@/infrastructure/database/schemas/collection.schema';
+import { Progress, ProgressSchema } from '@/infrastructure/database/schemas/progress.schema';
+import { ReadingList, ReadingListSchema } from '@/infrastructure/database/schemas/reading-list.schema';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Collection, CollectionSchema } from '@/infrastructure/database/schemas/collection.schema';
-import { ReadingList, ReadingListSchema } from '@/infrastructure/database/schemas/reading-list.schema';
-import { Progress, ProgressSchema } from '@/infrastructure/database/schemas/progress.schema';
-import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
+import { CollectionRepository } from './collection.repository';
 import { ReadingListRepository } from './reading-list.repository';
-import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
 import { ReadingProgressRepository } from './reading-progress.repository';
 
 @Module({
@@ -25,11 +27,16 @@ import { ReadingProgressRepository } from './reading-progress.repository';
       provide: IReadingProgressRepository,
       useClass: ReadingProgressRepository,
     },
+    {
+      provide: ICollectionRepository,
+      useClass: CollectionRepository,
+    },
   ],
   exports: [
     MongooseModule,
     IReadingListRepository,
     IReadingProgressRepository,
+    ICollectionRepository,
   ],
 })
-export class LibraryRepositoryModule {}
+export class LibraryRepositoryModule { }

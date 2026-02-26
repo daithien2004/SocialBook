@@ -28,5 +28,3 @@ export class UserGamification extends BaseSchema {
 
 export const UserGamificationSchema = SchemaFactory.createForClass(UserGamification);
 
-UserGamificationSchema.index({ userId: 1 });
-

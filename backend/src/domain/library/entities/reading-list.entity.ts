@@ -24,6 +24,7 @@ export class ReadingList extends Entity<string> {
     }
 
     static create(props: {
+        id: string;
         userId: string;
         bookId: string;
         status?: ReadingStatus;
@@ -31,7 +32,7 @@ export class ReadingList extends Entity<string> {
         collectionIds?: string[];
     }): ReadingList {
         return new ReadingList(
-            crypto.randomUUID(),
+            props.id,
             UserId.create(props.userId),
             BookId.create(props.bookId),
             props.status || ReadingStatus.READING,

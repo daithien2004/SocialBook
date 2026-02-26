@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { Chapter } from '@/domain/chapters/entities/chapter.entity';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { GetChapterByIdQuery } from './get-chapter-by-id.query';
+import { ChapterResult } from '../get-chapters/get-chapters.result';
+import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
 @Injectable()
 export class GetChapterByIdUseCase {
@@ -11,7 +12,7 @@ export class GetChapterByIdUseCase {
         private readonly chapterRepository: IChapterRepository
     ) { }
 
-    async execute(query: GetChapterByIdQuery): Promise<Chapter> {
+    async execute(query: GetChapterByIdQuery): Promise<ChapterResult> {
         if (!query.id) {
             throw new BadRequestException(ErrorMessages.INVALID_ID);
         }
@@ -25,6 +26,6 @@ export class GetChapterByIdUseCase {
 
         await this.chapterRepository.incrementViews(chapterId);
 
-        return chapter;
+        return ChapterApplicationMapper.toResult(chapter);
     }
 }

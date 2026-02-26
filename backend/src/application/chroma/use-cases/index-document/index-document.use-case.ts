@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { VectorDocument } from '@/domain/chroma/entities/vector-document.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { IndexDocumentCommand } from './index-document.command';
 
 @Injectable()
@@ -8,7 +9,8 @@ export class IndexDocumentUseCase {
     private readonly logger = new Logger(IndexDocumentUseCase.name);
 
     constructor(
-        private readonly vectorRepository: IVectorRepository
+        private readonly vectorRepository: IVectorRepository,
+        private readonly idGenerator: IIdGenerator,
     ) {}
 
     async execute(command: IndexDocumentCommand): Promise<{ success: boolean; documentId?: string; error?: string }> {
@@ -28,6 +30,7 @@ export class IndexDocumentUseCase {
 
             // Create new vector document
             const document = VectorDocument.create({
+                id: this.idGenerator.generate(),
                 contentId: command.contentId,
                 contentType: command.contentType,
                 content: command.content,

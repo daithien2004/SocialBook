@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class UserId {
     private readonly value: string;
 
@@ -11,13 +9,7 @@ export class UserId {
         if (!id || id.trim().length === 0) {
             throw new Error('User ID cannot be empty');
         }
-
-        // Validate MongoDB ObjectId format
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid User ID format');
-        }
-
-        return new UserId(id);
+        return new UserId(id.trim());
     }
 
     toString(): string {
@@ -25,6 +17,7 @@ export class UserId {
     }
 
     equals(other: UserId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 

@@ -4,7 +4,7 @@ import { ITextToSpeechProvider } from '@/domain/text-to-speech/interfaces/text-t
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { TextToSpeech, TTSStatus } from '@/domain/text-to-speech/entities/text-to-speech.entity';
 import { LanguageDetectorService } from '@/domain/text-to-speech/services/language-detector.service';
-import { Types } from 'mongoose';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
 interface GenerateAudioOptions {
     voice?: string;
@@ -20,13 +20,11 @@ export class GenerateChapterAudioUseCase {
         private readonly ttsRepository: ITextToSpeechRepository,
         private readonly ttsProvider: ITextToSpeechProvider,
         private readonly chapterRepository: IChapterRepository,
+        private readonly idGenerator: IIdGenerator,
     ) {}
 
     async execute(chapterId: string, options: GenerateAudioOptions = {}): Promise<any> {
-        // 1. Validation
-        if (!Types.ObjectId.isValid(chapterId)) {
-            throw new BadRequestException('Invalid chapter ID');
-        }
+        // 1. Validation (Optional, can rely on repository or value objects)
 
         // 2. Get Chapter
         const chapter = await this.chapterRepository.findById(chapterId as any); // Casting for now as ChapterId mismatch might occur
@@ -60,6 +58,7 @@ export class GenerateChapterAudioUseCase {
 
         // 6. Create Pending Record
         const tts = TextToSpeech.create({
+            id: this.idGenerator.generate(),
             chapterId,
             bookId: chapter.bookId.toString(),
             text,

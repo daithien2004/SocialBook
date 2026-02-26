@@ -7,6 +7,7 @@ import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/
 import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
 import { ChromaRepositoryModule } from '@/infrastructure/database/repositories/chroma/chroma-repository.module';
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     GenresRepositoryModule,
     ChromaRepositoryModule,
     InfrastructureModule,
+    IdGeneratorModule,
   ],
   providers: [IntelligentSearchUseCase],
   exports: [IntelligentSearchUseCase],

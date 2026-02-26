@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class ChapterId {
     private readonly value: string;
 
@@ -11,17 +9,7 @@ export class ChapterId {
         if (!id || id.trim().length === 0) {
             throw new Error('Chapter ID cannot be empty');
         }
-
-        // Validate MongoDB ObjectId format
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid Chapter ID format');
-        }
-
-        return new ChapterId(id);
-    }
-
-    static generate(): ChapterId {
-        return new ChapterId(new Types.ObjectId().toString());
+        return new ChapterId(id.trim());
     }
 
     toString(): string {
@@ -29,6 +17,7 @@ export class ChapterId {
     }
 
     equals(other: ChapterId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 }

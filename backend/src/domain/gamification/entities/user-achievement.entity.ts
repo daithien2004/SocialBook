@@ -14,11 +14,7 @@ export class UserAchievementId {
         if (!id || id.trim().length === 0) {
             throw new Error('UserAchievement ID cannot be empty');
         }
-        return new UserAchievementId(id);
-    }
-
-    static generate(): UserAchievementId {
-        return new UserAchievementId(crypto.randomUUID());
+        return new UserAchievementId(id.trim());
     }
 
     toString(): string {
@@ -26,6 +22,7 @@ export class UserAchievementId {
     }
 
     equals(other: UserAchievementId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 }
@@ -46,12 +43,13 @@ export class UserAchievement extends Entity<UserAchievementId> {
     }
 
     static create(props: {
+        id: UserAchievementId;
         userId: string;
         achievementId: string;
         rewardXP?: number;
     }): UserAchievement {
         return new UserAchievement(
-            UserAchievementId.generate(),
+            props.id,
             UserId.create(props.userId),
             AchievementId.create(props.achievementId),
             0,

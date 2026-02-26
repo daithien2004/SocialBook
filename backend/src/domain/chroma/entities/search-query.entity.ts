@@ -15,6 +15,7 @@ export class SearchQuery {
     ) {}
 
     static create(props: {
+        id: string;
         query: string;
         embedding: number[];
         contentType?: 'book' | 'author' | 'chapter';
@@ -27,7 +28,7 @@ export class SearchQuery {
         }
 
         return new SearchQuery(
-            VectorId.generate(),
+            VectorId.create(props.id),
             props.query.trim(),
             EmbeddingVector.create(props.embedding),
             props.limit || 10,
@@ -130,8 +131,9 @@ export class SearchQuery {
     }
 
     // Static methods for common query types
-    static createBookSearch(query: string, embedding: number[], limit?: number): SearchQuery {
+    static createBookSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
         return SearchQuery.create({
+            id,
             query,
             embedding,
             contentType: 'book',
@@ -139,8 +141,9 @@ export class SearchQuery {
         });
     }
 
-    static createAuthorSearch(query: string, embedding: number[], limit?: number): SearchQuery {
+    static createAuthorSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
         return SearchQuery.create({
+            id,
             query,
             embedding,
             contentType: 'author',
@@ -148,8 +151,9 @@ export class SearchQuery {
         });
     }
 
-    static createChapterSearch(query: string, embedding: number[], limit?: number): SearchQuery {
+    static createChapterSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
         return SearchQuery.create({
+            id,
             query,
             embedding,
             contentType: 'chapter',
@@ -157,8 +161,9 @@ export class SearchQuery {
         });
     }
 
-    static createGeneralSearch(query: string, embedding: number[], limit?: number): SearchQuery {
+    static createGeneralSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
         return SearchQuery.create({
+            id,
             query,
             embedding,
             limit

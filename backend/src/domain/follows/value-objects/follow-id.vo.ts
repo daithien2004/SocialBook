@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class FollowId {
     private readonly value: string;
 
@@ -11,17 +9,7 @@ export class FollowId {
         if (!id || id.trim().length === 0) {
             throw new Error('Follow ID cannot be empty');
         }
-
-        // Validate MongoDB ObjectId format
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid Follow ID format');
-        }
-
-        return new FollowId(id);
-    }
-
-    static generate(): FollowId {
-        return new FollowId(new Types.ObjectId().toString());
+        return new FollowId(id.trim());
     }
 
     toString(): string {
@@ -29,6 +17,7 @@ export class FollowId {
     }
 
     equals(other: FollowId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 }

@@ -1,15 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { IChapterRepository, ChapterFilter, PaginationOptions, SortOptions } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { ChapterFilter, IChapterRepository, PaginationOptions, SortOptions } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
+import { Injectable } from '@nestjs/common';
 import { GetChaptersQuery } from './get-chapters.query';
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { ChapterResult } from './get-chapters.result';
+import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
+import { ChapterListReadModel } from '@/domain/chapters/read-models/chapter-list.read-model';
 
 @Injectable()
 export class GetChaptersUseCase {
     constructor(
         private readonly chapterRepository: IChapterRepository
-    ) {}
+    ) { }
 
-    async execute(query: GetChaptersQuery) {
+    async execute(query: GetChaptersQuery): Promise<PaginatedResult<ChapterResult> | ChapterListReadModel> {
         const filter: ChapterFilter = {
             title: query.title,
             bookId: query.bookId,
@@ -29,12 +33,20 @@ export class GetChaptersUseCase {
         };
 
         if (query.bookSlug) {
-            return await this.chapterRepository.findByBookSlug(query.bookSlug, pagination, sort);
+            return await this.chapterRepository.findListByBookSlug(query.bookSlug, pagination, sort);
         } else if (query.bookId) {
             const bookId = BookId.create(query.bookId);
-            return await this.chapterRepository.findByBook(bookId, pagination, sort);
+            const result = await this.chapterRepository.findByBook(bookId, pagination, sort);
+            return {
+                data: result.data.map(chapter => ChapterApplicationMapper.toResult(chapter)),
+                meta: result.meta
+            };
         } else {
-            return await this.chapterRepository.findAll(filter, pagination, sort);
+            const result = await this.chapterRepository.findAll(filter, pagination, sort);
+            return {
+                data: result.data.map(chapter => ChapterApplicationMapper.toResult(chapter)),
+                meta: result.meta
+            };
         }
     }
 }

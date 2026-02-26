@@ -1,4 +1,4 @@
-import { Chapter } from "@/domain/chapters/entities/chapter.entity";
+import { ChapterResult } from "@/application/chapters/use-cases/get-chapters/get-chapters.result";
 
 export class ChapterResponseDto {
     id: string;
@@ -15,30 +15,30 @@ export class ChapterResponseDto {
     createdAt: Date;
     updatedAt: Date;
 
-    constructor(chapter: Chapter) {
-        this.id = chapter.id.toString();
-        this.title = chapter.title.toString();
+    constructor(chapter: ChapterResult) {
+        this.id = chapter.id;
+        this.title = chapter.title;
         this.slug = chapter.slug;
-        this.bookId = chapter.bookId.toString();
+        this.bookId = chapter.bookId;
         this.paragraphs = chapter.paragraphs.map(p => ({
             id: p.id,
             content: p.content
         }));
         this.paragraphsCount = chapter.paragraphs.length;
         this.viewsCount = chapter.viewsCount;
-        this.orderIndex = chapter.orderIndex.getValue();
-        this.wordCount = chapter.getWordCount();
-        this.characterCount = chapter.getCharacterCount();
-        this.contentPreview = chapter.getContentPreview();
+        this.orderIndex = chapter.orderIndex;
+        this.wordCount = chapter.wordCount;
+        this.characterCount = chapter.characterCount;
+        this.contentPreview = chapter.contentPreview;
         this.createdAt = chapter.createdAt;
         this.updatedAt = chapter.updatedAt;
     }
 
-    static fromDomain(chapter: Chapter): ChapterResponseDto {
+    static fromResult(chapter: ChapterResult): ChapterResponseDto {
         return new ChapterResponseDto(chapter);
     }
 
-    static fromArray(chapters: Chapter[]): ChapterResponseDto[] {
+    static fromArray(chapters: ChapterResult[]): ChapterResponseDto[] {
         return chapters.map(chapter => new ChapterResponseDto(chapter));
     }
 }

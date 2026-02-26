@@ -20,6 +20,7 @@ export class Post extends Entity<string> {
     }
 
     static create(props: {
+        id: string;
         userId: string;
         bookId?: string;
         content: string;
@@ -28,7 +29,7 @@ export class Post extends Entity<string> {
         book?: { id: string; title: string; coverUrl: string };
     }): Post {
         return new Post(
-            crypto.randomUUID(),
+            props.id,
             props.userId,
             props.bookId || null,
             props.content,

@@ -1,8 +1,10 @@
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Chapter } from '../entities/chapter.entity';
+import { ChapterDetailReadModel } from '../read-models/chapter-detail.read-model';
+import { ChapterListReadModel } from '../read-models/chapter-list.read-model';
+import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
 import { ChapterTitle } from '../value-objects/chapter-title.vo';
-import { BookId } from '../value-objects/book-id.vo';
 
 export interface ChapterFilter {
     title?: string;
@@ -24,8 +26,6 @@ export interface SortOptions {
 
 export abstract class IChapterRepository {
     abstract findById(id: ChapterId): Promise<Chapter | null>;
-    abstract findBySlug(slug: string, bookId: BookId): Promise<Chapter | null>;
-    abstract findByTitle(title: ChapterTitle, bookId: BookId): Promise<Chapter | null>;
     abstract findAll(
         filter: ChapterFilter,
         pagination: PaginationOptions,
@@ -36,11 +36,15 @@ export abstract class IChapterRepository {
         pagination: PaginationOptions,
         sort?: SortOptions
     ): Promise<PaginatedResult<Chapter>>;
-    abstract findByBookSlug(
+    abstract findListByBookSlug(
         bookSlug: string,
         pagination: PaginationOptions,
         sort?: SortOptions
-    ): Promise<PaginatedResult<Chapter>>;
+    ): Promise<ChapterListReadModel>;
+    abstract findDetailBySlug(
+        chapterSlug: string,
+        bookSlug: string
+    ): Promise<ChapterDetailReadModel | null>;
     abstract findNextChapter(
         bookId: BookId,
         currentOrderIndex: number
@@ -51,20 +55,20 @@ export abstract class IChapterRepository {
     ): Promise<Chapter | null>;
     abstract findFirstChapter(bookId: BookId): Promise<Chapter | null>;
     abstract findLastChapter(bookId: BookId): Promise<Chapter | null>;
-    
+
     abstract save(chapter: Chapter): Promise<void>;
     abstract delete(id: ChapterId): Promise<void>;
-    
+
     abstract existsByTitle(title: ChapterTitle, bookId: BookId, excludeId?: ChapterId): Promise<boolean>;
     abstract existsBySlug(slug: string, bookId: BookId, excludeId?: ChapterId): Promise<boolean>;
     abstract existsByOrderIndex(orderIndex: number, bookId: BookId, excludeId?: ChapterId): Promise<boolean>;
-    
+
     abstract incrementViews(id: ChapterId): Promise<void>;
-    
+
     abstract countByBook(bookId: BookId): Promise<number>;
     abstract getTotalViewsByBook(bookId: BookId): Promise<number>;
     abstract getTotalWordsByBook(bookId: BookId): Promise<number>;
-    
+
     abstract getMaxOrderIndex(bookId: BookId): Promise<number>;
     abstract reorderChapters(bookId: BookId, chapterOrders: Array<{ id: string; orderIndex: number }>): Promise<void>;
     abstract countChaptersForBooks(bookIds: string[]): Promise<Map<string, number>>;

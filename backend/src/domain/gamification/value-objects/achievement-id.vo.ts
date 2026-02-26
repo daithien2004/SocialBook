@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class AchievementId {
     private readonly value: string;
 
@@ -11,14 +9,7 @@ export class AchievementId {
         if (!id || id.trim().length === 0) {
             throw new Error('Achievement ID cannot be empty');
         }
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid Achievement ID format');
-        }
-        return new AchievementId(id);
-    }
-
-    static generate(): AchievementId {
-        return new AchievementId(new Types.ObjectId().toString());
+        return new AchievementId(id.trim());
     }
 
     toString(): string {
@@ -26,6 +17,7 @@ export class AchievementId {
     }
 
     equals(other: AchievementId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 }

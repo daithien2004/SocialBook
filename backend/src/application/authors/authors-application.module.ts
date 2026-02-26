@@ -5,10 +5,12 @@ import { GetAuthorByIdUseCase } from './use-cases/get-author-by-id/get-author-by
 import { GetAuthorsUseCase } from './use-cases/get-authors/get-authors.use-case';
 import { UpdateAuthorUseCase } from './use-cases/update-author/update-author.use-case';
 import { AuthorsRepositoryModule } from '@/infrastructure/database/repositories/authors/authors-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
     AuthorsRepositoryModule,
+    IdGeneratorModule,
   ],
   providers: [
     CreateAuthorUseCase,

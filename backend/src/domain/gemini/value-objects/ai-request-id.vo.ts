@@ -8,10 +8,6 @@ export class AIRequestId {
         return new AIRequestId(value);
     }
 
-    static generate(): AIRequestId {
-        return new AIRequestId(crypto.randomUUID());
-    }
-
     toString(): string {
         return this._value;
     }

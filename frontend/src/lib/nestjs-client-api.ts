@@ -4,7 +4,7 @@ import { getSession, signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
 const clientApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_NEST_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.NEXT_PUBLIC_NEST_API_URL,
   withCredentials: true,
 });
 

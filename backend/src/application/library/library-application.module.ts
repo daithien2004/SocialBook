@@ -11,9 +11,13 @@ import { UpdateCollectionsUseCase } from './use-cases/update-collections/update-
 import { UpdateProgressUseCase } from './use-cases/update-progress/update-progress.use-case';
 import { UpdateStatusUseCase } from './use-cases/update-status/update-status.use-case';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [LibraryRepositoryModule],
+  imports: [
+    LibraryRepositoryModule,
+    IdGeneratorModule,
+  ],
   providers: [
     CreateCollectionUseCase,
     GetAllCollectionsUseCase,

@@ -1,14 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import { Chapter, ChapterDocument } from '@/infrastructure/database/schemas/chapter.schema';
-import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
-import { IChapterRepository, ChapterFilter, PaginationOptions, SortOptions } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Chapter as ChapterEntity } from '@/domain/chapters/entities/chapter.entity';
+import { ChapterDetailReadModel } from '@/domain/chapters/read-models/chapter-detail.read-model';
+import { ChapterListReadModel } from '@/domain/chapters/read-models/chapter-list.read-model';
+import { ChapterFilter, IChapterRepository, PaginationOptions, SortOptions } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ChapterTitle } from '@/domain/chapters/value-objects/chapter-title.vo';
-import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { Chapter, ChapterDocument } from '@/infrastructure/database/schemas/chapter.schema';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';
+import { Book, BookDocument } from '../../schemas/book.schema';
+import { BookMapper } from '../books/book.mapper';
+import { RawBookDocument } from '../books/book.mapper';
+import { RawChapterDocument, RawChapterPersistence } from './chapter.mapper';
 
 @Injectable()
 export class ChapterRepository implements IChapterRepository {
@@ -18,7 +23,7 @@ export class ChapterRepository implements IChapterRepository {
     ) { }
 
     async findById(id: ChapterId): Promise<ChapterEntity | null> {
-        const document = await this.chapterModel.findById(id.toString()).lean().exec();
+        const document = await this.chapterModel.findById(id.toString()).lean().exec() as unknown as RawChapterDocument | null;
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -26,7 +31,7 @@ export class ChapterRepository implements IChapterRepository {
         const document = await this.chapterModel.findOne({
             slug,
             bookId: new Types.ObjectId(bookId.toString())
-        }).lean().exec();
+        }).lean().exec() as unknown as RawChapterDocument | null;
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -34,7 +39,7 @@ export class ChapterRepository implements IChapterRepository {
         const document = await this.chapterModel.findOne({
             title: title.toString(),
             bookId: new Types.ObjectId(bookId.toString())
-        }).lean().exec();
+        }).lean().exec() as unknown as RawChapterDocument | null;
         return document ? this.mapToEntity(document) : null;
     }
 
@@ -53,11 +58,10 @@ export class ChapterRepository implements IChapterRepository {
             queryFilter.orderIndex = filter.orderIndex;
         }
 
-        // Word count filtering (aggregation pipeline)
-        let pipeline: any[] = [];
+        const pipeline: PipelineStage[] = [];
 
         if (filter.minWordCount !== undefined || filter.maxWordCount !== undefined) {
-            const wordCountMatch: any = {};
+            const wordCountMatch: { $gte?: number; $lte?: number } = {};
             if (filter.minWordCount !== undefined) {
                 wordCountMatch.$gte = filter.minWordCount;
             }
@@ -91,7 +95,6 @@ export class ChapterRepository implements IChapterRepository {
             pipeline.push({ $match: queryFilter });
         }
 
-        // Add sorting
         if (sort?.sortBy) {
             const sortOrder = sort.order === 'desc' ? -1 : 1;
             pipeline.push({ $sort: { [sort.sortBy]: sortOrder } });
@@ -99,13 +102,11 @@ export class ChapterRepository implements IChapterRepository {
             pipeline.push({ $sort: { orderIndex: 1 } });
         }
 
-        // Add pagination
         const skip = (pagination.page - 1) * pagination.limit;
         pipeline.push({ $skip: skip });
         pipeline.push({ $limit: pagination.limit });
 
-        // Get total count
-        const countPipeline = pipeline.slice(0, -2); // Remove skip and limit for count
+        const countPipeline = pipeline.slice(0, -2);
         countPipeline.push({ $count: 'total' });
 
         const [countResult, documents] = await Promise.all([
@@ -116,7 +117,7 @@ export class ChapterRepository implements IChapterRepository {
         const total = countResult.length > 0 ? countResult[0].total : 0;
 
         return {
-            data: documents.map(doc => this.mapToEntity(doc)),
+            data: documents.map(doc => this.mapToEntity(doc as RawChapterDocument)),
             meta: {
                 current: pagination.page,
                 pageSize: pagination.limit,
@@ -131,7 +132,6 @@ export class ChapterRepository implements IChapterRepository {
     }
 
     async findByBookSlug(bookSlug: string, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<ChapterEntity>> {
-        // Find book by slug first
         const book = await this.bookModel.findOne({ slug: bookSlug, isDeleted: false }).select('_id').lean().exec();
 
         if (!book) {
@@ -146,15 +146,97 @@ export class ChapterRepository implements IChapterRepository {
             };
         }
 
-        // Query chapters by bookId
         return this.findAll({ bookId: book._id.toString() }, pagination, sort);
+    }
+
+    async findListByBookSlug(bookSlug: string, pagination: PaginationOptions, sort?: SortOptions): Promise<ChapterListReadModel> {
+        const bookDocument = await this.bookModel.findOne({ slug: bookSlug }).select('title slug coverUrl authorId').lean().exec();
+        if (!bookDocument) {
+            throw new Error('Book not found');
+        }
+
+        const result = await this.findAll({ bookId: bookDocument._id.toString() }, pagination, sort);
+
+        return {
+            book: {
+                id: bookDocument._id.toString(),
+                title: bookDocument.title,
+                slug: bookDocument.slug,
+                coverUrl: bookDocument.coverUrl,
+                authorId: bookDocument.authorId?.toString() || ''
+            },
+            chapters: result.data.map(chapter => ({
+                id: chapter.id.toString(),
+                title: chapter.title.toString(),
+                slug: chapter.slug,
+                orderIndex: chapter.orderIndex.getValue(),
+                viewsCount: chapter.viewsCount,
+                createdAt: chapter.createdAt || new Date(),
+                updatedAt: chapter.updatedAt || new Date()
+            })),
+            total: result.meta.total
+        };
+    }
+
+    async findDetailBySlug(chapterSlug: string, bookSlug: string): Promise<ChapterDetailReadModel | null> {
+        const bookDocument = await this.bookModel.findOne({ slug: bookSlug }).populate('genres').lean().exec() as unknown as RawBookDocument | null;
+        if (!bookDocument) return null;
+
+        const chapterDocument = await this.chapterModel.findOne({
+            slug: chapterSlug,
+            bookId: bookDocument._id
+        }).lean().exec() as unknown as RawChapterDocument | null;
+        if (!chapterDocument) return null;
+
+        const [prevChapter, nextChapter] = await Promise.all([
+            this.chapterModel.findOne({
+                bookId: bookDocument._id,
+                orderIndex: { $lt: chapterDocument.orderIndex }
+            }).sort({ orderIndex: -1 }).select('title slug orderIndex').lean().exec() as unknown as RawChapterDocument | null,
+            this.chapterModel.findOne({
+                bookId: bookDocument._id,
+                orderIndex: { $gt: chapterDocument.orderIndex }
+            }).sort({ orderIndex: 1 }).select('title slug orderIndex').lean().exec() as unknown as RawChapterDocument | null
+        ]);
+
+        return {
+            book: BookMapper.toListReadModel(bookDocument),
+            chapter: {
+                id: chapterDocument._id.toString(),
+                bookId: chapterDocument.bookId.toString(),
+                title: chapterDocument.title,
+                slug: chapterDocument.slug,
+                orderIndex: chapterDocument.orderIndex,
+                viewsCount: chapterDocument.viewsCount || 0,
+                paragraphs: (chapterDocument.paragraphs || []).map(p => ({
+                    id: p._id?.toString(),
+                    content: p.content
+                })),
+                createdAt: chapterDocument.createdAt,
+                updatedAt: chapterDocument.updatedAt ?? new Date()
+            },
+            navigation: {
+                previous: prevChapter ? {
+                    id: prevChapter._id.toString(),
+                    title: prevChapter.title,
+                    slug: prevChapter.slug,
+                    orderIndex: prevChapter.orderIndex
+                } : null,
+                next: nextChapter ? {
+                    id: nextChapter._id.toString(),
+                    title: nextChapter.title,
+                    slug: nextChapter.slug,
+                    orderIndex: nextChapter.orderIndex
+                } : null
+            }
+        };
     }
 
     async findNextChapter(bookId: BookId, currentOrderIndex: number): Promise<ChapterEntity | null> {
         const document = await this.chapterModel.findOne({
             bookId: new Types.ObjectId(bookId.toString()),
             orderIndex: { $gt: currentOrderIndex }
-        }).sort({ orderIndex: 1 }).lean().exec();
+        }).sort({ orderIndex: 1 }).lean().exec() as unknown as RawChapterDocument | null;
 
         return document ? this.mapToEntity(document) : null;
     }
@@ -163,7 +245,7 @@ export class ChapterRepository implements IChapterRepository {
         const document = await this.chapterModel.findOne({
             bookId: new Types.ObjectId(bookId.toString()),
             orderIndex: { $lt: currentOrderIndex }
-        }).sort({ orderIndex: -1 }).lean().exec();
+        }).sort({ orderIndex: -1 }).lean().exec() as unknown as RawChapterDocument | null;
 
         return document ? this.mapToEntity(document) : null;
     }
@@ -171,7 +253,7 @@ export class ChapterRepository implements IChapterRepository {
     async findFirstChapter(bookId: BookId): Promise<ChapterEntity | null> {
         const document = await this.chapterModel.findOne({
             bookId: new Types.ObjectId(bookId.toString())
-        }).sort({ orderIndex: 1 }).lean().exec();
+        }).sort({ orderIndex: 1 }).lean().exec() as unknown as RawChapterDocument | null;
 
         return document ? this.mapToEntity(document) : null;
     }
@@ -179,7 +261,7 @@ export class ChapterRepository implements IChapterRepository {
     async findLastChapter(bookId: BookId): Promise<ChapterEntity | null> {
         const document = await this.chapterModel.findOne({
             bookId: new Types.ObjectId(bookId.toString())
-        }).sort({ orderIndex: -1 }).lean().exec();
+        }).sort({ orderIndex: -1 }).lean().exec() as unknown as RawChapterDocument | null;
 
         return document ? this.mapToEntity(document) : null;
     }
@@ -309,24 +391,24 @@ export class ChapterRepository implements IChapterRepository {
         await this.chapterModel.bulkWrite(bulkOps);
     }
 
-    private mapToEntity(document: any): ChapterEntity {
+    private mapToEntity(document: RawChapterDocument): ChapterEntity {
         return ChapterEntity.reconstitute({
             id: document._id.toString(),
             title: document.title,
             slug: document.slug,
             bookId: document.bookId?.toString() || '',
-            paragraphs: (document.paragraphs || []).map((p: any) => ({
-                id: p._id?.toString() || p.id,
+            paragraphs: (document.paragraphs || []).map(p => ({
+                id: p._id?.toString(),
                 content: p.content
             })),
             viewsCount: document.viewsCount || 0,
             orderIndex: document.orderIndex || 0,
             createdAt: document.createdAt,
-            updatedAt: document.updatedAt,
+            updatedAt: document.updatedAt ?? new Date(),
         });
     }
 
-    private mapToDocument(chapter: ChapterEntity): any {
+    private mapToDocument(chapter: ChapterEntity): RawChapterPersistence {
         return {
             title: chapter.title.toString(),
             slug: chapter.slug,
@@ -340,4 +422,3 @@ export class ChapterRepository implements IChapterRepository {
         };
     }
 }
-

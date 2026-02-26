@@ -6,10 +6,12 @@ import { GetBookBySlugUseCase } from './use-cases/get-book-by-slug/get-book-by-s
 import { GetBooksUseCase } from './use-cases/get-books/get-books.use-case';
 import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
     BooksRepositoryModule,
+    IdGeneratorModule,
   ],
   providers: [
     CreateBookUseCase,

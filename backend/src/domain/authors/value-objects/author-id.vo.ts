@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class AuthorId {
     private readonly value: string;
 
@@ -11,17 +9,7 @@ export class AuthorId {
         if (!id || id.trim().length === 0) {
             throw new Error('Author ID cannot be empty');
         }
-
-        // Validate MongoDB ObjectId format
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid Author ID format');
-        }
-
-        return new AuthorId(id);
-    }
-
-    static generate(): AuthorId {
-        return new AuthorId(new Types.ObjectId().toString());
+        return new AuthorId(id.trim());
     }
 
     toString(): string {
@@ -29,6 +17,7 @@ export class AuthorId {
     }
 
     equals(other: AuthorId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 }

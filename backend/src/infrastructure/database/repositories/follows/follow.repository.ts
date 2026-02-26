@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Follow, FollowDocument } from '@/infrastructure/database/schemas/follow.schema';
 import { IFollowRepository, FollowFilter, PaginationOptions, SortOptions, FollowStatusResult, FollowStats } from '@/domain/follows/repositories/follow.repository.interface';
 import { Follow as FollowEntity } from '@/domain/follows/entities/follow.entity';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { FollowId } from '@/domain/follows/value-objects/follow-id.vo';
 import { UserId } from '@/domain/follows/value-objects/user-id.vo';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
@@ -12,7 +13,10 @@ import { FollowMapper } from './follow.mapper';
 
 @Injectable()
 export class FollowRepository implements IFollowRepository {
-    constructor(@InjectModel(Follow.name) private readonly followModel: Model<FollowDocument>) {}
+    constructor(
+        @InjectModel(Follow.name) private readonly followModel: Model<FollowDocument>,
+        private readonly idGenerator: IIdGenerator
+    ) {}
 
     async findById(id: FollowId): Promise<FollowEntity | null> {
         const document = await this.followModel.findById(id.toString()).lean().exec();
@@ -216,6 +220,7 @@ export class FollowRepository implements IFollowRepository {
         }
 
         const follow = FollowEntity.create({
+            id: FollowId.create(this.idGenerator.generate()),
             userId: userId.toString(),
             targetId: targetId.toString(),
             status: true
@@ -235,6 +240,7 @@ export class FollowRepository implements IFollowRepository {
         }
 
         const follow = FollowEntity.create({
+            id: FollowId.create(this.idGenerator.generate()),
             userId: userId.toString(),
             targetId: targetId.toString(),
             status: false

@@ -17,13 +17,14 @@ export class Like extends Entity<string> {
     }
 
     static create(props: {
+        id: string;
         userId: string;
         targetId: string;
         targetType: TargetType;
         status?: boolean;
     }): Like {
         return new Like(
-            crypto.randomUUID(),
+            props.id,
             UserId.create(props.userId),
             TargetId.create(props.targetId),
             props.targetType,

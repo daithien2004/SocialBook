@@ -1,6 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IUserGamificationRepository } from '@/domain/gamification/repositories/user-gamification.repository.interface';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { UserGamification } from '@/domain/gamification/entities/user-gamification.entity';
+import { UserGamificationId } from '@/domain/gamification/value-objects/user-gamification-id.vo';
 import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
 import { RecordReadingCommand } from './record-reading.command';
 
@@ -9,7 +11,8 @@ export class RecordReadingUseCase {
     private readonly logger = new Logger(RecordReadingUseCase.name);
 
     constructor(
-        private readonly userGamificationRepository: IUserGamificationRepository
+        private readonly userGamificationRepository: IUserGamificationRepository,
+        private readonly idGenerator: IIdGenerator
     ) {}
 
     async execute(command: RecordReadingCommand): Promise<UserGamification> {
@@ -20,7 +23,10 @@ export class RecordReadingUseCase {
             let gamification = await this.userGamificationRepository.findByUser(userId);
             
             if (!gamification) {
-                gamification = UserGamification.create({ userId: command.userId });
+                gamification = UserGamification.create({ 
+                    id: UserGamificationId.create(this.idGenerator.generate()),
+                    userId: command.userId 
+                });
             }
 
             // Record reading and update streak

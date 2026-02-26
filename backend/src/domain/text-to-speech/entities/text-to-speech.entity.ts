@@ -40,6 +40,7 @@ export class TextToSpeech extends Entity<string> {
     }
 
     public static create(props: {
+        id: string;
         chapterId: string;
         bookId: string;
         text: string;
@@ -55,7 +56,7 @@ export class TextToSpeech extends Entity<string> {
         provider?: string;
     }): TextToSpeech {
         return new TextToSpeech(
-            crypto.randomUUID(),
+            props.id,
             props.chapterId,
             props.bookId,
             props.text,

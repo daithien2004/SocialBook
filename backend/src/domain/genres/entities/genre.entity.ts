@@ -16,6 +16,7 @@ export class Genre extends Entity<GenreId> {
     }
 
     static create(props: {
+        id: GenreId;
         name: string;
         description?: string;
     }): Genre {
@@ -23,7 +24,7 @@ export class Genre extends Entity<GenreId> {
         const slug = Genre.generateSlug(props.name);
         
         return new Genre(
-            GenreId.generate(),
+            props.id,
             name,
             slug,
             props.description?.trim() || ''

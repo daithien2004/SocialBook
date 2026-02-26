@@ -1,5 +1,3 @@
-import { Types } from 'mongoose';
-
 export class BookId {
     private readonly value: string;
 
@@ -11,13 +9,7 @@ export class BookId {
         if (!id || id.trim().length === 0) {
             throw new Error('Book ID cannot be empty');
         }
-
-        // Validate MongoDB ObjectId format
-        if (!Types.ObjectId.isValid(id)) {
-            throw new Error('Invalid Book ID format');
-        }
-
-        return new BookId(id);
+        return new BookId(id.trim());
     }
 
     toString(): string {
@@ -25,6 +17,7 @@ export class BookId {
     }
 
     equals(other: BookId): boolean {
+        if (!other) return false;
         return this.value === other.value;
     }
 

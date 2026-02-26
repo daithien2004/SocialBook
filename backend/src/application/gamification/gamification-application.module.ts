@@ -3,9 +3,13 @@ import { GetGamificationStatsUseCase } from './use-cases/get-gamification-stats/
 import { RecordReadingUseCase } from './use-cases/record-reading/record-reading.use-case';
 import { UnlockAchievementUseCase } from './use-cases/unlock-achievement/unlock-achievement.use-case';
 import { GamificationRepositoryModule } from '@/infrastructure/database/repositories/gamification/gamification-repository.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [GamificationRepositoryModule],
+  imports: [
+    GamificationRepositoryModule,
+    IdGeneratorModule,
+  ],
   providers: [
     GetGamificationStatsUseCase,
     RecordReadingUseCase,

@@ -1,7 +1,9 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { IOnboardingRepository } from '@/domain/onboarding/repositories/onboarding.repository.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { UserId as GamificationUserId } from '@/domain/gamification/value-objects/user-id.vo';
+import { UserGamificationId } from '@/domain/gamification/value-objects/user-gamification-id.vo';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { IUserGamificationRepository } from '@/domain/gamification/repositories/user-gamification.repository.interface';
@@ -18,6 +20,7 @@ export class CompleteOnboardingUseCase {
     @Inject(IUserGamificationRepository)
     private readonly userGamificationRepository: IUserGamificationRepository,
     private readonly unlockAchievementUseCase: UnlockAchievementUseCase,
+    private readonly idGenerator: IIdGenerator
   ) {}
 
   async execute(userId: string) {
@@ -32,7 +35,10 @@ export class CompleteOnboardingUseCase {
     // Initialize Gamification
     let gamification = await this.userGamificationRepository.findByUser(GamificationUserId.create(userId));
     if (!gamification) {
-        gamification = UserGamification.create({ userId });
+        gamification = UserGamification.create({ 
+            id: UserGamificationId.create(this.idGenerator.generate()),
+            userId 
+        });
         await this.userGamificationRepository.save(gamification);
     }
 

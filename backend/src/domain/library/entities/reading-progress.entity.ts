@@ -26,6 +26,7 @@ export class ReadingProgress extends Entity<string> {
     }
 
     static create(props: {
+        id: string;
         userId: string;
         bookId: string;
         chapterId: string;
@@ -34,7 +35,7 @@ export class ReadingProgress extends Entity<string> {
         timeSpent?: number;
     }): ReadingProgress {
         return new ReadingProgress(
-            crypto.randomUUID(),
+            props.id,
             UserId.create(props.userId),
             BookId.create(props.bookId),
             ChapterId.create(props.chapterId),

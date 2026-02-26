@@ -1,24 +1,33 @@
+import { Collection } from '@/domain/library/entities/collection.entity';
+import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
+import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
+import { Injectable } from '@nestjs/common';
 import { GetAllCollectionsQuery } from './get-all-collections.query';
 
-export interface CollectionWithBookCount {
-    id: string;
-    name: string;
-    description: string | null;
-    isPublic: boolean;
-    userId: string;
+export interface GetAllCollectionsResult {
+    collection: Collection;
     bookCount: number;
-    createdAt: Date;
-    updatedAt: Date;
 }
 
+@Injectable()
 export class GetAllCollectionsUseCase {
-    async execute(query: GetAllCollectionsQuery): Promise<CollectionWithBookCount[]> {
-        // TODO: Implement get all collections logic
-        // 1. Query collections from repository
-        // 2. Filter by userId if provided
-        // 3. Include book count for each collection
-        // 4. Return collections
+    constructor(
+        private readonly collectionRepository: ICollectionRepository,
+        private readonly readingListRepository: IReadingListRepository,
+    ) { }
 
-        return [];
+    async execute(query: GetAllCollectionsQuery): Promise<GetAllCollectionsResult[]> {
+        const collections = await this.collectionRepository.findByUserId(query.userId);
+
+        const results = await Promise.all(collections.map(async (collection) => {
+            const bookCount = await this.readingListRepository.countByCollectionId(collection.id);
+
+            return {
+                collection,
+                bookCount
+            };
+        }));
+
+        return results;
     }
 }

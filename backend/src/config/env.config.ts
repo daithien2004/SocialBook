@@ -2,7 +2,7 @@ import { registerAs } from '@nestjs/config';
 
 export default registerAs('env', () => ({
     // Server
-    PORT: parseInt(process.env.PORT ?? '', 10) || 3000,
+    PORT: parseInt(process.env.PORT ?? '', 10) || 5000,
     NODE_ENV: process.env.NODE_ENV || 'development',
 
     // Database
