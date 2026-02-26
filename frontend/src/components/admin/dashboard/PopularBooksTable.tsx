@@ -45,13 +45,13 @@ export function PopularBooksTable({ books }: PopularBooksTableProps) {
                                 <td className="py-3">
                                     <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-300">
                                         <Eye className="w-4 h-4 mr-1.5 text-blue-500" />
-                                        {book.views.toLocaleString()}
+                                        {book.stats?.views?.toLocaleString() || 0}
                                     </div>
                                 </td>
                                 <td className="py-3">
                                     <div className="flex items-center justify-center text-sm text-gray-600 dark:text-gray-300">
                                         <ThumbsUp className="w-4 h-4 mr-1.5 text-pink-500" />
-                                        {book.likes.toLocaleString()}
+                                        {book.stats?.likes?.toLocaleString() || 0}
                                     </div>
                                 </td>
                                 <td className="py-3 pl-11 text-center">

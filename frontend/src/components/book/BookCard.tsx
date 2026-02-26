@@ -4,12 +4,12 @@ import { Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { ElementType, useEffect, useRef, useState } from 'react';
 
-import { cn, formatCompact } from '@/lib/utils';
 import AddToLibraryModal from '@/components/library/AddToLibraryModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
+import { cn, formatCompact } from '@/lib/utils';
 
 export function BookCard({ book }: { book: Book }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,7 +56,7 @@ export function BookCard({ book }: { book: Book }) {
 
             <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
               <div className="flex items-center gap-2 text-[11px] font-mono font-bold text-muted-foreground">
-                <span>VOL {book.stats?.chapters || 0}</span>
+                <span>VOL {book.stats?.chapterCount || 0}</span>
 
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 opacity-75"></span>
@@ -64,7 +64,7 @@ export function BookCard({ book }: { book: Book }) {
                 </span>
 
                 <span className="flex items-center gap-1">
-                  {formatCompact(book.views)}
+                  {formatCompact(book.stats?.views || 0)}
                 </span>
               </div>
 

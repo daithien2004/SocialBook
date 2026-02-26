@@ -2,9 +2,9 @@
 
 import { useGetBookBySlugQuery, useLikeBookMutation } from '@/features/books/api/bookApi';
 import { useCreatePostMutation } from '@/features/posts/api/postApi';
-import { toast } from 'sonner';
-import { useMemo } from 'react';
 import { getErrorMessage } from '@/lib/utils';
+import { useMemo } from 'react';
+import { toast } from 'sonner';
 
 export const useBookDetail = (bookSlug: string) => {
   const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });
@@ -58,7 +58,7 @@ export const useBookDetail = (bookSlug: string) => {
     return `📚 ${title}
 ✍️ Tác giả: ${authorName}
 ⭐ Đánh giá: ${book.stats?.averageRating || 0}/5 (${book.stats?.totalRatings || 0} đánh giá)
-👁️ ${book.views?.toLocaleString() || 0} lượt xem
+👁️ ${book.stats?.views?.toLocaleString() || 0} lượt xem
 
 ${description}
 

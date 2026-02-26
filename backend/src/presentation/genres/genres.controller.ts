@@ -1,20 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
-import { CreateGenreDto } from '@/presentation/genres/dto/create-genre.dto';
-import { UpdateGenreDto } from '@/presentation/genres/dto/update-genre.dto';
-import { FilterGenreDto } from '@/presentation/genres/dto/filter-genre.dto';
-import { CreateGenreUseCase } from '@/application/genres/use-cases/create-genre/create-genre.use-case';
-import { UpdateGenreUseCase } from '@/application/genres/use-cases/update-genre/update-genre.use-case';
-import { GetGenresUseCase } from '@/application/genres/use-cases/get-genres/get-genres.use-case';
-import { DeleteGenreUseCase } from '@/application/genres/use-cases/delete-genre/delete-genre.use-case';
 import { CreateGenreCommand } from '@/application/genres/use-cases/create-genre/create-genre.command';
-import { UpdateGenreCommand } from '@/application/genres/use-cases/update-genre/update-genre.command';
-import { GetGenresQuery } from '@/application/genres/use-cases/get-genres/get-genres.query';
+import { CreateGenreUseCase } from '@/application/genres/use-cases/create-genre/create-genre.use-case';
 import { DeleteGenreCommand } from '@/application/genres/use-cases/delete-genre/delete-genre.command';
+import { DeleteGenreUseCase } from '@/application/genres/use-cases/delete-genre/delete-genre.use-case';
+import { GetGenresQuery } from '@/application/genres/use-cases/get-genres/get-genres.query';
+import { GetGenresUseCase } from '@/application/genres/use-cases/get-genres/get-genres.use-case';
+import { UpdateGenreCommand } from '@/application/genres/use-cases/update-genre/update-genre.command';
+import { UpdateGenreUseCase } from '@/application/genres/use-cases/update-genre/update-genre.use-case';
+import { Public } from '@/common/decorators/customize';
+import { CreateGenreDto } from '@/presentation/genres/dto/create-genre.dto';
+import { FilterGenreDto } from '@/presentation/genres/dto/filter-genre.dto';
 import { GenreResponseDto } from '@/presentation/genres/dto/genre.response.dto';
+import { UpdateGenreDto } from '@/presentation/genres/dto/update-genre.dto';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { GetGenreByIdUseCase } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.use-case';
 import { GetGenreByIdQuery } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.query';
+import { GetGenreByIdUseCase } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.use-case';
 
 @ApiTags('Genres')
 @Controller('genres')
@@ -34,6 +35,7 @@ export class GenresController {
     return new GenreResponseDto(genre);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query() filter: FilterGenreDto,
@@ -49,6 +51,7 @@ export class GenresController {
     };
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const query = new GetGenreByIdQuery(id);

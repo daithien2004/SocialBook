@@ -1,17 +1,16 @@
-// src/app/admin/books/page.tsx
 'use client';
 
-import { useState } from 'react';
-import { useGetAdminBooksQuery, useDeleteBookMutation } from '@/features/books/api/bookApi';
-import Image from 'next/image';
-import Link from 'next/link';
+import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
+import { useDeleteBookMutation, useGetAdminBooksQuery } from '@/features/books/api/bookApi';
+import { BackendPagination, BookForAdmin } from '@/features/books/types/book.interface';
+import { useDebounce } from '@/hooks/useDebounce';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Search, Plus, Eye, Heart, BookOpen, Filter, ChevronLeft, ChevronRight, Loader2, Edit, Trash2, BookText } from 'lucide-react';
-import { BookForAdmin, BackendPagination } from '@/features/books/types/book.interface';
+import { BookOpen, BookText, ChevronLeft, ChevronRight, Edit, Eye, Filter, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { useDebounce } from '@/hooks/useDebounce';
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 
 type BookStatus = 'draft' | 'published' | 'completed';
 type StatusFilter = BookStatus | 'all';
@@ -189,11 +188,11 @@ export default function AdminBooksPage() {
                         <td className="py-4 text-center">
                           <span className={getStatusBadge(book.status)}>{getStatusText(book.status)}</span>
                         </td>
-                        <td className="py-4 text-center font-bold text-lg">{book.stats?.chapters || 0}</td>
+                        <td className="py-4 text-center font-bold text-lg">{book.stats?.chapterCount || 0}</td>
                         <td className="py-4 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Eye className="w-5 h-5 text-gray-500" />
-                            <span className="font-semibold">{(book.stats?.views || book.views || 0).toLocaleString()}</span>
+                            <span className="font-semibold">{(book.stats?.views || 0).toLocaleString()}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">

@@ -99,21 +99,39 @@ export class BookRepository implements IBookRepository {
         const skip = (pagination.page - 1) * pagination.limit;
         const total = await this.bookModel.countDocuments(queryFilter).exec();
 
-        let query = this.bookModel.find(queryFilter);
+        const sortStage: Record<string, 1 | -1> = sort?.sortBy
+            ? { [sort.sortBy]: (sort.order === 'desc' ? -1 : 1) as 1 | -1 }
+            : { createdAt: -1 };
 
-        if (sort?.sortBy) {
-            const sortOrder = sort.order === 'desc' ? -1 : 1;
-            query = query.sort({ [sort.sortBy]: sortOrder });
-        } else {
-            query = query.sort({ createdAt: -1 });
-        }
-
-        const documents = await query
-            .skip(skip)
-            .limit(pagination.limit)
-            .populate('genres')
-            .lean()
-            .exec();
+        const documents = await this.bookModel.aggregate([
+            { $match: queryFilter },
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: pagination.limit },
+            {
+                $lookup: {
+                    from: 'genres',
+                    localField: 'genres',
+                    foreignField: '_id',
+                    as: 'genres',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'chapters',
+                    localField: '_id',
+                    foreignField: 'bookId',
+                    pipeline: [{ $project: { _id: 1 } }],
+                    as: '_chapters',
+                },
+            },
+            {
+                $addFields: {
+                    chapterCount: { $size: '$_chapters' },
+                },
+            },
+            { $project: { _chapters: 0 } },
+        ]).exec();
 
         return {
             data: documents.map(doc => BookMapper.toListReadModel(doc)),

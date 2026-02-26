@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookStats } from '@/domain/statistics/models/statistics.model';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class GetBookStatsUseCase {
     constructor(
         private readonly bookRepository: IBookRepository,
         private readonly chapterRepository: IChapterRepository,
-    ) {}
+    ) { }
 
     async execute(): Promise<BookStats> {
         const [
@@ -31,8 +31,10 @@ export class GetBookStatsUseCase {
                 id: book.id.toString(),
                 title: book.title.toString(),
                 slug: book.slug,
-                views: book.views,
-                likes: book.likes
+                stats: {
+                    views: book.views,
+                    likes: book.likes
+                }
             }))
         };
     }

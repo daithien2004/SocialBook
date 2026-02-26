@@ -2,7 +2,7 @@ import { Book as BookEntity } from '@/domain/books/entities/book.entity';
 import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 import { Types } from 'mongoose';
-import { BookPersistence, RawBookDetailAggregation, RawBookDocument, RawGenre } from './book.raw-types';
+import { BookPersistence, RawBookDetailAggregation, RawBookDocument, RawBookListAggregation, RawGenre } from './book.raw-types';
 
 export class BookMapper {
   static toDomain(document: RawBookDocument): BookEntity {
@@ -30,7 +30,7 @@ export class BookMapper {
     });
   }
 
-  static toListReadModel(document: RawBookDocument): BookListReadModel {
+  static toListReadModel(document: RawBookListAggregation): BookListReadModel {
     return {
       id: document._id.toString(),
       title: document.title,
@@ -48,9 +48,12 @@ export class BookMapper {
       coverUrl: document.coverUrl || '',
       status: document.status || 'draft',
       tags: document.tags || [],
-      views: document.views || 0,
-      likes: document.likes || 0,
       likedBy: (document.likedBy || []).map((id) => id.toString()),
+      stats: {
+        views: document.views || 0,
+        likes: document.likes || 0,
+        chapterCount: document.chapterCount ?? 0,
+      },
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     };
@@ -90,9 +93,12 @@ export class BookMapper {
       coverUrl: doc.coverUrl || '',
       status: doc.status || 'draft',
       tags: doc.tags || [],
-      views: doc.views || 0,
-      likes: doc.likes || 0,
       likedBy: (doc.likedBy || []).map((id) => id.toString()),
+      stats: {
+        views: doc.views || 0,
+        likes: doc.likes || 0,
+        chapterCount: (doc.chapters || []).length,
+      },
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
       chapters: (doc.chapters || []).map((ch) => ({

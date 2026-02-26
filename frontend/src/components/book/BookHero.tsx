@@ -1,9 +1,9 @@
 'use client';
-import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
+import { cn } from '@/lib/utils';
 import { BookOpen, Bookmark, Heart, Share2, Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -72,7 +72,7 @@ export const BookHero = ({
             <StatsGrid book={book} />
 
             <div className="flex flex-wrap gap-4 mt-8">
-              {book.chapters?.length > 0 && (
+              {book.stats?.chapterCount > 0 && (
                 <Button
                   asChild
                   size="lg"
@@ -123,9 +123,9 @@ const StatsGrid = ({ book }: StatsGridProps) => (
       icon={<Star size={16} />}
       isRating
     />
-    <StatItem value={book.views?.toLocaleString()} label="Lượt xem" />
-    <StatItem value={book.likes?.toLocaleString()} label="Yêu thích" />
-    <StatItem value={book.chapters?.length || 0} label="Chương" />
+    <StatItem value={book.stats?.views?.toLocaleString()} label="Lượt xem" />
+    <StatItem value={book.stats?.likes?.toLocaleString()} label="Yêu thích" />
+    <StatItem value={book.stats?.chapterCount || 0} label="Chương" />
   </div>
 );
 
