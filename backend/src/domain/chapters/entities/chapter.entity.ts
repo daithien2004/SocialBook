@@ -16,7 +16,9 @@ export class Chapter extends Entity<ChapterId> {
         private _viewsCount: number,
         private _orderIndex: ChapterOrderIndex,
         createdAt?: Date,
-        updatedAt?: Date
+        updatedAt?: Date,
+        private _ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed',
+        private _audioUrl?: string
     ) {
         super(id, createdAt, updatedAt);
     }
@@ -62,6 +64,8 @@ export class Chapter extends Entity<ChapterId> {
         orderIndex: number;
         createdAt: Date;
         updatedAt: Date;
+        ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+        audioUrl?: string;
     }): Chapter {
         const paragraphs = props.paragraphs.map(p => Paragraph.create(p.id, p.content));
         
@@ -74,7 +78,9 @@ export class Chapter extends Entity<ChapterId> {
             props.viewsCount,
             ChapterOrderIndex.create(props.orderIndex),
             props.createdAt,
-            props.updatedAt
+            props.updatedAt,
+            props.ttsStatus,
+            props.audioUrl
         );
     }
 
@@ -101,6 +107,14 @@ export class Chapter extends Entity<ChapterId> {
 
     get orderIndex(): ChapterOrderIndex {
         return this._orderIndex;
+    }
+
+    get ttsStatus(): 'pending' | 'processing' | 'completed' | 'failed' | undefined {
+        return this._ttsStatus;
+    }
+
+    get audioUrl(): string | undefined {
+        return this._audioUrl;
     }
 
     // Business methods

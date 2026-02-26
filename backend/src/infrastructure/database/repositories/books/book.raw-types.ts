@@ -42,7 +42,7 @@ export interface RawBookDocument {
     _id: Types.ObjectId;
     title: string;
     slug: string;
-    authorId: Types.ObjectId;
+    authorId: Types.ObjectId | { _id: Types.ObjectId; name: string };
     genres: (Types.ObjectId | RawGenre)[];
     description?: string;
     publishedYear?: string;
@@ -54,11 +54,7 @@ export interface RawBookDocument {
     likedBy?: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
-}
-
-export interface RawBookListAggregation extends Omit<RawBookDocument, 'genres'> {
-    genres: RawGenre[];
-    chapterCount: number;
+    chapterCount?: number;
 }
 
 export interface RawBookDetailAggregation extends Omit<RawBookDocument, 'genres'> {
