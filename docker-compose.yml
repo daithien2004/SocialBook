@@ -22,6 +22,7 @@ services:
     env_file:
       - backend.env
     depends_on:
+      - mongo
       - redis
       - chroma
 
@@ -35,6 +36,19 @@ services:
       - frontend.env
     depends_on:
       - backend
+
+  mongo:
+    image: mongo:7
+    container_name: socialbook-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=socialbook
 
   redis:
     image: redis:7-alpine
@@ -58,5 +72,6 @@ services:
       - ANONYMIZED_TELEMETRY=FALSE
 
 volumes:
+  mongo_data:
   redis_data:
   chroma_data:
