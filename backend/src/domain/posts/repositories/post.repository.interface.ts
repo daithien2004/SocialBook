@@ -19,13 +19,13 @@ export abstract class IPostRepository {
     abstract findAll(options: FindAllOptions): Promise<PaginatedResult<Post>>;
     abstract delete(id: string): Promise<void>; // Hard delete
     abstract softDelete(id: string): Promise<void>; // Soft delete
-    
+
     // Admin specific
     abstract findFlagged(skip: number, limit: number): Promise<PaginatedResult<Post>>;
-    
+
     // User profile specific
     abstract countByUser(userId: string): Promise<number>;
-    
+
     // Helper checks
     abstract exists(id: string): Promise<boolean>;
 
@@ -33,5 +33,5 @@ export abstract class IPostRepository {
     abstract countTotal(): Promise<number>;
     abstract countActive(): Promise<number>;
     abstract countDeleted(): Promise<number>;
-    abstract getGrowthMetrics(startDate: Date, groupBy: string): Promise<Array<{ _id: string; count: number }>>;
+    abstract getGrowthMetrics(startDate: Date, groupBy: 'day' | 'month' | 'year'): Promise<Array<{ _id: string; count: number }>>;
 }

@@ -1,7 +1,5 @@
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Book as BookEntity } from '@/domain/books/entities/book.entity';
-import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
-import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 import { BookFilter, IBookRepository, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
 import { AuthorId } from '@/domain/books/value-objects/author-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
@@ -13,6 +11,7 @@ import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
 import { BookMapper } from './book.mapper';
 import { RawBookDocument } from './book.raw-types';
+import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 
 @Injectable()
 export class BookRepository implements IBookRepository {
@@ -308,59 +307,6 @@ export class BookRepository implements IBookRepository {
         return result.map(item => ({ genre: item._id, count: item.count }));
     }
 
-    async getGrowthMetrics(startDate: Date, groupBy: 'day' | 'month' | 'year'): Promise<Array<{ _id: string; count: number }>> {
-        let dateFormat: string;
-        switch (groupBy) {
-            case 'month': dateFormat = '%Y-%m'; break;
-            case 'year': dateFormat = '%Y'; break;
-            case 'day': default: dateFormat = '%Y-%m-%d'; break;
-        }
-
-        return await this.bookModel.aggregate([
-            { $match: { createdAt: { $gte: startDate } } },
-            {
-                $group: {
-                    _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } }
-        ]).exec();
-    }
-
-    async findDetailBySlug(slug: string): Promise<BookDetailReadModel | null> {
-        const results = await this.bookModel.aggregate([
-            { $match: { slug, isDeleted: false } },
-            {
-                $lookup: {
-                    from: 'genres',
-                    localField: 'genres',
-                    foreignField: '_id',
-                    as: 'genreDetails',
-                },
-            },
-            {
-                $lookup: {
-                    from: 'chapters',
-                    localField: '_id',
-                    foreignField: 'bookId',
-                    as: 'chapters',
-                },
-            },
-            {
-                $addFields: {
-                    chapters: {
-                        $sortArray: { input: '$chapters', sortBy: { orderIndex: 1 } },
-                    },
-                },
-            },
-        ]).exec();
-
-        if (!results || results.length === 0) return null;
-
-        return BookMapper.toDetailReadModel(results[0]);
-    }
-
     async findByIds(ids: BookId[]): Promise<BookEntity[]> {
         const objectIds = ids.map(id => id.toString());
         const documents = await this.bookModel.find({
@@ -371,109 +317,6 @@ export class BookRepository implements IBookRepository {
             .exec() as unknown as RawBookDocument[];
 
         return documents.map(doc => BookMapper.toDomain(doc));
-    }
-
-    async searchFuzzy(query: string, limit: number = 30): Promise<Array<{ id: BookId; score: number; matchType: string }>> {
-        const results: Array<{ id: BookId; score: number; matchType: string }> = [];
-        const normalizedQuery = this.normalizeText(query);
-
-        if (normalizedQuery.length < 2) return results;
-
-        const originalWords = query.trim().split(/\s+/).filter(w => w.length > 1);
-        if (originalWords.length > 6) return results;
-
-        try {
-            const requiredWords = originalWords.slice(0, Math.ceil(originalWords.length * 0.7));
-            const regexPattern = originalWords.length <= 3
-                ? originalWords.join('.*')
-                : requiredWords.join('|');
-
-            const regex = new RegExp(regexPattern, 'i');
-
-            const books = await this.bookModel
-                .find({
-                    $or: [
-                        { title: { $regex: regex } },
-                        { slug: { $regex: regex } },
-                    ],
-                    status: 'published',
-                    isDeleted: false,
-                })
-                .select('_id title slug')
-                .limit(limit)
-                .lean()
-                .exec();
-
-            for (const book of books) {
-                const titleSimilarity = this.calculateTextSimilarity(query, book.title);
-                const slugSimilarity = this.calculateTextSimilarity(query, book.slug || '');
-                const similarity = Math.max(titleSimilarity, slugSimilarity);
-
-                if (similarity >= 0.6) {
-                    let score = similarity >= 1.0 ? 15.0 : similarity >= 0.8 ? 12.0 : 10.0;
-                    results.push({
-                        id: BookId.create(book._id.toString()),
-                        score,
-                        matchType: similarity >= 1.0 ? 'exact' : similarity >= 0.8 ? 'starts_with' : 'contains',
-                    });
-                }
-            }
-        } catch (error) {
-            // Log error but don't crash search
-            console.error(`Fuzzy search error: ${error.message}`);
-        }
-        return results;
-    }
-
-    async searchByDescription(keywords: string[], limit: number = 10): Promise<Array<{ id: BookId; score: number }>> {
-        const results: Array<{ id: BookId; score: number }> = [];
-        if (!keywords || keywords.length === 0) return results;
-
-        try {
-            // Build regex pattern with word boundaries
-            const regexPattern = keywords.map(w => `\\b${w}\\b`).join('|');
-            const regex = new RegExp(regexPattern, 'i');
-
-            const books = await this.bookModel
-                .find({
-                    description: { $regex: regex },
-                    status: 'published',
-                    isDeleted: false,
-                })
-                .select('_id title description')
-                .limit(limit)
-                .lean()
-                .exec();
-
-            for (const book of books) {
-                const description = book.description?.toLowerCase() || '';
-                const matchedWords = keywords.filter(word =>
-                    description.includes(word.toLowerCase())
-                );
-
-                if (matchedWords.length > 0) {
-                    const properNounMatches = matchedWords.filter(w => w[0] === w[0].toUpperCase());
-
-                    let frequencyBonus = 0;
-                    for (const word of matchedWords) {
-                        const count = (description.match(new RegExp(word.toLowerCase(), 'gi')) || []).length;
-                        frequencyBonus += (count - 1) * 0.2;
-                    }
-
-                    const multipleProperNounBonus = properNounMatches.length >= 2 ? 1.0 : 0;
-                    const score = 8.0
-                        + (properNounMatches.length * 2.0)
-                        + ((matchedWords.length - properNounMatches.length) * 0.5)
-                        + multipleProperNounBonus
-                        + Math.min(frequencyBonus, 2.0);
-
-                    results.push({ id: BookId.create(book._id.toString()), score });
-                }
-            }
-        } catch (error) {
-            console.error(`Description search error: ${error.message}`);
-        }
-        return results;
     }
 
     private normalizeText(text: string): string {

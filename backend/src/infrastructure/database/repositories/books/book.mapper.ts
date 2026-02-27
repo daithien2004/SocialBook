@@ -17,6 +17,7 @@ export class BookMapper {
       ? author._id.toString()
       : (document.authorId ? document.authorId.toString() : '');
 
+
     return BookEntity.reconstitute({
       id: document._id.toString(),
       title: document.title,
@@ -43,6 +44,7 @@ export class BookMapper {
     const authorIdStr = (typeof author === 'object' && author !== null && '_id' in author)
       ? author._id.toString()
       : (document.authorId ? document.authorId.toString() : '');
+
 
     return {
       id: document._id.toString(),

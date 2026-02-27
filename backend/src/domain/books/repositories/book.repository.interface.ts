@@ -1,7 +1,5 @@
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Book } from '../entities/book.entity';
-import { BookDetailReadModel } from '../read-models/book-detail.read-model';
-import { BookListReadModel } from '../read-models/book-list.read-model';
 import { AuthorId } from '../value-objects/author-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { BookTitle } from '../value-objects/book-title.vo';
@@ -37,11 +35,6 @@ export abstract class IBookRepository {
         pagination: PaginationOptions,
         sort?: SortOptions
     ): Promise<PaginatedResult<Book>>;
-    abstract findAllList(
-        filter: BookFilter,
-        pagination: PaginationOptions,
-        sort?: SortOptions
-    ): Promise<PaginatedResult<BookListReadModel>>;
     abstract findByAuthor(
         authorId: AuthorId,
         pagination: PaginationOptions,
@@ -73,11 +66,6 @@ export abstract class IBookRepository {
 
     abstract countTotal(): Promise<number>;
     abstract countByGenreName(): Promise<Array<{ genre: string; count: number }>>;
-    abstract getGrowthMetrics(startDate: Date, groupBy: string): Promise<Array<{ _id: string; count: number }>>;
 
-    abstract searchFuzzy(query: string, limit?: number): Promise<Array<{ id: BookId; score: number; matchType: string }>>;
-    abstract searchByDescription(keywords: string[], limit?: number): Promise<Array<{ id: BookId; score: number }>>;
     abstract findByIds(ids: BookId[]): Promise<Book[]>;
-
-    abstract findDetailBySlug(slug: string): Promise<BookDetailReadModel | null>;
 }
