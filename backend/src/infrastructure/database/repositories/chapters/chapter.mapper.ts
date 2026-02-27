@@ -14,6 +14,8 @@ export interface RawChapterDocument {
   orderIndex: number;
   createdAt: Date;
   updatedAt: Date;
+  ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  audioUrl?: string;
 }
 
 export interface RawChapterPersistence {
@@ -24,6 +26,8 @@ export interface RawChapterPersistence {
   viewsCount: number;
   orderIndex: number;
   updatedAt: Date | undefined;
+  ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  audioUrl?: string;
 }
 
 export class ChapterMapper {
@@ -41,6 +45,8 @@ export class ChapterMapper {
       orderIndex: document.orderIndex || 0,
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
+      ttsStatus: document.ttsStatus,
+      audioUrl: document.audioUrl,
     });
   }
 
@@ -55,6 +61,8 @@ export class ChapterMapper {
       viewsCount: chapter.viewsCount,
       orderIndex: chapter.orderIndex.getValue(),
       updatedAt: chapter.updatedAt,
+      ttsStatus: chapter.ttsStatus,
+      audioUrl: chapter.audioUrl,
     };
   }
 }

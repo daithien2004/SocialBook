@@ -150,11 +150,7 @@ export class AuthorsController {
 
         return {
             message: 'Lấy danh sách tác giả thành công',
-            data: result.data.map(author => ({
-                _id: author.id.toString(),
-                name: author.name.toString(),
-                bio: author.bio
-            })),
+            data: result.data.map(author => new AuthorResponseDto(author)),
         };
     }
 

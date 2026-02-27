@@ -119,7 +119,7 @@ export class BookRepository implements IBookRepository {
             },
             {
                 $lookup: {
-                    from: 'users',
+                    from: 'authors',
                     localField: 'authorId',
                     foreignField: '_id',
                     pipeline: [{ $project: { _id: 1, name: 1 } }],

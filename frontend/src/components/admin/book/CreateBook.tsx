@@ -87,12 +87,12 @@ export default function CreateBook() {
   };
 
   const getGenreName = (genreId: string) => {
-    const genre = genres.find((g: any) => g.id === genreId);
+    const genre = genres.find((g: any) => (g.id ?? g._id) === genreId);
     return genre?.name || genreId;
   };
 
   const getAuthorName = (authorId: string) => {
-    const author = authors.find((a: any) => a.id === authorId);
+    const author = authors.find((a: any) => (a.id ?? a._id) === authorId);
     return author?.name || 'Chưa chọn';
   };
 
@@ -287,11 +287,14 @@ export default function CreateBook() {
                         <option value="">
                           {loadingAuthors ? 'Đang tải...' : 'Chọn tác giả'}
                         </option>
-                        {authors.map((author: any) => (
-                          <option key={author.id} value={author.id}>
-                            {author.name}
-                          </option>
-                        ))}
+                        {authors.map((author: any, idx: number) => {
+                          const authorId = author.id ?? author._id;
+                          return (
+                            <option key={authorId ?? `author-${idx}`} value={authorId}>
+                              {author.name}
+                            </option>
+                          );
+                        })}
                       </select>
                       <ChevronDown
                         size={20}
@@ -395,15 +398,18 @@ export default function CreateBook() {
                         <option value="">
                           {loadingGenres ? 'Đang tải...' : 'Chọn thể loại'}
                         </option>
-                        {genres.map((genre: any) => (
-                          <option
-                            key={genre.id}
-                            value={genre.id}
-                            disabled={formData.genres.includes(genre.id)}
-                          >
-                            {genre.name}
-                          </option>
-                        ))}
+                        {genres.map((genre: any, idx: number) => {
+                          const genreId = genre.id ?? genre._id;
+                          return (
+                            <option
+                              key={genreId ?? `genre-${idx}`}
+                              value={genreId}
+                              disabled={formData.genres.includes(genreId)}
+                            >
+                              {genre.name}
+                            </option>
+                          );
+                        })}
                       </select>
                       <ChevronDown
                         size={20}
