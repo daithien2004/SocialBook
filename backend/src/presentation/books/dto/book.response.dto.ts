@@ -24,7 +24,7 @@ export class BookResponseDto {
     createdAt: Date;
     updatedAt: Date;
 
-    constructor(readModel: BookListReadModel & { chapterCount?: number; authorName?: string }) {
+    private constructor(readModel: BookListReadModel & { chapterCount?: number; authorName?: string }) {
         this.id = readModel.id;
         this.title = readModel.title;
         this.slug = readModel.slug;
@@ -49,6 +49,10 @@ export class BookResponseDto {
         };
         this.createdAt = readModel.createdAt;
         this.updatedAt = readModel.updatedAt;
+    }
+
+    static fromReadModel(readModel: BookListReadModel & { chapterCount?: number; authorName?: string }): BookResponseDto {
+        return new BookResponseDto(readModel);
     }
 
     static fromEntity(book: Book): BookResponseDto {
@@ -82,6 +86,6 @@ export class BookResponseDto {
     }
 
     static fromArray(readModels: (BookListReadModel & { chapterCount?: number; authorName?: string })[]): BookResponseDto[] {
-        return readModels.map(rm => new BookResponseDto(rm));
+        return readModels.map(rm => BookResponseDto.fromReadModel(rm));
     }
 }

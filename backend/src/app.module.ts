@@ -6,6 +6,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
@@ -86,6 +87,7 @@ import { PresentationModule } from './presentation/presentation.module';
         limit: 10,
       },
     ]),
+    EventEmitterModule.forRoot(),
     CacheModule,
     LoggerModule,
     // Clean Architecture - 3 layers

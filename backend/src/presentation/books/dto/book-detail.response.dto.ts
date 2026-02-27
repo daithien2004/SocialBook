@@ -10,7 +10,7 @@ export class ChapterResponseDto {
     createdAt: Date;
     updatedAt?: Date;
 
-    constructor(chapter: ChapterSummary) {
+    private constructor(chapter: ChapterSummary) {
         this.id = chapter.id;
         this.title = chapter.title;
         this.slug = chapter.slug;
@@ -19,6 +19,10 @@ export class ChapterResponseDto {
         this.viewsCount = chapter.viewsCount;
         this.createdAt = chapter.createdAt;
         this.updatedAt = chapter.updatedAt;
+    }
+
+    static fromReadModel(chapter: ChapterSummary): ChapterResponseDto {
+        return new ChapterResponseDto(chapter);
     }
 }
 
@@ -45,7 +49,7 @@ export class BookDetailResponseDto {
     updatedAt: Date;
     chapters: ChapterResponseDto[];
 
-    constructor(readModel: BookDetailReadModel) {
+    private constructor(readModel: BookDetailReadModel) {
         this.id = readModel.id;
         this.title = readModel.title;
         this.slug = readModel.slug;
@@ -66,6 +70,10 @@ export class BookDetailResponseDto {
         };
         this.createdAt = readModel.createdAt;
         this.updatedAt = readModel.updatedAt;
-        this.chapters = readModel.chapters.map(ch => new ChapterResponseDto(ch));
+        this.chapters = readModel.chapters.map(ch => ChapterResponseDto.fromReadModel(ch));
+    }
+
+    static fromReadModel(readModel: BookDetailReadModel): BookDetailResponseDto {
+        return new BookDetailResponseDto(readModel);
     }
 }

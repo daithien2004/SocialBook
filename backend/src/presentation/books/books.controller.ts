@@ -26,19 +26,19 @@ import { CreateBookDto } from '@/presentation/books/dto/create-book.dto';
 import { FilterBookDto } from '@/presentation/books/dto/filter-book.dto';
 import { UpdateBookDto } from '@/presentation/books/dto/update-book.dto';
 
-import { CreateBookUseCase } from '@/application/books/use-cases/create-book/create-book.use-case';
-import { DeleteBookUseCase } from '@/application/books/use-cases/delete-book/delete-book.use-case';
-import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
-import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
-import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 import { CreateBookCommand } from '@/application/books/use-cases/create-book/create-book.command';
+import { CreateBookUseCase } from '@/application/books/use-cases/create-book/create-book.use-case';
 import { DeleteBookCommand } from '@/application/books/use-cases/delete-book/delete-book.command';
-import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query'; // Import Query
+import { DeleteBookUseCase } from '@/application/books/use-cases/delete-book/delete-book.use-case';
 import { GetBookByIdQuery } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.query';
-import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
-import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { GetBookByIdUseCase } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.use-case';
+import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query'; // Import Query
+import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
+import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
+import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
+import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
+import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
+import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
 @ApiTags('Books')
 @Controller('books')
@@ -127,7 +127,7 @@ export class BooksController {
 
     return {
       message: 'Lấy danh sách sách (Admin) thành công',
-      data: result.data.map(readModel => new BookResponseDto(readModel)),
+      data: result.data.map(readModel => BookResponseDto.fromReadModel(readModel)),
       meta: result.meta,
     };
   }
@@ -172,7 +172,7 @@ export class BooksController {
 
     return {
       message: 'Lấy danh sách sách thành công',
-      data: result.data.map(readModel => new BookResponseDto(readModel)),
+      data: result.data.map(readModel => BookResponseDto.fromReadModel(readModel)),
       meta: result.meta,
     };
   }
@@ -190,7 +190,7 @@ export class BooksController {
 
     return {
       message: 'Lấy thông tin sách thành công',
-      data: new BookDetailResponseDto(book),
+      data: BookDetailResponseDto.fromReadModel(book),
     };
   }
 
