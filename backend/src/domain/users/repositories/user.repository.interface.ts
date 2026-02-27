@@ -1,7 +1,7 @@
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { User } from '../entities/user.entity';
-import { UserId } from '../value-objects/user-id.vo';
 import { UserEmail } from '../value-objects/user-email.vo';
+import { UserId } from '../value-objects/user-id.vo';
 
 export interface UserFilter {
     username?: string;
@@ -20,15 +20,15 @@ export abstract class IUserRepository {
     abstract findById(id: UserId): Promise<User | null>;
     abstract findByEmail(email: UserEmail): Promise<User | null>;
     abstract findByUsername(username: string): Promise<User | null>;
-    
+
     abstract findAll(
         filter: UserFilter,
         pagination: UserPaginationOptions
     ): Promise<PaginatedResult<User>>;
-    
+
     abstract save(user: User): Promise<void>;
     abstract delete(id: UserId): Promise<void>;
-    
+
     abstract existsByEmail(email: UserEmail, excludeId?: UserId): Promise<boolean>;
     abstract existsByUsername(username: string, excludeId?: UserId): Promise<boolean>;
     abstract existsById(id: UserId): Promise<boolean>;
@@ -39,5 +39,5 @@ export abstract class IUserRepository {
     abstract countByDate(startDate: Date, endDate?: Date): Promise<number>;
     abstract countByProvider(): Promise<Map<string, number>>;
     abstract getGeographicDistribution(): Promise<Array<{ country: string; userCount: number }>>;
-    abstract getGrowthMetrics(startDate: Date, groupBy: string): Promise<Array<{ _id: string; count: number }>>;
+    abstract getGrowthMetrics(startDate: Date, groupBy: 'day' | 'month' | 'year'): Promise<Array<{ _id: string; count: number }>>;
 }

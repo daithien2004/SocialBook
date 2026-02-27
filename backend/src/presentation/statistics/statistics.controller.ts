@@ -1,3 +1,4 @@
+import { LocationCheckService } from '@/infrastructure/external/location-check.service';
 import {
   Controller,
   Get,
@@ -7,18 +8,17 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { LocationCheckService } from '@/infrastructure/external/location-check.service';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { GetOverviewStatsUseCase } from '@/application/statistics/use-cases/get-overview-stats.use-case';
-import { GetUserStatsUseCase } from '@/application/statistics/use-cases/get-user-stats.use-case';
 import { GetBookStatsUseCase } from '@/application/statistics/use-cases/get-book-stats.use-case';
 import { GetEngagementStatsUseCase } from '@/application/statistics/use-cases/get-engagement-stats.use-case';
 import { GetGrowthStatsUseCase } from '@/application/statistics/use-cases/get-growth-stats.use-case';
+import { GetOverviewStatsUseCase } from '@/application/statistics/use-cases/get-overview-stats.use-case';
+import { GetUserStatsUseCase } from '@/application/statistics/use-cases/get-user-stats.use-case';
 
 @ApiTags('Statistics')
 @Controller('statistics')
@@ -82,7 +82,7 @@ export class StatisticsController {
     @Query('groupBy') groupBy?: string,
   ) {
     const numDays = days ? parseInt(days, 10) : 30;
-    const groupByValue = groupBy ?? 'day';
+    const groupByValue = (groupBy as 'day' | 'month' | 'year') || 'day';
     const data = await this.getGrowthStatsUseCase.execute(numDays, groupByValue);
     return {
       message: 'Get growth statistics successfully',

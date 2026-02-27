@@ -1,24 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
-import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { GrowthMetric } from '@/domain/statistics/models/statistics.model';
+import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class GetGrowthStatsUseCase {
     constructor(
         private readonly userRepository: IUserRepository,
-        private readonly bookRepository: IBookRepository,
+        private readonly bookQueryProvider: IBookQueryProvider,
         private readonly postRepository: IPostRepository,
     ) { }
 
-    async execute(days: number = 30, groupBy: string = 'day'): Promise<GrowthMetric[]> {
+    async execute(days: number = 30, groupBy: 'day' | 'month' | 'year' = 'day'): Promise<GrowthMetric[]> {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
         const [userGrowth, bookGrowth, postGrowth] = await Promise.all([
             this.userRepository.getGrowthMetrics(startDate, groupBy),
-            this.bookRepository.getGrowthMetrics(startDate, groupBy),
+            this.bookQueryProvider.getGrowthMetrics(startDate, groupBy),
             this.postRepository.getGrowthMetrics(startDate, groupBy),
         ]);
 
