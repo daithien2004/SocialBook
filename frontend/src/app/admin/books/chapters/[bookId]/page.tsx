@@ -324,12 +324,14 @@ export default function ChapterManagementPage() {
       // Note: The mutation parameter is named "bookSlug" but we're passing bookId
       // because the backend route expects an ObjectId, not a slug
       const result = await createChapter({
-        bookSlug: bookId, // This is actually bookId, not slug!
+        bookSlug: book?.slug || '',
         data: {
           title: newChapterTitle,
+          bookId: bookId,
           paragraphs: newChapterParagraphs.filter(p => p.content.trim()),
         },
       }).unwrap();
+
 
       console.log('Chapter created successfully:', result);
       setShowNewChapterForm(false);
@@ -426,12 +428,14 @@ export default function ChapterManagementPage() {
         }
 
         await createChapter({
-          bookSlug: book.slug, // Uses slug from UseParams, but ensure it matches API expectation (seems to use slug in URL)
+          bookSlug: book.slug,
           data: {
             title: chapter.title || `Chapter ${successCount + 1}`,
+            bookId: bookId,       // required by CreateChapterDto
             paragraphs: paragraphs,
           },
         }).unwrap();
+
         successCount++;
       } catch (error: any) {
         console.error(`Failed to import chapter ${chapter.title}:`, error);

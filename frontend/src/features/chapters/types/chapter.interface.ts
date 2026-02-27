@@ -40,10 +40,13 @@ export interface CreateChapterParams {
   bookSlug: string;
   data: {
     title: string;
+    bookId: string;
     paragraphs: { id: string; content: string }[];
     slug?: string;
+    orderIndex?: number;
   };
 }
+
 
 export interface UpdateChapterParams {
   bookSlug: string;

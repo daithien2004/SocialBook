@@ -7,6 +7,7 @@ import { UpdateChapterUseCase } from './use-cases/update-chapter/update-chapter.
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
+import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-cha
     GetChapterBySlugUseCase,
     GetChaptersUseCase,
     UpdateChapterUseCase,
+    EpubParserService,
   ],
   exports: [
     CreateChapterUseCase,
@@ -28,6 +30,7 @@ import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-cha
     GetChapterBySlugUseCase,
     GetChaptersUseCase,
     UpdateChapterUseCase,
+    EpubParserService,
   ],
 })
-export class ChaptersApplicationModule {}
+export class ChaptersApplicationModule { }

@@ -9,8 +9,11 @@ import {
   Post,
   Put,
   Query,
-  UseGuards
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { Public } from '@/common/decorators/customize';
@@ -36,6 +39,7 @@ import { GetChaptersQuery } from '@/application/chapters/use-cases/get-chapters/
 import { UpdateChapterCommand } from '@/application/chapters/use-cases/update-chapter/update-chapter.command';
 import { GetChapterByIdQuery } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.query';
 import { GetChapterByIdUseCase } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.use-case';
+import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
 
 @ApiTags('Chapters')
 @Controller('books/:bookSlug/chapters')
@@ -47,7 +51,27 @@ export class ChaptersController {
     private readonly getChapterBySlugUseCase: GetChapterBySlugUseCase,
     private readonly deleteChapterUseCase: DeleteChapterUseCase,
     private readonly getChapterByIdUseCase: GetChapterByIdUseCase,
+    private readonly epubParserService: EpubParserService,
   ) { }
+
+  /**
+   * POST /books/:bookSlug/chapters/import/preview
+   * Parse EPUB/MOBI file and return chapter preview list
+   */
+  @Post('import/preview')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
+  async importPreview(
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new Error('No file uploaded');
+    }
+    const chapters = await this.epubParserService.parseEpub(file.buffer, file.originalname);
+    return chapters;
+  }
 
   @Public()
   @Get()
