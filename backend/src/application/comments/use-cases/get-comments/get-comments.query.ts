@@ -1,7 +1,6 @@
 export class GetCommentsQuery {
     constructor(
         public readonly targetId: string,
-        public readonly targetType: 'book' | 'chapter' | 'post' | 'author',
         public readonly parentId?: string | null,
         public readonly page?: number,
         public readonly limit?: number,

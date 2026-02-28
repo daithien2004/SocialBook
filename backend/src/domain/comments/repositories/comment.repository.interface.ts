@@ -59,18 +59,18 @@ export abstract class ICommentRepository {
         pagination?: PaginationOptions,
         sort?: SortOptions
     ): Promise<PaginatedResult<Comment>>;
-    
+
     abstract save(comment: Comment): Promise<void>;
     abstract delete(id: CommentId): Promise<void>;
     abstract softDelete(id: CommentId): Promise<void>;
-    
+
     abstract existsByUserAndTarget(
         userId: UserId,
         targetId: TargetId,
         targetType: CommentTargetType,
         content?: string
     ): Promise<boolean>;
-    
+
     abstract countByTarget(
         targetId: TargetId,
         targetType: CommentTargetType,
@@ -79,30 +79,30 @@ export abstract class ICommentRepository {
     abstract countByUser(userId: UserId): Promise<number>;
     abstract countByModerationStatus(status: 'pending' | 'approved' | 'rejected'): Promise<number>;
     abstract countFlagged(): Promise<number>;
-    
+
     abstract findFlagged(pagination?: PaginationOptions): Promise<PaginatedResult<Comment>>;
     abstract findPendingModeration(pagination?: PaginationOptions): Promise<PaginatedResult<Comment>>;
     abstract findRejected(pagination?: PaginationOptions): Promise<PaginatedResult<Comment>>;
-    
+
     abstract search(filter: CommentFilter, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<Comment>>;
-    
+
     abstract getRepliesTree(
         targetId: TargetId,
         targetType: CommentTargetType,
         maxDepth?: number
     ): Promise<CommentReplies[]>;
-    
+
     abstract updateLikesCount(id: CommentId, increment: boolean): Promise<void>;
     abstract updateModerationStatus(id: CommentId, status: 'pending' | 'approved' | 'rejected', reason?: string): Promise<void>;
     abstract flagComment(id: CommentId, reason: string): Promise<void>;
     abstract unflagComment(id: CommentId): Promise<void>;
-    
+
     abstract getRecentComments(pagination?: PaginationOptions): Promise<PaginatedResult<Comment>>;
     abstract getPopularComments(pagination?: PaginationOptions): Promise<PaginatedResult<Comment>>;
-    
+
     abstract batchDelete(ids: CommentId[]): Promise<void>;
     abstract batchModerate(ids: CommentId[], status: 'approved' | 'rejected', reason?: string): Promise<void>;
-    
+
     // Statistics
     abstract countTotal(): Promise<number>;
 }

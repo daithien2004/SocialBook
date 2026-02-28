@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
-import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
-import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
+import { ICommentRepository, CommentFilter } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { GetCommentsQuery } from './get-comments.query';
 
@@ -15,9 +13,6 @@ export class GetCommentsUseCase {
 
     async execute(query: GetCommentsQuery) {
         try {
-            const targetId = TargetId.create(query.targetId);
-            const targetType = CommentTargetType.create(query.targetType);
-
             let parentId: CommentId | null = null;
             if (query.parentId) {
                 parentId = CommentId.create(query.parentId);
@@ -38,7 +33,10 @@ export class GetCommentsUseCase {
             if (parentId) {
                 result = await this.commentRepository.findByParent(parentId, pagination, sort);
             } else {
-                result = await this.commentRepository.findTopLevel(targetId, targetType, pagination, sort);
+                const filter: CommentFilter = {
+                    targetId: query.targetId,
+                };
+                result = await this.commentRepository.search(filter, pagination, sort);
             }
 
             this.logger.log(`Retrieved ${result.data.length} comments for target ${query.targetId}`);

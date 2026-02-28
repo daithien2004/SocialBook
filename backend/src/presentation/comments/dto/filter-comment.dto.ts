@@ -49,41 +49,35 @@ export class FilterCommentDto {
     dateTo?: string;
 }
 
+import { Type } from 'class-transformer';
+
 export class GetCommentsDto {
-    @ApiProperty({ description: 'Target ID' })
+
     @IsMongoId()
     targetId: string;
 
-    @ApiProperty({ enum: TargetTypeEnum, description: 'Target type' })
-    @IsEnum(TargetTypeEnum)
-    targetType: TargetTypeEnum;
-
-    @ApiProperty({ description: 'Parent comment ID', required: false })
     @IsOptional()
     @IsMongoId()
     parentId?: string | null;
 
-    @ApiProperty({ description: 'Page number', required: false })
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     page?: number;
 
-    @ApiProperty({ description: 'Limit for pagination', required: false })
     @IsOptional()
+    @Type(() => Number)
     @IsNumber()
     limit?: number;
 
-    @ApiProperty({ description: 'Cursor for pagination', required: false })
     @IsOptional()
     @IsString()
     cursor?: string;
 
-    @ApiProperty({ description: 'Sort by field', required: false })
     @IsOptional()
     @IsString()
     sortBy?: string;
 
-    @ApiProperty({ description: 'Sort order', required: false })
     @IsOptional()
     @IsString()
     order?: 'asc' | 'desc';

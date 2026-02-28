@@ -1,3 +1,5 @@
+import { User } from '../../auth/slice/authSlice';
+
 export interface GetCommentsRequest {
     targetId: string;
     parentId: string | null;
@@ -51,15 +53,11 @@ export interface CommentItem {
     isLiked: boolean;
     repliesCount: number;
     parentId: string | null;
-    userId: {
-        id: string;
-        username: string;
-        image?: string;
-    } | null;
+    user: User;
 }
 
 export interface GetCommentsResponse {
-    data: CommentItem[];
+    comments: CommentItem[];
     nextCursor: string | null;
     hasMore: boolean;
 }

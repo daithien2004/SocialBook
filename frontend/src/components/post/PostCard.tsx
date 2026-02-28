@@ -92,7 +92,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
     const openCommentModal = () => setIsCommentOpen(true);
     const closeCommentModal = () => setIsCommentOpen(false);
 
-    const isOwner = post.userId?.id === user?.id;
+    const isOwner = post.user?.id === user?.id;
     const hasPostImages = post.imageUrls && post.imageUrls.length > 0;
 
     const handleDelete = async () => {
@@ -167,22 +167,22 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 {/* HEADER */}
                 <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
                     <div className="flex items-center gap-3 cursor-pointer"
-                        onClick={() => route.push(`users/${post.userId.id}`)}>
+                        onClick={() => route.push(`users/${post.user.id}`)}>
                         <div className="relative">
                             <Avatar className="h-10 w-10 border border-slate-200 dark:border-gray-700">
                                 <AvatarImage
-                                    src={post.userId?.image || post.userAvatar || '/abstract-book-pattern.png'}
-                                    alt={post.userId?.username || 'User'}
+                                    src={post.user?.image || post.userAvatar || '/abstract-book-pattern.png'}
+                                    alt={post.user?.username || 'User'}
                                     className="object-cover"
                                 />
-                                <AvatarFallback>{post.userId?.username?.charAt(0) || 'U'}</AvatarFallback>
+                                <AvatarFallback>{post.user?.username?.charAt(0) || 'U'}</AvatarFallback>
                             </Avatar>
                             {/* Chấm trạng thái online (optional) - giữ nguyên logic cũ nếu cần */}
                             <span className="absolute bottom-0 right-0 inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
                         </div>
                         <div className="space-y-0.5">
                             <h2 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
-                                {post.userId?.username || post.userId?.email || 'Người dùng ẩn danh'}
+                                {post.user?.username || post.user?.email || 'Người dùng ẩn danh'}
                             </h2>
                             <p className="text-xs text-slate-500 dark:text-gray-400">
                                 {createdDate}

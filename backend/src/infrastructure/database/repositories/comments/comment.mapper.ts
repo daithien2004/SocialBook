@@ -14,9 +14,18 @@ interface CommentPersistence {
 
 export class CommentMapper {
   static toDomain(document: CommentDocument | any): CommentEntity {
-    return CommentEntity.reconstitute({
+    // Khi executeQuery dùng .populate('userId'), document.userId là object
+    // Khi không populate, document.userId là ObjectId/string
+    const isPopulated = document.userId && typeof document.userId === 'object'
+      && !document.userId.toHexString; // ObjectId có toHexString, populated object thì không
+
+    const userIdStr = isPopulated
+      ? (document.userId._id ?? document.userId.id)?.toString() || ''
+      : document.userId?.toString() || '';
+
+    const entity = CommentEntity.reconstitute({
       id: document._id.toString(),
-      userId: document.userId?.toString() || '',
+      userId: userIdStr,
       targetType: document.targetType,
       targetId: document.targetId?.toString() || '',
       parentId: document.parentId?.toString() || null,
@@ -28,6 +37,16 @@ export class CommentMapper {
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     });
+
+    if (isPopulated) {
+      (entity as any).__userInfo = {
+        id: userIdStr,
+        name: document.userId.username || 'Unknown',
+        image: document.userId.image || null,
+      };
+    }
+
+    return entity;
   }
 
   static toPersistence(comment: CommentEntity): CommentPersistence {

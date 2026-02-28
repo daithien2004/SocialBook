@@ -15,7 +15,7 @@ import { CommentMapper } from './comment.mapper';
 export class CommentRepository implements ICommentRepository {
     private readonly logger = new Logger(CommentRepository.name);
 
-    constructor(@InjectModel(Comment.name) private readonly commentModel: Model<CommentDocument>) {}
+    constructor(@InjectModel(Comment.name) private readonly commentModel: Model<CommentDocument>) { }
 
     async findById(id: CommentId): Promise<CommentEntity | null> {
         const document = await this.commentModel.findById(id.toString()).lean().exec();
@@ -32,7 +32,7 @@ export class CommentRepository implements ICommentRepository {
         const queryFilter: FilterQuery<CommentDocument> = {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType: targetType.toString(),
-            isDeleted: false
+            isDelete: false
         };
 
         if (parentId) {
@@ -51,7 +51,7 @@ export class CommentRepository implements ICommentRepository {
     ): Promise<PaginatedResult<CommentEntity>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             userId: new Types.ObjectId(userId.toString()),
-            isDeleted: false
+            isDelete: false
         };
 
         return this.executeQuery(queryFilter, pagination, sort);
@@ -64,7 +64,7 @@ export class CommentRepository implements ICommentRepository {
     ): Promise<PaginatedResult<CommentEntity>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             parentId: new Types.ObjectId(parentId.toString()),
-            isDeleted: false
+            isDelete: false
         };
 
         return this.executeQuery(queryFilter, pagination, sort);
@@ -80,7 +80,7 @@ export class CommentRepository implements ICommentRepository {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType: targetType.toString(),
             parentId: null,
-            isDeleted: false
+            isDelete: false
         };
 
         return this.executeQuery(queryFilter, pagination, sort);
@@ -102,7 +102,7 @@ export class CommentRepository implements ICommentRepository {
     async softDelete(id: CommentId): Promise<void> {
         await this.commentModel.findByIdAndUpdate(
             id.toString(),
-            { isDeleted: true, updatedAt: new Date() }
+            { isDelete: true, updatedAt: new Date() }
         ).exec();
     }
 
@@ -116,7 +116,7 @@ export class CommentRepository implements ICommentRepository {
             userId: new Types.ObjectId(userId.toString()),
             targetId: new Types.ObjectId(targetId.toString()),
             targetType: targetType.toString(),
-            isDeleted: false
+            isDelete: false
         };
 
         if (content) {
@@ -135,7 +135,7 @@ export class CommentRepository implements ICommentRepository {
         const queryFilter: FilterQuery<CommentDocument> = {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType: targetType.toString(),
-            isDeleted: false
+            isDelete: false
         };
 
         if (parentId) {
@@ -150,28 +150,28 @@ export class CommentRepository implements ICommentRepository {
     async countByUser(userId: UserId): Promise<number> {
         return await this.commentModel.countDocuments({
             userId: new Types.ObjectId(userId.toString()),
-            isDeleted: false
+            isDelete: false
         }).exec();
     }
 
     async countByModerationStatus(status: 'pending' | 'approved' | 'rejected'): Promise<number> {
         return await this.commentModel.countDocuments({
             moderationStatus: status,
-            isDeleted: false
+            isDelete: false
         }).exec();
     }
 
     async countFlagged(): Promise<number> {
         return await this.commentModel.countDocuments({
             isFlagged: true,
-            isDeleted: false
+            isDelete: false
         }).exec();
     }
 
     async findFlagged(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             isFlagged: true,
-            isDeleted: false
+            isDelete: false
         };
 
         const sortOptions: SortOptions = {
@@ -185,7 +185,7 @@ export class CommentRepository implements ICommentRepository {
     async findPendingModeration(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             moderationStatus: 'pending',
-            isDeleted: false
+            isDelete: false
         };
 
         const sortOptions: SortOptions = {
@@ -199,7 +199,7 @@ export class CommentRepository implements ICommentRepository {
     async findRejected(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             moderationStatus: 'rejected',
-            isDeleted: false
+            isDelete: false
         };
 
         const sortOptions: SortOptions = {
@@ -211,7 +211,7 @@ export class CommentRepository implements ICommentRepository {
     }
 
     async search(filter: CommentFilter, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<CommentEntity>> {
-        const queryFilter: FilterQuery<CommentDocument> = { isDeleted: false };
+        const queryFilter: FilterQuery<CommentDocument> = { isDelete: false };
 
         if (filter.userId) {
             queryFilter.userId = new Types.ObjectId(filter.userId);
@@ -262,7 +262,7 @@ export class CommentRepository implements ICommentRepository {
         // This is a complex operation that would require recursive queries
         // For now, return top-level comments
         const topLevelComments = await this.findTopLevel(targetId, targetType);
-        
+
         return topLevelComments.data.map(comment => ({
             comment,
             replies: [], // Would need to fetch replies recursively
@@ -271,7 +271,7 @@ export class CommentRepository implements ICommentRepository {
     }
 
     async updateLikesCount(id: CommentId, increment: boolean): Promise<void> {
-        const update = increment ? 
+        const update = increment ?
             { $inc: { likesCount: 1 }, updatedAt: new Date() } :
             { $inc: { likesCount: -1 }, updatedAt: new Date() };
 
@@ -376,7 +376,9 @@ export class CommentRepository implements ICommentRepository {
         const limit = pagination?.limit || 10;
         const skip = (page - 1) * limit;
 
-        let query = this.commentModel.find(filter);
+        let query = this.commentModel
+            .find(filter)
+            .populate('userId', 'username image'); // lấy user info cùng lúc
 
         // Apply sorting
         if (sort?.sortBy) {

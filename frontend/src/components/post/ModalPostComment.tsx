@@ -66,7 +66,7 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
         <Dialog open={isCommentOpen} onOpenChange={(open) => !open && closeCommentModal()}>
             <DialogContent className="max-w-5xl h-[85vh] p-0 gap-0 overflow-hidden border-slate-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] flex flex-col md:flex-row">
                 <DialogHeader className="sr-only">
-                    <DialogTitle>Bình luận cho bài viết của {post.userId?.username}</DialogTitle>
+                    <DialogTitle>Bình luận cho bài viết của {post.user?.username}</DialogTitle>
                     <DialogDescription>Xem và chia sẻ bình luận về bài viết này</DialogDescription>
                 </DialogHeader>
 
@@ -91,16 +91,16 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                     {/* Header */}
                     <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-gray-800 shrink-0">
                         <Avatar className="h-9 w-9 border border-slate-200 dark:border-gray-700">
-                            <AvatarImage src={post.userId?.image} className="object-cover" />
+                            <AvatarImage src={post.user?.image} className="object-cover" />
                             <AvatarFallback>U</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-semibold text-slate-900 dark:text-gray-100 truncate">
-                                {post.userId?.username}
+                                {post.user?.username}
                             </h4>
-                            {post.bookId && (
+                            {post.book && (
                                 <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
-                                    {post.bookId.title}
+                                    {post.book.title}
                                 </p>
                             )}
                         </div>

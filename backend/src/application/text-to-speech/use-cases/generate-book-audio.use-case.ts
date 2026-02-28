@@ -8,7 +8,7 @@ export class GenerateBookAudioUseCase {
     constructor(
         private readonly generateChapterAudioUseCase: GenerateChapterAudioUseCase,
         private readonly chapterRepository: IChapterRepository,
-    ) {}
+    ) { }
 
     async execute(bookId: string, options: any = {}): Promise<any> {
         if (!Types.ObjectId.isValid(bookId)) {

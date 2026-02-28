@@ -3,11 +3,8 @@ import { Book } from '../../books/types/book.interface';
 
 export interface Post {
   id: string;
-  userId: User;
-  userName: string;
-  userAvatar: string;
-  bookId: Book;
-  bookTitle: string;
+  user: User;
+  book: Book;
   content: string;
   imageUrls: string[];
   isDelete: boolean;
