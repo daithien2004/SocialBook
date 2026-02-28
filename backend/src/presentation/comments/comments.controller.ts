@@ -73,14 +73,7 @@ export class CommentsController {
 
   @Public()
   @Get('target')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get comments for a target' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'cursor', required: false, type: String })
-  @ApiQuery({ name: 'sortBy', required: false, type: String })
-  @ApiQuery({ name: 'order', required: false, type: String })
-  async v(@Query() query: GetCommentsDto) {
+  async getByTarget(@Query() query: GetCommentsDto) {
     const getQuery = new GetCommentsQuery(
       query.targetId,
       query.parentId,
