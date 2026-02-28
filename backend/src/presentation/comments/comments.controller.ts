@@ -3,8 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Post,
   Put,
@@ -13,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiTags, ApiBody, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -49,9 +47,6 @@ export class CommentsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new comment' })
-  @ApiBody({ type: CreateCommentDto })
   async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateCommentDto) {
     const command = new CreateCommentCommand(
       req.user.id,
@@ -71,13 +66,6 @@ export class CommentsController {
 
   @Public()
   @Get('target')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get comments for a target' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'cursor', required: false, type: String })
-  @ApiQuery({ name: 'sortBy', required: false, type: String })
-  @ApiQuery({ name: 'order', required: false, type: String })
   async getByTarget(@Query() query: GetCommentsDto) {
     const getQuery = new GetCommentsQuery(
       query.targetId,
@@ -103,9 +91,6 @@ export class CommentsController {
 
   @Get(':id')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get comment by ID' })
-  @ApiParam({ name: 'id', description: 'Comment ID' })
   async getById(@Param('id') id: string) {
     // This would need a GetCommentByIdUseCase to be implemented
     return {
@@ -116,10 +101,6 @@ export class CommentsController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update a comment' })
-  @ApiParam({ name: 'id', description: 'Comment ID' })
-  @ApiBody({ type: UpdateCommentDto })
   async update(
     @Param('id') id: string,
     @Req() req: Request & { user: { id: string } },
@@ -137,9 +118,6 @@ export class CommentsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete a comment' })
-  @ApiParam({ name: 'id', description: 'Comment ID' })
   async remove(
     @Param('id') id: string,
     @Req() req: Request & {
@@ -157,10 +135,6 @@ export class CommentsController {
 
   @Post(':id/flag')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Flag a comment for moderation' })
-  @ApiParam({ name: 'id', description: 'Comment ID' })
-  @ApiBody({ type: FlagCommentDto })
   async flag(@Param('id') id: string, @Body() dto: FlagCommentDto) {
     // This would need a FlagCommentUseCase to be implemented
     return {
@@ -172,10 +146,6 @@ export class CommentsController {
   @Post(':id/moderate')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Moderate a comment' })
-  @ApiParam({ name: 'id', description: 'Comment ID' })
-  @ApiBody({ type: ModerateCommentDto })
   async moderate(@Param('id') id: string, @Body() dto: ModerateCommentDto) {
     const command = new ModerateCommentCommand(id, dto.status, dto.reason);
 
@@ -188,10 +158,6 @@ export class CommentsController {
 
   @Get('count')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get comment count for a target' })
-  @ApiQuery({ name: 'targetId', description: 'Target ID' })
-  @ApiQuery({ name: 'targetType', description: 'Target type' })
   async getCount(@Query() query: CommentCountDto) {
     // This would need a GetCommentCountUseCase to be implemented
     return {
@@ -203,8 +169,6 @@ export class CommentsController {
   @Get('stats')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get comment statistics' })
   async getStats() {
     // This would need a GetCommentStatsUseCase to be implemented
     return {
@@ -216,11 +180,7 @@ export class CommentsController {
   @Get('moderation/pending')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get comments pending moderation' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  async getPendingModeration(@Query('page') page: string = '1', @Query('limit') limit: string = '10') {
+  async getPendingModeration(@Query() filter: FilterCommentDto) {
     // This would need a GetPendingModerationUseCase to be implemented
     return {
       message: 'Get pending moderation not yet implemented',
@@ -231,11 +191,7 @@ export class CommentsController {
   @Get('moderation/flagged')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get flagged comments' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  async getFlagged(@Query('page') page: string = '1', @Query('limit') limit: string = '10') {
+  async getFlagged(@Query() filter: FilterCommentDto) {
     // This would need a GetFlaggedCommentsUseCase to be implemented
     return {
       message: 'Get flagged comments not yet implemented',

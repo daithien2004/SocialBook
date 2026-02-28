@@ -3,8 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Patch,
   Post,
@@ -36,7 +34,6 @@ export class ReviewsController {
 
   @Public()
   @Get('book/:bookId')
-  @HttpCode(HttpStatus.OK)
   async findAllByBook(@Req() req: Request & { user?: { id: string } }, @Param('bookId') bookId: string) {
     const userId = req.user?.id;
     const reviews = await this.getBookReviewsUseCase.execute(bookId);
@@ -58,7 +55,6 @@ export class ReviewsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateReviewDto) {
     const review = await this.createReviewUseCase.execute(req.user.id, dto);
     return {
@@ -69,7 +65,6 @@ export class ReviewsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
   async update(
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
@@ -84,7 +79,6 @@ export class ReviewsController {
 
   @Patch(':id/like')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
   async toggleLike(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
     const review = await this.toggleReviewLikeUseCase.execute(id, req.user.id);
     const isLiked = review.likedBy.includes(req.user.id);
@@ -99,7 +93,6 @@ export class ReviewsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
   async remove(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
     await this.deleteReviewUseCase.execute(id, req.user.id);
     return {

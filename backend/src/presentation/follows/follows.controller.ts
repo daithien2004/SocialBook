@@ -7,12 +7,10 @@ import {
   Req,
   Query,
   UseGuards,
-  HttpCode,
-  HttpStatus,
   Body,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiTags, ApiBody, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -43,9 +41,6 @@ export class FollowsController {
 
   @Public()
   @Get('following')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get following list for a user' })
-  @ApiQuery({ name: 'userId', description: 'User ID', required: true })
   async getFollowingList(@Query('userId') userId: string) {
     const query = new GetFollowsQuery(userId, undefined, 1, 100);
     const result = await this.getFollowsUseCase.execute(query);
@@ -59,9 +54,6 @@ export class FollowsController {
 
   @Get('followers')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get followers list for a target user' })
-  @ApiQuery({ name: 'targetUserId', description: 'Target User ID', required: true })
   async getFollowersList(
     @Req() req: Request & { user: { id: string } },
     @Query('targetUserId') targetUserId: string,
@@ -78,9 +70,6 @@ export class FollowsController {
 
   @Get('status')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get follow status between current user and target' })
-  @ApiQuery({ name: 'targetId', description: 'Target User ID', required: true })
   async getStatus(
     @Req() req: Request & { user: { id: string } },
     @Query('targetId') targetId: string,
@@ -102,9 +91,6 @@ export class FollowsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Follow a user' })
-  @ApiBody({ type: CreateFollowDto })
   async create(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: CreateFollowDto,
@@ -120,9 +106,6 @@ export class FollowsController {
 
   @Delete(':targetId')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Unfollow a user' })
-  @ApiParam({ name: 'targetId', description: 'Target User ID' })
   async unfollow(
     @Req() req: Request & { user: { id: string } },
     @Param('targetId') targetId: string,
@@ -137,9 +120,6 @@ export class FollowsController {
 
   @Get('stats')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get follow statistics for a user' })
-  @ApiQuery({ name: 'userId', description: 'User ID', required: true })
   async getStats(@Query('userId') userId: string) {
     // This would need a GetFollowStatsUseCase to be implemented
     return {
@@ -150,20 +130,14 @@ export class FollowsController {
 
   @Get('all')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get all follows with filtering' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getAll(
     @Query() filter: FilterFollowDto,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
   ) {
     const query = new GetFollowsQuery(
       filter.userId,
       filter.targetId,
-      Number(page),
-      Number(limit)
+      filter.page,
+      filter.limit
     );
     const result = await this.getFollowsUseCase.execute(query);
 

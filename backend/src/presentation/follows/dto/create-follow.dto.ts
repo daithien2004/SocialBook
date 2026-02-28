@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsMongoId, IsNotEmpty, IsOptional, IsBoolean, IsString } from 'class-validator';
 
 export class CreateFollowDto {
@@ -39,28 +39,30 @@ export class FollowStatsDto {
     userId: string;
 }
 
-export class FilterFollowDto {
-    @ApiProperty({ description: 'User ID filter', required: false })
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
+
+export class FilterFollowDto extends PaginationQueryDto {
+    @ApiPropertyOptional({ description: 'User ID filter' })
     @IsOptional()
     @IsMongoId()
     userId?: string;
 
-    @ApiProperty({ description: 'Target ID filter', required: false })
+    @ApiPropertyOptional({ description: 'Target ID filter' })
     @IsOptional()
     @IsMongoId()
     targetId?: string;
 
-    @ApiProperty({ description: 'Status filter', required: false })
+    @ApiPropertyOptional({ description: 'Status filter' })
     @IsOptional()
     @IsBoolean()
     status?: boolean;
 
-    @ApiProperty({ description: 'Date from filter', required: false })
+    @ApiPropertyOptional({ description: 'Date from filter' })
     @IsOptional()
     @IsString()
     dateFrom?: string;
 
-    @ApiProperty({ description: 'Date to filter', required: false })
+    @ApiPropertyOptional({ description: 'Date to filter' })
     @IsOptional()
     @IsString()
     dateTo?: string;

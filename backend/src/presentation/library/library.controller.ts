@@ -33,8 +33,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Patch,
   Post,
@@ -63,7 +61,6 @@ export class LibraryController {
   ) { }
 
   @Get()
-  @HttpCode(HttpStatus.OK)
   async getLibrary(
     @Req() req: Request & { user: { id: string } },
     @Query('status') status: ReadingStatusResult = ReadingStatusResult.READING,
@@ -78,7 +75,6 @@ export class LibraryController {
   }
 
   @Post('status')
-  @HttpCode(HttpStatus.OK)
   async updateStatus(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateLibraryStatusDto) {
     const command = new UpdateStatusCommand(req.user.id, dto.bookId, dto.status);
     const readingList = await this.updateStatusUseCase.execute(command);
@@ -90,7 +86,6 @@ export class LibraryController {
   }
 
   @Get('progress')
-  @HttpCode(HttpStatus.OK)
   async getChapterProgress(
     @Req() req: Request & { user: { id: string } },
     @Query('bookId') bookId: string,
@@ -106,8 +101,6 @@ export class LibraryController {
 
   @Post('progress')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Update chapter reading progress' })
-  @ApiBody({ type: UpdateProgressDto })
   async updateProgress(@Req() req: Request & { user: { id: string } }, @Body() updateProgressDto: UpdateProgressDto) {
     const command = new UpdateProgressCommand(
       req.user.id,
@@ -151,7 +144,6 @@ export class LibraryController {
   }
 
   @Patch('collections')
-  @HttpCode(HttpStatus.OK)
   async updateCollections(@Req() req: Request & { user: { id: string } }, @Body() dto: AddToCollectionsDto) {
     const command = new UpdateCollectionsCommand(req.user.id, dto.bookId, dto.collectionIds);
     const readingList = await this.updateCollectionsUseCase.execute(command);
@@ -163,7 +155,6 @@ export class LibraryController {
   }
 
   @Delete(':bookId')
-  @HttpCode(HttpStatus.OK)
   async remove(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
     const command = new RemoveFromLibraryCommand(req.user.id, bookId);
     await this.removeFromLibraryUseCase.execute(command);
@@ -174,7 +165,6 @@ export class LibraryController {
   }
 
   @Get('book/:bookId')
-  @HttpCode(HttpStatus.OK)
   async getBookLibraryInfo(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
     const query = new GetBookLibraryInfoQuery(req.user.id, bookId);
     const result = await this.getBookLibraryInfoUseCase.execute(query);

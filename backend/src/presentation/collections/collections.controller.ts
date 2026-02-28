@@ -31,7 +31,6 @@ export class CollectionsController {
   ) { }
 
   @Post()
-  @HttpCode(HttpStatus.CREATED)
   async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateCollectionDto) {
     const collection = await this.createCollectionUseCase.execute({
       userId: req.user.id,
