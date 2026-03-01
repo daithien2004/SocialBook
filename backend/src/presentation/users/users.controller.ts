@@ -2,8 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Patch,
   Post,
@@ -14,7 +12,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -24,6 +22,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
 import { CreateUserDto, UpdateUserOverviewDto } from '@/presentation/users/dto/user.dto';
+import { FilterUserDto } from '@/presentation/users/dto/filter-user.dto';
 import { UpdateReadingPreferencesDto } from '@/presentation/users/dto/update-reading-preferences.dto';
 import { UserResponseDto } from '@/presentation/users/dto/user.response.dto';
 
@@ -72,9 +71,6 @@ export class UsersController {
   ) { }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User created' })
-  @HttpCode(HttpStatus.CREATED)
   async create(@Body() createUserDto: CreateUserDto) {
     const command = new CreateUserCommand(
       createUserDto.username,
@@ -95,25 +91,17 @@ export class UsersController {
   @Get('admin')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Get all users (Admin)' })
-  @ApiQuery({ name: 'current', required: false })
-  @ApiQuery({ name: 'pageSize', required: false })
-  @HttpCode(HttpStatus.OK)
   async findAllAdmin(
-    @Query() query: any,
-    @Query('current') current: string,
-    @Query('pageSize') pageSize: string,
+    @Query() filter: FilterUserDto,
   ) {
-    const page = +current || 1;
-    const limit = +pageSize || 10;
     const getUsersQuery = new GetUsersQuery(
-      page,
-      limit,
-      query.username,
-      query.email,
-      query.roleId,
-      query.isBanned,
-      query.isVerified
+      filter.page,
+      filter.limit,
+      filter.username,
+      filter.email,
+      filter.roleId,
+      filter.isBanned,
+      filter.isVerified
     );
     const result = await this.getUsersUseCase.execute(getUsersQuery);
     return {
@@ -125,20 +113,15 @@ export class UsersController {
 
   @Public()
   @Get()
-  @HttpCode(HttpStatus.OK)
   async findAll(
-    @Query() query: any,
-    @Query('current') current: string,
-    @Query('pageSize') pageSize: string,
+    @Query() filter: FilterUserDto,
   ) {
-    const page = +current || 1;
-    const limit = +pageSize || 10;
     const getUsersQuery = new GetUsersQuery(
-      page,
-      limit,
-      query.username,
-      query.email,
-      query.roleId,
+      filter.page,
+      filter.limit,
+      filter.username,
+      filter.email,
+      filter.roleId,
       undefined,
       undefined
     );
@@ -153,9 +136,6 @@ export class UsersController {
   @Patch(':id/ban')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiOperation({ summary: 'Ban or unban a user' })
-  @ApiParam({ name: 'id', type: 'string' })
-  @HttpCode(HttpStatus.OK)
   async toggleBan(@Param('id') id: string) {
     const command = new ToggleBanCommand(id);
     const user = await this.toggleBanUseCase.execute(command);
@@ -167,9 +147,6 @@ export class UsersController {
 
   @Public()
   @Get(':id/overview')
-  @ApiOperation({ summary: 'Get user profile overview' })
-  @ApiParam({ name: 'id', type: 'string' })
-  @HttpCode(HttpStatus.OK)
   async getUserProfileOverview(@Param('id') id: string) {
     const query = new GetUserProfileQuery(id);
     const data = await this.getUserProfileUseCase.execute(query);
@@ -181,7 +158,6 @@ export class UsersController {
 
   @Public()
   @Get(':id/exist')
-  @HttpCode(HttpStatus.OK)
   async isUserExist(@Param('id') id: string) {
     const query = new CheckUserExistQuery(undefined, undefined, id);
     const exists = await this.checkUserExistUseCase.execute(query);
@@ -192,7 +168,6 @@ export class UsersController {
   }
 
   @Patch('me/overview')
-  @HttpCode(HttpStatus.OK)
   async updateMyProfileOverview(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: UpdateUserOverviewDto,
@@ -212,8 +187,6 @@ export class UsersController {
   }
 
   @Patch('me/avatar')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update user avatar' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -241,8 +214,6 @@ export class UsersController {
   }
 
   @Get('me/reading-preferences')
-  @ApiOperation({ summary: 'Get my reading preferences' })
-  @HttpCode(HttpStatus.OK)
   async getMyReadingPreferences(@Req() req: Request & { user: { id: string } }) {
     const query = new GetReadingPreferencesQuery(req.user.id);
     const data = await this.getReadingPreferencesUseCase.execute(query);
@@ -253,8 +224,6 @@ export class UsersController {
   }
 
   @Put('me/reading-preferences')
-  @ApiOperation({ summary: 'Update reading preferences' })
-  @HttpCode(HttpStatus.OK)
   async updateMyReadingPreferences(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: UpdateReadingPreferencesDto,
@@ -286,19 +255,11 @@ export class UsersController {
 
   @Public()
   @Get('search')
-  @ApiOperation({ summary: 'Search users' })
-  @ApiQuery({ name: 'keyword', required: true })
-  @ApiQuery({ name: 'current', required: false })
-  @ApiQuery({ name: 'pageSize', required: false })
-  @HttpCode(HttpStatus.OK)
   async searchUsers(
-    @Query('keyword') keyword: string,
-    @Query('current') current: string,
-    @Query('pageSize') pageSize: string,
+    @Query() filter: FilterUserDto,
   ) {
-    const page = +current || 1;
-    const limit = +pageSize || 10;
-    const query = new SearchUsersQuery(keyword, page, limit);
+    const keyword = filter.username || filter.email || '';
+    const query = new SearchUsersQuery(keyword, filter.page, filter.limit);
     const result = await this.searchUsersUseCase.execute(query);
 
     return {

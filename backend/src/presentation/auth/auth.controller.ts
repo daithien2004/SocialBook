@@ -6,14 +6,13 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpException,
   HttpStatus,
   Post,
   Req,
   UseGuards
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 // Use Cases
 import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
@@ -62,9 +61,6 @@ export class AuthController {
   ) { }
 
   @Public()
-  @ApiOperation({ summary: 'Login with Google' })
-  @ApiBody({ type: SignupGoogleDto })
-  @ApiResponse({ status: 200, description: 'Login successfuk' })
   @Post('google/login')
   async handleGoogleLogin(@Body() data: SignupGoogleDto) {
     const command = new GoogleAuthCommand(
@@ -83,10 +79,6 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  @ApiOperation({ summary: 'Login with email and password' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
-  @ApiBody({ type: LoginDto })
-  @HttpCode(HttpStatus.OK)
   async login(@Req() req: { user: User }, @Body() dto: LoginDto) {
     const command = new LoginCommand(req.user);
     const result = await this.loginUseCase.execute(command);
@@ -103,14 +95,11 @@ export class AuthController {
 
   @Get('profile')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current user profile' })
   getProfile(@Req() req: { user: User }) {
     return req.user;
   }
 
-  @ApiBearerAuth()
   @Post('logout')
-  @ApiOperation({ summary: 'Logout' })
   async logout(@Req() req: { user: { id: string } }) {
     const command = new LogoutCommand(req.user.id);
     return await this.logoutUseCase.execute(command);
@@ -118,8 +107,6 @@ export class AuthController {
 
   @Public()
   @Post('signup')
-  @ApiOperation({ summary: 'Register a new account' })
-  @ApiResponse({ status: 201, description: 'OTP sent to email' })
   async signup(@Body() dto: SignupLocalDto) {
     const command = new RegisterCommand(dto.username, dto.email, dto.password);
     const otp = await this.registerUseCase.execute(command);
@@ -131,10 +118,6 @@ export class AuthController {
 
   @Public()
   @Post('verify-otp')
-  @ApiOperation({ summary: 'Verify OTP and activate account' })
-  @ApiBody({ type: VerifyOtpDto })
-  @ApiResponse({ status: 200, description: 'Account activated successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid OTP or email' })
   async verifyOtp(@Body() body: VerifyOtpDto) {
     try {
       const command = new VerifyOtpCommand(body.email, body.otp);
@@ -147,9 +130,6 @@ export class AuthController {
 
   @Public()
   @Post('resend-otp')
-  @ApiOperation({ summary: 'Resend OTP' })
-  @ApiBody({ type: ResendOtpDto })
-  @ApiResponse({ status: 200, description: 'OTP resent successfully' })
   async resendOtp(@Body() body: ResendOtpDto) {
     try {
       const command = new ResendOtpCommand(body.email);
@@ -168,10 +148,6 @@ export class AuthController {
   @UseGuards(JwtRefreshAuthGuard)
   @Public()
   @Post('refresh')
-  @ApiOperation({ summary: 'Refresh access token' })
-  @ApiBody({ type: RefreshTokenDto })
-  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
-  @ApiResponse({ status: 401, description: 'Result token invalid' })
   async refresh(@Body() body: RefreshTokenDto) {
     const { refreshToken } = body;
     if (!refreshToken) {
@@ -202,7 +178,6 @@ export class AuthController {
 
   @Public()
   @Post('forgot-password')
-  @ApiOperation({ summary: 'Request password reset via email' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     const command = new ForgotPasswordCommand(dto.email);
     await this.forgotPasswordUseCase.execute(command);
@@ -213,7 +188,6 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
-  @ApiOperation({ summary: 'Reset password with OTP' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     const command = new ResetPasswordCommand(dto.email, dto.otp, dto.newPassword);
     const result = await this.resetPasswordUseCase.execute(command);

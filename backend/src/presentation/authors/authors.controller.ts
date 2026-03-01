@@ -1,4 +1,4 @@
-import { Public } from '@/common/decorators/customize';
+import { Public, ApiFileUpload } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -17,7 +17,7 @@ import {
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+// FileInterceptor removed since we use ApiFileUpload
 import { ApiTags } from '@nestjs/swagger';
 
 import { CreateAuthorDto } from '@/presentation/authors/dto/create-author.dto';
@@ -54,8 +54,7 @@ export class AuthorsController {
     @Post()
     @Roles('admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @UseInterceptors(FileInterceptor('photoUrl'))
-    @HttpCode(HttpStatus.CREATED)
+    @ApiFileUpload('photoUrl', CreateAuthorDto)
     async create(
         @Body() createAuthorDto: CreateAuthorDto,
         @UploadedFile() file?: Express.Multer.File,
@@ -111,7 +110,7 @@ export class AuthorsController {
     @Put(':id')
     @Roles('admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @UseInterceptors(FileInterceptor('photoUrl'))
+    @ApiFileUpload('photoUrl', UpdateAuthorDto)
     async update(
         @Param('id') id: string,
         @Body() updateAuthorDto: UpdateAuthorDto,

@@ -1,24 +1,20 @@
-import { Public } from '@/common/decorators/customize';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
+import { Public, ApiFileUpload } from '@/common/decorators/customize';
+import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
 import {
   Body,
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
+  Req,
   UploadedFile,
-  UseGuards,
-  UseInterceptors
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 
 import { BookDetailResponseDto } from '@/presentation/books/dto/book-detail.response.dto';
 import { BookResponseDto } from '@/presentation/books/dto/book.response.dto';
@@ -38,6 +34,9 @@ import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books
 import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
+import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
+import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
+import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
 @ApiTags('Books')
@@ -51,19 +50,13 @@ export class BooksController {
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,
     private readonly getBookByIdUseCase: GetBookByIdUseCase,
+    private readonly toggleLikeUseCase: ToggleLikeUseCase,
+    private readonly getLikeCountUseCase: GetLikeCountUseCase,
   ) { }
 
-  /**
-   * POST /books - Create new book (admin only)
-   */
   @Post()
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FileInterceptor('coverUrl'))
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new book' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: CreateBookDto })
+  @RequireAuth('admin')
+  @ApiFileUpload('coverUrl', CreateBookDto)
   async create(
     @Body() createBookDto: CreateBookDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -86,32 +79,14 @@ export class BooksController {
     };
   }
 
-  /**
-   * GET /books/admin/all - Get all books (admin only)
-   */
   @Get('admin/all')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Get all books (admin only)' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'genres', required: false, type: String })
-  @ApiQuery({ name: 'tags', required: false, type: String })
-  @ApiQuery({ name: 'author', required: false, type: String })
-  @ApiQuery({ name: 'status', required: false, type: String })
-  @ApiQuery({ name: 'sortBy', required: false, type: String })
-  @ApiQuery({ name: 'order', required: false, type: String })
+  @RequireAuth('admin')
   async findAllAdmin(
     @Query() filter: FilterBookDto,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-    @Query('sortBy') sortBy?: string,
-    @Query('order') order?: string,
   ) {
     const query = new GetBooksQuery(
-      Number(page),
-      Number(limit),
+      filter.page,
+      filter.limit,
       filter.title,
       filter.authorId,
       filter.genres,
@@ -119,8 +94,8 @@ export class BooksController {
       filter.status,
       filter.search,
       filter.publishedYear,
-      sortBy as any,
-      order as any
+      filter.sortBy as any,
+      filter.order as any
     );
 
     const result = await this.getBooksUseCase.execute(query);
@@ -132,31 +107,14 @@ export class BooksController {
     };
   }
 
-  /**
-   * GET /books - Get public books (browse & search)
-   */
   @Public()
   @Get()
-  @ApiOperation({ summary: 'Get public books (browse & search)' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'genres', required: false, type: String })
-  @ApiQuery({ name: 'tags', required: false, type: String })
-  @ApiQuery({ name: 'author', required: false, type: String })
-  @ApiQuery({ name: 'status', required: false, type: String })
-  @ApiQuery({ name: 'sortBy', required: false, type: String })
-  @ApiQuery({ name: 'order', required: false, type: String })
   async findAll(
     @Query() filter: FilterBookDto,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-    @Query('sortBy') sortBy?: string,
-    @Query('order') order?: string,
   ) {
     const query = new GetBooksQuery(
-      Number(page),
-      Number(limit),
+      filter.page,
+      filter.limit,
       filter.title,
       filter.authorId,
       filter.genres,
@@ -164,8 +122,8 @@ export class BooksController {
       filter.status,
       filter.search,
       filter.publishedYear,
-      sortBy as any,
-      order as any
+      filter.sortBy as any,
+      filter.order as any
     );
 
     const result = await this.getBooksUseCase.execute(query);
@@ -177,15 +135,10 @@ export class BooksController {
     };
   }
 
-  /**
-   * GET /books/:slug - Get book by Slug
-   */
   @Get(':slug')
   @Public()
-  @ApiOperation({ summary: 'Get book by Slug' })
-  @ApiParam({ name: 'slug', description: 'Book Slug' })
   async findOne(@Param('slug') slug: string) {
-    const query = new GetBookBySlugQuery(slug); // Use Query object
+    const query = new GetBookBySlugQuery(slug);
     const book = await this.getBookBySlugUseCase.execute(query);
 
     return {
@@ -194,13 +147,37 @@ export class BooksController {
     };
   }
 
-  /**
-   * GET /books/id/:id - Get book by ID
-   */
+  @Patch(':slug/like')
+  @RequireAuth()
+  async toggleLike(
+    @Param('slug') slug: string,
+    @Req() req: Request & { user: { id: string } }
+  ) {
+    const book = await this.getBookBySlugUseCase.execute(new GetBookBySlugQuery(slug));
+
+    const result = await this.toggleLikeUseCase.execute({
+      userId: req.user.id,
+      targetId: book.id,
+      targetType: TargetType.BOOK,
+    });
+
+    const likesCount = await this.getLikeCountUseCase.execute({
+      targetId: book.id,
+      targetType: TargetType.BOOK,
+    });
+
+    return {
+      message: result.isLiked ? 'Liked successfully' : 'Unliked successfully',
+      data: {
+        slug: book.slug,
+        isLiked: result.isLiked,
+        likes: likesCount.count,
+      },
+    };
+  }
+
   @Get('id/:id')
   @Public()
-  @ApiOperation({ summary: 'Get book by ID' })
-  @ApiParam({ name: 'id', description: 'Book ID' })
   async findOneById(@Param('id') id: string) {
     const query = new GetBookByIdQuery(id);
     const book = await this.getBookByIdUseCase.execute(query);
@@ -211,17 +188,9 @@ export class BooksController {
     };
   }
 
-  /**
-   * PUT /books/:id - Update book (admin only)
-   */
   @Put(':id')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FileInterceptor('coverUrl'))
-  @ApiOperation({ summary: 'Update book' })
-  @ApiParam({ name: 'id', description: 'Book ID' })
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: UpdateBookDto })
+  @RequireAuth('admin')
+  @ApiFileUpload('coverUrl', UpdateBookDto)
   async update(
     @Param('id') id: string,
     @Body() updateBookDto: UpdateBookDto,
@@ -246,14 +215,8 @@ export class BooksController {
     };
   }
 
-  /**
-   * DELETE /books/:id - Delete book (admin only)
-   */
   @Delete(':id')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Delete book' })
-  @ApiParam({ name: 'id', description: 'Book ID' })
+  @RequireAuth('admin')
   async remove(@Param('id') id: string) {
     const command = new DeleteBookCommand(id);
     await this.deleteBookUseCase.execute(command);

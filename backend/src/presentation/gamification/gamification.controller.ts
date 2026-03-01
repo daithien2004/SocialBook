@@ -6,11 +6,9 @@ import {
   Req,
   Query,
   UseGuards,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiTags, ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -33,9 +31,6 @@ export class GamificationController {
 
   @Post('record-reading')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Record reading activity and award XP' })
-  @ApiBody({ type: RecordReadingDto })
   async recordReading(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: RecordReadingDto,
@@ -57,8 +52,6 @@ export class GamificationController {
 
   @Get('stats')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get gamification stats for current user' })
   async getMyStats(@Req() req: Request & { user: { id: string } }) {
     const query = new GetGamificationStatsQuery(req.user.id);
     const stats = await this.getGamificationStatsUseCase.execute(query);
@@ -71,9 +64,6 @@ export class GamificationController {
 
   @Get('stats/:userId')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get gamification stats for a user' })
-  @ApiQuery({ name: 'userId', description: 'User ID' })
   async getUserStats(@Query('userId') userId: string) {
     const query = new GetGamificationStatsQuery(userId);
     const stats = await this.getGamificationStatsUseCase.execute(query);
@@ -86,8 +76,6 @@ export class GamificationController {
 
   @Get('global-stats')
   @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get global gamification statistics' })
   async getGlobalStats() {
     const query = new GetGamificationStatsQuery();
     const stats = await this.getGamificationStatsUseCase.execute(query);

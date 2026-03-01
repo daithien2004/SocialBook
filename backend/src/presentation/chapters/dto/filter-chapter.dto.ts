@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, IsMongoId, IsNumber } from 'class-validator';
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
-export class FilterChapterDto {
+export class FilterChapterDto extends PaginationQueryDto {
   @ApiProperty({ example: 'Chapter 1', required: false })
   @IsOptional()
   @IsString()

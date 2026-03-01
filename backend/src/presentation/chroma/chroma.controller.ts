@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -34,8 +34,6 @@ export class ChromaController {
 
     @Public()
     @Post('search')
-    @ApiOperation({ summary: 'Search documents in vector store' })
-    @ApiBody({ type: SearchQueryDto })
     async search(@Body() searchQuery: SearchQueryDto) {
         const command = new SearchCommand(
             searchQuery.query,
@@ -57,8 +55,6 @@ export class ChromaController {
     @Roles('admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Post('index')
-    @ApiOperation({ summary: 'Index a single document' })
-    @ApiBody({ type: IndexDocumentDto })
     async indexDocument(@Body() indexDocumentDto: IndexDocumentDto) {
         const command = new IndexDocumentCommand(
             indexDocumentDto.contentId,
@@ -79,8 +75,6 @@ export class ChromaController {
     @Roles('admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Post('batch-index')
-    @ApiOperation({ summary: 'Index multiple documents' })
-    @ApiBody({ type: BatchIndexDto })
     async batchIndex(@Body() batchIndexDto: BatchIndexDto) {
         const command = new BatchIndexCommand(
             batchIndexDto.contentIds,
@@ -98,7 +92,6 @@ export class ChromaController {
 
     @Public()
     @Post('reindex-all')
-    @ApiOperation({ summary: 'Reindex all content types' })
     async reindexAll() {
         // This would need to be implemented to get all content IDs and batch index them
         // For now, return a placeholder response
@@ -116,7 +109,6 @@ export class ChromaController {
     @Roles('admin')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Post('clear')
-    @ApiOperation({ summary: 'Clear the entire vector collection' })
     async clearCollection() {
         const result = await this.clearCollectionUseCase.execute();
         
@@ -128,7 +120,6 @@ export class ChromaController {
 
     @Public()
     @Get('stats')
-    @ApiOperation({ summary: 'Get collection statistics' })
     async getStats() {
         const stats = await this.getCollectionStatsUseCase.execute();
         
@@ -140,7 +131,6 @@ export class ChromaController {
 
     @Public()
     @Get('health')
-    @ApiOperation({ summary: 'Check vector store health' })
     async health() {
         // Basic health check - could be expanded to test actual vector store connectivity
         return {
