@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ICommentRepository, CommentFilter } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { GetCommentsQuery } from './get-comments.query';
+import { CommentResult } from './get-comments.result';
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { CommentMapper } from '@/infrastructure/database/repositories/comments/comment.mapper';
 
 @Injectable()
 export class GetCommentsUseCase {
@@ -11,7 +14,7 @@ export class GetCommentsUseCase {
         private readonly commentRepository: ICommentRepository
     ) { }
 
-    async execute(query: GetCommentsQuery) {
+    async execute(query: GetCommentsQuery): Promise<PaginatedResult<CommentResult>> {
         try {
             let parentId: CommentId | null = null;
             if (query.parentId) {
@@ -41,7 +44,10 @@ export class GetCommentsUseCase {
 
             this.logger.log(`Retrieved ${result.data.length} comments for target ${query.targetId}`);
 
-            return result;
+            return {
+                data: result.data.map(entity => CommentMapper.toResult(entity)),
+                meta: result.meta,
+            };
         } catch (error) {
             this.logger.error(`Failed to get comments for target ${query.targetId}`, error);
             throw error;

@@ -26,7 +26,7 @@ import { CommentResponseDto, CommentStatsDto } from '@/presentation/comments/dto
 
 import { CreateCommentUseCase } from '@/application/comments/use-cases/create-comment/create-comment.use-case';
 import { GetCommentsUseCase } from '@/application/comments/use-cases/get-comments/get-comments.use-case';
-import { GetCommentCountRequest, GetCommentCountUseCase } from '@/application/comments/use-cases/get-comment-count/get-comment-count.use-case';
+import { GetCommentCountUseCase } from '@/application/comments/use-cases/get-comment-count/get-comment-count.use-case';
 import { UpdateCommentUseCase } from '@/application/comments/use-cases/update-comment/update-comment.use-case';
 import { DeleteCommentUseCase } from '@/application/comments/use-cases/delete-comment/delete-comment.use-case';
 import { ModerateCommentUseCase } from '@/application/comments/use-cases/moderate-comment/moderate-comment.use-case';
@@ -36,6 +36,7 @@ import { GetCommentsQuery } from '@/application/comments/use-cases/get-comments/
 import { UpdateCommentCommand } from '@/application/comments/use-cases/update-comment/update-comment.command';
 import { DeleteCommentCommand } from '@/application/comments/use-cases/delete-comment/delete-comment.command';
 import { ModerateCommentCommand } from '@/application/comments/use-cases/moderate-comment/moderate-comment.command';
+import { GetCommentCountQuery } from '@/application/comments/use-cases/get-comment-count/get-comment-count.query';
 
 @ApiTags('Comments')
 @Controller('comments')
@@ -89,7 +90,7 @@ export class CommentsController {
     return {
       message: 'Comments retrieved successfully',
       data: {
-        comments: result.data.map(comment => new CommentResponseDto(comment)),
+        comments: result.data,
         meta: result.meta,
       },
     };
@@ -102,7 +103,7 @@ export class CommentsController {
   @ApiQuery({ name: 'targetId', description: 'Target ID' })
   @ApiQuery({ name: 'targetType', description: 'Target type (book | chapter | post | author)' })
   async getCount(@Query() query: CommentCountDto) {
-    const countQuery = new GetCommentCountRequest(
+    const countQuery = new GetCommentCountQuery(
       query.targetId,
       query.targetType,
     );

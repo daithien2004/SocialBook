@@ -1,6 +1,7 @@
 import { Comment as CommentEntity } from '@/domain/comments/entities/comment.entity';
 import { CommentDocument } from '@/infrastructure/database/schemas/comment.schema';
 import { Types } from 'mongoose';
+import { CommentResult } from '@/application/comments/use-cases/get-comments/get-comments.result';
 
 interface CommentPersistence {
   userId: Types.ObjectId;
@@ -13,15 +14,11 @@ interface CommentPersistence {
 }
 
 export class CommentMapper {
-  static toDomain(document: CommentDocument | any): CommentEntity {
-    // Khi executeQuery dùng .populate('userId'), document.userId là object
-    // Khi không populate, document.userId là ObjectId/string
-    const isPopulated = document.userId && typeof document.userId === 'object'
-      && !document.userId.toHexString; // ObjectId có toHexString, populated object thì không
-
+  static toDomain(document: any): CommentEntity {
+    const isPopulated = document.userId && typeof document.userId === 'object' && !document.userId.toHexString;
     const userIdStr = isPopulated
-      ? (document.userId._id ?? document.userId.id)?.toString() || ''
-      : document.userId?.toString() || '';
+      ? document.userId._id?.toString() ?? ''
+      : document.userId?.toString() ?? '';
 
     const entity = CommentEntity.reconstitute({
       id: document._id.toString(),
@@ -39,7 +36,7 @@ export class CommentMapper {
     });
 
     if (isPopulated) {
-      (entity as any).__userInfo = {
+      (entity as any).userInfo = {
         id: userIdStr,
         name: document.userId.username || 'Unknown',
         image: document.userId.image || null,
@@ -47,6 +44,27 @@ export class CommentMapper {
     }
 
     return entity;
+  }
+
+  static toResult(entity: CommentEntity): CommentResult {
+    const userInfo = (entity as any).userInfo;
+    return {
+      id: entity.id.toString(),
+      content: entity.content.toString(),
+      targetId: entity.targetId.toString(),
+      targetType: entity.targetType.toString() as any,
+      parentId: entity.parentId?.toString() || null,
+      likesCount: entity.likesCount,
+      isFlagged: entity.isFlagged,
+      moderationStatus: entity.moderationStatus.toString() as any,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      user: {
+        id: userInfo?.id || entity.userId.toString(),
+        name: userInfo?.name || 'Unknown',
+        image: userInfo?.image || null,
+      },
+    };
   }
 
   static toPersistence(comment: CommentEntity): CommentPersistence {

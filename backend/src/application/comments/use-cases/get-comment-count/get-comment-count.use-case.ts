@@ -3,19 +3,8 @@ import { ICommentRepository } from '@/domain/comments/repositories/comment.repos
 import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
 import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
-
-
-export class GetCommentCountRequest {
-    constructor(
-        public readonly targetId: string,
-        public readonly targetType: 'book' | 'chapter' | 'post' | 'author',
-        public readonly parentId?: string | null,
-    ) { }
-}
-
-export interface GetCommentCountResponse {
-    count: number;
-}
+import { GetCommentCountQuery } from './get-comment-count.query';
+import { GetCommentCountResult } from './get-comment-count.result';
 
 @Injectable()
 export class GetCommentCountUseCase {
@@ -25,7 +14,7 @@ export class GetCommentCountUseCase {
         private readonly commentRepository: ICommentRepository
     ) { }
 
-    async execute(query: GetCommentCountRequest): Promise<GetCommentCountResponse> {
+    async execute(query: GetCommentCountQuery): Promise<GetCommentCountResult> {
         try {
             const targetId = TargetId.create(query.targetId);
             const targetType = CommentTargetType.create(query.targetType);
