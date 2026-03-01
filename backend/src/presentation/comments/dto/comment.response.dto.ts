@@ -2,7 +2,6 @@ import { Comment } from '@/domain/comments/entities/comment.entity';
 
 export class CommentResponseDto {
     id: string;
-    user: { id: string; name: string; image: string | null };
     targetType: string;
     targetId: string;
     parentId: string | null;
@@ -21,14 +20,6 @@ export class CommentResponseDto {
 
     constructor(comment: Comment) {
         this.id = comment.id.toString();
-
-        // __userInfo được gắn bởi CommentMapper khi userId đã được populate
-        const ui = (comment as any).__userInfo;
-        this.user = {
-            id: ui?.id || comment.userId.toString(),
-            name: ui?.name || 'Unknown',
-            image: ui?.image || null,
-        };
 
         this.targetType = comment.targetType.toString();
         this.targetId = comment.targetId.toString();
