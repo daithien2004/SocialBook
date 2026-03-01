@@ -59,7 +59,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     const { isAuthenticated } = useAppAuth();
 
     const { user } = useAppAuth();
-    const isOwner = comment.userId?.id === user?.id;
+    const isOwner = comment.user.id === user?.id;
 
     const [editComment, { isLoading: isEditingComment }] =
         useEditCommentMutation();
@@ -201,9 +201,9 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
         <div className="flex w-full items-start gap-3 group animate-in fade-in duration-300">
             {/* Avatar */}
             <Avatar className="mt-1 h-8 w-8 shrink-0 border border-border">
-                <AvatarImage src={comment.userId?.image} alt={comment.userId?.username} />
+                <AvatarImage src={comment.user.image} alt={comment.user.username} />
                 <AvatarFallback className="text-[10px] font-bold">
-                    {comment.userId?.username?.[0]?.toUpperCase() || '?'}
+                    {comment.user.username?.[0]?.toUpperCase() || '?'}
                 </AvatarFallback>
             </Avatar>
 
@@ -213,7 +213,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                     <div className="relative rounded-2xl bg-muted/50 px-3 py-2">
                         <div className="pr-6">
                             <span className="mb-0.5 block text-sm font-bold text-foreground">
-                                {comment.userId?.username}
+                                {comment.user.username}
                             </span>
 
                             {isEditing ? (
@@ -330,7 +330,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                             {isReplying && (
                                 <div className="flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
                                     <Input
-                                        placeholder={`Trả lời ${comment.userId?.username}...`}
+                                        placeholder={`Trả lời ${comment.user.username}...`}
                                         value={replyText}
                                         onChange={(e) => setReplyText(e.target.value)}
                                         onKeyDown={(e) => {

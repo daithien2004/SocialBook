@@ -24,6 +24,7 @@ import { CommentResponseDto, CommentStatsDto } from '@/presentation/comments/dto
 
 import { CreateCommentUseCase } from '@/application/comments/use-cases/create-comment/create-comment.use-case';
 import { GetCommentsUseCase } from '@/application/comments/use-cases/get-comments/get-comments.use-case';
+import { GetCommentCountUseCase } from '@/application/comments/use-cases/get-comment-count/get-comment-count.use-case';
 import { UpdateCommentUseCase } from '@/application/comments/use-cases/update-comment/update-comment.use-case';
 import { DeleteCommentUseCase } from '@/application/comments/use-cases/delete-comment/delete-comment.use-case';
 import { ModerateCommentUseCase } from '@/application/comments/use-cases/moderate-comment/moderate-comment.use-case';
@@ -33,6 +34,7 @@ import { GetCommentsQuery } from '@/application/comments/use-cases/get-comments/
 import { UpdateCommentCommand } from '@/application/comments/use-cases/update-comment/update-comment.command';
 import { DeleteCommentCommand } from '@/application/comments/use-cases/delete-comment/delete-comment.command';
 import { ModerateCommentCommand } from '@/application/comments/use-cases/moderate-comment/moderate-comment.command';
+import { GetCommentCountQuery } from '@/application/comments/use-cases/get-comment-count/get-comment-count.query';
 
 @ApiTags('Comments')
 @Controller('comments')
@@ -40,6 +42,7 @@ export class CommentsController {
   constructor(
     private readonly createCommentUseCase: CreateCommentUseCase,
     private readonly getCommentsUseCase: GetCommentsUseCase,
+    private readonly getCommentCountUseCase: GetCommentCountUseCase,
     private readonly updateCommentUseCase: UpdateCommentUseCase,
     private readonly deleteCommentUseCase: DeleteCommentUseCase,
     private readonly moderateCommentUseCase: ModerateCommentUseCase,
@@ -69,7 +72,6 @@ export class CommentsController {
   async getByTarget(@Query() query: GetCommentsDto) {
     const getQuery = new GetCommentsQuery(
       query.targetId,
-      query.targetType,
       query.parentId,
       query.page,
       query.limit,
@@ -83,16 +85,34 @@ export class CommentsController {
     return {
       message: 'Comments retrieved successfully',
       data: {
-        comments: result.data.map(comment => new CommentResponseDto(comment)),
+        comments: result.data,
         meta: result.meta,
       },
+    };
+  }
+
+  @Get('count')
+  @Public()
+  @ApiOperation({ summary: 'Get comment count for a target' })
+  @ApiQuery({ name: 'targetId', description: 'Target ID' })
+  @ApiQuery({ name: 'targetType', description: 'Target type (book | chapter | post | author)' })
+  async getCount(@Query() query: CommentCountDto) {
+    const countQuery = new GetCommentCountQuery(
+      query.targetId,
+      query.targetType,
+    );
+
+    const result = await this.getCommentCountUseCase.execute(countQuery);
+
+    return {
+      message: 'Comment count retrieved successfully',
+      data: result,
     };
   }
 
   @Get(':id')
   @Public()
   async getById(@Param('id') id: string) {
-    // This would need a GetCommentByIdUseCase to be implemented
     return {
       message: 'Get comment by ID not yet implemented',
       data: null,
@@ -153,16 +173,6 @@ export class CommentsController {
 
     return {
       message: `Comment ${dto.status} successfully`,
-    };
-  }
-
-  @Get('count')
-  @Public()
-  async getCount(@Query() query: CommentCountDto) {
-    // This would need a GetCommentCountUseCase to be implemented
-    return {
-      message: 'Get comment count not yet implemented',
-      data: { count: 0 },
     };
   }
 

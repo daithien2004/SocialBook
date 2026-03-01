@@ -64,7 +64,6 @@ export const authOptions: NextAuthOptions = {
             email: credentials?.email,
             password: credentials?.password,
           });
-
           const { user, accessToken, refreshToken } = res.data.data;
           if (user && accessToken && refreshToken) {
             return {

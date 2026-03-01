@@ -4,6 +4,7 @@ import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { Like } from '@/domain/likes/entities/like.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+import { Injectable } from '@nestjs/common';
 
 export interface ToggleLikeRequest {
     userId: string;
@@ -16,11 +17,12 @@ export interface ToggleLikeResponse {
     likeId: string;
 }
 
+@Injectable()
 export class ToggleLikeUseCase {
     constructor(
         private readonly likeRepository: ILikeRepository,
         private readonly idGenerator: IIdGenerator,
-    ) {}
+    ) { }
 
     async execute(request: ToggleLikeRequest): Promise<ToggleLikeResponse> {
         const userId = UserId.create(request.userId);
@@ -28,18 +30,18 @@ export class ToggleLikeUseCase {
 
         // Find existing like
         const existingLike = await this.likeRepository.findByUserAndTarget(
-            userId, 
-            targetId, 
+            userId,
+            targetId,
             request.targetType
         );
 
         if (existingLike) {
             // Unlike
-            existingLike.unlike();
+            existingLike.toggle();
             await this.likeRepository.save(existingLike);
-            
+
             return {
-                isLiked: false,
+                isLiked: existingLike.status,
                 likeId: existingLike.id
             };
         } else {
@@ -51,9 +53,9 @@ export class ToggleLikeUseCase {
                 targetType: request.targetType,
                 status: true
             });
-            
+
             await this.likeRepository.save(newLike);
-            
+
             return {
                 isLiked: true,
                 likeId: newLike.id

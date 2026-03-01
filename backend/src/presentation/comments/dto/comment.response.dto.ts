@@ -2,7 +2,6 @@ import { Comment } from '@/domain/comments/entities/comment.entity';
 
 export class CommentResponseDto {
     id: string;
-    userId: string;
     targetType: string;
     targetId: string;
     parentId: string | null;
@@ -21,7 +20,7 @@ export class CommentResponseDto {
 
     constructor(comment: Comment) {
         this.id = comment.id.toString();
-        this.userId = comment.userId.toString();
+
         this.targetType = comment.targetType.toString();
         this.targetId = comment.targetId.toString();
         this.parentId = comment.parentId?.toString() || null;
@@ -64,6 +63,6 @@ export class CommentStatsDto {
         public rejectedComments: number,
         public flaggedComments: number,
         public commentsByType: Record<string, number>
-    ) {}
+    ) { }
 }
 

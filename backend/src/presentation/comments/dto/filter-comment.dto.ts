@@ -6,7 +6,6 @@ import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 export class FilterCommentDto extends PaginationQueryDto {
     @ApiPropertyOptional({ description: 'User ID filter' })
     @IsOptional()
-    @IsMongoId()
     userId?: string;
 
     @ApiPropertyOptional({ enum: TargetTypeEnum, description: 'Target type filter' })
@@ -16,12 +15,11 @@ export class FilterCommentDto extends PaginationQueryDto {
 
     @ApiPropertyOptional({ description: 'Target ID filter' })
     @IsOptional()
-    @IsMongoId()
+
     targetId?: string;
 
     @ApiPropertyOptional({ description: 'Parent comment ID filter' })
     @IsOptional()
-    @IsMongoId()
     parentId?: string;
 
     @ApiPropertyOptional({ description: 'Is flagged filter' })
@@ -50,22 +48,34 @@ export class FilterCommentDto extends PaginationQueryDto {
     dateTo?: string;
 }
 
-export class GetCommentsDto extends PaginationQueryDto {
-    @ApiProperty({ description: 'Target ID' })
-    @IsMongoId()
+import { Type } from 'class-transformer';
+
+export class GetCommentsDto {
+
     targetId: string;
 
-    @ApiProperty({ enum: TargetTypeEnum, description: 'Target type' })
-    @IsEnum(TargetTypeEnum)
-    targetType: TargetTypeEnum;
-
-    @ApiPropertyOptional({ description: 'Parent comment ID' })
     @IsOptional()
-    @IsMongoId()
     parentId?: string | null;
 
-    @ApiPropertyOptional({ description: 'Cursor for pagination' })
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    page?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    limit?: number;
+
     @IsOptional()
     @IsString()
     cursor?: string;
+
+    @IsOptional()
+    @IsString()
+    sortBy?: string;
+
+    @IsOptional()
+    @IsString()
+    order?: 'asc' | 'desc';
 }
