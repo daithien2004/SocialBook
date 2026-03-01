@@ -10,6 +10,7 @@ import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
 import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { CommentMapper } from './comment.mapper';
+import { CommentModel } from '@/domain/comments/read-models/comment-model';
 
 @Injectable()
 export class CommentRepository implements ICommentRepository {
@@ -28,7 +29,7 @@ export class CommentRepository implements ICommentRepository {
         parentId?: CommentId | null,
         pagination?: PaginationOptions,
         sort?: SortOptions
-    ): Promise<PaginatedResult<CommentEntity>> {
+    ): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType: targetType.toString(),
@@ -48,7 +49,7 @@ export class CommentRepository implements ICommentRepository {
         userId: UserId,
         pagination?: PaginationOptions,
         sort?: SortOptions
-    ): Promise<PaginatedResult<CommentEntity>> {
+    ): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             userId: new Types.ObjectId(userId.toString()),
             isDeleted: false
@@ -61,7 +62,7 @@ export class CommentRepository implements ICommentRepository {
         parentId: CommentId,
         pagination?: PaginationOptions,
         sort?: SortOptions
-    ): Promise<PaginatedResult<CommentEntity>> {
+    ): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             parentId: new Types.ObjectId(parentId.toString()),
             isDeleted: false
@@ -75,7 +76,7 @@ export class CommentRepository implements ICommentRepository {
         targetType: CommentTargetType,
         pagination?: PaginationOptions,
         sort?: SortOptions
-    ): Promise<PaginatedResult<CommentEntity>> {
+    ): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType: targetType.toString(),
@@ -168,7 +169,7 @@ export class CommentRepository implements ICommentRepository {
         }).exec();
     }
 
-    async findFlagged(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
+    async findFlagged(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             isFlagged: true,
             isDeleted: false
@@ -182,7 +183,7 @@ export class CommentRepository implements ICommentRepository {
         return this.executeQuery(queryFilter, pagination, sortOptions);
     }
 
-    async findPendingModeration(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
+    async findPendingModeration(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             moderationStatus: 'pending',
             isDeleted: false
@@ -196,7 +197,7 @@ export class CommentRepository implements ICommentRepository {
         return this.executeQuery(queryFilter, pagination, sortOptions);
     }
 
-    async findRejected(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
+    async findRejected(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             moderationStatus: 'rejected',
             isDeleted: false
@@ -210,7 +211,7 @@ export class CommentRepository implements ICommentRepository {
         return this.executeQuery(queryFilter, pagination, sortOptions);
     }
 
-    async search(filter: CommentFilter, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<CommentEntity>> {
+    async search(filter: CommentFilter, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = { isDeleted: false };
 
         if (filter.userId) {
@@ -311,7 +312,7 @@ export class CommentRepository implements ICommentRepository {
         }).exec();
     }
 
-    async getRecentComments(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
+    async getRecentComments(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             moderationStatus: 'approved',
             isDeleted: false
@@ -325,7 +326,7 @@ export class CommentRepository implements ICommentRepository {
         return this.executeQuery(queryFilter, pagination, sortOptions);
     }
 
-    async getPopularComments(pagination?: PaginationOptions): Promise<PaginatedResult<CommentEntity>> {
+    async getPopularComments(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
         const queryFilter: FilterQuery<CommentDocument> = {
             moderationStatus: 'approved',
             isDeleted: false
@@ -371,7 +372,7 @@ export class CommentRepository implements ICommentRepository {
         filter: FilterQuery<CommentDocument>,
         pagination?: PaginationOptions,
         sort?: SortOptions,
-    ): Promise<PaginatedResult<CommentEntity>> {
+    ): Promise<PaginatedResult<CommentModel>> {
 
         const page = pagination?.page ?? 1;
         const limit = pagination?.limit ?? 10;
@@ -403,7 +404,23 @@ export class CommentRepository implements ICommentRepository {
         ]);
 
         return {
-            data: documents.map(doc => this.mapToEntity(doc)),
+            data: documents.map((doc: any): CommentModel => ({
+                id: doc._id.toString(),
+                content: doc.content,
+                targetId: doc.targetId.toString(),
+                targetType: doc.targetType,
+                parentId: doc.parentId ? doc.parentId.toString() : null,
+                likesCount: doc.likesCount,
+                isFlagged: doc.isFlagged,
+                moderationStatus: doc.moderationStatus,
+                createdAt: doc.createdAt,
+                updatedAt: doc.updatedAt,
+                user: {
+                    id: doc.userId._id.toString(),
+                    name: doc.userId.username,
+                    image: doc.userId.image,
+                },
+            })),
             meta: {
                 current: page,
                 pageSize: limit,

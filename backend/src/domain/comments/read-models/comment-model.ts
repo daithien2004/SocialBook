@@ -1,10 +1,9 @@
-export interface CommentUserResult {
+export interface UserSummary {
     id: string;
     name: string;
-    image: string | null;
+    image: string;
 }
-
-export interface CommentResult {
+export interface CommentModel {
     id: string;
     content: string;
     targetId: string;
@@ -15,5 +14,5 @@ export interface CommentResult {
     moderationStatus: string;
     createdAt: Date;
     updatedAt: Date;
-    user: CommentUserResult;
+    user: UserSummary;
 }
