@@ -40,6 +40,8 @@ import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-coun
 import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { BookId } from '@/domain/books/value-objects/book-id.vo';
 
 @ApiTags('Books')
 @Controller('books')
@@ -55,6 +57,7 @@ export class BooksController {
     private readonly getBookFiltersUseCase: GetBookFiltersUseCase,
     private readonly toggleLikeUseCase: ToggleLikeUseCase,
     private readonly getLikeCountUseCase: GetLikeCountUseCase,
+    private readonly bookRepository: IBookRepository,
   ) { }
 
   @Post()
@@ -169,12 +172,20 @@ export class BooksController {
     @Req() req: Request & { user: { id: string } }
   ) {
     const book = await this.getBookBySlugUseCase.execute(new GetBookBySlugQuery(slug));
+    const bookId = BookId.create(book.id);
 
     const result = await this.toggleLikeUseCase.execute({
       userId: req.user.id,
       targetId: book.id,
       targetType: TargetType.BOOK,
     });
+
+    // Sync book.likedBy array so isLiked reflects correctly on next GET /books/:slug
+    if (result.isLiked) {
+      await this.bookRepository.addLike(bookId, req.user.id);
+    } else {
+      await this.bookRepository.removeLike(bookId, req.user.id);
+    }
 
     const likesCount = await this.getLikeCountUseCase.execute({
       targetId: book.id,

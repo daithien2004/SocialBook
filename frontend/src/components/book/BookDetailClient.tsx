@@ -20,6 +20,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     book,
     isLoading,
     error,
+    isLiked,
     isLiking,
     isCreatingPost,
     handleToggleLike,
@@ -71,6 +72,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
           <BookHero
             book={book}
+            isLiked={isLiked}
             isLiking={isLiking}
             onToggleLike={handleToggleLike}
             onOpenLibrary={() => setLibraryModalOpen(true)}

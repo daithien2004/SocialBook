@@ -5,12 +5,20 @@ import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { getErrorMessage } from '@/lib/utils';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 export const useBookDetail = (bookSlug: string) => {
   const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });
+  const { user } = useAppAuth();
 
   const [likeBook, { isLoading: isLiking }] = useLikeBookMutation();
   const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
+
+  // Compute isLiked from the likedBy array + current user id
+  const isLiked = useMemo(() => {
+    if (!user?.id || !book?.likedBy) return false;
+    return book.likedBy.includes(user.id);
+  }, [book?.likedBy, user?.id]);
 
   const handleToggleLike = async () => {
     if (!book?.id) return;
@@ -40,7 +48,7 @@ export const useBookDetail = (bookSlug: string) => {
       } else {
         toast.success('Chia sẻ thành công!');
       }
-      return true; // Return true to signal success to modal
+      return true;
     } catch (err: any) {
       if (err?.status !== 401) {
         toast.error(getErrorMessage(err));
@@ -49,7 +57,6 @@ export const useBookDetail = (bookSlug: string) => {
     }
   };
 
-  // 4. Computed Values
   const defaultShareContent = useMemo(() => {
     if (!book || !book.title) return '';
     const authorName = book.authorId?.name || 'Không rõ';
@@ -69,6 +76,7 @@ ${description}
     book,
     isLoading,
     error,
+    isLiked,
     isLiking,
     isCreatingPost,
     handleToggleLike,

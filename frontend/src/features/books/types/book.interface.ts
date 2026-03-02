@@ -11,7 +11,7 @@ export interface Book {
   coverUrl: string;
   status: 'draft' | 'published' | 'completed';
   tags: string[];
-  isLiked: boolean;
+  likedBy: string[];
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
