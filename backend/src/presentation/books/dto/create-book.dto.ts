@@ -59,12 +59,12 @@ export class CreateBookDto {
 
   @ApiProperty({ example: ['fiction', 'classic'], isArray: true, required: false })
   @Transform(({ value }) => {
+    if (!value || (typeof value === 'string' && value.trim() === '')) return undefined;
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
-      // Nếu có dấu phẩy, split thành array
-      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value];
+      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value.trim()];
     }
-    return [];
+    return undefined;
   })
   @IsOptional()
   @IsArray()

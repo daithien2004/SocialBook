@@ -1,6 +1,6 @@
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Book as BookEntity } from '@/domain/books/entities/book.entity';
-import { BookFilter, IBookRepository, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
+import { BookFilter, BookFilters, IBookRepository, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
 import { AuthorId } from '@/domain/books/value-objects/author-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
@@ -342,6 +342,72 @@ export class BookRepository implements IBookRepository {
             return 0.6;
         }
         return 0.0;
+    }
+
+    async getFilters(): Promise<BookFilters> {
+        const [genresResult, tagsResult] = await Promise.all([
+            this.bookModel.aggregate([
+                { $match: { isDeleted: false, status: 'published' } },
+                { $unwind: '$genres' },
+                {
+                    $lookup: {
+                        from: 'genres',
+                        localField: 'genres',
+                        foreignField: '_id',
+                        as: 'genreInfo'
+                    }
+                },
+                { $unwind: '$genreInfo' },
+                {
+                    $group: {
+                        _id: '$genreInfo._id',
+                        name: { $first: '$genreInfo.name' },
+                        slug: { $first: '$genreInfo.slug' },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 20 },
+                {
+                    $project: {
+                        _id: 0,
+                        id: '$_id',
+                        name: 1,
+                        slug: 1,
+                        count: 1
+                    }
+                }
+            ]).exec(),
+            this.bookModel.aggregate([
+                { $match: { isDeleted: false, status: 'published' } },
+                { $unwind: '$tags' },
+                {
+                    $group: {
+                        _id: '$tags',
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 20 },
+                {
+                    $project: {
+                        _id: 0,
+                        name: '$_id',
+                        count: 1
+                    }
+                }
+            ]).exec()
+        ]);
+
+        return {
+            genres: genresResult.map(g => ({
+                id: g.id.toString(),
+                name: g.name,
+                slug: g.slug,
+                count: g.count
+            })),
+            tags: tagsResult
+        };
     }
 }
 

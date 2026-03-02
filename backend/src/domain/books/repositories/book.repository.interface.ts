@@ -26,6 +26,12 @@ export interface SortOptions {
     order?: 'asc' | 'desc';
 }
 
+export interface BookFilters {
+    genres: Array<{ id: string; name: string; slug: string; count: number }>;
+    tags: Array<{ name: string; count: number }>;
+}
+
+
 export abstract class IBookRepository {
     abstract findById(id: BookId): Promise<Book | null>;
     abstract findBySlug(slug: string): Promise<Book | null>;
@@ -68,4 +74,5 @@ export abstract class IBookRepository {
     abstract countByGenreName(): Promise<Array<{ genre: string; count: number }>>;
 
     abstract findByIds(ids: BookId[]): Promise<Book[]>;
+    abstract getFilters(): Promise<BookFilters>;
 }

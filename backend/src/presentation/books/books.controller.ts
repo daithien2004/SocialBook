@@ -36,6 +36,7 @@ import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-sl
 import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
 import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
+import { GetFiltersUseCase } from '@/application/books/use-cases/get-filters/get-filters.use-case';
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
@@ -51,6 +52,7 @@ export class BooksController {
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,
     private readonly getBookByIdUseCase: GetBookByIdUseCase,
+    private readonly getFiltersUseCase: GetFiltersUseCase,
   ) { }
 
   /**
@@ -174,6 +176,20 @@ export class BooksController {
       message: 'Lấy danh sách sách thành công',
       data: result.data.map(readModel => BookResponseDto.fromReadModel(readModel)),
       meta: result.meta,
+    };
+  }
+
+  /**
+   * GET /books/filters/all - Get book filters
+   */
+  @Public()
+  @Get('filters/all')
+  @ApiOperation({ summary: 'Get book filters' })
+  async getFilters() {
+    const data = await this.getFiltersUseCase.execute();
+    return {
+      message: 'Lấy filter thành công',
+      data,
     };
   }
 
