@@ -11,7 +11,12 @@ export const bookRelationApi = createApi({
       query: () => ({
         url: '/authors',
         method: 'GET',
+        params: { limit: 1000 },
       }),
+      transformResponse: (response: { data?: AuthorOption[] } | AuthorOption[]): AuthorOption[] => {
+        if (Array.isArray(response)) return response;
+        return (response as { data?: AuthorOption[] }).data ?? [];
+      },
       providesTags: ['Authors'],
     }),
 
@@ -19,7 +24,12 @@ export const bookRelationApi = createApi({
       query: () => ({
         url: '/genres',
         method: 'GET',
+        params: { limit: 1000 },
       }),
+      transformResponse: (response: { data?: GenreOption[] } | GenreOption[]): GenreOption[] => {
+        if (Array.isArray(response)) return response;
+        return (response as { data?: GenreOption[] }).data ?? [];
+      },
       providesTags: ['Genres'],
     }),
   }),

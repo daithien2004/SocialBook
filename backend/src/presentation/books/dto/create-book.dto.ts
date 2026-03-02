@@ -50,12 +50,12 @@ export class CreateBookDto {
   status?: 'draft' | 'published' | 'completed';
 
   @Transform(({ value }) => {
+    if (!value || (typeof value === 'string' && value.trim() === '')) return undefined;
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
-      // Nếu có dấu phẩy, split thành array
-      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value];
+      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value.trim()];
     }
-    return [];
+    return undefined;
   })
   @IsOptional()
   @IsArray()

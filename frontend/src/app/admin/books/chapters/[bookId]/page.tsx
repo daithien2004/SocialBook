@@ -324,12 +324,14 @@ export default function ChapterManagementPage() {
       // Note: The mutation parameter is named "bookSlug" but we're passing bookId
       // because the backend route expects an ObjectId, not a slug
       const result = await createChapter({
-        bookSlug: bookId, // This is actually bookId, not slug!
+        bookSlug: book?.slug || '',
         data: {
           title: newChapterTitle,
+          bookId: bookId,
           paragraphs: newChapterParagraphs.filter(p => p.content.trim()),
         },
       }).unwrap();
+
 
       console.log('Chapter created successfully:', result);
       setShowNewChapterForm(false);
@@ -349,12 +351,20 @@ export default function ChapterManagementPage() {
   // TTS handlers - NO hardcoded options to allow backend auto-detection
   const handleGenerateAudio = async (chapterId: string) => {
     try {
-      await generateChapterAudio({
+      const ttsResult = await generateChapterAudio({
         chapterId,
       }).unwrap();
       toast.success('Tạo audio thành công!');
-      // Refetch chapters to update TTS status and audio URL
-      await refetchChapters();
+
+      // Optimistic update: cập nhật ngay local state trước khi refetch
+      setChapters(prev => prev.map(ch =>
+        ch.id === chapterId
+          ? { ...ch, ttsStatus: 'completed' as const, audioUrl: ttsResult.audioUrl }
+          : ch
+      ));
+
+      // Refetch để đồng bộ với server (ttsApi và chaptersApi là 2 instance riêng)
+      refetchChaptersQuery();
     } catch (error: any) {
       console.error('Failed to generate audio:', error);
       toast.error(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
@@ -375,8 +385,11 @@ export default function ChapterManagementPage() {
         `Thành công: ${result.successful}/${result.total}\n` +
         `Thất bại: ${result.failed}`
       );
-      // Refetch chapters to update TTS status and audio URLs for all chapters
-      await refetchChapters();
+
+      // Refetch để lấy trạng thái mới nhất từ server
+      setPage(1);
+      setChapters([]);
+      refetchChaptersQuery();
     } catch (error: any) {
       console.error('Failed to generate all audio:', error);
       alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
@@ -415,12 +428,14 @@ export default function ChapterManagementPage() {
         }
 
         await createChapter({
-          bookSlug: book.slug, // Uses slug from UseParams, but ensure it matches API expectation (seems to use slug in URL)
+          bookSlug: book.slug,
           data: {
             title: chapter.title || `Chapter ${successCount + 1}`,
+            bookId: bookId,       // required by CreateChapterDto
             paragraphs: paragraphs,
           },
         }).unwrap();
+
         successCount++;
       } catch (error: any) {
         console.error(`Failed to import chapter ${chapter.title}:`, error);

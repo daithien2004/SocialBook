@@ -33,54 +33,78 @@ export class IntelligentSearchUseCase {
         try {
             const { query, page = 1, limit = 10, genres, sortBy = 'score', order = 'desc' } = queryDto;
             const q = query;
-            
+
             // AI Analysis (Optional/Mocked for now)
             const aiAnalysis = await this.analyzeQueryWithAI(q);
 
             // STEP 1: Semantic Search (Candidate Generation)
             const semanticCandidates = await this.semanticSearch(q);
-            
+
             const bookScoreMap = new Map<string, { score: number; matchType: string }>();
             semanticCandidates.forEach(c => bookScoreMap.set(c.id, { score: c.score * 50, matchType: 'semantic' }));
 
             // STEP 2 & 3: Keyword Search & Author Expansion (Simplified for now)
             // We can add author boosting if needed, but for now relying on semantic + filters.
-            
+
             let candidateIds = Array.from(bookScoreMap.keys());
-            if (candidateIds.length === 0) {
-                 // Fallback to basic search if no semantic results?
-                 // Or return empty.
-                 // For now, return empty.
-                 return { data: [], meta: { current: page, pageSize: limit, total: 0, totalPages: 0 } };
-            }
+            let isSemantic = candidateIds.length > 0;
 
             // STEP 4: Apply Filters (intersect with candidates)
             let genreIds: string[] = [];
             if (genres) {
-                 const slugs = genres.split(',');
-                 const genresFound = await this.genreRepository.findBySlugs(slugs);
-                 genreIds = genresFound.map(g => g.id.toString());
+                const slugs = genres.split(',');
+                const genresFound = await this.genreRepository.findBySlugs(slugs);
+                genreIds = genresFound.map(g => g.id.toString());
             } else if (aiAnalysis?.targetGenres) {
-                 for (const gName of aiAnalysis.targetGenres) {
-                      try {
-                          const gNameVO = GenreName.create(gName);
-                          const g = await this.genreRepository.findByName(gNameVO);
-                          if (g) genreIds.push(g.id.toString());
+                for (const gName of aiAnalysis.targetGenres) {
+                    try {
+                        const gNameVO = GenreName.create(gName);
+                        const g = await this.genreRepository.findByName(gNameVO);
+                        if (g) genreIds.push(g.id.toString());
                       } catch (e) {}
-                 }
+                }
             }
 
             // Fetch Full Book Data
-            const booksResult = await this.bookRepository.findAll({
-                ids: candidateIds,
-                genres: genreIds.length > 0 ? genreIds : undefined,
-                status: 'published'
-            }, { 
-                page: 1, 
-                limit: 1000 
-            });
+            let books: any[] = [];
+            if (isSemantic) {
+                const booksResult = await this.bookRepository.findAll({
+                    ids: candidateIds,
+                    genres: genreIds.length > 0 ? genreIds : undefined,
+                    status: 'published'
+                }, {
+                    page: 1,
+                    limit: 1000
+                });
+                books = booksResult.data;
+            } else {
+                // Fallback to basic search using $text or title regex
+                const booksResult = await this.bookRepository.findAll({
+                    title: q, // Also use title for regex search since text search might require exact keywords
+                    search: q ? `"${q}"` : undefined, // Enclose in quotes to match phrase via $text
+                    genres: genreIds.length > 0 ? genreIds : undefined,
+                    status: 'published'
+                }, {
+                    page: 1,
+                    limit: 1000
+                });
+                books = booksResult.data;
 
-            const books = booksResult.data;
+                // Fallback to simple title lookup if title query has issues
+                if (books.length === 0 && q) {
+                    const backupResult = await this.bookRepository.findAll({
+                        title: q, // simple regex search
+                        genres: genreIds.length > 0 ? genreIds : undefined,
+                        status: 'published'
+                    }, { page: 1, limit: 1000 });
+                    books = backupResult.data;
+                }
+
+                books.forEach((b, index) => bookScoreMap.set(b.id.toString(), {
+                    score: 50 - index * 0.1, // Basic score based on index 
+                    matchType: 'keyword'
+                }));
+            }
 
             // STEP 5: Enrich with Stats (Batch)
             const foundIds = books.map(b => b.id.toString());
@@ -94,7 +118,7 @@ export class IntelligentSearchUseCase {
                 const bid = book.id.toString();
                 const scoreData = bookScoreMap.get(bid);
                 const rStats = reviewStats.get(bid) || { rating: 0, count: 0 };
-                
+
                 return {
                     id: bid,
                     _id: bid,
@@ -110,12 +134,12 @@ export class IntelligentSearchUseCase {
                     updatedAt: book.updatedAt,
                     authorId: {
                         _id: book.authorId.toString(),
-                        name: (book as any).author?.name || 'Unknown', 
+                        name: (book as any).author?.name || 'Unknown',
                         avatar: (book as any).author?.avatar || undefined
                     },
                     genres: book.genres.map(g => ({
                         _id: g.toString(),
-                        name: (g as any).name || 'Unknown', 
+                        name: (g as any).name || 'Unknown',
                         slug: (g as any).slug || ''
                     })),
                     stats: {
@@ -129,7 +153,7 @@ export class IntelligentSearchUseCase {
                     matchType: scoreData?.matchType,
                 };
             });
-            
+
             const finalSort = sortBy === 'score' ? 'score' : sortBy;
             const sorted = this.sortBooks(searchResults, finalSort, order);
 
@@ -153,13 +177,13 @@ export class IntelligentSearchUseCase {
     }
 
     private async analyzeQueryWithAI(query: string): Promise<any> {
-        return null; 
+        return null;
     }
 
     private async semanticSearch(query: string): Promise<Array<{ id: string; score: number }>> {
-         try {
+        try {
             const embedding = await this.geminiService.embedText(query);
-            
+
             // Using VectorSearchQuery factory or constructor
             const searchQuery = VectorSearchQuery.create({
                 id: this.idGenerator.generate(),
@@ -174,13 +198,13 @@ export class IntelligentSearchUseCase {
             return results
                 .filter(r => r.document.metadata.type === 'book' || r.document.contentType.toString() === 'book')
                 .map(r => ({
-                    id: r.document.metadata.bookId || r.document.contentId, 
+                    id: r.document.metadata.bookId || r.document.contentId,
                     score: r.score
                 }));
-         } catch (e) {
-             this.logger.warn(`Semantic search failed: ${e.message}`);
-             return [];
-         }
+        } catch (e) {
+            this.logger.warn(`Semantic search failed: ${e.message}`);
+            return [];
+        }
     }
 
     private sortBooks(books: SearchResultBook[], sortBy: string, order: string): SearchResultBook[] {

@@ -7,6 +7,7 @@ import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ChapterTitle } from '@/domain/chapters/value-objects/chapter-title.vo';
 import { Chapter, ChapterDocument } from '@/infrastructure/database/schemas/chapter.schema';
+import { TextToSpeech, TextToSpeechDocument } from '@/infrastructure/database/schemas/text-to-speech.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';
@@ -20,6 +21,7 @@ export class ChapterRepository implements IChapterRepository {
     constructor(
         @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
         @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
+        @InjectModel(TextToSpeech.name) private readonly ttsModel: Model<TextToSpeechDocument>,
     ) { }
 
     async findById(id: ChapterId): Promise<ChapterEntity | null> {
@@ -155,27 +157,63 @@ export class ChapterRepository implements IChapterRepository {
             throw new Error('Book not found');
         }
 
-        const result = await this.findAll({ bookId: bookDocument._id.toString() }, pagination, sort);
+        const bookObjectId = bookDocument._id as Types.ObjectId;
+        const skip = (pagination.page - 1) * pagination.limit;
+        const sortField = sort?.sortBy || 'orderIndex';
+        const sortOrder: 1 | -1 = sort?.order === 'desc' ? -1 : 1;
+
+        const [countResult, chapterDocs] = await Promise.all([
+            this.chapterModel.countDocuments({ bookId: bookObjectId }).exec(),
+            this.chapterModel
+                .find({ bookId: bookObjectId })
+                .sort({ [sortField]: sortOrder })
+                .skip(skip)
+                .limit(pagination.limit)
+                .lean()
+                .exec() as unknown as RawChapterDocument[],
+        ]);
+
+        // Lấy tất cả ttsStatus cho các chapter trong 1 query
+        const chapterIds = chapterDocs.map(ch => ch._id);
+        const ttsDocs = await this.ttsModel
+            .find({ chapterId: { $in: chapterIds }, status: 'completed' })
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+
+        // Map chapterId -> TTS record mới nhất
+        const ttsMap = new Map<string, { audioUrl?: string }>();
+        for (const tts of ttsDocs) {
+            const key = tts.chapterId.toString();
+            if (!ttsMap.has(key)) {
+                ttsMap.set(key, { audioUrl: tts.audioUrl });
+            }
+        }
 
         return {
             book: {
-                id: bookDocument._id.toString(),
+                id: bookObjectId.toString(),
                 title: bookDocument.title,
                 slug: bookDocument.slug,
                 coverUrl: bookDocument.coverUrl,
-                authorId: bookDocument.authorId?.toString() || ''
+                authorId: bookDocument.authorId?.toString() || '',
             },
-            chapters: result.data.map(chapter => ({
-                id: chapter.id.toString(),
-                title: chapter.title.toString(),
-                slug: chapter.slug,
-                orderIndex: chapter.orderIndex.getValue(),
-                viewsCount: chapter.viewsCount,
-                paragraphsCount: chapter.paragraphs ? chapter.paragraphs.length : 0,
-                createdAt: chapter.createdAt || new Date(),
-                updatedAt: chapter.updatedAt || new Date()
-            })),
-            total: result.meta.total
+            chapters: chapterDocs.map((doc) => {
+                const tts = ttsMap.get(doc._id.toString());
+                return {
+                    id: doc._id.toString(),
+                    title: doc.title,
+                    slug: doc.slug,
+                    orderIndex: doc.orderIndex,
+                    viewsCount: doc.viewsCount || 0,
+                    paragraphsCount: (doc.paragraphs || []).length,
+                    createdAt: doc.createdAt,
+                    updatedAt: doc.updatedAt,
+                    ttsStatus: tts ? ('completed' as const) : undefined,
+                    audioUrl: tts?.audioUrl,
+                };
+            }),
+            total: countResult,
         };
     }
 
@@ -392,6 +430,18 @@ export class ChapterRepository implements IChapterRepository {
         await this.chapterModel.bulkWrite(bulkOps);
     }
 
+    async updateTtsStatus(
+        chapterId: string,
+        ttsStatus: 'pending' | 'processing' | 'completed' | 'failed',
+        audioUrl?: string
+    ): Promise<void> {
+        const update: Record<string, unknown> = { ttsStatus, updatedAt: new Date() };
+        if (audioUrl) {
+            update.audioUrl = audioUrl;
+        }
+        await this.chapterModel.findByIdAndUpdate(chapterId, update).exec();
+    }
+
     private mapToEntity(document: RawChapterDocument): ChapterEntity {
         return ChapterEntity.reconstitute({
             id: document._id.toString(),
@@ -406,6 +456,8 @@ export class ChapterRepository implements IChapterRepository {
             orderIndex: document.orderIndex || 0,
             createdAt: document.createdAt,
             updatedAt: document.updatedAt ?? new Date(),
+            ttsStatus: document.ttsStatus,
+            audioUrl: document.audioUrl,
         });
     }
 
@@ -420,6 +472,8 @@ export class ChapterRepository implements IChapterRepository {
             viewsCount: chapter.viewsCount,
             orderIndex: chapter.orderIndex.getValue(),
             updatedAt: chapter.updatedAt,
+            ttsStatus: chapter.ttsStatus,
+            audioUrl: chapter.audioUrl,
         };
     }
 }

@@ -21,7 +21,7 @@ export class GenerateChapterAudioUseCase {
         private readonly ttsProvider: ITextToSpeechProvider,
         private readonly chapterRepository: IChapterRepository,
         private readonly idGenerator: IIdGenerator,
-    ) {}
+    ) { }
 
     async execute(chapterId: string, options: GenerateAudioOptions = {}): Promise<any> {
         // 1. Validation (Optional, can rely on repository or value objects)
@@ -52,7 +52,9 @@ export class GenerateChapterAudioUseCase {
         if (!forceRegenerate) {
             const existing = await this.ttsRepository.findExisting(chapterId, language, voice);
             if (existing) {
-                return existing; // Return entity, mapper will handle presentation
+                // Sync ttsStatus back to chapter document (may have been missing before)
+                await this.chapterRepository.updateTtsStatus(chapterId, 'completed', existing.audioUrl);
+                return existing;
             }
         }
 
@@ -74,9 +76,8 @@ export class GenerateChapterAudioUseCase {
 
         try {
             // 7. Update to Processing
-            // savedTTS.props.status = TTSStatus.PROCESSING; // Direct update or via method?
-            // Usually we might just update DB state directly if entity doesn't track change sets deeply
             await this.ttsRepository.updateStatus(savedTTS.id!, TTSStatus.PROCESSING);
+            await this.chapterRepository.updateTtsStatus(chapterId, 'processing');
 
             // 8. Generate Audio
             const { audioUrl, duration } = await this.ttsProvider.generateAudio(text, {
@@ -89,12 +90,15 @@ export class GenerateChapterAudioUseCase {
             // 9. Update Success
             savedTTS.complete(audioUrl, format, duration);
             await this.ttsRepository.save(savedTTS);
+            // Also update the chapter document with ttsStatus and audioUrl
+            await this.chapterRepository.updateTtsStatus(chapterId, 'completed', audioUrl);
 
             return savedTTS;
         } catch (error) {
             // 10. Update Failure
             savedTTS.fail(error.message);
             await this.ttsRepository.save(savedTTS);
+            await this.chapterRepository.updateTtsStatus(chapterId, 'failed');
             throw new InternalServerErrorException(`Failed to generate audio: ${error.message}`);
         }
     }

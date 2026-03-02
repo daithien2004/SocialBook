@@ -7,6 +7,7 @@ import { DeleteBookUseCase } from './use-cases/delete-book/delete-book.use-case'
 import { GetBookByIdUseCase } from './use-cases/get-book-by-id/get-book-by-id.use-case';
 import { GetBookBySlugUseCase } from './use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { GetBooksUseCase } from './use-cases/get-books/get-books.use-case';
+import { GetFiltersUseCase } from './use-cases/get-filters/get-filters.use-case';
 import { GetBookFiltersUseCase } from './use-cases/get-book-filters/get-book-filters.use-case';
 import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case';
 
@@ -21,6 +22,7 @@ import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case'
     GetBookByIdUseCase,
     GetBookBySlugUseCase,
     GetBooksUseCase,
+    GetFiltersUseCase,
     GetBookFiltersUseCase,
     UpdateBookUseCase,
     BookViewedHandler,
@@ -31,6 +33,7 @@ import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case'
     GetBookByIdUseCase,
     GetBookBySlugUseCase,
     GetBooksUseCase,
+    GetFiltersUseCase,
     GetBookFiltersUseCase,
     UpdateBookUseCase,
   ],
