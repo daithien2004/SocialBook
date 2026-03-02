@@ -15,18 +15,14 @@ export class CreateCommentUseCase {
     constructor(
         private readonly commentRepository: ICommentRepository,
         private readonly idGenerator: IIdGenerator
-    ) {}
+    ) { }
 
     async execute(command: CreateCommentCommand): Promise<Comment> {
         try {
-            // Validate user ID
             const userId = UserId.create(command.userId);
-            
-            // Validate target
             const targetId = TargetId.create(command.targetId);
             const targetType = CommentTargetType.create(command.targetType);
-            
-            // Check if user has already commented on this target with similar content (optional duplicate check)
+
             const exists = await this.commentRepository.existsByUserAndTarget(
                 userId,
                 targetId,
@@ -38,18 +34,21 @@ export class CreateCommentUseCase {
                 throw new BadRequestException('You have already posted a similar comment on this content');
             }
 
-            // Create the comment
+            const { effectiveParentId, level } = await this.commentRepository.resolveParentId(
+                targetId,
+                targetType,
+                command.parentId,
+            );
+            console.log(effectiveParentId, level);
             const comment = Comment.create({
                 id: CommentId.create(this.idGenerator.generate()),
                 userId: command.userId,
                 targetType: command.targetType,
                 targetId: command.targetId,
                 content: command.content,
-                parentId: command.parentId || undefined
+                parentId: effectiveParentId ?? undefined,
             });
 
-
-            // Save to repository
             await this.commentRepository.save(comment);
 
             this.logger.log(`Comment created successfully: ${comment.id.toString()} by user ${command.userId}`);

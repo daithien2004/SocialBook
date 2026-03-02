@@ -40,8 +40,8 @@ export class Comment extends Entity<CommentId> {
         const targetType = CommentTargetType.create(props.targetType);
         const targetId = TargetId.create(props.targetId);
         const content = CommentContent.create(props.content);
-        const moderationStatus = props.moderationStatus ? 
-            ModerationStatus.create(props.moderationStatus) : 
+        const moderationStatus = props.moderationStatus ?
+            ModerationStatus.create(props.moderationStatus) :
             ModerationStatus.pending();
 
         return new Comment(
@@ -211,13 +211,13 @@ export class Comment extends Entity<CommentId> {
     }
 
     canBeEdited(userId: string): boolean {
-        return this._userId.toString() === userId && 
-               this._moderationStatus.isPending();
+        return this._userId.toString() === userId &&
+            this._moderationStatus.isPending();
     }
 
     canBeDeleted(userId: string): boolean {
-        return this._userId.toString() === userId || 
-               this._moderationStatus.isRejected();
+        return this._userId.toString() === userId ||
+            this._moderationStatus.isRejected();
     }
 
     // Static methods for common operations

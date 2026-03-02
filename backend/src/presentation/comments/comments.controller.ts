@@ -79,7 +79,6 @@ export class CommentsController {
       query.sortBy as any,
       query.order as any
     );
-
     const result = await this.getCommentsUseCase.execute(getQuery);
 
     return {
@@ -91,17 +90,14 @@ export class CommentsController {
     };
   }
 
-  @Get('count')
   @Public()
-  @ApiOperation({ summary: 'Get comment count for a target' })
-  @ApiQuery({ name: 'targetId', description: 'Target ID' })
-  @ApiQuery({ name: 'targetType', description: 'Target type (book | chapter | post | author)' })
+  @Get('count')
   async getCount(@Query() query: CommentCountDto) {
     const countQuery = new GetCommentCountQuery(
       query.targetId,
       query.targetType,
+      query.parentId,
     );
-
     const result = await this.getCommentCountUseCase.execute(countQuery);
 
     return {

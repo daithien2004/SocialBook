@@ -20,11 +20,14 @@ export class GetCommentCountUseCase {
             const targetType = CommentTargetType.create(query.targetType);
 
             let parentId: CommentId | null = null;
+            let count: number;
             if (query.parentId) {
                 parentId = CommentId.create(query.parentId);
+                count = await this.commentRepository.countByTarget(targetId, targetType, parentId);
             }
-
-            const count = await this.commentRepository.countByTarget(targetId, targetType, parentId);
+            else {
+                count = await this.commentRepository.countByTarget(targetId, targetType);
+            }
 
             this.logger.log(`Comment count for target ${query.targetId}: ${count}`);
 

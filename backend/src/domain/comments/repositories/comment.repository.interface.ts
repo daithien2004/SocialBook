@@ -5,12 +5,18 @@ import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { CommentTargetType } from '../value-objects/comment-target-type.vo';
 import { CommentModel } from '../read-models/comment-model';
+import { CommentDepth } from '../value-objects/comment-depth.vo';
+
+export interface ParentResolutionResult {
+    effectiveParentId: string | null;
+    level: CommentDepth;
+}
 
 export interface CommentFilter {
     userId?: string;
     targetType?: 'book' | 'chapter' | 'post' | 'author';
     targetId?: string;
-    parentId?: string;
+    parentId?: string | null;
     isFlagged?: boolean;
     moderationStatus?: 'pending' | 'approved' | 'rejected';
     search?: string;
@@ -104,6 +110,11 @@ export abstract class ICommentRepository {
     abstract batchDelete(ids: CommentId[]): Promise<void>;
     abstract batchModerate(ids: CommentId[], status: 'approved' | 'rejected', reason?: string): Promise<void>;
 
-    // Statistics
+    abstract resolveParentId(
+        targetId: TargetId,
+        targetType: CommentTargetType,
+        parentId?: string | null,
+    ): Promise<ParentResolutionResult>;
+
     abstract countTotal(): Promise<number>;
 }
