@@ -2,6 +2,7 @@ import { ILikeRepository } from '@/domain/likes/repositories/like.repository.int
 import { UserId } from '@/domain/likes/value-objects/user-id.vo';
 import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
+import { Injectable } from '@nestjs/common';
 
 export interface GetLikeStatusRequest {
     userId: string;
@@ -13,18 +14,19 @@ export interface GetLikeStatusResponse {
     isLiked: boolean;
 }
 
+@Injectable()
 export class GetLikeStatusUseCase {
     constructor(
         private readonly likeRepository: ILikeRepository
-    ) {}
+    ) { }
 
     async execute(request: GetLikeStatusRequest): Promise<GetLikeStatusResponse> {
         const userId = UserId.create(request.userId);
         const targetId = TargetId.create(request.targetId);
 
         const existingLike = await this.likeRepository.findByUserAndTarget(
-            userId, 
-            targetId, 
+            userId,
+            targetId,
             request.targetType
         );
 

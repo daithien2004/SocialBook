@@ -33,7 +33,6 @@ const ListComments: React.FC<ListCommentsProps> = (props) => {
     fetchComments,
     { data, isLoading, isError, isFetching, isUninitialized },
   ] = useLazyGetCommentsByTargetQuery();
-
   const isFirstLoading = isLoading || (isFetching && isUninitialized);
 
   // --- Logic Style động theo Theme ---
@@ -54,8 +53,8 @@ const ListComments: React.FC<ListCommentsProps> = (props) => {
   }, [isCommentOpen, targetId, parentId, fetchComments]);
 
   useEffect(() => {
-    if (data?.items) {
-      setAllComments(data.items);
+    if (data?.comments) {
+      setAllComments(data.comments);
       setCursor(data.nextCursor ?? undefined);
     }
   }, [data]);

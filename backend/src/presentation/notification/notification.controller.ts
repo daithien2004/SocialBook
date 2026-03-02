@@ -2,8 +2,6 @@ import {
     Body,
     Controller,
     Get,
-    HttpCode,
-    HttpStatus,
     Param,
     Patch,
     Post,
@@ -11,7 +9,7 @@ import {
     Req,
     UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -27,6 +25,7 @@ import { MarkNotificationReadUseCase } from '@/application/notifications/use-cas
 import { MarkNotificationReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.command';
 
 import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
+import { FilterNotificationDto } from '@/presentation/notification/dto/filter-notification.dto';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()
@@ -40,23 +39,15 @@ export class NotificationController {
     ) { }
 
     @Get()
-    @ApiOperation({ summary: 'Get my notifications' })
-    @ApiQuery({ name: 'page', required: false, type: Number })
-    @ApiQuery({ name: 'limit', required: false, type: Number })
-    @ApiQuery({ name: 'isRead', required: false, type: Boolean })
-    @HttpCode(HttpStatus.OK)
     async getMyNotifications(
         @Req() req: Request & { user: { id: string } },
-        @Query('page') page: string = '1',
-        @Query('limit') limit: string = '10',
-        @Query('isRead') isRead?: string,
+        @Query() filter: FilterNotificationDto,
     ) {
-        const isReadBool = isRead === 'true' ? true : isRead === 'false' ? false : undefined;
         const query = new GetUserNotificationsQuery(
             req.user.id,
-            Number(page),
-            Number(limit),
-            isReadBool
+            filter.page,
+            filter.limit,
+            filter.isRead
         );
 
         const result = await this.getUserNotificationsUseCase.execute(query);
@@ -68,9 +59,6 @@ export class NotificationController {
     }
 
     @Patch(':id/read')
-    @ApiOperation({ summary: 'Mark notification as read' })
-    @ApiParam({ name: 'id', type: 'string' })
-    @HttpCode(HttpStatus.OK)
     async markRead(
         @Param('id') id: string,
         @Req() req: Request & { user: { id: string } }
@@ -86,9 +74,6 @@ export class NotificationController {
     @Post()
     @Roles('admin')
     @UseGuards(RolesGuard)
-    @ApiOperation({ summary: 'Create notification (Admin)' })
-    @ApiBody({ type: CreateNotificationDto })
-    @HttpCode(HttpStatus.CREATED)
     async create(
         @Body() dto: CreateNotificationDto
     ) {

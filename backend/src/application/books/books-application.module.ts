@@ -8,6 +8,7 @@ import { GetBookByIdUseCase } from './use-cases/get-book-by-id/get-book-by-id.us
 import { GetBookBySlugUseCase } from './use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { GetBooksUseCase } from './use-cases/get-books/get-books.use-case';
 import { GetFiltersUseCase } from './use-cases/get-filters/get-filters.use-case';
+import { GetBookFiltersUseCase } from './use-cases/get-book-filters/get-book-filters.use-case';
 import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case';
 
 @Module({
@@ -22,6 +23,7 @@ import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case'
     GetBookBySlugUseCase,
     GetBooksUseCase,
     GetFiltersUseCase,
+    GetBookFiltersUseCase,
     UpdateBookUseCase,
     BookViewedHandler,
   ],
@@ -32,6 +34,7 @@ import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case'
     GetBookBySlugUseCase,
     GetBooksUseCase,
     GetFiltersUseCase,
+    GetBookFiltersUseCase,
     UpdateBookUseCase,
   ],
 })

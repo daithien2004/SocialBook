@@ -5,8 +5,6 @@ import {
   Delete,
   Body,
   Param,
-  HttpCode,
-  HttpStatus,
   Query,
   UseGuards,
   Inject,
@@ -41,7 +39,6 @@ export class TextToSpeechController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('chapter/:chapterId')
-  @HttpCode(HttpStatus.OK)
   async generateChapterAudio(
     @Param('chapterId') chapterId: string,
     @Body() dto: GenerateChapterAudioDto,
@@ -59,7 +56,6 @@ export class TextToSpeechController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post('book/:bookId/all')
-  @HttpCode(HttpStatus.OK)
   async generateBookAudio(
     @Param('bookId') bookId: string,
     @Body() dto: GenerateBookAudioDto,
@@ -111,7 +107,6 @@ export class TextToSpeechController {
    */
   @Public()
   @Post('chapter/:chapterId/play')
-  @HttpCode(HttpStatus.OK)
   async incrementPlayCount(@Param('chapterId') chapterId: string) {
     await this.incrementPlayCountUseCase.execute(chapterId);
     return {

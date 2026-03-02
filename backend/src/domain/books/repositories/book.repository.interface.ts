@@ -71,7 +71,8 @@ export abstract class IBookRepository {
     abstract countByStatus(status: 'draft' | 'published' | 'completed'): Promise<number>;
 
     abstract countTotal(): Promise<number>;
-    abstract countByGenreName(): Promise<Array<{ genre: string; count: number }>>;
+    abstract countByGenreName(): Promise<Array<{ id: string; name: string; slug: string; count: number }>>;
+    abstract countByTags(): Promise<Array<{ name: string; count: number }>>;
 
     abstract findByIds(ids: BookId[]): Promise<Book[]>;
     abstract getFilters(): Promise<BookFilters>;

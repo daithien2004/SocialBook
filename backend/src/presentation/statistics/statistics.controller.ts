@@ -2,13 +2,11 @@ import { LocationCheckService } from '@/infrastructure/external/location-check.s
 import {
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -36,9 +34,6 @@ export class StatisticsController {
   ) { }
 
   @Get('overview')
-  @ApiOperation({ summary: 'Get system overview statistics' })
-  @ApiResponse({ status: 200, description: 'Return system overview statistics' })
-  @HttpCode(HttpStatus.OK)
   async getOverview() {
     const data = await this.getOverviewStatsUseCase.execute();
     return {
@@ -48,9 +43,6 @@ export class StatisticsController {
   }
 
   @Get('users')
-  @ApiOperation({ summary: 'Get user statistics' })
-  @ApiResponse({ status: 200, description: 'Return user statistics' })
-  @HttpCode(HttpStatus.OK)
   async getUserStats() {
     const data = await this.getUserStatsUseCase.execute();
     return {
@@ -60,9 +52,6 @@ export class StatisticsController {
   }
 
   @Get('books')
-  @ApiOperation({ summary: 'Get book statistics' })
-  @ApiResponse({ status: 200, description: 'Return book statistics' })
-  @HttpCode(HttpStatus.OK)
   async getBookStats() {
     const data = await this.getBookStatsUseCase.execute();
     return {
@@ -72,11 +61,6 @@ export class StatisticsController {
   }
 
   @Get('growth')
-  @ApiOperation({ summary: 'Get growth metrics over time' })
-  @ApiResponse({ status: 200, description: 'Return growth metrics' })
-  @ApiQuery({ name: 'days', required: false, type: Number, description: 'Number of days to look back (default: 30)' })
-  @ApiQuery({ name: 'groupBy', required: false, enum: ['day', 'week', 'month'], description: 'Group by period (default: day)' })
-  @HttpCode(HttpStatus.OK)
   async getGrowth(
     @Query('days') days?: string,
     @Query('groupBy') groupBy?: string,
@@ -91,9 +75,6 @@ export class StatisticsController {
   }
 
   @Get('analytics/reading-heatmap')
-  @ApiOperation({ summary: 'Get reading heatmap data' })
-  @ApiResponse({ status: 200, description: 'Return reading heatmap data' })
-  @HttpCode(HttpStatus.OK)
   async getReadingHeatmap() {
     const data = await this.getEngagementStatsUseCase.getReadingHeatmap();
     return {
@@ -103,10 +84,6 @@ export class StatisticsController {
   }
 
   @Get('analytics/chapter-engagement')
-  @ApiOperation({ summary: 'Get chapter engagement data' })
-  @ApiResponse({ status: 200, description: 'Return chapter engagement data' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @HttpCode(HttpStatus.OK)
   async getChapterEngagement(@Query('limit') limit?: string) {
     const numLimit = limit ? parseInt(limit, 10) : 10;
     const data = await this.getEngagementStatsUseCase.getChapterEngagement(numLimit);
@@ -117,10 +94,6 @@ export class StatisticsController {
   }
 
   @Get('analytics/reading-speed')
-  @ApiOperation({ summary: 'Get reading speed data' })
-  @ApiResponse({ status: 200, description: 'Return reading speed data' })
-  @ApiQuery({ name: 'days', required: false, type: Number })
-  @HttpCode(HttpStatus.OK)
   async getReadingSpeed(@Query('days') days?: string) {
     const numDays = days ? parseInt(days, 10) : 30;
     const data = await this.getEngagementStatsUseCase.getReadingSpeed(numDays);
@@ -131,9 +104,6 @@ export class StatisticsController {
   }
 
   @Get('analytics/active-users')
-  @ApiOperation({ summary: 'Get real-time active users count' })
-  @ApiResponse({ status: 200, description: 'Return active users count' })
-  @HttpCode(HttpStatus.OK)
   async getActiveUsers() {
     const data = await this.getEngagementStatsUseCase.getActiveUsers();
     return {
@@ -143,9 +113,6 @@ export class StatisticsController {
   }
 
   @Get('analytics/geographic')
-  @ApiOperation({ summary: 'Get geographic distribution data' })
-  @ApiResponse({ status: 200, description: 'Return geographic distribution data' })
-  @HttpCode(HttpStatus.OK)
   async getGeographicDistribution() {
     const data = await this.getEngagementStatsUseCase.getGeographicDistribution();
     return {
@@ -155,7 +122,6 @@ export class StatisticsController {
   }
 
   @Get('check-locations')
-  @HttpCode(HttpStatus.OK)
   async checkLocations() {
     const result = await this.locationCheckService.checkUserLocations();
     return {
@@ -165,7 +131,6 @@ export class StatisticsController {
   }
 
   @Post('seed-locations')
-  @HttpCode(HttpStatus.OK)
   async seedLocations() {
     const result = await this.locationCheckService.seedLocations();
     return {
@@ -175,7 +140,6 @@ export class StatisticsController {
   }
 
   @Post('seed-reading-history')
-  @HttpCode(HttpStatus.OK)
   async seedReadingHistory(@Query('days') days?: string) {
     const numDays = days ? parseInt(days, 10) : 30;
     const result = await this.locationCheckService.seedReadingHistory(numDays);

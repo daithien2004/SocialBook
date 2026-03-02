@@ -15,7 +15,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-
 import { Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -25,6 +24,7 @@ import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response
 import { CreateChapterDto } from '@/presentation/chapters/dto/create-chapter.dto';
 import { FilterChapterDto } from '@/presentation/chapters/dto/filter-chapter.dto';
 import { UpdateChapterDto } from '@/presentation/chapters/dto/update-chapter.dto';
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 import { CreateChapterUseCase } from '@/application/chapters/use-cases/create-chapter/create-chapter.use-case';
 import { DeleteChapterUseCase } from '@/application/chapters/use-cases/delete-chapter/delete-chapter.use-case';
@@ -75,17 +75,13 @@ export class ChaptersController {
 
   @Public()
   @Get()
-  @ApiOperation({ summary: 'Get chapters by book slug' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getChapters(
     @Param('bookSlug') bookSlug: string,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '200',
+    @Query() filter: PaginationQueryDto,
   ) {
     const query = new GetChaptersQuery(
-      Number(page),
-      Number(limit),
+      filter.page,
+      filter.limit,
       undefined,
       undefined,
       bookSlug,
@@ -101,7 +97,6 @@ export class ChaptersController {
 
   @Public()
   @Get('all')
-  @ApiOperation({ summary: 'Get all chapters by book slug (no pagination)' })
   async getAllChapters(@Param('bookSlug') bookSlug: string) {
     const query = new GetChaptersQuery(1, 1000, undefined, undefined, bookSlug);
 
@@ -113,15 +108,10 @@ export class ChaptersController {
     };
   }
 
-  /**
-   * GET /books/:bookSlug/chapters/id/:chapterId - Get chapter by ID (with id/ prefix)
-   */
   @Public()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('id/:chapterId')
-  @ApiOperation({ summary: 'Get chapter by ID (with id/ prefix)' })
-  @ApiParam({ name: 'chapterId', description: 'Chapter ID' })
   async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
     const query = new GetChapterByIdQuery(chapterId);
     const chapter = await this.getChapterByIdUseCase.execute(query);
@@ -131,14 +121,8 @@ export class ChaptersController {
     };
   }
 
-  /**
-   * GET /books/:bookSlug/chapters/:chapterId - Get chapter by ID
-   */
   @Public()
   @Get(':chapterSlug')
-  @ApiOperation({ summary: 'Get chapter by slug' })
-  @ApiParam({ name: 'chapterSlug', description: 'Chapter slug' })
-  @ApiParam({ name: 'bookSlug', description: 'Book slug' })
   async getChapterBySlug(@Param('chapterSlug') chapterSlug: string, @Param('bookSlug') bookSlug: string) {
     const query = new GetChapterBySlugQuery(chapterSlug, bookSlug);
     const result = await this.getChapterBySlugUseCase.execute(query);
@@ -151,9 +135,6 @@ export class ChaptersController {
   @Post()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new chapter' })
-  @ApiBody({ type: CreateChapterDto })
   async create(@Body() createChapterDto: CreateChapterDto) {
     const command = new CreateChapterCommand(
       createChapterDto.title,
@@ -173,9 +154,6 @@ export class ChaptersController {
   @Put(':chapterId')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Update chapter' })
-  @ApiParam({ name: 'chapterId', description: 'Chapter ID' })
-  @ApiBody({ type: UpdateChapterDto })
   async update(
     @Param('chapterId') chapterId: string,
     @Body() updateChapterDto: UpdateChapterDto
@@ -199,8 +177,6 @@ export class ChaptersController {
   @Delete(':chapterId')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Delete chapter' })
-  @ApiParam({ name: 'chapterId', description: 'Chapter ID' })
   async remove(@Param('chapterId') chapterId: string) {
     const command = new DeleteChapterCommand(chapterId);
     await this.deleteChapterUseCase.execute(command);
@@ -212,31 +188,20 @@ export class ChaptersController {
   @Get()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiOperation({ summary: 'Get all chapters with filtering (admin)' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'title', required: false, type: String })
-  @ApiQuery({ name: 'bookId', required: false, type: String })
-  @ApiQuery({ name: 'sortBy', required: false, type: String })
-  @ApiQuery({ name: 'order', required: false, type: String })
   async getAllChaptersAdmin(
     @Query() filter: FilterChapterDto,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-    @Query('sortBy') sortBy?: string,
-    @Query('order') order?: string,
   ) {
     const query = new GetChaptersQuery(
-      Number(page),
-      Number(limit),
+      filter.page,
+      filter.limit,
       filter.title,
       filter.bookId,
       undefined,
       filter.orderIndex,
       filter.minWordCount,
       filter.maxWordCount,
-      sortBy as any,
-      order as any
+      filter.sortBy as any,
+      filter.order as any
     );
 
     const result = await this.getChaptersUseCase.execute(query);

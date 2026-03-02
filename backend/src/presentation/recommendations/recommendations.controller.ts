@@ -1,5 +1,6 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { GetRecommendationsDto } from './dto/get-recommendations.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { GetPersonalizedRecommendationsUseCase } from '@/application/recommendations/use-cases/get-personalized-recommendations.use-case';
 
@@ -13,16 +14,12 @@ export class RecommendationsController {
   ) {}
 
   @Get('personalized')
-  @ApiOperation({ summary: 'Get personalized book recommendations' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
   async getPersonalizedRecommendations(
     @Req() req: any,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query() filter: GetRecommendationsDto,
   ) {
     const userId = req.user.id;
-    const result = await this.getPersonalizedRecommendationsUseCase.execute(userId, page, limit);
+    const result = await this.getPersonalizedRecommendationsUseCase.execute(userId, filter.page, filter.limit);
 
     return {
         message: 'Recommendations generated successfully',
