@@ -73,4 +73,9 @@ export abstract class IChapterRepository {
     abstract reorderChapters(bookId: BookId, chapterOrders: Array<{ id: string; orderIndex: number }>): Promise<void>;
     abstract countChaptersForBooks(bookIds: string[]): Promise<Map<string, number>>;
     abstract countTotal(): Promise<number>;
+    abstract updateTtsStatus(
+        chapterId: string,
+        ttsStatus: 'pending' | 'processing' | 'completed' | 'failed',
+        audioUrl?: string
+    ): Promise<void>;
 }

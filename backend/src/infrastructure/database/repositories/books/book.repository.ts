@@ -1,6 +1,6 @@
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Book as BookEntity } from '@/domain/books/entities/book.entity';
-import { BookFilter, IBookRepository, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
+import { BookFilter, BookFilters, IBookRepository, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
 import { AuthorId } from '@/domain/books/value-objects/author-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
@@ -11,6 +11,7 @@ import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
 import { BookMapper } from './book.mapper';
 import { RawBookDocument } from './book.raw-types';
+import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 
 @Injectable()
 export class BookRepository implements IBookRepository {
@@ -93,6 +94,69 @@ export class BookRepository implements IBookRepository {
         };
     }
 
+    async findAllList(filter: BookFilter, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<BookListReadModel>> {
+        const queryFilter = this.buildQueryFilter(filter);
+        const skip = (pagination.page - 1) * pagination.limit;
+        const total = await this.bookModel.countDocuments(queryFilter).exec();
+
+        const sortStage: Record<string, 1 | -1> = sort?.sortBy
+            ? { [sort.sortBy]: (sort.order === 'desc' ? -1 : 1) as 1 | -1 }
+            : { createdAt: -1 };
+
+        const documents = await this.bookModel.aggregate([
+            { $match: queryFilter },
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: pagination.limit },
+            {
+                $lookup: {
+                    from: 'genres',
+                    localField: 'genres',
+                    foreignField: '_id',
+                    as: 'genres',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'authors',
+                    localField: 'authorId',
+                    foreignField: '_id',
+                    pipeline: [{ $project: { _id: 1, name: 1 } }],
+                    as: '_authorArr',
+                },
+            },
+            {
+                $addFields: {
+                    authorId: { $arrayElemAt: ['$_authorArr', 0] },
+                },
+            },
+            {
+                $lookup: {
+                    from: 'chapters',
+                    localField: '_id',
+                    foreignField: 'bookId',
+                    pipeline: [{ $project: { _id: 1 } }],
+                    as: '_chapters',
+                },
+            },
+            {
+                $addFields: {
+                    chapterCount: { $size: '$_chapters' },
+                },
+            },
+            { $project: { _chapters: 0, _authorArr: 0 } },
+        ]).exec();
+
+        return {
+            data: documents.map(doc => BookMapper.toListReadModel(doc)),
+            meta: {
+                current: pagination.page,
+                pageSize: pagination.limit,
+                total,
+                totalPages: Math.ceil(total / pagination.limit),
+            },
+        };
+    }
 
     async findByAuthor(authorId: AuthorId, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<BookEntity>> {
         return this.findAll({ authorId: authorId.toString() }, pagination, sort);
@@ -304,6 +368,72 @@ export class BookRepository implements IBookRepository {
             return 0.6;
         }
         return 0.0;
+    }
+
+    async getFilters(): Promise<BookFilters> {
+        const [genresResult, tagsResult] = await Promise.all([
+            this.bookModel.aggregate([
+                { $match: { isDeleted: false, status: 'published' } },
+                { $unwind: '$genres' },
+                {
+                    $lookup: {
+                        from: 'genres',
+                        localField: 'genres',
+                        foreignField: '_id',
+                        as: 'genreInfo'
+                    }
+                },
+                { $unwind: '$genreInfo' },
+                {
+                    $group: {
+                        _id: '$genreInfo._id',
+                        name: { $first: '$genreInfo.name' },
+                        slug: { $first: '$genreInfo.slug' },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 20 },
+                {
+                    $project: {
+                        _id: 0,
+                        id: '$_id',
+                        name: 1,
+                        slug: 1,
+                        count: 1
+                    }
+                }
+            ]).exec(),
+            this.bookModel.aggregate([
+                { $match: { isDeleted: false, status: 'published' } },
+                { $unwind: '$tags' },
+                {
+                    $group: {
+                        _id: '$tags',
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 20 },
+                {
+                    $project: {
+                        _id: 0,
+                        name: '$_id',
+                        count: 1
+                    }
+                }
+            ]).exec()
+        ]);
+
+        return {
+            genres: genresResult.map(g => ({
+                id: g.id.toString(),
+                name: g.name,
+                slug: g.slug,
+                count: g.count
+            })),
+            tags: tagsResult
+        };
     }
 }
 

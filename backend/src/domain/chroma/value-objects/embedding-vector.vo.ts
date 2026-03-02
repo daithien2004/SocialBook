@@ -10,12 +10,7 @@ export class EmbeddingVector {
             throw new Error('Embedding vector must be an array');
         }
 
-        if (vector.length === 0) {
-            throw new Error('Embedding vector cannot be empty');
-        }
-
-        // Validate all elements are numbers
-        if (!vector.every(element => typeof element === 'number' && !isNaN(element))) {
+        if (vector.length > 0 && !vector.every(element => typeof element === 'number' && !isNaN(element))) {
             throw new Error('All elements in embedding vector must be valid numbers');
         }
 
@@ -56,8 +51,8 @@ export class EmbeddingVector {
     }
 
     calculateSimilarity(other: EmbeddingVector): number {
-        if (this.length !== other.length) {
-            throw new Error('Vectors must have the same length for similarity calculation');
+        if (this.length === 0 || other.length === 0 || this.length !== other.length) {
+            return 0;
         }
 
         let dotProduct = 0;

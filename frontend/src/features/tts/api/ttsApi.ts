@@ -42,7 +42,7 @@ export interface GenerateBookAudioResponse {
 export const ttsApi = createApi({
     reducerPath: 'ttsApi',
     baseQuery: axiosBaseQuery(),
-    tagTypes: ['TTS'],
+    tagTypes: ['TTS', 'Chapters'],
     endpoints: (builder) => ({
         // Generate audio for a single chapter
         generateChapterAudio: builder.mutation<
@@ -60,6 +60,7 @@ export const ttsApi = createApi({
                     return [
                         { type: 'TTS', id: chapterId },
                         { type: 'TTS', id: 'LIST' },
+                        { type: 'Chapters', id: 'LIST' },
                     ];
                 }
                 return [];
@@ -76,7 +77,10 @@ export const ttsApi = createApi({
                 method: 'POST',
                 body: options,
             }),
-            invalidatesTags: [{ type: 'TTS', id: 'LIST' }],
+            invalidatesTags: [
+                { type: 'TTS', id: 'LIST' },
+                { type: 'Chapters', id: 'LIST' },
+            ],
         }),
 
         // Get TTS audio by chapter ID

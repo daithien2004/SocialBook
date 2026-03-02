@@ -12,10 +12,11 @@ export class BookMapper {
     });
 
     const author = document.authorId as any;
-    const authorName = (typeof author === 'object' && author !== null && 'name' in author) ? author.name : undefined;
+    const authorName = (typeof author === 'object' && 'name' in author) ? author.name : undefined;
     const authorIdStr = (typeof author === 'object' && author !== null && '_id' in author)
       ? author._id.toString()
-      : (author ? author.toString() : '');
+      : (document.authorId ? document.authorId.toString() : '');
+
 
     return BookEntity.reconstitute({
       id: document._id.toString(),
@@ -39,10 +40,11 @@ export class BookMapper {
 
   static toListReadModel(document: RawBookDocument): BookListReadModel {
     const author = document.authorId as any;
-    const authorName = (typeof author === 'object' && author !== null && 'name' in author) ? author.name : undefined;
+    const authorName = (typeof author === 'object' && 'name' in author) ? author.name : undefined;
     const authorIdStr = (typeof author === 'object' && author !== null && '_id' in author)
       ? author._id.toString()
-      : (author ? author.toString() : '');
+      : (document.authorId ? document.authorId.toString() : '');
+
 
     return {
       id: document._id.toString(),
