@@ -44,6 +44,12 @@ export class CommentCountDto {
     @ApiProperty({ enum: TargetTypeEnum, description: 'Target type' })
     @IsEnum(TargetTypeEnum)
     targetType: TargetTypeEnum;
+
+    @ApiProperty({ description: 'Parent comment ID', required: false })
+    @IsOptional()
+    @ValidateIf((o) => o.parentId !== null)
+    @IsMongoId()
+    parentId?: string | null;
 }
 
 export class ModerateCommentDto {

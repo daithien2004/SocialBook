@@ -52,6 +52,7 @@ import { Type } from 'class-transformer';
 
 export class GetCommentsDto {
 
+    @IsString()
     targetId: string;
 
     @IsOptional()

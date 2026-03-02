@@ -71,6 +71,8 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
         usePostCreateMutation();
 
     const { data: replyCount, isLoading } = useGetReplyCountByParentQuery({
+        targetId: targetId,
+        targetType: targetType,
         parentId: comment.id,
     });
 

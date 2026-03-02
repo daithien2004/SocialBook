@@ -1,13 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Comment, CommentDocument } from '@/infrastructure/database/schemas/comment.schema';
-import { ICommentRepository, CommentFilter, PaginationOptions, SortOptions, CommentReplies } from '@/domain/comments/repositories/comment.repository.interface';
+import { ICommentRepository, CommentFilter, PaginationOptions, SortOptions, CommentReplies, ParentResolutionResult } from '@/domain/comments/repositories/comment.repository.interface';
 import { Comment as CommentEntity } from '@/domain/comments/entities/comment.entity';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { UserId } from '@/domain/comments/value-objects/user-id.vo';
 import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
 import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
+import { CommentDepth } from '@/domain/comments/value-objects/comment-depth.vo';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { CommentMapper } from './comment.mapper';
 import { CommentModel } from '@/domain/comments/read-models/comment-model';
@@ -141,7 +142,7 @@ export class CommentRepository implements ICommentRepository {
 
         if (parentId) {
             queryFilter.parentId = new Types.ObjectId(parentId.toString());
-        } else {
+        } else if (parentId === null) {
             queryFilter.parentId = null;
         }
 
@@ -228,6 +229,8 @@ export class CommentRepository implements ICommentRepository {
 
         if (filter.parentId) {
             queryFilter.parentId = new Types.ObjectId(filter.parentId);
+        } else if (filter.parentId === null) {
+            queryFilter.parentId = null;
         }
 
         if (filter.isFlagged !== undefined) {
@@ -417,7 +420,7 @@ export class CommentRepository implements ICommentRepository {
                 updatedAt: doc.updatedAt,
                 user: {
                     id: doc.userId._id.toString(),
-                    name: doc.userId.username,
+                    username: doc.userId.username,
                     image: doc.userId.image,
                 },
             })),
@@ -438,7 +441,45 @@ export class CommentRepository implements ICommentRepository {
         return CommentMapper.toPersistence(comment);
     }
 
-    // Statistics
+    async resolveParentId(
+        targetId: TargetId,
+        targetType: CommentTargetType,
+        parentId?: string | null,
+    ): Promise<ParentResolutionResult> {
+        if (!parentId) {
+            return { effectiveParentId: null, level: CommentDepth.root() };
+        }
+
+        const parent = await this.commentModel
+            .findById(parentId)
+            .select('_id targetId targetType parentId')
+            .lean() as any;
+        console.log(parent);
+        if (!parent) {
+            throw new NotFoundException('Parent comment not found');
+        }
+
+        if (parent.targetId.toString() !== targetId.toString()) {
+            throw new ForbiddenException(
+                'Parent comment does not belong to this target',
+            );
+        }
+        if (parent.targetType !== targetType.toString()) {
+            throw new ForbiddenException('Parent comment target type mismatch');
+        }
+
+        if (!parent.parentId) {
+            return {
+                effectiveParentId: parent._id.toString(),
+                level: CommentDepth.create(2),
+            };
+        }
+        return {
+            effectiveParentId: parent.parentId.toString(),
+            level: CommentDepth.maxAllowed(),
+        };
+    }
+
     async countTotal(): Promise<number> {
         return await this.commentModel.countDocuments({ isDeleted: false }).exec();
     }

@@ -86,10 +86,11 @@ export interface DeleteCommentRequest {
 
 // types/comment.interface.ts
 export interface GetReplyCountByParentRequest {
+    targetId: string;
+    targetType: string;
     parentId: string;
 }
 
 export interface GetReplyCountByParentResponse {
-    parentId: string;
     count: number;
 }

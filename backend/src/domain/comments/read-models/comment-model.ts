@@ -1,6 +1,6 @@
 export interface UserSummary {
     id: string;
-    name: string;
+    username: string;
     image: string;
 }
 export interface CommentModel {
