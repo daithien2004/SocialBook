@@ -20,7 +20,7 @@ export const NESTJS_COMMENTS_ENDPOINTS = {
     getResolveParent: '/comments/resolve-parent',
     getCount: '/comments/count',
     editComment: (id: string) => `/comments/${id}/edit`,
-    deleteComment: (id: string) => `/comments/${id}/delete`,
+    deleteComment: (id: string) => `/comments/${id}`,
 };
 
 export const NESTJS_LIKES_ENDPOINTS = {

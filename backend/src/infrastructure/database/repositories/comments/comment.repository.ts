@@ -446,36 +446,59 @@ export class CommentRepository implements ICommentRepository {
         targetType: CommentTargetType,
         parentId?: string | null,
     ): Promise<ParentResolutionResult> {
+
         if (!parentId) {
-            return { effectiveParentId: null, level: CommentDepth.root() };
+            return {
+                effectiveParentId: null,
+                level: CommentDepth.create(1),
+            };
         }
 
-        const parent = await this.commentModel
+        const target = await this.commentModel
             .findById(parentId)
             .select('_id targetId targetType parentId')
             .lean() as any;
-        console.log(parent);
-        if (!parent) {
+
+        if (!target) {
             throw new NotFoundException('Parent comment not found');
         }
 
-        if (parent.targetId.toString() !== targetId.toString()) {
+        if (target.targetId.toString() !== targetId.toString()) {
             throw new ForbiddenException(
                 'Parent comment does not belong to this target',
             );
         }
-        if (parent.targetType !== targetType.toString()) {
-            throw new ForbiddenException('Parent comment target type mismatch');
+
+        if (target.targetType !== targetType.toString()) {
+            throw new ForbiddenException(
+                'Parent comment target type mismatch',
+            );
+        }
+
+        if (!target.parentId) {
+            return {
+                effectiveParentId: target._id.toString(),
+                level: CommentDepth.create(2),
+            };
+        }
+
+        const parent = await this.commentModel
+            .findById(target.parentId)
+            .select('_id parentId')
+            .lean() as any;
+        if (!parent) {
+            throw new NotFoundException('Parent comment not found');
         }
 
         if (!parent.parentId) {
             return {
-                effectiveParentId: parent._id.toString(),
-                level: CommentDepth.create(2),
+                effectiveParentId: target._id.toString(),
+                level: CommentDepth.maxAllowed(),
             };
         }
+
         return {
-            effectiveParentId: parent.parentId.toString(),
+            effectiveParentId: parent._id.toString(),
             level: CommentDepth.maxAllowed(),
         };
     }
