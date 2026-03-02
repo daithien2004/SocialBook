@@ -218,8 +218,9 @@ export class BookRepository implements IBookRepository {
         return await this.bookModel.countDocuments({ isDeleted: false }).exec();
     }
 
-    async countByGenreName(): Promise<Array<{ genre: string; count: number }>> {
+    async countByGenreName(): Promise<Array<{ id: string; name: string; slug: string; count: number }>> {
         const result = await this.bookModel.aggregate([
+            { $match: { isDeleted: false } },
             { $unwind: '$genres' },
             {
                 $lookup: {
@@ -232,15 +233,40 @@ export class BookRepository implements IBookRepository {
             { $unwind: '$genreInfo' },
             {
                 $group: {
-                    _id: '$genreInfo.name',
+                    _id: '$genreInfo._id',
+                    name: { $first: '$genreInfo.name' },
+                    slug: { $first: '$genreInfo.slug' },
                     count: { $sum: 1 }
                 }
             },
             { $sort: { count: -1 } },
-            { $limit: 10 }
         ]).exec();
 
-        return result.map(item => ({ genre: item._id, count: item.count }));
+        return result.map(item => ({ 
+            id: item._id.toString(), 
+            name: item.name, 
+            slug: item.slug, 
+            count: item.count 
+        }));
+    }
+
+    async countByTags(): Promise<Array<{ name: string; count: number }>> {
+        const result = await this.bookModel.aggregate([
+            { $match: { isDeleted: false, tags: { $exists: true, $not: { $size: 0 } } } },
+            { $unwind: '$tags' },
+            {
+                $group: {
+                    _id: '$tags',
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { count: -1 } },
+        ]).exec();
+
+        return result.map(item => ({ 
+            name: item._id, 
+            count: item.count 
+        }));
     }
 
     async findByIds(ids: BookId[]): Promise<BookEntity[]> {

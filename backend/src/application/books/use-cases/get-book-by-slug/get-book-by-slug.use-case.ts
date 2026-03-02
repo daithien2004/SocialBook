@@ -23,7 +23,6 @@ export class GetBookBySlugUseCase {
             throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
         }
 
-        // Emit an event to increment views asynchronously (CQRS compliance)
         this.eventEmitter.emit('book.viewed', { bookId: book.id });
 
         return book;

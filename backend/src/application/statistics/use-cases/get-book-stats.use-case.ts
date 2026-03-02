@@ -26,7 +26,7 @@ export class GetBookStatsUseCase {
         return {
             total,
             totalChapters,
-            byGenre: byGenre.map(g => ({ genres: g.genre, count: g.count })),
+            byGenre: byGenre.map(g => ({ genres: g.name, count: g.count })),
             popularBooks: popularBooksResult.data.map(book => ({
                 id: book.id.toString(),
                 title: book.title.toString(),
