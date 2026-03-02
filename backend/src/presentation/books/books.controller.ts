@@ -32,6 +32,8 @@ import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-sl
 import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
 import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
+import { GetBookFiltersQuery } from '@/application/books/use-cases/get-book-filters/get-book-filters.query';
+import { GetBookFiltersUseCase } from '@/application/books/use-cases/get-book-filters/get-book-filters.use-case';
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
@@ -50,6 +52,7 @@ export class BooksController {
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,
     private readonly getBookByIdUseCase: GetBookByIdUseCase,
+    private readonly getBookFiltersUseCase: GetBookFiltersUseCase,
     private readonly toggleLikeUseCase: ToggleLikeUseCase,
     private readonly getLikeCountUseCase: GetLikeCountUseCase,
   ) { }
@@ -104,6 +107,18 @@ export class BooksController {
       message: 'Lấy danh sách sách (Admin) thành công',
       data: result.data.map(readModel => BookResponseDto.fromReadModel(readModel)),
       meta: result.meta,
+    };
+  }
+
+  @Public()
+  @Get('filters/all')
+  async getFilters() {
+    const query = new GetBookFiltersQuery();
+    const data = await this.getBookFiltersUseCase.execute(query);
+
+    return {
+      message: 'Lấy danh sách bộ lọc thành công',
+      data,
     };
   }
 

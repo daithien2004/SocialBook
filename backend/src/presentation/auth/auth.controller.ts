@@ -108,8 +108,8 @@ export class AuthController {
   @Public()
   @Post('signup')
   async signup(@Body() dto: SignupLocalDto) {
-    const command = new RegisterCommand(dto.username, dto.email, dto.password);
-    const otp = await this.registerUseCase.execute(command);
+    const command = new RegisterCommand(dto.email, dto.username, dto.password);
+    await this.registerUseCase.execute(command);
 
     return {
       message: 'Mã OTP đã được gửi đến email của bạn',

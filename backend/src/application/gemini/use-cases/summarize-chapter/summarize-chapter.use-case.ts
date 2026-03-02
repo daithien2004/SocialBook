@@ -3,7 +3,6 @@ import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
 import type { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
 import { AIRequest, AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
-import { UserId } from '@/domain/gemini/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
 export interface SummarizeChapterRequest {
@@ -29,7 +28,6 @@ export class SummarizeChapterUseCase {
     ) {}
 
     async execute(request: SummarizeChapterRequest): Promise<SummarizeChapterResponse> {
-        const userId = UserId.create(request.userId);
         
         const aiRequest = AIRequest.create({
             id: this.idGenerator.generate(),
