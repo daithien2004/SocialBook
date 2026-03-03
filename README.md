@@ -1,72 +1,125 @@
-# SocialBook
+# SocialBook 📚
 
-SocialBook là một nền tảng mạng xã hội đa tính năng dành riêng cho những người yêu sách. Dự án kết hợp việc theo dõi đọc sách truyền thống với mạng xã hội hiện đại, gamification (trò chơi hóa) và các tính năng AI để nâng cao trải nghiệm đọc sách.
+<div align="center">
 
-## 🚀 Công Nghệ Sử Dụng (Tech Stack)
+**A feature-rich social network platform for book lovers — combining reading tracking, social interaction, gamification, and AI-powered features.**
+
+[![NestJS](https://img.shields.io/badge/Backend-NestJS%2011-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js%2015-000000?style=flat-square&logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=flat-square&logo=mongodb)](https://www.mongodb.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+
+</div>
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 📚 **Book Management** | Browse, read, and track books with chapter and review support |
+| 🤝 **Social Interaction** | Follow users, like books/comments, and receive real-time notifications |
+| 🎮 **Gamification** | Earn achievements, maintain reading streaks, and complete daily goals for XP |
+| 🤖 **AI Integration** | Chapter summaries (Gemini AI), Text-to-Speech, and vector search (ChromaDB) |
+| 🔐 **Auth & Onboarding** | Secure JWT-based auth with user preference setup |
+| 🔍 **Search & Recommendations** | Full-text search and AI-powered book recommendations |
+| 📊 **Statistics** | Personal reading stats and gamification progress tracking |
+
+---
+
+## 🚀 Tech Stack
 
 ### Frontend
 - **Framework:** Next.js 15 (App Router, Turbopack)
-- **Ngôn ngữ:** TypeScript
+- **Language:** TypeScript
 - **Styling:** TailwindCSS 4, Radix UI, Framer Motion
-- **Quản lý trạng thái:** Redux Toolkit, RTK Query
+- **State Management:** Redux Toolkit, RTK Query
 - **Real-time:** Socket.IO Client
-- **Biểu đồ/Bản đồ:** Recharts, React Map GL
+- **Charts / Maps:** Recharts, React Map GL
 
 ### Backend
-- **Framework:** NestJS 11
-- **Ngôn ngữ:** TypeScript
-- **Cơ sở dữ liệu:** MongoDB (via Mongoose), Redis (Caching/Queues), ChromaDB (Vector Search)
-- **Xác thực:** JWT, Passport
+- **Framework:** NestJS 11 — structured with **Clean Architecture**
+- **Language:** TypeScript
+- **Databases:** MongoDB (Mongoose), Redis (Caching/Queues), ChromaDB (Vector Search)
+- **Authentication:** JWT, Passport
 - **Real-time:** Socket.IO Gateway
-- **Tích hợp AI:** 
-  - Google Gemini (Tóm tắt chương sách)
+- **AI Integration:**
+  - Google Gemini — Chapter summarization
   - OpenAI / LangChain
-  - HuggingFace
+  - HuggingFace Embeddings
   - Google Cloud Text-to-Speech
+- **Documentation:** Swagger / OpenAPI
 
 ### DevOps / Infrastructure
-- **Containerization:** Docker (cho Redis & ChromaDB)
+- **Containerization:** Docker (Redis & ChromaDB via Docker Compose)
 - **Build Tools:** Turbopack
 
-## ✨ Tính Năng Chính
+---
 
-- **📚 Quản lý sách:** Duyệt, đọc và theo dõi sách. Hỗ trợ Quản lý Chương (Chapters) và Đánh giá (Reviews).
-- **🤝 Tương tác xã hội:** Theo dõi người dùng khác, like sách/bình luận, và nhận thông báo thời gian thực.
-- **🎮 Gamification:** Đạt thành tựu, duy trì chuỗi đọc sách (streak), và hoàn thành mục tiêu hàng ngày để nhận XP.
-- **🤖 Hỗ trợ AI:** 
-  - **Tóm tắt chương:** Nhận tóm tắt nhanh nội dung chương sách sử dụng Gemini AI.
-  - **Text-to-Speech:** Nghe nội dung sách.
-  - **Embeddings:** Tìm kiếm vector sử dụng ChromaDB.
-- **🔐 Onboarding & Xác thực:** Quy trình đăng nhập/đăng ký bảo mật cùng với thiết lập sở thích người dùng.
+## 🏗️ Architecture
 
-## 🛠️ Cài Đặt & Thiết Lập
+The backend follows **Clean Architecture** principles, separating concerns into four distinct layers:
 
-### Yêu cầu tiên quyết
-- Node.js (v18+ khuyến nghị)
-- MongoDB (Cài local hoặc dùng Atlas)
-- Docker Desktop (để chạy Redis & ChromaDB)
+```
+backend/src/
+├── domain/            # 🔵 Enterprise business rules
+│   ├── entities/      #    Core domain entities
+│   ├── value-objects/ #    Immutable value objects
+│   └── repositories/  #    Repository interfaces (contracts)
+│
+├── application/       # 🟢 Application business rules
+│   └── {feature}/
+│       ├── use-cases/ #    One use case per file
+│       ├── dtos/      #    Data Transfer Objects
+│       └── mappers/   #    Domain ↔ DTO mapping
+│
+├── infrastructure/    # 🟡 Frameworks & external adapters
+│   ├── database/      #    Mongoose schemas & repository implementations
+│   ├── external/      #    Third-party integrations (Cloudinary, etc.)
+│   └── gateways/      #    Socket.IO gateways
+│
+├── presentation/      # 🔴 Delivery mechanism
+│   └── {feature}/
+│       └── *.controller.ts  # HTTP controllers (REST API)
+│
+└── shared/            # ⚪ Cross-cutting concerns
+    ├── cache/         #    Redis cache utilities
+    ├── domain/        #    Shared base classes (Entity, AggregateRoot)
+    └── database/      #    Database abstraction helpers
+```
 
-### 1. Clone dự án
+### Domain Modules
+`auth` · `users` · `books` · `chapters` · `authors` · `genres` · `comments` · `likes` · `follows` · `reviews` · `library` · `posts` · `notifications` · `gamification` · `statistics` · `search` · `recommendations` · `onboarding` · `scraper` · `chroma` · `gemini` · `text-to-speech`
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+- Node.js v18+
+- MongoDB (local or Atlas)
+- Docker Desktop (for Redis & ChromaDB)
+
+### 1. Clone the repository
 ```bash
 git clone <repository_url>
 cd socialbook_dev_thien
 ```
 
-### 2. Thiết lập Infrastructure
-Khởi chạy các dịch vụ cần thiết (Redis, ChromaDB) bằng Docker Compose:
+### 2. Start infrastructure services
 ```bash
 docker-compose up -d
 ```
 
-### 3. Thiết lập Backend
-Di chuyển vào thư mục backend và cài đặt dependencies:
+### 3. Setup Backend
+
 ```bash
 cd backend
 npm install
 ```
 
-**Biến môi trường (.env):**
-Tạo file `.env` trong thư mục `backend` với nội dung sau:
+Create a `.env` file inside the `backend/` directory:
 
 ```env
 PORT=5000
@@ -92,44 +145,38 @@ RAPID_API_HOST=
 RAPID_API_URL=
 ```
 
-Chạy backend server:
+Start the backend server:
 ```bash
 npm run start:dev
 ```
-Server sẽ khởi chạy tại `http://localhost:5000`.
+> API available at `http://localhost:5000`
+> Swagger docs at `http://localhost:5000/api`
 
-### 4. Thiết lập Frontend
-Mở terminal mới, di chuyển vào thư mục frontend và cài đặt dependencies:
+### 4. Setup Frontend
+
 ```bash
 cd frontend
 npm install
 ```
 
-**Biến môi trường (.env.local):**
-Tạo file `.env.local` trong thư mục `frontend` với nội dung sau:
+Create a `.env.local` file inside the `frontend/` directory:
 
 ```env
 NEXT_PUBLIC_NEST_API_URL=
-
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-
 NEXTAUTH_SECRET=
-
 NEXT_PUBLIC_SOCKET_URL=
 ```
 
-Chạy frontend development server:
+Start the frontend dev server:
 ```bash
 npm run dev
 ```
-Ứng dụng sẽ chạy tại `http://localhost:3000`.
+> App available at `http://localhost:3000`
 
-## 📂 Cấu Trúc Dự Án
+---
 
-- **backend/**: Ứng dụng NestJS chứa toàn bộ logic API, schemas, và services.
-  - `src/modules`: Các module theo tính năng (books, users, v.v.).
-- **frontend/**: Ứng dụng Next.js cho giao diện người dùng.
-  - `src/app`: Các trang App Router.
-  - `src/components`: Các UI component tái sử dụng.
-  - `src/store`: Quản lý trạng thái (State management).
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
