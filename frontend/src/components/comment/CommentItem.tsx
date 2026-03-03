@@ -123,28 +123,19 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
         }
     };
 
-    const handleDeleteComment = () => {
-        toast('Bạn có chắc chắn muốn xóa bình luận này?', {
-            action: {
-                label: 'Xóa',
-                onClick: async () => {
-                    try {
-                        await deleteComment({
-                            id: comment.id,
-                            targetId,
-                            parentId: comment.parentId ?? null,
-                        }).unwrap();
-
-                        toast.success('Bình luận đã được xóa!');
-                    } catch (e: any) {
-                        if (e?.status !== 401) {
-                            toast.error(getErrorMessage(e));
-                        }
-                    }
-                },
-            },
-            cancel: 'Hủy',
-        });
+    const handleDeleteComment = async () => {
+        try {
+            await deleteComment({
+                id: comment.id,
+                targetId,
+                parentId: comment.parentId ?? null,
+            }).unwrap();
+            toast.success('Bình luận đã được xóa!');
+        } catch (e: any) {
+            if (e?.status !== 401) {
+                toast.error(getErrorMessage(e));
+            }
+        }
     };
 
     useEffect(() => {

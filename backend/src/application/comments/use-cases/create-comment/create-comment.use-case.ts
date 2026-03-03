@@ -39,7 +39,6 @@ export class CreateCommentUseCase {
                 targetType,
                 command.parentId,
             );
-            console.log(effectiveParentId, level);
             const comment = Comment.create({
                 id: CommentId.create(this.idGenerator.generate()),
                 userId: command.userId,
