@@ -2,7 +2,6 @@ import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
-  IsMongoId,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -14,7 +13,7 @@ export class FilterBookDto extends PaginationQueryDto {
   title?: string;
 
   @IsOptional()
-  @IsMongoId({ message: 'Author ID không hợp lệ' })
+  @IsString({ message: 'Author ID không hợp lệ' })
   authorId?: string;
 
   @Transform(({ value }) => {
@@ -27,7 +26,7 @@ export class FilterBookDto extends PaginationQueryDto {
   })
   @IsOptional()
   @IsArray()
-  @IsMongoId({ each: true, message: 'Mỗi genres ID phải là MongoId hợp lệ' })
+  @IsString({ each: true, message: 'Mỗi genre phải là một chuỗi (ID hoặc slug)' })
   genres?: string[];
 
   @Transform(({ value }) => {

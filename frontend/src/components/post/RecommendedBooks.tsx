@@ -96,7 +96,7 @@ export default function RecommendedBooks() {
 
                     return (
                         <div
-                            key={book.id}
+                            key={isAuthenticated ? item.bookId : book.id}
                             onClick={() => router.push(`/books/${book.slug}`)}
                             className="px-4 py-2 border-b border-slate-50 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group"
                         >
