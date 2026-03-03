@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_RECOMMENDATIONS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_RECOMMENDATIONS_ENDPOINTS } from '@/constants/server-endpoints';
 import { GetRecommendationsRequest, RecommendationsResponse } from '../types/recommendation.interface';
 
 export const recommendationsApi = createApi({

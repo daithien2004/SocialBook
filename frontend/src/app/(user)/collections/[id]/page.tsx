@@ -1,26 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
 import {
+  BookOpen,
   ChevronLeft,
+  FolderOpen,
   MoreVertical,
   Pencil,
   Trash2,
-  BookOpen,
-  FolderOpen,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import {
+  useAddBookToCollectionsMutation,
+  useDeleteCollectionMutation,
   useGetCollectionDetailQuery,
   useUpdateCollectionMutation,
-  useDeleteCollectionMutation,
-  useAddBookToCollectionsMutation,
-} from '@/src/features/library/api/libraryApi';
-import { LibraryItem } from '@/src/features/library/types/library.interface';
+} from '@/features/library/api/libraryApi';
+import { LibraryItem } from '@/features/library/types/library.interface';
 import { toast } from 'sonner';
 
 export default function CollectionDetailPage() {
@@ -78,7 +78,7 @@ export default function CollectionDetailPage() {
       },
       cancel: {
         label: 'Hủy',
-        onClick: () => {},
+        onClick: () => { },
       },
     });
   };

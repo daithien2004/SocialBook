@@ -16,26 +16,26 @@ import {
 } from 'lucide-react';
 
 // --- IMPORTS THƯ VIỆN & COMPONENT ---
-import AddToLibraryModal from '@/src/components/library/AddToLibraryModal';
+import AddToLibraryModal from '@/components/library/AddToLibraryModal';
 import {
   useGetChapterQuery,
   useGetChaptersQuery,
-} from '@/src/features/chapters/api/chaptersApi';
+} from '@/features/chapters/api/chaptersApi';
 import CreatePostModal, {
   CreatePostData,
-} from '@/src/components/post/CreatePostModal';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
-import ChapterNavigation from '@/src/components/chapter/ChapterNavigation';
-import CommentSection from '@/src/components/chapter/CommentSection';
-import ChapterHeader from '@/src/components/chapter/ChapterHeader';
-import { ChapterContent } from '@/src/components/chapter/ChapterContent';
-import { useReadingProgress } from '@/src/hooks/useReadingProgress';
-import AudiobookView from '@/src/components/chapter/AudiobookView';
-import ChapterSummaryModal from '@/src/components/chapter/ChapterSummaryModal';
-import ReadingSettingsPanel from '@/src/components/chapter/ReadingSettingsPanel';
-import ChapterListDrawer from '@/src/components/book/ChapterListDrawer';
-import { ReadingTimeTracker } from '@/src/features/books/components/ReadingTimeTracker';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+} from '@/components/post/CreatePostModal';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
+import ChapterNavigation from '@/components/chapter/ChapterNavigation';
+import CommentSection from '@/components/chapter/CommentSection';
+import ChapterHeader from '@/components/chapter/ChapterHeader';
+import { ChapterContent } from '@/components/chapter/ChapterContent';
+import { useReadingProgress } from '@/hooks/useReadingProgress';
+import AudiobookView from '@/components/chapter/AudiobookView';
+import ChapterSummaryModal from '@/components/chapter/ChapterSummaryModal';
+import ReadingSettingsPanel from '@/components/chapter/ReadingSettingsPanel';
+import ChapterListDrawer from '@/components/book/ChapterListDrawer';
+import { ReadingTimeTracker } from '@/features/books/components/ReadingTimeTracker';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -50,7 +50,6 @@ export default function ChapterPage({ params }: ChapterPageProps) {
 
   const { isAuthenticated: isLoggedIn } = useAppAuth();
 
-  // --- STATE QUẢN LÝ UI ---
   const [showTOC, setShowTOC] = useState(false);
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -58,11 +57,9 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
   const [showSettings, setShowSettings] = useState(false);
 
-  // State cho hiệu ứng cuộn (Immersive Mode)
   const [isControlsVisible, setIsControlsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  // --- API DATA ---
   const {
     data: chapterData,
     isLoading,
@@ -157,7 +154,6 @@ ${book.description?.slice(0, 100)}...
 #${book.title.replace(/\s+/g, '')} #${chapter.title.replace(/\s+/g, '')}`
       : '';
 
-  // --- RENDER LOADING ---
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#141414] flex items-center justify-center transition-colors duration-300">
@@ -166,7 +162,6 @@ ${book.description?.slice(0, 100)}...
     );
   }
 
-  // --- RENDER ERROR ---
   if (error || !chapterData || !book || !chapter) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#141414] text-gray-900 dark:text-white transition-colors duration-300">
@@ -183,7 +178,6 @@ ${book.description?.slice(0, 100)}...
     );
   }
 
-  // --- RENDER AUDIOBOOK MODE ---
   if (viewMode === 'listen') {
     return (
       <div className="h-screen bg-gray-50 dark:bg-[#1a1a1a] flex flex-col overflow-hidden animate-in fade-in duration-300 transition-colors">

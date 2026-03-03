@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_AUTH_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_AUTH_ENDPOINTS } from '@/constants/server-endpoints';
 import { User } from 'next-auth';
 import { SignupRequest, VerifyOtpRequest, ForgotPasswordRequest, ResetPasswordRequest, ResendOtpRequest } from '../types/auth.type';
 
@@ -49,7 +49,7 @@ export const authApi = createApi({
       providesTags: ['User'],
     }),
 
-    resendOtp: builder.mutation<string, ResendOtpRequest>({
+    resendOtp: builder.mutation<{ message: string; data: { resendCooldown: number } }, ResendOtpRequest>({
       query: (data) => ({
         url: NESTJS_AUTH_ENDPOINTS.resendOtp,
         method: 'POST',

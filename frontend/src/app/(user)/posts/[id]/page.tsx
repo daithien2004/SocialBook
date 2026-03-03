@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
-import { useGetPostByIdQuery } from '@/src/features/posts/api/postApi';
-import ModalPostComment from '@/src/components/post/ModalPostComment';
-import {useGetCountQuery, useGetStatusQuery} from "@/src/features/likes/api/likeApi";
-import {useGetCommentCountQuery} from "@/src/features/comments/api/commentApi";
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useGetPostByIdQuery } from '@/features/posts/api/postApi';
+import ModalPostComment from '@/components/post/ModalPostComment';
+import {useGetCountQuery, useGetStatusQuery} from "@/features/likes/api/likeApi";
+import {useGetCommentCountQuery} from "@/features/comments/api/commentApi";
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 export default function PostModalOverlay() {
     const router = useRouter();

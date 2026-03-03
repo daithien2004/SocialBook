@@ -4,6 +4,14 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const formatCompact = (num: number) => {
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    compactDisplay: 'short',
+  }).format(num);
+};
+
 export function formatDate(date: Date | string | null | undefined) {
   if (!date) return "";
 
@@ -28,9 +36,18 @@ export function formatNumber(num?: number): string {
   return num.toString();
 }
 
-export const getErrorMessage = (err: any) => {
-  const raw = err?.data?.message ?? err?.message;
-  return Array.isArray(raw) ? raw.join('\n') : (raw || 'Update failed');
+export const getErrorMessage = (error: any): string => {
+  if (typeof error === 'string') return error;
+
+  if (Array.isArray(error?.data?.message)) {
+    return error.data.message.join(', ');
+  }
+
+  return (
+    error?.data?.message ||
+    error?.message ||
+    'Đã có lỗi xảy ra. Vui lòng thử lại.'
+  );
 };
 
 export function timeAgo(dateString: string) {

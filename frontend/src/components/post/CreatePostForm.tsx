@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 interface CreatePostFormProps {
   onClose: () => void;
@@ -75,7 +76,7 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
       onClose();
     } catch (error: any) {
       console.log('Failed to create post:', error);
-      console.log(error?.data?.message || 'Lỗi khi đăng bài viết');
+      toast.error(getErrorMessage(error));
     }
   };
 

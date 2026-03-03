@@ -1,6 +1,6 @@
 import { Plus, Settings } from 'lucide-react';
-import { ReadingListItem } from '@/src/components/user/reading-list-item';
-import { useGetCollectionsQuery } from '@/src/features/library/api/libraryApi';
+import { ReadingListItem } from '@/components/user/reading-list-item';
+import { useGetCollectionsQuery } from '@/features/library/api/libraryApi';
 import { useParams, useRouter } from 'next/navigation';
 export function ReadingLists() {
   const { userId } = useParams<{ userId: string }>();

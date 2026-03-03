@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useGetGenreQuery, useUpdateGenreMutation } from '@/src/features/genres/api/genreApi';
+import { useGetGenreQuery, useUpdateGenreMutation } from '@/features/genres/api/genreApi';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 export default function EditGenrePage() {
     const router = useRouter();
@@ -50,7 +51,7 @@ export default function EditGenrePage() {
             router.push('/admin/genres');
         } catch (error: any) {
             console.error('Failed to update genre:', error);
-            toast.error(error?.data?.message || 'Cập nhật thể loại thất bại!');
+            toast.error(getErrorMessage(error));
         }
     };
 

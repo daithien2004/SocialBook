@@ -1,10 +1,10 @@
-import { Book } from '@/src/features/books/types/book.interface';
+import { Book } from '@/features/books/types/book.interface';
 import { BookCard } from './BookCard';
 import {
   BookGridSkeleton,
   EmptyBooksState,
-  LoadingMoreIndicator,
   EndOfListMessage,
+  LoadingMoreIndicator,
 } from './LoadingStates';
 
 interface BookGridProps {

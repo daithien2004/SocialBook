@@ -15,7 +15,7 @@ export interface ModerationQueueItem {
 }
 
 export interface ModerationQueueResponse {
-    items: ModerationQueueItem[];
+    data: ModerationQueueItem[];
     meta: {
         page: number;
         limit: number;

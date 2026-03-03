@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useCreateGenreMutation } from '@/src/features/genres/api/genreApi';
+import { useCreateGenreMutation } from '@/features/genres/api/genreApi';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 export default function NewGenrePage() {
     const router = useRouter();
@@ -34,7 +35,7 @@ export default function NewGenrePage() {
             router.push('/admin/genres');
         } catch (error: any) {
             console.error('Failed to create genre:', error);
-            toast.error(error?.data?.message || 'Tạo thể loại thất bại!');
+            toast.error(getErrorMessage(error));
         }
     };
 

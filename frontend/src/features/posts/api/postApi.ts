@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { CreatePostRequest, DeleteImageRequest, PaginatedPostsResponse, PaginationParams, PaginationParamsByUser, Post, UpdatePostRequest } from '../../posts/types/post.interface';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_POSTS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_POSTS_ENDPOINTS } from '@/constants/server-endpoints';
 
 
 export const postApi = createApi({
@@ -18,7 +18,7 @@ export const postApi = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.items.map(({ id }) => ({
+            ...result.data.map(({ id }) => ({
               type: 'Post' as const,
               id: id,
             })),
@@ -44,7 +44,7 @@ export const postApi = createApi({
       providesTags: (result) =>
         result
           ? [
-            ...result.items.map(({ id }) => ({
+            ...result.data.map(({ id }) => ({
               type: 'Post' as const,
               id,
             })),

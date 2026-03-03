@@ -1,18 +1,33 @@
 'use client';
 
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {Button} from '@/components/ui/button';
-import {Camera} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
     useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
     usePatchUpdateUserProfileOverviewMutation,
-} from '@/src/features/users/api/usersApi';
-import {useParams} from 'next/navigation';
-import {getErrorMessage} from "@/src/lib/utils";
-import {toast} from "sonner";
+} from '@/features/users/api/usersApi';
+import { getErrorMessage } from "@/lib/utils";
+import { useParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from "sonner";
+const COUNTRIES = [
+    "Việt Nam",
+    "Hoa Kỳ (USA)",
+    "Vương Quốc Anh (Anh)",
+    "Nhật Bản",
+    "Hàn Quốc",
+    "Trung Quốc",
+    "Đài Loan",
+    "Singapore",
+    "Thái Lan",
+    "Pháp",
+    "Đức",
+    "Nga",
+    "Úc",
+    "Canada"
+];
 
 const UserProfilePage = () => {
-    const {userId} = useParams<{ userId: string }>();
+    const { userId } = useParams<{ userId: string }>();
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -34,7 +49,7 @@ const UserProfilePage = () => {
         setPreviewUrl(url);
     };
 
-// dọn URL tránh leak bộ nhớ
+    // dọn URL tránh leak bộ nhớ
     useEffect(() => {
         return () => {
             if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -48,13 +63,13 @@ const UserProfilePage = () => {
         if (fileInputRef.current) fileInputRef.current.value = ''; // quan trọng
     };
 
-    const {data: overview, isLoading: isOverviewLoading} =
-        useGetUserOverviewQuery(userId, {skip: !userId});
+    const { data: overview, isLoading: isOverviewLoading } =
+        useGetUserOverviewQuery(userId, { skip: !userId });
 
-    const [updateOverview, {isLoading: isSaving}] =
+    const [updateOverview, { isLoading: isSaving }] =
         usePatchUpdateUserProfileOverviewMutation();
 
-    const [updateAvatar, {isLoading: isSavingAvatarApi}] =
+    const [updateAvatar, { isLoading: isSavingAvatarApi }] =
         usePatchUpdateUserAvatarMutation();
 
     // form state
@@ -109,10 +124,10 @@ const UserProfilePage = () => {
     }, [overview, form.website, form.location, form.bio, form.displayName]);
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
-        const {name, value} = e.target;
-        setForm((prev) => ({...prev, [name]: value}));
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSave = async () => {
@@ -189,8 +204,8 @@ const UserProfilePage = () => {
               bg-black/40
               text-white text-xs font-medium
             ">
-              Đổi ảnh
-            </span>
+                                Đổi ảnh
+                            </span>
                         </button>
 
                         {selectedFile && (
@@ -294,25 +309,30 @@ const UserProfilePage = () => {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-gray-300">
-                            Địa điểm
+                            Quốc gia / Lãnh thổ
                         </label>
-                        <input
-                            type="text"
+                        <select
                             name="location"
                             value={form.location}
                             onChange={handleChange}
-                            placeholder="TP. Hồ Chí Minh, Việt Nam"
                             className="
               mt-1 w-full rounded-lg
               border border-slate-200 dark:border-gray-700
               bg-slate-50 dark:bg-neutral-900
               px-3 py-2 text-sm
               text-slate-800 dark:text-gray-100
-              outline-none
+              outline-none appearance-none
               focus:border-teal-500
               focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
             "
-                        />
+                        >
+                            <option value="">-- Chọn quốc gia --</option>
+                            {COUNTRIES.map((ct) => (
+                                <option key={ct} value={ct}>
+                                    {ct}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {isDirty && (

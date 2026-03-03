@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useCallback, ChangeEvent } from 'react';
-import { useCreateAuthorMutation } from '@/src/features/authors/api/authorApi';
+import { useCreateAuthorMutation } from '@/features/authors/api/authorApi';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Upload, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 const DEFAULT_AVATAR = '/default-avatar.png';
 
@@ -68,7 +69,7 @@ export default function NewAuthorPage() {
             router.push('/admin/authors');
         } catch (error: any) {
             console.error('Failed to create author:', error);
-            toast.error(error?.data?.message || 'Tạo tác giả thất bại!');
+            toast.error(getErrorMessage(error));
         }
     };
 

@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_CHAPTERS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_CHAPTERS_ENDPOINTS } from '@/constants/server-endpoints';
 import { Chapter, ChapterDetailData, ChapterPreview, ChaptersListData, CreateChapterParams, DeleteChapterParams, GetChapterByIdParams, GetChapterParams, GetChaptersParams, ImportChaptersParams, UpdateChapterParams } from '../types/chapter.interface';
 
 export const CHAPTER_TAGS = {
@@ -37,6 +37,35 @@ export const chaptersApi = createApi({
           limit: params.limit
         }
       }),
+      transformResponse: (response: unknown): ChaptersListData => {
+        const objResponse = response as { book?: any, chapters?: Chapter[], data?: Chapter[], meta?: any };
+
+        if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
+          return {
+            chapters: objResponse.chapters,
+            total: objResponse.meta?.total ?? objResponse.chapters.length,
+            book: objResponse.book || {}
+          };
+        }
+
+        if (objResponse?.data && Array.isArray(objResponse.data)) {
+          return {
+            chapters: objResponse.data,
+            total: objResponse.meta?.total ?? objResponse.data.length,
+            book: {}
+          };
+        }
+
+        if (Array.isArray(response)) {
+          return {
+            chapters: response as Chapter[],
+            total: (response as Chapter[]).length,
+            book: {}
+          };
+        }
+
+        return { chapters: [], total: 0, book: {} };
+      },
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 
@@ -49,6 +78,39 @@ export const chaptersApi = createApi({
           limit: params.limit
         }
       }),
+      transformResponse: (response: unknown): ChaptersListData => {
+        // AxiosBaseQuery extracts response.data. In case of { book, chapters }
+        const objResponse = response as { book?: any, chapters?: Chapter[], data?: Chapter[], meta?: any };
+
+        if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
+          return {
+            chapters: objResponse.chapters,
+            total: objResponse.meta?.total ?? objResponse.chapters.length,
+            book: objResponse.book || {}
+          };
+        }
+
+        // Response từ axiosBaseQuery khi có meta: { data: Chapter[], meta: PaginationMeta }
+        if (objResponse?.data && Array.isArray(objResponse.data)) {
+          return {
+            chapters: objResponse.data,
+            total: objResponse.meta?.total ?? objResponse.data.length,
+            book: {}
+          };
+        }
+
+        // Fallback: response là array trực tiếp
+        if (Array.isArray(response)) {
+          return {
+            chapters: response as Chapter[],
+            total: (response as Chapter[]).length,
+            book: {}
+          };
+        }
+
+        // Default empty state
+        return { chapters: [], total: 0, book: {} };
+      },
       providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
     }),
 

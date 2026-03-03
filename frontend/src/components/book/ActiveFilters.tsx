@@ -1,7 +1,7 @@
 'use client';
 import { X } from 'lucide-react';
 
-import { FiltersData } from '@/src/features/books/types/book.interface';
+import { FiltersData } from '@/features/books/types/book.interface';
 
 interface ActiveFiltersProps {
   genres: string[];

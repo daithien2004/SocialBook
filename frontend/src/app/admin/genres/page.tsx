@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetGenresQuery, useDeleteGenreMutation } from '@/src/features/genres/api/genreApi';
+import { useGetGenresQuery, useDeleteGenreMutation } from '@/features/genres/api/genreApi';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Search, Plus, Loader2, Edit, Trash2, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
-import { Genre } from '@/src/features/genres/types/genre.interface';
+import { Genre } from '@/features/genres/types/genre.interface';
 import { toast } from 'sonner';
-import { useDebounce } from '@/src/hooks/useDebounce';
-import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
+import { useDebounce } from '@/hooks/useDebounce';
+import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 
 export default function AdminGenresPage() {
     const [page, setPage] = useState(1);

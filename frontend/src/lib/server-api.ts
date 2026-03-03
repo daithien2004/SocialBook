@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const serverApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_NEST_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.NEXT_PUBLIC_NEST_API_URL,
 });
 
 serverApi.interceptors.request.use(

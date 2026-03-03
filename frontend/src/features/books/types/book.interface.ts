@@ -11,9 +11,7 @@ export interface Book {
   coverUrl: string;
   status: 'draft' | 'published' | 'completed';
   tags: string[];
-  views: number;
-  likes: number;
-  isLiked: boolean;
+  likedBy: string[];
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -24,7 +22,7 @@ export interface Book {
   stats: {
     averageRating: number;
     totalRatings: number;
-    chapters: number;
+    chapterCount: number;
     views: number;
     likes: number;
   };
@@ -83,21 +81,19 @@ export interface BookForAdmin {
   coverUrl: string;
   status: 'draft' | 'published' | 'completed';
   tags: string[];
-  views: number;
-  likes: number;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
   stats: {
-    chapters: number;
+    chapterCount: number;
     views: number;
     likes: string; // backend trả về string
   };
 }
 
 export interface BackendPagination {
-  page: number;
-  limit: number;
+  current: number;
+  pageSize: number;
   total: number;
   totalPages: number;
 }
@@ -150,12 +146,12 @@ export interface UpdateBookParams {
 export interface BookStats {
   views: number;
   likes: number;
-  chapters: number;
+  chapterCount: number;
 }
 
 export interface AdminBooksData {
-  books: BookForAdmin[];
-  pagination: BackendPagination;
+  data: BookForAdmin[];
+  meta: BackendPagination;
 }
 
 export interface FiltersData {
@@ -179,9 +175,9 @@ export interface LikeResult {
 
 export interface PaginatedData<T> {
   data: T[];
-  metaData: {
-    page: number;
-    limit: number;
+  meta: {
+    current: number;
+    pageSize: number;
     total: number;
     totalPages: number;
   };

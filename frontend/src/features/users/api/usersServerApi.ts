@@ -1,4 +1,4 @@
-import serverApi from "@/src/lib/server-api";
+import serverApi from "@/lib/server-api";
 
 export async function userServerApi(){
     return {

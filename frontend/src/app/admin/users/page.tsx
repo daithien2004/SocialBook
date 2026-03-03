@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetUsersQuery, useBanUserMutation } from '@/src/features/users/api/usersApi';
+import { useGetUsersQuery, useBanUserMutation } from '@/features/users/api/usersApi';
 import { toast } from 'sonner';
 import { Loader2, ChevronLeft, ChevronRight, Lock, Unlock, Mail, Shield, CheckCircle, XCircle } from 'lucide-react';
-import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
+import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 
 const UsersPage = () => {
     const [page, setPage] = useState(1);
@@ -13,9 +13,9 @@ const UsersPage = () => {
         `current=${page}&pageSize=${pageSize}`
     );
     const [banUser, { isLoading: isBanning }] = useBanUserMutation();
-    const users = data?.items || [];
-    const total = data?.pagination?.totalItems || 0;
-    const totalPages = Math.ceil(total / pageSize);
+    const users = data?.data || [];
+    const total = data?.meta?.total || 0;
+    const totalPages = data?.meta?.totalPages || Math.ceil(total / pageSize);
 
     const handleBan = async (id: string) => {
         try {

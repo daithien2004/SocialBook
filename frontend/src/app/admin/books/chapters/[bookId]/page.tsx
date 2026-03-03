@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useGetBookByIdQuery } from '@/src/features/books/api/bookApi';
+import { useGetBookByIdQuery } from '@/features/books/api/bookApi';
 import {
   useGetAdminChaptersQuery,
   useCreateChapterMutation,
@@ -10,17 +10,17 @@ import {
   useDeleteChapterMutation,
   useGetChapterByIdQuery,
   useLazyGetChapterByIdQuery,
-} from '@/src/features/chapters/api/chaptersApi';
+} from '@/features/chapters/api/chaptersApi';
 import {
   useGenerateChapterAudioMutation,
   useGenerateBookAudioMutation,
   useGetChapterAudioQuery,
-} from '@/src/features/tts/api/ttsApi';
-import { Chapter, Paragraph } from '@/src/features/chapters/types/chapter.interface';
+} from '@/features/tts/api/ttsApi';
+import { Chapter, Paragraph } from '@/features/chapters/types/chapter.interface';
 import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { FileImportModal } from '@/src/components/chapter/FileImportModal';
+import { FileImportModal } from '@/components/chapter/FileImportModal';
 
 export default function ChapterManagementPage() {
   const params = useParams();
@@ -189,31 +189,46 @@ export default function ChapterManagementPage() {
     setParagraphs: (p: Paragraph[]) => void,
     onPaste?: () => void
   ) => {
-    if (content.includes('\n')) {
-      const lines = content.split('\n');
-      const newParagraphs = paragraphs.map(p => ({ ...p }));
+    // Tự động phân tách thành từng câu dựa trên dấu câu (. ! ?) và xuống dòng
+    // Chỉ phân tách nếu user paste một đoạn văn dài có tính chất đa câu/xuống dòng
+    // Tránh việc đang type dấu chấm (.) thì bị nhảy ô ngay lập tức gây khó chịu 
+    const isPaste = content.length - paragraphs[index].content.length > 5;
 
-      // First line goes to current paragraph
-      newParagraphs[index].content = lines[0];
+    if (content.includes('\n') || (isPaste && /[.!?]\s/.test(content))) {
+      // Phân tách bằng newline VÀ dấu câu (dấu chấm/hỏi/chấm than tiếp nối khoảng trắng)
+      // Dùng regex để tách nhưng giữ lại text, ví dụ: "Câu 1. Câu 2" -> ["Câu 1.", "Câu 2"]
+      const segments = content
+        .split(/(?<=[.!?])\s+|\n+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
 
-      // Subsequent lines become new paragraphs
-      const newItems = lines.slice(1).map(line => ({
-        id: uuidv4(),
-        content: line
-      }));
+      if (segments.length > 1) {
+        const newParagraphs = paragraphs.map(p => ({ ...p }));
 
-      newParagraphs.splice(index + 1, 0, ...newItems);
-      setParagraphs(newParagraphs);
+        // Đoạn đầu tiên vào current index
+        newParagraphs[index].content = segments[0];
 
-      // Scroll to bottom if pasting multiple lines
-      if (lines.length > 1 && onPaste) {
-        setTimeout(onPaste, 100);
+        // Các đoạn tiếp theo tạo ô mới
+        const newItems = segments.slice(1).map(line => ({
+          id: uuidv4(),
+          content: line
+        }));
+
+        newParagraphs.splice(index + 1, 0, ...newItems);
+        setParagraphs(newParagraphs);
+
+        // Scroll to bottom if pasting
+        if (onPaste) {
+          setTimeout(onPaste, 100);
+        }
+        return;
       }
-    } else {
-      const newParagraphs = paragraphs.map(p => ({ ...p }));
-      newParagraphs[index].content = content;
-      setParagraphs(newParagraphs);
     }
+
+    // Nếu chỉ gõ bình thường hoặc không có đoạn nào tách được
+    const newParagraphs = paragraphs.map(p => ({ ...p }));
+    newParagraphs[index].content = content;
+    setParagraphs(newParagraphs);
   };
 
   const handleParagraphKeyDown = (
@@ -309,12 +324,14 @@ export default function ChapterManagementPage() {
       // Note: The mutation parameter is named "bookSlug" but we're passing bookId
       // because the backend route expects an ObjectId, not a slug
       const result = await createChapter({
-        bookSlug: bookId, // This is actually bookId, not slug!
+        bookSlug: book?.slug || '',
         data: {
           title: newChapterTitle,
+          bookId: bookId,
           paragraphs: newChapterParagraphs.filter(p => p.content.trim()),
         },
       }).unwrap();
+
 
       console.log('Chapter created successfully:', result);
       setShowNewChapterForm(false);
@@ -334,12 +351,20 @@ export default function ChapterManagementPage() {
   // TTS handlers - NO hardcoded options to allow backend auto-detection
   const handleGenerateAudio = async (chapterId: string) => {
     try {
-      await generateChapterAudio({
+      const ttsResult = await generateChapterAudio({
         chapterId,
       }).unwrap();
       toast.success('Tạo audio thành công!');
-      // Refetch chapters to update TTS status and audio URL
-      await refetchChapters();
+
+      // Optimistic update: cập nhật ngay local state trước khi refetch
+      setChapters(prev => prev.map(ch =>
+        ch.id === chapterId
+          ? { ...ch, ttsStatus: 'completed' as const, audioUrl: ttsResult.audioUrl }
+          : ch
+      ));
+
+      // Refetch để đồng bộ với server (ttsApi và chaptersApi là 2 instance riêng)
+      refetchChaptersQuery();
     } catch (error: any) {
       console.error('Failed to generate audio:', error);
       toast.error(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
@@ -360,8 +385,11 @@ export default function ChapterManagementPage() {
         `Thành công: ${result.successful}/${result.total}\n` +
         `Thất bại: ${result.failed}`
       );
-      // Refetch chapters to update TTS status and audio URLs for all chapters
-      await refetchChapters();
+
+      // Refetch để lấy trạng thái mới nhất từ server
+      setPage(1);
+      setChapters([]);
+      refetchChaptersQuery();
     } catch (error: any) {
       console.error('Failed to generate all audio:', error);
       alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
@@ -377,11 +405,15 @@ export default function ChapterManagementPage() {
 
     for (const chapter of importedChapters) {
       try {
-        // Split content into paragraphs
-        const paragraphs = chapter.content.split('\n').filter(p => p.trim()).map(p => ({
-          id: uuidv4(),
-          content: p.trim()
-        }));
+        // Tách câu và đoạn (phân tách mảng lớn theo \n hoặc câu)
+        const paragraphs = chapter.content
+          .split(/(?<=[.!?])\s+|\n+/)
+          .map(p => p.trim())
+          .filter(p => p.length > 0)
+          .map(p => ({
+            id: uuidv4(),
+            content: p
+          }));
 
         if (!book?.slug) {
           toast.error('Book information missing');
@@ -396,12 +428,14 @@ export default function ChapterManagementPage() {
         }
 
         await createChapter({
-          bookSlug: book.slug, // Uses slug from UseParams, but ensure it matches API expectation (seems to use slug in URL)
+          bookSlug: book.slug,
           data: {
             title: chapter.title || `Chapter ${successCount + 1}`,
+            bookId: bookId,       // required by CreateChapterDto
             paragraphs: paragraphs,
           },
         }).unwrap();
+
         successCount++;
       } catch (error: any) {
         console.error(`Failed to import chapter ${chapter.title}:`, error);

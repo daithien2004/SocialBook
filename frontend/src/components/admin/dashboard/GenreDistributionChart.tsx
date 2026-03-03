@@ -1,6 +1,6 @@
 'use client';
 
-import { BookStats } from '@/src/features/admin/types/dashboard.types';
+import { BookStats } from '@/features/admin/types/dashboard.types';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface GenreDistributionChartProps {

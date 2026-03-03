@@ -1,17 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useGetAuthorsQuery, useDeleteAuthorMutation } from '@/src/features/authors/api/authorApi';
+import { useGetAuthorsQuery, useDeleteAuthorMutation } from '@/features/authors/api/authorApi';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Search, Plus, Loader2, Edit, Trash2, User, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Author } from '@/src/features/authors/types/author.interface';
+import { Author } from '@/features/authors/types/author.interface';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
-import { useDebounce } from '@/src/hooks/useDebounce';
-import { ConfirmDelete } from '@/src/components/admin/ConfirmDelete';
+import { useDebounce } from '@/hooks/useDebounce';
+import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 
 export default function AdminAuthorsPage() {
     const [page, setPage] = useState(1);

@@ -1,7 +1,7 @@
 // src/app/admin/books/edit/[bookId]/page.tsx
 'use client';
 
-import EditBook from '@/src/components/admin/book/EditBook';
+import EditBook from '@/components/admin/book/EditBook';
 import { use } from 'react';
 
 interface PageProps {

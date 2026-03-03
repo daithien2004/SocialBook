@@ -25,10 +25,10 @@ export function useTabsManager({
     const currentState = tabStates[activeTab];
 
     const setFetchedData = useCallback((data: PaginatedData<Book>) => {
-        if (!data?.data || !data?.metaData) return;
+        if (!data?.data || !data?.meta) return;
 
         const newBooks = data.data;
-        const metaData = data.metaData;
+        const metaData = data.meta;
 
         setTabStates((prev) => {
             const current = prev[activeTab];
@@ -39,7 +39,7 @@ export function useTabsManager({
                     [activeTab]: {
                         ...current,
                         books: newBooks,
-                        hasMore: metaData.page < metaData.totalPages,
+                        hasMore: metaData.current < metaData.totalPages,
                         isInitialized: true,
                     },
                 };
@@ -53,7 +53,7 @@ export function useTabsManager({
                 [activeTab]: {
                     ...current,
                     books: [...current.books, ...uniqueBooks],
-                    hasMore: metaData.page < metaData.totalPages,
+                    hasMore: metaData.current< metaData.totalPages,
                     isInitialized: true,
                 },
             };

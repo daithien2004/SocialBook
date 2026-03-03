@@ -1,7 +1,7 @@
 "use client"
-import {useGetFollowingStatsListQuery} from "@/src/features/follows/api/followApi";
+import {useGetFollowingStatsListQuery} from "@/features/follows/api/followApi";
 import {useParams} from "next/navigation";
-import FollowingItem from "@/src/components/user/following-item";
+import FollowingItem from "@/components/user/following-item";
 
 const FollowingPage = () => {
     const { userId } = useParams<{ userId: string }>();

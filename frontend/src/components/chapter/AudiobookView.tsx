@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Volume2, Play, Pause, SkipForward, SkipBack, Loader2 } from 'lucide-react';
-import { useGetChapterAudioQuery, useIncrementPlayCountMutation } from '@/src/features/tts/api/ttsApi';
+import { useGetChapterAudioQuery, useIncrementPlayCountMutation } from '@/features/tts/api/ttsApi';
 
 interface Paragraph {
     id: string;

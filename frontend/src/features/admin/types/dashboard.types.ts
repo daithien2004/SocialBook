@@ -43,8 +43,10 @@ export interface BookStats {
         id: string;
         title: string;
         slug: string;
-        views: number;
-        likes: number;
+        stats: {
+            views: number;
+            likes: number;
+        };
     }>;
 }
 

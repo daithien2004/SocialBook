@@ -15,8 +15,9 @@ import {
     ChevronDown,
     Save,
 } from 'lucide-react';
-import { useUpdateBookMutation, useGetBookByIdQuery } from '@/src/features/books/api/bookApi';
-import { useGetAuthorsQuery, useGetGenresQuery } from '@/src/features/admin/api/bookRelationApi';
+import { useUpdateBookMutation, useGetBookByIdQuery } from '@/features/books/api/bookApi';
+import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
+import { getErrorMessage } from '@/lib/utils';
 
 const DEFAULT_COVER = '/abstract-book-pattern.png';
 
@@ -179,17 +180,7 @@ export default function EditBook({ bookId }: EditBookProps) {
             }, 1500);
 
         } catch (err: any) {
-            let errorMsg = 'Không thể cập nhật sách. Vui lòng kiểm tra lại thông tin.';
-
-            if (err?.data?.message) {
-                if (Array.isArray(err.data.message)) {
-                    errorMsg = err.data.message.join(', ');
-                } else {
-                    errorMsg = err.data.message;
-                }
-            }
-
-            setMessage({ type: 'error', text: errorMsg });
+            setMessage({ type: 'error', text: getErrorMessage(err) });
         }
     };
 

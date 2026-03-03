@@ -1,36 +1,50 @@
 'use client';
 
+import { NotificationBell } from '@/components/notification/NotificationBell';
 import {
-  BookOpen,
-  Globe,
-  Search,
-  Library,
-  ChevronDown,
-  Moon,
-  Sun,
-  Flame,
-  Target,
-  Trophy,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
-import { useRef, useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
-import { NotificationBell } from '@/src/components/notification/NotificationBell';
-import {
-  useGetStreakQuery,
   useCheckInStreakMutation,
   useGetDailyGoalQuery,
-} from '@/src/features/gamification/api/gamificationApi';
-import { toast } from 'sonner';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+  useGetStreakQuery,
+} from '@/features/gamification/api/gamificationApi';
+import { useAppAuth } from '@/hooks/useAppAuth';
+import {
+  BookOpen,
+  Flame,
+  Globe,
+  Library,
+  LogOut,
+  Menu,
+  Moon,
+  Search,
+  Settings,
+  Sun,
+  Target,
+  Trophy,
+  User,
+} from 'lucide-react';
+import { signOut } from 'next-auth/react';
+import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
+import { toast } from 'sonner';
 import { logout } from '../features/auth/slice/authSlice';
+import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export function HeaderClient() {
   const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -49,54 +63,54 @@ export function HeaderClient() {
     skip: isGuest,
   });
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const checkInKey = `streak-checked-in-${userId}-${todayStr}`;
+    if (localStorage.getItem(checkInKey)) return; 
+
+    const performCheckIn = async () => {
+      try {
+        const result = await checkInStreak().unwrap();
+        localStorage.setItem(checkInKey, 'true');
+        if (result.message === 'Streak updated') {
+          toast.success(`Streak updated! ${result.currentStreak} day(s) 🔥`, {
+            icon: '🔥',
+            style: { borderRadius: '10px', background: '#333', color: '#fff' },
+          });
+        }
+      } catch (error) { }
+    };
+
+    performCheckIn();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     setMounted(true);
+    if (!dailyGoal || !userId) return;
 
-    if (dailyGoal && userId) {
-       const minutesGoal = dailyGoal.goals?.minutes;
-       const current = minutesGoal?.current || 0;
-       const target = minutesGoal?.target || 90;
-       
-       const todayStr = new Date().toISOString().split('T')[0];
-       const celebrationKey = `daily-goal-celebrated-${userId}-${todayStr}`;
-       const hasCelebratedToday = localStorage.getItem(celebrationKey);
+    const minutesGoal = dailyGoal.goals?.minutes;
+    const current = minutesGoal?.current || 0;
+    const target = minutesGoal?.target || 90;
 
-       if (current >= target && !hasCelebratedToday) {
-          localStorage.setItem(celebrationKey, 'true');
-          import('canvas-confetti').then((confetti) => {
-            confetti.default({
-              particleCount: 150,
-              spread: 100,
-              origin: { y: 0.3 },
-              colors: ['#FFD700', '#FFA500', '#ffffff'],
-            });
-          });
-          toast.success('Xuất sắc! Bạn đã đạt mục tiêu hôm nay! 🎉');
-       }
+    const todayStr = new Date().toISOString().split('T')[0];
+    const celebrationKey = `daily-goal-celebrated-${userId}-${todayStr}`;
+    const hasCelebratedToday = localStorage.getItem(celebrationKey);
+
+    if (current >= target && !hasCelebratedToday) {
+      localStorage.setItem(celebrationKey, 'true');
+      import('canvas-confetti').then((confetti) => {
+        confetti.default({
+          particleCount: 150,
+          spread: 100,
+          origin: { y: 0.3 },
+          colors: ['#FFD700', '#FFA500', '#ffffff'],
+        });
+      });
+      toast.success('Xuất sắc! Bạn đã đạt mục tiêu hôm nay! 🎉');
     }
-
-    if (isAuthenticated) {
-      const performCheckIn = async () => {
-        try {
-          const result = await checkInStreak().unwrap();
-
-          if (result.message === 'Streak updated') {
-            toast.success(`Streak updated! ${result.currentStreak} day(s) 🔥`, {
-              icon: '🔥',
-              style: {
-                borderRadius: '10px',
-                background: '#333',
-                color: '#fff',
-              },
-            });
-          }
-        } catch (error) {
-        }
-      };
-      performCheckIn();
-    }
-  }, [isAuthenticated, checkInStreak, dailyGoal]);
+  }, [dailyGoal, userId]);
 
   const dispatch = useDispatch();
 
@@ -107,61 +121,46 @@ export function HeaderClient() {
     router.push('/login');
   };
 
-  const goTo = (path: string) => {
-    router.push(path);
-    setIsMenuOpen(false);
-  };
-
   const toggleTheme = () => {
     if (!mounted) return;
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
-    <header className="fixed top-0 z-50 w-full h-16 bg-white/80 dark:bg-black backdrop-blur-md border-b border-gray-200 dark:border-white/10 transition-colors duration-300">
+    <header className="fixed top-0 z-50 w-full h-16 bg-background/80 backdrop-blur-md border-b border-border transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 h-full">
         <div className="flex items-center justify-between h-full">
           <div
-            className="flex items-center gap-3 group cursor-pointer"
+            className="flex items-center gap-3 cursor-pointer"
             onClick={() => router.push('/')}
           >
-            <BookOpen className="w-6 h-6 text-gray-900 dark:text-white stroke-[1.5px] group-hover:scale-110 transition-transform duration-300" />
-
-            <h1 className="text-2xl font-serif font-bold text-gray-900 dark:text-white tracking-tight group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
+            <BookOpen className="w-6 h-6 text-foreground stroke-[1.5px] hover:scale-110 transition-transform duration-300" />
+            <h1 className="text-2xl font-serif font-bold text-foreground tracking-tight hover:text-muted-foreground transition-colors">
               SocialBook
             </h1>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <button
-              onClick={() => router.push('/books')}
-              className="group flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-            >
-              <Search className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
+          <nav className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" onClick={() => router.push('/books')} className="gap-2 text-muted-foreground hover:text-foreground">
+              <Search className="w-4 h-4" />
               Tìm Kiếm Sách
-            </button>
-
-            <button
-              onClick={() => router.push('/posts')}
-              className="group flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-            >
-              <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
+            </Button>
+            <Button variant="ghost" onClick={() => router.push('/posts')} className="gap-2 text-muted-foreground hover:text-foreground">
+              <Globe className="w-4 h-4" />
               Bảng Feed
-            </button>
-
-            <button
-              onClick={() => router.push('/library')}
-              className="group flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-            >
-              <Library className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
+            </Button>
+            <Button variant="ghost" onClick={() => router.push('/library')} className="gap-2 text-muted-foreground hover:text-foreground">
+              <Library className="w-4 h-4" />
               Thư viện
-            </button>
+            </Button>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <button
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
-              className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
+              className="rounded-full text-muted-foreground hover:text-foreground"
               title="Đổi giao diện"
             >
               {mounted && theme === 'dark' ? (
@@ -169,18 +168,17 @@ export function HeaderClient() {
               ) : (
                 <Moon className="w-5 h-5" />
               )}
-            </button>
+            </Button>
 
             {isAuthenticated && user ? (
               <>
                 {/* Daily Goal Display */}
                 {dailyGoal && (
                   <div
-                    className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${
-                      (dailyGoal.goals?.minutes?.current || 0) >= (dailyGoal.goals?.minutes?.target || 90)
-                        ? 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-500/30 text-yellow-700 dark:text-yellow-400'
-                        : 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400'
-                    }`}
+                    className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${(dailyGoal.goals?.minutes?.current || 0) >= (dailyGoal.goals?.minutes?.target || 90)
+                      ? 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-500/30 text-yellow-700 dark:text-yellow-400'
+                      : 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400'
+                      }`}
                     title="Mục tiêu đọc sách hôm nay"
                   >
                     {(dailyGoal.goals?.minutes?.current || 0) >= (dailyGoal.goals?.minutes?.target || 90) ? (
@@ -200,11 +198,10 @@ export function HeaderClient() {
                   title="Chuỗi ngày đọc sách liên tiếp"
                 >
                   <Flame
-                    className={`w-4 h-4 ${
-                      streakData?.currentStreak > 0
-                        ? 'fill-orange-500 text-orange-500'
-                        : 'text-orange-300'
-                    }`}
+                    className={`w-4 h-4 ${streakData?.currentStreak > 0
+                      ? 'fill-orange-500 text-orange-500'
+                      : 'text-orange-300'
+                      }`}
                   />
                   <span className="text-sm font-bold font-mono">
                     {streakData?.currentStreak || 0}
@@ -212,108 +209,98 @@ export function HeaderClient() {
                 </div>
 
                 <NotificationBell />
-                <div className="relative inline-flex items-center">
-                  <button
-                    onClick={() => setIsMenuOpen((prev) => !prev)}
-                    className="flex items-center"
-                  >
-                    <img
-                      src={avatarUrl || '/user.png'}
-                      alt="User avatar"
-                      className="h-9 w-9 rounded-full object-cover border border-gray-200 dark:border-white/20 transition-transform shadow-sm"
-                    />
-                    <ChevronDown className="ml-1 w-4 h-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors" />
-                  </button>
 
-                  {isMenuOpen && (
-                    <div className="absolute right-0 top-11 mt-2 w-56 rounded-lg bg-white dark:bg-[#18181b] shadow-lg border border-gray-200 dark:border-zinc-700 overflow-hidden z-50">
-                      <div className="px-4 py-3 border-b border-gray-100 dark:border-zinc-700">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {user.name || 'Người dùng'}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full px-0 hover:bg-transparent">
+                      <Avatar className="h-9 w-9 border border-border shadow-sm">
+                        <AvatarImage src={avatarUrl} alt={user.name || 'User'} />
+                        <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
                       </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {!user.onboardingCompleted && (
+                      <DropdownMenuItem onClick={() => router.push('/onboarding')} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10">
+                        <Flame className="mr-2 h-4 w-4" />
+                        <span>Tiếp tục Onboarding</span>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => router.push(`/users/${userId}`)}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Hồ sơ của tôi</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/library')}>
+                      <Library className="mr-2 h-4 w-4" />
+                      <span>Thư viện</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {/* router.push('/settings') */ }}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Cài đặt</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Đăng xuất</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-                      <div className="py-1">
-                        {!user.onboardingCompleted && (
-                           <button
-                             onClick={() => goTo('/onboarding')}
-                             className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 font-medium hover:bg-red-50 dark:hover:bg-red-900/10"
-                           >
-                             <Flame className="w-4 h-4 mr-2" />
-                             Tiếp tục Onboarding
-                           </button>
-                        )}
-                        <div className="px-4 py-2 sm:hidden flex items-center justify-between text-sm text-gray-700 dark:text-gray-200">
-                          <span className="flex items-center gap-2">
-                            <Flame className="w-4 h-4 text-orange-500" />{' '}
-                            Currently Streak
-                          </span>
-                          <span className="font-bold">
-                            {streakData?.currentStreak || 0}
-                          </span>
+                {/* Mobile Menu */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="md:hidden">
+                      <Menu className="w-5 h-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right">
+                    <div className="flex flex-col gap-4 mt-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Avatar>
+                          <AvatarImage src={avatarUrl} />
+                          <AvatarFallback>{user.username?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-bold">{user.name}</span>
+                          <span className="text-xs text-muted-foreground">{user.email}</span>
                         </div>
-                        <button
-                          onClick={() => goTo(`/users/${userId}`)}
-                          className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                        >
-                          Hồ sơ của tôi
-                        </button>
-                        <button
-                          onClick={() => goTo('/library')}
-                          className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                        >
-                          Thư viện
-                        </button>
-                        <button
-                          // onClick={() => goTo("/settings/language")}
-                          className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                        >
-                          Ngôn ngữ: Tiếng Việt
-                        </button>
-
-                        <button
-                          onClick={toggleTheme}
-                          className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                        >
-                          <span>
-                            Chủ đề:{' '}
-                            {mounted && theme === 'dark' ? 'Tối' : 'Sáng'}
-                          </span>
-                        </button>
-
-                        <button
-                          // onClick={() => goTo("/settings")}
-                          className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800"
-                        >
-                          Cài đặt
-                        </button>
                       </div>
-
-                      <div className="border-t border-gray-100 dark:border-zinc-700">
-                        <button
-                          onClick={() => {
-                            setIsMenuOpen(false);
-                            handleLogout();
-                          }}
-                          className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
-                        >
-                          Đăng xuất
-                        </button>
-                      </div>
+                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push(`/users/${userId}`)}>
+                        <User className="w-4 h-4" /> Hồ sơ
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push('/books')}>
+                        <Search className="w-4 h-4" /> Tìm sách
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push('/posts')}>
+                        <Globe className="w-4 h-4" /> Bảng feed
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push('/library')}>
+                        <Library className="w-4 h-4" /> Thư viện
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleLogout}>
+                        <LogOut className="w-4 h-4" /> Đăng xuất
+                      </Button>
                     </div>
-                  )}
-                </div>
+                  </SheetContent>
+                </Sheet>
               </>
             ) : (
-              <button
+              <Button
                 onClick={() => router.push('/login')}
-                className="group flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-600 dark:text-gray-300 hover:border-blue-200 dark:hover:border-blue-500/50 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300"
+                variant="outline"
+                className="gap-2 border-primary/20 hover:border-primary text-primary hover:text-primary hover:bg-primary/5"
               >
                 Đăng nhập
-              </button>
+              </Button>
             )}
           </div>
         </div>

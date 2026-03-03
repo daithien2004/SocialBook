@@ -1,8 +1,8 @@
+import { NESTJS_BOOKS_ENDPOINTS } from '@/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { AdminBooksData, Book, BookForAdmin, BookStats, FiltersData, GetAdminBooksParams, GetBookParams, GetBooksParams, PaginatedData, UpdateBookParams } from '../types/book.interface';
 import { buildLikeBookInvalidationTags, buildListTags, buildUpdateBookInvalidationTags } from '../books.helpers';
-import { NESTJS_BOOKS_ENDPOINTS } from '@/src/constants/server-endpoints';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
+import { AdminBooksData, Book, BookForAdmin, BookStats, FiltersData, GetAdminBooksParams, GetBookParams, GetBooksParams, PaginatedData, UpdateBookParams } from '../types/book.interface';
 
 export const BOOK_TAGS = {
   BOOKS: 'Books',
@@ -69,7 +69,7 @@ export const booksApi = createApi({
         params,
       }),
       providesTags: (result) =>
-        buildListTags(result?.books, BOOK_TAGS.ADMIN_BOOKS, 'id'),
+        buildListTags(result?.data, BOOK_TAGS.ADMIN_BOOKS, 'id'),
     }),
 
     getBookById: builder.query<BookForAdmin, string>({

@@ -4,7 +4,7 @@ import { Model } from 'mongoose';
 import {
   Author,
   AuthorDocument,
-} from '@/src/modules/authors/schemas/author.schema';
+} from '@/infrastructure/database/schemas/author.schema';
 
 @Injectable()
 export class AuthorsSeed {

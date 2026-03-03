@@ -6,7 +6,7 @@ import {
     TextToSpeechDocument,
     TTSStatus,
     TTSVoiceType,
-} from '@/src/modules/text-to-speech/schemas/textToSpeech.schema';
+} from '@/infrastructure/database/schemas/text-to-speech.schema';
 
 @Injectable()
 export class TextToSpeechSeed {

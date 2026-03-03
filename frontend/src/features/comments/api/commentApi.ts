@@ -1,9 +1,9 @@
-import {createApi} from '@reduxjs/toolkit/query/react';
-import {axiosBaseQuery} from '@/src/lib/nestjs-client-api';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import {
     NESTJS_COMMENTS_ENDPOINTS,
     NESTJS_LIKES_ENDPOINTS,
-} from '@/src/constants/server-endpoints';
+} from '@/constants/server-endpoints';
 import {
     GetCommentsResponse,
     GetCommentsRequest,
@@ -28,10 +28,10 @@ export const commentApi = createApi({
     endpoints: (builder) => ({
         getCommentsByTarget: builder.query<GetCommentsResponse, GetCommentsRequest>(
             {
-                query: ({targetId, parentId, cursor, limit}) => ({
+                query: ({ targetId, parentId, cursor, limit }) => ({
                     url: NESTJS_COMMENTS_ENDPOINTS.getCommentsByTarget,
                     method: 'GET',
-                    params: {targetId, parentId, cursor, limit},
+                    params: { targetId, parentId, cursor, limit },
                 }),
                 providesTags: (result, error, arg) => {
                     const threadTag = {
@@ -39,11 +39,11 @@ export const commentApi = createApi({
                         id: `THREAD-${arg.targetId}-${arg.parentId ?? 'root'}`,
                     };
 
-                    if (!result?.items) return [threadTag];
+                    if (!result?.comments) return [threadTag];
 
                     return [
                         threadTag,
-                        ...result.items.map((c) => ({
+                        ...result.comments.map((c) => ({
                             type: 'Comment' as const,
                             id: c.id,
                         })),
@@ -56,10 +56,10 @@ export const commentApi = createApi({
             ResolveParentResponse,
             GetResolveParentRequest
         >({
-            query: ({targetId, parentId, targetType}) => ({
-                url: NESTJS_COMMENTS_ENDPOINTS.getResolveParent,
+            query: ({ targetId, parentId, targetType }) => ({
+                url: NESTJS_COMMENTS_ENDPOINTS.getCommentsByTarget,
                 method: 'GET',
-                params: {targetId, parentId, targetType},
+                params: { targetId, parentId, targetType },
             }),
         }),
 
@@ -69,22 +69,27 @@ export const commentApi = createApi({
                 method: 'POST',
                 body: data,
             }),
-            invalidatesTags: (_, __, arg) => [
-                {
-                    type: 'Comment',
-                    id: `THREAD-${arg.targetId}-${arg.parentId ?? 'root'}`,
-                },
-                {
-                    type: 'Comment',
-                    id: `COUNT-${arg.targetType}-${arg.targetId}`,
-                },
-                arg.parentId
-                    ? {
+
+            invalidatesTags: (result, error) => {
+                if (!result) return [];
+
+                return [
+                    {
                         type: 'Comment',
-                        id: `REPLY-COUNT-${arg.parentId}`,
-                    }
-                    : undefined,
-            ],
+                        id: `THREAD-${result.targetId}-${result.parentId ?? 'root'}`,
+                    },
+                    {
+                        type: 'Comment',
+                        id: `COUNT-${result.targetType}-${result.targetId}`,
+                    },
+                    result.parentId
+                        ? {
+                            type: 'Comment',
+                            id: `REPLY-COUNT-${result.parentId}`,
+                        }
+                        : undefined,
+                ].filter(Boolean) as { type: 'Comment'; id: string }[];
+            },
         }),
 
         postToggleLike: builder.mutation<
@@ -105,10 +110,10 @@ export const commentApi = createApi({
         }),
 
         getCommentCount: builder.query<{ count: number }, CommentRequest>({
-            query: ({targetId, targetType}) => ({
+            query: ({ targetId, targetType }) => ({
                 url: NESTJS_COMMENTS_ENDPOINTS.getCount,
                 method: "GET",
-                params: {targetId, targetType},
+                params: { targetId, targetType },
             }),
             providesTags: (result, error, arg) => [
                 {
@@ -122,10 +127,10 @@ export const commentApi = createApi({
             EditCommentResponse,
             EditCommentRequest
         >({
-            query: ({id, content}) => ({
+            query: ({ id, content }) => ({
                 url: NESTJS_COMMENTS_ENDPOINTS.editComment(id),
                 method: 'POST',
-                body: {content},
+                body: { content },
             }),
             invalidatesTags: (_, __, arg) => [
                 {
@@ -139,14 +144,18 @@ export const commentApi = createApi({
             void,
             DeleteCommentRequest
         >({
-            query: ({id}) => ({
+            query: ({ id }) => ({
                 url: NESTJS_COMMENTS_ENDPOINTS.deleteComment(id),
-                method: 'POST',
+                method: 'DELETE',
             }),
             invalidatesTags: (_, __, arg) => [
                 {
                     type: 'Comment',
                     id: `THREAD-${arg.targetId}-${arg.parentId ?? 'root'}`,
+                },
+                {
+                    type: 'Comment',
+                    id: `REPLY-COUNT-${arg.parentId}`,
                 },
             ],
         }),
@@ -155,13 +164,14 @@ export const commentApi = createApi({
             GetReplyCountByParentResponse,
             GetReplyCountByParentRequest
         >({
-            query: ({parentId}) => ({
-                url: NESTJS_COMMENTS_ENDPOINTS.getReplyCountByParent(parentId),
-                method: 'GET',
+            query: ({ targetId, targetType, parentId }) => ({
+                url: NESTJS_COMMENTS_ENDPOINTS.getCount,
+                method: "GET",
+                params: { targetId, targetType, parentId },
             }),
             providesTags: (result, error, arg) => [
                 {
-                    type: 'Comment' as const,
+                    type: 'Comment',
                     id: `REPLY-COUNT-${arg.parentId}`,
                 },
             ],
@@ -176,7 +186,6 @@ export const {
     useGetCommentCountQuery,
     usePostToggleLikeMutation,
     useGetReplyCountByParentQuery,
-
     useEditCommentMutation,
     useDeleteCommentMutation,
 } = commentApi;

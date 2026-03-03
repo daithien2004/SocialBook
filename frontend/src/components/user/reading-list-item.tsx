@@ -1,7 +1,7 @@
-import { BookItem } from "@/src/components/user/book-item";
+import { BookItem } from "@/components/user/book-item";
 import { ChevronRight } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useGetCollectionDetailNoAuthQuery } from "@/src/features/library/api/libraryApi";
+import { useGetCollectionDetailNoAuthQuery } from "@/features/library/api/libraryApi";
 
 interface ReadingListItemProps {
     id: string;

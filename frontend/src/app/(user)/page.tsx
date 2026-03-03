@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/src/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
-import HomePageClient from '@/src/components/HomePageClient';
+import HomePageClient from '@/components/HomePageClient';
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);

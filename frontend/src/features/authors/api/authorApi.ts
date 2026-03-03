@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_AUTHORS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_AUTHORS_ENDPOINTS } from '@/constants/server-endpoints';
 import {
   Author,
   AuthorsListResponse,
@@ -26,12 +26,6 @@ export const authorApi = createApi({
           name: params.name,
         },
       }),
-      transformResponse: (response: any) => {
-        return {
-          data: response.data,
-          meta: response.meta,
-        };
-      },
       providesTags: (result) =>
         result?.data
           ? [
@@ -45,9 +39,6 @@ export const authorApi = createApi({
         url: NESTJS_AUTHORS_ENDPOINTS.getById(id),
         method: 'GET',
       }),
-      transformResponse: (response: any) => {
-        return response;
-      },
       providesTags: (result, error, id) => [{ type: 'Author', id }],
     }),
     createAuthor: builder.mutation<Author, CreateAuthorRequest>({
@@ -56,7 +47,6 @@ export const authorApi = createApi({
         method: 'POST',
         body,
       }),
-      transformResponse: (response: any) => response.data,
       invalidatesTags: [{ type: 'Authors', id: 'LIST' }],
     }),
     updateAuthor: builder.mutation<Author, UpdateAuthorRequest>({
@@ -65,7 +55,6 @@ export const authorApi = createApi({
         method: 'PUT',
         body: data,
       }),
-      transformResponse: (response: any) => response.data,
       invalidatesTags: (result, error, { id }) => [
         { type: 'Author', id },
         { type: 'Authors', id: 'LIST' },

@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_GEMINI_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_GEMINI_ENDPOINTS } from '@/constants/server-endpoints';
 
 export const geminiApi = createApi({
   reducerPath: 'geminiApi',

@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
-import { BookOrderField } from '@/src/features/books/types/book.interface';
+import { BookOrderField } from '@/features/books/types/book.interface';
 
 export const useBookParams = () => {
     const searchParams = useSearchParams();

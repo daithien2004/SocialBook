@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_TTS_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_TTS_ENDPOINTS } from '@/constants/server-endpoints';
 
 export interface TTSAudio {
     id: string;
@@ -42,7 +42,7 @@ export interface GenerateBookAudioResponse {
 export const ttsApi = createApi({
     reducerPath: 'ttsApi',
     baseQuery: axiosBaseQuery(),
-    tagTypes: ['TTS'],
+    tagTypes: ['TTS', 'Chapters'],
     endpoints: (builder) => ({
         // Generate audio for a single chapter
         generateChapterAudio: builder.mutation<
@@ -60,6 +60,7 @@ export const ttsApi = createApi({
                     return [
                         { type: 'TTS', id: chapterId },
                         { type: 'TTS', id: 'LIST' },
+                        { type: 'Chapters', id: 'LIST' },
                     ];
                 }
                 return [];
@@ -76,7 +77,10 @@ export const ttsApi = createApi({
                 method: 'POST',
                 body: options,
             }),
-            invalidatesTags: [{ type: 'TTS', id: 'LIST' }],
+            invalidatesTags: [
+                { type: 'TTS', id: 'LIST' },
+                { type: 'Chapters', id: 'LIST' },
+            ],
         }),
 
         // Get TTS audio by chapter ID
@@ -85,11 +89,6 @@ export const ttsApi = createApi({
                 url: NESTJS_TTS_ENDPOINTS.getByChapter(chapterId),
                 method: 'GET',
             }),
-            transformResponse: (response: any) => {
-                // Handle case where response might be null or have nested data
-                if (!response) return null;
-                return response.data || response;
-            },
             providesTags: (result, error, chapterId) => [
                 { type: 'TTS', id: chapterId },
             ],

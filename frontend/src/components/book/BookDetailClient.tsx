@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { HeaderClient } from '@/src/components/HeaderClient';
+import { HeaderClient } from '@/components/HeaderClient';
 
-import { useBookDetail } from '@/src/features/books/hooks/useBookDetail';
+import { useBookDetail } from '@/features/books/hooks/useBookDetail';
 import { BookHero } from './BookHero';
 import { BookDescription } from './BookDescription';
 import { BookSidebar } from './BookSidebar';
@@ -20,6 +20,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     book,
     isLoading,
     error,
+    isLiked,
     isLiking,
     isCreatingPost,
     handleToggleLike,
@@ -71,6 +72,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
           <BookHero
             book={book}
+            isLiked={isLiked}
             isLiking={isLiking}
             onToggleLike={handleToggleLike}
             onOpenLibrary={() => setLibraryModalOpen(true)}

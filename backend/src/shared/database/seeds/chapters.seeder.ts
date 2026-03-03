@@ -4,8 +4,8 @@ import { Model, Types } from 'mongoose';
 import {
   Chapter,
   ChapterDocument,
-} from '@/src/modules/chapters/schemas/chapter.schema';
-import { Book, BookDocument } from '@/src/modules/books/schemas/book.schema';
+} from '@/infrastructure/database/schemas/chapter.schema';
+import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
 
 @Injectable()
 export class ChaptersSeed {

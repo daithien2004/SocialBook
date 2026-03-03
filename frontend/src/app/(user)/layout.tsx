@@ -1,6 +1,6 @@
-import { Header } from '@/src/components/header';
+import { Header } from '@/components/header';
 import { ReactNode } from 'react';
-import { ChatWidget } from '@/src/components/ChatWidget';
+import { ChatWidget } from '@/components/ChatWidget';
 import {ThemeProvider} from "next-themes";
 
 export default async function ClientLayout({

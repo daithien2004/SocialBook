@@ -2,7 +2,7 @@
 'use client';
 
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
-import { BookForAdmin } from '@/src/features/books/types/book.interface';
+import { BookForAdmin } from '@/features/books/types/book.interface';
 
 interface DeleteBookModalProps {
     book: BookForAdmin | null;

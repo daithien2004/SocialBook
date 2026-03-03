@@ -4,20 +4,23 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   Author,
   AuthorSchema,
-} from '@/src/modules/authors/schemas/author.schema';
-import { Book, BookSchema } from '@/src/modules/books/schemas/book.schema';
-import { Genre, GenreSchema } from '@/src/modules/genres/schemas/genre.schema';
+} from '@/infrastructure/database/schemas/author.schema';
+import { Book, BookSchema } from '@/infrastructure/database/schemas/book.schema';
+import { Genre, GenreSchema } from '@/infrastructure/database/schemas/genre.schema';
+import { Review, ReviewSchema } from '@/infrastructure/database/schemas/review.schema';
+import { Chapter, ChapterSchema } from '@/infrastructure/database/schemas/chapter.schema';
+import { User, UserSchema } from '@/infrastructure/database/schemas/user.schema';
+import { Role, RoleSchema } from '@/infrastructure/database/schemas/role.schema';
+import { TextToSpeech } from '@/domain/text-to-speech/entities/text-to-speech.entity';
+import { Post, PostSchema } from '@/infrastructure/database/schemas/post.schema';
+import { Notification, NotificationSchema } from '@/infrastructure/database/schemas/notification.schema';
+import { Progress, ProgressSchema } from '@/infrastructure/database/schemas/progress.schema';
+import { Follow, FollowSchema } from '@/infrastructure/database/schemas/follow.schema';
+import { Like, LikeSchema } from '@/infrastructure/database/schemas/like.schema';
 import {
-  Review,
-  ReviewSchema,
-} from '@/src/modules/reviews/schemas/review.schema'; // Update this path to the correct location of review.schema
-import {
-  Chapter,
-  ChapterSchema,
-} from '@/src/modules/chapters/schemas/chapter.schema';
-import { User, UserSchema } from '@/src/modules/users/schemas/user.schema';
-import { Role, RoleSchema } from '@/src/modules/roles/schemas/role.schema';
-import { TextToSpeech, TextToSpeechSchema } from '@/src/modules/text-to-speech/schemas/textToSpeech.schema';
+  Comment,
+  CommentSchema,
+} from '@/infrastructure/database/schemas/comment.schema';
 
 import { AuthorsSeed } from './authors.seeder';
 import { GenresSeed } from './genres.seeder';
@@ -27,12 +30,9 @@ import { ChaptersSeed } from './chapters.seeder';
 import { SeederService } from './seeder.service';
 import { UsersSeed } from './users.seeder';
 import { CommentsSeed } from './comments.seeder';
-import {
-  Comment,
-  CommentSchema,
-} from '@/src/modules/comments/schemas/comment.schema';
 import { RolesSeed } from './roles.seed';
 import { TextToSpeechSeed } from './textToSpeech.seeder';
+import { TextToSpeechSchema } from '@/infrastructure/database/schemas/text-to-speech.schema';
 
 @Module({
   imports: [
@@ -54,42 +54,35 @@ import { TextToSpeechSeed } from './textToSpeech.seeder';
     }),
     // Register các schema
     MongooseModule.forFeature([
-      { name: Role.name, schema: RoleSchema },
-
       { name: Author.name, schema: AuthorSchema },
-      { name: Genre.name, schema: GenreSchema },
       { name: Book.name, schema: BookSchema },
+      { name: Genre.name, schema: GenreSchema },
       { name: Review.name, schema: ReviewSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
+      { name: Role.name, schema: RoleSchema },
       { name: TextToSpeech.name, schema: TextToSpeechSchema },
+      { name: Post.name, schema: PostSchema },
+      { name: Notification.name, schema: NotificationSchema },
+      { name: Progress.name, schema: ProgressSchema },
+      { name: Follow.name, schema: FollowSchema },
+      { name: Like.name, schema: LikeSchema },
     ]),
   ],
   providers: [
-    RolesSeed,
-
-    UsersSeed,
+    SeederService,
     AuthorsSeed,
     GenresSeed,
     BooksSeed,
     ReviewsSeed,
     ChaptersSeed,
-    CommentsSeed,
-    TextToSpeechSeed,
-    SeederService,
-  ],
-  exports: [
-    RolesSeed,
     UsersSeed,
-    AuthorsSeed,
-    GenresSeed,
-    BooksSeed,
-    ReviewsSeed,
-    ChaptersSeed,
     CommentsSeed,
+    RolesSeed,
     TextToSpeechSeed,
-    SeederService,
   ],
+  exports: [SeederService],
 })
 export class DatabaseSeedModule { }
+

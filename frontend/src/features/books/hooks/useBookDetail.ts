@@ -1,15 +1,24 @@
 'use client';
 
-import { useGetBookBySlugQuery, useLikeBookMutation } from '@/src/features/books/api/bookApi';
-import { useCreatePostMutation } from '@/src/features/posts/api/postApi';
-import { toast } from 'sonner';
+import { useGetBookBySlugQuery, useLikeBookMutation } from '@/features/books/api/bookApi';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
+import { getErrorMessage } from '@/lib/utils';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 export const useBookDetail = (bookSlug: string) => {
   const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });
+  const { user } = useAppAuth();
 
   const [likeBook, { isLoading: isLiking }] = useLikeBookMutation();
   const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
+
+  // Compute isLiked from the likedBy array + current user id
+  const isLiked = useMemo(() => {
+    if (!user?.id || !book?.likedBy) return false;
+    return book.likedBy.includes(user.id);
+  }, [book?.likedBy, user?.id]);
 
   const handleToggleLike = async () => {
     if (!book?.id) return;
@@ -39,32 +48,35 @@ export const useBookDetail = (bookSlug: string) => {
       } else {
         toast.success('Chia sẻ thành công!');
       }
-      return true; // Return true to signal success to modal
+      return true;
     } catch (err: any) {
       if (err?.status !== 401) {
-        toast.error(err?.data?.message || 'Không thể tạo bài viết');
+        toast.error(getErrorMessage(err));
       }
       return false;
     }
   };
 
-  // 4. Computed Values
   const defaultShareContent = useMemo(() => {
-    if (!book) return '';
-    return `📚 ${book.title}
-✍️ Tác giả: ${book.authorId.name}
+    if (!book || !book.title) return '';
+    const authorName = book.authorId?.name || 'Không rõ';
+    const title = book.title || '';
+    const description = book.description || '';
+    return `📚 ${title}
+✍️ Tác giả: ${authorName}
 ⭐ Đánh giá: ${book.stats?.averageRating || 0}/5 (${book.stats?.totalRatings || 0} đánh giá)
-👁️ ${book.views?.toLocaleString()} lượt xem
+👁️ ${book.stats?.views?.toLocaleString() || 0} lượt xem
 
-${book.description}
+${description}
 
-#${book.title.replace(/\s+/g, '')} #${book.authorId.name.replace(/\s+/g, '')}`;
+#${title.replace(/\s+/g, '')} #${authorName.replace(/\s+/g, '')}`;
   }, [book]);
 
   return {
     book,
     isLoading,
     error,
+    isLiked,
     isLiking,
     isCreatingPost,
     handleToggleLike,

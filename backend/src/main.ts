@@ -1,14 +1,18 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { Logger } from '@/shared/logger/logger.service';
 import { ValidationPipe } from '@nestjs/common';
-import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import cookieParser from 'cookie-parser';
+import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { configSwagger } from './config/swagger.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(Logger));
 
   // Lấy ConfigService từ application context
   const configService = app.get(ConfigService);
@@ -18,7 +22,7 @@ async function bootstrap() {
     'FRONTEND_URL',
     'http://localhost:3000',
   );
-  const port = configService.get<number>('PORT', 5000);
+  const port = configService.get<number>('env.PORT', 5000);
 
   // Đặt tiền tố toàn cục 'api' cho tất cả các route trong ứng dụng
   // Ví dụ: Các endpoint sẽ có dạng /api/resource thay vì /resource
@@ -49,10 +53,13 @@ async function bootstrap() {
   app.useWebSocketAdapter(new IoAdapter(app));
 
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new TransformInterceptor());
+
+  configSwagger(app);
+
+  configSwagger(app);
 
   // Khởi động server
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`Backend running on ${await app.getUrl()}`);
 }
 bootstrap();

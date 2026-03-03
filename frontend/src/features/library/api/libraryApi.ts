@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/src/lib/nestjs-client-api';
-import { NESTJS_LIBRARY_ENDPOINTS } from '@/src/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { NESTJS_LIBRARY_ENDPOINTS } from '@/constants/server-endpoints';
 import {
   LibraryItem,
   Collection,
@@ -56,7 +56,6 @@ export const libraryApi = createApi({
       keepUnusedDataFor: 0,
     }),
 
-    // 3. Update tiến độ đọc (Scroll / Next Chapter)
     updateReadingProgress: builder.mutation<LibraryItem, UpdateProgressRequest>(
       {
         query: (data) => ({
@@ -133,7 +132,6 @@ export const libraryApi = createApi({
       ],
     }),
 
-    // 8. Tạo Folder mới
     createCollection: builder.mutation<Collection, CreateCollectionRequest>({
       query: (data) => ({
         url: NESTJS_LIBRARY_ENDPOINTS.collections,
@@ -173,7 +171,7 @@ export const libraryApi = createApi({
         body,
       }),
       invalidatesTags: (result, error, { bookId }) => [
-         { type: 'Library', id: 'LIST_ALL' }
+        { type: 'Library', id: 'LIST_ALL' }
       ]
     }),
   }),

@@ -1,23 +1,26 @@
 'use client';
 
-import { useGetUserAchievementsQuery } from '@/src/features/gamification/api/gamificationApi';
+import { useGetUserAchievementsQuery } from '@/features/gamification/api/gamificationApi';
 import { Trophy, Medal, Award } from 'lucide-react';
-import { useAppAuth } from '@/src/hooks/useAppAuth';
+import { useAppAuth } from '@/hooks/useAppAuth';
 
 export function AchievementsWidget() {
   const { isAuthenticated } = useAppAuth();
-  const { data: achievements = [], isLoading } = useGetUserAchievementsQuery(
+  const { data: achievementsData, isLoading } = useGetUserAchievementsQuery(
     undefined,
     {
       skip: !isAuthenticated,
     }
   );
 
+  // Handle both array and object response formats
+  const achievements = Array.isArray(achievementsData)
+    ? achievementsData
+    : achievementsData?.data ?? [];
+
   if (isLoading || achievements.length === 0) return null;
 
   const displayList = achievements.slice(0, 3);
-
-  console.log(achievements)
 
   return (
     <div className="bg-white dark:bg-[#1f1f1f] rounded-2xl p-5 border border-gray-100 dark:border-white/5 shadow-sm transition-colors duration-300">
@@ -37,11 +40,11 @@ export function AchievementsWidget() {
             Chưa có thành tựu nào. Hãy đọc sách để mở khóa!
           </div>
         ) : (
-          displayList.map((item: any) => {
+          displayList.map((item: any, index: number) => {
             const achievement = item.achievementId;
             return (
               <div
-                key={item.id}
+                key={item._id || item.id || index}
                 className="flex items-start gap-3 p-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 transition-colors"
               >
                 <div className="p-2 bg-yellow-100 dark:bg-yellow-500/20 rounded-full shrink-0">
