@@ -23,10 +23,10 @@ export class ReindexAllUseCase {
 
         await this.vectorRepository.clearCollection();
 
-        // Tạm thời chỉ reindex authors để test cho nhanh
-        const booksResult = { totalProcessed: 0, successful: 0, failed: 0, errors: [] as Array<{ contentId: string; error: string }> };
+        // Reindex toàn bộ
+        const booksResult = await this.indexBooks();
         const authorsResult = await this.indexAuthors();
-        const chaptersResult = { totalProcessed: 0, successful: 0, failed: 0, errors: [] as Array<{ contentId: string; error: string }> };
+        const chaptersResult = await this.indexChapters();
 
         return {
             books: booksResult,
@@ -61,8 +61,7 @@ export class ReindexAllUseCase {
                             title: titleStr,
                             authorId: book.authorId ? book.authorId.toString() : 'Unknown',
                         },
-                        // Dùng embedding mặc định đơn giản để tránh mảng rỗng gây lỗi phía Chroma
-                        embedding: [0.0]
+                        embedding: []
                     });
                 } catch (mapErr) {
                     this.logger.error(`Error mapping book ${book?.id}`, mapErr);
@@ -101,8 +100,7 @@ export class ReindexAllUseCase {
                         metadata: {
                             name: nameStr,
                         },
-                        // Dùng embedding mặc định đơn giản để tránh mảng rỗng gây lỗi phía Chroma
-                        embedding: [0.0]
+                        embedding: []
                     });
                 } catch (mapErr) {
                     this.logger.error(`Error mapping author ${author?.id}`, mapErr);
@@ -145,8 +143,7 @@ export class ReindexAllUseCase {
                             title: titleStr,
                             bookId: chapter.bookId ? chapter.bookId.toString() : 'Unknown',
                         },
-                        // Dùng embedding mặc định đơn giản để tránh mảng rỗng gây lỗi phía Chroma
-                        embedding: [0.0]
+                        embedding: []
                     });
                 } catch (mapErr) {
                     this.logger.error(`Error mapping chapter ${chapter?.id}`, mapErr);

@@ -17,7 +17,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     private embeddings: GoogleGenerativeAIEmbeddings;
     private isInitialized = false;
 
-    constructor(private configService: ConfigService) {}
+    constructor(private configService: ConfigService) { }
 
     async onModuleInit() {
         try {
@@ -25,6 +25,16 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
                 apiKey: this.configService.get('GOOGLE_API_KEY'),
                 model: 'text-embedding-004',
             });
+
+            // Ghi đè bộ lọc an toàn để tránh bị chặn content tiểu thuyết/truyện
+            if (this.embeddings) {
+                (this.embeddings as any).safetySettings = [
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+                ];
+            }
 
             this.vectorStore = new Chroma(this.embeddings, {
                 collectionName: this.configService.get('CHROMA_COLLECTION', 'socialbook_vectors'),
@@ -48,7 +58,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     // Document operations
     async save(document: VectorDocument): Promise<void> {
         this.ensureInitialized();
-        
+
         const langchainDoc = new Document({
             pageContent: document.content,
             metadata: {
@@ -64,10 +74,10 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async findById(id: VectorId): Promise<VectorDocument | null> {
         this.ensureInitialized();
-        
+
         try {
             const results = await this.vectorStore.similaritySearchWithScore(
-                `id:${id.toString()}`, 
+                `id:${id.toString()}`,
                 1
             );
 
@@ -85,14 +95,14 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async findByContentId(contentId: string, contentType?: ContentType): Promise<VectorDocument[]> {
         this.ensureInitialized();
-        
+
         try {
-            const filter = contentType 
+            const filter = contentType
                 ? `contentId:${contentId} AND contentType:${contentType.toString()}`
                 : `contentId:${contentId}`;
-                
+
             const results = await this.vectorStore.similaritySearchWithScore(filter, 100);
-            
+
             return results.map(result => this.mapLangchainResultToDocument(result));
         } catch (error) {
             this.logger.error(`Failed to find documents by content ID: ${contentId}`, error);
@@ -102,7 +112,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async deleteById(id: VectorId): Promise<void> {
         this.ensureInitialized();
-        
+
         try {
             // Chroma doesn't have a direct delete by ID method
             // This would need to be implemented using Chroma's delete API
@@ -115,7 +125,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async deleteByContentId(contentId: string, contentType?: ContentType): Promise<void> {
         this.ensureInitialized();
-        
+
         try {
             // Chroma doesn't have a direct delete method
             // This would need to be implemented using Chroma's delete API
@@ -129,7 +139,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     // Search operations
     async search(query: SearchQuery): Promise<SearchResult[]> {
         this.ensureInitialized();
-        
+
         try {
             const results = await this.vectorStore.similaritySearch(
                 query.query,
@@ -150,7 +160,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async searchByContent(content: string, contentType?: ContentType, limit?: number): Promise<SearchResult[]> {
         this.ensureInitialized();
-        
+
         try {
             const results = await this.vectorStore.similaritySearch(content, limit || 10);
 
@@ -167,7 +177,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async findSimilar(documentId: VectorId, limit?: number, threshold?: number): Promise<SearchResult[]> {
         this.ensureInitialized();
-        
+
         try {
             const document = await this.findById(documentId);
             if (!document) {
@@ -194,7 +204,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     // Batch operations
     async saveBatch(documents: VectorDocument[]): Promise<BatchIndexResult> {
         this.ensureInitialized();
-        
+
         const errors: Array<{ contentId: string; error: string }> = [];
         let successful = 0;
         let failed = 0;
@@ -222,11 +232,11 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async deleteBatch(ids: VectorId[]): Promise<BatchIndexResult> {
         this.ensureInitialized();
-        
+
         // Chroma doesn't have batch delete implemented
         // This would need to be implemented using Chroma's delete API
         this.logger.warn(`Batch delete not implemented for ${ids.length} documents`);
-        
+
         return {
             totalProcessed: ids.length,
             successful: 0,
@@ -240,7 +250,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async deleteByContentType(contentType: ContentType): Promise<void> {
         this.ensureInitialized();
-        
+
         try {
             // Chroma doesn't have delete by metadata implemented
             // This would need to be implemented using Chroma's delete API
@@ -254,7 +264,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     // Collection operations
     async clearCollection(): Promise<void> {
         this.ensureInitialized();
-        
+
         try {
             // This would need to be implemented using Chroma's delete collection API
             this.logger.warn('Clear collection not implemented for Chroma');
@@ -266,11 +276,11 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async getCollectionStats(): Promise<CollectionStats> {
         this.ensureInitialized();
-        
+
         try {
             // This would need to be implemented using Chroma's get collection API
             this.logger.warn('Collection stats not fully implemented for Chroma');
-            
+
             return {
                 totalDocuments: 0,
                 documentsByType: {},
@@ -286,7 +296,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async optimizeCollection(): Promise<void> {
         this.ensureInitialized();
-        
+
         try {
             // Chroma handles optimization automatically
             this.logger.log('Collection optimization completed');
@@ -368,13 +378,13 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     async getDocumentsByContentType(contentType: ContentType, limit?: number): Promise<VectorDocument[]> {
         this.ensureInitialized();
-        
+
         try {
             const results = await this.vectorStore.similaritySearchWithScore(
                 `contentType:${contentType.toString()}`,
                 limit || 100
             );
-            
+
             return results.map(result => this.mapLangchainResultToDocument(result));
         } catch (error) {
             this.logger.error(`Failed to get documents by content type: ${contentType.toString()}`, error);
@@ -384,7 +394,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     private mapLangchainDocToDocument(doc: any): VectorDocument {
         const metadata = doc.metadata || {};
-        
+
         return VectorDocument.reconstitute({
             id: metadata.id || this.generateId(),
             contentId: metadata.contentId || '',
@@ -399,7 +409,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
     private mapLangchainResultToDocument(result: any): VectorDocument {
         const metadata = result.metadata || {};
-        
+
         return VectorDocument.reconstitute({
             id: metadata.id || this.generateId(),
             contentId: metadata.contentId || '',
