@@ -11,6 +11,7 @@ import { ElementType } from 'react';
 
 interface BookHeroProps {
   book: Book;
+  isLiked: boolean;
   isLiking: boolean;
   onToggleLike: () => void;
   onOpenLibrary: () => void;
@@ -19,6 +20,7 @@ interface BookHeroProps {
 
 export const BookHero = ({
   book,
+  isLiked,
   isLiking,
   onToggleLike,
   onOpenLibrary,
@@ -96,10 +98,10 @@ export const BookHero = ({
               <div className="flex gap-2">
                 <IconButton
                   onClick={onToggleLike}
-                  active={book.isLiked}
+                  active={isLiked}
                   disabled={isLiking}
                   icon={Heart}
-                  title={book.isLiked ? 'Bỏ thích' : 'Yêu thích'}
+                  title={isLiked ? 'Bỏ thích' : 'Yêu thích'}
                 />
                 <IconButton onClick={onOpenShare} icon={Share2} title="Chia sẻ" />
               </div>

@@ -10,16 +10,16 @@ export type NotificationItem = {
     title: string;
     message: string;
     type:
-        | 'info'
-        | 'success'
-        | 'warning'
-        | 'error'
-        | 'system'
-        | 'message'
-        | 'comment'
-        | 'reply'
-        | 'like'
-        | 'follow';
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'system'
+    | 'message'
+    | 'comment'
+    | 'reply'
+    | 'like'
+    | 'follow';
     isRead: boolean;
     createdAt: string;
     actionUrl: string | null;
@@ -35,10 +35,13 @@ export function useNotifications(userToken: string | undefined) {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const socketRef = useRef<Socket | null>(null);
+    const prevTokenRef = useRef<string | undefined>(undefined);
 
     useEffect(() => {
+        if (userToken === prevTokenRef.current) return;
+        prevTokenRef.current = userToken;
+
         if (!userToken) {
-            // nếu user logout hoặc chưa có token -> ngắt kết nối
             socketRef.current?.disconnect();
             socketRef.current = null;
             setNotifications([]);
@@ -46,7 +49,7 @@ export function useNotifications(userToken: string | undefined) {
             return;
         }
 
-        // 🔌 luôn reconnect mỗi khi token thay đổi
+        // Reconnect khi token thay đổi
         if (socketRef.current) {
             socketRef.current.disconnect();
             socketRef.current = null;
@@ -62,8 +65,6 @@ export function useNotifications(userToken: string | undefined) {
         socketRef.current = socketInstance;
 
         socketInstance.on("connect", () => {
-            // console.log("WS connected:", socketInstance.id);
-
             socketInstance.emit("notification:list", (data: NotificationItem[]) => {
                 setNotifications(data);
                 setUnreadCount(data.filter((n) => !n.isRead).length);
@@ -84,8 +85,6 @@ export function useNotifications(userToken: string | undefined) {
 
         socketInstance.on("error", (err: any) => {
             console.log("WS error:", err);
-            // Nếu backend emit TOKEN_EXPIRED thì ở đây bạn có thể gọi getSession()
-            // để trigger NextAuth refresh, rồi token mới sẽ chạy vào hook này.
         });
 
         return () => {
