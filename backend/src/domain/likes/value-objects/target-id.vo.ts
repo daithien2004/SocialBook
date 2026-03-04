@@ -1,22 +1,11 @@
-export class TargetId {
-    private constructor(private readonly _value: string) {}
+import { Identifier } from '@/shared/domain/identifier.base';
 
-    static create(value: string): TargetId {
-        if (!value || value.trim().length === 0) {
-            throw new Error('Target ID cannot be empty');
-        }
-        return new TargetId(value);
+export class TargetId extends Identifier {
+    private constructor(id: string) {
+        super(id);
     }
 
-    toString(): string {
-        return this._value;
-    }
-
-    equals(other: TargetId): boolean {
-        return this._value === other._value;
-    }
-
-    get value(): string {
-        return this._value;
+    static create(id: string): TargetId {
+        return new TargetId(Identifier.validate(id, 'Target ID'));
     }
 }

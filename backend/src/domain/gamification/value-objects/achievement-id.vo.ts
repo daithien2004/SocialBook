@@ -1,23 +1,11 @@
-export class AchievementId {
-    private readonly value: string;
+import { Identifier } from '@/shared/domain/identifier.base';
 
+export class AchievementId extends Identifier {
     private constructor(id: string) {
-        this.value = id;
+        super(id);
     }
 
     static create(id: string): AchievementId {
-        if (!id || id.trim().length === 0) {
-            throw new Error('Achievement ID cannot be empty');
-        }
-        return new AchievementId(id.trim());
-    }
-
-    toString(): string {
-        return this.value;
-    }
-
-    equals(other: AchievementId): boolean {
-        if (!other) return false;
-        return this.value === other.value;
+        return new AchievementId(Identifier.validate(id, 'Achievement ID'));
     }
 }

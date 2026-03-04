@@ -1,23 +1,11 @@
-export class UserGamificationId {
-    private readonly value: string;
+import { Identifier } from '@/shared/domain/identifier.base';
 
+export class UserGamificationId extends Identifier {
     private constructor(id: string) {
-        this.value = id;
+        super(id);
     }
 
     static create(id: string): UserGamificationId {
-        if (!id || id.trim().length === 0) {
-            throw new Error('UserGamification ID cannot be empty');
-        }
-        return new UserGamificationId(id.trim());
-    }
-
-    toString(): string {
-        return this.value;
-    }
-
-    equals(other: UserGamificationId): boolean {
-        if (!other) return false;
-        return this.value === other.value;
+        return new UserGamificationId(Identifier.validate(id, 'User Gamification ID'));
     }
 }
