@@ -12,7 +12,9 @@ export class GetPostUseCase {
 
   async execute(query: GetPostQuery): Promise<Post> {
     const post = await this.postRepository.findById(query.postId);
-    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
+    if (!post || post.isFlagged) {
+      throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
+    }
     return post;
   }
 }

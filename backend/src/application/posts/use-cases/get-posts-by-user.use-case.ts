@@ -14,6 +14,6 @@ export class GetPostsByUserUseCase {
     const { userId, page, limit } = query;
     if (!userId) throw new BadRequestException(ErrorMessages.INVALID_ID);
     const skip = (page - 1) * limit;
-    return this.postRepository.findAll({ skip, limit, userId });
+    return this.postRepository.findAll({ skip, limit, userId, isFlagged: false });
   }
 }

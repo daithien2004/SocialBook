@@ -12,6 +12,6 @@ export class GetPostsUseCase {
   async execute(query: GetPostsQuery): Promise<PaginatedResult<Post>> {
     const { page, limit } = query;
     const skip = (page - 1) * limit;
-    return this.postRepository.findAll({ skip, limit });
+    return this.postRepository.findAll({ skip, limit, isFlagged: false });
   }
 }
