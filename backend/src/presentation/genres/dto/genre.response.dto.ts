@@ -1,24 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Genre } from '@/domain/genres/entities/genre.entity';
 
 export class GenreResponseDto {
-    @ApiProperty()
     id: string;
 
-    @ApiProperty()
     name: string;
 
-    @ApiProperty()
     slug: string;
 
-    @ApiProperty({ required: false })
     description?: string;
 
-    @ApiProperty()
     createdAt: Date;
 
-    @ApiProperty()
     updatedAt: Date;
+
 
     constructor(genre: Genre) {
         this.id = genre.id.toString();

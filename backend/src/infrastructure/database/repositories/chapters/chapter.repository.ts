@@ -1,8 +1,8 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { Chapter as ChapterEntity } from '@/domain/chapters/entities/chapter.entity';
 import { ChapterDetailReadModel } from '@/domain/chapters/read-models/chapter-detail.read-model';
 import { ChapterListReadModel } from '@/domain/chapters/read-models/chapter-list.read-model';
-import { ChapterFilter, IChapterRepository, PaginationOptions, SortOptions } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { ChapterFilter, IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ChapterTitle } from '@/domain/chapters/value-objects/chapter-title.vo';
@@ -16,13 +16,25 @@ import { BookMapper } from '../books/book.mapper';
 import { RawBookDocument } from '../books/book.raw-types';
 import { RawChapterDocument, RawChapterPersistence } from './chapter.mapper';
 
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
+
 @Injectable()
-export class ChapterRepository implements IChapterRepository {
+export class ChapterRepository extends BaseMongoRepository<ChapterEntity, ChapterDocument, ChapterId> implements IChapterRepository {
     constructor(
         @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
         @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
         @InjectModel(TextToSpeech.name) private readonly ttsModel: Model<TextToSpeechDocument>,
-    ) { }
+    ) {
+        super(chapterModel);
+    }
+
+    protected toDomain(doc: ChapterDocument): ChapterEntity {
+        return this.mapToEntity(doc as unknown as RawChapterDocument);
+    }
+
+    protected toPersistence(entity: ChapterEntity): any {
+        return this.mapToDocument(entity);
+    }
 
     async findById(id: ChapterId): Promise<ChapterEntity | null> {
         const document = await this.chapterModel.findById(id.toString()).lean().exec() as unknown as RawChapterDocument | null;
@@ -120,12 +132,7 @@ export class ChapterRepository implements IChapterRepository {
 
         return {
             data: documents.map(doc => this.mapToEntity(doc as RawChapterDocument)),
-            meta: {
-                current: pagination.page,
-                pageSize: pagination.limit,
-                total,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
+            meta: this.buildMeta(pagination.page, pagination.limit, total),
         };
     }
 
@@ -139,12 +146,7 @@ export class ChapterRepository implements IChapterRepository {
         if (!book) {
             return {
                 data: [],
-                meta: {
-                    current: pagination.page,
-                    pageSize: pagination.limit,
-                    total: 0,
-                    totalPages: 0,
-                },
+                meta: this.buildMeta(pagination.page, pagination.limit, 0),
             };
         }
 
@@ -306,16 +308,11 @@ export class ChapterRepository implements IChapterRepository {
     }
 
     async save(chapter: ChapterEntity): Promise<void> {
-        const document = this.mapToDocument(chapter);
-        await this.chapterModel.findByIdAndUpdate(
-            chapter.id.toString(),
-            document,
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(chapter);
     }
 
     async delete(id: ChapterId): Promise<void> {
-        await this.chapterModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async existsByTitle(title: ChapterTitle, bookId: BookId, excludeId?: ChapterId): Promise<boolean> {

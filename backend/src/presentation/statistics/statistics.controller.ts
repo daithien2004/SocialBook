@@ -6,7 +6,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -18,10 +17,8 @@ import { GetGrowthStatsUseCase } from '@/application/statistics/use-cases/get-gr
 import { GetOverviewStatsUseCase } from '@/application/statistics/use-cases/get-overview-stats.use-case';
 import { GetUserStatsUseCase } from '@/application/statistics/use-cases/get-user-stats.use-case';
 
-@ApiTags('Statistics')
 @Controller('statistics')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@ApiBearerAuth()
 @Roles('admin', 'editor')
 export class StatisticsController {
   constructor(

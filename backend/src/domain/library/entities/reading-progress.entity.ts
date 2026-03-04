@@ -1,7 +1,7 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
+import { UserId } from '../value-objects/user-id.vo';
 
 export enum ChapterStatus {
     NOT_STARTED = 'NOT_STARTED',
@@ -102,8 +102,8 @@ export class ReadingProgress extends Entity<string> {
 
     updateProgress(progress: number): void {
         this._progress = Math.max(0, Math.min(100, progress));
-        this._status = this._progress >= 80 ? ChapterStatus.COMPLETED : 
-                      this._progress > 0 ? ChapterStatus.IN_PROGRESS : ChapterStatus.NOT_STARTED;
+        this._status = this._progress >= 80 ? ChapterStatus.COMPLETED :
+            this._progress > 0 ? ChapterStatus.IN_PROGRESS : ChapterStatus.NOT_STARTED;
         this._lastReadAt = new Date();
         this.markAsUpdated();
     }

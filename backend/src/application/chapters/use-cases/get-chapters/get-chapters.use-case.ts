@@ -1,11 +1,11 @@
-import { ChapterFilter, IChapterRepository, PaginationOptions, SortOptions } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
+import { ChapterListReadModel } from '@/domain/chapters/read-models/chapter-list.read-model';
+import { ChapterFilter, IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { Injectable } from '@nestjs/common';
-import { GetChaptersQuery } from './get-chapters.query';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
-import { ChapterResult } from './get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
-import { ChapterListReadModel } from '@/domain/chapters/read-models/chapter-list.read-model';
+import { GetChaptersQuery } from './get-chapters.query';
+import { ChapterResult } from './get-chapters.result';
 
 @Injectable()
 export class GetChaptersUseCase {

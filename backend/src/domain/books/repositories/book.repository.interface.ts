@@ -1,9 +1,11 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { Book } from '../entities/book.entity';
 import { AuthorId } from '../value-objects/author-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { BookTitle } from '../value-objects/book-title.vo';
 import { GenreId } from '../value-objects/genre-id.vo';
+
+export type BookSortField = 'createdAt' | 'updatedAt' | 'title' | 'views' | 'likes' | 'publishedYear';
 
 export interface BookFilter {
     title?: string;
@@ -14,16 +16,6 @@ export interface BookFilter {
     search?: string;
     publishedYear?: string;
     ids?: string[];
-}
-
-export interface PaginationOptions {
-    page: number;
-    limit: number;
-}
-
-export interface SortOptions {
-    sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'views' | 'likes' | 'publishedYear';
-    order?: 'asc' | 'desc';
 }
 
 export interface BookFilters {

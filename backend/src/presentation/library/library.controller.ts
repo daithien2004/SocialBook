@@ -1,4 +1,5 @@
 import { RecordReadingUseCase } from '@/application/gamification/use-cases/record-reading/record-reading.use-case';
+import { ReadingStatusResult } from '@/application/library/mappers/library.results';
 import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
 import { GetBookLibraryInfoUseCase } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case';
 import { GetChapterProgressQuery } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.query';
@@ -40,12 +41,8 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { ReadingStatusResult } from '@/application/library/mappers/library.results';
 import { Request } from 'express';
-
 @Controller('library')
-@ApiTags('Library')
 @UseGuards(JwtAuthGuard)
 export class LibraryController {
   constructor(

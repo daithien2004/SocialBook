@@ -1,3 +1,7 @@
+import { Public } from '@/common/decorators/customize';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
 import {
   Body,
   Controller,
@@ -14,17 +18,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Public } from '@/common/decorators/customize';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
 
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response.dto';
 import { CreateChapterDto } from '@/presentation/chapters/dto/create-chapter.dto';
 import { FilterChapterDto } from '@/presentation/chapters/dto/filter-chapter.dto';
 import { UpdateChapterDto } from '@/presentation/chapters/dto/update-chapter.dto';
-import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 import { CreateChapterUseCase } from '@/application/chapters/use-cases/create-chapter/create-chapter.use-case';
 import { DeleteChapterUseCase } from '@/application/chapters/use-cases/delete-chapter/delete-chapter.use-case';
@@ -33,15 +32,14 @@ import { UpdateChapterUseCase } from '@/application/chapters/use-cases/update-ch
 
 import { CreateChapterCommand } from '@/application/chapters/use-cases/create-chapter/create-chapter.command';
 import { DeleteChapterCommand } from '@/application/chapters/use-cases/delete-chapter/delete-chapter.command';
+import { GetChapterByIdQuery } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.query';
+import { GetChapterByIdUseCase } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.use-case';
 import { GetChapterBySlugQuery } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.query';
 import { GetChapterBySlugUseCase } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
 import { GetChaptersQuery } from '@/application/chapters/use-cases/get-chapters/get-chapters.query';
 import { UpdateChapterCommand } from '@/application/chapters/use-cases/update-chapter/update-chapter.command';
-import { GetChapterByIdQuery } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.query';
-import { GetChapterByIdUseCase } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.use-case';
 import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
 
-@ApiTags('Chapters')
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
   constructor(

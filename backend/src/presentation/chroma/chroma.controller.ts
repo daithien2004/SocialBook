@@ -1,28 +1,27 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+
 
 import { Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
+import { BatchIndexDto } from '@/presentation/chroma/dto/batch-index.dto';
 import { IndexDocumentDto } from '@/presentation/chroma/dto/index-document.dto';
 import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
-import { BatchIndexDto } from '@/presentation/chroma/dto/batch-index.dto';
 import { SearchResponseDto } from '@/presentation/chroma/dto/search.response.dto';
 
-import { IndexDocumentUseCase } from '@/application/chroma/use-cases/index-document/index-document.use-case';
-import { SearchUseCase } from '@/application/chroma/use-cases/search/search.use-case';
 import { BatchIndexUseCase } from '@/application/chroma/use-cases/batch-index/batch-index.use-case';
 import { ClearCollectionUseCase } from '@/application/chroma/use-cases/clear-collection/clear-collection.use-case';
 import { GetCollectionStatsUseCase } from '@/application/chroma/use-cases/get-collection-stats/get-collection-stats.use-case';
+import { IndexDocumentUseCase } from '@/application/chroma/use-cases/index-document/index-document.use-case';
 import { ReindexAllUseCase } from '@/application/chroma/use-cases/reindex-all/reindex-all.use-case';
+import { SearchUseCase } from '@/application/chroma/use-cases/search/search.use-case';
 
+import { BatchIndexCommand } from '@/application/chroma/use-cases/batch-index/batch-index.command';
 import { IndexDocumentCommand } from '@/application/chroma/use-cases/index-document/index-document.command';
 import { SearchCommand } from '@/application/chroma/use-cases/search/search.command';
-import { BatchIndexCommand } from '@/application/chroma/use-cases/batch-index/batch-index.command';
 
-@ApiTags('Chroma Vector Search')
 @Controller('chroma')
 export class ChromaController {
     constructor(

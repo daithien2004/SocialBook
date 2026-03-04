@@ -1,7 +1,7 @@
 import { ReadingProgress } from '../entities/reading-progress.entity';
-import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
+import { UserId } from '../value-objects/user-id.vo';
 
 export abstract class IReadingProgressRepository {
     abstract save(progress: ReadingProgress): Promise<void>;

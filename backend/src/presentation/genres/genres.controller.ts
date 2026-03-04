@@ -12,12 +12,10 @@ import { FilterGenreDto } from '@/presentation/genres/dto/filter-genre.dto';
 import { GenreResponseDto } from '@/presentation/genres/dto/genre.response.dto';
 import { UpdateGenreDto } from '@/presentation/genres/dto/update-genre.dto';
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 
 import { GetGenreByIdQuery } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.query';
 import { GetGenreByIdUseCase } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.use-case';
 
-@ApiTags('Genres')
 @Controller('genres')
 export class GenresController {
   constructor(
@@ -39,10 +37,8 @@ export class GenresController {
   @Get()
   async findAll(
     @Query() filter: FilterGenreDto,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
   ) {
-    const query = new GetGenresQuery(Number(page), Number(limit), filter.name);
+    const query = new GetGenresQuery(filter.actualPage, filter.actualLimit, filter.name);
     const result = await this.getGenresUseCase.execute(query);
 
     return {
@@ -54,11 +50,9 @@ export class GenresController {
   @Get('admin')
   async findAllAdmin(
     @Query() filter: FilterGenreDto,
-    @Query('current') current: string = '1',
-    @Query('pageSize') pageSize: string = '15',
   ) {
     // Nếu ProTable gửi current/pageSize thì map nó, không thì dùng mặc định
-    const query = new GetGenresQuery(Number(current), Number(pageSize), filter.name);
+    const query = new GetGenresQuery(filter.actualPage, filter.actualLimit, filter.name);
     const result = await this.getGenresUseCase.execute(query);
 
     return {

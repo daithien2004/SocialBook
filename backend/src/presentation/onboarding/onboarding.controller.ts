@@ -1,10 +1,9 @@
-import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
-import { Request } from 'express';
-// import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'; // Ensure you have swagger if used
+import { CompleteOnboardingUseCase } from '@/application/onboarding/use-cases/complete-onboarding.use-case';
 import { GetOnboardingStatusUseCase } from '@/application/onboarding/use-cases/get-onboarding-status.use-case';
 import { StartOnboardingUseCase } from '@/application/onboarding/use-cases/start-onboarding.use-case';
 import { UpdateOnboardingStepUseCase } from '@/application/onboarding/use-cases/update-onboarding-step.use-case';
-import { CompleteOnboardingUseCase } from '@/application/onboarding/use-cases/complete-onboarding.use-case';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Request } from 'express';
 
 @Controller('onboarding')
 export class OnboardingController {

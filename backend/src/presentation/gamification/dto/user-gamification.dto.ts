@@ -1,15 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsMongoId, IsNotEmpty, IsOptional, IsNumber, IsString, IsEnum, Min, Max } from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreateUserGamificationDto {
-    @ApiProperty({ description: 'User ID' })
     @IsMongoId()
     @IsNotEmpty()
     userId: string;
 }
 
 export class RecordReadingDto {
-    @ApiProperty({ description: 'XP to award', required: false })
     @IsOptional()
     @IsNumber()
     @Min(0)
@@ -17,7 +14,6 @@ export class RecordReadingDto {
 }
 
 export class AddXPDto {
-    @ApiProperty({ description: 'XP amount to add' })
     @IsNumber()
     @Min(1)
     @IsNotEmpty()
@@ -25,41 +21,35 @@ export class AddXPDto {
 }
 
 export class UseStreakFreezeDto {
-    @ApiProperty({ description: 'User ID' })
     @IsMongoId()
     @IsNotEmpty()
     userId: string;
 }
 
-export class FilterUserGamificationDto {
-    @ApiProperty({ description: 'Minimum streak', required: false })
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
+
+export class FilterUserGamificationDto extends PaginationQueryDto {
     @IsOptional()
     @IsNumber()
     minStreak?: number;
 
-    @ApiProperty({ description: 'Maximum streak', required: false })
     @IsOptional()
     @IsNumber()
     maxStreak?: number;
 
-    @ApiProperty({ description: 'Has active streak', required: false })
     @IsOptional()
     hasActiveStreak?: boolean;
 }
 
 export class GamificationStatsDto {
-    @ApiProperty({ description: 'Total XP distributed' })
     totalXP: number;
 
-    @ApiProperty({ description: 'Active streaks count' })
     activeStreaksCount: number;
 
-    @ApiProperty({ description: 'Users with streak count' })
     usersWithStreakCount: number;
 
-    @ApiProperty({ description: 'Top users by streak' })
     topUsersByStreak: any[];
 
-    @ApiProperty({ description: 'Top users by XP' })
     topUsersByXP: any[];
 }
+

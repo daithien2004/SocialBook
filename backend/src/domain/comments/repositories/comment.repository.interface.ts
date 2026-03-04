@@ -1,11 +1,13 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { Comment } from '../entities/comment.entity';
-import { CommentId } from '../value-objects/comment-id.vo';
-import { UserId } from '../value-objects/user-id.vo';
-import { TargetId } from '../value-objects/target-id.vo';
-import { CommentTargetType } from '../value-objects/comment-target-type.vo';
 import { CommentModel } from '../read-models/comment-model';
 import { CommentDepth } from '../value-objects/comment-depth.vo';
+import { CommentId } from '../value-objects/comment-id.vo';
+import { CommentTargetType } from '../value-objects/comment-target-type.vo';
+import { TargetId } from '../value-objects/target-id.vo';
+import { UserId } from '../value-objects/user-id.vo';
+
+export type CommentSortField = 'createdAt' | 'updatedAt' | 'likesCount';
 
 export interface ParentResolutionResult {
     effectiveParentId: string | null;
@@ -22,17 +24,6 @@ export interface CommentFilter {
     search?: string;
     dateFrom?: Date;
     dateTo?: Date;
-}
-
-export interface PaginationOptions {
-    page: number;
-    limit: number;
-    cursor?: string;
-}
-
-export interface SortOptions {
-    sortBy?: 'createdAt' | 'updatedAt' | 'likesCount';
-    order?: 'asc' | 'desc';
 }
 
 export interface CommentReplies {

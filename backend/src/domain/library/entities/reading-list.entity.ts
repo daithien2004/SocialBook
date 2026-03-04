@@ -1,7 +1,7 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
+import { UserId } from '../value-objects/user-id.vo';
 
 export enum ReadingStatus {
     READING = 'READING',

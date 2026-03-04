@@ -1,34 +1,31 @@
 import {
+  Body,
   Controller,
   Get,
   Post,
-  Body,
-  Req,
   Query,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
-import { Request } from 'express';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
-import { Public } from '@/common/decorators/customize';
+
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 import { RecordReadingDto } from '@/presentation/gamification/dto/user-gamification.dto';
 
-import { RecordReadingUseCase } from '@/application/gamification/use-cases/record-reading/record-reading.use-case';
-import { GetGamificationStatsUseCase } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.use-case';
-import { GetStreakUseCase } from '@/application/gamification/use-cases/get-streak/get-streak.use-case';
 import { CheckInUseCase } from '@/application/gamification/use-cases/check-in/check-in.use-case';
 import { GetDailyGoalsUseCase } from '@/application/gamification/use-cases/get-daily-goals/get-daily-goals.use-case';
+import { GetGamificationStatsUseCase } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.use-case';
+import { GetStreakUseCase } from '@/application/gamification/use-cases/get-streak/get-streak.use-case';
+import { RecordReadingUseCase } from '@/application/gamification/use-cases/record-reading/record-reading.use-case';
 
-import { RecordReadingCommand } from '@/application/gamification/use-cases/record-reading/record-reading.command';
-import { GetGamificationStatsQuery } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.query';
-import { GetStreakQuery } from '@/application/gamification/use-cases/get-streak/get-streak.query';
 import { CheckInCommand } from '@/application/gamification/use-cases/check-in/check-in.command';
 import { GetDailyGoalsQuery } from '@/application/gamification/use-cases/get-daily-goals/get-daily-goals.query';
+import { GetGamificationStatsQuery } from '@/application/gamification/use-cases/get-gamification-stats/get-gamification-stats.query';
+import { GetStreakQuery } from '@/application/gamification/use-cases/get-streak/get-streak.query';
+import { RecordReadingCommand } from '@/application/gamification/use-cases/record-reading/record-reading.command';
 
-@ApiTags('Gamification')
 @Controller('gamification')
 export class GamificationController {
   constructor(

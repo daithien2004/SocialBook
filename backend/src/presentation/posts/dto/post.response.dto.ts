@@ -1,39 +1,28 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Post } from '@/domain/posts/entities/post.entity';
 
 export class PostResponseDto {
-    @ApiProperty()
     id: string;
 
-    @ApiProperty()
     content: string;
 
-    @ApiProperty()
     imageUrls: string[];
 
-    @ApiProperty()
     isFlagged: boolean;
 
-    @ApiProperty({ required: false })
     moderationStatus?: string;
 
-    @ApiProperty({ type: Object, required: false })
     user?: { id: string; username: string; image?: string };
 
-    @ApiProperty({ type: Object, required: false })
     book?: { id: string; title: string; slug?: string };
 
-    @ApiProperty({ required: false })
     likesCount?: number;
 
-    @ApiProperty({ required: false })
     commentsCount?: number;
 
-    @ApiProperty()
     createdAt: Date;
 
-    @ApiProperty()
     updatedAt: Date;
+
 
     constructor(post: Post) {
         this.id = post.id.toString();

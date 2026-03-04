@@ -1,4 +1,4 @@
-import { Public, ApiFileUpload } from '@/common/decorators/customize';
+import { ApiFileUpload, Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -7,39 +7,34 @@ import {
     Controller,
     Delete,
     Get,
-    HttpCode,
-    HttpStatus,
     Param,
     Post,
     Put,
     Query,
     UploadedFile,
-    UseGuards,
-    UseInterceptors,
+    UseGuards
 } from '@nestjs/common';
-// FileInterceptor removed since we use ApiFileUpload
-import { ApiTags } from '@nestjs/swagger';
 
-import { CreateAuthorDto } from '@/presentation/authors/dto/create-author.dto';
-import { UpdateAuthorDto } from '@/presentation/authors/dto/update-author.dto';
-import { FilterAuthorDto } from '@/presentation/authors/dto/filter-author.dto';
+
 import { AuthorResponseDto } from '@/presentation/authors/dto/author.response.dto';
+import { CreateAuthorDto } from '@/presentation/authors/dto/create-author.dto';
+import { FilterAuthorDto } from '@/presentation/authors/dto/filter-author.dto';
+import { UpdateAuthorDto } from '@/presentation/authors/dto/update-author.dto';
 
 import { CreateAuthorUseCase } from '@/application/authors/use-cases/create-author/create-author.use-case';
-import { UpdateAuthorUseCase } from '@/application/authors/use-cases/update-author/update-author.use-case';
-import { GetAuthorsUseCase } from '@/application/authors/use-cases/get-authors/get-authors.use-case';
-import { GetAuthorByIdUseCase } from '@/application/authors/use-cases/get-author-by-id/get-author-by-id.use-case';
 import { DeleteAuthorUseCase } from '@/application/authors/use-cases/delete-author/delete-author.use-case';
+import { GetAuthorByIdUseCase } from '@/application/authors/use-cases/get-author-by-id/get-author-by-id.use-case';
+import { GetAuthorsUseCase } from '@/application/authors/use-cases/get-authors/get-authors.use-case';
+import { UpdateAuthorUseCase } from '@/application/authors/use-cases/update-author/update-author.use-case';
 
 import { CreateAuthorCommand } from '@/application/authors/use-cases/create-author/create-author.command';
-import { UpdateAuthorCommand } from '@/application/authors/use-cases/update-author/update-author.command';
-import { GetAuthorsQuery } from '@/application/authors/use-cases/get-authors/get-authors.query';
 import { DeleteAuthorCommand } from '@/application/authors/use-cases/delete-author/delete-author.command';
 import { GetAuthorByIdQuery } from '@/application/authors/use-cases/get-author-by-id/get-author-by-id.query';
+import { GetAuthorsQuery } from '@/application/authors/use-cases/get-authors/get-authors.query';
+import { UpdateAuthorCommand } from '@/application/authors/use-cases/update-author/update-author.command';
 
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 
-@ApiTags('Authors')
 @Controller('authors')
 export class AuthorsController {
     constructor(
@@ -77,12 +72,10 @@ export class AuthorsController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     async findAll(
         @Query() filter: FilterAuthorDto,
-        @Query('current') current: string = '1',
-        @Query('pageSize') pageSize: string = '10',
     ) {
         const query = new GetAuthorsQuery(
-            Number(current),
-            Number(pageSize),
+            filter.actualPage,
+            filter.actualLimit,
             filter.name,
             filter.bio
         );

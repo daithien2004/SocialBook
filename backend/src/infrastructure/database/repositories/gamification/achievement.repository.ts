@@ -1,17 +1,29 @@
+import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
+import { Achievement as AchievementEntity } from '@/domain/gamification/entities/achievement.entity';
+import { AchievementFilter, IAchievementRepository } from '@/domain/gamification/repositories/achievement.repository.interface';
+import { AchievementCode } from '@/domain/gamification/value-objects/achievement-code.vo';
+import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
+import { Achievement, AchievementDocument } from '@/infrastructure/database/schemas/achievement.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { Achievement, AchievementDocument } from '@/infrastructure/database/schemas/achievement.schema';
-import { IAchievementRepository, AchievementFilter, PaginationOptions } from '@/domain/gamification/repositories/achievement.repository.interface';
-import { Achievement as AchievementEntity } from '@/domain/gamification/entities/achievement.entity';
-import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
-import { AchievementCode } from '@/domain/gamification/value-objects/achievement-code.vo';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { AchievementMapper } from './achievement.mapper';
 
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
+
 @Injectable()
-export class AchievementRepository implements IAchievementRepository {
-    constructor(@InjectModel(Achievement.name) private readonly achievementModel: Model<AchievementDocument>) {}
+export class AchievementRepository extends BaseMongoRepository<AchievementEntity, AchievementDocument, AchievementId> implements IAchievementRepository {
+    constructor(@InjectModel(Achievement.name) private readonly achievementModel: Model<AchievementDocument>) {
+        super(achievementModel);
+    }
+
+    protected toDomain(doc: AchievementDocument): AchievementEntity {
+        return this.mapToEntity(doc);
+    }
+
+    protected toPersistence(entity: AchievementEntity): any {
+        return this.mapToDocument(entity);
+    }
 
     async findById(id: AchievementId): Promise<AchievementEntity | null> {
         const document = await this.achievementModel.findById(id.toString()).lean().exec();
@@ -55,26 +67,16 @@ export class AchievementRepository implements IAchievementRepository {
 
         return {
             data: documents.map(doc => this.mapToEntity(doc)),
-            meta: {
-                current: page,
-                pageSize: limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
+            meta: this.buildMeta(page, limit, total)
         };
     }
 
     async save(achievement: AchievementEntity): Promise<void> {
-        const document = this.mapToDocument(achievement);
-        await this.achievementModel.findByIdAndUpdate(
-            achievement.id.toString(),
-            document,
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(achievement);
     }
 
     async delete(id: AchievementId): Promise<void> {
-        await this.achievementModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async findByCategory(category: string): Promise<AchievementEntity[]> {

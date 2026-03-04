@@ -1,7 +1,7 @@
+import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
 import { AIRequest, AIRequestType } from '../entities/ai-request.entity';
 import { AIRequestId } from '../value-objects/ai-request-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 
 export interface AIRequestFilter {
     type?: AIRequestType;
@@ -9,11 +9,6 @@ export interface AIRequestFilter {
     isCompleted?: boolean;
     dateFrom?: Date;
     dateTo?: Date;
-}
-
-export interface PaginationOptions {
-    page: number;
-    limit: number;
 }
 
 export interface IAIRequestRepository {

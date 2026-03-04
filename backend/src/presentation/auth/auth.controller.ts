@@ -12,27 +12,27 @@ import {
   Req,
   UseGuards
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
 
 // Use Cases
-import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
-import { LoginCommand } from '@/application/auth/use-cases/login/login.command';
-import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
-import { RegisterCommand } from '@/application/auth/use-cases/register/register.command';
-import { GoogleAuthUseCase } from '@/application/auth/use-cases/google-auth/google-auth.use-case';
-import { GoogleAuthCommand } from '@/application/auth/use-cases/google-auth/google-auth.command';
-import { RefreshTokenUseCase } from '@/application/auth/use-cases/refresh-token/refresh-token.use-case';
-import { RefreshTokenCommand } from '@/application/auth/use-cases/refresh-token/refresh-token.command';
-import { LogoutUseCase } from '@/application/auth/use-cases/logout/logout.use-case';
-import { LogoutCommand } from '@/application/auth/use-cases/logout/logout.command';
-import { ForgotPasswordUseCase } from '@/application/auth/use-cases/forgot-password/forgot-password.use-case';
 import { ForgotPasswordCommand } from '@/application/auth/use-cases/forgot-password/forgot-password.command';
-import { ResetPasswordUseCase } from '@/application/auth/use-cases/reset-password/reset-password.use-case';
-import { ResetPasswordCommand } from '@/application/auth/use-cases/reset-password/reset-password.command';
-import { VerifyOtpUseCase } from '@/application/auth/use-cases/verify-otp/verify-otp.use-case';
-import { VerifyOtpCommand } from '@/application/auth/use-cases/verify-otp/verify-otp.command';
-import { ResendOtpUseCase } from '@/application/auth/use-cases/resend-otp/resend-otp.use-case';
+import { ForgotPasswordUseCase } from '@/application/auth/use-cases/forgot-password/forgot-password.use-case';
+import { GoogleAuthCommand } from '@/application/auth/use-cases/google-auth/google-auth.command';
+import { GoogleAuthUseCase } from '@/application/auth/use-cases/google-auth/google-auth.use-case';
+import { LoginCommand } from '@/application/auth/use-cases/login/login.command';
+import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
+import { LogoutCommand } from '@/application/auth/use-cases/logout/logout.command';
+import { LogoutUseCase } from '@/application/auth/use-cases/logout/logout.use-case';
+import { RefreshTokenCommand } from '@/application/auth/use-cases/refresh-token/refresh-token.command';
+import { RefreshTokenUseCase } from '@/application/auth/use-cases/refresh-token/refresh-token.use-case';
+import { RegisterCommand } from '@/application/auth/use-cases/register/register.command';
+import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
 import { ResendOtpCommand } from '@/application/auth/use-cases/resend-otp/resend-otp.command';
+import { ResendOtpUseCase } from '@/application/auth/use-cases/resend-otp/resend-otp.use-case';
+import { ResetPasswordCommand } from '@/application/auth/use-cases/reset-password/reset-password.command';
+import { ResetPasswordUseCase } from '@/application/auth/use-cases/reset-password/reset-password.use-case';
+import { VerifyOtpCommand } from '@/application/auth/use-cases/verify-otp/verify-otp.command';
+import { VerifyOtpUseCase } from '@/application/auth/use-cases/verify-otp/verify-otp.use-case';
 
 import {
   ForgotPasswordDto,
@@ -45,7 +45,6 @@ import {
   VerifyOtpDto,
 } from '@/presentation/auth/dto/auth.dto';
 
-@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -94,7 +93,6 @@ export class AuthController {
   }
 
   @Get('profile')
-  @ApiBearerAuth()
   getProfile(@Req() req: { user: User }) {
     return req.user;
   }

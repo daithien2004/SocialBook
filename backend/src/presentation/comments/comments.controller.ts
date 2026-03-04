@@ -11,32 +11,31 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+
 
 import { Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { CreateCommentDto, UpdateCommentDto, CommentCountDto, ModerateCommentDto, FlagCommentDto } from '@/presentation/comments/dto/create-comment.dto';
-import { FilterCommentDto, GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
 import { CommentResponseDto, CommentStatsDto } from '@/presentation/comments/dto/comment.response.dto';
+import { CommentCountDto, CreateCommentDto, FlagCommentDto, ModerateCommentDto, UpdateCommentDto } from '@/presentation/comments/dto/create-comment.dto';
+import { FilterCommentDto, GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
 
 import { CreateCommentUseCase } from '@/application/comments/use-cases/create-comment/create-comment.use-case';
-import { GetCommentsUseCase } from '@/application/comments/use-cases/get-comments/get-comments.use-case';
-import { GetCommentCountUseCase } from '@/application/comments/use-cases/get-comment-count/get-comment-count.use-case';
-import { UpdateCommentUseCase } from '@/application/comments/use-cases/update-comment/update-comment.use-case';
 import { DeleteCommentUseCase } from '@/application/comments/use-cases/delete-comment/delete-comment.use-case';
+import { GetCommentCountUseCase } from '@/application/comments/use-cases/get-comment-count/get-comment-count.use-case';
+import { GetCommentsUseCase } from '@/application/comments/use-cases/get-comments/get-comments.use-case';
 import { ModerateCommentUseCase } from '@/application/comments/use-cases/moderate-comment/moderate-comment.use-case';
+import { UpdateCommentUseCase } from '@/application/comments/use-cases/update-comment/update-comment.use-case';
 
 import { CreateCommentCommand } from '@/application/comments/use-cases/create-comment/create-comment.command';
-import { GetCommentsQuery } from '@/application/comments/use-cases/get-comments/get-comments.query';
-import { UpdateCommentCommand } from '@/application/comments/use-cases/update-comment/update-comment.command';
 import { DeleteCommentCommand } from '@/application/comments/use-cases/delete-comment/delete-comment.command';
-import { ModerateCommentCommand } from '@/application/comments/use-cases/moderate-comment/moderate-comment.command';
 import { GetCommentCountQuery } from '@/application/comments/use-cases/get-comment-count/get-comment-count.query';
+import { GetCommentsQuery } from '@/application/comments/use-cases/get-comments/get-comments.query';
+import { ModerateCommentCommand } from '@/application/comments/use-cases/moderate-comment/moderate-comment.command';
+import { UpdateCommentCommand } from '@/application/comments/use-cases/update-comment/update-comment.command';
 
-@ApiTags('Comments')
 @Controller('comments')
 export class CommentsController {
   constructor(

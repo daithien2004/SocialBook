@@ -6,26 +6,24 @@ import {
   HttpStatus,
   Post,
   Query,
-  Req,
-  UseGuards,
+  Req
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
-import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
+
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
 import { GetLikeStatusUseCase } from '@/application/likes/use-cases/get-like-status/get-like-status.use-case';
-import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
-import { Public } from '@/common/decorators/customize';
+import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
 import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
+import { Public } from '@/common/decorators/customize';
+import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 
-@ApiTags('Likes')
 @Controller('likes')
 export class LikesController {
   constructor(
     private readonly toggleLikeUseCase: ToggleLikeUseCase,
     private readonly getLikeCountUseCase: GetLikeCountUseCase,
     private readonly getLikeStatusUseCase: GetLikeStatusUseCase,
-  ) {}
+  ) { }
 
   @Post('toggle')
   @RequireAuth()

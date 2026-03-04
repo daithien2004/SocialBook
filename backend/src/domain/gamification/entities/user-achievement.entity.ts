@@ -3,27 +3,15 @@ import { AchievementId } from '../value-objects/achievement-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { XP } from '../value-objects/xp.vo';
 
-export class UserAchievementId {
-    private readonly value: string;
+import { Identifier } from '@/shared/domain/identifier.base';
 
+export class UserAchievementId extends Identifier {
     private constructor(id: string) {
-        this.value = id;
+        super(id);
     }
 
     static create(id: string): UserAchievementId {
-        if (!id || id.trim().length === 0) {
-            throw new Error('UserAchievement ID cannot be empty');
-        }
-        return new UserAchievementId(id.trim());
-    }
-
-    toString(): string {
-        return this.value;
-    }
-
-    equals(other: UserAchievementId): boolean {
-        if (!other) return false;
-        return this.value === other.value;
+        return new UserAchievementId(Identifier.validate(id, 'UserAchievement ID'));
     }
 }
 

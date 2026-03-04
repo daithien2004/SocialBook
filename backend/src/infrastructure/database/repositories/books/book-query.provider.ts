@@ -1,8 +1,8 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
-import { BookFilter, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
+import { BookFilter } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';

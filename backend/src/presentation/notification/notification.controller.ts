@@ -9,26 +9,24 @@ import {
     Req,
     UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
+
+import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
-import { Roles } from '@/common/decorators/roles.decorator';
 
-import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto'; // Need CreateNotificationDto? usually internal. Or create one.
-import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
 import { CreateNotificationCommand } from '@/application/notifications/use-cases/create-notification/create-notification.command';
-import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
+import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
 import { GetUserNotificationsQuery } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.query';
-import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
+import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
 import { MarkNotificationReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.command';
+import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
+import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto'; // Need CreateNotificationDto? usually internal. Or create one.
 
-import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
 import { FilterNotificationDto } from '@/presentation/notification/dto/filter-notification.dto';
+import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
 
-@ApiTags('Notifications')
-@ApiBearerAuth()
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 export class NotificationController {
