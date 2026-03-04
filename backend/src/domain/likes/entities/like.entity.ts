@@ -1,7 +1,7 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { TargetType } from '../value-objects/target-type.vo';
+import { UserId } from '../value-objects/user-id.vo';
 
 export class Like extends Entity<string> {
     private constructor(

@@ -1,17 +1,29 @@
+import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
+import { UserGamification as UserGamificationEntity } from '@/domain/gamification/entities/user-gamification.entity';
+import { IUserGamificationRepository, UserGamificationFilter } from '@/domain/gamification/repositories/user-gamification.repository.interface';
+import { UserGamificationId } from '@/domain/gamification/value-objects/user-gamification-id.vo';
+import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { UserGamification, UserGamificationDocument } from '../../schemas/user-gamification.schema';
-import { IUserGamificationRepository, UserGamificationFilter, PaginationOptions } from '@/domain/gamification/repositories/user-gamification.repository.interface';
-import { UserGamification as UserGamificationEntity } from '@/domain/gamification/entities/user-gamification.entity';
-import { UserGamificationId } from '@/domain/gamification/value-objects/user-gamification-id.vo';
-import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { UserGamificationMapper } from './user-gamification.mapper';
 
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
+
 @Injectable()
-export class UserGamificationRepository implements IUserGamificationRepository {
-    constructor(@InjectModel(UserGamification.name) private readonly userGamificationModel: Model<UserGamificationDocument>) {}
+export class UserGamificationRepository extends BaseMongoRepository<UserGamificationEntity, UserGamificationDocument, UserGamificationId> implements IUserGamificationRepository {
+    constructor(@InjectModel(UserGamification.name) private readonly userGamificationModel: Model<UserGamificationDocument>) {
+        super(userGamificationModel);
+    }
+
+    protected toDomain(doc: UserGamificationDocument): UserGamificationEntity {
+        return this.mapToEntity(doc);
+    }
+
+    protected toPersistence(entity: UserGamificationEntity): any {
+        return this.mapToDocument(entity);
+    }
 
     async findById(id: UserGamificationId): Promise<UserGamificationEntity | null> {
         const document = await this.userGamificationModel.findById(id.toString()).lean().exec();
@@ -50,26 +62,16 @@ export class UserGamificationRepository implements IUserGamificationRepository {
 
         return {
             data: documents.map(doc => this.mapToEntity(doc)),
-            meta: {
-                current: page,
-                pageSize: limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
+            meta: this.buildMeta(page, limit, total)
         };
     }
 
     async save(gamification: UserGamificationEntity): Promise<void> {
-        const document = this.mapToDocument(gamification);
-        await this.userGamificationModel.findByIdAndUpdate(
-            gamification.id.toString(),
-            document,
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(gamification);
     }
 
     async delete(id: UserGamificationId): Promise<void> {
-        await this.userGamificationModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async getTopUsersByStreak(limit: number): Promise<UserGamificationEntity[]> {

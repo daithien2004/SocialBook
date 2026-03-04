@@ -1,12 +1,12 @@
+import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
+import { Genre as GenreEntity } from '@/domain/genres/entities/genre.entity';
+import { GenreFilter, IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
+import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
+import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { Genre as GenreEntity } from '@/domain/genres/entities/genre.entity';
-import { GenreFilter, IGenreRepository, PaginationOptions } from '@/domain/genres/repositories/genre.repository.interface';
-import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
-import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 import { Genre, GenreDocument } from '../../schemas/genre.schema';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { GenreMapper } from './genre.mapper';
 
 interface GenrePersistence {
@@ -18,15 +18,19 @@ interface GenrePersistence {
     updatedAt: Date;
 }
 
-@Injectable()
-export class GenresRepository implements IGenreRepository {
-    constructor(@InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>) {}
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
 
-    private toDomain(doc: GenreDocument): GenreEntity {
+@Injectable()
+export class GenresRepository extends BaseMongoRepository<GenreEntity, GenreDocument, GenreId> implements IGenreRepository {
+    constructor(@InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>) {
+        super(genreModel);
+    }
+
+    protected toDomain(doc: GenreDocument): GenreEntity {
         return GenreMapper.toDomain(doc);
     }
 
-    private toPersistence(entity: GenreEntity): GenrePersistence {
+    protected toPersistence(entity: GenreEntity): GenrePersistence {
         return GenreMapper.toPersistence(entity);
     }
 
@@ -50,13 +54,13 @@ export class GenresRepository implements IGenreRepository {
         pagination: PaginationOptions
     ): Promise<PaginatedResult<GenreEntity>> {
         const query: FilterQuery<GenreDocument> = {};
-        
+
         if (filter.name) {
             query.name = { $regex: filter.name, $options: 'i' };
         }
 
         const skip = (pagination.page - 1) * pagination.limit;
-        
+
         const [docs, total] = await Promise.all([
             this.genreModel.find(query)
                 .sort({ name: 1 })
@@ -68,12 +72,7 @@ export class GenresRepository implements IGenreRepository {
 
         return {
             data: docs.map(doc => this.toDomain(doc)),
-            meta: {
-                total,
-                current: pagination.page,
-                pageSize: pagination.limit,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
+            meta: this.buildMeta(pagination.page, pagination.limit, total),
         };
     }
 
@@ -83,7 +82,7 @@ export class GenresRepository implements IGenreRepository {
             id: doc._id.toString(),
             name: doc.name,
             slug: doc.slug,
-            description: '', 
+            description: '',
             createdAt: (doc as any).createdAt || new Date(),
             updatedAt: (doc as any).updatedAt || new Date(),
         }));
@@ -103,27 +102,21 @@ export class GenresRepository implements IGenreRepository {
     }
 
     async save(genre: GenreEntity): Promise<void> {
-        const persistenceData = this.toPersistence(genre);
-        
-        await this.genreModel.findOneAndUpdate(
-            { _id: persistenceData._id },
-            { $set: persistenceData },
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(genre);
     }
 
     async delete(id: GenreId): Promise<void> {
-        await this.genreModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async countByIds(ids: string[]): Promise<number> {
-         const objectIds = ids.map(id => new Types.ObjectId(id));
-         return this.genreModel.countDocuments({ _id: { $in: objectIds } }).exec();
+        const objectIds = ids.map(id => new Types.ObjectId(id));
+        return this.genreModel.countDocuments({ _id: { $in: objectIds } }).exec();
     }
 
     async getGenreBookCounts() {
-         return this.genreModel.aggregate([
-             {
+        return this.genreModel.aggregate([
+            {
                 $lookup: {
                     from: 'books',
                     let: { genreId: '$_id' },
@@ -157,7 +150,7 @@ export class GenresRepository implements IGenreRepository {
                 }
             },
             { $sort: { name: 1 } }
-         ]).exec();
+        ]).exec();
     }
 }
 

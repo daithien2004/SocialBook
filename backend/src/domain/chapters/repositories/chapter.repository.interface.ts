@@ -1,4 +1,4 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { Chapter } from '../entities/chapter.entity';
 import { ChapterDetailReadModel } from '../read-models/chapter-detail.read-model';
 import { ChapterListReadModel } from '../read-models/chapter-list.read-model';
@@ -6,22 +6,14 @@ import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
 import { ChapterTitle } from '../value-objects/chapter-title.vo';
 
+export type ChapterSortField = 'createdAt' | 'updatedAt' | 'title' | 'orderIndex' | 'viewsCount';
+
 export interface ChapterFilter {
     title?: string;
     bookId?: string;
     orderIndex?: number;
     minWordCount?: number;
     maxWordCount?: number;
-}
-
-export interface PaginationOptions {
-    page: number;
-    limit: number;
-}
-
-export interface SortOptions {
-    sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'orderIndex' | 'viewsCount';
-    order?: 'asc' | 'desc';
 }
 
 export abstract class IChapterRepository {

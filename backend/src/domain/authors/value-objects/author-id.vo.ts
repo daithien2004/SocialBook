@@ -1,23 +1,11 @@
-export class AuthorId {
-    private readonly value: string;
+import { Identifier } from '@/shared/domain/identifier.base';
 
+export class AuthorId extends Identifier {
     private constructor(id: string) {
-        this.value = id;
+        super(id);
     }
 
     static create(id: string): AuthorId {
-        if (!id || id.trim().length === 0) {
-            throw new Error('Author ID cannot be empty');
-        }
-        return new AuthorId(id.trim());
-    }
-
-    toString(): string {
-        return this.value;
-    }
-
-    equals(other: AuthorId): boolean {
-        if (!other) return false;
-        return this.value === other.value;
+        return new AuthorId(Identifier.validate(id, 'Author ID'));
     }
 }

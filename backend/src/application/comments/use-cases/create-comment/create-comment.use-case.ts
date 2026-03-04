@@ -23,23 +23,11 @@ export class CreateCommentUseCase {
             const targetId = TargetId.create(command.targetId);
             const targetType = CommentTargetType.create(command.targetType);
 
-            const exists = await this.commentRepository.existsByUserAndTarget(
-                userId,
-                targetId,
-                targetType,
-                command.content
-            );
-
-            if (exists) {
-                throw new BadRequestException('You have already posted a similar comment on this content');
-            }
-
             const { effectiveParentId, level } = await this.commentRepository.resolveParentId(
                 targetId,
                 targetType,
                 command.parentId,
             );
-            console.log(effectiveParentId, level);
             const comment = Comment.create({
                 id: CommentId.create(this.idGenerator.generate()),
                 userId: command.userId,

@@ -1,26 +1,32 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
+import { Follow as FollowEntity } from '@/domain/follows/entities/follow.entity';
+import { FollowFilter, FollowStats, FollowStatusResult, IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
+import { FollowId } from '@/domain/follows/value-objects/follow-id.vo';
+import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
+import { UserId } from '@/domain/follows/value-objects/user-id.vo';
+import { Follow, FollowDocument } from '@/infrastructure/database/schemas/follow.schema';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { Follow, FollowDocument } from '@/infrastructure/database/schemas/follow.schema';
-import { IFollowRepository, FollowFilter, PaginationOptions, SortOptions, FollowStatusResult, FollowStats } from '@/domain/follows/repositories/follow.repository.interface';
-import { Follow as FollowEntity } from '@/domain/follows/entities/follow.entity';
-import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { FollowId } from '@/domain/follows/value-objects/follow-id.vo';
-import { UserId } from '@/domain/follows/value-objects/user-id.vo';
-import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { FollowMapper } from './follow.mapper';
 
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
+
 @Injectable()
-export class FollowRepository implements IFollowRepository {
+export class FollowRepository extends BaseMongoRepository<FollowEntity, FollowDocument, FollowId> implements IFollowRepository {
     constructor(
         @InjectModel(Follow.name) private readonly followModel: Model<FollowDocument>,
         private readonly idGenerator: IIdGenerator
-    ) {}
+    ) {
+        super(followModel);
+    }
+
+
 
     async findById(id: FollowId): Promise<FollowEntity | null> {
         const document = await this.followModel.findById(id.toString()).lean().exec();
-        return document ? this.mapToEntity(document) : null;
+        return document ? this.toDomain(document) : null;
     }
 
     async findByUser(userId: UserId, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<FollowEntity>> {
@@ -29,7 +35,7 @@ export class FollowRepository implements IFollowRepository {
             status: true
         };
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort);
     }
 
     async findByTarget(targetId: TargetId, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<FollowEntity>> {
@@ -38,7 +44,7 @@ export class FollowRepository implements IFollowRepository {
             status: true
         };
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort);
     }
 
     async findAll(filter: FollowFilter, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<FollowEntity>> {
@@ -66,24 +72,27 @@ export class FollowRepository implements IFollowRepository {
             }
         }
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort);
     }
 
     async save(follow: FollowEntity): Promise<void> {
-        const document = this.mapToDocument(follow);
-        await this.followModel.findByIdAndUpdate(
-            follow.id.toString(),
-            document,
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(follow);
     }
 
     async delete(id: FollowId): Promise<void> {
-        await this.followModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async softDelete(id: FollowId): Promise<void> {
         await this.followModel.findByIdAndUpdate(id.toString(), { status: false, updatedAt: new Date() }).exec();
+    }
+
+    protected toDomain(doc: FollowDocument): FollowEntity {
+        return FollowMapper.toDomain(doc);
+    }
+
+    protected toPersistence(entity: FollowEntity): any {
+        return FollowMapper.toPersistence(entity);
     }
 
     async exists(userId: UserId, targetId: TargetId): Promise<FollowEntity | null> {
@@ -92,7 +101,7 @@ export class FollowRepository implements IFollowRepository {
             targetId: new Types.ObjectId(targetId.toString())
         }).lean().exec();
 
-        return document ? this.mapToEntity(document) : null;
+        return document ? this.toDomain(document) : null;
     }
 
     async getFollowStatus(userId: UserId, targetId: TargetId): Promise<FollowStatusResult> {
@@ -165,7 +174,7 @@ export class FollowRepository implements IFollowRepository {
             status: true
         }).lean().exec();
 
-        return documents.map(doc => this.mapToEntity(doc));
+        return documents.map(doc => this.toDomain(doc));
     }
 
     async getFollowStats(userId: UserId): Promise<FollowStats> {
@@ -201,7 +210,7 @@ export class FollowRepository implements IFollowRepository {
         const queryFilter: FilterQuery<FollowDocument> = { status: true };
         const sortOptions: SortOptions = { sortBy: 'createdAt', order: 'desc' };
 
-        return this.executeQuery(queryFilter, pagination, sortOptions);
+        return this.executePaginatedQuery(queryFilter, pagination, sortOptions);
     }
 
     async getPopularFollows(pagination?: PaginationOptions): Promise<PaginatedResult<FollowEntity>> {
@@ -260,50 +269,6 @@ export class FollowRepository implements IFollowRepository {
         }
 
         return this.followUser(userId, targetId);
-    }
-
-    private async executeQuery(
-        filter: FilterQuery<FollowDocument>,
-        pagination?: PaginationOptions,
-        sort?: SortOptions
-    ): Promise<PaginatedResult<FollowEntity>> {
-        const page = pagination?.page || 1;
-        const limit = pagination?.limit || 10;
-        const skip = (page - 1) * limit;
-
-        let query = this.followModel.find(filter);
-
-        if (sort?.sortBy) {
-            const sortOrder = sort.order === 'desc' ? -1 : 1;
-            query = query.sort({ [sort.sortBy]: sortOrder });
-        } else {
-            query = query.sort({ createdAt: -1 });
-        }
-
-        query = query.skip(skip).limit(limit);
-
-        const [documents, total] = await Promise.all([
-            query.lean().exec(),
-            this.followModel.countDocuments(filter).exec()
-        ]);
-
-        return {
-            data: documents.map(doc => this.mapToEntity(doc)),
-            meta: {
-                current: page,
-                pageSize: limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
-    }
-
-    private mapToEntity(document: any): FollowEntity {
-        return FollowMapper.toDomain(document);
-    }
-
-    private mapToDocument(follow: FollowEntity): Partial<FollowDocument> {
-        return FollowMapper.toPersistence(follow);
     }
 }
 

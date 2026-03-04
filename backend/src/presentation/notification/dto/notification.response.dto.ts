@@ -1,26 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Notification, NotificationMeta } from '@/domain/notifications/entities/notification.entity';
+import { Notification } from '@/domain/notifications/entities/notification.entity';
 
 export class NotificationResponseDto {
-    @ApiProperty()
     id: string;
 
-    @ApiProperty()
     title: string;
 
-    @ApiProperty()
     message: string;
 
-    @ApiProperty()
     type: string;
 
-    @ApiProperty()
     isRead: boolean;
 
-    @ApiProperty({ required: false })
     actionUrl: string | null;
 
-    @ApiProperty({ type: Object, required: false })
     meta?: {
         actorId: string;
         username?: string;
@@ -28,11 +20,10 @@ export class NotificationResponseDto {
         targetId?: string;
     };
 
-    @ApiProperty()
     createdAt: Date;
 
-    @ApiProperty()
     updatedAt: Date;
+
 
     constructor(notification: Notification) {
         this.id = notification.id.toString();

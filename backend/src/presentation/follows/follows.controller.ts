@@ -1,35 +1,33 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
-  Req,
-  Query,
-  UseGuards,
   Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiTags, ApiBody, ApiOperation, ApiQuery } from '@nestjs/swagger';
+
 
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
-import { CreateFollowDto } from '@/presentation/follows/dto/create-follow.dto';
-import { FilterFollowDto } from '@/presentation/follows/dto/create-follow.dto';
-import { FollowResponseDto, FollowStatusResponseDto, FollowStatsResponseDto } from '@/presentation/follows/dto/follow.response.dto';
+import { CreateFollowDto, FilterFollowDto } from '@/presentation/follows/dto/create-follow.dto';
+import { FollowResponseDto, FollowStatsResponseDto, FollowStatusResponseDto } from '@/presentation/follows/dto/follow.response.dto';
 
 import { CreateFollowUseCase } from '@/application/follows/use-cases/create-follow/create-follow.use-case';
-import { GetFollowsUseCase } from '@/application/follows/use-cases/get-follows/get-follows.use-case';
-import { GetFollowStatusUseCase } from '@/application/follows/use-cases/get-follow-status/get-follow-status.use-case';
 import { DeleteFollowUseCase } from '@/application/follows/use-cases/delete-follow/delete-follow.use-case';
+import { GetFollowStatusUseCase } from '@/application/follows/use-cases/get-follow-status/get-follow-status.use-case';
+import { GetFollowsUseCase } from '@/application/follows/use-cases/get-follows/get-follows.use-case';
 
 import { CreateFollowCommand } from '@/application/follows/use-cases/create-follow/create-follow.command';
-import { GetFollowsQuery } from '@/application/follows/use-cases/get-follows/get-follows.query';
-import { GetFollowStatusQuery } from '@/application/follows/use-cases/get-follow-status/get-follow-status.query';
 import { DeleteFollowCommand } from '@/application/follows/use-cases/delete-follow/delete-follow.command';
+import { GetFollowStatusQuery } from '@/application/follows/use-cases/get-follow-status/get-follow-status.query';
+import { GetFollowsQuery } from '@/application/follows/use-cases/get-follows/get-follows.query';
 
-@ApiTags('Follows')
 @Controller('follows')
 export class FollowsController {
   constructor(

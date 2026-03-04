@@ -7,6 +7,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BookQueryProvider } from './book-query.provider';
 import { BookRepository } from './book.repository';
+import { Genre, GenreSchema } from '../../schemas/genre.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { BookRepository } from './book.repository';
       { name: Book.name, schema: BookSchema },
       { name: Chapter.name, schema: ChapterSchema },
       { name: Author.name, schema: AuthorSchema },
+      { name: Genre.name, schema: GenreSchema },
     ]),
   ],
   providers: [

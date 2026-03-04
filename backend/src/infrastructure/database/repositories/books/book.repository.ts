@@ -1,21 +1,32 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { Book as BookEntity } from '@/domain/books/entities/book.entity';
-import { BookFilter, BookFilters, IBookRepository, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
+import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
+import { BookFilter, BookFilters, IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { AuthorId } from '@/domain/books/value-objects/author-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { GenreId } from '@/domain/books/value-objects/genre-id.vo';
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
 import { BookMapper } from './book.mapper';
 import { RawBookDocument } from './book.raw-types';
-import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 
 @Injectable()
-export class BookRepository implements IBookRepository {
-    constructor(@InjectModel(Book.name) private readonly bookModel: Model<BookDocument>) { }
+export class BookRepository extends BaseMongoRepository<BookEntity, BookDocument, BookId> implements IBookRepository {
+    constructor(@InjectModel(Book.name) private readonly bookModel: Model<BookDocument>) {
+        super(bookModel);
+    }
+
+    protected toDomain(doc: BookDocument): BookEntity {
+        return BookMapper.toDomain(doc as any);
+    }
+
+    protected toPersistence(entity: BookEntity): any {
+        return BookMapper.toPersistence(entity);
+    }
 
     async findById(id: BookId): Promise<BookEntity | null> {
         const document = await this.bookModel.findById(id.toString()).populate('genres').lean().exec();
@@ -85,12 +96,7 @@ export class BookRepository implements IBookRepository {
 
         return {
             data: documents.map(doc => BookMapper.toDomain(doc)),
-            meta: {
-                current: pagination.page,
-                pageSize: pagination.limit,
-                total,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
+            meta: this.buildMeta(pagination.page, pagination.limit, total),
         };
     }
 
@@ -175,23 +181,15 @@ export class BookRepository implements IBookRepository {
     }
 
     async save(book: BookEntity): Promise<void> {
-        const document = BookMapper.toPersistence(book);
-        await this.bookModel.findByIdAndUpdate(
-            book.id.toString(),
-            document,
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(book);
     }
 
     async delete(id: BookId): Promise<void> {
-        await this.bookModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async softDelete(id: BookId): Promise<void> {
-        await this.bookModel.findByIdAndUpdate(
-            id.toString(),
-            { isDeleted: true, updatedAt: new Date() }
-        ).exec();
+        return this.baseSoftDelete(id);
     }
 
     async existsByTitle(title: BookTitle, excludeId?: BookId): Promise<boolean> {
@@ -306,11 +304,11 @@ export class BookRepository implements IBookRepository {
             { $sort: { count: -1 } },
         ]).exec();
 
-        return result.map(item => ({ 
-            id: item._id.toString(), 
-            name: item.name, 
-            slug: item.slug, 
-            count: item.count 
+        return result.map(item => ({
+            id: item._id.toString(),
+            name: item.name,
+            slug: item.slug,
+            count: item.count
         }));
     }
 
@@ -327,9 +325,9 @@ export class BookRepository implements IBookRepository {
             { $sort: { count: -1 } },
         ]).exec();
 
-        return result.map(item => ({ 
-            name: item._id, 
-            count: item.count 
+        return result.map(item => ({
+            name: item._id,
+            count: item.count
         }));
     }
 

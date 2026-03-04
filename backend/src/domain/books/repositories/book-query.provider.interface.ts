@@ -1,8 +1,8 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { BookDetailReadModel } from '../read-models/book-detail.read-model';
 import { BookListReadModel } from '../read-models/book-list.read-model';
 import { BookId } from '../value-objects/book-id.vo';
-import { BookFilter, PaginationOptions, SortOptions } from './book.repository.interface';
+import { BookFilter } from './book.repository.interface';
 
 export abstract class IBookQueryProvider {
     abstract findAllList(

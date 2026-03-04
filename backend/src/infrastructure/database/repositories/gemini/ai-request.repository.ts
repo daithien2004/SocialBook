@@ -1,12 +1,12 @@
+import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
+import { AIRequest, AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
+import { AIRequestFilter, IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
+import { AIRequestId } from '@/domain/gemini/value-objects/ai-request-id.vo';
+import { UserId } from '@/domain/gemini/value-objects/user-id.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { IAIRequestRepository, AIRequestFilter, PaginationOptions } from '@/domain/gemini/repositories/ai-request.repository.interface';
-import { AIRequest, AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
-import { AIRequestId } from '@/domain/gemini/value-objects/ai-request-id.vo';
-import { UserId } from '@/domain/gemini/value-objects/user-id.vo';
-import { AIRequest as AIRequestModelClass, AIRequestDocument } from '../../schemas/ai-request.schema';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { AIRequestDocument, AIRequest as AIRequestModelClass } from '../../schemas/ai-request.schema';
 
 interface AIRequestPersistence {
     _id: Types.ObjectId;
@@ -19,11 +19,15 @@ interface AIRequestPersistence {
     updatedAt: Date;
 }
 
-@Injectable()
-export class AIRequestRepository implements IAIRequestRepository {
-    constructor(@InjectModel(AIRequestModelClass.name) private readonly aiRequestModel: Model<AIRequestDocument>) {}
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
 
-    private toDomain(doc: AIRequestDocument): AIRequest {
+@Injectable()
+export class AIRequestRepository extends BaseMongoRepository<AIRequest, AIRequestDocument, AIRequestId> implements IAIRequestRepository {
+    constructor(@InjectModel(AIRequestModelClass.name) private readonly aiRequestModel: Model<AIRequestDocument>) {
+        super(aiRequestModel);
+    }
+
+    protected toDomain(doc: AIRequestDocument): AIRequest {
         return AIRequest.reconstitute({
             id: doc._id.toString(),
             prompt: doc.prompt,
@@ -36,7 +40,7 @@ export class AIRequestRepository implements IAIRequestRepository {
         });
     }
 
-    private toPersistence(request: AIRequest): AIRequestPersistence {
+    protected toPersistence(request: AIRequest): AIRequestPersistence {
         return {
             _id: new Types.ObjectId(request.id.toString()),
             prompt: request.prompt,
@@ -50,13 +54,7 @@ export class AIRequestRepository implements IAIRequestRepository {
     }
 
     async save(request: AIRequest): Promise<void> {
-        const persistenceData = this.toPersistence(request);
-        
-        await this.aiRequestModel.findOneAndUpdate(
-            { _id: persistenceData._id },
-            { $set: persistenceData },
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(request);
     }
 
     async findById(id: AIRequestId): Promise<AIRequest | null> {
@@ -66,9 +64,9 @@ export class AIRequestRepository implements IAIRequestRepository {
 
     async findByUserId(userId: UserId, pagination: PaginationOptions = { page: 1, limit: 10 }): Promise<PaginatedResult<AIRequest>> {
         const query: FilterQuery<AIRequestDocument> = { userId: userId.toString() };
-        
+
         const skip = (pagination.page - 1) * pagination.limit;
-        
+
         const [docs, total] = await Promise.all([
             this.aiRequestModel.find(query)
                 .sort({ createdAt: -1 })
@@ -80,20 +78,15 @@ export class AIRequestRepository implements IAIRequestRepository {
 
         return {
             data: docs.map(doc => this.toDomain(doc)),
-            meta: {
-                total,
-                current: pagination.page,
-                pageSize: pagination.limit,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
+            meta: this.buildMeta(pagination.page, pagination.limit, total),
         };
     }
 
     async findByType(type: AIRequestType, pagination: PaginationOptions = { page: 1, limit: 10 }): Promise<PaginatedResult<AIRequest>> {
         const query: FilterQuery<AIRequestDocument> = { type };
-        
+
         const skip = (pagination.page - 1) * pagination.limit;
-        
+
         const [docs, total] = await Promise.all([
             this.aiRequestModel.find(query)
                 .sort({ createdAt: -1 })
@@ -105,30 +98,25 @@ export class AIRequestRepository implements IAIRequestRepository {
 
         return {
             data: docs.map(doc => this.toDomain(doc)),
-            meta: {
-                total,
-                current: pagination.page,
-                pageSize: pagination.limit,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
+            meta: this.buildMeta(pagination.page, pagination.limit, total),
         };
     }
 
     async findAll(filter: AIRequestFilter, pagination: PaginationOptions): Promise<PaginatedResult<AIRequest>> {
         const query: FilterQuery<AIRequestDocument> = {};
-        
+
         if (filter.type) {
             query.type = filter.type;
         }
-        
+
         if (filter.userId) {
             query.userId = filter.userId;
         }
-        
+
         if (filter.isCompleted !== undefined) {
             query.response = filter.isCompleted ? { $ne: null } : null;
         }
-        
+
         if (filter.dateFrom || filter.dateTo) {
             query.createdAt = {};
             if (filter.dateFrom) {
@@ -140,7 +128,7 @@ export class AIRequestRepository implements IAIRequestRepository {
         }
 
         const skip = (pagination.page - 1) * pagination.limit;
-        
+
         const [docs, total] = await Promise.all([
             this.aiRequestModel.find(query)
                 .sort({ createdAt: -1 })
@@ -152,17 +140,12 @@ export class AIRequestRepository implements IAIRequestRepository {
 
         return {
             data: docs.map(doc => this.toDomain(doc)),
-            meta: {
-                total,
-                current: pagination.page,
-                pageSize: pagination.limit,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
+            meta: this.buildMeta(pagination.page, pagination.limit, total),
         };
     }
 
     async delete(id: AIRequestId): Promise<void> {
-        await this.aiRequestModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async countByUserId(userId: UserId): Promise<number> {
@@ -175,7 +158,7 @@ export class AIRequestRepository implements IAIRequestRepository {
 
     async count(filter?: AIRequestFilter): Promise<number> {
         const query: FilterQuery<AIRequestDocument> = {};
-        
+
         if (filter) {
             if (filter.type) query.type = filter.type;
             if (filter.userId) query.userId = filter.userId;
@@ -188,7 +171,7 @@ export class AIRequestRepository implements IAIRequestRepository {
                 if (filter.dateTo) query.createdAt.$lte = filter.dateTo;
             }
         }
-        
+
         return await this.aiRequestModel.countDocuments(query).exec();
     }
 

@@ -146,12 +146,16 @@ export const commentApi = createApi({
         >({
             query: ({ id }) => ({
                 url: NESTJS_COMMENTS_ENDPOINTS.deleteComment(id),
-                method: 'POST',
+                method: 'DELETE',
             }),
             invalidatesTags: (_, __, arg) => [
                 {
                     type: 'Comment',
                     id: `THREAD-${arg.targetId}-${arg.parentId ?? 'root'}`,
+                },
+                {
+                    type: 'Comment',
+                    id: `REPLY-COUNT-${arg.parentId}`,
                 },
             ],
         }),
@@ -167,7 +171,7 @@ export const commentApi = createApi({
             }),
             providesTags: (result, error, arg) => [
                 {
-                    type: 'Comment' as const,
+                    type: 'Comment',
                     id: `REPLY-COUNT-${arg.parentId}`,
                 },
             ],

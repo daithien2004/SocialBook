@@ -1,45 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { User } from '@/domain/users/entities/user.entity';
 
 export class UserResponseDto {
-    @ApiProperty()
     id: string;
-
-    @ApiProperty()
     username: string;
-
-    @ApiProperty()
     email: string;
-
-    @ApiProperty()
     roleId: string;
-
-    @ApiProperty()
     isVerified: boolean;
-
-    @ApiProperty()
     isBanned: boolean;
-
-    @ApiProperty()
     provider: string;
-
-    @ApiProperty({ required: false })
     image?: string;
-
-    @ApiProperty({ required: false })
     bio?: string;
-
-    @ApiProperty({ required: false })
     location?: string;
-
-    @ApiProperty({ required: false })
     website?: string;
-
-    @ApiProperty()
     createdAt: Date;
-
-    @ApiProperty()
     updatedAt: Date;
+
 
     constructor(user: User) {
         this.id = user.id.toString();

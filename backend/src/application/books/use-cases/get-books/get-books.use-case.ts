@@ -1,5 +1,6 @@
+import { PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
-import { BookFilter, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
+import { BookFilter } from '@/domain/books/repositories/book.repository.interface';
 import { Injectable } from '@nestjs/common';
 import { GetBooksQuery } from './get-books.query';
 

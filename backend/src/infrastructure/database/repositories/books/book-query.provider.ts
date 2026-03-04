@@ -1,18 +1,22 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
-import { BookFilter, PaginationOptions, SortOptions } from '@/domain/books/repositories/book.repository.interface';
+import { BookFilter } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
+import { Genre, GenreDocument } from '../../schemas/genre.schema';
 import { BookMapper } from './book.mapper';
 
 @Injectable()
 export class BookQueryProvider implements IBookQueryProvider {
-    constructor(@InjectModel(Book.name) private readonly bookModel: Model<BookDocument>) { }
+    constructor(
+        @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
+        @InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>
+    ) { }
 
     private buildQueryFilter(filter: BookFilter): FilterQuery<BookDocument> {
         const queryFilter: FilterQuery<BookDocument> = { isDeleted: false };
@@ -32,6 +36,19 @@ export class BookQueryProvider implements IBookQueryProvider {
     }
 
     async findAllList(filter: BookFilter, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<BookListReadModel>> {
+        if (filter.genres && filter.genres.length > 0) {
+            const resolvedGenreIds = await Promise.all(
+                filter.genres.map(async (genreIdOrSlug) => {
+                    if (Types.ObjectId.isValid(genreIdOrSlug)) {
+                        return genreIdOrSlug;
+                    }
+                    const genre = await this.genreModel.findOne({ slug: genreIdOrSlug }).select('_id').lean().exec();
+                    return genre ? genre._id.toString() : null;
+                })
+            );
+            filter.genres = resolvedGenreIds.filter((id): id is string => id !== null);
+        }
+
         const queryFilter = this.buildQueryFilter(filter);
         const skip = (pagination.page - 1) * pagination.limit;
         const total = await this.bookModel.countDocuments(queryFilter).exec();

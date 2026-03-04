@@ -1,22 +1,11 @@
-export class BookId {
-    private constructor(private readonly _value: string) {}
+import { Identifier } from '@/shared/domain/identifier.base';
 
-    static create(value: string): BookId {
-        if (!value || value.trim().length === 0) {
-            throw new Error('Book ID cannot be empty');
-        }
-        return new BookId(value);
+export class BookId extends Identifier {
+    private constructor(id: string) {
+        super(id);
     }
 
-    toString(): string {
-        return this._value;
-    }
-
-    equals(other: BookId): boolean {
-        return this._value === other._value;
-    }
-
-    get value(): string {
-        return this._value;
+    static create(id: string): BookId {
+        return new BookId(Identifier.validate(id, 'Book ID'));
     }
 }

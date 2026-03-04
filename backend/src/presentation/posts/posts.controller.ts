@@ -16,43 +16,42 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
+
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { CreatePostDto } from '@/presentation/posts/dto/create-post.dto';
-import { PaginationDto, PaginationUserDto } from '@/presentation/posts/dto/pagination.dto';
+import { PaginationUserDto } from '@/presentation/posts/dto/pagination.dto';
 import { UpdatePostDto } from '@/presentation/posts/dto/update-post.dto';
 
 import { Public } from '@/common/decorators/customize';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
 // Use Cases
-import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
-import { CreatePostCommand } from '@/application/posts/use-cases/create-post.command';
-import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
-import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
-import { GetPostsByUserUseCase } from '@/application/posts/use-cases/get-posts-by-user.use-case';
-import { GetPostsByUserQuery } from '@/application/posts/use-cases/get-posts-by-user.query';
-import { GetPostUseCase } from '@/application/posts/use-cases/get-post.use-case';
-import { GetPostQuery } from '@/application/posts/use-cases/get-post.query';
-import { UpdatePostUseCase } from '@/application/posts/use-cases/update-post.use-case';
-import { UpdatePostCommand } from '@/application/posts/use-cases/update-post.command';
-import { DeletePostUseCase } from '@/application/posts/use-cases/delete-post.use-case';
-import { DeletePostCommand } from '@/application/posts/use-cases/delete-post.command';
-import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-post-image.use-case';
-import { RemovePostImageCommand } from '@/application/posts/use-cases/remove-post-image.command';
-import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
-import { GetFlaggedPostsQuery } from '@/application/posts/use-cases/get-flagged-posts.query';
-import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
 import { ApprovePostCommand } from '@/application/posts/use-cases/approve-post.command';
-import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
+import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
+import { CreatePostCommand } from '@/application/posts/use-cases/create-post.command';
+import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
+import { DeletePostCommand } from '@/application/posts/use-cases/delete-post.command';
+import { DeletePostUseCase } from '@/application/posts/use-cases/delete-post.use-case';
+import { GetFlaggedPostsQuery } from '@/application/posts/use-cases/get-flagged-posts.query';
+import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
+import { GetPostQuery } from '@/application/posts/use-cases/get-post.query';
+import { GetPostUseCase } from '@/application/posts/use-cases/get-post.use-case';
+import { GetPostsByUserQuery } from '@/application/posts/use-cases/get-posts-by-user.query';
+import { GetPostsByUserUseCase } from '@/application/posts/use-cases/get-posts-by-user.use-case';
+import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
+import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
 import { RejectPostCommand } from '@/application/posts/use-cases/reject-post.command';
+import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
+import { RemovePostImageCommand } from '@/application/posts/use-cases/remove-post-image.command';
+import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-post-image.use-case';
+import { UpdatePostCommand } from '@/application/posts/use-cases/update-post.command';
+import { UpdatePostUseCase } from '@/application/posts/use-cases/update-post.use-case';
 import { PostResponseDto } from '@/presentation/posts/dto/post.response.dto';
 
-@ApiTags('Posts')
-@ApiBearerAuth()
 @Controller('posts')
 export class PostsController {
   constructor(
@@ -70,15 +69,15 @@ export class PostsController {
 
   @Public()
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    const limit = query.limit > 100 ? 100 : query.limit;
-    const postsQuery = new GetPostsQuery(query.page, limit);
+  async findAll(@Query() query: PaginationQueryDto) {
+    const limit = query.actualLimit > 100 ? 100 : query.actualLimit;
+    const postsQuery = new GetPostsQuery(query.actualPage, limit);
     const result = await this.getPostsUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data), // Response DTO handles Post Entity mapping
       meta: {
-        page: query.page,
+        page: query.actualPage,
         limit,
         total: result.total,
         totalPages: Math.ceil(result.total / limit),
@@ -89,14 +88,15 @@ export class PostsController {
   @Public()
   @Get('user')
   async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto) {
-    const limit = query.limit > 100 ? 100 : query.limit;
-    const postsQuery = new GetPostsByUserQuery(query.userId, query.page, limit);
+    if (!query.userId) throw new BadRequestException('userId is required');
+    const limit = query.actualLimit > 100 ? 100 : query.actualLimit;
+    const postsQuery = new GetPostsByUserQuery(query.userId, query.actualPage, limit);
     const result = await this.getPostsByUserUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
       meta: {
-        page: query.page,
+        page: query.actualPage,
         limit,
         total: result.total,
         totalPages: Math.ceil(result.total / limit),
@@ -118,7 +118,6 @@ export class PostsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
-  @ApiConsumes('multipart/form-data')
   async create(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: CreatePostDto,
@@ -155,7 +154,6 @@ export class PostsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
-  @ApiConsumes('multipart/form-data')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdatePostDto,
@@ -229,14 +227,14 @@ export class PostsController {
   @Get('admin/flagged')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  async getFlaggedPosts(@Query() query: PaginationDto) {
-    const limit = query.limit > 100 ? 100 : query.limit;
-    const flaggedQuery = new GetFlaggedPostsQuery(query.page, limit);
+  async getFlaggedPosts(@Query() query: PaginationQueryDto) {
+    const limit = query.actualLimit > 100 ? 100 : query.actualLimit;
+    const flaggedQuery = new GetFlaggedPostsQuery(query.actualPage, limit);
     const result = await this.getFlaggedPostsUseCase.execute(flaggedQuery);
     return {
       data: PostResponseDto.fromArray(result.data),
       meta: {
-        page: query.page,
+        page: query.actualPage,
         limit,
         total: result.total,
         totalPages: Math.ceil(result.total / limit),

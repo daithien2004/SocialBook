@@ -1,17 +1,12 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
 import { Achievement, AchievementCategory } from '../entities/achievement.entity';
-import { AchievementId } from '../value-objects/achievement-id.vo';
 import { AchievementCode } from '../value-objects/achievement-code.vo';
+import { AchievementId } from '../value-objects/achievement-id.vo';
 
 export interface AchievementFilter {
     category?: AchievementCategory;
     isActive?: boolean;
     search?: string;
-}
-
-export interface PaginationOptions {
-    page: number;
-    limit: number;
 }
 
 export abstract class IAchievementRepository {
@@ -21,14 +16,14 @@ export abstract class IAchievementRepository {
         filter: AchievementFilter,
         pagination: PaginationOptions
     ): Promise<PaginatedResult<Achievement>>;
-    
+
     abstract save(achievement: Achievement): Promise<void>;
     abstract delete(id: AchievementId): Promise<void>;
-    
+
     abstract findByCategory(category: AchievementCategory): Promise<Achievement[]>;
     abstract findActive(): Promise<Achievement[]>;
     abstract findByRequirementType(type: string): Promise<Achievement[]>;
-    
+
     abstract existsByCode(code: AchievementCode): Promise<boolean>;
     abstract countByCategory(): Promise<Record<AchievementCategory, number>>;
     abstract countActive(): Promise<number>;

@@ -1,23 +1,11 @@
-export class GenreId {
-    private readonly value: string;
+import { Identifier } from '@/shared/domain/identifier.base';
 
+export class GenreId extends Identifier {
     private constructor(id: string) {
-        this.value = id;
+        super(id);
     }
 
     static create(id: string): GenreId {
-        if (!id || id.trim().length === 0) {
-            throw new Error('Genre ID cannot be empty');
-        }
-        return new GenreId(id.trim());
-    }
-
-    toString(): string {
-        return this.value;
-    }
-
-    equals(other: GenreId): boolean {
-        if (!other) return false;
-        return this.value === other.value;
+        return new GenreId(Identifier.validate(id, 'Genre ID'));
     }
 }

@@ -1,23 +1,35 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { PaginatedResult, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
+import { Comment as CommentEntity } from '@/domain/comments/entities/comment.entity';
+import { CommentModel } from '@/domain/comments/read-models/comment-model';
+import { CommentFilter, CommentReplies, ICommentRepository, ParentResolutionResult } from '@/domain/comments/repositories/comment.repository.interface';
+import { CommentDepth } from '@/domain/comments/value-objects/comment-depth.vo';
+import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
+import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
+import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
+import { UserId } from '@/domain/comments/value-objects/user-id.vo';
+import { Comment, CommentDocument } from '@/infrastructure/database/schemas/comment.schema';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { Comment, CommentDocument } from '@/infrastructure/database/schemas/comment.schema';
-import { ICommentRepository, CommentFilter, PaginationOptions, SortOptions, CommentReplies, ParentResolutionResult } from '@/domain/comments/repositories/comment.repository.interface';
-import { Comment as CommentEntity } from '@/domain/comments/entities/comment.entity';
-import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
-import { UserId } from '@/domain/comments/value-objects/user-id.vo';
-import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
-import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
-import { CommentDepth } from '@/domain/comments/value-objects/comment-depth.vo';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { CommentMapper } from './comment.mapper';
-import { CommentModel } from '@/domain/comments/read-models/comment-model';
+
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
 
 @Injectable()
-export class CommentRepository implements ICommentRepository {
+export class CommentRepository extends BaseMongoRepository<CommentEntity, CommentDocument, CommentId> implements ICommentRepository {
     private readonly logger = new Logger(CommentRepository.name);
 
-    constructor(@InjectModel(Comment.name) private readonly commentModel: Model<CommentDocument>) { }
+    constructor(@InjectModel(Comment.name) private readonly commentModel: Model<CommentDocument>) {
+        super(commentModel);
+    }
+
+    protected toDomain(doc: CommentDocument): CommentEntity {
+        return this.mapToEntity(doc);
+    }
+
+    protected toPersistence(entity: CommentEntity): any {
+        return this.mapToDocument(entity);
+    }
 
     async findById(id: CommentId): Promise<CommentEntity | null> {
         const document = await this.commentModel.findById(id.toString()).lean().exec();
@@ -43,7 +55,7 @@ export class CommentRepository implements ICommentRepository {
             queryFilter.parentId = null;
         }
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort, this.mapToReadModel, ['userId']);
     }
 
     async findByUser(
@@ -56,7 +68,7 @@ export class CommentRepository implements ICommentRepository {
             isDeleted: false
         };
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort, this.mapToReadModel, ['userId']);
     }
 
     async findByParent(
@@ -69,7 +81,7 @@ export class CommentRepository implements ICommentRepository {
             isDeleted: false
         };
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort, this.mapToReadModel, ['userId']);
     }
 
     async findTopLevel(
@@ -85,27 +97,19 @@ export class CommentRepository implements ICommentRepository {
             isDeleted: false
         };
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort, this.mapToReadModel, ['userId']);
     }
 
     async save(comment: CommentEntity): Promise<void> {
-        const document = this.mapToDocument(comment);
-        await this.commentModel.findByIdAndUpdate(
-            comment.id.toString(),
-            document,
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(comment);
     }
 
     async delete(id: CommentId): Promise<void> {
-        await this.commentModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async softDelete(id: CommentId): Promise<void> {
-        await this.commentModel.findByIdAndUpdate(
-            id.toString(),
-            { isDeleted: true, updatedAt: new Date() }
-        ).exec();
+        return this.baseSoftDelete(id);
     }
 
     async existsByUserAndTarget(
@@ -181,7 +185,7 @@ export class CommentRepository implements ICommentRepository {
             order: 'desc'
         };
 
-        return this.executeQuery(queryFilter, pagination, sortOptions);
+        return this.executePaginatedQuery(queryFilter, pagination, sortOptions, this.mapToReadModel, ['userId']);
     }
 
     async findPendingModeration(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
@@ -195,7 +199,7 @@ export class CommentRepository implements ICommentRepository {
             order: 'desc'
         };
 
-        return this.executeQuery(queryFilter, pagination, sortOptions);
+        return this.executePaginatedQuery(queryFilter, pagination, sortOptions, this.mapToReadModel, ['userId']);
     }
 
     async findRejected(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
@@ -209,7 +213,7 @@ export class CommentRepository implements ICommentRepository {
             order: 'desc'
         };
 
-        return this.executeQuery(queryFilter, pagination, sortOptions);
+        return this.executePaginatedQuery(queryFilter, pagination, sortOptions, this.mapToReadModel, ['userId']);
     }
 
     async search(filter: CommentFilter, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<CommentModel>> {
@@ -255,7 +259,7 @@ export class CommentRepository implements ICommentRepository {
             }
         }
 
-        return this.executeQuery(queryFilter, pagination, sort);
+        return this.executePaginatedQuery(queryFilter, pagination, sort, this.mapToReadModel, ['userId']);
     }
 
     async getRepliesTree(
@@ -326,7 +330,7 @@ export class CommentRepository implements ICommentRepository {
             order: 'desc'
         };
 
-        return this.executeQuery(queryFilter, pagination, sortOptions);
+        return this.executePaginatedQuery(queryFilter, pagination, sortOptions, this.mapToReadModel, ['userId']);
     }
 
     async getPopularComments(pagination?: PaginationOptions): Promise<PaginatedResult<CommentModel>> {
@@ -340,7 +344,7 @@ export class CommentRepository implements ICommentRepository {
             order: 'desc'
         };
 
-        return this.executeQuery(queryFilter, pagination, sortOptions);
+        return this.executePaginatedQuery(queryFilter, pagination, sortOptions, this.mapToReadModel, ['userId']);
     }
 
     async batchDelete(ids: CommentId[]): Promise<void> {
@@ -371,67 +375,23 @@ export class CommentRepository implements ICommentRepository {
         ).exec();
     }
 
-    private async executeQuery(
-        filter: FilterQuery<CommentDocument>,
-        pagination?: PaginationOptions,
-        sort?: SortOptions,
-    ): Promise<PaginatedResult<CommentModel>> {
-
-        const page = pagination?.page ?? 1;
-        const limit = pagination?.limit ?? 10;
-        const skip = (page - 1) * limit;
-
-        let query = this.commentModel
-            .find(filter)
-            .populate('userId', 'username image')
-            .lean();
-
-        if (sort?.sortBy) {
-            const order = sort.order === 'desc' ? -1 : 1;
-            query = query.sort({ [sort.sortBy]: order });
-        } else {
-            query = query.sort({ createdAt: -1 });
-        }
-
-        if (pagination?.cursor) {
-            query = query.where({
-                _id: { $gt: new Types.ObjectId(pagination.cursor) },
-            });
-        } else {
-            query = query.skip(skip).limit(limit);
-        }
-
-        const [documents, total] = await Promise.all([
-            query.exec(),
-            this.commentModel.countDocuments(filter).exec(),
-        ]);
-
-        return {
-            data: documents.map((doc: any): CommentModel => ({
-                id: doc._id.toString(),
-                content: doc.content,
-                targetId: doc.targetId.toString(),
-                targetType: doc.targetType,
-                parentId: doc.parentId ? doc.parentId.toString() : null,
-                likesCount: doc.likesCount,
-                isFlagged: doc.isFlagged,
-                moderationStatus: doc.moderationStatus,
-                createdAt: doc.createdAt,
-                updatedAt: doc.updatedAt,
-                user: {
-                    id: doc.userId._id.toString(),
-                    username: doc.userId.username,
-                    image: doc.userId.image,
-                },
-            })),
-            meta: {
-                current: page,
-                pageSize: limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
-    }
+    private mapToReadModel = (doc: any): CommentModel => ({
+        id: doc._id.toString(),
+        content: doc.content,
+        targetId: doc.targetId.toString(),
+        targetType: doc.targetType,
+        parentId: doc.parentId ? doc.parentId.toString() : null,
+        likesCount: doc.likesCount,
+        isFlagged: doc.isFlagged,
+        moderationStatus: doc.moderationStatus,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt,
+        user: {
+            id: doc.userId._id.toString(),
+            username: doc.userId.username,
+            image: doc.userId.image,
+        },
+    });
 
     private mapToEntity(document: any): CommentEntity {
         return CommentMapper.toDomain(document);
@@ -446,36 +406,59 @@ export class CommentRepository implements ICommentRepository {
         targetType: CommentTargetType,
         parentId?: string | null,
     ): Promise<ParentResolutionResult> {
+
         if (!parentId) {
-            return { effectiveParentId: null, level: CommentDepth.root() };
+            return {
+                effectiveParentId: null,
+                level: CommentDepth.create(1),
+            };
         }
 
-        const parent = await this.commentModel
+        const target = await this.commentModel
             .findById(parentId)
             .select('_id targetId targetType parentId')
             .lean() as any;
-        console.log(parent);
-        if (!parent) {
+
+        if (!target) {
             throw new NotFoundException('Parent comment not found');
         }
 
-        if (parent.targetId.toString() !== targetId.toString()) {
+        if (target.targetId.toString() !== targetId.toString()) {
             throw new ForbiddenException(
                 'Parent comment does not belong to this target',
             );
         }
-        if (parent.targetType !== targetType.toString()) {
-            throw new ForbiddenException('Parent comment target type mismatch');
+
+        if (target.targetType !== targetType.toString()) {
+            throw new ForbiddenException(
+                'Parent comment target type mismatch',
+            );
+        }
+
+        if (!target.parentId) {
+            return {
+                effectiveParentId: target._id.toString(),
+                level: CommentDepth.create(2),
+            };
+        }
+
+        const parent = await this.commentModel
+            .findById(target.parentId)
+            .select('_id parentId')
+            .lean() as any;
+        if (!parent) {
+            throw new NotFoundException('Parent comment not found');
         }
 
         if (!parent.parentId) {
             return {
-                effectiveParentId: parent._id.toString(),
-                level: CommentDepth.create(2),
+                effectiveParentId: target._id.toString(),
+                level: CommentDepth.maxAllowed(),
             };
         }
+
         return {
-            effectiveParentId: parent.parentId.toString(),
+            effectiveParentId: parent._id.toString(),
             level: CommentDepth.maxAllowed(),
         };
     }

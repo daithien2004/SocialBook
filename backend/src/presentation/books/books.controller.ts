@@ -1,5 +1,5 @@
-import { Public, ApiFileUpload } from '@/common/decorators/customize';
 import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
+import { ApiFileUpload, Public } from '@/common/decorators/customize';
 import {
   Body,
   Controller,
@@ -14,7 +14,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiTags } from '@nestjs/swagger';
+
 
 import { BookDetailResponseDto } from '@/presentation/books/dto/book-detail.response.dto';
 import { BookResponseDto } from '@/presentation/books/dto/book.response.dto';
@@ -30,21 +30,20 @@ import { GetBookByIdQuery } from '@/application/books/use-cases/get-book-by-id/g
 import { GetBookByIdUseCase } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.use-case';
 import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query'; // Import Query
 import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
+import { GetBookFiltersQuery } from '@/application/books/use-cases/get-book-filters/get-book-filters.query';
+import { GetBookFiltersUseCase } from '@/application/books/use-cases/get-book-filters/get-book-filters.use-case';
 import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
 import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
 import { GetFiltersUseCase } from '@/application/books/use-cases/get-filters/get-filters.use-case';
-import { GetBookFiltersQuery } from '@/application/books/use-cases/get-book-filters/get-book-filters.query';
-import { GetBookFiltersUseCase } from '@/application/books/use-cases/get-book-filters/get-book-filters.use-case';
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
 import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
-import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
+import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 
-@ApiTags('Books')
 @Controller('books')
 export class BooksController {
   constructor(

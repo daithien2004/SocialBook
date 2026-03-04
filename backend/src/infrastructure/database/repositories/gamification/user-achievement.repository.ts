@@ -1,17 +1,29 @@
+import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
+import { UserAchievement as UserAchievementEntity, UserAchievementId } from '@/domain/gamification/entities/user-achievement.entity';
+import { IUserAchievementRepository, UserAchievementFilter } from '@/domain/gamification/repositories/user-achievement.repository.interface';
+import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
+import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { UserAchievement, UserAchievementDocument } from '../../schemas/user-achievement.schema';
-import { IUserAchievementRepository, UserAchievementFilter, PaginationOptions } from '@/domain/gamification/repositories/user-achievement.repository.interface';
-import { UserAchievement as UserAchievementEntity, UserAchievementId } from '@/domain/gamification/entities/user-achievement.entity';
-import { UserId } from '@/domain/gamification/value-objects/user-id.vo';
-import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { UserAchievementMapper } from './user-achievement.mapper';
 
+import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
+
 @Injectable()
-export class UserAchievementRepository implements IUserAchievementRepository {
-    constructor(@InjectModel(UserAchievement.name) private readonly userAchievementModel: Model<UserAchievementDocument>) {}
+export class UserAchievementRepository extends BaseMongoRepository<UserAchievementEntity, UserAchievementDocument, UserAchievementId> implements IUserAchievementRepository {
+    constructor(@InjectModel(UserAchievement.name) private readonly userAchievementModel: Model<UserAchievementDocument>) {
+        super(userAchievementModel);
+    }
+
+    protected toDomain(doc: UserAchievementDocument): UserAchievementEntity {
+        return this.mapToEntity(doc);
+    }
+
+    protected toPersistence(entity: UserAchievementEntity): any {
+        return this.mapToDocument(entity);
+    }
 
     async findById(id: UserAchievementId): Promise<UserAchievementEntity | null> {
         const document = await this.userAchievementModel.findById(id.toString()).lean().exec();
@@ -37,12 +49,7 @@ export class UserAchievementRepository implements IUserAchievementRepository {
 
         return {
             data: documents.map(doc => this.mapToEntity(doc)),
-            meta: {
-                current: page,
-                pageSize: limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
+            meta: this.buildMeta(page, limit, total)
         };
     }
 
@@ -87,26 +94,16 @@ export class UserAchievementRepository implements IUserAchievementRepository {
 
         return {
             data: documents.map(doc => this.mapToEntity(doc)),
-            meta: {
-                current: page,
-                pageSize: limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            }
+            meta: this.buildMeta(page, limit, total)
         };
     }
 
     async save(userAchievement: UserAchievementEntity): Promise<void> {
-        const document = this.mapToDocument(userAchievement);
-        await this.userAchievementModel.findByIdAndUpdate(
-            userAchievement.id.toString(),
-            document,
-            { upsert: true, new: true }
-        ).exec();
+        return this.baseSave(userAchievement);
     }
 
     async delete(id: UserAchievementId): Promise<void> {
-        await this.userAchievementModel.findByIdAndDelete(id.toString()).exec();
+        return this.baseDelete(id);
     }
 
     async findUnlockedByUser(userId: UserId): Promise<UserAchievementEntity[]> {

@@ -1,7 +1,7 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { UserId } from '../value-objects/user-id.vo';
+import { IReadingPreferences, ReadingPreferences } from '../value-objects/reading-preferences.vo';
 import { UserEmail } from '../value-objects/user-email.vo';
-import { ReadingPreferences, IReadingPreferences } from '../value-objects/reading-preferences.vo';
+import { UserId } from '../value-objects/user-id.vo';
 
 export class User extends Entity<UserId> {
     private constructor(
@@ -38,7 +38,7 @@ export class User extends Entity<UserId> {
         image?: string;
     }): User {
         const emailVO = UserEmail.create(props.email);
-        
+
         return new User(
             props.id,
             props.roleId,
@@ -50,11 +50,11 @@ export class User extends Entity<UserId> {
             props.provider || 'local',
             props.providerId,
             props.image,
-            undefined, 
-            undefined, 
-            undefined, 
             undefined,
-            false, 
+            undefined,
+            undefined,
+            undefined,
+            false,
             undefined
         );
     }
@@ -126,7 +126,7 @@ export class User extends Entity<UserId> {
         if (props.location !== undefined) this._location = props.location?.trim();
         if (props.website !== undefined) this._website = props.website?.trim();
         if (props.image !== undefined) this._image = props.image;
-        
+
         this.markAsUpdated();
     }
 
@@ -158,7 +158,7 @@ export class User extends Entity<UserId> {
         this._isBanned = false;
         this.markAsUpdated();
     }
-    
+
     updateHashedRt(hashedRt: string | null): void {
         this._hashedRt = hashedRt || undefined;
         this.markAsUpdated();

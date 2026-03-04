@@ -1,39 +1,28 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Review } from '@/domain/reviews/entities/review.entity';
 
 export class ReviewResponseDto {
-    @ApiProperty()
     id: string;
 
-    @ApiProperty()
     content: string;
 
-    @ApiProperty()
     rating: number;
 
-    @ApiProperty()
     likesCount: number;
 
-    @ApiProperty()
     verifiedPurchase: boolean;
 
-    @ApiProperty()
     isFlagged: boolean;
 
-    @ApiProperty({ required: false })
     moderationStatus?: string;
 
-    @ApiProperty({ type: Object, required: false })
     user?: { id: string; username: string; image?: string };
 
-    @ApiProperty({ type: Object, required: false })
     book?: { id: string; title: string; coverUrl?: string };
 
-    @ApiProperty()
     createdAt: Date;
 
-    @ApiProperty()
     updatedAt: Date;
+
 
     constructor(review: Review) {
         this.id = review.id.toString();
