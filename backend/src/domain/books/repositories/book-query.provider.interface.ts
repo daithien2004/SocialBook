@@ -13,9 +13,7 @@ export abstract class IBookQueryProvider {
 
     abstract findDetailBySlug(slug: string): Promise<BookDetailReadModel | null>;
 
-    abstract searchFuzzy(query: string, limit?: number): Promise<Array<{ id: BookId; score: number; matchType: string }>>;
-
-    abstract searchByDescription(keywords: string[], limit?: number): Promise<Array<{ id: BookId; score: number }>>;
+    abstract searchByText(query: string, limit?: number): Promise<Array<{ id: BookId; score: number }>>;
 
     abstract getGrowthMetrics(startDate: Date, groupBy: 'day' | 'month' | 'year'): Promise<Array<{ _id: string; count: number }>>;
 }

@@ -50,8 +50,8 @@ export class Book extends BaseSoftDeleteSchema {
 export const BookSchema = SchemaFactory.createForClass(Book);
 
 
-BookSchema.index({ status: 1, isDeleted: 1, updatedAt: -1 });
-BookSchema.index({ title: 'text', slug: 'text' });
+BookSchema.index({ status: 1, updatedAt: -1 }, { partialFilterExpression: { isDeleted: false } });
+BookSchema.index({ title: 'text', slug: 'text', description: 'text' });
 BookSchema.index({ genres: 1 });
 BookSchema.index({ tags: 1 });
 BookSchema.index({ authorId: 1 });

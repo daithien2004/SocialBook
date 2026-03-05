@@ -44,6 +44,14 @@ export class Comment extends BaseSoftDeleteSchema {
 export type CommentDocument = HydratedDocument<Comment>;
 export const CommentSchema = SchemaFactory.createForClass(Comment);
 
-CommentSchema.virtual('id').get(function () {
-  return this._id.toString();
-});
+// Lấy comment theo target (post/chapter...), lọc soft-delete, sắp xếp mới nhất
+CommentSchema.index({ targetId: 1, targetType: 1, createdAt: -1 }, { partialFilterExpression: { isDeleted: false } });
+
+// Lấy replies theo comment cha
+CommentSchema.index({ parentId: 1 }, { partialFilterExpression: { isDeleted: false } });
+
+// Lấy comment của 1 user
+CommentSchema.index({ userId: 1 }, { partialFilterExpression: { isDeleted: false } });
+
+// Admin: lọc theo trạng thái kiểm duyệt
+CommentSchema.index({ moderationStatus: 1, createdAt: -1 }, { partialFilterExpression: { isDeleted: false } });

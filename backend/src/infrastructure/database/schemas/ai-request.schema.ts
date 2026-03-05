@@ -1,6 +1,6 @@
+import { AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
 
 export type AIRequestDocument = HydratedDocument<AIRequest>;
 
@@ -30,3 +30,5 @@ AIRequestSchema.index({ userId: 1, createdAt: -1 });
 AIRequestSchema.index({ type: 1, createdAt: -1 });
 AIRequestSchema.index({ createdAt: -1 });
 
+// Auto-delete AI request logs older than 90 days (7,776,000 seconds)
+AIRequestSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });

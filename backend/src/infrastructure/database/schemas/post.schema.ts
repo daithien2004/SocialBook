@@ -17,10 +17,6 @@ export class Post extends BaseSoftDeleteSchema {
   @Prop({ type: [String], default: [] })
   imageUrls: string[];
 
-  // Keep specific field name if different from Base
-  @Prop({ type: Boolean, default: false })
-  isDelete: boolean;
-
   @Prop({ type: Boolean, default: false })
   isFlagged: boolean;
 
@@ -35,4 +31,5 @@ export type PostDocument = HydratedDocument<Post>;
 export const PostSchema = SchemaFactory.createForClass(Post);
 
 // Add index for performance
-PostSchema.index({ createdAt: -1 }); // For growth and recent posts queries
+PostSchema.index({ createdAt: -1 }, { partialFilterExpression: { isDeleted: false } }); // For growth and recent posts queries
+PostSchema.index({ userId: 1, createdAt: -1 }, { partialFilterExpression: { isDeleted: false } }); // Optimize standard user feed lookup

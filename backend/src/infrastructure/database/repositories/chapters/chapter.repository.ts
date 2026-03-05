@@ -72,68 +72,18 @@ export class ChapterRepository extends BaseMongoRepository<ChapterEntity, Chapte
             queryFilter.orderIndex = filter.orderIndex;
         }
 
-        const pipeline: PipelineStage[] = [];
+        const preFacetStages: PipelineStage[] = [];
 
-        if (filter.minWordCount !== undefined || filter.maxWordCount !== undefined) {
-            const wordCountMatch: { $gte?: number; $lte?: number } = {};
-            if (filter.minWordCount !== undefined) {
-                wordCountMatch.$gte = filter.minWordCount;
-            }
-            if (filter.maxWordCount !== undefined) {
-                wordCountMatch.$lte = filter.maxWordCount;
-            }
+        const resolvedSort = sort?.sortBy ? sort : { sortBy: 'orderIndex', order: 'asc' as const };
 
-            pipeline.push({
-                $addFields: {
-                    wordCount: {
-                        $reduce: {
-                            input: '$paragraphs',
-                            initialValue: 0,
-                            in: {
-                                $add: [
-                                    '$$value',
-                                    { $size: { $split: [{ $trim: { input: '$$this.content' } }, ' '] } }
-                                ]
-                            }
-                        }
-                    }
-                }
-            });
-
-            pipeline.push({
-                $match: { wordCount: wordCountMatch }
-            });
-        }
-
-        if (Object.keys(queryFilter).length > 0) {
-            pipeline.push({ $match: queryFilter });
-        }
-
-        if (sort?.sortBy) {
-            const sortOrder = sort.order === 'desc' ? -1 : 1;
-            pipeline.push({ $sort: { [sort.sortBy]: sortOrder } });
-        } else {
-            pipeline.push({ $sort: { orderIndex: 1 } });
-        }
-
-        const skip = (pagination.page - 1) * pagination.limit;
-        pipeline.push({ $skip: skip });
-        pipeline.push({ $limit: pagination.limit });
-
-        const countPipeline = pipeline.slice(0, -2);
-        countPipeline.push({ $count: 'total' });
-
-        const [countResult, documents] = await Promise.all([
-            this.chapterModel.aggregate(countPipeline).exec(),
-            this.chapterModel.aggregate(pipeline).exec()
-        ]);
-
-        const total = countResult.length > 0 ? countResult[0].total : 0;
-
-        return {
-            data: documents.map(doc => this.mapToEntity(doc as RawChapterDocument)),
-            meta: this.buildMeta(pagination.page, pagination.limit, total),
-        };
+        return this.executePaginatedQuery<ChapterEntity>(
+            queryFilter,
+            pagination,
+            resolvedSort,
+            (doc: RawChapterDocument) => this.mapToEntity(doc),
+            undefined, // populateArgs
+            { preFacet: preFacetStages }
+        );
     }
 
     async findByBook(bookId: BookId, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<ChapterEntity>> {
@@ -160,20 +110,17 @@ export class ChapterRepository extends BaseMongoRepository<ChapterEntity, Chapte
         }
 
         const bookObjectId = bookDocument._id as Types.ObjectId;
-        const skip = (pagination.page - 1) * pagination.limit;
         const sortField = sort?.sortBy || 'orderIndex';
-        const sortOrder: 1 | -1 = sort?.order === 'desc' ? -1 : 1;
 
-        const [countResult, chapterDocs] = await Promise.all([
-            this.chapterModel.countDocuments({ bookId: bookObjectId }).exec(),
-            this.chapterModel
-                .find({ bookId: bookObjectId })
-                .sort({ [sortField]: sortOrder })
-                .skip(skip)
-                .limit(pagination.limit)
-                .lean()
-                .exec() as unknown as RawChapterDocument[],
-        ]);
+        const paginatedResult = await this.executePaginatedQuery<RawChapterDocument>(
+            { bookId: bookObjectId },
+            pagination,
+            { sortBy: sortField, order: sort?.order },
+            (doc) => doc as RawChapterDocument
+        );
+
+        const total = paginatedResult.meta.total;
+        const chapterDocs = paginatedResult.data;
 
         // Lấy tất cả ttsStatus cho các chapter trong 1 query
         const chapterIds = chapterDocs.map(ch => ch._id);
@@ -215,7 +162,7 @@ export class ChapterRepository extends BaseMongoRepository<ChapterEntity, Chapte
                     audioUrl: tts?.audioUrl,
                 };
             }),
-            total: countResult,
+            total: total,
         };
     }
 
@@ -395,17 +342,6 @@ export class ChapterRepository extends BaseMongoRepository<ChapterEntity, Chapte
         ]).exec();
 
         return result.length > 0 ? result[0].totalViews : 0;
-    }
-
-    async getTotalWordsByBook(bookId: BookId): Promise<number> {
-        const result = await this.chapterModel.aggregate([
-            { $match: { bookId: new Types.ObjectId(bookId.toString()) } },
-            { $unwind: '$paragraphs' },
-            { $project: { wordCount: { $size: { $split: [{ $trim: { input: '$paragraphs.content' } }, ' '] } } } },
-            { $group: { _id: null, totalWords: { $sum: '$wordCount' } } }
-        ]).exec();
-
-        return result.length > 0 ? result[0].totalWords : 0;
     }
 
     async getMaxOrderIndex(bookId: BookId): Promise<number> {

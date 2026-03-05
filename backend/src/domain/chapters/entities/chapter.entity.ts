@@ -1,10 +1,10 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { ChapterId } from '../value-objects/chapter-id.vo';
-import { ChapterTitle } from '../value-objects/chapter-title.vo';
-import { BookId } from '../value-objects/book-id.vo';
-import { ChapterOrderIndex } from '../value-objects/chapter-order-index.vo';
-import { Paragraph } from '../value-objects/paragraph.vo';
 import slugify from 'slugify';
+import { BookId } from '../value-objects/book-id.vo';
+import { ChapterId } from '../value-objects/chapter-id.vo';
+import { ChapterOrderIndex } from '../value-objects/chapter-order-index.vo';
+import { ChapterTitle } from '../value-objects/chapter-title.vo';
+import { Paragraph } from '../value-objects/paragraph.vo';
 
 export class Chapter extends Entity<ChapterId> {
     private constructor(
@@ -34,8 +34,8 @@ export class Chapter extends Entity<ChapterId> {
         const slug = Chapter.generateSlug(props.title);
         const bookId = BookId.create(props.bookId);
         const orderIndex = ChapterOrderIndex.create(props.orderIndex);
-        
-        const paragraphs = props.paragraphs.map(p => 
+
+        const paragraphs = props.paragraphs.map(p =>
             p.id ? Paragraph.create(p.id, p.content) : Paragraph.createWithoutId(p.content)
         );
 
@@ -68,7 +68,7 @@ export class Chapter extends Entity<ChapterId> {
         audioUrl?: string;
     }): Chapter {
         const paragraphs = props.paragraphs.map(p => Paragraph.create(p.id, p.content));
-        
+
         return new Chapter(
             ChapterId.create(props.id),
             ChapterTitle.create(props.title),
@@ -143,7 +143,7 @@ export class Chapter extends Entity<ChapterId> {
 
     updateParagraph(paragraphId: string, newContent: string): void {
         const paragraphIndex = this._paragraphs.findIndex(p => p.id === paragraphId);
-        
+
         if (paragraphIndex === -1) {
             throw new Error('Paragraph not found');
         }
@@ -154,7 +154,7 @@ export class Chapter extends Entity<ChapterId> {
 
     removeParagraph(paragraphId: string): void {
         const paragraphIndex = this._paragraphs.findIndex(p => p.id === paragraphId);
-        
+
         if (paragraphIndex === -1) {
             throw new Error('Paragraph not found');
         }
@@ -169,7 +169,7 @@ export class Chapter extends Entity<ChapterId> {
 
     reorderParagraphs(newOrder: string[]): void {
         const reorderedParagraphs: Paragraph[] = [];
-        
+
         for (const id of newOrder) {
             const paragraph = this._paragraphs.find(p => p.id === id);
             if (!paragraph) {
@@ -189,12 +189,6 @@ export class Chapter extends Entity<ChapterId> {
     incrementViews(): void {
         this._viewsCount += 1;
         this.markAsUpdated();
-    }
-
-    getWordCount(): number {
-        return this._paragraphs.reduce((count, paragraph) => {
-            return count + paragraph.content.split(/\s+/).filter(word => word.length > 0).length;
-        }, 0);
     }
 
     getCharacterCount(): number {

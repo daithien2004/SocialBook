@@ -1,9 +1,9 @@
+import { Onboarding } from '@/domain/onboarding/entities/onboarding.entity';
+import { IOnboardingRepository } from '@/domain/onboarding/repositories/onboarding.repository.interface';
+import { OnboardingMapper } from '@/infrastructure/database/repositories/onboarding/onboarding.mapper';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { IOnboardingRepository } from '@/domain/onboarding/repositories/onboarding.repository.interface';
-import { Onboarding } from '@/domain/onboarding/entities/onboarding.entity';
-import { OnboardingMapper } from '@/infrastructure/database/repositories/onboarding/onboarding.mapper';
 import { UserOnboarding, UserOnboardingDocument } from '../../schemas/user-onboarding.schema';
 
 @Injectable()
@@ -11,10 +11,10 @@ export class OnboardingRepository implements IOnboardingRepository {
   constructor(
     @InjectModel(UserOnboarding.name)
     private readonly model: Model<UserOnboardingDocument>,
-  ) {}
+  ) { }
 
   async findByUserId(userId: string): Promise<Onboarding | null> {
-    const document = await this.model.findOne({ userId: new Types.ObjectId(userId) }).exec();
+    const document = await this.model.findOne({ userId: new Types.ObjectId(userId) }).lean().exec();
     return OnboardingMapper.toDomain(document);
   }
 

@@ -196,8 +196,6 @@ export class ChaptersController {
       filter.bookId,
       undefined,
       filter.orderIndex,
-      filter.minWordCount,
-      filter.maxWordCount,
       filter.sortBy as any,
       filter.order as any
     );

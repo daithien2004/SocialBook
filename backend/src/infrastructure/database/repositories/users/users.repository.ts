@@ -1,13 +1,13 @@
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { User as UserEntity } from '@/domain/users/entities/user.entity';
+import { IUserRepository, UserFilter, UserPaginationOptions } from '@/domain/users/repositories/user.repository.interface';
+import { IReadingPreferences } from '@/domain/users/value-objects/reading-preferences.vo';
+import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
+import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { User as UserEntity } from '@/domain/users/entities/user.entity';
-import { IUserRepository, UserFilter, UserPaginationOptions } from '@/domain/users/repositories/user.repository.interface';
-import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
-import { IReadingPreferences } from '@/domain/users/value-objects/reading-preferences.vo';
 import { User, UserDocument } from '../../schemas/user.schema';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { UserMapper } from './user.mapper';
 
 interface UserPersistence {
@@ -33,7 +33,7 @@ interface UserPersistence {
 
 @Injectable()
 export class UsersRepository implements IUserRepository {
-    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
+    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) { }
 
     private toDomain(doc: UserDocument): UserEntity {
         return UserMapper.toDomain(doc);
@@ -44,17 +44,17 @@ export class UsersRepository implements IUserRepository {
     }
 
     async findById(id: UserId): Promise<UserEntity | null> {
-        const doc = await this.userModel.findById(id.toString()).exec();
+        const doc = await this.userModel.findById(id.toString()).lean().exec();
         return doc ? this.toDomain(doc) : null;
     }
 
     async findByEmail(email: UserEmail): Promise<UserEntity | null> {
-        const doc = await this.userModel.findOne({ email: email.toString() }).exec();
+        const doc = await this.userModel.findOne({ email: email.toString() }).lean().exec();
         return doc ? this.toDomain(doc) : null;
     }
 
     async findByUsername(username: string): Promise<UserEntity | null> {
-        const doc = await this.userModel.findOne({ username }).exec();
+        const doc = await this.userModel.findOne({ username }).lean().exec();
         return doc ? this.toDomain(doc) : null;
     }
 
@@ -63,7 +63,7 @@ export class UsersRepository implements IUserRepository {
         pagination: UserPaginationOptions
     ): Promise<PaginatedResult<UserEntity>> {
         const query: FilterQuery<UserDocument> = {};
-        
+
         if (filter.username) {
             query.username = { $regex: filter.username, $options: 'i' };
         }
@@ -81,18 +81,26 @@ export class UsersRepository implements IUserRepository {
         }
 
         const skip = (pagination.page - 1) * pagination.limit;
-        
-        const [docs, total] = await Promise.all([
-            this.userModel.find(query)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(pagination.limit)
-                .exec(),
-            this.userModel.countDocuments(query).exec()
-        ]);
+
+        const [result] = await this.userModel.aggregate([
+            { $match: query },
+            {
+                $facet: {
+                    metadata: [{ $count: 'total' }],
+                    data: [
+                        { $sort: { createdAt: -1 } },
+                        { $skip: skip },
+                        { $limit: pagination.limit }
+                    ]
+                }
+            }
+        ]).exec();
+
+        const total = result.metadata[0]?.total || 0;
+        const docs = result.data;
 
         return {
-            data: docs.map(doc => this.toDomain(doc)),
+            data: docs.map((doc: UserDocument) => this.toDomain(doc)),
             meta: {
                 total,
                 current: pagination.page,
@@ -104,7 +112,7 @@ export class UsersRepository implements IUserRepository {
 
     async save(user: UserEntity): Promise<void> {
         const persistenceData = this.toPersistence(user);
-        
+
         await this.userModel.findOneAndUpdate(
             { _id: persistenceData._id },
             { $set: persistenceData },
@@ -115,7 +123,7 @@ export class UsersRepository implements IUserRepository {
     async delete(id: UserId): Promise<void> {
         await this.userModel.findByIdAndDelete(id.toString()).exec();
     }
-    
+
     async existsByEmail(email: UserEmail, excludeId?: UserId): Promise<boolean> {
         const query: FilterQuery<UserDocument> = { email: email.toString() };
         if (excludeId) {
@@ -142,7 +150,7 @@ export class UsersRepository implements IUserRepository {
     async findByIds(ids: UserId[]): Promise<UserEntity[]> {
         const docs = await this.userModel.find({
             _id: { $in: ids.map(id => id.toString()) }
-        }).exec();
+        }).lean().exec();
         return docs.map(doc => this.toDomain(doc));
     }
 
@@ -187,7 +195,7 @@ export class UsersRepository implements IUserRepository {
 
     async getGrowthMetrics(startDate: Date, groupBy: 'day' | 'month' | 'year'): Promise<Array<{ _id: string; count: number }>> {
         let dateFormat: string;
-         switch (groupBy) {
+        switch (groupBy) {
             case 'month': dateFormat = '%Y-%m'; break;
             case 'year': dateFormat = '%Y'; break;
             case 'day': default: dateFormat = '%Y-%m-%d'; break;
