@@ -38,6 +38,102 @@ export class FollowRepository extends BaseMongoRepository<FollowEntity, FollowDo
         return this.executePaginatedQuery(queryFilter, pagination, sort);
     }
 
+    async findByUserWithUserInfo(userId: string, page = 1, limit = 100): Promise<{ data: any[]; meta: any }> {
+        const skip = (page - 1) * limit;
+
+        const [rows, total] = await Promise.all([
+            this.followModel.aggregate([
+                { $match: { userId: new Types.ObjectId(userId), status: true } },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'targetId',
+                        foreignField: '_id',
+                        as: 'targetUser',
+                    },
+                },
+                { $unwind: { path: '$targetUser', preserveNullAndEmptyArrays: true } },
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $project: {
+                        id: '$_id',
+                        userId: 1,
+                        targetId: 1,
+                        status: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        username: '$targetUser.username',
+                        image: '$targetUser.image',
+                    },
+                },
+            ]).exec(),
+            this.followModel.countDocuments({ userId: new Types.ObjectId(userId), status: true }),
+        ]);
+
+        return {
+            data: rows.map(r => ({
+                id: r._id?.toString() ?? r.id?.toString(),
+                userId: r.userId?.toString(),
+                targetId: r.targetId?.toString(),
+                status: r.status,
+                username: r.username,
+                image: r.image,
+                createdAt: r.createdAt,
+                updatedAt: r.updatedAt,
+            })),
+            meta: { current: page, pageSize: limit, total, totalPages: Math.ceil(total / limit) },
+        };
+    }
+
+    async findByTargetWithUserInfo(targetId: string, page = 1, limit = 100): Promise<{ data: any[]; meta: any }> {
+        const skip = (page - 1) * limit;
+
+        const [rows, total] = await Promise.all([
+            this.followModel.aggregate([
+                { $match: { targetId: new Types.ObjectId(targetId), status: true } },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'followerUser',
+                    },
+                },
+                { $unwind: { path: '$followerUser', preserveNullAndEmptyArrays: true } },
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $project: {
+                        id: '$_id',
+                        userId: 1,
+                        targetId: 1,
+                        status: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        username: '$followerUser.username',
+                        image: '$followerUser.image',
+                    },
+                },
+            ]).exec(),
+            this.followModel.countDocuments({ targetId: new Types.ObjectId(targetId), status: true }),
+        ]);
+
+        return {
+            data: rows.map(r => ({
+                id: r._id?.toString() ?? r.id?.toString(),
+                userId: r.userId?.toString(),
+                targetId: r.targetId?.toString(),
+                status: r.status,
+                username: r.username,
+                image: r.image,
+                createdAt: r.createdAt,
+                updatedAt: r.updatedAt,
+            })),
+            meta: { current: page, pageSize: limit, total, totalPages: Math.ceil(total / limit) },
+        };
+    }
+
     async findByTarget(targetId: TargetId, pagination?: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<FollowEntity>> {
         const queryFilter: FilterQuery<FollowDocument> = {
             targetId: new Types.ObjectId(targetId.toString()),

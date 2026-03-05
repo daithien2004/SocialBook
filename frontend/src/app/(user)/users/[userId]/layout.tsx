@@ -42,6 +42,7 @@ export default async function UserLayout({
     try {
       const followApi = await followServerApi();
       initialFollowState = await followApi.getFollowState(userId);
+      console.log(initialFollowState);
     } catch (error) {
       console.error('SSR follow state error:', error);
     }

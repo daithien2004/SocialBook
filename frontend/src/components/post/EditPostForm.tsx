@@ -15,7 +15,7 @@ interface EditPostFormProps {
 
 export default function EditPostForm({ post, onClose }: EditPostFormProps) {
     const [content, setContent] = useState(post.content);
-    const [bookId, setBookId] = useState(post.bookId?.id || '');
+    const [bookId, setBookId] = useState(post.book?.id || '');
     const [newImages, setNewImages] = useState<File[]>([]);
     const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,13 +102,13 @@ export default function EditPostForm({ post, onClose }: EditPostFormProps) {
                         {/* User info */}
                         <div className="flex items-center gap-3">
                             <img
-                                src={post.userId?.image || '/abstract-book-pattern.png'}
-                                alt={post.userId?.username}
+                                src={post.user?.image || '/abstract-book-pattern.png'}
+                                alt={post.user?.username}
                                 className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
                             />
                             <div className="space-y-0.5">
                                 <p className="font-semibold text-sm text-slate-900 dark:text-gray-100">
-                                    {post.userId?.username}
+                                    {post.user?.username}
                                 </p>
                                 <p className="text-xs text-slate-500 dark:text-gray-400">
                                     Chia sẻ công khai

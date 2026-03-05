@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useGetBooksQuery } from '@/features/books/api/bookApi';
 import { Book, BookOrderField } from '@/features/books/types/book.interface';
 import { ChevronDown, Search, X, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 interface BookSelectorProps {
   value: string; // bookId
@@ -62,7 +63,6 @@ export default function BookSelector({
   }, [isOpen]);
 
   const selectedBook = allBooks.find((book) => book.id === value);
-
   const filteredBooks = allBooks.filter(
     (book) =>
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -138,18 +138,19 @@ export default function BookSelector({
         role="button"
         tabIndex={disabled ? -1 : 0}
         className={`w-full rounded-2xl px-3.5 py-2.5 text-sm flex items-center justify-between transition-colors border ${disabled
-            ? 'bg-slate-100 border-slate-200 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700'
-            : 'bg-white border-slate-200 hover:border-sky-400 cursor-pointer dark:bg-[#1a1a1a] dark:border-gray-700 dark:hover:border-sky-400'
+          ? 'bg-slate-100 border-slate-200 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700'
+          : 'bg-white border-slate-200 hover:border-sky-400 cursor-pointer dark:bg-[#1a1a1a] dark:border-gray-700 dark:hover:border-sky-400'
           }`}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {selectedBook ? (
             <>
-              <div className="w-8 h-10 rounded-md overflow-hidden bg-slate-100 dark:bg-gray-900/40 flex-shrink-0 border border-slate-200 dark:border-gray-700">
-                <img
+              <div className="relative w-8 h-10 rounded-md overflow-hidden bg-slate-100 dark:bg-gray-900/40 flex-shrink-0 border border-slate-200 dark:border-gray-700">
+                <Image
                   src={selectedBook.coverUrl}
                   alt={selectedBook.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
               <div className="text-left flex-1 min-w-0">
@@ -233,8 +234,8 @@ export default function BookSelector({
                         type="button"
                         onClick={() => handleSelect(book)}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${book.id === value
-                            ? 'bg-sky-50 dark:bg-sky-900/30'
-                            : 'hover:bg-slate-50 dark:hover:bg-gray-800'
+                          ? 'bg-sky-50 dark:bg-sky-900/30'
+                          : 'hover:bg-slate-50 dark:hover:bg-gray-800'
                           }`}
                       >
                         <div className="w-9 h-12 rounded-md overflow-hidden bg-slate-100 dark:bg-gray-900/40 flex-shrink-0 border border-slate-200 dark:border-gray-700">

@@ -4,16 +4,19 @@ import { axiosBaseQuery } from "@/lib/nestjs-client-api";
 export interface FollowStateResponse {
     isOwner: boolean;
     isFollowing: boolean;
+    followId?: string;
+    userId?: string;
+    targetId?: string;
 }
 
 export interface FollowingUser {
     id: string;
     image?: string;
     username: string;
-    postCount: number,
-    readingListCount: number,
-    followersCount: number,
-    isFollowedByCurrentUser: boolean
+    postCount: number;
+    readingListCount: number;
+    followersCount: number;
+    isFollowedByCurrentUser: boolean;
 }
 
 export const followApi = createApi({
@@ -26,20 +29,10 @@ export const followApi = createApi({
                 url: `/follows/following?userId=${userId}`,
                 method: "GET",
             }),
-            transformResponse: (response: unknown): FollowingUser[] => Array.isArray(response) ? response : [],
+            transformResponse: (response: any): FollowingUser[] =>
+                Array.isArray(response?.data) ? response.data : [],
             providesTags: () => [
                 { type: "Follow", id: `FOLLOWING_LIST` },
-            ],
-        }),
-
-        getFollowingStatsList: builder.query<FollowingUser[], string>({
-            query: (targetUserId) => ({
-                url: `/follows/following-stats?targetUserId=${targetUserId}`,
-                method: "GET",
-            }),
-            transformResponse: (response: unknown): FollowingUser[] => Array.isArray(response) ? response : [],
-            providesTags: () => [
-                { type: "Follow", id: `FOLLOWING_STATS_LIST` },
             ],
         }),
 
@@ -48,29 +41,55 @@ export const followApi = createApi({
                 url: `/follows/followers?targetUserId=${targetUserId}`,
                 method: "GET",
             }),
-            transformResponse: (response: unknown): FollowingUser[] => Array.isArray(response) ? response : [],
+            transformResponse: (response: any): FollowingUser[] =>
+                Array.isArray(response?.data) ? response.data : [],
             providesTags: () => [
                 { type: "Follow", id: `FOLLOWERS_LIST` },
             ],
         }),
 
+        getFollowStatus: builder.query<FollowStateResponse, string>({
+            query: (targetId) => ({
+                url: `/follows/status?targetId=${targetId}`,
+                method: "GET",
+            }),
+            transformResponse: (response: any): FollowStateResponse => response?.data ?? response,
+            providesTags: (_, __, targetId) => [
+                { type: "Follow", id: `STATUS-${targetId}` },
+            ],
+        }),
+
         toggleFollow: builder.mutation<FollowStateResponse, string>({
             query: (targetUserId) => ({
-                url: `/follows/${targetUserId}`,
+                url: `/follows`,
                 method: "POST",
+                body: { targetId: targetUserId },
             }),
-            invalidatesTags: () => [
+            invalidatesTags: (_, __, targetUserId) => [
                 { type: "Follow", id: `FOLLOWING_LIST` },
                 { type: "Follow", id: `FOLLOWERS_LIST` },
-                { type: "Follow", id: `FOLLOWING_STATS_LIST` },
+                { type: "Follow", id: `STATUS-${targetUserId}` },
+            ],
+        }),
+
+        unfollow: builder.mutation<void, string>({
+            query: (targetId) => ({
+                url: `/follows/${targetId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: (_, __, targetId) => [
+                { type: "Follow", id: `FOLLOWING_LIST` },
+                { type: "Follow", id: `FOLLOWERS_LIST` },
+                { type: "Follow", id: `STATUS-${targetId}` },
             ],
         }),
     }),
 });
 
 export const {
-    useToggleFollowMutation,
-    useGetFollowingStatsListQuery,
     useGetFollowingListQuery,
-    useGetFollowersListQuery
-} = followApi
+    useGetFollowersListQuery,
+    useGetFollowStatusQuery,
+    useToggleFollowMutation,
+    useUnfollowMutation,
+} = followApi;
