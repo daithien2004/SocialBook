@@ -12,8 +12,6 @@ export interface ChapterFilter {
     title?: string;
     bookId?: string;
     orderIndex?: number;
-    minWordCount?: number;
-    maxWordCount?: number;
 }
 
 export abstract class IChapterRepository {
@@ -59,7 +57,6 @@ export abstract class IChapterRepository {
 
     abstract countByBook(bookId: BookId): Promise<number>;
     abstract getTotalViewsByBook(bookId: BookId): Promise<number>;
-    abstract getTotalWordsByBook(bookId: BookId): Promise<number>;
 
     abstract getMaxOrderIndex(bookId: BookId): Promise<number>;
     abstract reorderChapters(bookId: BookId, chapterOrders: Array<{ id: string; orderIndex: number }>): Promise<void>;

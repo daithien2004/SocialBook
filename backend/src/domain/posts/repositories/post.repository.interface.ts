@@ -1,10 +1,21 @@
+import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Post } from '../entities/post.entity';
 
 export interface FindAllOptions {
-    skip: number;
     limit: number;
     userId?: string;
     isFlagged?: boolean;
+    cursor?: string;
+}
+
+export interface FindFlaggedOptions {
+    page: number;
+    limit: number;
+}
+
+export interface PaginatedResult<T> {
+    data: T[];
+    total: number;
 }
 
 export interface PaginatedResult<T> {
@@ -16,12 +27,12 @@ export abstract class IPostRepository {
     abstract create(post: Post): Promise<Post>;
     abstract update(post: Post): Promise<Post>;
     abstract findById(id: string): Promise<Post | null>;
-    abstract findAll(options: FindAllOptions): Promise<PaginatedResult<Post>>;
-    abstract delete(id: string): Promise<void>; // Hard delete
-    abstract softDelete(id: string): Promise<void>; // Soft delete
+    abstract findAll(options: FindAllOptions): Promise<CursorPaginatedResult<Post>>;
+    abstract delete(id: string): Promise<void>;
+    abstract softDelete(id: string): Promise<void>;
 
     // Admin specific
-    abstract findFlagged(skip: number, limit: number): Promise<PaginatedResult<Post>>;
+    abstract findFlagged(options: FindFlaggedOptions): Promise<PaginatedResult<Post>>;
 
     // User profile specific
     abstract countByUser(userId: string): Promise<number>;

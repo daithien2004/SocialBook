@@ -69,37 +69,35 @@ export class PostsController {
 
   @Public()
   @Get()
-  async findAll(@Query() query: PaginationQueryDto) {
-    const limit = query.actualLimit > 100 ? 100 : query.actualLimit;
-    const postsQuery = new GetPostsQuery(query.actualPage, limit);
+  async findAll(@Query() query: PaginationQueryDto & { cursor?: string }) {
+    const limit = Math.min(query.actualLimit || 10, 100);
+    const postsQuery = new GetPostsQuery(limit, query.cursor);
     const result = await this.getPostsUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
-      data: PostResponseDto.fromArray(result.data), // Response DTO handles Post Entity mapping
+      data: PostResponseDto.fromArray(result.data),
       meta: {
-        page: query.actualPage,
         limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / limit),
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
       },
     };
   }
 
   @Public()
   @Get('user')
-  async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto) {
+  async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto & { cursor?: string }) {
     if (!query.userId) throw new BadRequestException('userId is required');
-    const limit = query.actualLimit > 100 ? 100 : query.actualLimit;
-    const postsQuery = new GetPostsByUserQuery(query.userId, query.actualPage, limit);
+    const limit = Math.min(query.actualLimit || 10, 100);
+    const postsQuery = new GetPostsByUserQuery(query.userId, limit, query.cursor);
     const result = await this.getPostsByUserUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
       meta: {
-        page: query.actualPage,
         limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / limit),
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
       },
     };
   }

@@ -6,9 +6,7 @@ export class GetChaptersQuery {
         public readonly bookId?: string,
         public readonly bookSlug?: string,
         public readonly orderIndex?: number,
-        public readonly minWordCount?: number,
-        public readonly maxWordCount?: number,
         public readonly sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'orderIndex' | 'viewsCount',
         public readonly order?: 'asc' | 'desc'
-    ) {}
+    ) { }
 }

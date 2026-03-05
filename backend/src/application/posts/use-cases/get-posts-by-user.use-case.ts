@@ -1,7 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { IPostRepository, PaginatedResult } from '@/domain/posts/repositories/post.repository.interface';
-import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
+import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
+import { Post } from '@/domain/posts/entities/post.entity';
+import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { GetPostsByUserQuery } from './get-posts-by-user.query';
 
 @Injectable()
@@ -10,10 +11,9 @@ export class GetPostsByUserUseCase {
     private readonly postRepository: IPostRepository,
   ) { }
 
-  async execute(query: GetPostsByUserQuery): Promise<PaginatedResult<Post>> {
-    const { userId, page, limit } = query;
+  async execute(query: GetPostsByUserQuery): Promise<CursorPaginatedResult<Post>> {
+    const { userId, limit, cursor } = query;
     if (!userId) throw new BadRequestException(ErrorMessages.INVALID_ID);
-    const skip = (page - 1) * limit;
-    return this.postRepository.findAll({ skip, limit, userId, isFlagged: false });
+    return this.postRepository.findAll({ limit, cursor, userId });
   }
 }

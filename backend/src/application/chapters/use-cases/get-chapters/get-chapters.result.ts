@@ -11,7 +11,6 @@ export interface ChapterResult {
     paragraphs: ChapterParagraphResult[];
     viewsCount: number;
     orderIndex: number;
-    wordCount: number;
     characterCount: number;
     contentPreview: string;
     createdAt: Date;

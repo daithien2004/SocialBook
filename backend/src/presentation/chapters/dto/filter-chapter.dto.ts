@@ -13,13 +13,5 @@ export class FilterChapterDto extends PaginationQueryDto {
   @IsOptional()
   @IsNumber()
   orderIndex?: number;
-
-  @IsOptional()
-  @IsNumber()
-  minWordCount?: number;
-
-  @IsOptional()
-  @IsNumber()
-  maxWordCount?: number;
 }
 

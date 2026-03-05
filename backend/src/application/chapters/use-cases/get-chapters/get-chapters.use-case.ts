@@ -17,9 +17,7 @@ export class GetChaptersUseCase {
         const filter: ChapterFilter = {
             title: query.title,
             bookId: query.bookId,
-            orderIndex: query.orderIndex,
-            minWordCount: query.minWordCount,
-            maxWordCount: query.maxWordCount
+            orderIndex: query.orderIndex
         };
 
         const pagination: PaginationOptions = {

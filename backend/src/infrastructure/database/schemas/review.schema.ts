@@ -45,9 +45,4 @@ export class Review extends BaseSchema {
 
 export const ReviewSchema = SchemaFactory.createForClass(Review);
 
-ReviewSchema.virtual('id').get(function () {
-  return this._id.toString();
-});
-
-// Index để đảm bảo mỗi user chỉ review 1 lần cho 1 book
 ReviewSchema.index({ userId: 1, bookId: 1 }, { unique: true });

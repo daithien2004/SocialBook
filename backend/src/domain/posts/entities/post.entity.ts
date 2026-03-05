@@ -4,10 +4,10 @@ export class Post extends Entity<string> {
     private constructor(
         id: string,
         public readonly userId: string,
-        private _bookId: string | null, 
+        private _bookId: string | null,
         private _content: string,
         private _imageUrls: string[],
-        private _isDelete: boolean,
+        private _isDeleted: boolean,
         private _isFlagged: boolean,
         private _moderationReason: string | undefined,
         private _moderationStatus: string | undefined,
@@ -47,7 +47,7 @@ export class Post extends Entity<string> {
         bookId: string | null;
         content: string;
         imageUrls: string[];
-        isDelete: boolean;
+        isDeleted: boolean;
         isFlagged: boolean;
         moderationReason?: string;
         moderationStatus?: string;
@@ -62,7 +62,7 @@ export class Post extends Entity<string> {
             props.bookId,
             props.content,
             props.imageUrls,
-            props.isDelete,
+            props.isDeleted,
             props.isFlagged,
             props.moderationReason,
             props.moderationStatus,
@@ -76,7 +76,7 @@ export class Post extends Entity<string> {
     get bookId(): string | null { return this._bookId; }
     get content(): string { return this._content; }
     get imageUrls(): string[] { return [...this._imageUrls]; }
-    get isDelete(): boolean { return this._isDelete; }
+    get isDeleted(): boolean { return this._isDeleted; }
     get isFlagged(): boolean { return this._isFlagged; }
     get moderationReason(): string | undefined { return this._moderationReason; }
     get moderationStatus(): string | undefined { return this._moderationStatus; }
@@ -102,7 +102,7 @@ export class Post extends Entity<string> {
     }
 
     delete(): void {
-        this._isDelete = true;
+        this._isDeleted = true;
         this.markAsUpdated();
     }
 
@@ -133,7 +133,7 @@ export class Post extends Entity<string> {
 
     reject(): void {
         this._moderationStatus = 'rejected';
-        this._isDelete = true;
+        this._isDeleted = true;
         this.markAsUpdated();
     }
 }

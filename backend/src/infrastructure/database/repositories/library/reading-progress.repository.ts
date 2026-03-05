@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, FilterQuery } from 'mongoose';
+import { ChapterStatus, ReadingProgress } from '@/domain/library/entities/reading-progress.entity';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
-import { ReadingProgress, ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
-import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
-import { Progress, ProgressDocument, ProgressSchema } from '../../schemas/progress.schema';
+import { UserId } from '@/domain/library/value-objects/user-id.vo';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Progress, ProgressDocument } from '../../schemas/progress.schema';
 import { ReadingStatus } from '../../schemas/reading-list.schema';
 
 interface ReadingProgressPersistence {
@@ -25,13 +25,13 @@ interface ReadingProgressPersistence {
 @Injectable()
 export class ReadingProgressRepository implements IReadingProgressRepository {
     constructor(
-        @InjectModel(Progress.name) 
+        @InjectModel(Progress.name)
         private readonly progressModel: Model<ProgressDocument>
-    ) {}
+    ) { }
 
     private toDomain(doc: ProgressDocument): ReadingProgress {
         const status = this.mapStatusToChapterStatus(doc.status);
-        
+
         return ReadingProgress.reconstitute({
             id: doc._id.toString(),
             userId: doc.userId.toString(),
@@ -85,7 +85,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
 
     async save(readingProgress: ReadingProgress): Promise<void> {
         const persistenceData = this.toPersistence(readingProgress);
-        
+
         await this.progressModel.findOneAndUpdate(
             { _id: persistenceData._id },
             { $set: persistenceData },
@@ -97,8 +97,8 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
         const doc = await this.progressModel.findOne({
             userId: new Types.ObjectId(userId.toString()),
             chapterId: new Types.ObjectId(chapterId.toString())
-        }).exec();
-        
+        }).lean().exec();
+
         return doc ? this.toDomain(doc) : null;
     }
 
@@ -106,16 +106,16 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
         const docs = await this.progressModel.find({
             userId: new Types.ObjectId(userId.toString()),
             bookId: new Types.ObjectId(bookId.toString())
-        }).exec();
-        
+        }).lean().exec();
+
         return docs.map(doc => this.toDomain(doc));
     }
 
     async findByUserId(userId: UserId): Promise<ReadingProgress[]> {
         const docs = await this.progressModel.find({
             userId: new Types.ObjectId(userId.toString())
-        }).exec();
-        
+        }).lean().exec();
+
         return docs.map(doc => this.toDomain(doc));
     }
 
@@ -131,7 +131,7 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
             userId: new Types.ObjectId(userId.toString()),
             chapterId: new Types.ObjectId(chapterId.toString())
         });
-        
+
         return !!result;
     }
 }

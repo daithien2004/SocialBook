@@ -1,7 +1,7 @@
-import { PaginatedResult, PaginationMeta, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
+import { CursorPaginatedResult, PaginatedResult, PaginationMeta, PaginationOptions, SortOptions } from '@/common/interfaces/pagination.interface';
 import { Entity } from '@/shared/domain/entity.base';
 import { Identifier } from '@/shared/domain/identifier.base';
-import { Document, FilterQuery, Model, Query } from 'mongoose';
+import { Document, FilterQuery, Model, PipelineStage } from 'mongoose';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -46,44 +46,91 @@ export abstract class BaseMongoRepository<
         return { page, limit, skip };
     }
 
-    private applySort(
-        query: Query<TDocument[], TDocument>,
-        sort?: SortOptions
-    ): Query<TDocument[], TDocument> {
-        if (sort?.sortBy) {
-            return query.sort({ [sort.sortBy]: sort.order === 'desc' ? -1 : 1 });
-        }
-        return query.sort({ createdAt: -1 }); // default sort
-    }
-
     protected async executePaginatedQuery<R = TEntity>(
         filter: FilterQuery<TDocument>,
         pagination?: PaginationOptions,
         sort?: SortOptions,
         mapFn?: (doc: any) => R,
-        populateArgs?: any[]
+        populateArgs?: any[],
+        pipelineStages?: { preFacet?: PipelineStage[], postFacet?: PipelineStage[] }
     ): Promise<PaginatedResult<R>> {
         const { page, limit, skip } = this.normalizePagination(pagination);
 
-        let query = this.model.find(filter);
-        if (populateArgs) {
-            populateArgs.forEach(p => { query = query.populate(p); });
+        const sortStage: Record<string, 1 | -1> = sort?.sortBy
+            ? { [sort.sortBy]: sort.order === 'desc' ? -1 : 1 }
+            : { createdAt: -1 };
+
+        const aggregatePipeline: PipelineStage[] = [
+            { $match: filter },
+            ...(pipelineStages?.preFacet || []),
+            {
+                $facet: {
+                    metadata: [{ $count: 'total' }],
+                    data: [
+                        { $sort: sortStage },
+                        { $skip: skip },
+                        { $limit: limit },
+                        ...(pipelineStages?.postFacet || [])
+                    ] as any[],
+                },
+            },
+        ];
+
+        const [result] = await this.model.aggregate(aggregatePipeline).exec();
+
+        const total: number = result.metadata[0]?.total ?? 0;
+        let documents: any[] = result.data;
+
+        if (populateArgs && documents.length > 0) {
+            documents = await this.model.populate(documents, populateArgs);
         }
 
-        const [documents, total] = await Promise.all([
-            this.applySort(query, sort)
-                .skip(skip)
-                .limit(limit)
-                .lean()
-                .exec(),
-            this.model.countDocuments(filter).exec(),
-        ]);
-
-        const mapper = mapFn || ((doc: any) => this.toDomain(doc) as unknown as R);
+        const data = mapFn
+            ? documents.map(doc => mapFn(doc))
+            : documents.map(doc => this.toDomain(doc)) as unknown as R[];
 
         return {
-            data: documents.map(doc => mapper(doc)),
+            data,
             meta: this.buildMeta(page, limit, total),
+        };
+    }
+
+    protected async executeCursorQuery<R = TEntity>(
+        filter: FilterQuery<TDocument>,
+        limit: number = DEFAULT_LIMIT,
+        sort: Record<string, 1 | -1> = { _id: -1 },
+        mapFn?: (doc: any) => R,
+        populateArgs?: any[],
+        pipelineStages?: PipelineStage[]
+    ): Promise<CursorPaginatedResult<R>> {
+        const aggregatePipeline: PipelineStage[] = [
+            { $match: filter },
+            ...(pipelineStages || []),
+            { $sort: sort },
+            { $limit: limit + 1 }
+        ];
+
+        let docs = await this.model.aggregate(aggregatePipeline).exec();
+        const hasMore = docs.length > limit;
+
+        if (hasMore) {
+            docs.pop();
+        }
+
+        if (populateArgs && docs.length > 0) {
+            docs = await this.model.populate(docs, populateArgs);
+        }
+
+        const data = mapFn
+            ? docs.map(doc => mapFn(doc))
+            : docs.map(doc => this.toDomain(doc)) as unknown as R[];
+
+        const nextCursor = hasMore && docs.length > 0 ? docs[docs.length - 1]._id.toString() : null;
+
+        return {
+            data,
+            nextCursor,
+            hasMore,
         };
     }
 
@@ -96,3 +143,4 @@ export abstract class BaseMongoRepository<
         };
     }
 }
+
