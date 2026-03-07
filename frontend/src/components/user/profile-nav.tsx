@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import {
     useToggleFollowMutation,
+    useUnfollowMutation,
     type FollowStateResponse,
 } from "@/features/follows/api/followApi";
 import { usersApi } from "@/features/users/api/usersApi";
@@ -28,7 +29,9 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
         initialFollowState
     );
 
-    const [toggleFollow, { isLoading: isToggling }] = useToggleFollowMutation();
+    const [toggleFollow, { isLoading: isFollowing_loading }] = useToggleFollowMutation();
+    const [unfollow, { isLoading: isUnfollowing_loading }] = useUnfollowMutation();
+    const isToggling = isFollowing_loading || isUnfollowing_loading;
 
     const isAuthenticated = !!followState;
     const isOwner = followState?.isOwner === true;
@@ -36,16 +39,16 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
 
     const handleFollowClick = async () => {
         try {
-            const result = await toggleFollow(profileUserId);
+            let result;
+            if (isFollowing) {
+                result = await unfollow(profileUserId);
+            } else {
+                result = await toggleFollow(profileUserId);
+            }
 
-            if ('data' in result) {
+            if (result && !('error' in result)) {
                 setFollowState((prev) =>
-                    prev
-                        ? {
-                            ...prev,
-                            isFollowing: !prev.isFollowing,
-                        }
-                        : prev
+                    prev ? { ...prev, isFollowing: !prev.isFollowing } : prev
                 );
                 dispatch(
                     usersApi.util.invalidateTags([
@@ -58,7 +61,6 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
         }
     };
 
-    // Determine the current tab value based on the segment
     const currentTab = segment === null ? "about" : segment;
 
     const handleTabChange = (value: string) => {
@@ -93,12 +95,6 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
                                 className="rounded-none border-b-2 border-transparent px-2 pb-3 pt-2 font-medium text-slate-500 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 dark:text-gray-400 dark:data-[state=active]:border-indigo-400 dark:data-[state=active]:text-indigo-400 bg-transparent shadow-none hover:text-slate-800 dark:hover:text-gray-200 transition-none"
                             >
                                 Đang theo dõi
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="followers"
-                                className="rounded-none border-b-2 border-transparent px-2 pb-3 pt-2 font-medium text-slate-500 data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-600 dark:text-gray-400 dark:data-[state=active]:border-indigo-400 dark:data-[state=active]:text-indigo-400 bg-transparent shadow-none hover:text-slate-800 dark:hover:text-gray-200 transition-none"
-                            >
-                                Người theo dõi
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
