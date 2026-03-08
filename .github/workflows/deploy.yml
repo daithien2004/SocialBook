@@ -3,12 +3,24 @@ name: Deploy Dev Branch
 on:
   push:
     branches:
-      - dev_thien_refactor-clean
+      - develop
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          cd backend
+          npm install
+          npm run test
+
   deploy:
     runs-on: ubuntu-latest
-
+    needs: test
     steps:
       # 1️⃣ Checkout
       - name: Checkout code
