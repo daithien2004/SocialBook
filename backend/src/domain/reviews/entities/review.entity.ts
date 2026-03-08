@@ -1,22 +1,24 @@
 import { Entity } from '@/shared/domain/entity.base';
 
+export interface ReviewProps {
+    userId: string;
+    bookId: string;
+    content: string;
+    rating: number;
+    likesCount: number;
+    likedBy: string[];
+    isFlagged: boolean;
+    moderationStatus: string;
+    user?: { id: string; username: string; image: string };
+    book?: { id: string; title: string; coverUrl: string };
+}
+
 export class Review extends Entity<string> {
-    private constructor(
-        id: string,
-        public readonly userId: string,
-        public readonly bookId: string,
-        private _content: string,
-        private _rating: number,
-        private _likesCount: number,
-        private _likedBy: string[],
-        private _isFlagged: boolean,
-        private _moderationStatus: string,
-        createdAt?: Date,
-        updatedAt?: Date,
-        public user?: { id: string; username: string; image: string },
-        public book?: { id: string; title: string; coverUrl: string }
-    ) {
+    private _props: ReviewProps;
+
+    private constructor(id: string, props: ReviewProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -29,14 +31,16 @@ export class Review extends Entity<string> {
     }): Review {
         return new Review(
             props.id,
-            props.userId,
-            props.bookId,
-            props.content,
-            props.rating,
-            0,
-            [],
-            false,
-            props.moderationStatus || 'pending'
+            {
+                userId: props.userId,
+                bookId: props.bookId,
+                content: props.content,
+                rating: props.rating,
+                likesCount: 0,
+                likedBy: [],
+                isFlagged: false,
+                moderationStatus: props.moderationStatus || 'pending'
+            }
         );
     }
 
@@ -57,43 +61,49 @@ export class Review extends Entity<string> {
     }): Review {
         return new Review(
             props.id,
-            props.userId,
-            props.bookId,
-            props.content,
-            props.rating,
-            props.likesCount,
-            props.likedBy,
-            props.isFlagged,
-            props.moderationStatus,
+            {
+                userId: props.userId,
+                bookId: props.bookId,
+                content: props.content,
+                rating: props.rating,
+                likesCount: props.likesCount,
+                likedBy: props.likedBy,
+                isFlagged: props.isFlagged,
+                moderationStatus: props.moderationStatus,
+                user: props.user,
+                book: props.book
+            },
             props.createdAt,
-            props.updatedAt,
-            props.user,
-            props.book
+            props.updatedAt
         );
     }
 
-    get content(): string { return this._content; }
-    get rating(): number { return this._rating; }
-    get likesCount(): number { return this._likesCount; }
-    get likedBy(): string[] { return [...this._likedBy]; }
-    get isFlagged(): boolean { return this._isFlagged; }
-    get moderationStatus(): string { return this._moderationStatus; }
+    get userId(): string { return this._props.userId; }
+    get bookId(): string { return this._props.bookId; }
+    get content(): string { return this._props.content; }
+    get rating(): number { return this._props.rating; }
+    get likesCount(): number { return this._props.likesCount; }
+    get likedBy(): string[] { return [...this._props.likedBy]; }
+    get isFlagged(): boolean { return this._props.isFlagged; }
+    get moderationStatus(): string { return this._props.moderationStatus; }
+    get user(): { id: string; username: string; image: string } | undefined { return this._props.user; }
+    get book(): { id: string; title: string; coverUrl: string } | undefined { return this._props.book; }
 
     update(content: string, rating: number): void {
-        this._content = content;
-        this._rating = rating;
-        this._moderationStatus = 'pending';
+        this._props.content = content;
+        this._props.rating = rating;
+        this._props.moderationStatus = 'pending';
         this.markAsUpdated();
     }
 
     updateContent(content: string): void {
-        this._content = content;
-        this._moderationStatus = 'pending';
+        this._props.content = content;
+        this._props.moderationStatus = 'pending';
         this.markAsUpdated();
     }
 
     updateRating(rating: number): void {
-        this._rating = rating;
+        this._props.rating = rating;
         this.markAsUpdated();
     }
 }

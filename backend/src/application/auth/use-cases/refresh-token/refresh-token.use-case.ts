@@ -1,5 +1,6 @@
 import { Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -16,6 +17,7 @@ export class RefreshTokenUseCase {
     private readonly tokenService: TokenService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
   ) { }
 
   async execute(command: RefreshTokenCommand) {
@@ -26,7 +28,7 @@ export class RefreshTokenUseCase {
     if (!user || !user.hashedRt) {
       throw new ForbiddenException('Từ chối truy cập');
     }
-    const rtMatches = await bcrypt.compare(refreshToken, user.hashedRt);
+    const rtMatches = await this.passwordHasher.compare(refreshToken, user.hashedRt);
     if (!rtMatches) {
       throw new ForbiddenException('Từ chối truy cập');
     }
@@ -50,7 +52,7 @@ export class RefreshTokenUseCase {
       const user = await this.userRepository.findById(id);
       if (!user || !user.hashedRt) return false;
 
-      const isMatch = await bcrypt.compare(token, user.hashedRt);
+      const isMatch = await this.passwordHasher.compare(token, user.hashedRt);
 
       if (!isMatch) {
         throw new UnauthorizedException('Refresh token không hợp lệ');

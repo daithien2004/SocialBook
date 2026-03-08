@@ -1,6 +1,7 @@
 
 import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 
@@ -8,6 +9,7 @@ import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 export class ValidateUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
+    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
   ) {}
 
   async execute(email: string, pass: string): Promise<any> {
@@ -18,7 +20,7 @@ export class ValidateUserUseCase {
       return null;
     }
 
-    const isMatch = await bcrypt.compare(pass, user.password || '');
+    const isMatch = await this.passwordHasher.compare(pass, user.password || '');
     if (!isMatch) {
       return null;
     }

@@ -23,6 +23,7 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
 import { RolesRepositoryModule } from '@/infrastructure/database/repositories/roles/roles-repository.module';
 import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/otp-repository.module';
 import { LocalStrategy } from '@/infrastructure/auth/strategies/local.strategy';
+import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { LocalStrategy } from '@/infrastructure/auth/strategies/local.strategy';
     UsersRepositoryModule,
     RolesRepositoryModule,
     OtpRepositoryModule,
+    PasswordHasherModule,
   ],
   providers: [
     TokenService,

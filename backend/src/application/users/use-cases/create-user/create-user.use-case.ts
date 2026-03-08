@@ -6,13 +6,15 @@ import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { CreateUserCommand } from './create-user.command';
 
-import * as bcrypt from 'bcrypt';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class CreateUserUseCase {
     constructor(
         private readonly userRepository: IUserRepository,
         private readonly idGenerator: IIdGenerator,
+        @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
     ) {}
 
     async execute(command: CreateUserCommand): Promise<User> {
@@ -29,7 +31,7 @@ export class CreateUserUseCase {
 
         let hashedPassword = command.password;
         if (command.password) {
-            hashedPassword = await bcrypt.hash(command.password, 10);
+            hashedPassword = await this.passwordHasher.hash(command.password);
         }
 
         const user = User.create({

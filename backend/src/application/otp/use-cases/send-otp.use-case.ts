@@ -24,7 +24,7 @@ export class SendOtpUseCase {
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         const expiredAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
 
-        const otp = new Otp(email, otpCode, expiredAt);
+        const otp = new Otp({ email, code: otpCode, expiredAt });
 
         // 3. Save OTP
         try {

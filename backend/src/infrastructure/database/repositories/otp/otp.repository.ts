@@ -37,7 +37,7 @@ export class OtpRepository implements IOtpRepository {
         const ttl = await this.redis.ttl(key);
         const expiredAt = new Date(Date.now() + ttl * 1000);
         
-        return new Otp(email, code, expiredAt);
+        return new Otp({ email, code, expiredAt });
     }
 
     async deleteByEmail(email: string): Promise<void> {

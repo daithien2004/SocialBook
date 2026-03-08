@@ -3,18 +3,20 @@ import { VectorId } from '../value-objects/vector-id.vo';
 import { EmbeddingVector } from '../value-objects/embedding-vector.vo';
 import { ContentType } from '../value-objects/content-type.vo';
 
+export interface VectorDocumentProps {
+    contentId: string;
+    contentType: ContentType;
+    content: string;
+    metadata: Record<string, any>;
+    embedding: EmbeddingVector;
+}
+
 export class VectorDocument extends Entity<VectorId> {
-    private constructor(
-        id: VectorId,
-        private _contentId: string,
-        private _contentType: ContentType,
-        private _content: string,
-        private _metadata: Record<string, any>,
-        private _embedding: EmbeddingVector,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
+    private _props: VectorDocumentProps;
+
+    private constructor(id: VectorId, props: VectorDocumentProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -35,11 +37,13 @@ export class VectorDocument extends Entity<VectorId> {
 
         return new VectorDocument(
             VectorId.create(props.id),
-            props.contentId.trim(),
-            ContentType.create(props.contentType),
-            props.content.trim(),
-            props.metadata || {},
-            EmbeddingVector.create(props.embedding)
+            {
+                contentId: props.contentId.trim(),
+                contentType: ContentType.create(props.contentType),
+                content: props.content.trim(),
+                metadata: props.metadata || {},
+                embedding: EmbeddingVector.create(props.embedding)
+            }
         );
     }
 
@@ -55,36 +59,24 @@ export class VectorDocument extends Entity<VectorId> {
     }): VectorDocument {
         return new VectorDocument(
             VectorId.create(props.id),
-            props.contentId,
-            ContentType.create(props.contentType),
-            props.content,
-            props.metadata,
-            EmbeddingVector.create(props.embedding),
+            {
+                contentId: props.contentId,
+                contentType: ContentType.create(props.contentType),
+                content: props.content,
+                metadata: props.metadata,
+                embedding: EmbeddingVector.create(props.embedding)
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
     // Getters
-    get contentId(): string {
-        return this._contentId;
-    }
-
-    get contentType(): ContentType {
-        return this._contentType;
-    }
-
-    get content(): string {
-        return this._content;
-    }
-
-    get metadata(): Record<string, any> {
-        return { ...this._metadata };
-    }
-
-    get embedding(): EmbeddingVector {
-        return this._embedding;
-    }
+    get contentId(): string { return this._props.contentId; }
+    get contentType(): ContentType { return this._props.contentType; }
+    get content(): string { return this._props.content; }
+    get metadata(): Record<string, any> { return { ...this._props.metadata }; }
+    get embedding(): EmbeddingVector { return this._props.embedding; }
 
     // Business methods
     updateContent(newContent: string): void {
@@ -92,59 +84,59 @@ export class VectorDocument extends Entity<VectorId> {
             throw new Error('Content cannot be empty');
         }
 
-        this._content = newContent.trim();
+        this._props.content = newContent.trim();
         this.markAsUpdated();
     }
 
     updateMetadata(newMetadata: Record<string, any>): void {
-        this._metadata = { ...newMetadata };
+        this._props.metadata = { ...newMetadata };
         this.markAsUpdated();
     }
 
     updateEmbedding(newEmbedding: number[]): void {
-        this._embedding = EmbeddingVector.create(newEmbedding);
+        this._props.embedding = EmbeddingVector.create(newEmbedding);
         this.markAsUpdated();
     }
 
     addMetadata(key: string, value: any): void {
-        this._metadata[key] = value;
+        this._props.metadata[key] = value;
         this.markAsUpdated();
     }
 
     removeMetadata(key: string): void {
-        delete this._metadata[key];
+        delete this._props.metadata[key];
         this.markAsUpdated();
     }
 
     calculateSimilarity(other: VectorDocument): number {
-        return this._embedding.calculateSimilarity(other._embedding);
+        return this._props.embedding.calculateSimilarity(other._props.embedding);
     }
 
     getContentPreview(maxLength: number = 200): string {
-        if (this._content.length <= maxLength) {
-            return this._content;
+        if (this._props.content.length <= maxLength) {
+            return this._props.content;
         }
-        return this._content.substring(0, maxLength) + '...';
+        return this._props.content.substring(0, maxLength) + '...';
     }
 
     getWordCount(): number {
-        return this._content.split(/\s+/).filter(word => word.length > 0).length;
+        return this._props.content.split(/\s+/).filter(word => word.length > 0).length;
     }
 
     getCharacterCount(): number {
-        return this._content.length;
+        return this._props.content.length;
     }
 
     matchesContentType(type: 'book' | 'author' | 'chapter'): boolean {
-        return this._contentType.toString() === type;
+        return this._props.contentType.toString() === type;
     }
 
     hasMetadataKey(key: string): boolean {
-        return key in this._metadata;
+        return key in this._props.metadata;
     }
 
     getMetadataValue(key: string): any {
-        return this._metadata[key];
+        return this._props.metadata[key];
     }
 
     // Static methods for common operations

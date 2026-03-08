@@ -4,16 +4,18 @@ import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { FollowStatus } from '../value-objects/follow-status.vo';
 
+export interface FollowProps {
+    userId: UserId;
+    targetId: TargetId;
+    status: FollowStatus;
+}
+
 export class Follow extends Entity<FollowId> {
-    private constructor(
-        id: FollowId,
-        private _userId: UserId,
-        private _targetId: TargetId,
-        private _status: FollowStatus,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
+    private _props: FollowProps;
+
+    private constructor(id: FollowId, props: FollowProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -32,9 +34,11 @@ export class Follow extends Entity<FollowId> {
 
         return new Follow(
             props.id,
-            userId,
-            targetId,
-            status
+            {
+                userId,
+                targetId,
+                status
+            }
         );
     }
 
@@ -48,64 +52,58 @@ export class Follow extends Entity<FollowId> {
     }): Follow {
         return new Follow(
             FollowId.create(props.id),
-            UserId.create(props.userId),
-            TargetId.create(props.targetId),
-            FollowStatus.create(props.status),
+            {
+                userId: UserId.create(props.userId),
+                targetId: TargetId.create(props.targetId),
+                status: FollowStatus.create(props.status)
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
     // Getters
-    get userId(): UserId {
-        return this._userId;
-    }
-
-    get targetId(): TargetId {
-        return this._targetId;
-    }
-
-    get status(): FollowStatus {
-        return this._status;
-    }
+    get userId(): UserId { return this._props.userId; }
+    get targetId(): TargetId { return this._props.targetId; }
+    get status(): FollowStatus { return this._props.status; }
 
     // Business methods
     activate(): void {
-        this._status = FollowStatus.active();
+        this._props.status = FollowStatus.active();
         this.markAsUpdated();
     }
 
     deactivate(): void {
-        this._status = FollowStatus.inactive();
+        this._props.status = FollowStatus.inactive();
         this.markAsUpdated();
     }
 
     toggleStatus(): void {
-        this._status = this._status.toggle();
+        this._props.status = this._props.status.toggle();
         this.markAsUpdated();
     }
 
     updateTarget(newTargetId: string): void {
         const targetId = TargetId.create(newTargetId);
         
-        if (this._userId.getValue() === targetId.getValue()) {
+        if (this._props.userId.getValue() === targetId.getValue()) {
             throw new Error('User cannot follow themselves');
         }
 
-        this._targetId = targetId;
+        this._props.targetId = targetId;
         this.markAsUpdated();
     }
 
     isActive(): boolean {
-        return this._status.isActive();
+        return this._props.status.isActive();
     }
 
     isInactive(): boolean {
-        return this._status.isInactive();
+        return this._props.status.isInactive();
     }
 
     canBeModified(userId: string): boolean {
-        return this._userId.getValue() === userId;
+        return this._props.userId.getValue() === userId;
     }
 
     // Static methods for common operations
@@ -129,16 +127,16 @@ export class Follow extends Entity<FollowId> {
 
     // Validation methods
     isValid(): boolean {
-        return this._userId.getValue() !== this._targetId.getValue();
+        return this._props.userId.getValue() !== this._props.targetId.getValue();
     }
 
     // Helper methods
     getFollowInfo() {
         return {
             id: this.id.toString(),
-            userId: this._userId.toString(),
-            targetId: this._targetId.toString(),
-            status: this._status.getValue(),
+            userId: this._props.userId.toString(),
+            targetId: this._props.targetId.toString(),
+            status: this._props.status.getValue(),
             isActive: this.isActive(),
             createdAt: this.createdAt,
             updatedAt: this.updatedAt

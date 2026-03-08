@@ -9,20 +9,22 @@ export enum ChapterStatus {
     COMPLETED = 'COMPLETED',
 }
 
+export interface ReadingProgressProps {
+    userId: UserId;
+    bookId: BookId;
+    chapterId: ChapterId;
+    progress: number;
+    status: ChapterStatus;
+    timeSpent: number;
+    lastReadAt: Date | null;
+}
+
 export class ReadingProgress extends Entity<string> {
-    private constructor(
-        id: string,
-        private _userId: UserId,
-        private _bookId: BookId,
-        private _chapterId: ChapterId,
-        private _progress: number,
-        private _status: ChapterStatus,
-        private _timeSpent: number,
-        private _lastReadAt: Date | null,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
+    private _props: ReadingProgressProps;
+
+    private constructor(id: string, props: ReadingProgressProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -36,13 +38,15 @@ export class ReadingProgress extends Entity<string> {
     }): ReadingProgress {
         return new ReadingProgress(
             props.id,
-            UserId.create(props.userId),
-            BookId.create(props.bookId),
-            ChapterId.create(props.chapterId),
-            props.progress || 0,
-            props.status || ChapterStatus.NOT_STARTED,
-            props.timeSpent || 0,
-            null
+            {
+                userId: UserId.create(props.userId),
+                bookId: BookId.create(props.bookId),
+                chapterId: ChapterId.create(props.chapterId),
+                progress: props.progress || 0,
+                status: props.status || ChapterStatus.NOT_STARTED,
+                timeSpent: props.timeSpent || 0,
+                lastReadAt: null
+            }
         );
     }
 
@@ -60,83 +64,65 @@ export class ReadingProgress extends Entity<string> {
     }): ReadingProgress {
         return new ReadingProgress(
             props.id,
-            UserId.create(props.userId),
-            BookId.create(props.bookId),
-            ChapterId.create(props.chapterId),
-            props.progress,
-            props.status,
-            props.timeSpent,
-            props.lastReadAt,
+            {
+                userId: UserId.create(props.userId),
+                bookId: BookId.create(props.bookId),
+                chapterId: ChapterId.create(props.chapterId),
+                progress: props.progress,
+                status: props.status,
+                timeSpent: props.timeSpent,
+                lastReadAt: props.lastReadAt
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
-    get userId(): UserId {
-        return this._userId;
-    }
-
-    get bookId(): BookId {
-        return this._bookId;
-    }
-
-    get chapterId(): ChapterId {
-        return this._chapterId;
-    }
-
-    get progress(): number {
-        return this._progress;
-    }
-
-    get status(): ChapterStatus {
-        return this._status;
-    }
-
-    get timeSpent(): number {
-        return this._timeSpent;
-    }
-
-    get lastReadAt(): Date | null {
-        return this._lastReadAt;
-    }
+    get userId(): UserId { return this._props.userId; }
+    get bookId(): BookId { return this._props.bookId; }
+    get chapterId(): ChapterId { return this._props.chapterId; }
+    get progress(): number { return this._props.progress; }
+    get status(): ChapterStatus { return this._props.status; }
+    get timeSpent(): number { return this._props.timeSpent; }
+    get lastReadAt(): Date | null { return this._props.lastReadAt; }
 
     updateProgress(progress: number): void {
-        this._progress = Math.max(0, Math.min(100, progress));
-        this._status = this._progress >= 80 ? ChapterStatus.COMPLETED :
-            this._progress > 0 ? ChapterStatus.IN_PROGRESS : ChapterStatus.NOT_STARTED;
-        this._lastReadAt = new Date();
+        this._props.progress = Math.max(0, Math.min(100, progress));
+        this._props.status = this._props.progress >= 80 ? ChapterStatus.COMPLETED :
+            this._props.progress > 0 ? ChapterStatus.IN_PROGRESS : ChapterStatus.NOT_STARTED;
+        this._props.lastReadAt = new Date();
         this.markAsUpdated();
     }
 
     addTimeSpent(seconds: number): void {
-        this._timeSpent += Math.max(0, seconds);
+        this._props.timeSpent += Math.max(0, seconds);
         this.markAsUpdated();
     }
 
     markAsCompleted(): void {
-        this._progress = 100;
-        this._status = ChapterStatus.COMPLETED;
-        this._lastReadAt = new Date();
+        this._props.progress = 100;
+        this._props.status = ChapterStatus.COMPLETED;
+        this._props.lastReadAt = new Date();
         this.markAsUpdated();
     }
 
     isCompleted(): boolean {
-        return this._status === ChapterStatus.COMPLETED;
+        return this._props.status === ChapterStatus.COMPLETED;
     }
 
     isInProgress(): boolean {
-        return this._status === ChapterStatus.IN_PROGRESS;
+        return this._props.status === ChapterStatus.IN_PROGRESS;
     }
 
     isNotStarted(): boolean {
-        return this._status === ChapterStatus.NOT_STARTED;
+        return this._props.status === ChapterStatus.NOT_STARTED;
     }
 
     getTimeSpentInMinutes(): number {
-        return Math.round(this._timeSpent / 60);
+        return Math.round(this._props.timeSpent / 60);
     }
 
     getTimeSpentInHours(): number {
-        return Math.round(this._timeSpent / 3600 * 100) / 100;
+        return Math.round(this._props.timeSpent / 3600 * 100) / 100;
     }
 }
