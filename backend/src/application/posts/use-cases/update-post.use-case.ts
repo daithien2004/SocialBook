@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
@@ -18,7 +19,7 @@ export class UpdatePostUseCase {
 
   async execute(command: UpdatePostCommand, files?: Express.Multer.File[]): Promise<Post> {
     const post = await this.postRepository.findById(command.postId);
-    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
+    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
     // Check ownership if needed or handled by controller/guard. 
     // Assuming command.userId is trustworthy (from JWT). 
@@ -39,7 +40,7 @@ export class UpdatePostUseCase {
 
     if (command.bookId) {
       const bookExists = await this.bookRepository.existsById(command.bookId);
-      if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+      if (!bookExists) throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
       post.updateBookId(command.bookId);
     }
 

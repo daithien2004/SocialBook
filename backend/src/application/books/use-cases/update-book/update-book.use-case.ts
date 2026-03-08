@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, ConflictDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
@@ -17,7 +18,7 @@ export class UpdateBookUseCase {
         
         const book = await this.bookRepository.findById(bookId);
         if (!book) {
-            throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+            throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
         }
 
         // Check if title is being updated and if it conflicts with existing book
@@ -26,7 +27,7 @@ export class UpdateBookUseCase {
             const exists = await this.bookRepository.existsByTitle(newTitle, bookId);
             
             if (exists) {
-                throw new ConflictException('Book with this title already exists');
+                throw new ConflictDomainException('Book with this title already exists');
             }
             
             book.changeTitle(command.title);

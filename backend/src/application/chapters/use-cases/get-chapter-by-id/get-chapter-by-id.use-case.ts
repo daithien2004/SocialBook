@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { ErrorMessages } from '@/common/constants/error-messages';
@@ -14,14 +15,14 @@ export class GetChapterByIdUseCase {
 
     async execute(query: GetChapterByIdQuery): Promise<ChapterResult> {
         if (!query.id) {
-            throw new BadRequestException(ErrorMessages.INVALID_ID);
+            throw new BadRequestDomainException(ErrorMessages.INVALID_ID);
         }
 
         const chapterId = ChapterId.create(query.id);
         const chapter = await this.chapterRepository.findById(chapterId);
 
         if (!chapter) {
-            throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
+            throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
         }
 
         await this.chapterRepository.incrementViews(chapterId);

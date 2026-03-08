@@ -1,4 +1,5 @@
-import { Injectable, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictDomainException, InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Genre } from '@/domain/genres/entities/genre.entity';
@@ -19,7 +20,7 @@ export class CreateGenreUseCase {
         const exists = await this.genreRepository.existsByName(name);
         
         if (exists) {
-            throw new ConflictException(ErrorMessages.GENRE_EXISTS || 'Genre already exists');
+            throw new ConflictDomainException(ErrorMessages.GENRE_EXISTS || 'Genre already exists');
         }
 
         const genre = Genre.create({

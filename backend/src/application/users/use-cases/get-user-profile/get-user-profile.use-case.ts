@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
@@ -21,7 +22,7 @@ export class GetUserProfileUseCase {
         const user = await this.userRepository.findById(userId);
 
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundDomainException('User not found');
         }
 
         const targetId = TargetId.create(query.id);

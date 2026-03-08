@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { NotFoundDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Comment } from '@/domain/comments/entities/comment.entity';

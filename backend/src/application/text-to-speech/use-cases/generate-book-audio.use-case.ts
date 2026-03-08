@@ -1,7 +1,8 @@
-import { Injectable, Inject, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { GenerateChapterAudioUseCase } from '@/application/text-to-speech/use-cases/generate-chapter-audio.use-case';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { Types } from 'mongoose';
+import { BookId } from '@/domain/books/value-objects/book-id.vo';
 
 @Injectable()
 export class GenerateBookAudioUseCase {
@@ -10,19 +11,13 @@ export class GenerateBookAudioUseCase {
         private readonly chapterRepository: IChapterRepository,
     ) { }
 
-    async execute(bookId: string, options: any = {}): Promise<any> {
-        if (!Types.ObjectId.isValid(bookId)) {
-            throw new BadRequestException('Invalid book ID');
-        }
+    async execute(bookIdStr: string, options: any = {}): Promise<any> {
+        const bookId = BookId.create(bookIdStr);
 
-        // Use findByBookSlug if needed or implement findByBookId in repo properly
-        // For now, assume findByBook works or we use a workaround
-        // The previous service implementation had complex fallback logic.
-        // Let's rely on standard repository methods.
-        const chapters = await this.chapterRepository.findByBook(bookId as any, { page: 1, limit: 1000 }); // Pagination handling might range large books
+        const chapters = await this.chapterRepository.findByBook(bookId, { page: 1, limit: 1000 }); // Pagination handling might range large books
 
         if (!chapters.data || chapters.data.length === 0) {
-            throw new NotFoundException('No chapters found for book');
+            throw new NotFoundDomainException('No chapters found for book');
         }
 
         const results = {
@@ -34,7 +29,7 @@ export class GenerateBookAudioUseCase {
         };
 
         for (const chapter of chapters.data) {
-            const chapterId = (chapter as any).id || (chapter as any)._id.toString();
+            const chapterId = chapter.id.toString();
             try {
                 const result = await this.generateChapterAudioUseCase.execute(chapterId, options);
                 results.successful++;

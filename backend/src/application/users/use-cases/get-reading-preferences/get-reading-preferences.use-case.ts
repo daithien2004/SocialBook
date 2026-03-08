@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { ReadingPreferences } from '@/domain/users/value-objects/reading-preferences.vo';
@@ -13,7 +14,7 @@ export class GetReadingPreferencesUseCase {
         const user = await this.userRepository.findById(userId);
 
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundDomainException('User not found');
         }
 
         return user.readingPreferences || ReadingPreferences.createDefault();

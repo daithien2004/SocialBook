@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { NotFoundDomainException, ForbiddenDomainException } from '@/shared/domain/common-exceptions';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { UserId } from '@/domain/follows/value-objects/user-id.vo';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
@@ -21,12 +22,12 @@ export class DeleteFollowUseCase {
             );
 
             if (!existingFollow) {
-                throw new NotFoundException('Follow relationship not found');
+                throw new NotFoundDomainException('Follow relationship not found');
             }
 
             // Check if user can delete this follow (only the follower can delete)
             if (existingFollow.userId.getValue() !== command.userId) {
-                throw new ForbiddenException('You can only delete your own follows');
+                throw new ForbiddenDomainException('You can only delete your own follows');
             }
 
             // Delete the follow

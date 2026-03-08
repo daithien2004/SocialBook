@@ -1,5 +1,6 @@
 
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { UserBannedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
+import { Injectable } from '@nestjs/common';
 import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -26,19 +27,10 @@ export class ValidateUserUseCase {
     }
 
     if (user.isBanned) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
-        error: 'USER_BANNED',
-      });
+      throw new UserBannedDomainException('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.');
     }
 
-    // Return specific user info needed by LocalStrategy/Login
-    /* 
-       Note: The original service returned the whole user entity. 
-       LocalStrategy used it to populate req.user for Login controller.
-    */
-    const { password, ...result } = user; // strip password although Mongoose document might behave differently
+    const { password, ...result } = user;
     return user;
   }
 }

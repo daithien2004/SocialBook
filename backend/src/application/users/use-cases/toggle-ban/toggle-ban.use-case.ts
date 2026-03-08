@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { User } from '@/domain/users/entities/user.entity';
@@ -13,7 +14,7 @@ export class ToggleBanUseCase {
         const user = await this.userRepository.findById(userId);
 
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundDomainException('User not found');
         }
 
         if (user.isBanned) {

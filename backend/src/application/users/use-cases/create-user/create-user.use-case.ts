@@ -1,4 +1,5 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { User } from '@/domain/users/entities/user.entity';
@@ -21,12 +22,12 @@ export class CreateUserUseCase {
         const emailVO = UserEmail.create(command.email);
         const emailExists = await this.userRepository.existsByEmail(emailVO);
         if (emailExists) {
-            throw new ConflictException('Email already exists');
+            throw new ConflictDomainException('Email already exists');
         }
 
         const usernameExists = await this.userRepository.existsByUsername(command.username);
         if (usernameExists) {
-            throw new ConflictException('Username already exists');
+            throw new ConflictDomainException('Username already exists');
         }
 
         let hashedPassword = command.password;

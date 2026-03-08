@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BadRequestDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
@@ -21,7 +22,7 @@ export class CreatePostUseCase {
   async execute(command: CreatePostCommand, files?: Express.Multer.File[]): Promise<Post> {
     // Validate Book
     const bookExists = await this.bookRepository.existsById(command.bookId);
-    if (!bookExists) throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+    if (!bookExists) throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
 
     // Content Moderation
     const moderationResult = await this.checkContentUseCase.execute(command.content);

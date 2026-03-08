@@ -1,4 +1,5 @@
-import { Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
+import { Injectable } from '@nestjs/common';
 import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -26,11 +27,11 @@ export class RefreshTokenUseCase {
     const user = await this.userRepository.findById(id);
 
     if (!user || !user.hashedRt) {
-      throw new ForbiddenException('Từ chối truy cập');
+      throw new UnauthorizedDomainException('Từ chối truy cập');
     }
     const rtMatches = await this.passwordHasher.compare(refreshToken, user.hashedRt);
     if (!rtMatches) {
-      throw new ForbiddenException('Từ chối truy cập');
+      throw new UnauthorizedDomainException('Từ chối truy cập');
     }
 
     let roleName = 'user';
@@ -55,12 +56,12 @@ export class RefreshTokenUseCase {
       const isMatch = await this.passwordHasher.compare(token, user.hashedRt);
 
       if (!isMatch) {
-        throw new UnauthorizedException('Refresh token không hợp lệ');
+        throw new UnauthorizedDomainException('Refresh token không hợp lệ');
       }
 
       return payload;
     } catch (error) {
-      throw new UnauthorizedException('Refresh token không hợp lệ');
+      throw new UnauthorizedDomainException('Refresh token không hợp lệ');
     }
   }
 }

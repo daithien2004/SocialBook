@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { NotFoundDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IUserAchievementRepository } from '@/domain/gamification/repositories/user-achievement.repository.interface';
 import { IAchievementRepository } from '@/domain/gamification/repositories/achievement.repository.interface';
 import { IUserGamificationRepository } from '@/domain/gamification/repositories/user-gamification.repository.interface';
@@ -27,7 +28,7 @@ export class UnlockAchievementUseCase {
             // Check if achievement exists
             const achievement = await this.achievementRepository.findById(achievementId);
             if (!achievement) {
-                throw new NotFoundException('Achievement not found');
+                throw new NotFoundDomainException('Achievement not found');
             }
 
             // Find existing user achievement or create new one
@@ -38,7 +39,7 @@ export class UnlockAchievementUseCase {
 
             if (userAchievement) {
                 if (userAchievement.isUnlocked) {
-                    throw new ConflictException('Achievement already unlocked');
+                    throw new ConflictDomainException('Achievement already unlocked');
                 }
             } else {
                 userAchievement = UserAchievement.create({

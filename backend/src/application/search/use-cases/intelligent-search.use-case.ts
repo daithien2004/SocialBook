@@ -134,14 +134,14 @@ export class IntelligentSearchUseCase {
                     updatedAt: book.updatedAt,
                     authorId: {
                         _id: book.authorId.toString(),
-                        name: (book as any).author?.name || 'Unknown',
-                        avatar: (book as any).author?.avatar || undefined
+                        name: book.author?.name || 'Unknown',
+                        avatar: undefined 
                     },
-                    genres: book.genres.map(g => ({
-                        _id: g.toString(),
-                        name: (g as any).name || 'Unknown',
-                        slug: (g as any).slug || ''
-                    })),
+                    genres: book.genreObjects?.map(g => ({
+                        _id: g.id,
+                        name: g.name,
+                        slug: g.slug
+                    })) || [],
                     stats: {
                         chapters: chapterCounts.get(bid) || 0,
                         views: book.views,

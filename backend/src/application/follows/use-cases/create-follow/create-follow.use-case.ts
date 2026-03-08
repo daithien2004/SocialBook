@@ -1,4 +1,5 @@
-import { Injectable, Logger, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Follow } from '@/domain/follows/entities/follow.entity';
@@ -25,14 +26,14 @@ export class CreateFollowUseCase {
 
             // Check if user is trying to follow themselves
             if (userId.getValue() === targetId.getValue()) {
-                throw new BadRequestException('User cannot follow themselves');
+                throw new BadRequestDomainException('User cannot follow themselves');
             }
 
             // Check if follow already exists
             const existingFollow = await this.followRepository.exists(userId, targetId);
             
             if (existingFollow) {
-                throw new ConflictException('Follow relationship already exists');
+                throw new ConflictDomainException('Follow relationship already exists');
             }
 
             // Create the follow

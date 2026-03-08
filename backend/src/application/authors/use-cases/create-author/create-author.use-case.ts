@@ -1,4 +1,5 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Author } from '@/domain/authors/entities/author.entity';
@@ -19,7 +20,7 @@ export class CreateAuthorUseCase {
         const exists = await this.authorRepository.existsByName(name);
         
         if (exists) {
-            throw new ConflictException(ErrorMessages.AUTHOR_EXISTS || 'Author already exists');
+            throw new ConflictDomainException(ErrorMessages.AUTHOR_EXISTS || 'Author already exists');
         }
 
         const author = Author.create({

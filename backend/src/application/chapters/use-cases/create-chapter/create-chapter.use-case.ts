@@ -1,4 +1,5 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Chapter } from '@/domain/chapters/entities/chapter.entity';
@@ -24,7 +25,7 @@ export class CreateChapterUseCase {
         const exists = await this.chapterRepository.existsByTitle(title, bookId);
         
         if (exists) {
-            throw new ConflictException('Chapter with this title already exists in this book');
+            throw new ConflictDomainException('Chapter with this title already exists in this book');
         }
 
         // Determine order index if not provided
@@ -37,7 +38,7 @@ export class CreateChapterUseCase {
         // Check if order index is already taken
         const orderIndexExists = await this.chapterRepository.existsByOrderIndex(orderIndex, bookId);
         if (orderIndexExists) {
-            throw new ConflictException(`Chapter with order index ${orderIndex} already exists in this book`);
+            throw new ConflictDomainException(`Chapter with order index ${orderIndex} already exists in this book`);
         }
 
         const chapter = Chapter.create({
