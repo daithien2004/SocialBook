@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
     FollowingUser,
     useToggleFollowMutation,
+    useUnfollowMutation,
 } from "@/features/follows/api/followApi";
 import { RootState } from "@/store/store";
 import { UserCheck, UserPlus } from "lucide-react";
@@ -16,12 +17,17 @@ const FollowerItem = (props: FollowingUser) => {
         props.isFollowedByCurrentUser
     );
     const route = useRouter();
-    const [toggleFollow, { isLoading: isToggling }] =
-        useToggleFollowMutation();
+    const [toggleFollow, { isLoading: isFollowLoading }] = useToggleFollowMutation();
+    const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
+    const isToggling = isFollowLoading || isUnfollowLoading;
 
     const handleToggleFollow = async () => {
         try {
-            await toggleFollow(props.id).unwrap();
+            if (isFollowing) {
+                await unfollow(props.id).unwrap();
+            } else {
+                await toggleFollow(props.id).unwrap();
+            }
             setIsFollowing((prev) => !prev);
         } catch (e: any) {
             console.log("Toggle follow failed:", e);

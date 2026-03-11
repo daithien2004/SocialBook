@@ -28,7 +28,7 @@ export function FollowersModal({
     } = useGetFollowersListQuery(userId, {
         skip: !userId || !isOpen,
     });
-
+    console.log(followersList);
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="sm:max-w-md bg-white dark:bg-[#1a1a1a] p-0 gap-0 overflow-hidden border-slate-100 dark:border-gray-800">
