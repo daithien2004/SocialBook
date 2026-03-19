@@ -171,7 +171,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                         <div className="relative">
                             <Avatar className="h-10 w-10 border border-slate-200 dark:border-gray-700">
                                 <AvatarImage
-                                    src={post.user?.image || post.userAvatar || '/abstract-book-pattern.png'}
+                                    src={post.user?.image || '/abstract-book-pattern.png'}
                                     alt={post.user?.username || 'User'}
                                     className="object-cover"
                                 />
@@ -222,16 +222,16 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                 </CardContent>
 
                 {/* BOOK SECTION */}
-                {post.bookId && (
+                {post.book && (
                     <div className="px-4 pb-3">
                         <div
                             className="p-3 bg-slate-50 dark:bg-gray-900/40 rounded-xl border border-slate-100 dark:border-gray-800 flex items-start gap-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-gray-800/60 transition-colors"
-                            onClick={() => route.push(`/books/${post.bookId.slug}`)} // Assuming slug exists
+                            onClick={() => route.push(`/books/${post.book.slug}`)} // Assuming slug exists
                         >
                             <div className="shrink-0 w-14 h-20 rounded-md overflow-hidden border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800">
                                 <img
-                                    src={post.bookId.coverUrl || '/abstract-book-pattern.png'}
-                                    alt={post.bookId.title}
+                                    src={post.book.coverUrl || '/abstract-book-pattern.png'}
+                                    alt={post.book.title}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -242,12 +242,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                                 </Badge>
                                 <h3
                                     className="font-semibold text-sm text-slate-900 dark:text-gray-100 truncate mt-1"
-                                    title={post.bookId.title}
+                                    title={post.book.title}
                                 >
-                                    {post.bookId.title}
+                                    {post.book.title}
                                 </h3>
                                 <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
-                                    {post.bookId.authorId?.name || 'Tác giả ẩn danh'}
+                                    {post.book.authorId?.name || 'Tác giả ẩn danh'}
                                 </p>
                             </div>
                         </div>

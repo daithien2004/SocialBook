@@ -27,6 +27,7 @@ import { CreateFollowCommand } from '@/application/follows/use-cases/create-foll
 import { DeleteFollowCommand } from '@/application/follows/use-cases/delete-follow/delete-follow.command';
 import { GetFollowStatusQuery } from '@/application/follows/use-cases/get-follow-status/get-follow-status.query';
 import { GetFollowsQuery } from '@/application/follows/use-cases/get-follows/get-follows.query';
+import { FollowRepository } from '@/infrastructure/database/repositories/follows/follow.repository';
 
 @Controller('follows')
 export class FollowsController {
@@ -35,17 +36,17 @@ export class FollowsController {
     private readonly getFollowsUseCase: GetFollowsUseCase,
     private readonly getFollowStatusUseCase: GetFollowStatusUseCase,
     private readonly deleteFollowUseCase: DeleteFollowUseCase,
+    private readonly followRepository: FollowRepository,
   ) { }
 
   @Public()
   @Get('following')
   async getFollowingList(@Query('userId') userId: string) {
-    const query = new GetFollowsQuery(userId, undefined, 1, 100);
-    const result = await this.getFollowsUseCase.execute(query);
-
+    const result = await this.followRepository.findByUserWithUserInfo(userId);
+    
     return {
       message: 'Get following list successfully',
-      data: result.data.map(follow => new FollowResponseDto(follow)),
+      data: result.data.map(item => new FollowResponseDto(item)),
       meta: result.meta,
     };
   }
@@ -56,12 +57,11 @@ export class FollowsController {
     @Req() req: Request & { user: { id: string } },
     @Query('targetUserId') targetUserId: string,
   ) {
-    const query = new GetFollowsQuery(undefined, targetUserId, 1, 100);
-    const result = await this.getFollowsUseCase.execute(query);
+    const result = await this.followRepository.findByTargetWithUserInfo(targetUserId);
 
     return {
       message: 'Get followers list successfully',
-      data: result.data.map(follow => new FollowResponseDto(follow)),
+      data: result.data.map(item => new FollowResponseDto(item)),
       meta: result.meta,
     };
   }

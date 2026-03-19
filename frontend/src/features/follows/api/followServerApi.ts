@@ -7,7 +7,7 @@ export async function followServerApi() {
     return {
         async getFollowState(targetUserId: string): Promise<FollowStateResponse | null> {
             try {
-                const res = await api.get(`/follows/${targetUserId}`);
+                const res = await api.get(`/follows/status?targetId=${targetUserId}`);
                 return res.data?.data ?? null;
             } catch (err: any) {
                 console.log("getFollowState error:", err?.response?.data || err);
