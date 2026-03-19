@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
 import { TextToSpeech } from '@/domain/text-to-speech/entities/text-to-speech.entity';
 

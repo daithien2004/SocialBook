@@ -1,7 +1,7 @@
+import { NESTJS_POSTS_ENDPOINTS } from '@/constants/server-endpoints';
+import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { CreatePostRequest, DeleteImageRequest, PaginatedPostsResponse, PaginationParams, PaginationParamsByUser, Post, UpdatePostRequest } from '../../posts/types/post.interface';
-import { axiosBaseQuery } from '@/lib/nestjs-client-api';
-import { NESTJS_POSTS_ENDPOINTS } from '@/constants/server-endpoints';
 
 
 export const postApi = createApi({
@@ -10,10 +10,10 @@ export const postApi = createApi({
   tagTypes: ['Post', 'PostDetail'],
   endpoints: (builder) => ({
     getPosts: builder.query<PaginatedPostsResponse, PaginationParams>({
-      query: ({ page = 1, limit = 10 } = {}) => ({
+      query: ({ cursor, limit = 10 } = {}) => ({
         url: NESTJS_POSTS_ENDPOINTS.getAll,
         method: 'GET',
-        params: { page, limit },
+        params: { cursor, limit },
       }),
       providesTags: (result) =>
         result
@@ -36,10 +36,10 @@ export const postApi = createApi({
     }),
 
     getPostsByUser: builder.query<PaginatedPostsResponse, PaginationParamsByUser>({
-      query: ({ page = 1, limit = 10, userId }) => ({
+      query: ({ cursor, limit = 10, userId }) => ({
         url: NESTJS_POSTS_ENDPOINTS.getAllByUsers,
         method: 'GET',
-        params: { page, limit, userId },
+        params: { cursor, limit, userId },
       }),
       providesTags: (result) =>
         result

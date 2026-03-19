@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, ConflictDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { Chapter } from '@/domain/chapters/entities/chapter.entity';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
@@ -20,7 +21,7 @@ export class UpdateChapterUseCase {
         
         const chapter = await this.chapterRepository.findById(chapterId);
         if (!chapter) {
-            throw new NotFoundException(ErrorMessages.CHAPTER_NOT_FOUND);
+            throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
         }
 
         // Check if title is being updated and if it conflicts with existing chapter
@@ -30,7 +31,7 @@ export class UpdateChapterUseCase {
             const exists = await this.chapterRepository.existsByTitle(newTitle, bookId, chapterId);
             
             if (exists) {
-                throw new ConflictException('Chapter with this title already exists in this book');
+                throw new ConflictDomainException('Chapter with this title already exists in this book');
             }
             
             chapter.changeTitle(command.title);
@@ -77,7 +78,7 @@ export class UpdateChapterUseCase {
             );
             
             if (orderIndexExists) {
-                throw new ConflictException(`Chapter with order index ${command.orderIndex} already exists in this book`);
+                throw new ConflictDomainException(`Chapter with order index ${command.orderIndex} already exists in this book`);
             }
             
             chapter.updateOrderIndex(command.orderIndex);

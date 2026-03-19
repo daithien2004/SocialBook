@@ -3,17 +3,19 @@ import { AuthorId } from '../value-objects/author-id.vo';
 import { AuthorName } from '../value-objects/author-name.vo';
 import slugify from 'slugify';
 
+export interface AuthorProps {
+    name: AuthorName;
+    slug: string;
+    bio: string;
+    photoUrl: string;
+}
+
 export class Author extends Entity<AuthorId> {
-    private constructor(
-        id: AuthorId,
-        private _name: AuthorName,
-        private _slug: string,
-        private _bio: string,
-        private _photoUrl: string,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
+    private _props: AuthorProps;
+
+    private constructor(id: AuthorId, props: AuthorProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -27,10 +29,12 @@ export class Author extends Entity<AuthorId> {
         
         return new Author(
             props.id,
-            name,
-            slug,
-            props.bio?.trim() || '',
-            props.photoUrl?.trim() || ''
+            {
+                name,
+                slug,
+                bio: props.bio?.trim() || '',
+                photoUrl: props.photoUrl?.trim() || ''
+            }
         );
     }
 
@@ -45,45 +49,36 @@ export class Author extends Entity<AuthorId> {
     }): Author {
         return new Author(
             AuthorId.create(props.id),
-            AuthorName.create(props.name),
-            props.slug,
-            props.bio,
-            props.photoUrl,
+            {
+                name: AuthorName.create(props.name),
+                slug: props.slug,
+                bio: props.bio,
+                photoUrl: props.photoUrl
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
-    get name(): AuthorName {
-        return this._name;
-    }
-
-    get slug(): string {
-        return this._slug;
-    }
-
-    get bio(): string {
-        return this._bio;
-    }
-
-    get photoUrl(): string {
-        return this._photoUrl;
-    }
+    get name(): AuthorName { return this._props.name; }
+    get slug(): string { return this._props.slug; }
+    get bio(): string { return this._props.bio; }
+    get photoUrl(): string { return this._props.photoUrl; }
 
     changeName(newName: string): void {
         const name = AuthorName.create(newName);
-        this._name = name;
-        this._slug = Author.generateSlug(newName);
+        this._props.name = name;
+        this._props.slug = Author.generateSlug(newName);
         this.markAsUpdated();
     }
 
     updateBio(bio: string): void {
-        this._bio = bio.trim();
+        this._props.bio = bio.trim();
         this.markAsUpdated();
     }
 
     updatePhotoUrl(photoUrl: string): void {
-        this._photoUrl = photoUrl.trim();
+        this._props.photoUrl = photoUrl.trim();
         this.markAsUpdated();
     }
 

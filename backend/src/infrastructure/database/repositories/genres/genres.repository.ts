@@ -35,17 +35,17 @@ export class GenresRepository extends BaseMongoRepository<GenreEntity, GenreDocu
     }
 
     async findById(id: GenreId): Promise<GenreEntity | null> {
-        const doc = await this.genreModel.findById(id.toString()).exec();
+        const doc = await this.genreModel.findById(id.toString()).lean().exec();
         return doc ? this.toDomain(doc) : null;
     }
 
     async findByName(name: GenreName): Promise<GenreEntity | null> {
-        const doc = await this.genreModel.findOne({ name: name.toString() }).exec();
+        const doc = await this.genreModel.findOne({ name: name.toString() }).lean().exec();
         return doc ? this.toDomain(doc) : null;
     }
 
     async findBySlugs(slugs: string[]): Promise<GenreEntity[]> {
-        const docs = await this.genreModel.find({ slug: { $in: slugs } }).exec();
+        const docs = await this.genreModel.find({ slug: { $in: slugs } }).lean().exec();
         return docs.map(doc => this.toDomain(doc));
     }
 
@@ -66,6 +66,7 @@ export class GenresRepository extends BaseMongoRepository<GenreEntity, GenreDocu
                 .sort({ name: 1 })
                 .skip(skip)
                 .limit(pagination.limit)
+                .lean()
                 .exec(),
             this.genreModel.countDocuments(query).exec()
         ]);

@@ -55,7 +55,7 @@ export class ReindexAllUseCase {
                     return VectorDocument.create({
                         id: this.idGenerator.generate(),
                         contentId: book.id ? book.id.toString() : this.idGenerator.generate(),
-                        contentType: 'book' as any,
+                        contentType: 'book',
                         content,
                         metadata: {
                             title: titleStr,
@@ -66,9 +66,9 @@ export class ReindexAllUseCase {
                     });
                 } catch (mapErr) {
                     this.logger.error(`Error mapping book ${book?.id}`, mapErr);
-                    return null as any; // Filtered out below
+                    return null; // Filtered out below
                 }
-            }).filter(doc => doc !== null);
+            }).filter((doc): doc is VectorDocument => doc !== null);
 
             if (documents.length === 0) {
                 return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
@@ -96,7 +96,7 @@ export class ReindexAllUseCase {
                     return VectorDocument.create({
                         id: this.idGenerator.generate(),
                         contentId: author.id ? author.id.toString() : this.idGenerator.generate(),
-                        contentType: 'author' as any,
+                        contentType: 'author',
                         content,
                         metadata: {
                             name: nameStr,
@@ -106,9 +106,9 @@ export class ReindexAllUseCase {
                     });
                 } catch (mapErr) {
                     this.logger.error(`Error mapping author ${author?.id}`, mapErr);
-                    return null as any;
+                    return null;
                 }
-            }).filter(doc => doc !== null);
+            }).filter((doc): doc is VectorDocument => doc !== null);
 
             if (documents.length === 0) {
                 return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
@@ -139,7 +139,7 @@ export class ReindexAllUseCase {
                     return VectorDocument.create({
                         id: this.idGenerator.generate(),
                         contentId: chapter.id ? chapter.id.toString() : this.idGenerator.generate(),
-                        contentType: 'chapter' as any,
+                        contentType: 'chapter',
                         content,
                         metadata: {
                             title: titleStr,
@@ -150,9 +150,9 @@ export class ReindexAllUseCase {
                     });
                 } catch (mapErr) {
                     this.logger.error(`Error mapping chapter ${chapter?.id}`, mapErr);
-                    return null as any;
+                    return null;
                 }
-            }).filter(doc => doc !== null);
+            }).filter((doc): doc is VectorDocument => doc !== null);
 
             if (documents.length === 0) {
                 return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };

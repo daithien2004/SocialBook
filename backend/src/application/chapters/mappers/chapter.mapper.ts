@@ -14,7 +14,6 @@ export class ChapterApplicationMapper {
             })),
             viewsCount: chapter.viewsCount,
             orderIndex: chapter.orderIndex.getValue(),
-            wordCount: chapter.getWordCount(),
             characterCount: chapter.getCharacterCount(),
             contentPreview: chapter.getContentPreview(),
             createdAt: chapter.createdAt,

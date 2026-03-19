@@ -10,8 +10,9 @@ export class GetFlaggedPostsUseCase {
   ) { }
 
   async execute(query: GetFlaggedPostsQuery): Promise<PaginatedResult<Post>> {
-    const { page, limit } = query;
-    const skip = (page - 1) * limit;
-    return this.postRepository.findFlagged(skip, limit);
+    return this.postRepository.findFlagged({
+      page: query.page,
+      limit: query.limit,
+    });
   }
 }

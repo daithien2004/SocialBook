@@ -1,5 +1,6 @@
 import { Injectable, ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
@@ -19,6 +20,7 @@ export class RegisterUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getRoleByNameUseCase: GetRoleByNameUseCase,
     private readonly sendOtpUseCase: SendOtpUseCase,
+    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
   ) { }
 
   async execute(command: RegisterCommand): Promise<string> {
@@ -29,7 +31,7 @@ export class RegisterUseCase {
       if (!user.isVerified) {
         user.updateProfile({ username: command.username });
         if (command.password) {
-          const hash = await bcrypt.hash(command.password, 10);
+          const hash = await this.passwordHasher.hash(command.password);
           user.updatePassword(hash);
         }
         await this.userRepository.save(user);

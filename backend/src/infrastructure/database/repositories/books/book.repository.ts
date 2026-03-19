@@ -102,18 +102,8 @@ export class BookRepository extends BaseMongoRepository<BookEntity, BookDocument
 
     async findAllList(filter: BookFilter, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<BookListReadModel>> {
         const queryFilter = this.buildQueryFilter(filter);
-        const skip = (pagination.page - 1) * pagination.limit;
-        const total = await this.bookModel.countDocuments(queryFilter).exec();
 
-        const sortStage: Record<string, 1 | -1> = sort?.sortBy
-            ? { [sort.sortBy]: (sort.order === 'desc' ? -1 : 1) as 1 | -1 }
-            : { createdAt: -1 };
-
-        const documents = await this.bookModel.aggregate([
-            { $match: queryFilter },
-            { $sort: sortStage },
-            { $skip: skip },
-            { $limit: pagination.limit },
+        const postFacetStages: any[] = [
             {
                 $lookup: {
                     from: 'genres',
@@ -150,18 +140,17 @@ export class BookRepository extends BaseMongoRepository<BookEntity, BookDocument
                     chapterCount: { $size: '$_chapters' },
                 },
             },
-            { $project: { _chapters: 0, _authorArr: 0 } },
-        ]).exec();
+            { $project: { _chapters: 0, _authorArr: 0 } }
+        ];
 
-        return {
-            data: documents.map(doc => BookMapper.toListReadModel(doc)),
-            meta: {
-                current: pagination.page,
-                pageSize: pagination.limit,
-                total,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
-        };
+        return this.executePaginatedQuery<BookListReadModel>(
+            queryFilter,
+            pagination,
+            sort,
+            (doc: RawBookDocument) => BookMapper.toListReadModel(doc),
+            undefined, // no populateArgs
+            { postFacet: postFacetStages }
+        );
     }
 
     async findByAuthor(authorId: AuthorId, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<BookEntity>> {

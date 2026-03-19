@@ -33,23 +33,19 @@ export interface UpdatePostRequest {
 }
 
 export interface PaginationParams {
-  page?: number;
+  cursor?: string;
   limit?: number;
 }
 
-export interface PaginationParamsByUser {
-  page?: number;
-  limit?: number;
+export interface PaginationParamsByUser extends PaginationParams {
   userId: string;
 }
 
 export interface PaginatedPostsResponse {
   data: Post[];
   meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+    nextCursor: string | null;
+    hasMore: boolean;
   };
 }
 

@@ -9,7 +9,6 @@ export class ChapterResponseDto {
     paragraphsCount: number;
     viewsCount: number;
     orderIndex: number;
-    wordCount: number;
     characterCount: number;
     contentPreview: string;
     createdAt: Date;
@@ -27,7 +26,6 @@ export class ChapterResponseDto {
         this.paragraphsCount = chapter.paragraphs.length;
         this.viewsCount = chapter.viewsCount;
         this.orderIndex = chapter.orderIndex;
-        this.wordCount = chapter.wordCount;
         this.characterCount = chapter.characterCount;
         this.contentPreview = chapter.contentPreview;
         this.createdAt = chapter.createdAt;

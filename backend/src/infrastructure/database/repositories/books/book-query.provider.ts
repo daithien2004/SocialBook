@@ -10,6 +10,7 @@ import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
 import { Genre, GenreDocument } from '../../schemas/genre.schema';
 import { BookMapper } from './book.mapper';
+import { RawBookDocument } from './book.raw-types';
 
 @Injectable()
 export class BookQueryProvider implements IBookQueryProvider {
@@ -37,72 +38,98 @@ export class BookQueryProvider implements IBookQueryProvider {
 
     async findAllList(filter: BookFilter, pagination: PaginationOptions, sort?: SortOptions): Promise<PaginatedResult<BookListReadModel>> {
         if (filter.genres && filter.genres.length > 0) {
-            const resolvedGenreIds = await Promise.all(
-                filter.genres.map(async (genreIdOrSlug) => {
-                    if (Types.ObjectId.isValid(genreIdOrSlug)) {
-                        return genreIdOrSlug;
-                    }
-                    const genre = await this.genreModel.findOne({ slug: genreIdOrSlug }).select('_id').lean().exec();
-                    return genre ? genre._id.toString() : null;
-                })
-            );
-            filter.genres = resolvedGenreIds.filter((id): id is string => id !== null);
+            const slugsToResolve = filter.genres.filter(id => !Types.ObjectId.isValid(id));
+            const validIds = filter.genres.filter(id => Types.ObjectId.isValid(id));
+
+            if (slugsToResolve.length > 0) {
+                const genres = await this.genreModel.find({ slug: { $in: slugsToResolve } }).select('_id').lean().exec();
+                validIds.push(...genres.map(g => g._id.toString()));
+            }
+            filter.genres = validIds;
         }
 
         const queryFilter = this.buildQueryFilter(filter);
         const skip = (pagination.page - 1) * pagination.limit;
-        const total = await this.bookModel.countDocuments(queryFilter).exec();
 
         const sortStage: Record<string, 1 | -1> = sort?.sortBy
             ? { [sort.sortBy]: (sort.order === 'desc' ? -1 : 1) as 1 | -1 }
             : { createdAt: -1 };
 
-        const documents = await this.bookModel.aggregate([
+        const [result] = await this.bookModel.aggregate([
             { $match: queryFilter },
-            { $sort: sortStage },
-            { $skip: skip },
-            { $limit: pagination.limit },
             {
-                $lookup: {
-                    from: 'genres',
-                    localField: 'genres',
-                    foreignField: '_id',
-                    as: 'genres',
+                $facet: {
+                    metadata: [{ $count: 'total' }],
+                    data: [
+                        { $sort: sortStage },
+                        { $skip: skip },
+                        { $limit: pagination.limit },
+                        {
+                            $lookup: {
+                                from: 'genres',
+                                localField: 'genres',
+                                foreignField: '_id',
+                                as: 'genres',
+                            },
+                        },
+                        {
+                            $lookup: {
+                                from: 'users',
+                                localField: 'authorId',
+                                foreignField: '_id',
+                                pipeline: [{ $project: { _id: 1, name: 1 } }],
+                                as: '_authorArr',
+                            },
+                        },
+                        {
+                            $addFields: {
+                                authorId: { $arrayElemAt: ['$_authorArr', 0] },
+                            },
+                        },
+                        {
+                            $lookup: {
+                                from: 'chapters',
+                                localField: '_id',
+                                foreignField: 'bookId',
+                                pipeline: [{ $project: { _id: 1 } }],
+                                as: '_chapters',
+                            },
+                        },
+                        {
+                            $addFields: {
+                                chapterCount: { $size: '$_chapters' },
+                            },
+                        },
+                        {
+                            $project: {
+                                _id: 1,
+                                title: 1,
+                                slug: 1,
+                                coverUrl: 1,
+                                status: 1,
+                                createdAt: 1,
+                                updatedAt: 1,
+                                views: 1,
+                                likes: 1,
+                                __v: 1,
+                                genres: { _id: 1, name: 1, slug: 1 },
+                                authorId: 1,
+                                chapterCount: 1,
+                                tags: 1,
+                                likedBy: 1,
+                                publishedYear: 1
+                            }
+                        },
+                    ],
                 },
             },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'authorId',
-                    foreignField: '_id',
-                    pipeline: [{ $project: { _id: 1, name: 1 } }],
-                    as: '_authorArr',
-                },
-            },
-            {
-                $addFields: {
-                    authorId: { $arrayElemAt: ['$_authorArr', 0] },
-                },
-            },
-            {
-                $lookup: {
-                    from: 'chapters',
-                    localField: '_id',
-                    foreignField: 'bookId',
-                    pipeline: [{ $project: { _id: 1 } }],
-                    as: '_chapters',
-                },
-            },
-            {
-                $addFields: {
-                    chapterCount: { $size: '$_chapters' },
-                },
-            },
-            { $project: { _chapters: 0, _authorArr: 0 } },
         ]).exec();
 
+        const total = result.metadata[0]?.total || 0;
+        const documents = result.data;
+
         return {
-            data: documents.map(doc => BookMapper.toListReadModel(doc)),
+            data: documents.map((doc: RawBookDocument) => BookMapper.toListReadModel(doc)),
             meta: {
                 current: pagination.page,
                 pageSize: pagination.limit,
@@ -138,6 +165,34 @@ export class BookQueryProvider implements IBookQueryProvider {
                     },
                 },
             },
+            {
+                $project: {
+                    _id: 1,
+                    title: 1,
+                    slug: 1,
+                    description: 1,
+                    publishedYear: 1,
+                    coverUrl: 1,
+                    status: 1,
+                    tags: 1,
+                    likedBy: 1,
+                    views: 1,
+                    likes: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    authorId: 1,
+                    'genreDetails._id': 1,
+                    'genreDetails.name': 1,
+                    'genreDetails.slug': 1,
+                    'chapters._id': 1,
+                    'chapters.title': 1,
+                    'chapters.slug': 1,
+                    'chapters.orderIndex': 1,
+                    'chapters.viewsCount': 1,
+                    'chapters.createdAt': 1,
+                    'chapters.updatedAt': 1,
+                }
+            }
         ]).exec();
 
         if (!results || results.length === 0) return null;
@@ -165,104 +220,36 @@ export class BookQueryProvider implements IBookQueryProvider {
         ]).exec();
     }
 
-    async searchFuzzy(query: string, limit: number = 30): Promise<Array<{ id: BookId; score: number; matchType: string }>> {
-        const results: Array<{ id: BookId; score: number; matchType: string }> = [];
-        const normalizedQuery = this.normalizeText(query);
-
-        if (normalizedQuery.length < 2) return results;
-
-        const originalWords = query.trim().split(/\s+/).filter(w => w.length > 1);
-        if (originalWords.length > 6) return results;
-
-        try {
-            const requiredWords = originalWords.slice(0, Math.ceil(originalWords.length * 0.7));
-            const regexPattern = originalWords.length <= 3
-                ? originalWords.join('.*')
-                : requiredWords.join('|');
-
-            const regex = new RegExp(regexPattern, 'i');
-
-            const books = await this.bookModel
-                .find({
-                    $or: [
-                        { title: { $regex: regex } },
-                        { slug: { $regex: regex } },
-                    ],
-                    status: 'published',
-                    isDeleted: false,
-                })
-                .select('_id title slug')
-                .limit(limit)
-                .lean()
-                .exec();
-
-            for (const book of books) {
-                const titleSimilarity = this.calculateTextSimilarity(query, book.title);
-                const slugSimilarity = this.calculateTextSimilarity(query, book.slug || '');
-                const similarity = Math.max(titleSimilarity, slugSimilarity);
-
-                if (similarity >= 0.6) {
-                    let score = similarity >= 1.0 ? 15.0 : similarity >= 0.8 ? 12.0 : 10.0;
-                    results.push({
-                        id: BookId.create(book._id.toString()),
-                        score,
-                        matchType: similarity >= 1.0 ? 'exact' : similarity >= 0.8 ? 'starts_with' : 'contains',
-                    });
-                }
-            }
-        } catch (error: any) {
-            console.error(`Fuzzy search error: ${error.message}`);
-        }
-        return results;
-    }
-
-    async searchByDescription(keywords: string[], limit: number = 10): Promise<Array<{ id: BookId; score: number }>> {
+    async searchByText(query: string, limit: number = 10): Promise<Array<{ id: BookId; score: number }>> {
         const results: Array<{ id: BookId; score: number }> = [];
-        if (!keywords || keywords.length === 0) return results;
+        if (!query || query.trim().length === 0) return results;
 
         try {
-            const regexPattern = keywords.map(w => `\\b${w}\\b`).join('|');
-            const regex = new RegExp(regexPattern, 'i');
-
             const books = await this.bookModel
-                .find({
-                    description: { $regex: regex },
-                    status: 'published',
-                    isDeleted: false,
-                })
-                .select('_id title description')
+                .find(
+                    {
+                        $text: { $search: query },
+                        status: 'published',
+                        isDeleted: false
+                    },
+                    { score: { $meta: 'textScore' } } // Projection for sorting score
+                )
+                .sort({ score: { $meta: 'textScore' } }) // Sort by MongoDB text match score
                 .limit(limit)
+                .select('_id')
                 .lean()
                 .exec();
 
             for (const book of books) {
-                const description = book.description?.toLowerCase() || '';
-                const matchedWords = keywords.filter(word =>
-                    description.includes(word.toLowerCase())
-                );
-
-                if (matchedWords.length > 0) {
-                    const properNounMatches = matchedWords.filter(w => w[0] === w[0].toUpperCase());
-
-                    let frequencyBonus = 0;
-                    for (const word of matchedWords) {
-                        const count = (description.match(new RegExp(word.toLowerCase(), 'gi')) || []).length;
-                        frequencyBonus += (count - 1) * 0.2;
-                    }
-
-                    const multipleProperNounBonus = properNounMatches.length >= 2 ? 1.0 : 0;
-                    const score = 8.0
-                        + (properNounMatches.length * 2.0)
-                        + ((matchedWords.length - properNounMatches.length) * 0.5)
-                        + multipleProperNounBonus
-                        + Math.min(frequencyBonus, 2.0);
-
-                    results.push({ id: BookId.create(book._id.toString()), score });
-                }
+                results.push({
+                    id: BookId.create(book._id.toString()),
+                    score: (book as any).score // The textScore returned by projection
+                });
             }
         } catch (error: any) {
-            console.error(`Description search error: ${error.message}`);
+            console.error(`Text search error: ${error.message}`);
         }
+
         return results;
     }
 

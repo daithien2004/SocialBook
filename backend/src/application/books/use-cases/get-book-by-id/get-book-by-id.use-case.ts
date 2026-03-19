@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
@@ -13,14 +14,14 @@ export class GetBookByIdUseCase {
 
     async execute(query: GetBookByIdQuery): Promise<Book> {
         if (!query.id) {
-            throw new BadRequestException(ErrorMessages.INVALID_ID);
+            throw new BadRequestDomainException(ErrorMessages.INVALID_ID);
         }
 
         const bookId = BookId.create(query.id);
         const book = await this.bookRepository.findById(bookId);
 
         if (!book) {
-            throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+            throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
         }
 
         await this.bookRepository.incrementViews(bookId);

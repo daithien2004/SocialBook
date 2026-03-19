@@ -1,6 +1,5 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import PostCard from '@/components/post/PostCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useGetPostsQuery } from '@/features/posts/api/postApi';
 import { Post } from '@/features/posts/types/post.interface';
+import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { AlertCircle, ArrowUp, LayoutGrid, List } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -17,7 +17,7 @@ interface PostListProps {
 }
 
 const PostList: React.FC<PostListProps> = () => {
-    const [page, setPage] = useState(1);
+    const [cursor, setCursor] = useState<string | undefined>(undefined);
     const [allPosts, setAllPosts] = useState<Post[]>([]);
     const limit = 10;
 
@@ -27,15 +27,15 @@ const PostList: React.FC<PostListProps> = () => {
     const observerTarget = useRef<HTMLDivElement | null>(null);
 
     const { data, isLoading, error, isFetching } = useGetPostsQuery(
-        { page, limit },
+        { cursor, limit },
         {
             refetchOnMountOrArgChange: true,
         }
     );
 
     const items = data?.data ?? [];
-    const total = data?.meta?.total ?? 0;
-    const prevTotalRef = useRef<number | null>(null);
+    const hasMore = data?.meta?.hasMore ?? false;
+    const nextCursor = data?.meta?.nextCursor;
 
     const [mounted, setMounted] = useState(false);
     useEffect(() => {
@@ -43,35 +43,17 @@ const PostList: React.FC<PostListProps> = () => {
     }, []);
 
     useEffect(() => {
-        if (!data?.meta) return;
-        const currentTotal = data.meta.total;
-
-        if (prevTotalRef.current === null) {
-            prevTotalRef.current = currentTotal;
-            return;
-        }
-
-        if (currentTotal !== prevTotalRef.current) {
-            prevTotalRef.current = currentTotal;
-            setPage(1);
-            setAllPosts([]);
-        }
-    }, [data?.meta?.total]);
-
-    const hasMore = allPosts.length < total;
-
-    useEffect(() => {
-        if (!items.length) return;
+        if (!items.length && !hasMore) return;
 
         setAllPosts((prev) => {
-            if (page === 1) {
+            if (cursor === undefined) {
                 return items;
             }
 
             const newPosts = items.filter((post) => !prev.some((p) => p.id === post.id));
             return [...prev, ...newPosts];
         });
-    }, [items, page]);
+    }, [items, cursor, hasMore]);
 
     useEffect(() => {
         const target = observerTarget.current;
@@ -81,8 +63,8 @@ const PostList: React.FC<PostListProps> = () => {
             (entries) => {
                 const entry = entries[0];
 
-                if (entry.isIntersecting && hasMore && !isFetching) {
-                    setPage((prev) => prev + 1);
+                if (entry.isIntersecting && hasMore && !isFetching && nextCursor) {
+                    setCursor(nextCursor);
                 }
             },
             { threshold: 0.15 }
@@ -95,7 +77,7 @@ const PostList: React.FC<PostListProps> = () => {
         };
     }, [hasMore, isFetching]);
 
-    if (isLoading && page === 1) {
+    if (isLoading && cursor === undefined) {
         return (
             <div className="flex justify-center items-center py-10">
                 <Spinner className="size-10 text-sky-500" />
@@ -141,14 +123,17 @@ const PostList: React.FC<PostListProps> = () => {
             {/* View Mode Toggle */}
             <div className="flex justify-between items-center bg-white dark:bg-[#1a1a1a] p-2 rounded-xl border border-slate-100 dark:border-gray-800 shadow-sm">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white px-2">Bảng tin</h2>
-                <ToggleGroup type="single" value={viewMode} onValueChange={(val) => val && setViewMode(val as 'grid' | 'list')}>
-                    <ToggleGroupItem value="list" aria-label="List view" className="h-8 w-8 p-0">
-                        <List className="h-4 w-4" />
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 w-8 p-0">
-                        <LayoutGrid className="h-4 w-4" />
-                    </ToggleGroupItem>
-                </ToggleGroup>
+                <div className="flex items-center gap-2">
+                    {isFetching && <Spinner className="size-4 text-sky-500" />}
+                    <ToggleGroup type="single" value={viewMode} onValueChange={(val) => val && setViewMode(val as 'grid' | 'list')}>
+                        <ToggleGroupItem value="list" aria-label="List view" className="h-8 w-8 p-0">
+                            <List className="h-4 w-4" />
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 w-8 p-0">
+                            <LayoutGrid className="h-4 w-4" />
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                </div>
             </div>
 
             {/* Posts Grid/List */}
@@ -162,7 +147,7 @@ const PostList: React.FC<PostListProps> = () => {
                 ))}
             </div>
 
-            {isFetching && page > 1 && (
+            {isFetching && cursor !== undefined && (
                 <div className="flex justify-center py-4 w-full">
                     <Spinner className="size-8 text-sky-500" />
                 </div>

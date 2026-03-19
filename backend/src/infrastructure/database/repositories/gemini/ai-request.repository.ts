@@ -58,7 +58,7 @@ export class AIRequestRepository extends BaseMongoRepository<AIRequest, AIReques
     }
 
     async findById(id: AIRequestId): Promise<AIRequest | null> {
-        const doc = await this.aiRequestModel.findById(id.toString()).exec();
+        const doc = await this.aiRequestModel.findById(id.toString()).lean().exec();
         return doc ? this.toDomain(doc) : null;
     }
 
@@ -72,6 +72,7 @@ export class AIRequestRepository extends BaseMongoRepository<AIRequest, AIReques
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(pagination.limit)
+                .lean()
                 .exec(),
             this.aiRequestModel.countDocuments(query).exec()
         ]);
@@ -92,6 +93,7 @@ export class AIRequestRepository extends BaseMongoRepository<AIRequest, AIReques
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(pagination.limit)
+                .lean()
                 .exec(),
             this.aiRequestModel.countDocuments(query).exec()
         ]);
@@ -134,6 +136,7 @@ export class AIRequestRepository extends BaseMongoRepository<AIRequest, AIReques
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(pagination.limit)
+                .lean()
                 .exec(),
             this.aiRequestModel.countDocuments(query).exec()
         ]);

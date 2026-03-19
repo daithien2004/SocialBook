@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
 import { DeleteGenreCommand } from './delete-genre.command';
@@ -17,13 +18,13 @@ export class DeleteGenreUseCase {
         const genre = await this.genreRepository.findById(genreId);
         
         if (!genre) {
-            throw new NotFoundException(ErrorMessages.GENRE_NOT_FOUND || 'Genre not found');
+            throw new NotFoundDomainException(ErrorMessages.GENRE_NOT_FOUND || 'Genre not found');
         }
 
         const booksCount = await this.bookRepository.countByGenre(genreId.toString()); 
         
         if (booksCount > 0) {
-            throw new ConflictException(`Không thể xóa thể loại này vì có ${booksCount} sách đang sử dụng`);
+            throw new ConflictDomainException(`Không thể xóa thể loại này vì có ${booksCount} sách đang sử dụng`);
         }
 
         await this.genreRepository.delete(genreId);

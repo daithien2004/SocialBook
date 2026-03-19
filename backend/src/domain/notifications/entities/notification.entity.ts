@@ -21,33 +21,36 @@ export interface NotificationMeta {
   [key: string]: any;
 }
 
+export interface NotificationProps {
+    userId: string;
+    title: string;
+    message: string;
+    type: NotificationType | string;
+    isRead: boolean;
+    sentAt: Date;
+    actionUrl?: string;
+    meta?: NotificationMeta;
+}
+
 export class Notification extends Entity<string> {
-    private constructor(
-        id: string,
-        public readonly userId: string,
-        private _title: string,
-        private _message: string,
-        private _type: NotificationType | string,
-        private _isRead: boolean,
-        private _sentAt: Date,
-        private _actionUrl?: string,
-        private _meta?: NotificationMeta,
-        createdAt?: Date,
-        updatedAt?: Date,
-    ) {
+    private _props: NotificationProps;
+
+    private constructor(id: string, props: NotificationProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
-    get title(): string { return this._title; }
-    get message(): string { return this._message; }
-    get type(): NotificationType | string { return this._type; }
-    get isRead(): boolean { return this._isRead; }
-    get sentAt(): Date { return this._sentAt; }
-    get actionUrl(): string | undefined { return this._actionUrl; }
-    get meta(): NotificationMeta | undefined { return this._meta; }
+    get title(): string { return this._props.title; }
+    get message(): string { return this._props.message; }
+    get type(): NotificationType | string { return this._props.type; }
+    get isRead(): boolean { return this._props.isRead; }
+    get sentAt(): Date { return this._props.sentAt; }
+    get actionUrl(): string | undefined { return this._props.actionUrl; }
+    get meta(): NotificationMeta | undefined { return this._props.meta; }
+    get userId(): string { return this._props.userId; }
 
     public markAsRead(): void {
-        this._isRead = true;
+        this._props.isRead = true;
         this.markAsUpdated();
     }
 
@@ -62,14 +65,16 @@ export class Notification extends Entity<string> {
     ): Notification {
         return new Notification(
             id,
-            userId,
-            title,
-            message,
-            type,
-            false,
-            new Date(),
-            actionUrl,
-            meta
+            {
+                userId,
+                title,
+                message,
+                type,
+                isRead: false,
+                sentAt: new Date(),
+                actionUrl,
+                meta
+            }
         );
     }
 
@@ -88,14 +93,16 @@ export class Notification extends Entity<string> {
     }): Notification {
         return new Notification(
             props.id,
-            props.userId,
-            props.title,
-            props.message,
-            props.type,
-            props.isRead,
-            props.sentAt,
-            props.actionUrl,
-            props.meta,
+            {
+                userId: props.userId,
+                title: props.title,
+                message: props.message,
+                type: props.type,
+                isRead: props.isRead,
+                sentAt: props.sentAt,
+                actionUrl: props.actionUrl,
+                meta: props.meta
+            },
             props.createdAt,
             props.updatedAt
         );

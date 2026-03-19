@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
@@ -6,6 +6,13 @@ import { ScraperFactory } from '@/infrastructure/scraper/factories/scraper.facto
 import { ScrapedBookData } from '@/domain/scraper/models/scraped-data.model';
 import { AuthorName } from '@/domain/authors/value-objects/author-name.vo';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
+import { Author } from '@/domain/authors/entities/author.entity';
+import { AuthorId } from '@/domain/authors/value-objects/author-id.vo';
+import { Genre } from '@/domain/genres/entities/genre.entity';
+import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
+import { Book } from '@/domain/books/entities/book.entity';
+import { BookId } from '@/domain/books/value-objects/book-id.vo';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import slugify from 'slugify';
 
 @Injectable()
@@ -17,6 +24,7 @@ export class ScrapeBookUseCase {
     private readonly bookRepository: IBookRepository,
     private readonly authorRepository: IAuthorRepository,
     private readonly genreRepository: IGenreRepository,
+    private readonly idGenerator: IIdGenerator,
   ) {}
 
   async execute(url: string): Promise<any> {
@@ -43,11 +51,11 @@ export class ScrapeBookUseCase {
     let author = await this.authorRepository.findByName(authorNameVO);
     
     if (!author) {
-       // Using 'any' cast as IAuthorRepository might strictly expect domain entities or specific methods
-       // Assuming specific repository implementation handles creation or we need to update interface
-       // For this refactor, we assume the repository or an underlying mechanism supports creation
-       // Ideally, we would have a 'create' method in IAuthorRepository taking an Author entity
-       author = await (this.authorRepository as any).create({ name: authorNameVO.toString() });
+        author = Author.create({
+            id: AuthorId.create(this.idGenerator.generate()),
+            name: authorNameVO.toString(),
+        });
+        await this.authorRepository.save(author);
     }
 
     // 2. Find or Create Genres
@@ -57,14 +65,14 @@ export class ScrapeBookUseCase {
             const genreNameVO = GenreName.create(genreNameStr);
             let genre = await this.genreRepository.findByName(genreNameVO);
             if (!genre) {
-                genre = await (this.genreRepository as any).create({
+                genre = Genre.create({
+                    id: GenreId.create(this.idGenerator.generate()),
                     name: genreNameStr,
-                    slug: slugify(genreNameStr, { lower: true, strict: true, locale: 'vi' }),
                 });
+                await this.genreRepository.save(genre);
             }
             if (genre) {
-                 // Genre.id is a GenreId value object, we need string for Book entity/schema
-                 genreIds.push(genre.id.toString());
+                  genreIds.push(genre.id.toString());
             }
         } catch (e) {
             this.logger.warn(`Skipping invalid genre name: ${genreNameStr}`);
@@ -76,21 +84,27 @@ export class ScrapeBookUseCase {
     let book = await this.bookRepository.findBySlug(slug);
     
     if (!book) {
-        book = await (this.bookRepository as any).create({
+        book = Book.create({
+            id: BookId.create(this.idGenerator.generate()),
             title: bookData.title,
-            slug,
-            authorId: author?.id.toString(),
+            authorId: author.id.toString(),
             genres: genreIds,
             description: bookData.description,
             coverUrl: bookData.coverUrl,
-            status: bookData.status,
+            status: this.mapStatus(bookData.status),
             tags: bookData.genres,
-            views: 0,
-            likes: 0
         });
+        await this.bookRepository.save(book);
     }
 
     return book;
+  }
+
+  private mapStatus(status: string): 'draft' | 'published' | 'completed' {
+    const s = status?.toLowerCase() || '';
+    if (s.includes('hoàn') || s.includes('complete')) return 'completed';
+    if (s.includes('đang') || s.includes('publish') || s.includes('ongoing')) return 'published';
+    return 'draft';
   }
 }
 

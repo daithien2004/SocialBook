@@ -62,6 +62,16 @@ export class Notification extends BaseSchema {
 export type NotificationDocument = HydratedDocument<Notification>;
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
-NotificationSchema.virtual('id').get(function () {
-  return this._id.toString();
-});
+// Lấy tất cả notification của user, mới nhất trước — query chính của findAllByUser
+NotificationSchema.index({ userId: 1, createdAt: -1 });
+
+// Tự động xóa notification cũ sau 30 ngày (2,592,000 giây)
+NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
+
+// Đếm / lọc notification chưa đọc — dùng bởi countUnread và findAllByUser(isRead)
+NotificationSchema.index({ userId: 1, isRead: 1 });
+
+NotificationSchema.index(
+  { 'userId': 1, 'type': 1, 'meta.actorId': 1, 'meta.targetId': 1 },
+  { unique: true }
+);

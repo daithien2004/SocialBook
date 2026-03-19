@@ -1,4 +1,5 @@
-import { Injectable, UnauthorizedException, ForbiddenException, ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { UnauthorizedDomainException, UserBannedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
@@ -68,17 +69,12 @@ export class GoogleAuthUseCase {
       // Handle existing user login
       if (!existingUser.isVerified) {
         this.logger.warn(`Google login failed: Account not verified for ${command.email}`);
-        throw new UnauthorizedException('Tài khoản chưa được xác thực');
+        throw new UnauthorizedDomainException('Tài khoản chưa được xác thực');
       }
 
       if (existingUser.isBanned) {
         this.logger.warn(`Google login failed: Account banned for ${command.email}`);
-        throw new ForbiddenException({
-          statusCode: 403,
-          message:
-            'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
-          error: 'USER_BANNED',
-        });
+        throw new UserBannedDomainException('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.');
       }
 
       if (existingUser.provider === 'local') {
@@ -117,8 +113,8 @@ export class GoogleAuthUseCase {
       };
     } catch (error) {
       if (
-        error instanceof UnauthorizedException ||
-        error instanceof ForbiddenException ||
+        error instanceof UnauthorizedDomainException ||
+        error instanceof UserBannedDomainException ||
         error instanceof ConflictException ||
         error instanceof InternalServerErrorException
       ) {

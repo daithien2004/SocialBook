@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { ModerateCommentCommand } from './moderate-comment.command';
@@ -19,7 +20,7 @@ export class ModerateCommentUseCase {
             // Find the comment
             const comment = await this.commentRepository.findById(commentId);
             if (!comment) {
-                throw new NotFoundException(ErrorMessages.COMMENT_NOT_FOUND);
+                throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
             }
 
             // Update moderation status

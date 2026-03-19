@@ -10,6 +10,12 @@ export interface PaginatedResult<T> {
   meta: PaginationMeta;
 }
 
+export interface CursorPaginatedResult<T> {
+  data: T[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export interface PaginationOptions {
   page: number;
   limit: number;

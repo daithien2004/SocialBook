@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, FilterQuery } from 'mongoose';
-import { ILikeRepository } from '@/domain/likes/repositories/like.repository.interface';
 import { Like } from '@/domain/likes/entities/like.entity';
-import { UserId } from '@/domain/likes/value-objects/user-id.vo';
+import { ILikeRepository } from '@/domain/likes/repositories/like.repository.interface';
 import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
+import { UserId } from '@/domain/likes/value-objects/user-id.vo';
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { LikeDocument } from '../../schemas/like.schema';
 import { LikeMapper } from './like.mapper';
 
@@ -22,9 +22,9 @@ interface LikePersistence {
 @Injectable()
 export class LikeRepository implements ILikeRepository {
     constructor(
-        @InjectModel('Like') 
+        @InjectModel('Like')
         private readonly likeModel: Model<LikeDocument>
-    ) {}
+    ) { }
 
     private toDomain(doc: LikeDocument): Like {
         return LikeMapper.toDomain(doc);
@@ -36,9 +36,9 @@ export class LikeRepository implements ILikeRepository {
 
     async save(like: Like): Promise<void> {
         const persistenceData = this.toPersistence(like);
-        
+
         await this.likeModel.findOneAndUpdate(
-            { 
+            {
                 userId: persistenceData.userId,
                 targetId: persistenceData.targetId,
                 targetType: persistenceData.targetType
@@ -53,8 +53,8 @@ export class LikeRepository implements ILikeRepository {
             userId: new Types.ObjectId(userId.toString()),
             targetId: new Types.ObjectId(targetId.toString()),
             targetType
-        }).exec();
-        
+        }).lean().exec();
+
         return doc ? this.toDomain(doc) : null;
     }
 
@@ -62,8 +62,8 @@ export class LikeRepository implements ILikeRepository {
         const docs = await this.likeModel.find({
             targetId: new Types.ObjectId(targetId.toString()),
             targetType
-        }).exec();
-        
+        }).lean().exec();
+
         return docs.map(doc => this.toDomain(doc));
     }
 
@@ -81,8 +81,8 @@ export class LikeRepository implements ILikeRepository {
             targetId: { $in: targetIds.map(id => new Types.ObjectId(id.toString())) },
             targetType,
             status: true
-        }).select('targetId').exec();
-        
+        }).select('targetId').lean().exec();
+
         return docs.map(doc => doc.targetId.toString());
     }
 
@@ -96,7 +96,7 @@ export class LikeRepository implements ILikeRepository {
             targetId: new Types.ObjectId(targetId.toString()),
             targetType
         });
-        
+
         return !!result;
     }
 }

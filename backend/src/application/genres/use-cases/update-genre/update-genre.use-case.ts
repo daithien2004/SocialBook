@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { Genre } from '@/domain/genres/entities/genre.entity';
 import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
@@ -17,7 +18,7 @@ export class UpdateGenreUseCase {
         const genre = await this.genreRepository.findById(genreId);
         
         if (!genre) {
-            throw new NotFoundException(ErrorMessages.GENRE_NOT_FOUND || 'Genre not found');
+            throw new NotFoundDomainException(ErrorMessages.GENRE_NOT_FOUND || 'Genre not found');
         }
 
         if (command.name && command.name !== genre.name.toString()) {
@@ -25,7 +26,7 @@ export class UpdateGenreUseCase {
             const exists = await this.genreRepository.existsByName(newName, genreId);
             
             if (exists) {
-                throw new ConflictException(ErrorMessages.GENRE_EXISTS || 'Genre name already exists');
+                throw new ConflictDomainException(ErrorMessages.GENRE_EXISTS || 'Genre name already exists');
             }
             
             genre.changeName(command.name);

@@ -17,6 +17,7 @@ import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
 import { ExternalServicesModule } from '@/infrastructure/external/external-services.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     LibraryRepositoryModule,
     ExternalServicesModule,
     IdGeneratorModule,
+    PasswordHasherModule,
   ],
   providers: [
     CheckUserExistUseCase,

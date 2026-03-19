@@ -1,4 +1,5 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { User } from '@/domain/users/entities/user.entity';
@@ -6,30 +7,32 @@ import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { CreateUserCommand } from './create-user.command';
 
-import * as bcrypt from 'bcrypt';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class CreateUserUseCase {
     constructor(
         private readonly userRepository: IUserRepository,
         private readonly idGenerator: IIdGenerator,
+        @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
     ) {}
 
     async execute(command: CreateUserCommand): Promise<User> {
         const emailVO = UserEmail.create(command.email);
         const emailExists = await this.userRepository.existsByEmail(emailVO);
         if (emailExists) {
-            throw new ConflictException('Email already exists');
+            throw new ConflictDomainException('Email already exists');
         }
 
         const usernameExists = await this.userRepository.existsByUsername(command.username);
         if (usernameExists) {
-            throw new ConflictException('Username already exists');
+            throw new ConflictDomainException('Username already exists');
         }
 
         let hashedPassword = command.password;
         if (command.password) {
-            hashedPassword = await bcrypt.hash(command.password, 10);
+            hashedPassword = await this.passwordHasher.hash(command.password);
         }
 
         const user = User.create({

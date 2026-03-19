@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { VerifyOtpUseCase } from '@/application/otp/use-cases/verify-otp.use-case';
@@ -11,6 +12,7 @@ export class ResetPasswordUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly verifyOtpUseCase: VerifyOtpUseCase,
+    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
   ) { }
 
   async execute(command: ResetPasswordCommand): Promise<string> {
@@ -20,7 +22,7 @@ export class ResetPasswordUseCase {
       throw new BadRequestException('Người dùng không tồn tại');
     }
 
-    const isSamePassword = await bcrypt.compare(command.newPassword, user.password!);
+    const isSamePassword = await this.passwordHasher.compare(command.newPassword, user.password!);
     if (isSamePassword) {
       throw new BadRequestException(
         'Mật khẩu mới phải khác mật khẩu hiện tại',
@@ -37,7 +39,7 @@ export class ResetPasswordUseCase {
       throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
     }
 
-    const hashPassword = await bcrypt.hash(command.newPassword, 10);
+    const hashPassword = await this.passwordHasher.hash(command.newPassword);
     user.updatePassword(hashPassword);
     await this.userRepository.save(user);
 

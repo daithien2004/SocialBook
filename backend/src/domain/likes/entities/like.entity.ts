@@ -3,17 +3,19 @@ import { TargetId } from '../value-objects/target-id.vo';
 import { TargetType } from '../value-objects/target-type.vo';
 import { UserId } from '../value-objects/user-id.vo';
 
+export interface LikeProps {
+    userId: UserId;
+    targetId: TargetId;
+    targetType: TargetType;
+    status: boolean;
+}
+
 export class Like extends Entity<string> {
-    private constructor(
-        id: string,
-        private _userId: UserId,
-        private _targetId: TargetId,
-        private _targetType: TargetType,
-        private _status: boolean,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
+    private _props: LikeProps;
+
+    private constructor(id: string, props: LikeProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -25,10 +27,12 @@ export class Like extends Entity<string> {
     }): Like {
         return new Like(
             props.id,
-            UserId.create(props.userId),
-            TargetId.create(props.targetId),
-            props.targetType,
-            props.status ?? true
+            {
+                userId: UserId.create(props.userId),
+                targetId: TargetId.create(props.targetId),
+                targetType: props.targetType,
+                status: props.status ?? true
+            }
         );
     }
 
@@ -43,47 +47,38 @@ export class Like extends Entity<string> {
     }): Like {
         return new Like(
             props.id,
-            UserId.create(props.userId),
-            TargetId.create(props.targetId),
-            props.targetType,
-            props.status,
+            {
+                userId: UserId.create(props.userId),
+                targetId: TargetId.create(props.targetId),
+                targetType: props.targetType,
+                status: props.status
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
-    get userId(): UserId {
-        return this._userId;
-    }
-
-    get targetId(): TargetId {
-        return this._targetId;
-    }
-
-    get targetType(): TargetType {
-        return this._targetType;
-    }
-
-    get status(): boolean {
-        return this._status;
-    }
+    get userId(): UserId { return this._props.userId; }
+    get targetId(): TargetId { return this._props.targetId; }
+    get targetType(): TargetType { return this._props.targetType; }
+    get status(): boolean { return this._props.status; }
 
     toggle(): void {
-        this._status = !this._status;
+        this._props.status = !this._props.status;
         this.markAsUpdated();
     }
 
     like(): void {
-        this._status = true;
+        this._props.status = true;
         this.markAsUpdated();
     }
 
     unlike(): void {
-        this._status = false;
+        this._props.status = false;
         this.markAsUpdated();
     }
 
     isLiked(): boolean {
-        return this._status;
+        return this._props.status;
     }
 }

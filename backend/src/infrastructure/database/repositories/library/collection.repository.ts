@@ -24,7 +24,7 @@ export class CollectionRepository implements ICollectionRepository {
     }
 
     async findById(id: string): Promise<Collection | null> {
-        const doc = await this.collectionModel.findById(new Types.ObjectId(id)).exec();
+        const doc = await this.collectionModel.findById(new Types.ObjectId(id)).lean().exec();
         return doc ? CollectionMapper.toDomain(doc) : null;
     }
 
@@ -32,6 +32,7 @@ export class CollectionRepository implements ICollectionRepository {
         const docs = await this.collectionModel
             .find({ userId: new Types.ObjectId(userId) })
             .sort({ name: 1 })
+            .lean()
             .exec();
         return docs.map(doc => CollectionMapper.toDomain(doc));
     }
@@ -40,13 +41,13 @@ export class CollectionRepository implements ICollectionRepository {
         const doc = await this.collectionModel.findOne({
             userId: new Types.ObjectId(userId),
             name: name
-        }).exec();
+        }).lean().exec();
         return doc ? CollectionMapper.toDomain(doc) : null;
     }
 
     async findByIds(ids: string[]): Promise<Collection[]> {
         const objectIds = ids.map(id => new Types.ObjectId(id));
-        const docs = await this.collectionModel.find({ _id: { $in: objectIds } }).exec();
+        const docs = await this.collectionModel.find({ _id: { $in: objectIds } }).lean().exec();
         return docs.map(doc => CollectionMapper.toDomain(doc));
     }
 
