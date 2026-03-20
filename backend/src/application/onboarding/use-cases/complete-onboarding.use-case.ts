@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IOnboardingRepository } from '@/domain/onboarding/repositories/onboarding.repository.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -26,7 +27,7 @@ export class CompleteOnboardingUseCase {
   async execute(userId: string) {
     const onboarding = await this.onboardingRepository.findByUserId(userId);
     if (!onboarding) {
-      throw new NotFoundException(ErrorMessages.ONBOARDING_NOT_FOUND);
+      throw new NotFoundDomainException(ErrorMessages.ONBOARDING_NOT_FOUND);
     }
 
     onboarding.complete();

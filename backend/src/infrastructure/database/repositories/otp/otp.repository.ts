@@ -39,7 +39,7 @@ export class OtpRepository implements IOtpRepository {
 
         // TTL is managed by Redis — use a fixed expiry approximation
         const expiredAt = new Date(Date.now() + this.OTP_EXPIRY * 1000);
-        return new Otp(email, code, expiredAt);
+        return new Otp({ email, code, expiredAt });
     }
 
     async deleteByEmail(email: string): Promise<void> {

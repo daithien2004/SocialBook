@@ -2,7 +2,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { Logger } from '@/shared/logger';
@@ -14,6 +15,7 @@ export class TokenService {
     private readonly configService: ConfigService,
     private readonly userRepository: IUserRepository,
     private readonly logger: Logger,
+    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
   ) {
     this.logger.setContext(TokenService.name);
   }
@@ -40,7 +42,7 @@ export class TokenService {
       }),
     ]);
 
-    const hashedRt = await bcrypt.hash(refreshToken, 10);
+    const hashedRt = await this.passwordHasher.hash(refreshToken);
     
     // Update hashed RT
     const id = UserId.create(userId);

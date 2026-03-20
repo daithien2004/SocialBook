@@ -1,9 +1,12 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { ScraperFactory } from '@/infrastructure/scraper/factories/scraper.factory';
 import { ScrapedChapterData } from '@/domain/scraper/models/scraped-data.model';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
+import { Chapter } from '@/domain/chapters/entities/chapter.entity';
+import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
+import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
 @Injectable()
 export class ScrapeChapterUseCase {
@@ -13,9 +16,10 @@ export class ScrapeChapterUseCase {
     private readonly scraperFactory: ScraperFactory,
     private readonly chapterRepository: IChapterRepository,
     private readonly bookRepository: IBookRepository,
+    private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute(bookIdStr: string, chapterUrl: string, orderIndex: number): Promise<any> {
+  async execute(bookIdStr: string, chapterUrl: string, orderIndexNum: number): Promise<any> {
     try {
       const bookId = BookId.create(bookIdStr);
       const book = await this.bookRepository.findById(bookId);
@@ -27,15 +31,16 @@ export class ScrapeChapterUseCase {
       // Check existing
       const slug = this.extractSlug(chapterUrl) || chapterData.title; 
       
-      // Save logic 
-       return await (this.chapterRepository as any).create({
-           bookId: bookIdStr, 
-           title: chapterData.title,
-           slug: slug,
-           paragraphs: chapterData.paragraphs,
-           orderIndex: orderIndex,
-           content: chapterData.content
-       });
+      const chapter = Chapter.create({
+          id: ChapterId.create(this.idGenerator.generate()),
+          bookId: bookIdStr, 
+          title: chapterData.title,
+          paragraphs: (chapterData.paragraphs || []).map(p => ({ content: p.content })),
+          orderIndex: orderIndexNum,
+      });
+
+      await this.chapterRepository.save(chapter);
+      return chapter;
 
     } catch (error) {
       this.logger.error(`Failed to scrape chapter ${chapterUrl}: ${error.message}`);

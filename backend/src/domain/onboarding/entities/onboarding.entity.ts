@@ -8,49 +8,54 @@ export interface ReadingTime {
     weekend: boolean;
 }
 
+export interface OnboardingProps {
+    userId: string;
+    isCompleted: boolean;
+    currentStep: number;
+    favoriteGenres: string[];
+    readingGoalType: string;
+    readingGoalTarget: number;
+    readingGoalUnit: string;
+    readingTime: ReadingTime;
+    completedAt?: Date;
+}
+
 export class Onboarding extends Entity<string> {
-    private constructor(
-        id: string,
-        public readonly userId: string,
-        private _isCompleted: boolean,
-        private _currentStep: number,
-        private _favoriteGenres: string[],
-        private _readingGoalType: string,
-        private _readingGoalTarget: number,
-        private _readingGoalUnit: string,
-        private _readingTime: ReadingTime,
-        private _completedAt?: Date,
-        createdAt?: Date,
-        updatedAt?: Date,
-    ) {
+    private _props: OnboardingProps;
+
+    private constructor(id: string, props: OnboardingProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
-    get isCompleted(): boolean { return this._isCompleted; }
-    get currentStep(): number { return this._currentStep; }
-    get favoriteGenres(): string[] { return [...this._favoriteGenres]; }
-    get readingGoalType(): string { return this._readingGoalType; }
-    get readingGoalTarget(): number { return this._readingGoalTarget; }
-    get readingGoalUnit(): string { return this._readingGoalUnit; }
-    get readingTime(): ReadingTime { return { ...this._readingTime }; }
-    get completedAt(): Date | undefined { return this._completedAt; }
+    get isCompleted(): boolean { return this._props.isCompleted; }
+    get currentStep(): number { return this._props.currentStep; }
+    get favoriteGenres(): string[] { return [...this._props.favoriteGenres]; }
+    get readingGoalType(): string { return this._props.readingGoalType; }
+    get readingGoalTarget(): number { return this._props.readingGoalTarget; }
+    get readingGoalUnit(): string { return this._props.readingGoalUnit; }
+    get readingTime(): ReadingTime { return { ...this._props.readingTime }; }
+    get completedAt(): Date | undefined { return this._props.completedAt; }
+    get userId(): string { return this._props.userId; }
 
     public static create(id: string, userId: string): Onboarding {
         return new Onboarding(
             id,
-            userId,
-            false,
-            1,
-            [],
-            'daily',
-            0,
-            'pages',
             {
-                morning: false,
-                afternoon: false,
-                evening: false,
-                night: false,
-                weekend: false,
+                userId,
+                isCompleted: false,
+                currentStep: 1,
+                favoriteGenres: [],
+                readingGoalType: 'daily',
+                readingGoalTarget: 0,
+                readingGoalUnit: 'pages',
+                readingTime: {
+                    morning: false,
+                    afternoon: false,
+                    evening: false,
+                    night: false,
+                    weekend: false,
+                }
             }
         );
     }
@@ -71,40 +76,42 @@ export class Onboarding extends Entity<string> {
     }): Onboarding {
         return new Onboarding(
             props.id,
-            props.userId,
-            props.isCompleted,
-            props.currentStep,
-            props.favoriteGenres,
-            props.readingGoalType,
-            props.readingGoalTarget,
-            props.readingGoalUnit,
-            props.readingTime,
-            props.completedAt,
+            {
+                userId: props.userId,
+                isCompleted: props.isCompleted,
+                currentStep: props.currentStep,
+                favoriteGenres: props.favoriteGenres,
+                readingGoalType: props.readingGoalType,
+                readingGoalTarget: props.readingGoalTarget,
+                readingGoalUnit: props.readingGoalUnit,
+                readingTime: props.readingTime,
+                completedAt: props.completedAt
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
     public updateStep(step: number, data: any): void {
-        if (this._isCompleted) return;
+        if (this._props.isCompleted) return;
 
         if (step === 1 && data.favoriteGenres) {
-            this._favoriteGenres = data.favoriteGenres;
+            this._props.favoriteGenres = data.favoriteGenres;
         } else if (step === 2 && data.readingGoal) {
-            this._readingGoalType = data.readingGoal.type;
-            this._readingGoalTarget = data.readingGoal.amount;
-            this._readingGoalUnit = data.readingGoal.unit;
+            this._props.readingGoalType = data.readingGoal.type;
+            this._props.readingGoalTarget = data.readingGoal.amount;
+            this._props.readingGoalUnit = data.readingGoal.unit;
         } else if (step === 3 && data.readingTime) {
-            this._readingTime = data.readingTime;
+            this._props.readingTime = data.readingTime;
         }
 
-        this._currentStep = step + 1;
+        this._props.currentStep = step + 1;
         this.markAsUpdated();
     }
 
     public complete(): void {
-        this._isCompleted = true;
-        this._completedAt = new Date();
+        this._props.isCompleted = true;
+        this._props.completedAt = new Date();
         this.markAsUpdated();
     }
 }

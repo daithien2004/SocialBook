@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserGamificationRepository } from '@/domain/gamification/repositories/user-gamification.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { UserGamification } from '@/domain/gamification/entities/user-gamification.entity';

@@ -10,19 +10,21 @@ export interface AchievementRequirement {
     condition?: string;
 }
 
+export interface AchievementProps {
+    code: AchievementCode;
+    name: string;
+    description: string;
+    category: AchievementCategory;
+    requirement: AchievementRequirement;
+    isActive: boolean;
+}
+
 export class Achievement extends Entity<AchievementId> {
-    private constructor(
-        id: AchievementId,
-        private _code: AchievementCode,
-        private _name: string,
-        private _description: string,
-        private _category: AchievementCategory,
-        private _requirement: AchievementRequirement,
-        private _isActive: boolean,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
+    private _props: AchievementProps;
+
+    private constructor(id: AchievementId, props: AchievementProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -35,12 +37,14 @@ export class Achievement extends Entity<AchievementId> {
     }): Achievement {
         return new Achievement(
             props.id,
-            AchievementCode.create(props.code),
-            props.name.trim(),
-            props.description.trim(),
-            props.category,
-            props.requirement,
-            true
+            {
+                code: AchievementCode.create(props.code),
+                name: props.name.trim(),
+                description: props.description.trim(),
+                category: props.category,
+                requirement: props.requirement,
+                isActive: true
+            }
         );
     }
 
@@ -57,71 +61,56 @@ export class Achievement extends Entity<AchievementId> {
     }): Achievement {
         return new Achievement(
             AchievementId.create(props.id),
-            AchievementCode.create(props.code),
-            props.name,
-            props.description,
-            props.category,
-            props.requirement,
-            props.isActive,
+            {
+                code: AchievementCode.create(props.code),
+                name: props.name,
+                description: props.description,
+                category: props.category,
+                requirement: props.requirement,
+                isActive: props.isActive
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
-    get code(): AchievementCode {
-        return this._code;
-    }
-
-    get name(): string {
-        return this._name;
-    }
-
-    get description(): string {
-        return this._description;
-    }
-
-    get category(): AchievementCategory {
-        return this._category;
-    }
-
-    get requirement(): AchievementRequirement {
-        return this._requirement;
-    }
-
-    get isActive(): boolean {
-        return this._isActive;
-    }
+    get code(): AchievementCode { return this._props.code; }
+    get name(): string { return this._props.name; }
+    get description(): string { return this._props.description; }
+    get category(): AchievementCategory { return this._props.category; }
+    get requirement(): AchievementRequirement { return this._props.requirement; }
+    get isActive(): boolean { return this._props.isActive; }
 
     updateName(name: string): void {
-        this._name = name.trim();
+        this._props.name = name.trim();
         this.markAsUpdated();
     }
 
     updateDescription(description: string): void {
-        this._description = description.trim();
+        this._props.description = description.trim();
         this.markAsUpdated();
     }
 
     updateRequirement(requirement: AchievementRequirement): void {
-        this._requirement = requirement;
+        this._props.requirement = requirement;
         this.markAsUpdated();
     }
 
     activate(): void {
-        this._isActive = true;
+        this._props.isActive = true;
         this.markAsUpdated();
     }
 
     deactivate(): void {
-        this._isActive = false;
+        this._props.isActive = false;
         this.markAsUpdated();
     }
 
     checkUnlockCondition(progress: number): boolean {
-        return progress >= this._requirement.value && this._isActive;
+        return progress >= this._props.requirement.value && this._props.isActive;
     }
 
     getProgressPercentage(currentValue: number): number {
-        return Math.min(100, (currentValue / this._requirement.value) * 100);
+        return Math.min(100, (currentValue / this._props.requirement.value) * 100);
     }
 }

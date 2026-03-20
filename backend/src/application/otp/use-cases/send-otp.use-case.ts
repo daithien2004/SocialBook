@@ -1,4 +1,5 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { MailerService } from '@nestjs-modules/mailer';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/otp/entities/otp.entity';
@@ -24,14 +25,14 @@ export class SendOtpUseCase {
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         const expiredAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
 
-        const otp = new Otp(email, otpCode, expiredAt);
+        const otp = new Otp({ email, code: otpCode, expiredAt });
 
         // 3. Save OTP
         try {
             await this.otpRepository.save(otp);
         } catch (error) {
             this.logger.error(`Error saving OTP for ${email}: ${error.message}`);
-            throw new InternalServerErrorException('Failed to save OTP');
+            throw new InternalServerDomainException('Failed to save OTP');
         }
 
         // 4. Send Email
@@ -55,7 +56,7 @@ export class SendOtpUseCase {
             });
         } catch (error) {
             this.logger.error(`Error sending email to ${email}: ${error.message}`);
-            throw new InternalServerErrorException('Failed to send OTP email');
+            throw new InternalServerDomainException('Failed to send OTP email');
         }
 
         return otpCode;

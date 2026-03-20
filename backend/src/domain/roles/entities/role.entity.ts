@@ -1,21 +1,28 @@
 import { Entity } from '@/shared/domain/entity.base';
 
+export interface RoleProps {
+    name: string;
+}
+
 export class Role extends Entity<string> {
+    private _props: RoleProps;
+
     private constructor(
         id: string,
-        private _name: string,
+        props: RoleProps,
         createdAt?: Date,
         updatedAt?: Date,
     ) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
-    get name(): string { return this._name; }
+    get name(): string { return this._props.name; }
 
-    static create(id: string, name: string): Role {
+    static create(props: { id: string; name: string }): Role {
         return new Role(
-            id,
-            name
+            props.id,
+            { name: props.name }
         );
     }
 
@@ -27,14 +34,14 @@ export class Role extends Entity<string> {
     }): Role {
         return new Role(
             props.id,
-            props.name,
+            { name: props.name },
             props.createdAt,
             props.updatedAt,
         );
     }
 
     updateName(name: string): void {
-        this._name = name;
+        this._props.name = name;
         this.markAsUpdated();
     }
 }

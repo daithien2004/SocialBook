@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { ApprovePostCommand } from './approve-post.command';
@@ -11,10 +12,10 @@ export class ApprovePostUseCase {
 
   async execute(command: ApprovePostCommand) {
     const post = await this.postRepository.findById(command.postId);
-    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
+    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
     if (!post.isFlagged) {
-      throw new BadRequestException('Post is not flagged');
+      throw new BadRequestDomainException('Post is not flagged');
     }
 
     post.approve();

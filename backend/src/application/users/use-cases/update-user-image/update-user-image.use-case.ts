@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
@@ -13,14 +14,14 @@ export class UpdateUserImageUseCase {
 
     async execute(command: UpdateUserImageCommand, file: Express.Multer.File): Promise<{ url: string }> {
         if (!file) {
-            throw new BadRequestException('File is required');
+            throw new BadRequestDomainException('File is required');
         }
 
         const userId = UserId.create(command.userId);
         const user = await this.userRepository.findById(userId);
 
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundDomainException('User not found');
         }
 
         const url = await this.mediaService.uploadImage(file);

@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { NotFoundDomainException, ForbiddenDomainException } from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { DeleteCommentCommand } from './delete-comment.command';
@@ -19,13 +20,13 @@ export class DeleteCommentUseCase {
             // Find the comment
             const comment = await this.commentRepository.findById(commentId);
             if (!comment) {
-                throw new NotFoundException(ErrorMessages.COMMENT_NOT_FOUND);
+                throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
             }
 
             // Check if user can delete this comment
             const canDelete = command.isAdmin || comment.canBeDeleted(command.userId);
             if (!canDelete) {
-                throw new ForbiddenException('You cannot delete this comment');
+                throw new ForbiddenDomainException('You cannot delete this comment');
             }
 
             // Delete the comment

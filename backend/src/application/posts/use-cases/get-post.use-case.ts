@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
@@ -13,7 +14,7 @@ export class GetPostUseCase {
   async execute(query: GetPostQuery): Promise<Post> {
     const post = await this.postRepository.findById(query.postId);
     if (!post || post.isFlagged) {
-      throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
+      throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
     }
     return post;
   }

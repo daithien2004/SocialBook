@@ -3,16 +3,18 @@ import { GenreId } from '../value-objects/genre-id.vo';
 import { GenreName } from '../value-objects/genre-name.vo';
 import slugify from 'slugify';
 
+export interface GenreProps {
+    name: GenreName;
+    slug: string;
+    description: string;
+}
+
 export class Genre extends Entity<GenreId> {
-    private constructor(
-        id: GenreId,           
-        private _name: GenreName,              
-        private _slug: string,                
-        private _description: string,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
+    private _props: GenreProps;
+
+    private constructor(id: GenreId, props: GenreProps, createdAt?: Date, updatedAt?: Date) {
         super(id, createdAt, updatedAt);
+        this._props = props;
     }
 
     static create(props: {
@@ -25,9 +27,11 @@ export class Genre extends Entity<GenreId> {
         
         return new Genre(
             props.id,
-            name,
-            slug,
-            props.description?.trim() || ''
+            {
+                name,
+                slug,
+                description: props.description?.trim() || ''
+            }
         );
     }
 
@@ -41,35 +45,29 @@ export class Genre extends Entity<GenreId> {
     }): Genre {
         return new Genre(
             GenreId.create(props.id),
-            GenreName.create(props.name),
-            props.slug,
-            props.description,
+            {
+                name: GenreName.create(props.name),
+                slug: props.slug,
+                description: props.description
+            },
             props.createdAt,
             props.updatedAt
         );
     }
 
-    get name(): GenreName {
-        return this._name;
-    }
-
-    get slug(): string {
-        return this._slug;
-    }
-
-    get description(): string {
-        return this._description;
-    }
+    get name(): GenreName { return this._props.name; }
+    get slug(): string { return this._props.slug; }
+    get description(): string { return this._props.description; }
 
     changeName(newName: string): void {
         const name = GenreName.create(newName);
-        this._name = name;
-        this._slug = Genre.generateSlug(newName);
+        this._props.name = name;
+        this._props.slug = Genre.generateSlug(newName);
         this.markAsUpdated();
     }
 
     updateDescription(description: string): void {
-        this._description = description.trim();
+        this._props.description = description.trim();
         this.markAsUpdated();
     }
 

@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException, ConflictDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { Author } from '@/domain/authors/entities/author.entity';
 import { AuthorId } from '@/domain/authors/value-objects/author-id.vo';
@@ -17,7 +18,7 @@ export class UpdateAuthorUseCase {
         
         const author = await this.authorRepository.findById(authorId);
         if (!author) {
-            throw new NotFoundException(ErrorMessages.AUTHOR_NOT_FOUND);
+            throw new NotFoundDomainException(ErrorMessages.AUTHOR_NOT_FOUND);
         }
 
         // Check if name is being updated and if it conflicts with existing author
@@ -26,7 +27,7 @@ export class UpdateAuthorUseCase {
             const exists = await this.authorRepository.existsByName(newName, authorId);
             
             if (exists) {
-                throw new ConflictException(ErrorMessages.AUTHOR_EXISTS);
+                throw new ConflictDomainException(ErrorMessages.AUTHOR_EXISTS);
             }
             
             author.changeName(command.name);

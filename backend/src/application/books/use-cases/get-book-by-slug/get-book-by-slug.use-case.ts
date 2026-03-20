@@ -1,7 +1,8 @@
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
-import { BadRequestException, Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { BadRequestDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
 import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
@@ -19,7 +20,7 @@ export class GetBookBySlugUseCase {
 
     async execute(query: GetBookBySlugQuery): Promise<BookDetailReadModel> {
         if (!query.slug) {
-            throw new BadRequestException('Slug cannot be empty');
+            throw new BadRequestDomainException('Slug cannot be empty');
         }
 
         const cacheKey = `books:slug:${query.slug}`;
@@ -38,7 +39,7 @@ export class GetBookBySlugUseCase {
             const book = await this.bookQueryProvider.findDetailBySlug(query.slug);
 
             if (!book) {
-                throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+                throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
             }
 
             // 3. Set vào cache

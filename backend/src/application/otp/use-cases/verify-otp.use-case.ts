@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestDomainException, InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
 import { VerifyOtpCommand } from './verify-otp.command';
 
@@ -17,11 +18,11 @@ export class VerifyOtpUseCase {
             const otp = await this.otpRepository.findByEmail(email);
 
             if (!otp) {
-                throw new BadRequestException('OTP not found or expired');
+                throw new BadRequestDomainException('OTP not found or expired');
             }
 
             if (otp.code !== inputOtp) {
-                throw new BadRequestException('Invalid OTP');
+                throw new BadRequestDomainException('Invalid OTP');
             }
 
             // If valid, delete the OTP to prevent reuse and clear rate limit
@@ -29,9 +30,9 @@ export class VerifyOtpUseCase {
 
             return true;
         } catch (error) {
-            if (error instanceof BadRequestException) throw error;
+            if (error instanceof BadRequestDomainException) throw error;
             this.logger.error(`Error verifying OTP for ${email}: ${error.message}`);
-            throw new InternalServerErrorException('Failed to verify OTP');
+            throw new InternalServerDomainException('Failed to verify OTP');
         }
     }
 }

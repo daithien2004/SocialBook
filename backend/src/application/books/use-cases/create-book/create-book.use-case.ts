@@ -1,4 +1,5 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Book } from '@/domain/books/entities/book.entity';
@@ -20,7 +21,7 @@ export class CreateBookUseCase {
     const exists = await this.bookRepository.existsByTitle(title);
 
     if (exists) {
-      throw new ConflictException('Book with this title already exists');
+      throw new ConflictDomainException('Book with this title already exists');
     }
 
     // Validate that genres array is not empty and has max 5 items

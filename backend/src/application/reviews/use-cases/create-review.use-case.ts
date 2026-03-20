@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BadRequestDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { CreateReviewDto } from '@/presentation/reviews/dto/create-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
@@ -17,14 +18,14 @@ export class CreateReviewUseCase {
     // Check intersection
     const exists = await this.reviewRepository.existsByUserAndBook(userId, dto.bookId);
     if (exists) {
-        throw new ConflictException('Review already exists');
+        throw new ConflictDomainException('Review already exists');
     }
 
     // Content Moderation
     const moderationResult = await this.checkContentUseCase.execute(dto.content);
     if (!moderationResult.isSafe) {
       const reason = moderationResult.reason || 'Content is not safe';
-      throw new BadRequestException(`Review rejected: ${reason}`);
+      throw new BadRequestDomainException(`Review rejected: ${reason}`);
     }
 
     const review = Review.create({

@@ -27,7 +27,7 @@ export class DeleteBookUseCase {
 
         await this.bookRepository.softDelete(bookId);
 
-        // Ghi DB xong mới xóa cache — đúng thứ tự
+        // Ghi DB xong m?i x�a cache � d�ng th? t?
         await this.cache.del(`books:detail:${command.id}`);
         await this.cache.del(`books:slug:${book.slug.toString()}`);
     }

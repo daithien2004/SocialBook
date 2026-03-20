@@ -1,4 +1,5 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BadRequestDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { UpdateReviewDto } from '@/presentation/reviews/dto/update-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
@@ -13,11 +14,11 @@ export class UpdateReviewUseCase {
   async execute(userId: string, reviewId: string, dto: UpdateReviewDto): Promise<any> {
     const review = await this.reviewRepository.findById(reviewId);
     if (!review) {
-      throw new NotFoundException('Review not found');
+      throw new NotFoundDomainException('Review not found');
     }
 
     if (review.userId !== userId) {
-      throw new BadRequestException('You can only update your own review');
+      throw new BadRequestDomainException('You can only update your own review');
     }
 
     let updated = false;
@@ -25,7 +26,7 @@ export class UpdateReviewUseCase {
     if (dto.content !== undefined) {
       const moderationResult = await this.checkContentUseCase.execute(dto.content);
       if (!moderationResult.isSafe) {
-         throw new BadRequestException(`Content rejected: ${moderationResult.reason}`);
+         throw new BadRequestDomainException(`Content rejected: ${moderationResult.reason}`);
       }
       review.updateContent(dto.content);
       updated = true;
