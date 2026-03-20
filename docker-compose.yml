@@ -59,6 +59,15 @@ services:
     volumes:
       - redis_data:/data
 
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: socialbook-redis-insight
+    restart: unless-stopped
+    ports:
+      - '5540:5540'
+    depends_on:
+      - redis
+
   chroma:
     image: chromadb/chroma:latest
     container_name: socialbook-chroma

@@ -1,15 +1,18 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, Inject } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
+import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
 
 @Injectable()
 export class UpdateBookUseCase {
     constructor(
-        private readonly bookRepository: IBookRepository
+        private readonly bookRepository: IBookRepository,
+        @Inject(CACHE_SERVICE) private readonly cache: ICacheService,
     ) {}
 
     async execute(command: UpdateBookCommand): Promise<Book> {
@@ -69,6 +72,11 @@ export class UpdateBookUseCase {
         }
 
         await this.bookRepository.save(book);
+
+        // Ghi DB xong mới xóa cache — đúng thứ tự
+        // Xóa cả 2 key vì frontend có thể dùng id hoặc slug
+        await this.cache.del(`books:detail:${command.id}`);
+        await this.cache.del(`books:slug:${book.slug.toString()}`);
 
         return book;
     }

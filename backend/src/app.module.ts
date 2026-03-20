@@ -1,5 +1,5 @@
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { CacheModule } from '@/shared/cache/redis.module';
+import { CacheInfrastructureModule } from '@/infrastructure/cache/cache-infrastructure.module';
 import { LoggerModule } from '@/shared/logger/logger.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { MailerModule } from '@nestjs-modules/mailer';
@@ -88,7 +88,7 @@ import { PresentationModule } from './presentation/presentation.module';
       },
     ]),
     EventEmitterModule.forRoot(),
-    CacheModule,
+    CacheInfrastructureModule,
     LoggerModule,
     // Clean Architecture - 3 layers
     InfrastructureModule,
