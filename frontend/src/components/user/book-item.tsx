@@ -10,10 +10,13 @@ interface BookItemProps {
     authorName: string;
     bookImage: string;
     slug: string;
+    showStats?: boolean;
 }
 
 export function BookItem(props: BookItemProps) {
-    const { data: stats } = useGetBookStatsQuery(props.bookId);
+    const { data: stats } = useGetBookStatsQuery(props.bookId, {
+        skip: props.showStats === false,
+    });
     const router = useRouter();
 
     return (
@@ -60,6 +63,7 @@ export function BookItem(props: BookItemProps) {
                         {props.authorName}
                     </p>
 
+                    {props.showStats !== false && (
                     <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-gray-500">
                         <div className="flex items-center gap-1">
                             <Eye className="h-4 w-3 relative -top-[0.5px]" />
@@ -78,10 +82,11 @@ export function BookItem(props: BookItemProps) {
                         <div className="flex items-center gap-1">
                             <List className="h-4 w-3 relative -top-[0.5px]" />
                             <span className="font-serif text-[12px]">
-                {formatNumber(stats?.chapters)}
+                {formatNumber(stats?.chapterCount)}
               </span>
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,49 +1,31 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useLazySearchUsersQuery } from '@/features/users/api/usersApi';
 import { useRouter } from "next/navigation";
-
-interface User {
-    id: string;
-    username: string;
-    avatar?: string;
-}
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function UserSearchSidebar() {
     const [keyword, setKeyword] = useState('');
-    const [users, setUsers] = useState<User[]>([]);
+    const debouncedKeyword = useDebounce(keyword, 300);
     const route = useRouter();
     const [triggerSearch, {data, isFetching}] = useLazySearchUsersQuery();
+
     useEffect(() => {
-        if (!keyword.trim()) {
-            setUsers([]);
+        if (!debouncedKeyword.trim()) {
             return;
         }
 
-        const timeout = setTimeout(() => {
-            triggerSearch({
-                keyword,
-                current: 1,
-                pageSize: 5,
-            });
-        }, 300);
+        triggerSearch({
+            keyword: debouncedKeyword,
+            current: 1,
+            pageSize: 5,
+        });
+    }, [debouncedKeyword, triggerSearch]);
 
-        return () => clearTimeout(timeout);
-    }, [keyword, triggerSearch]);
-
-    useEffect(() => {
-        if (!data?.data) return;
-
-        const mappedUsers: User[] = data.data.map((u) => ({
-            id: u.id,
-            username: u.username,
-            avatar: u.image,
-        }));
-
-        setUsers(mappedUsers);
-    }, [data]);
+    const users = debouncedKeyword.trim() ? (data?.data ?? []) : [];
 
     return (
         <div
@@ -83,10 +65,12 @@ export default function UserSearchSidebar() {
                             key={user.id}
                             className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition text-left"
                         >
-                            <img
+                            <Image
                                 src={user.avatar || '/abstract-book-pattern.png'}
                                 alt={user.username}
-                                className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-gray-700"
+                                width={36}
+                                height={36}
+                                className="h-9 w-9 rounded-full border border-slate-200 object-cover dark:border-gray-700"
                             />
 
                             <div className="flex-1 min-w-0">

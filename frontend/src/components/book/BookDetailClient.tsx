@@ -1,5 +1,7 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
 import { HeaderClient } from '@/components/HeaderClient';
@@ -8,8 +10,12 @@ import { useBookDetail } from '@/features/books/hooks/useBookDetail';
 import { BookHero } from './BookHero';
 import { BookDescription } from './BookDescription';
 import { BookSidebar } from './BookSidebar';
-import { BookModals } from './BookModals';
 import { ReviewSection } from './ReviewSection';
+
+const BookModals = dynamic(
+  () => import('./BookModals').then((module) => module.BookModals),
+  { ssr: false }
+);
 
 interface BookDetailClientProps {
   bookSlug: string;
@@ -58,10 +64,13 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
           alt="BG"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40"
         />
         <div className="absolute inset-0 bg-white/80 dark:bg-[#0f0f0f]/70"></div>
       </div>
@@ -96,19 +105,21 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
           </div>
         </div>
 
-        <BookModals
-          book={book}
-          isLibraryOpen={isLibraryModalOpen}
-          isShareOpen={isShareModalOpen}
-          closeLibrary={() => setLibraryModalOpen(false)}
-          closeShare={() => setShareModalOpen(false)}
-          onShareSubmit={async (data: any) => {
-            const success = await handleSharePost(data);
-            if (success) setShareModalOpen(false);
-          }}
-          defaultShareContent={defaultShareContent}
-          isSharing={isCreatingPost}
-        />
+        {(isLibraryModalOpen || isShareModalOpen) && (
+          <BookModals
+            book={book}
+            isLibraryOpen={isLibraryModalOpen}
+            isShareOpen={isShareModalOpen}
+            closeLibrary={() => setLibraryModalOpen(false)}
+            closeShare={() => setShareModalOpen(false)}
+            onShareSubmit={async (data: any) => {
+              const success = await handleSharePost(data);
+              if (success) setShareModalOpen(false);
+            }}
+            defaultShareContent={defaultShareContent}
+            isSharing={isCreatingPost}
+          />
+        )}
       </div>
     </div>
   );

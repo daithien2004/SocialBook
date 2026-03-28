@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 
 export type NotificationItem = {
     id: string;
@@ -38,6 +38,8 @@ export function useNotifications(userToken: string | undefined) {
     const prevTokenRef = useRef<string | undefined>(undefined);
 
     useEffect(() => {
+        let isCancelled = false;
+
         if (userToken === prevTokenRef.current) return;
         prevTokenRef.current = userToken;
 
@@ -55,40 +57,45 @@ export function useNotifications(userToken: string | undefined) {
             socketRef.current = null;
         }
 
-        const socketInstance = io(
-            `${process.env.NEXT_PUBLIC_SOCKET_URL}/notifications`,
-            {
-                auth: { token: userToken },
-            }
-        );
+        void import("socket.io-client").then(({ io }) => {
+            if (isCancelled) return;
 
-        socketRef.current = socketInstance;
+            const socketInstance = io(
+                `${process.env.NEXT_PUBLIC_SOCKET_URL}/notifications`,
+                {
+                    auth: { token: userToken },
+                }
+            );
 
-        socketInstance.on("connect", () => {
-            socketInstance.emit("notification:list", (data: NotificationItem[]) => {
-                setNotifications(data);
-                setUnreadCount(data.filter((n) => !n.isRead).length);
+            socketRef.current = socketInstance;
+
+            socketInstance.on("connect", () => {
+                socketInstance.emit("notification:list", (data: NotificationItem[]) => {
+                    setNotifications(data);
+                    setUnreadCount(data.filter((n) => !n.isRead).length);
+                });
+            });
+
+            socketInstance.on("notification:new", (payload: NotificationItem) => {
+                setNotifications((prev) => [payload, ...prev]);
+                setUnreadCount((prev) => prev + 1);
+            });
+
+            socketInstance.on("notification:read", ({ id }: { id: string }) => {
+                setNotifications((prev) =>
+                    prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+                );
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+            });
+
+            socketInstance.on("error", (err: any) => {
+                console.log("WS error:", err);
             });
         });
 
-        socketInstance.on("notification:new", (payload: NotificationItem) => {
-            setNotifications((prev) => [payload, ...prev]);
-            setUnreadCount((prev) => prev + 1);
-        });
-
-        socketInstance.on("notification:read", ({ id }: { id: string }) => {
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-            );
-            setUnreadCount((prev) => Math.max(0, prev - 1));
-        });
-
-        socketInstance.on("error", (err: any) => {
-            console.log("WS error:", err);
-        });
-
         return () => {
-            socketInstance.disconnect();
+            isCancelled = true;
+            socketRef.current?.disconnect();
             socketRef.current = null;
         };
     }, [userToken]);

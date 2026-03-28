@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { use, useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -222,10 +223,13 @@ ${book.description?.slice(0, 100)}...
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-600 selection:text-white pb-32 relative transition-colors duration-300">
       {/* GLOBAL BACKGROUND FIXED */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
           alt="Background Texture"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
         />
         <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>

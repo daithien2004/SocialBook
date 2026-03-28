@@ -1,10 +1,15 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { useGetFlaggedPostsQuery, useApprovePostMutation, useRejectPostMutation } from '@/features/admin/api/moderationApi';
 import { toast } from 'sonner';
 import { Loader2, ChevronLeft, ChevronRight, Check, X, AlertTriangle, User, BookOpen } from 'lucide-react';
 import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
+
+function getModerationErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback;
+}
 
 const ModerationQueuePage = () => {
     const [page, setPage] = useState(1);
@@ -74,8 +79,8 @@ const ModerationQueuePage = () => {
                                                         await approvePost(post.id).unwrap();
                                                         toast.success('Bài viết đã được phê duyệt');
                                                         refetch();
-                                                    } catch (error: any) {
-                                                        toast.error(error?.message || 'Phê duyệt thất bại');
+                                                    } catch (error: unknown) {
+                                                        toast.error(getModerationErrorMessage(error, 'Phê duyệt thất bại'));
                                                     }
                                                 }}
                                                 okText="Phê duyệt"
@@ -97,8 +102,8 @@ const ModerationQueuePage = () => {
                                                         await rejectPost(post.id).unwrap();
                                                         toast.success('Bài viết đã bị từ chối và xóa');
                                                         refetch();
-                                                    } catch (error: any) {
-                                                        toast.error(error?.message || 'Từ chối thất bại');
+                                                    } catch (error: unknown) {
+                                                        toast.error(getModerationErrorMessage(error, 'Từ chối thất bại'));
                                                     }
                                                 }}
                                                 okText="Xóa"
@@ -121,12 +126,18 @@ const ModerationQueuePage = () => {
                                         {post.imageUrls && post.imageUrls.length > 0 && (
                                             <div className="grid grid-cols-4 gap-2 mt-4">
                                                 {post.imageUrls.map((url: string, idx: number) => (
-                                                    <img
+                                                    <div
                                                         key={idx}
-                                                        src={url}
-                                                        alt={`Post image ${idx + 1}`}
-                                                        className="rounded-md object-cover aspect-square border border-gray-200"
-                                                    />
+                                                        className="relative aspect-square overflow-hidden rounded-md border border-gray-200"
+                                                    >
+                                                        <Image
+                                                            src={url}
+                                                            alt={`Post image ${idx + 1}`}
+                                                            fill
+                                                            sizes="(max-width: 768px) 25vw, 160px"
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
                                                 ))}
                                             </div>
                                         )}

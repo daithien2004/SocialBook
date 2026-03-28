@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, use, useCallback, ChangeEvent } from 'react';
 import { useGetAuthorQuery, useUpdateAuthorMutation } from '@/features/authors/api/authorApi';
 import { useRouter } from 'next/navigation';
@@ -93,7 +94,7 @@ export default function EditAuthorPage({ params }: EditAuthorPageProps) {
 
             toast.success('Cập nhật tác giả thành công!');
             router.push('/admin/authors');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to update author:', error);
             toast.error(getErrorMessage(error));
         }
@@ -150,10 +151,13 @@ export default function EditAuthorPage({ params }: EditAuthorPageProps) {
                                     Ảnh đại diện
                                 </label>
                                 <div className="w-48 h-48 relative rounded-full overflow-hidden shadow-lg border-4 border-gray-200 group">
-                                    <img
+                                    <Image
                                         src={photoPreview}
                                         alt="Author photo"
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        unoptimized
+                                        sizes="192px"
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <div className="text-center text-white">

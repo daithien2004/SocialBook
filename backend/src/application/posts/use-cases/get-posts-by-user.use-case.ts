@@ -13,8 +13,8 @@ export class GetPostsByUserUseCase {
   ) { }
 
   async execute(query: GetPostsByUserQuery): Promise<CursorPaginatedResult<Post>> {
-    const { userId, limit, cursor } = query;
+    const { userId, limit, cursor, viewerUserId } = query;
     if (!userId) throw new BadRequestDomainException(ErrorMessages.INVALID_ID);
-    return this.postRepository.findAll({ limit, cursor, userId });
+    return this.postRepository.findAll({ limit, cursor, userId, viewerUserId });
   }
 }

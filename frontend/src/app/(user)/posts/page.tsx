@@ -1,13 +1,37 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import {useState} from 'react';
 import PostList from '@/components/post/PostList';
-import CreatePostForm from '@/components/post/CreatePostForm';
 import {useAppAuth} from '@/hooks/useAppAuth';
 import {BookOpen, Users, Library, Quote, ImageIcon, PenSquare} from 'lucide-react';
-import RecommendedBooks from "@/components/post/RecommendedBooks";
 import {useRouter} from "next/navigation";
-import UserSearchSidebar from "@/components/post/UserSearchSidebar";
+
+const CreatePostForm = dynamic(
+    () => import('@/components/post/CreatePostForm'),
+    { ssr: false }
+);
+
+const UserSearchSidebar = dynamic(
+    () => import('@/components/post/UserSearchSidebar'),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-40 rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-gray-800 dark:bg-neutral-900" />
+        ),
+    }
+);
+
+const RecommendedBooks = dynamic(
+    () => import('@/components/post/RecommendedBooks'),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-56 rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-gray-800 dark:bg-neutral-900" />
+        ),
+    }
+);
 
 export default function Post() {
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -37,10 +61,12 @@ export default function Post() {
                             className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4 cursor-pointer">
 
                             <div className="flex items-center gap-3 mb-3">
-                                <img
+                                <Image
                                     src={currentUserImage}
                                     alt={currentUserName}
-                                    className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
+                                    width={40}
+                                    height={40}
+                                    className="h-10 w-10 rounded-full border border-slate-200 object-cover dark:border-gray-700"
                                 />
                                 <div>
                                     <p className="text-sm font-semibold text-slate-900 dark:text-gray-100 truncate">{currentUserName}</p>
@@ -108,13 +134,15 @@ export default function Post() {
                     <div
                         className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4 mb-4">
                         <div className="flex items-center gap-3 mb-3">
-                            <img
+                            <Image
                                 src={currentUserImage}
                                 alt={currentUserName}
+                                width={36}
+                                height={36}
                                 onClick={() => {
                                     route.push(`users/${currentUserId}/following`)
                                 }}
-                                className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-gray-700 cursor-pointer"
+                                className="h-9 w-9 cursor-pointer rounded-full border border-slate-200 object-cover dark:border-gray-700"
                             />
                             <button
                                 onClick={() => setShowCreateForm(true)}

@@ -28,7 +28,7 @@ export class PostMapper {
 
     // Handle bookId: could be ObjectId or populated Book object
     let bookId: string | null = null;
-    let book: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } } | undefined;
+    let book: { id: string; title: string; slug?: string; coverUrl: string; authorId?: { name: string; bio: string } } | undefined;
 
     if (postDoc.bookId) {
       if (typeof postDoc.bookId === 'object' && 'title' in postDoc.bookId) {
@@ -38,6 +38,7 @@ export class PostMapper {
         book = {
           id: bookObj._id.toString(),
           title: bookObj.title,
+          slug: bookObj.slug,
           coverUrl: bookObj.coverUrl,
           authorId: bookObj.authorId // Keep as is if populated further
         };
@@ -56,6 +57,9 @@ export class PostMapper {
       isFlagged: postDoc.isFlagged || false,
       moderationReason: postDoc.moderationReason,
       moderationStatus: postDoc.moderationStatus,
+      likesCount: (postDoc as any).likesCount,
+      commentsCount: (postDoc as any).commentsCount,
+      likedByCurrentUser: (postDoc as any).likedByCurrentUser,
       createdAt: postDoc.createdAt,
       updatedAt: postDoc.updatedAt,
       author,

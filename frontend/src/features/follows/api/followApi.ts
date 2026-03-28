@@ -1,5 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "@/lib/nestjs-client-api";
+import { extractArrayData, extractObjectData } from "@/lib/api-response";
 
 export interface FollowStateResponse {
     isOwner: boolean;
@@ -29,8 +30,7 @@ export const followApi = createApi({
                 url: `/follows/following?userId=${userId}`,
                 method: "GET",
             }),
-            transformResponse: (response: any): FollowingUser[] =>
-                Array.isArray(response?.data) ? response.data : [],
+            transformResponse: extractArrayData<FollowingUser>,
             providesTags: () => [
                 { type: "Follow", id: `FOLLOWING_LIST` },
             ],
@@ -41,8 +41,7 @@ export const followApi = createApi({
                 url: `/follows/followers?targetUserId=${targetUserId}`,
                 method: "GET",
             }),
-            transformResponse: (response: any): FollowingUser[] =>
-                Array.isArray(response?.data) ? response.data : [],
+            transformResponse: extractArrayData<FollowingUser>,
             providesTags: () => [
                 { type: "Follow", id: `FOLLOWERS_LIST` },
             ],
@@ -53,7 +52,7 @@ export const followApi = createApi({
                 url: `/follows/status?targetId=${targetId}`,
                 method: "GET",
             }),
-            transformResponse: (response: any): FollowStateResponse => response?.data ?? response,
+            transformResponse: extractObjectData<FollowStateResponse>,
             providesTags: (_, __, targetId) => [
                 { type: "Follow", id: `STATUS-${targetId}` },
             ],

@@ -112,10 +112,13 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] pb-20 transition-colors duration-300 font-sans selection:bg-blue-500 selection:text-white relative">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
           alt="Background Texture"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40"
         />
         <div className="absolute inset-0 bg-white/80 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>

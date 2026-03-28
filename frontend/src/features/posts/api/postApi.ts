@@ -3,6 +3,32 @@ import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { CreatePostRequest, DeleteImageRequest, PaginatedPostsResponse, PaginationParams, PaginationParamsByUser, Post, UpdatePostRequest } from '../../posts/types/post.interface';
 
+type RawPost = Post & {
+  likesCount?: number;
+  commentsCount?: number;
+};
+
+type RawPaginatedPostsResponse = {
+  data?: RawPost[];
+  meta?: PaginatedPostsResponse['meta'];
+};
+
+const normalizePost = (post: RawPost): Post => ({
+  ...post,
+  totalLikes: post.totalLikes ?? post.likesCount,
+  totalComments: post.totalComments ?? post.commentsCount,
+});
+
+const normalizePaginatedPosts = (
+  response: RawPaginatedPostsResponse
+): PaginatedPostsResponse => ({
+  data: (response.data ?? []).map(normalizePost),
+  meta: response.meta ?? {
+    nextCursor: null,
+    hasMore: false,
+  },
+});
+
 
 export const postApi = createApi({
   reducerPath: 'postApi',
@@ -15,6 +41,8 @@ export const postApi = createApi({
         method: 'GET',
         params: { cursor, limit },
       }),
+      transformResponse: (response: RawPaginatedPostsResponse) =>
+        normalizePaginatedPosts(response),
       providesTags: (result) =>
         result
           ? [
@@ -32,6 +60,7 @@ export const postApi = createApi({
         url: NESTJS_POSTS_ENDPOINTS.getOne(id),
         method: 'GET',
       }),
+      transformResponse: (response: RawPost) => normalizePost(response),
       providesTags: (result, error, id) => [{ type: 'PostDetail', id }],
     }),
 
@@ -41,6 +70,8 @@ export const postApi = createApi({
         method: 'GET',
         params: { cursor, limit, userId },
       }),
+      transformResponse: (response: RawPaginatedPostsResponse) =>
+        normalizePaginatedPosts(response),
       providesTags: (result) =>
         result
           ? [

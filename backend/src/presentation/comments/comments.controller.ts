@@ -67,8 +67,12 @@ export class CommentsController {
   }
 
   @Public()
+  @UseGuards(JwtAuthGuard)
   @Get('target')
-  async getByTarget(@Query() query: GetCommentsDto) {
+  async getByTarget(
+    @Req() req: Request & { user?: { id: string } },
+    @Query() query: GetCommentsDto
+  ) {
     const getQuery = new GetCommentsQuery(
       query.targetId,
       query.parentId,
@@ -76,7 +80,8 @@ export class CommentsController {
       query.limit,
       query.cursor,
       query.sortBy as any,
-      query.order as any
+      query.order as any,
+      req.user?.id,
     );
     const result = await this.getCommentsUseCase.execute(getQuery);
 

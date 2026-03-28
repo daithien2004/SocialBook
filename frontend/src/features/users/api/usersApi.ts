@@ -1,8 +1,11 @@
 import { NESTJS_USERS_ENDPOINTS } from '@/constants/server-endpoints';
 import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { mapPaginatedResponse } from '@/lib/api-response';
 import { createApi } from '@reduxjs/toolkit/query/react';
 import {
     SearchUsersParams,
+    SearchUsersRawItem,
+    SearchUsersRawResponse,
     SearchUsersResponse,
     UpdateUserOverviewRequest,
     UserListResponse,
@@ -99,6 +102,17 @@ export const usersApi = createApi({
                     pageSize,
                 },
             }),
+            transformResponse: (response: SearchUsersRawResponse): SearchUsersResponse =>
+                mapPaginatedResponse<SearchUsersRawItem, SearchUsersResponse['data'][number]>(
+                    response,
+                    (user) => ({
+                    id: user.id,
+                    username: user.username,
+                    avatar: user.image,
+                    bio: user.bio,
+                    createdAt: user.createdAt,
+                    })
+                ),
             providesTags: ['Users'],
         }),
 

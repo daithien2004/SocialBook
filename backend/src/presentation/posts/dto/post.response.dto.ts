@@ -13,11 +13,19 @@ export class PostResponseDto {
 
     user?: { id: string; username: string; image?: string };
 
-    book?: { id: string; title: string; slug?: string };
+    book?: {
+        id: string;
+        title: string;
+        slug?: string;
+        coverUrl?: string;
+        authorId?: { name: string; bio: string };
+    };
 
     likesCount?: number;
 
     commentsCount?: number;
+
+    likedByCurrentUser?: boolean;
 
     createdAt: Date;
 
@@ -47,8 +55,15 @@ export class PostResponseDto {
             this.book = {
                 id: post.book.id,
                 title: post.book.title,
+                slug: post.book.slug,
+                coverUrl: post.book.coverUrl,
+                authorId: post.book.authorId,
             };
         }
+
+        this.likesCount = post.likesCount;
+        this.commentsCount = post.commentsCount;
+        this.likedByCurrentUser = post.likedByCurrentUser;
     }
 
     static fromDomain(post: Post): PostResponseDto {

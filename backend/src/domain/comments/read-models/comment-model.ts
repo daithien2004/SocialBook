@@ -10,6 +10,8 @@ export interface CommentModel {
     targetType: string;
     parentId: string | null;
     likesCount: number;
+    repliesCount: number;
+    isLiked: boolean;
     isFlagged: boolean;
     moderationStatus: string;
     createdAt: Date;

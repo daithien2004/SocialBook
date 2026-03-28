@@ -68,10 +68,14 @@ export class PostsController {
   ) { }
 
   @Public()
+  @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@Query() query: PaginationQueryDto & { cursor?: string }) {
+  async findAll(
+    @Req() req: Request & { user?: { id: string } },
+    @Query() query: PaginationQueryDto & { cursor?: string }
+  ) {
     const limit = Math.min(query.actualLimit || 10, 100);
-    const postsQuery = new GetPostsQuery(limit, query.cursor);
+    const postsQuery = new GetPostsQuery(limit, query.cursor, req.user?.id);
     const result = await this.getPostsUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
@@ -85,11 +89,20 @@ export class PostsController {
   }
 
   @Public()
+  @UseGuards(JwtAuthGuard)
   @Get('user')
-  async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto & { cursor?: string }) {
+  async findAllByUser(
+    @Req() req: Request & { user?: { id: string } },
+    @Query() query: PaginationUserDto & { cursor?: string }
+  ) {
     if (!query.userId) throw new BadRequestException('userId is required');
     const limit = Math.min(query.actualLimit || 10, 100);
-    const postsQuery = new GetPostsByUserQuery(query.userId, limit, query.cursor);
+    const postsQuery = new GetPostsByUserQuery(
+      query.userId,
+      limit,
+      query.cursor,
+      req.user?.id
+    );
     const result = await this.getPostsByUserUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
@@ -103,9 +116,13 @@ export class PostsController {
   }
 
   @Public()
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const query = new GetPostQuery(id);
+  async findOne(
+    @Req() req: Request & { user?: { id: string } },
+    @Param('id') id: string
+  ) {
+    const query = new GetPostQuery(id, req.user?.id);
     const data = await this.getPostUseCase.execute(query);
     return {
       message: 'Get post detail successfully',

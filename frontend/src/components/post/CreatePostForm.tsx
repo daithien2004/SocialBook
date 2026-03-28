@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
@@ -23,6 +24,12 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
 
   const [createPost, { isLoading }] = useCreatePostMutation();
 
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+    };
+  }, [imagePreviews]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + images.length > 10) {
@@ -30,18 +37,18 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
       return;
     }
 
-    setImages((prev) => [...prev, ...files]);
+    const previewUrls = files.map((file) => URL.createObjectURL(file));
 
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    setImages((prev) => [...prev, ...files]);
+    setImagePreviews((prev) => [...prev, ...previewUrls]);
   };
 
   const removeImage = (index: number) => {
+    const previewToRemove = imagePreviews[index];
+    if (previewToRemove) {
+      URL.revokeObjectURL(previewToRemove);
+    }
+
     setImages((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
@@ -112,10 +119,12 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
           <form onSubmit={handleSubmit} className="p-5 space-y-5">
             {/* User info */}
             <div className="flex items-center gap-3">
-              <img
+              <Image
                 src={currentUserImage}
                 alt={currentUserName}
-                className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full border border-slate-200 object-cover dark:border-gray-700"
               />
               <div className="space-y-0.5">
                 <p className="font-semibold text-sm text-slate-900 dark:text-gray-100">
@@ -160,10 +169,13 @@ export default function CreatePostForm({ onClose }: CreatePostFormProps) {
                     key={index}
                     className="relative group rounded-xl overflow-hidden border border-slate-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-900/40"
                   >
-                    <img
+                    <Image
                       src={preview}
                       alt={`Preview ${index + 1}`}
-                      className="w-full h-28 md:h-32 object-cover"
+                      width={160}
+                      height={128}
+                      unoptimized
+                      className="h-28 w-full object-cover md:h-32"
                     />
                     <button
                       type="button"

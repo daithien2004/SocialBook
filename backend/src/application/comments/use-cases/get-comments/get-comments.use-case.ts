@@ -27,6 +27,7 @@ export class GetCommentsUseCase {
         const filter: CommentFilter = {
             targetId: query.targetId,
             parentId: query.parentId ?? null,
+            viewerUserId: query.viewerUserId,
         };
 
         const result = await this.commentRepository.search(filter, pagination, sort);

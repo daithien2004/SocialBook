@@ -1,14 +1,8 @@
 'use client';
 
-import EditPostForm from '@/components/post/EditPostForm';
-import ModalPostComment from '@/components/post/ModalPostComment';
-import SharePostModal from '@/components/post/SharePostModal';
-import { useGetCommentCountQuery } from '@/features/comments/api/commentApi';
-import {
-    useGetCountQuery,
-    useGetStatusQuery,
-    usePostToggleLikeMutation,
-} from '@/features/likes/api/likeApi';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+import { usePostToggleLikeMutation } from '@/features/likes/api/likeApi';
 import {
     useDeletePostImageMutation,
     useDeletePostMutation,
@@ -28,7 +22,7 @@ import {
     X,
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 // Shadcn UI
@@ -47,37 +41,34 @@ interface PostCardProps {
     post: Post;
 }
 
+const EditPostForm = dynamic(() => import('@/components/post/EditPostForm'), {
+    ssr: false,
+});
+
+const ModalPostComment = dynamic(
+    () => import('@/components/post/ModalPostComment'),
+    { ssr: false }
+);
+
+const SharePostModal = dynamic(
+    () => import('@/components/post/SharePostModal'),
+    { ssr: false }
+);
+
 const PostCard: React.FC<PostCardProps> = ({ post }) => {
     const [isCommentOpen, setIsCommentOpen] = useState(false);
     const [showEditForm, setShowEditForm] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [showShare, setShowShare] = useState(false);
+    const [optimisticLikeCount, setOptimisticLikeCount] = useState(post.totalLikes ?? 0);
+    const [optimisticLikeStatus, setOptimisticLikeStatus] = useState(post.likedByCurrentUser ?? false);
     const route = useRouter();
     const { user } = useAppAuth();
 
     const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
     const [deleteImage] = useDeletePostImageMutation();
     const [toggleLike] = usePostToggleLikeMutation();
-
-    const { isAuthenticated } = useAppAuth();
-
-    const { data: likeCount, isLoading: isLikeLoading } = useGetCountQuery({
-        targetId: post.id,
-        targetType: 'post',
-    });
-
-    const { data: likeStatus, isLoading: isLikeStatusLoading } = useGetStatusQuery({
-        targetId: post.id,
-        targetType: 'post',
-    }, {
-        skip: !isAuthenticated,
-    });
-
-    const { data: commentCount } = useGetCommentCountQuery({
-        targetId: post.id,
-        targetType: 'post',
-    });
 
     const origin =
         typeof window !== 'undefined' ? window.location.origin : '';
@@ -94,15 +85,26 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
     const isOwner = post.user?.id === user?.id;
     const hasPostImages = post.imageUrls && post.imageUrls.length > 0;
+    const displayedLikeCount = optimisticLikeCount;
+    const displayedLikeStatus = optimisticLikeStatus;
+    const displayedCommentCount = post.totalComments ?? 0;
+
+    useEffect(() => {
+        setOptimisticLikeCount(post.totalLikes ?? 0);
+    }, [post.totalLikes]);
+
+    useEffect(() => {
+        setOptimisticLikeStatus(post.likedByCurrentUser ?? false);
+    }, [post.likedByCurrentUser]);
 
     const handleDelete = async () => {
         try {
             await deletePost(post.id).unwrap();
             toast.success('Xóa bài viết thành công!');
             setShowDeleteConfirm(false);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to delete post:', error);
-            if (error?.status !== 401) {
+            if ((error as { status?: number })?.status !== 401) {
                 toast.error(getErrorMessage(error));
             }
         }
@@ -122,9 +124,9 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             }
 
             toast.success('Xóa ảnh thành công!');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to delete image:', error);
-            if (error?.status !== 401) {
+            if ((error as { status?: number })?.status !== 401) {
                 toast.error(getErrorMessage(error));
             }
         }
@@ -146,11 +148,21 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
     const handleLike = async () => {
         try {
+            const nextLiked = !displayedLikeStatus;
+
+            setOptimisticLikeStatus(nextLiked);
+            setOptimisticLikeCount((prev) =>
+                nextLiked ? prev + 1 : Math.max(0, prev - 1)
+            );
+
             await toggleLike({
                 targetId: post.id,
                 targetType: 'post',
             }).unwrap();
         } catch (error) {
+            setOptimisticLikeStatus(post.likedByCurrentUser ?? false);
+            setOptimisticLikeCount(post.totalLikes ?? 0);
+
             console.log('Toggle like failed:', error);
         }
     };
@@ -229,10 +241,13 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                             onClick={() => route.push(`/books/${post.book.slug}`)} // Assuming slug exists
                         >
                             <div className="shrink-0 w-14 h-20 rounded-md overflow-hidden border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800">
-                                <img
+                                <Image
                                     src={post.book.coverUrl || '/abstract-book-pattern.png'}
                                     alt={post.book.title}
-                                    className="w-full h-full object-cover"
+                                    width={56}
+                                    height={80}
+                                    sizes="56px"
+                                    className="h-full w-full object-cover"
                                 />
                             </div>
                             <div className="flex-1 min-w-0 space-y-1">
@@ -259,10 +274,12 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                     <div className="relative w-full bg-slate-50 dark:bg-gray-900/30 group border-y border-slate-100 dark:border-gray-800">
                         <div className="relative h-96 w-full overflow-hidden">
                             {/* Improved Image Container */}
-                            <img
+                            <Image
                                 src={post.imageUrls![currentImageIndex]}
                                 alt={`Post image ${currentImageIndex + 1}`}
-                                className="w-full h-full object-contain bg-slate-100 dark:bg-black/20"
+                                fill
+                                sizes="(max-width: 768px) 100vw, 768px"
+                                className="object-contain bg-slate-100 dark:bg-black/20"
                             />
                         </div>
 
@@ -324,15 +341,14 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleLike}
-                                disabled={isLikeLoading || isLikeStatusLoading}
-                                className={`gap-2 px-3 text-slate-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 ${likeStatus?.isLiked ? 'text-rose-500 dark:text-rose-500' : ''}`}
+                                className={`gap-2 px-3 text-slate-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 ${displayedLikeStatus ? 'text-rose-500 dark:text-rose-500' : ''}`}
                             >
                                 <Heart
                                     size={18}
-                                    className={likeStatus?.isLiked ? 'fill-current' : ''}
+                                    className={displayedLikeStatus ? 'fill-current' : ''}
                                 />
                                 <span className="hidden sm:inline">
-                                    {likeStatus?.isLiked ? 'Đã thích' : 'Thích'}
+                                    {displayedLikeStatus ? 'Đã thích' : 'Thích'}
                                 </span>
                             </Button>
 
@@ -359,42 +375,46 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
                         {/* Stats - Optional, keeping it simple or moving to top if preferred. Keeping as is for now but styled better. */}
                     </div>
                     {/* Stats Bar */}
-                    {((likeCount?.count ?? 0) > 0 || (commentCount?.count ?? 0) > 0) && (
+                    {(displayedLikeCount > 0 || displayedCommentCount > 0) && (
                         <div className="px-4 py-2 w-full bg-slate-50/50 dark:bg-gray-900/30 text-xs text-slate-500 dark:text-gray-400 flex gap-4 border-t border-slate-100 dark:border-gray-800/50">
-                            {(likeCount?.count ?? 0) > 0 && (
+                            {displayedLikeCount > 0 && (
                                 <span className="flex items-center gap-1">
                                     <Heart size={12} className="fill-rose-400 text-rose-400" />
-                                    {likeCount?.count} lượt thích
+                                    {displayedLikeCount} lượt thích
                                 </span>
                             )}
-                            {(commentCount?.count ?? 0) > 0 && (
+                            {displayedCommentCount > 0 && (
                                 <span className="flex items-center gap-1">
                                     <MessageCircle size={12} className="fill-sky-400 text-sky-400" />
-                                    {commentCount?.count} bình luận
+                                    {displayedCommentCount} bình luận
                                 </span>
                             )}
                         </div>
                     )}
                 </CardFooter>
 
-                <SharePostModal
-                    isOpen={showShare}
-                    onClose={() => setShowShare(false)}
-                    postUrl={postUrl}
-                    shareTitle={shareTitle}
-                    shareMedia={shareMedia}
-                />
+                {showShare && (
+                    <SharePostModal
+                        isOpen={showShare}
+                        onClose={() => setShowShare(false)}
+                        postUrl={postUrl}
+                        shareTitle={shareTitle}
+                        shareMedia={shareMedia}
+                    />
+                )}
 
                 {/* MODALS */}
-                <ModalPostComment
-                    post={post}
-                    handleLike={handleLike}
-                    isCommentOpen={isCommentOpen}
-                    closeCommentModal={closeCommentModal}
-                    commentCount={commentCount?.count}
-                    likeStatus={likeStatus?.isLiked}
-                    likeCount={likeCount?.count}
-                />
+                {isCommentOpen && (
+                    <ModalPostComment
+                        post={post}
+                        handleLike={handleLike}
+                        isCommentOpen={isCommentOpen}
+                        closeCommentModal={closeCommentModal}
+                        commentCount={displayedCommentCount}
+                        likeStatus={displayedLikeStatus}
+                        likeCount={displayedLikeCount}
+                    />
+                )}
 
                 {showEditForm && (
                     <EditPostForm post={post} onClose={() => setShowEditForm(false)} />

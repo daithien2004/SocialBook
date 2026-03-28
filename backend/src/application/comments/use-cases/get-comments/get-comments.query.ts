@@ -6,6 +6,7 @@ export class GetCommentsQuery {
         public readonly limit?: number,
         public readonly cursor?: string,
         public readonly sortBy?: 'createdAt' | 'updatedAt' | 'likesCount',
-        public readonly order?: 'asc' | 'desc'
+        public readonly order?: 'asc' | 'desc',
+        public readonly viewerUserId?: string,
     ) { }
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -169,10 +170,13 @@ export default function CreatePostModal({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {previewUrls.map((url, index) => (
                     <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border border-slate-200 dark:border-gray-700">
-                      <img
+                      <Image
                         src={url}
                         alt={`Preview ${index}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        unoptimized
+                        sizes="(max-width: 640px) 50vw, 33vw"
+                        className="object-cover"
                       />
                       <Button
                         variant="destructive"

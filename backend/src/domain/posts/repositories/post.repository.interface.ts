@@ -4,6 +4,7 @@ import { Post } from '../entities/post.entity';
 export interface FindAllOptions {
     limit: number;
     userId?: string;
+    viewerUserId?: string;
     isFlagged?: boolean;
     cursor?: string;
 }
@@ -26,7 +27,7 @@ export interface PaginatedResult<T> {
 export abstract class IPostRepository {
     abstract create(post: Post): Promise<Post>;
     abstract update(post: Post): Promise<Post>;
-    abstract findById(id: string): Promise<Post | null>;
+    abstract findById(id: string, viewerUserId?: string): Promise<Post | null>;
     abstract findAll(options: FindAllOptions): Promise<CursorPaginatedResult<Post>>;
     abstract delete(id: string): Promise<void>;
     abstract softDelete(id: string): Promise<void>;

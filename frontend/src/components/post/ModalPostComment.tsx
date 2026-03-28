@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import ListComments from '@/components/comment/ListComments';
 import { usePostCreateMutation } from '@/features/comments/api/commentApi';
 import { Post } from '@/features/posts/types/post.interface';
@@ -73,10 +74,12 @@ const ModalPostComment: React.FC<ModalPostCommentProps> = (props) => {
                 {/* Left Side - Image (Hidden on Mobile) */}
                 <div className="hidden md:flex md:w-1/2 bg-slate-900 items-center justify-center relative">
                     {post?.imageUrls?.[0] ? (
-                        <img
+                        <Image
                             src={post.imageUrls[0]}
                             alt="Post content"
-                            className="w-full h-full object-contain"
+                            fill
+                            sizes="50vw"
+                            className="object-contain"
                         />
                     ) : (
                         <div className="text-slate-400 text-sm">

@@ -6,6 +6,7 @@ import { Book } from '@/features/books/types/book.interface';
 import { formatCompact } from '@/lib/utils';
 import { BookOpen, ChevronLeft, ChevronRight, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 interface BannerSliderProps {
@@ -41,11 +42,14 @@ export function BannerSlider({ books }: BannerSliderProps) {
 
       <div className="relative z-10 h-full flex items-center justify-between px-6 md:px-12 lg:px-20">
         <div className="hidden md:block w-[280px] h-[420px] lg:w-[320px] lg:h-[480px] flex-shrink-0 mr-8 relative animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <img
+          <Image
             key={currentBook.coverUrl}
             src={currentBook.coverUrl}
             alt={currentBook.title}
-            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 rounded-md shadow-2xl"
+            fill
+            priority={currentSlide === 0}
+            sizes="(max-width: 1024px) 280px, 320px"
+            className="rounded-md object-cover shadow-2xl transition-transform duration-500 hover:scale-105"
           />
         </div>
 

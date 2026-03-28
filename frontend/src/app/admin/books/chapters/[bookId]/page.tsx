@@ -14,13 +14,13 @@ import {
 import {
   useGenerateChapterAudioMutation,
   useGenerateBookAudioMutation,
-  useGetChapterAudioQuery,
 } from '@/features/tts/api/ttsApi';
 import { Chapter, Paragraph } from '@/features/chapters/types/chapter.interface';
 import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { FileImportModal } from '@/components/chapter/FileImportModal';
+import { getErrorMessage } from '@/lib/utils';
 
 export default function ChapterManagementPage() {
   const params = useParams();
@@ -337,14 +337,14 @@ export default function ChapterManagementPage() {
       setShowNewChapterForm(false);
       setNewChapterTitle('');
       setNewChapterParagraphs([{ id: uuidv4(), content: '' }]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create chapter:', {
         error,
-        errorData: error?.data,
-        errorMessage: error?.message,
-        errorStatus: error?.status,
+        errorData: (error as { data?: unknown })?.data,
+        errorMessage: (error as { message?: string })?.message,
+        errorStatus: (error as { status?: number })?.status,
       });
-      toast.error(`Tạo chương thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
+      toast.error(`Tạo chương thất bại: ${getErrorMessage(error)}`);
     }
   };
 
@@ -365,9 +365,9 @@ export default function ChapterManagementPage() {
 
       // Refetch để đồng bộ với server (ttsApi và chaptersApi là 2 instance riêng)
       refetchChaptersQuery();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to generate audio:', error);
-      toast.error(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
+      toast.error(`Tạo audio thất bại: ${getErrorMessage(error)}`);
     }
   };
 
@@ -390,9 +390,9 @@ export default function ChapterManagementPage() {
       setPage(1);
       setChapters([]);
       refetchChaptersQuery();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to generate all audio:', error);
-      alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
+      alert(`Tạo audio thất bại: ${getErrorMessage(error)}`);
     }
   };
 
@@ -437,12 +437,12 @@ export default function ChapterManagementPage() {
         }).unwrap();
 
         successCount++;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(`Failed to import chapter ${chapter.title}:`, error);
         failCount++;
         // Show specific error for the first failure
         if (failCount === 1) {
-          toast.error(`Import failed for "${chapter.title}": ${error?.data?.message || 'Invalid data'}`);
+          toast.error(`Import failed for "${chapter.title}": ${getErrorMessage(error)}`);
         }
       }
     }

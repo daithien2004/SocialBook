@@ -9,8 +9,11 @@ export interface PostProps {
     isFlagged: boolean;
     moderationReason?: string;
     moderationStatus?: string;
+    likesCount?: number;
+    commentsCount?: number;
+    likedByCurrentUser?: boolean;
     author?: { id: string; username: string; email: string; image: string };
-    book?: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } };
+    book?: { id: string; title: string; slug?: string; coverUrl: string; authorId?: { name: string; bio: string } };
 }
 
 export class Post extends Entity<string> {
@@ -28,7 +31,7 @@ export class Post extends Entity<string> {
         content: string;
         imageUrls?: string[];
         author?: { id: string; username: string; email: string; image: string };
-        book?: { id: string; title: string; coverUrl: string };
+        book?: { id: string; title: string; slug?: string; coverUrl: string };
     }): Post {
         return new Post(
             props.id,
@@ -41,6 +44,9 @@ export class Post extends Entity<string> {
                 isFlagged: false,
                 moderationReason: undefined,
                 moderationStatus: 'pending',
+                likesCount: 0,
+                commentsCount: 0,
+                likedByCurrentUser: false,
                 author: props.author,
                 book: props.book
             }
@@ -57,10 +63,13 @@ export class Post extends Entity<string> {
         isFlagged: boolean;
         moderationReason?: string;
         moderationStatus?: string;
+        likesCount?: number;
+        commentsCount?: number;
+        likedByCurrentUser?: boolean;
         createdAt: Date;
         updatedAt: Date;
         author?: { id: string; username: string; email: string; image: string };
-        book?: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } };
+        book?: { id: string; title: string; slug?: string; coverUrl: string; authorId?: { name: string; bio: string } };
     }): Post {
         return new Post(
             props.id,
@@ -73,6 +82,9 @@ export class Post extends Entity<string> {
                 isFlagged: props.isFlagged,
                 moderationReason: props.moderationReason,
                 moderationStatus: props.moderationStatus,
+                likesCount: props.likesCount,
+                commentsCount: props.commentsCount,
+                likedByCurrentUser: props.likedByCurrentUser,
                 author: props.author,
                 book: props.book
             },
@@ -89,8 +101,11 @@ export class Post extends Entity<string> {
     get isFlagged(): boolean { return this._props.isFlagged; }
     get moderationReason(): string | undefined { return this._props.moderationReason; }
     get moderationStatus(): string | undefined { return this._props.moderationStatus; }
+    get likesCount(): number | undefined { return this._props.likesCount; }
+    get commentsCount(): number | undefined { return this._props.commentsCount; }
+    get likedByCurrentUser(): boolean | undefined { return this._props.likedByCurrentUser; }
     get author(): { id: string; username: string; email: string; image: string } | undefined { return this._props.author; }
-    get book(): { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } } | undefined { return this._props.book; }
+    get book(): { id: string; title: string; slug?: string; coverUrl: string; authorId?: { name: string; bio: string } } | undefined { return this._props.book; }
 
     updateContent(content: string): void {
         this._props.content = content;

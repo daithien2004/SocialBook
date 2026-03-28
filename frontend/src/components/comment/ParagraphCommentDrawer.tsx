@@ -62,9 +62,9 @@ export default function ParagraphCommentDrawer({
 
             setCommentText('');
             toast.success('Bình luận đã được gửi!');
-        } catch (e: any) {
-            if (e?.status !== 401) {
-                toast.error(getErrorMessage(e));
+        } catch (error: unknown) {
+            if ((error as { status?: number })?.status !== 401) {
+                toast.error(getErrorMessage(error));
             }
         }
     };

@@ -49,7 +49,7 @@ export default function EditGenrePage() {
 
             toast.success('Cập nhật thể loại thành công!');
             router.push('/admin/genres');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to update genre:', error);
             toast.error(getErrorMessage(error));
         }

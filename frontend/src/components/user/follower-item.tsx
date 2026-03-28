@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
     FollowingUser,
@@ -45,15 +46,20 @@ const FollowerItem = (props: FollowingUser) => {
         >
             {/* Left */}
             <div className="flex items-center gap-3">
-                <img
-                    src={props.image}
-                    alt={props.username}
+                <div
                     onClick={() => {
                         route.push(`/users/${props.id}`)
                     }}
-                    className="h-10 w-10 rounded-full object-cover
-            border border-slate-200 dark:border-gray-700 cursor-pointer"
-                />
+                    className="relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 dark:border-gray-700 cursor-pointer"
+                >
+                    <Image
+                        src={props.image || '/user.png'}
+                        alt={props.username}
+                        fill
+                        sizes="40px"
+                        className="object-cover"
+                    />
+                </div>
 
                 <div className="flex flex-col">
                     <span className="font-semibold text-slate-800 dark:text-gray-100">

@@ -238,11 +238,13 @@ export default function BookSelector({
                           : 'hover:bg-slate-50 dark:hover:bg-gray-800'
                           }`}
                       >
-                        <div className="w-9 h-12 rounded-md overflow-hidden bg-slate-100 dark:bg-gray-900/40 flex-shrink-0 border border-slate-200 dark:border-gray-700">
-                          <img
+                        <div className="relative w-9 h-12 rounded-md overflow-hidden bg-slate-100 dark:bg-gray-900/40 flex-shrink-0 border border-slate-200 dark:border-gray-700">
+                          <Image
                             src={book.coverUrl}
                             alt={book.title}
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="36px"
+                            className="object-cover"
                           />
                         </div>
                         <div className="flex-1 min-w-0">

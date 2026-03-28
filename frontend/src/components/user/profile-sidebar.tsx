@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react"
+import Image from "next/image";
 import { Facebook, Twitter, Mail } from "lucide-react"
 import {useGetFollowingListQuery} from "@/features/follows/api/followApi";
 import {useRouter} from "next/navigation";
@@ -69,9 +70,12 @@ export function ProfileSidebar(props : ProfileNavProps) {
 
                   <div className="flex gap-2">
                     {topFollowing.map((user) => (
-                        <img
+                        <Image
                             key={user.id}
                             src={user.image || "/user.png"}
+                            alt={user.username || "user"}
+                            width={32}
+                            height={32}
                             onClick={() => router.push(`/users/${user.id}`)}
                             className="
                     h-8 w-8 rounded-full object-cover cursor-pointer

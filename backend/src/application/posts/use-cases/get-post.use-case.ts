@@ -12,7 +12,10 @@ export class GetPostUseCase {
   ) { }
 
   async execute(query: GetPostQuery): Promise<Post> {
-    const post = await this.postRepository.findById(query.postId);
+    const post = await this.postRepository.findById(
+      query.postId,
+      query.viewerUserId
+    );
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
     return post;
   }

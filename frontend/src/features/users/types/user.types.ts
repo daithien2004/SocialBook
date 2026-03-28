@@ -1,3 +1,5 @@
+import type { PaginatedApiResult } from '@/lib/api-response';
+
 export interface User {
     id: string;
     username: string;
@@ -16,12 +18,7 @@ export interface User {
 
 export interface UserListResponse {
     data: User[];
-    meta: {
-        current: number;
-        pageSize: number;
-        total: number;
-        totalPages: number;
-    };
+    meta: PaginatedApiResult<User>['meta'];
 }
 
 export interface UserOverviewResponse {
@@ -50,19 +47,22 @@ export interface SearchUsersParams {
     pageSize?: number;
 }
 
-export interface SearchUsersResponse {
-    message: string;
-    data: {
-        id: string;
-        username: string;
-        image?: string;
-        bio?: string;
-        createdAt: string;
-    }[];
-    meta: {
-        current: number;
-        pageSize: number;
-        total: number;
-        totalPages: number;
-    };
+export interface SearchUserItem {
+    id: string;
+    username: string;
+    avatar?: string;
+    bio?: string;
+    createdAt: string;
 }
+
+export type SearchUsersRawItem = {
+    id: string;
+    username: string;
+    image?: string;
+    bio?: string;
+    createdAt: string;
+};
+
+export type SearchUsersRawResponse = PaginatedApiResult<SearchUsersRawItem>;
+
+export type SearchUsersResponse = PaginatedApiResult<SearchUserItem>;

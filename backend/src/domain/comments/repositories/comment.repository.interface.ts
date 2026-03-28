@@ -16,6 +16,7 @@ export interface ParentResolutionResult {
 
 export interface CommentFilter {
     userId?: string;
+    viewerUserId?: string;
     targetType?: 'book' | 'chapter' | 'post' | 'author';
     targetId?: string;
     parentId?: string | null;

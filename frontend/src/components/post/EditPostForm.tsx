@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import { Post } from '@/features/posts/types/post.interface';
 import { useUpdatePostMutation } from '@/features/posts/api/postApi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
@@ -22,6 +23,12 @@ export default function EditPostForm({ post, onClose }: EditPostFormProps) {
 
     const [updatePost, { isLoading }] = useUpdatePostMutation();
 
+    useEffect(() => {
+        return () => {
+            newImagePreviews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+        };
+    }, [newImagePreviews]);
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         const totalImages =
@@ -32,18 +39,18 @@ export default function EditPostForm({ post, onClose }: EditPostFormProps) {
             return;
         }
 
-        setNewImages((prev) => [...prev, ...files]);
+        const previewUrls = files.map((file) => URL.createObjectURL(file));
 
-        files.forEach((file) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setNewImagePreviews((prev) => [...prev, reader.result as string]);
-            };
-            reader.readAsDataURL(file);
-        });
+        setNewImages((prev) => [...prev, ...files]);
+        setNewImagePreviews((prev) => [...prev, ...previewUrls]);
     };
 
     const removeNewImage = (index: number) => {
+        const previewToRemove = newImagePreviews[index];
+        if (previewToRemove) {
+            URL.revokeObjectURL(previewToRemove);
+        }
+
         setNewImages((prev) => prev.filter((_, i) => i !== index));
         setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
     };
@@ -101,10 +108,12 @@ export default function EditPostForm({ post, onClose }: EditPostFormProps) {
                     <form onSubmit={handleSubmit} className="p-5 space-y-5">
                         {/* User info */}
                         <div className="flex items-center gap-3">
-                            <img
+                            <Image
                                 src={post.user?.image || '/abstract-book-pattern.png'}
                                 alt={post.user?.username}
-                                className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 rounded-full border border-slate-200 object-cover dark:border-gray-700"
                             />
                             <div className="space-y-0.5">
                                 <p className="font-semibold text-sm text-slate-900 dark:text-gray-100">
@@ -150,10 +159,12 @@ export default function EditPostForm({ post, onClose }: EditPostFormProps) {
                                             key={index}
                                             className="relative rounded-xl overflow-hidden border border-slate-100 dark:border-gray-700"
                                         >
-                                            <img
+                                            <Image
                                                 src={url}
                                                 alt={`Existing ${index + 1}`}
-                                                className="w-full h-28 md:h-32 object-cover"
+                                                width={160}
+                                                height={128}
+                                                className="h-28 w-full object-cover md:h-32"
                                             />
                                             <span
                                                 className="absolute top-2 left-2 text-xs px-2 py-1 rounded bg-slate-900/70 text-white">
@@ -176,10 +187,13 @@ export default function EditPostForm({ post, onClose }: EditPostFormProps) {
                                         key={index}
                                         className="relative group rounded-xl overflow-hidden border border-slate-100 dark:border-gray-700"
                                     >
-                                        <img
+                                        <Image
                                             src={preview}
                                             alt={`New ${index + 1}`}
-                                            className="w-full h-28 md:h-32 object-cover"
+                                            width={160}
+                                            height={128}
+                                            unoptimized
+                                            className="h-28 w-full object-cover md:h-32"
                                         />
                                         <button
                                             type="button"

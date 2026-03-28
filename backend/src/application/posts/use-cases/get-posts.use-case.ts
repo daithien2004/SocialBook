@@ -14,6 +14,7 @@ export class GetPostsUseCase {
     return this.postRepository.findAll({
       limit: query.limit,
       cursor: query.cursor,
+      viewerUserId: query.viewerUserId,
     });
   }
 }

@@ -33,7 +33,7 @@ export default function NewGenrePage() {
 
             toast.success('Tạo thể loại thành công!');
             router.push('/admin/genres');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to create genre:', error);
             toast.error(getErrorMessage(error));
         }
