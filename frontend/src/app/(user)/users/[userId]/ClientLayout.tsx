@@ -5,7 +5,7 @@ import { ProfileNav } from "@/components/user/profile-nav";
 import React, { ReactNode } from "react";
 import { ProfileSidebar } from "@/components/user/profile-sidebar";
 import { FollowStateResponse } from "@/features/follows/api/followApi";
-import {useGetUserOverviewQuery} from "@/features/users/api/usersApi";
+import { useGetUserOverviewQuery } from "@/features/users/api/usersApi";
 
 interface ClientLayoutProps {
     children: ReactNode;
@@ -13,20 +13,20 @@ interface ClientLayoutProps {
     initialFollowState: FollowStateResponse | null;
 }
 
-export default function ClientLayout(props : ClientLayoutProps) {
-    const {children, profileUserId, initialFollowState} = props
+export default function ClientLayout(props: ClientLayoutProps) {
+    const { children, profileUserId, initialFollowState } = props
     const { data: overview, isLoading: isOverviewLoading } =
         useGetUserOverviewQuery(profileUserId, {
             skip: !profileUserId,
         });
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-[#1a1a1a] text-slate-900 dark:text-gray-200">
-        <ProfileHeader username={overview?.username}
-                           image={overview?.image}
-                           postCount = {overview?.postCount}
-                           readingListCount = {overview?.readingListCount}
-                           followersCount = {overview?.followersCount}
-                           profileUserId={profileUserId}
+            <ProfileHeader username={overview?.username}
+                image={overview?.image}
+                postCount={overview?.postCount}
+                readingListCount={overview?.readingListCount}
+                followersCount={overview?.followersCount}
+                profileUserId={profileUserId}
             />
 
             <ProfileNav
@@ -38,7 +38,7 @@ export default function ClientLayout(props : ClientLayoutProps) {
                 <div className="flex flex-col lg:flex-row gap-6">
                     <div className="w-full lg:w-2/6">
                         <ProfileSidebar
-                            bio = {overview?.bio}
+                            bio={overview?.bio}
                             profileUserId={profileUserId}
                             joinedAt={overview?.createdAt}
                         />

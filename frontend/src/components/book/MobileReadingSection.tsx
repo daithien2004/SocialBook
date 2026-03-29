@@ -4,12 +4,14 @@ import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
-import { LibraryStatus } from '@/features/library/types/library.interface';
+import { LibraryStatus, LibraryItem } from '@/features/library/types/library.interface';
 import { useAppAuth } from '@/hooks/useAppAuth';
+
+const EMPTY_BOOKS: LibraryItem[] = [];
 
 export function MobileReadingSection() {
   const { isAuthenticated, isGuest } = useAppAuth();
-  const { data: books = [], isLoading } = useGetLibraryBooksQuery(
+  const { data: books = EMPTY_BOOKS, isLoading } = useGetLibraryBooksQuery(
     { status: LibraryStatus.READING },
     { skip: !isAuthenticated }
   );
@@ -154,7 +156,7 @@ export function MobileReadingSection() {
               {/* Book Info */}
               <Link
                 href={`/books/${item.bookId.slug}`}
-                className="block font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-2 min-h-[2.5rem]"
+                className="block font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 hover:text-primary transition-colors mb-2 min-h-[2.5rem]"
               >
                 {item.bookId.title}
               </Link>
@@ -163,7 +165,7 @@ export function MobileReadingSection() {
               {item.lastReadChapterId ? (
                 <Link
                   href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
-                  className="w-full flex items-center justify-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20 text-xs font-semibold py-2 rounded-lg transition-all"
+                  className="w-full flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-foreground/90 border border-primary/20 text-xs font-semibold py-2 rounded-lg transition-all"
                 >
                   <BookOpen size={12} />
                   Chương {item.lastReadChapterId.orderIndex}

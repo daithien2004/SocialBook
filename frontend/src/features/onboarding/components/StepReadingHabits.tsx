@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function StepReadingHabits({ onSubmit, initialData }: any) {
   const [times, setTimes] = useState(initialData.readingTime || {});
@@ -29,30 +30,38 @@ export default function StepReadingHabits({ onSubmit, initialData }: any) {
       <h2 className="text-2xl font-bold mb-2 dark:text-white">Bạn thường đọc sách khi nào?</h2>
       <p className="text-gray-500 mb-6">Chúng tôi sẽ giúp bạn duy trì thói quen với những lời nhắc nhở thông minh.</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {OPTIONS.map(opt => (
-          <button
-            key={opt.key}
-            onClick={() => toggleTime(opt.key)}
-            className={`p-4 rounded-xl border-2 text-left transition-all
-              ${times[opt.key]
-                ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400'
-                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-800'
-              }`}
-          >
-            <div className={`font-semibold ${times[opt.key] ? 'text-indigo-700 dark:text-indigo-300' : 'dark:text-gray-200'}`}>
-              {opt.label}
-            </div>
-            <div className="text-sm text-gray-400">{opt.sub}</div>
-          </button>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+        {OPTIONS.map(opt => {
+          const isSelected = times[opt.key];
+          return (
+            <Button
+              key={opt.key}
+              variant={isSelected ? 'default' : 'outline'}
+              onClick={() => toggleTime(opt.key)}
+              className={cn(
+                "h-auto p-4 flex flex-col items-start gap-1 rounded-xl transition-all duration-300",
+                isSelected ? "shadow-md scale-[1.02]" : "hover:border-primary/50 hover:bg-primary/5"
+              )}
+            >
+              <div className="font-bold text-sm">
+                {opt.label}
+              </div>
+              <div className={cn(
+                "text-xs",
+                isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+              )}>
+                {opt.sub}
+              </div>
+            </Button>
+          );
+        })}
       </div>
 
       <Button
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500"
+        className="w-full h-12 rounded-xl font-bold shadow-lg"
         onClick={() => onSubmit({ readingTime: times })}
       >
-        Sắp xong rồi
+        Tiếp tục nào
       </Button>
     </motion.div>
   );

@@ -4,13 +4,22 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { Users, BookOpen, FileText, MessageSquare, BarChart2, Download } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { StatCard } from '@/components/admin/dashboard/StatCard';
-import { UserGrowthChart } from '@/components/admin/dashboard/UserGrowthChart';
 import { TimeRangeSelector } from '@/components/admin/dashboard/TimeRangeSelector';
 import { ViewTypeSelector, ViewType } from '@/components/admin/dashboard/ViewTypeSelector';
 import { useDashboardData, useExportStatistics } from '@/features/admin/hooks/useDashboard';
 import { PopularBooksTable } from '@/components/admin/dashboard/PopularBooksTable';
-import { GenreDistributionChart } from '@/components/admin/dashboard/GenreDistributionChart';
+
+const UserGrowthChart = dynamic(
+  () => import('@/components/admin/dashboard/UserGrowthChart').then((mod) => mod.UserGrowthChart),
+  { ssr: false, loading: () => <div className="animate-pulse bg-gray-200 dark:bg-gray-800 h-[300px] rounded-xl flex justify-center items-center">Loading chart...</div> }
+);
+
+const GenreDistributionChart = dynamic(
+  () => import('@/components/admin/dashboard/GenreDistributionChart').then((mod) => mod.GenreDistributionChart),
+  { ssr: false, loading: () => <div className="animate-pulse bg-gray-200 dark:bg-gray-800 h-[300px] rounded-xl flex justify-center items-center">Loading chart...</div> }
+);
 
 export default function AdminPage() {
   const router = useRouter();
@@ -188,19 +197,19 @@ export default function AdminPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Growth Chart - Takes up 2 columns */}
         <div className="lg:col-span-2">
-          {growthData.length > 0 && <UserGrowthChart data={growthData} viewType={viewType} timeRange={timeRange} />}
+          {growthData.length > 0 ? <UserGrowthChart data={growthData} viewType={viewType} timeRange={timeRange} /> : null}
         </div>
 
         {/* Genre Distribution - Takes up 1 column */}
         <div className="lg:col-span-1">
-          {bookStats && <GenreDistributionChart genres={bookStats.byGenre} />}
+          {bookStats ? <GenreDistributionChart genres={bookStats.byGenre} /> : null}
         </div>
       </div>
 
       {/* Popular Content Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
-          {bookStats && <PopularBooksTable books={bookStats.popularBooks} />}
+          {bookStats ? <PopularBooksTable books={bookStats.popularBooks} /> : null}
         </div>
         {/* Could add another widget here, e.g. Recent Activity feed if implemented */}
         <div className="lg:col-span-1 space-y-6">

@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function StepReadingGoals({ onSubmit, initialData }: any) {
   const [goal, setGoal] = useState(
@@ -40,25 +41,25 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
           <span className="text-sm font-medium dark:text-gray-300">
             Đo lường bằng:
           </span>
-          <div className="mt-2 flex gap-4">
+          <div className="mt-2 flex gap-3">
             {unitOptions.map((option) => (
-              <button
+              <Button
                 key={option.value}
+                variant={goal.unit === option.value ? 'default' : 'outline'}
                 onClick={() =>
                   setGoal({
                     ...goal,
                     unit: option.value,
-                    amount: option.amounts[1], // Set to middle option when changing unit
+                    amount: option.amounts[1],
                   })
                 }
-                className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all
-                  ${goal.unit === option.value
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                    : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
-                  }`}
+                className={cn(
+                  "flex-1 py-6 rounded-xl font-bold transition-all duration-300",
+                  goal.unit === option.value && "shadow-md scale-105"
+                )}
               >
                 {option.label}
-              </button>
+              </Button>
             ))}
           </div>
         </label>
@@ -67,19 +68,19 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
           <span className="text-sm font-medium dark:text-gray-300">
             Tôi muốn đọc:
           </span>
-          <div className="mt-2 flex gap-4">
+          <div className="mt-2 flex gap-3">
             {currentUnitConfig.amounts.map((amount) => (
-              <button
+              <Button
                 key={amount}
+                variant={goal.amount === amount ? 'default' : 'outline'}
                 onClick={() => setGoal({ ...goal, amount })}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold transition-all
-                  ${goal.amount === amount
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                    : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
-                  }`}
+                className={cn(
+                  "flex-1 py-6 rounded-xl font-bold transition-all duration-300",
+                  goal.amount === amount && "shadow-md scale-105"
+                )}
               >
                 {amount} {goal.unit === 'minutes' ? 'phút' : goal.unit === 'pages' ? 'trang' : 'cuốn'}
-              </button>
+              </Button>
             ))}
           </div>
         </label>
@@ -88,30 +89,30 @@ export default function StepReadingGoals({ onSubmit, initialData }: any) {
           <span className="text-sm font-medium dark:text-gray-300">
             Tần suất:
           </span>
-          <div className="mt-2 flex gap-4">
+          <div className="mt-2 flex gap-3">
             {[
               { id: 'daily', label: 'Mỗi ngày' },
               { id: 'weekly', label: 'Mỗi tuần' },
               { id: 'monthly', label: 'Mỗi tháng' }
             ].map((type) => (
-              <button
+              <Button
                 key={type.id}
+                variant={goal.type === type.id ? 'default' : 'outline'}
                 onClick={() => setGoal({ ...goal, type: type.id })}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 font-semibold capitalize transition-all
-                  ${goal.type === type.id
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300'
-                    : 'border-gray-200 dark:border-gray-700 dark:text-gray-300 hover:border-indigo-200 dark:hover:border-indigo-800'
-                  }`}
+                className={cn(
+                  "flex-1 py-6 rounded-xl font-bold transition-all duration-300",
+                  goal.type === type.id && "shadow-md scale-105"
+                )}
               >
                 {type.label}
-              </button>
+              </Button>
             ))}
           </div>
         </label>
       </div>
 
       <Button
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500"
+        className="w-full h-12 rounded-xl font-bold shadow-lg"
         onClick={() => onSubmit({ readingGoal: goal })}
       >
         Thiết lập mục tiêu

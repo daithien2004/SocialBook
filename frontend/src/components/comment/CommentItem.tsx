@@ -260,7 +260,8 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                         onClick={handleEditComment}
                                         size="icon"
                                         variant="ghost"
-                                        className="h-8 w-8 bg-blue-50 text-blue-600 hover:bg-blue-50 hover:text-blue-500"
+                                        className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary/20"
+                                        aria-label="Xác nhận sửa"
                                     >
                                         <CornerDownRight size={14} />
                                     </Button>
@@ -281,6 +282,7 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                         variant="ghost"
                                         size="icon"
                                         className="h-8 w-8 rounded-full opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+                                        aria-label="Tùy chọn bình luận"
                                     >
                                         <MoreVertical
                                             size={16}
@@ -395,7 +397,8 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                         }
                                         onClick={handleSubmitReply}
                                         size="icon"
-                                        className="h-9 w-9 bg-blue-600 hover:bg-blue-500"
+                                        className="h-9 w-9 bg-primary hover:bg-primary/90"
+                                        aria-label="Gửi phản hồi"
                                     >
                                         {isPostingReply ? (
                                             <Loader2

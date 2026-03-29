@@ -1,14 +1,12 @@
 'use client';
 
-import CreatePostModal, {
-  CreatePostData,
-} from '@/components/post/CreatePostModal';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { getErrorMessage } from '@/lib/utils';
 import { useReadingSettings } from '@/store/useReadingSettings';
+import { useModalStore } from '@/store/useModalStore';
 import { MessageSquarePlus, Share2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -39,12 +37,9 @@ export function ChapterContent({
   );
   const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
   const [activeParagraph, setActiveParagraph] = useState<Paragraph | null>(null);
-  const [postModalOpen, setPostModalOpen] = useState(false);
-  const [selectedParagraph, setSelectedParagraph] = useState<Paragraph | null>(
-    null
-  );
-
-  const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
+  
+  const { openCreatePost } = useModalStore();
+  const [createPost] = useCreatePostMutation();
 
   const handleToggleComments = (paragraph: Paragraph) => {
     setActiveParagraphId(paragraph.id);
@@ -53,34 +48,35 @@ export function ChapterContent({
   };
 
   const handleOpenPostModal = (paragraph: Paragraph) => {
-    setSelectedParagraph(paragraph);
-    setPostModalOpen(true);
-  };
+    openCreatePost({
+      title: `Chia sẻ trích dẫn${bookTitle ? ` từ "${bookTitle}"` : ''}`,
+      contentPlaceholder: "Nội dung trích dẫn...",
+      defaultContent: paragraph.content,
+      onSubmit: async (data) => {
+        if (!bookId) {
+          toast.error('Không tìm thấy thông tin sách');
+          return;
+        }
+        try {
+          const result = await createPost({
+            bookId: bookId,
+            content: data.content,
+            images: data.images,
+          }).unwrap();
 
-  const handleSubmitPost = async (data: CreatePostData) => {
-    if (!bookId) {
-      toast.error('Không tìm thấy thông tin sách');
-      return;
-    }
-    try {
-      const result = await createPost({
-        bookId: bookId,
-        content: data.content,
-        images: data.images,
-      }).unwrap();
-
-      if (result.warning) {
-        toast.warning('Bài viết đang được xem xét', {
-          description: result.warning,
-          duration: 5000
-        });
-      } else {
-        toast.success('Chia sẻ thành công!');
+          if (result.warning) {
+            toast.warning('Bài viết đang được xem xét', {
+              description: result.warning,
+              duration: 5000
+            });
+          } else {
+            toast.success('Chia sẻ thành công!');
+          }
+        } catch (error: any) {
+          toast.error(getErrorMessage(error));
+        }
       }
-      setPostModalOpen(false);
-    } catch (error: any) {
-      toast.error(getErrorMessage(error));
-    }
+    });
   };
 
   return (
@@ -133,6 +129,7 @@ export function ChapterContent({
                         size="icon"
                         onClick={() => handleToggleComments(para)}
                         className="h-8 w-8 rounded-full shadow-sm hover:scale-110 transition-transform"
+                        aria-label="Bình luận đoạn này"
                       >
                         <MessageSquarePlus size={16} />
                       </Button>
@@ -149,6 +146,7 @@ export function ChapterContent({
                         size="icon"
                         onClick={() => handleOpenPostModal(para)}
                         className="h-8 w-8 rounded-full shadow-sm hover:scale-110 transition-transform"
+                        aria-label="Chia sẻ trích dẫn"
                       >
                         <Share2 size={16} />
                       </Button>
@@ -173,17 +171,6 @@ export function ChapterContent({
         }}
         paragraphId={activeParagraph?.id || null}
         paragraphContent={activeParagraph?.content}
-      />
-
-      <CreatePostModal
-        isSubmitting={isCreatingPost}
-        isOpen={postModalOpen}
-        onClose={() => setPostModalOpen(false)}
-        onSubmit={handleSubmitPost}
-        defaultContent={selectedParagraph?.content || ''}
-        title={`Chia sẻ trích dẫn${bookTitle ? ` từ "${bookTitle}"` : ''}`}
-        contentLabel="Nội dung trích dẫn"
-        maxImages={10}
       />
     </TooltipProvider>
   );

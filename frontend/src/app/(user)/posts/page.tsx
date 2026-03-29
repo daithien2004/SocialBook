@@ -7,11 +7,7 @@ import PostList from '@/components/post/PostList';
 import {useAppAuth} from '@/hooks/useAppAuth';
 import {BookOpen, Users, Library, Quote, ImageIcon, PenSquare} from 'lucide-react';
 import {useRouter} from "next/navigation";
-
-const CreatePostForm = dynamic(
-    () => import('@/components/post/CreatePostForm'),
-    { ssr: false }
-);
+import { useModalStore } from '@/store/useModalStore';
 
 const UserSearchSidebar = dynamic(
     () => import('@/components/post/UserSearchSidebar'),
@@ -34,7 +30,7 @@ const RecommendedBooks = dynamic(
 );
 
 export default function Post() {
-    const [showCreateForm, setShowCreateForm] = useState(false);
+    const { openCreatePost } = useModalStore();
     const {user} = useAppAuth();
     const currentUserId = user?.id;
     const route = useRouter();
@@ -76,7 +72,10 @@ export default function Post() {
                             </div>
 
                             <button
-                                onClick={() => setShowCreateForm(true)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openCreatePost();
+                                }}
                                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-zinc-800 text-xs font-medium text-slate-700 dark:text-gray-300 py-2 hover:bg-slate-100 dark:hover:bg-gray-800 transition"
                             >
                                 <PenSquare size={14}/>
@@ -110,11 +109,6 @@ export default function Post() {
                                     )
                                 }
 
-                                {/*<button className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">*/}
-                                {/*  <Quote size={16} />*/}
-                                {/*  <span>Trích dẫn yêu thích</span>*/}
-                                {/*</button>*/}
-
                                 <button
                                     className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
                                     <Library size={16}/>
@@ -145,8 +139,7 @@ export default function Post() {
                                 className="h-9 w-9 cursor-pointer rounded-full border border-slate-200 object-cover dark:border-gray-700"
                             />
                             <button
-                                onClick={() => setShowCreateForm(true)}
-
+                                onClick={() => openCreatePost()}
                                 className="flex-1 text-left text-sm text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full px-4 py-2 transition"
                             >
                                 {currentUserName}, bạn đang nghĩ gì về cuốn sách hôm nay?
@@ -157,7 +150,7 @@ export default function Post() {
                             className="flex justify-between items-center border-t border-slate-100 dark:border-gray-800 pt-3">
                             <div className="flex gap-4 text-xs text-slate-600 dark:text-gray-400">
                                 <button
-                                    onClick={() => setShowCreateForm(true)}
+                                    onClick={() => openCreatePost()}
                                     className="inline-flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400"
                                 >
                                     <ImageIcon size={16}/>
@@ -165,7 +158,7 @@ export default function Post() {
                                 </button>
 
                                 <button
-                                    onClick={() => setShowCreateForm(true)}
+                                    onClick={() => openCreatePost()}
                                     className="inline-flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400"
                                 >
                                     <Quote size={16}/>
@@ -174,7 +167,7 @@ export default function Post() {
                             </div>
 
                             <button
-                                onClick={() => setShowCreateForm(true)}
+                                onClick={() => openCreatePost()}
                                 className="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-sky-700"
                             >
                                 <PenSquare size={14}/>
@@ -183,39 +176,12 @@ export default function Post() {
                         </div>
                     </div>
 
-                    {showCreateForm && <CreatePostForm onClose={() => setShowCreateForm(false)}/>}
-
                     <PostList currentUserId={currentUserId}/>
                 </section>
 
                 {/* RIGHT SIDEBAR */}
                 <aside className="hidden lg:block w-[22%]">
                     <div className="sticky top-20 space-y-4">
-                        {/*<div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4">*/}
-                        {/*  <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide mb-3">*/}
-                        {/*    Gợi ý cho bạn*/}
-                        {/*  </h2>*/}
-
-                        {/*  <ul className="space-y-2 text-sm text-slate-700 dark:text-gray-300">*/}
-                        {/*    <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">*/}
-                        {/*      <span>Tác giả nổi bật</span>*/}
-                        {/*      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400">*/}
-                        {/*      Khám phá*/}
-                        {/*    </span>*/}
-                        {/*    </li>*/}
-
-                        {/*    <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">*/}
-                        {/*      <span>Bài viết hay gần đây</span>*/}
-                        {/*      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />*/}
-                        {/*    </li>*/}
-
-                        {/*    <li className="flex items-center justify-between hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer">*/}
-                        {/*      <span>Nhóm đọc nổi bật</span>*/}
-                        {/*      <span className="text-[10px] text-slate-400 dark:text-gray-500">Mới</span>*/}
-                        {/*    </li>*/}
-                        {/*  </ul>*/}
-                        {/*</div>*/}
-
                         <RecommendedBooks/>
                     </div>
                 </aside>

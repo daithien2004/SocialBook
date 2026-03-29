@@ -1,8 +1,7 @@
 'use client'
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FollowersModal } from "@/components/user/FollowersModal";
-import { useState } from "react";
+import { useModalStore } from "@/store/useModalStore";
 
 interface PropsProfileHeader {
     username: string | undefined,
@@ -14,7 +13,7 @@ interface PropsProfileHeader {
 }
 
 export function ProfileHeader(props: PropsProfileHeader) {
-    const [openModal, setOpenModal] = useState(false);
+    const { openFollowers } = useModalStore();
 
     return (
         <div className="relative w-full">
@@ -74,7 +73,7 @@ export function ProfileHeader(props: PropsProfileHeader) {
                     </div>
 
                     <div
-                        onClick={() => setOpenModal(true)}
+                        onClick={() => openFollowers({ userId: props.profileUserId, count: props.followersCount })}
                         className="flex flex-col items-center group cursor-pointer hover:bg-white/5 rounded-lg p-1 -m-1 transition-colors"
                     >
                         <span className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">
@@ -86,8 +85,6 @@ export function ProfileHeader(props: PropsProfileHeader) {
                     </div>
                 </div>
             </div>
-
-            <FollowersModal isOpen={openModal} onClose={() => setOpenModal(false)} />
         </div>
     );
 }

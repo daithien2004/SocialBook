@@ -4,7 +4,7 @@ import { Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { ElementType, useEffect, useRef, useState } from 'react';
+import React, { ElementType, memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,19 +12,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
 import { cn, formatCompact } from '@/lib/utils';
 
-const AddToLibraryModal = dynamic(
-  () => import('@/components/library/AddToLibraryModal'),
-  { ssr: false }
-);
+import { useModalStore } from '@/store/useModalStore';
 
-export function BookCard({ book }: { book: Book }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export const BookCard = memo(function BookCard({ book }: { book: Book }) {
+  const { openAddToLibrary, isAddToLibraryOpen, addToLibraryData } = useModalStore();
+  const isCurrentBookOpen = isAddToLibraryOpen && addToLibraryData?.bookId === book.id;
 
-  const handleAddToLibrary = (e: React.MouseEvent) => {
+  const handleAddToLibrary = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsModalOpen(true);
-  };
+    openAddToLibrary({ bookId: book.id });
+  }, [book.id, openAddToLibrary]);
 
   return (
     <>
@@ -79,6 +77,7 @@ export function BookCard({ book }: { book: Book }) {
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Thêm vào danh sách đọc"
                 onClick={handleAddToLibrary}
                 className="h-8 w-8 text-muted-foreground hover:text-red-600 dark:hover:text-white hover:bg-transparent"
                 title="Save to Library"
@@ -86,24 +85,16 @@ export function BookCard({ book }: { book: Book }) {
                 <Bookmark
                   size={16}
                   className="transition-transform hover:scale-110"
-                  fill={isModalOpen ? 'currentColor' : 'none'}
+                  fill={isCurrentBookOpen ? 'currentColor' : 'none'}
                 />
               </Button>
             </div>
           </CardContent>
         </Card>
       </Link>
-
-      {isModalOpen && (
-        <AddToLibraryModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          bookId={book.id}
-        />
-      )}
     </>
   );
-}
+});
 
 // BookSection Component with Dark Mode Support
 interface BookSectionProps {
@@ -156,6 +147,9 @@ export function BookSection({
     }
   };
 
+  const handleScrollLeft = useCallback(() => scroll('left'), []);
+  const handleScrollRight = useCallback(() => scroll('right'), []);
+
   if (!books || books.length === 0) return null;
 
   return (
@@ -177,7 +171,7 @@ export function BookSection({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => scroll('left')}
+            onClick={handleScrollLeft}
             disabled={!canScrollLeft}
             className={cn(
               "rounded-full border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300",
@@ -191,7 +185,7 @@ export function BookSection({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => scroll('right')}
+            onClick={handleScrollRight}
             disabled={!canScrollRight}
             className={cn(
               "rounded-full border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300",

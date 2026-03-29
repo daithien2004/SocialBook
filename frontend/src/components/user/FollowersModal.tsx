@@ -8,33 +8,30 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import FollowerItem from "@/components/user/follower-item";
-import { useGetFollowersListQuery } from "@/features/follows/api/followApi";
+import { useGetFollowersListQuery, FollowingUser } from "@/features/follows/api/followApi";
 import { useParams } from "next/navigation";
 
-type FollowersModalProps = {
-    isOpen: boolean;
-    onClose: () => void;
-};
+import { useModalStore } from "@/store/useModalStore";
 
-export function FollowersModal({
-    isOpen,
-    onClose,
-}: FollowersModalProps) {
-    const { userId } = useParams<{ userId: string }>();
+const EMPTY_FOLLOWERS: FollowingUser[] = [];
+
+export function FollowersModal() {
+    const { isFollowersOpen, closeFollowers, followersData } = useModalStore();
+    const userId = followersData?.userId || "";
 
     const {
-        data: followersList = [],
+        data: followersList = EMPTY_FOLLOWERS,
         isLoading,
     } = useGetFollowersListQuery(userId, {
-        skip: !userId || !isOpen,
+        skip: !userId || !isFollowersOpen,
     });
-    console.log(followersList);
+    
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={isFollowersOpen} onOpenChange={(open) => !open && closeFollowers()}>
             <DialogContent className="sm:max-w-md bg-white dark:bg-[#1a1a1a] p-0 gap-0 overflow-hidden border-slate-100 dark:border-gray-800">
                 <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
                     <DialogTitle className="text-center text-lg font-semibold">
-                        {followersList.length} Người theo dõi
+                        {followersData?.count ?? followersList.length} Người theo dõi
                     </DialogTitle>
                 </DialogHeader>
 

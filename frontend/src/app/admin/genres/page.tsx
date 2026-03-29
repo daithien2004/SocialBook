@@ -1,6 +1,5 @@
 'use client';
 
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getErrorMessage } from '@/lib/utils';
 import {
@@ -20,14 +19,15 @@ import {
     Tag,
     Trash2,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useModalStore } from '@/store/useModalStore';
 
 export default function AdminGenresPage() {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 500);
+    const { openConfirm, openGenreModal } = useModalStore();
 
     const { data, isLoading, isFetching, refetch } = useGetGenresQuery(
         {
@@ -73,13 +73,13 @@ export default function AdminGenresPage() {
                             thể loại
                         </p>
                     </div>
-                    <Link
-                        href="/admin/genres/new"
-                        className="flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow"
+                    <button
+                        onClick={() => openGenreModal({ onSuccess: refetch })}
+                        className="flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow active:scale-95"
                     >
                         <Plus className="h-5 w-5" />
                         Thêm thể loại mới
-                    </Link>
+                    </button>
                 </div>
 
                 <div className="bg-gray-50/50 px-6 py-4">
@@ -186,31 +186,34 @@ export default function AdminGenresPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex justify-center gap-2">
-                                                        <Link
-                                                            href={`/admin/genres/edit/${genre.id}`}
+                                                        <button
+                                                            onClick={() => openGenreModal({
+                                                                genre: {
+                                                                    id: genre.id,
+                                                                    name: genre.name,
+                                                                    description: genre.description
+                                                                },
+                                                                onSuccess: refetch
+                                                            })}
                                                             className="rounded-lg p-2 transition-colors hover:bg-green-50"
                                                             title="Chỉnh sửa"
                                                         >
                                                             <Edit className="h-5 w-5 text-green-600" />
-                                                        </Link>
-                                                        <ConfirmDelete
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openConfirm({
+                                                                title: "Xóa thể loại",
+                                                                description: `Bạn có chắc chắn muốn xóa thể loại "${genre.name}"?`,
+                                                                variant: "destructive",
+                                                                confirmText: "Xóa",
+                                                                onConfirm: () => handleDelete(genre.id, genre.name)
+                                                            })}
+                                                            className="rounded-lg p-2 transition-colors hover:bg-red-50"
                                                             title="Xóa thể loại"
-                                                            description={`Bạn có chắc chắn muốn xóa thể loại "${genre.name}"?`}
-                                                            onConfirm={() =>
-                                                                handleDelete(
-                                                                    genre.id,
-                                                                    genre.name
-                                                                )
-                                                            }
+                                                            disabled={isDeleting}
                                                         >
-                                                            <button
-                                                                className="rounded-lg p-2 transition-colors hover:bg-red-50"
-                                                                title="Xóa thể loại"
-                                                                disabled={isDeleting}
-                                                            >
-                                                                <Trash2 className="h-5 w-5 text-red-600" />
-                                                            </button>
-                                                        </ConfirmDelete>
+                                                            <Trash2 className="h-5 w-5 text-red-600" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>

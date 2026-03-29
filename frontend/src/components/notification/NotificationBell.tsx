@@ -50,7 +50,7 @@ export function NotificationBell() {
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-gray-800">
           <h4 className="font-semibold text-sm">Thông báo</h4>
           {unreadCount > 0 && (
-            <Badge variant="secondary" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-100">
+            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 dark:bg-primary/20 dark:text-primary-foreground/90 hover:bg-primary/20">
               {unreadCount} mới
             </Badge>
           )}
@@ -83,7 +83,7 @@ export function NotificationBell() {
                     }}
                     className={`
                         w-full text-left flex items-start gap-3 p-4 transition-colors border-b border-slate-50 dark:border-gray-800/50 last:border-0
-                        ${isUnread ? 'bg-blue-50/50 dark:bg-blue-900/10 hover:bg-blue-50 dark:hover:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-gray-800/50'}
+                        ${isUnread ? 'bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20' : 'hover:bg-slate-50 dark:hover:bg-gray-800/50'}
                     `}
                   >
                     <div className="relative shrink-0">
@@ -92,7 +92,7 @@ export function NotificationBell() {
                         <AvatarFallback>U</AvatarFallback>
                       </Avatar>
                       {isUnread && (
-                        <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-white dark:border-[#1a1a1a]" />
+                        <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-white dark:border-[#1a1a1a]" />
                       )}
                     </div>
 
@@ -110,7 +110,7 @@ export function NotificationBell() {
 
                     {isUnread && (
                       <div
-                        className="shrink-0 p-1 rounded-full text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                        className="shrink-0 p-1 rounded-full text-primary hover:bg-primary/10 dark:hover:bg-primary/20"
                         onClick={(e) => {
                           e.stopPropagation();
                           markAsRead(notif.id);

@@ -101,23 +101,23 @@ const PostListUser: React.FC<PostListProps> = ({ userId }) => {
         <PostCard key={post.id} post={post} />
       ))}
 
-      {isFetching && cursor !== undefined && (
+      {isFetching && cursor !== undefined ? (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      )}
+      ) : null}
 
-      {hasMore && <div ref={observerTarget} className="h-10" />}
+      {hasMore ? <div ref={observerTarget} className="h-10" /> : null}
 
-      {allPosts.length > 5 && (
+      {allPosts.length > 5 ? (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition z-40"
+          className="fixed bottom-8 right-8 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition z-40"
           aria-label="Scroll to top"
         >
           ↑
         </button>
-      )}
+      ) : null}
     </div>
   );
 };

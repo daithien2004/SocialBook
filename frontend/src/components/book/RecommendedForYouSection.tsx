@@ -35,8 +35,8 @@ export const RecommendedForYouSection = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-20 h-20 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
-                <LogIn size={32} className="text-blue-600 dark:text-blue-400" />
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                <LogIn size={32} className="text-primary" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-3">
                 Đăng nhập để nhận gợi ý cá nhân hóa

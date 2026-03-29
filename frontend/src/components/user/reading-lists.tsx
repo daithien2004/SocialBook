@@ -1,10 +1,13 @@
 import { Plus, Settings } from 'lucide-react';
 import { ReadingListItem } from '@/components/user/reading-list-item';
 import { useGetCollectionsQuery } from '@/features/library/api/libraryApi';
+import { Collection } from '@/features/library/types/library.interface';
 import { useParams, useRouter } from 'next/navigation';
+
+const EMPTY_COLLECTIONS: Collection[] = [];
 export function ReadingLists() {
   const { userId } = useParams<{ userId: string }>();
-  const { data: collectionsData = [] } = useGetCollectionsQuery(userId);
+  const { data: collectionsData = EMPTY_COLLECTIONS } = useGetCollectionsQuery(userId);
   const route = useRouter();
   return (
       <div

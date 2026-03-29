@@ -17,7 +17,9 @@ import StepReadingGoals from './StepReadingGoals';
 import StepReadingHabits from './StepReadingHabits';
 import StepCompletion from './StepCompletion';
 import { toast } from 'sonner';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
 export default function OnboardingWizard() {
   const router = useRouter();
@@ -60,7 +62,7 @@ export default function OnboardingWizard() {
       await updateStep({ step, data: updatedData }).unwrap();
 
       if (step < 4) {
-        setStep(step + 1);
+        setStep((prev) => (prev !== null ? prev + 1 : 1));
       } else {
         await completeOnboarding().unwrap();
         await update({ 
@@ -68,24 +70,22 @@ export default function OnboardingWizard() {
           user: { ...user, onboardingCompleted: true } 
         });
         dispatch(gamificationApi.util.invalidateTags(['GamificationStats', 'Achievements']));
-        toast.success('Welcome to SocialBook!');
+        toast.success('Chào mừng bạn đến với SocialBook!');
         router.replace('/');
       }
     } catch (error) {
-      toast.error('Failed to save progress');
+      toast.error('Không thể lưu tiến trình');
     }
   };
 
   const handleBack = () => {
-    if (step && step > 1) {
-      setStep(step - 1);
-    }
+    setStep((prev) => (prev && prev > 1 ? prev - 1 : prev));
   };
 
   if (step === null) {
       return (
         <div className="flex items-center justify-center min-h-[400px]">
-           <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       );
   }
@@ -94,24 +94,25 @@ export default function OnboardingWizard() {
     <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-2xl mt-10">
       {/* Back Button */}
       {step > 1 && step < 4 && (
-        <button
+        <Button
+          variant="ghost"
           onClick={handleBack}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors mb-6 group"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all mb-6 group px-2 h-8"
         >
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-medium">Quay lại</span>
-        </button>
+          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium text-sm">Quay lại</span>
+        </Button>
       )}
 
       {/* Progress Bar */}
       <div className="mb-8">
-        <div className="flex justify-between mb-2">
+        <div className="flex justify-between mb-3 px-1">
           {['Sở thích', 'Mục tiêu', 'Thói quen', 'Sẵn sàng'].map(
             (label, idx) => (
               <div
                 key={label}
-                className={`text-sm font-medium ${
-                  step > idx ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'
+                className={`text-[10px] font-bold tracking-wider uppercase transition-colors duration-300 ${
+                  step > idx ? 'text-primary' : 'text-muted-foreground/50'
                 }`}
               >
                 {label}
@@ -119,40 +120,33 @@ export default function OnboardingWizard() {
             )
           )}
         </div>
-        <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-indigo-600 dark:bg-indigo-500"
-            initial={{ width: `${((step - 1) / 4) * 100}%` }}
-            animate={{ width: `${(step / 4) * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
+        <Progress value={(step / 4) * 100} className="h-1.5" />
       </div>
 
       {/* Step Content */}
       <AnimatePresence mode="wait">
-        {step === 1 && (
+        {step === 1 ? (
           <StepGenreSelection
             key="step1"
             onSubmit={handleNext}
             initialData={formData}
           />
-        )}
-        {step === 2 && (
+        ) : null}
+        {step === 2 ? (
           <StepReadingGoals
             key="step2"
             onSubmit={handleNext}
             initialData={formData}
           />
-        )}
-        {step === 3 && (
+        ) : null}
+        {step === 3 ? (
           <StepReadingHabits
             key="step3"
             onSubmit={handleNext}
             initialData={formData}
           />
-        )}
-        {step === 4 && <StepCompletion key="step4" onSubmit={handleNext} />}
+        ) : null}
+        {step === 4 ? <StepCompletion key="step4" onSubmit={handleNext} /> : null}
       </AnimatePresence>
     </div>
   );

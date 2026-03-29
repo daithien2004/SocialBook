@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useUpdateBookMutation, useGetBookByIdQuery } from '@/features/books/api/bookApi';
 import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
+import { AuthorOption, GenreOption } from '@/features/admin/types/bookRelation.interface';
 import { getErrorMessage } from '@/lib/utils';
 
 const DEFAULT_COVER = '/abstract-book-pattern.png';
@@ -38,14 +39,17 @@ interface EditBookProps {
     bookId: string;
 }
 
+const EMPTY_AUTHORS: AuthorOption[] = [];
+const EMPTY_GENRES: GenreOption[] = [];
+
 export default function EditBook({ bookId }: EditBookProps) {
     const router = useRouter();
 
     // Fetch existing book data
     const { data: bookData, isLoading: loadingBook, error: bookError } = useGetBookByIdQuery(bookId);
     const [updateBook, { isLoading: isUpdating }] = useUpdateBookMutation();
-    const { data: authors = [], isLoading: loadingAuthors } = useGetAuthorsQuery();
-    const { data: genres = [], isLoading: loadingGenres } = useGetGenresQuery();
+    const { data: authors = EMPTY_AUTHORS, isLoading: loadingAuthors } = useGetAuthorsQuery();
+    const { data: genres = EMPTY_GENRES, isLoading: loadingGenres } = useGetGenresQuery();
 
     const [formData, setFormData] = useState<FormData>({
         title: '',

@@ -1,7 +1,7 @@
 'use client';
 
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 import { useBanUserMutation, useGetUsersQuery } from '@/features/users/api/usersApi';
+import { useModalStore } from '@/store/useModalStore';
 import { getErrorMessage } from '@/lib/utils';
 import {
     CheckCircle,
@@ -21,6 +21,7 @@ const UsersPage = () => {
     const { data, isLoading, isFetching, refetch } = useGetUsersQuery(
         `current=${page}&pageSize=${pageSize}`
     );
+    const { openConfirm } = useModalStore();
     const [banUser, { isLoading: isBanning }] = useBanUserMutation();
     const users = data?.data || [];
     const total = data?.meta?.total || 0;
@@ -142,51 +143,26 @@ const UsersPage = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex justify-center">
-                                                        <ConfirmDelete
-                                                            title={
+                                                        <button
+                                                            onClick={() => openConfirm({
+                                                                title: user.isBanned ? 'Mở khóa người dùng' : 'Khóa người dùng',
+                                                                description: user.isBanned 
+                                                                    ? `Bạn có chắc chắn muốn mở khóa người dùng "${user.username}"?`
+                                                                    : `Bạn có chắc chắn muốn khóa người dùng "${user.username}"? Hành động này sẽ tạm dừng quyền truy cập của họ.`,
+                                                                confirmText: user.isBanned ? 'Mở khóa' : 'Khóa người dùng',
+                                                                variant: user.isBanned ? 'default' : 'destructive',
+                                                                onConfirm: () => handleBan(user.id)
+                                                            })}
+                                                            className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium shadow-sm transition-all ${
                                                                 user.isBanned
-                                                                    ? 'Mở khóa người dùng'
-                                                                    : 'Khóa người dùng'
-                                                            }
-                                                            description={
-                                                                user.isBanned
-                                                                    ? 'Bạn có chắc chắn muốn mở khóa người dùng này?'
-                                                                    : 'Bạn có chắc chắn muốn khóa người dùng này?'
-                                                            }
-                                                            onConfirm={() =>
-                                                                handleBan(
-                                                                    user.id
-                                                                )
-                                                            }
-                                                            okText={
-                                                                user.isBanned
-                                                                    ? 'Mở khóa'
-                                                                    : 'Khóa'
-                                                            }
-                                                            okButtonProps={{
-                                                                danger: !user.isBanned,
-                                                            }}
+                                                                    ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-500'
+                                                                    : 'border-dashed border-red-200 bg-white text-red-500 hover:border-red-400 hover:text-red-600'
+                                                            }`}
+                                                            title={user.isBanned ? 'Unban User' : 'Ban User'}
+                                                            disabled={isBanning}
                                                         >
-                                                            <button
-                                                                className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium shadow-sm transition-all ${
-                                                                    user.isBanned
-                                                                        ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-500'
-                                                                        : 'border-dashed border-red-200 bg-white text-red-500 hover:border-red-400 hover:text-red-600'
-                                                                }`}
-                                                                title={
-                                                                    user.isBanned
-                                                                        ? 'Unban User'
-                                                                        : 'Ban User'
-                                                                }
-                                                                disabled={
-                                                                    isBanning
-                                                                }
-                                                            >
-                                                                {user.isBanned
-                                                                    ? 'Unban'
-                                                                    : 'Ban'}
-                                                            </button>
-                                                        </ConfirmDelete>
+                                                            {user.isBanned ? 'Unban' : 'Ban'}
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>

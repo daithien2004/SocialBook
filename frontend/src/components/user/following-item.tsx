@@ -101,9 +101,9 @@ const FollowingItem = (props: FollowingUser) => {
                     className={`w-full rounded-md text-xs font-medium tracking-wide transition-all
             ${isFollowing
                             ? `
-                  bg-teal-600 text-white
-                  hover:bg-teal-500
-                  dark:bg-teal-700 dark:hover:bg-teal-600
+                  bg-primary text-primary-foreground
+                  hover:bg-primary/90
+                  dark:bg-primary dark:hover:bg-primary/80
                   shadow-sm
                 `
                             : `

@@ -3,7 +3,7 @@
 import type React from "react"
 import Image from "next/image";
 import { Facebook, Twitter, Mail } from "lucide-react"
-import {useGetFollowingListQuery} from "@/features/follows/api/followApi";
+import {useGetFollowingListQuery, FollowingUser} from "@/features/follows/api/followApi";
 import {useRouter} from "next/navigation";
 import {formatDate} from "@/lib/utils";
 
@@ -22,10 +22,12 @@ interface ProfileNavProps {
   joinedAt: Date | undefined;
 }
 
+const EMPTY_FOLLOWING: FollowingUser[] = [];
+
 export function ProfileSidebar(props : ProfileNavProps) {
   const {profileUserId, joinedAt} = props
   const {
-    data: following = [],
+    data: following = EMPTY_FOLLOWING,
     isLoading,
     isError,
   } = useGetFollowingListQuery(profileUserId, {

@@ -10,13 +10,13 @@ import { Post } from '@/features/posts/types/post.interface';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 import { AlertCircle, ArrowUp, LayoutGrid, List } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 
 interface PostListProps {
     currentUserId?: string;
 }
 
-const PostList: React.FC<PostListProps> = () => {
+const PostList: React.FC<PostListProps> = memo(function PostList() {
     const [cursor, setCursor] = useState<string | undefined>(undefined);
     const [allPosts, setAllPosts] = useState<Post[]>([]);
     const limit = 10;
@@ -124,7 +124,7 @@ const PostList: React.FC<PostListProps> = () => {
             <div className="flex justify-between items-center bg-white dark:bg-[#1a1a1a] p-2 rounded-xl border border-slate-100 dark:border-gray-800 shadow-sm">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white px-2">Bảng tin</h2>
                 <div className="flex items-center gap-2">
-                    {isFetching && <Spinner className="size-4 text-sky-500" />}
+                    {isFetching ? <Spinner className="size-4 text-sky-500" /> : null}
                     <ToggleGroup type="single" value={viewMode} onValueChange={(val) => val && setViewMode(val as 'grid' | 'list')}>
                         <ToggleGroupItem value="list" aria-label="List view" className="h-8 w-8 p-0">
                             <List className="h-4 w-4" />
@@ -147,15 +147,15 @@ const PostList: React.FC<PostListProps> = () => {
                 ))}
             </div>
 
-            {isFetching && cursor !== undefined && (
+            {isFetching && cursor !== undefined ? (
                 <div className="flex justify-center py-4 w-full">
                     <Spinner className="size-8 text-sky-500" />
                 </div>
-            )}
+            ) : null}
 
-            {hasMore && <div ref={observerTarget} className="h-10 w-full" />}
+            {hasMore ? <div ref={observerTarget} className="h-10 w-full" /> : null}
 
-            {allPosts.length > 5 && (
+            {allPosts.length > 5 ? (
                 <Button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="fixed bottom-8 right-8 rounded-full shadow-lg z-40 w-12 h-12"
@@ -164,9 +164,9 @@ const PostList: React.FC<PostListProps> = () => {
                 >
                     <ArrowUp className="h-5 w-5" />
                 </Button>
-            )}
+            ) : null}
         </div>
     );
-};
+});
 
 export default PostList;
