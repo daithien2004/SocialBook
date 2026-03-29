@@ -11,7 +11,8 @@ import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({
   namespace: '/notifications',
-  cors: { origin: '*' }, // dev
+  cors: { origin: '*' },
+  maxHttpBufferSize: 1e6,
 })
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;

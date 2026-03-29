@@ -184,7 +184,9 @@ export class UsersController {
   }
 
   @Patch('me/avatar')
-  @UseInterceptors(FileInterceptor('file')) // field name = "file"
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 5 * 1024 * 1024 },
+  }))
   async updateMyAvatar(
     @Req() req: Request & { user: { id: string } },
     @UploadedFile() file: Express.Multer.File,

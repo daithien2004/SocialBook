@@ -59,7 +59,9 @@ export class ChaptersController {
   @Post('import/preview')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 20 * 1024 * 1024 },
+  }))
   @HttpCode(HttpStatus.OK)
   async importPreview(
     @UploadedFile() file: Express.Multer.File,
