@@ -4,8 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { configSwagger } from './config/swagger.config';
 
 async function bootstrap() {
@@ -13,6 +15,7 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.useLogger(app.get(Logger));
+  app.use(helmet());
 
   // Lấy ConfigService từ application context
   const configService = app.get(ConfigService);
@@ -33,7 +36,7 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
-      forbidNonWhitelisted: false,
+      forbidNonWhitelisted: true,
     }),
   );
 
@@ -53,8 +56,7 @@ async function bootstrap() {
   app.useWebSocketAdapter(new IoAdapter(app));
 
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  configSwagger(app);
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   configSwagger(app);
 

@@ -6,15 +6,13 @@ import {
     Patch,
     Post,
     Query,
-    Req,
     UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
-
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 import { CreateNotificationCommand } from '@/application/notifications/use-cases/create-notification/create-notification.command';
 import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
@@ -22,7 +20,7 @@ import { GetUserNotificationsQuery } from '@/application/notifications/use-cases
 import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
 import { MarkNotificationReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.command';
 import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
-import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto'; // Need CreateNotificationDto? usually internal. Or create one.
+import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto';
 
 import { FilterNotificationDto } from '@/presentation/notification/dto/filter-notification.dto';
 import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
@@ -38,11 +36,11 @@ export class NotificationController {
 
     @Get()
     async getMyNotifications(
-        @Req() req: Request & { user: { id: string } },
+        @CurrentUser('id') userId: string,
         @Query() filter: FilterNotificationDto,
     ) {
         const query = new GetUserNotificationsQuery(
-            req.user.id,
+            userId,
             filter.page,
             filter.limit,
             filter.isRead
@@ -59,16 +57,15 @@ export class NotificationController {
     @Patch(':id/read')
     async markRead(
         @Param('id') id: string,
-        @Req() req: Request & { user: { id: string } }
+        @CurrentUser('id') userId: string
     ) {
-        const command = new MarkNotificationReadCommand(req.user.id, id);
+        const command = new MarkNotificationReadCommand(userId, id);
         await this.markNotificationReadUseCase.execute(command);
         return {
             message: 'Notification marked as read',
         };
     }
 
-    // Admin endpoint to manually create notification (for testing or system notifications)
     @Post()
     @Roles('admin')
     @UseGuards(RolesGuard)

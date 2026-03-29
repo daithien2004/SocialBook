@@ -7,19 +7,17 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
 
 import { Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
-
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 import { FilterUserDto } from '@/presentation/users/dto/filter-user.dto';
 import { UpdateReadingPreferencesDto } from '@/presentation/users/dto/update-reading-preferences.dto';
@@ -55,7 +53,7 @@ export class UsersController {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private readonly getUserByIdUseCase: GetUserByIdUseCase, // Not used directly in this controller yet?
+    private readonly getUserByIdUseCase: GetUserByIdUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly toggleBanUseCase: ToggleBanUseCase,
@@ -165,12 +163,13 @@ export class UsersController {
   }
 
   @Patch('me/overview')
+  @UseGuards(JwtAuthGuard)
   async updateMyProfileOverview(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Body() dto: UpdateUserOverviewDto,
   ) {
     const command = new UpdateUserCommand(
-      req.user.id,
+      userId,
       dto.username,
       dto.bio,
       dto.location,
@@ -184,14 +183,15 @@ export class UsersController {
   }
 
   @Patch('me/avatar')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', {
     limits: { fileSize: 5 * 1024 * 1024 },
   }))
   async updateMyAvatar(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const command = new UpdateUserImageCommand(req.user.id);
+    const command = new UpdateUserImageCommand(userId);
     const result = await this.updateUserImageUseCase.execute(command, file);
     return {
       message: 'Update avatar successfully',
@@ -200,8 +200,9 @@ export class UsersController {
   }
 
   @Get('me/reading-preferences')
-  async getMyReadingPreferences(@Req() req: Request & { user: { id: string } }) {
-    const query = new GetReadingPreferencesQuery(req.user.id);
+  @UseGuards(JwtAuthGuard)
+  async getMyReadingPreferences(@CurrentUser('id') userId: string) {
+    const query = new GetReadingPreferencesQuery(userId);
     const data = await this.getReadingPreferencesUseCase.execute(query);
     return {
       message: 'Get reading preferences successfully',
@@ -210,12 +211,13 @@ export class UsersController {
   }
 
   @Put('me/reading-preferences')
+  @UseGuards(JwtAuthGuard)
   async updateMyReadingPreferences(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Body() dto: UpdateReadingPreferencesDto,
   ) {
     const command = new UpdateReadingPreferencesCommand(
-      req.user.id,
+      userId,
       dto.theme,
       dto.fontSize,
       dto.fontFamily,
@@ -229,10 +231,8 @@ export class UsersController {
       dto.dailyReadingGoal
     );
 
-
     const user = await this.updateReadingPreferencesUseCase.execute(command);
 
-    // Since we need to return readingPreferences according to previous code
     return {
       message: 'Reading preferences updated successfully',
       data: user.readingPreferences,

@@ -10,11 +10,9 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
-
 
 import { BookDetailResponseDto } from '@/presentation/books/dto/book-detail.response.dto';
 import { BookResponseDto } from '@/presentation/books/dto/book.response.dto';
@@ -28,7 +26,7 @@ import { DeleteBookCommand } from '@/application/books/use-cases/delete-book/del
 import { DeleteBookUseCase } from '@/application/books/use-cases/delete-book/delete-book.use-case';
 import { GetBookByIdQuery } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.query';
 import { GetBookByIdUseCase } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.use-case';
-import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query'; // Import Query
+import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query';
 import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { GetBookFiltersQuery } from '@/application/books/use-cases/get-book-filters/get-book-filters.query';
 import { GetBookFiltersUseCase } from '@/application/books/use-cases/get-book-filters/get-book-filters.use-case';
@@ -43,6 +41,8 @@ import { IBookRepository } from '@/domain/books/repositories/book.repository.int
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @Controller('books')
 export class BooksController {
@@ -167,24 +167,24 @@ export class BooksController {
 
   @Patch(':slug/like')
   @RequireAuth()
+  @UseGuards(JwtAuthGuard)
   async toggleLike(
     @Param('slug') slug: string,
-    @Req() req: Request & { user: { id: string } }
+    @CurrentUser('id') userId: string
   ) {
     const book = await this.getBookBySlugUseCase.execute(new GetBookBySlugQuery(slug));
     const bookId = BookId.create(book.id);
 
     const result = await this.toggleLikeUseCase.execute({
-      userId: req.user.id,
+      userId,
       targetId: book.id,
       targetType: TargetType.BOOK,
     });
 
-    // Sync book.likedBy array so isLiked reflects correctly on next GET /books/:slug
     if (result.isLiked) {
-      await this.bookRepository.addLike(bookId, req.user.id);
+      await this.bookRepository.addLike(bookId, userId);
     } else {
-      await this.bookRepository.removeLike(bookId, req.user.id);
+      await this.bookRepository.removeLike(bookId, userId);
     }
 
     const likesCount = await this.getLikeCountUseCase.execute({

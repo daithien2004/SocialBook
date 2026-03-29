@@ -52,10 +52,6 @@ export class ChaptersController {
     private readonly epubParserService: EpubParserService,
   ) { }
 
-  /**
-   * POST /books/:bookSlug/chapters/import/preview
-   * Parse EPUB/MOBI file and return chapter preview list
-   */
   @Post('import/preview')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -108,10 +104,43 @@ export class ChaptersController {
     };
   }
 
-  @Public()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('admin/list')
+  async getAllChaptersAdmin(
+    @Query() filter: FilterChapterDto,
+  ) {
+    const query = new GetChaptersQuery(
+      filter.page,
+      filter.limit,
+      filter.title,
+      filter.bookId,
+      undefined,
+      filter.orderIndex,
+      filter.sortBy as any,
+      filter.order as any
+    );
+
+    const result = await this.getChaptersUseCase.execute(query);
+
+    if ('book' in result && 'chapters' in result) {
+      return {
+        message: 'Get all chapters successfully',
+        data: result,
+      };
+    }
+
+    const paginatedResult = result as any;
+    return {
+      message: 'Get all chapters successfully',
+      data: ChapterResponseDto.fromArray(paginatedResult.data),
+      meta: paginatedResult.meta,
+    };
+  }
+
   @Get('id/:chapterId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
     const query = new GetChapterByIdQuery(chapterId);
     const chapter = await this.getChapterByIdUseCase.execute(query);
@@ -182,40 +211,6 @@ export class ChaptersController {
     await this.deleteChapterUseCase.execute(command);
     return {
       message: 'Xóa chương thành công',
-    };
-  }
-
-  @Get()
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async getAllChaptersAdmin(
-    @Query() filter: FilterChapterDto,
-  ) {
-    const query = new GetChaptersQuery(
-      filter.page,
-      filter.limit,
-      filter.title,
-      filter.bookId,
-      undefined,
-      filter.orderIndex,
-      filter.sortBy as any,
-      filter.order as any
-    );
-
-    const result = await this.getChaptersUseCase.execute(query);
-
-    if ('book' in result && 'chapters' in result) {
-      return {
-        message: 'Get all chapters successfully',
-        data: result,
-      };
-    }
-
-    const paginatedResult = result as any;
-    return {
-      message: 'Get all chapters successfully',
-      data: ChapterResponseDto.fromArray(paginatedResult.data),
-      meta: paginatedResult.meta,
     };
   }
 }

@@ -1,4 +1,5 @@
 import { Entity } from '@/shared/domain/entity.base';
+import { ModerationStatus } from '../enums/moderation-status.enum';
 
 export interface PostProps {
     userId: string;
@@ -8,7 +9,7 @@ export interface PostProps {
     isDeleted: boolean;
     isFlagged: boolean;
     moderationReason?: string;
-    moderationStatus?: string;
+    moderationStatus?: ModerationStatus;
     likesCount?: number;
     commentsCount?: number;
     likedByCurrentUser?: boolean;
@@ -43,7 +44,7 @@ export class Post extends Entity<string> {
                 isDeleted: false,
                 isFlagged: false,
                 moderationReason: undefined,
-                moderationStatus: 'pending',
+                moderationStatus: ModerationStatus.PENDING,
                 likesCount: 0,
                 commentsCount: 0,
                 likedByCurrentUser: false,
@@ -62,7 +63,7 @@ export class Post extends Entity<string> {
         isDeleted: boolean;
         isFlagged: boolean;
         moderationReason?: string;
-        moderationStatus?: string;
+        moderationStatus?: ModerationStatus;
         likesCount?: number;
         commentsCount?: number;
         likedByCurrentUser?: boolean;
@@ -100,7 +101,7 @@ export class Post extends Entity<string> {
     get isDeleted(): boolean { return this._props.isDeleted; }
     get isFlagged(): boolean { return this._props.isFlagged; }
     get moderationReason(): string | undefined { return this._props.moderationReason; }
-    get moderationStatus(): string | undefined { return this._props.moderationStatus; }
+    get moderationStatus(): ModerationStatus | undefined { return this._props.moderationStatus; }
     get likesCount(): number | undefined { return this._props.likesCount; }
     get commentsCount(): number | undefined { return this._props.commentsCount; }
     get likedByCurrentUser(): boolean | undefined { return this._props.likedByCurrentUser; }
@@ -135,13 +136,13 @@ export class Post extends Entity<string> {
     flag(reason: string): void {
         this._props.isFlagged = true;
         this._props.moderationReason = reason;
-        this._props.moderationStatus = 'pending';
+        this._props.moderationStatus = ModerationStatus.PENDING;
         this.markAsUpdated();
     }
 
     approve(): void {
         this._props.isFlagged = false;
-        this._props.moderationStatus = 'approved';
+        this._props.moderationStatus = ModerationStatus.APPROVED;
         this.markAsUpdated();
     }
 
@@ -158,7 +159,7 @@ export class Post extends Entity<string> {
     }
 
     reject(): void {
-        this._props.moderationStatus = 'rejected';
+        this._props.moderationStatus = ModerationStatus.REJECTED;
         this._props.isDeleted = true;
         this.markAsUpdated();
     }

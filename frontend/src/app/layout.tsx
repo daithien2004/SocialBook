@@ -19,6 +19,7 @@ import GlobalConfirmModal from '@/components/common/GlobalConfirmModal';
 import GenreModal from '@/components/admin/genre/GenreModal';
 import AuthorModal from '@/components/admin/author/AuthorModal';
 import ManageChapterModal from '@/components/admin/chapter/ManageChapterModal';
+import { ThemeProvider } from '@/context/ThemeProvider';
 
 export const metadata = {
   title: 'SocialBook',
@@ -32,27 +33,34 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${inter.variable} ${merriweather.variable} ${notoSans.variable} mdl-js`} suppressHydrationWarning>
       <body>
-        <Providers>
-          <ScrollToTop />
-          <AuthSync />
-          {children}
-          <CreatePostModal />
-          <EditPostModal />
-          <SharePostModal />
-          <ModalPostComment />
-          <AddToLibraryModal />
-          <FollowersModal />
-          <ChapterSummaryModal />
-          <FileImportModal />
-          <DeleteBookModal />
-          <CreateCollectionModal />
-          <EditCollectionModal />
-          <GlobalConfirmModal />
-          <GenreModal />
-          <AuthorModal />
-          <ManageChapterModal />
-        </Providers>
-        <Toaster richColors position="bottom-right" />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            <ScrollToTop />
+            <AuthSync />
+            {children}
+            <CreatePostModal />
+            <EditPostModal />
+            <SharePostModal />
+            <ModalPostComment />
+            <AddToLibraryModal />
+            <FollowersModal />
+            <ChapterSummaryModal />
+            <FileImportModal />
+            <DeleteBookModal />
+            <CreateCollectionModal />
+            <EditCollectionModal />
+            <GlobalConfirmModal />
+            <GenreModal />
+            <AuthorModal />
+            <ManageChapterModal />
+          </Providers>
+          <Toaster richColors position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

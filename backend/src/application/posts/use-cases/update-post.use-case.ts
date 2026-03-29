@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
+import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
@@ -12,7 +12,7 @@ import { UpdatePostCommand } from './update-post.command';
 export class UpdatePostUseCase {
   constructor(
     private readonly postRepository: IPostRepository,
-    private readonly cloudinaryService: CloudinaryService,
+    private readonly mediaService: IMediaService,
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
   ) { }
@@ -45,7 +45,7 @@ export class UpdatePostUseCase {
     }
 
     if (files && files.length > 0) {
-      const newImageUrls = await this.cloudinaryService.uploadMultipleImages(files);
+      const newImageUrls = await this.mediaService.uploadMultipleImages(files);
       post.updateImages([...post.imageUrls, ...newImageUrls]);
     }
 

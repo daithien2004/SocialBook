@@ -6,9 +6,8 @@ import {
   HttpStatus,
   Post,
   Query,
-  Req
+  UseGuards
 } from '@nestjs/common';
-import { Request } from 'express';
 
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
 import { GetLikeStatusUseCase } from '@/application/likes/use-cases/get-like-status/get-like-status.use-case';
@@ -16,6 +15,8 @@ import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/tog
 import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
 import { Public } from '@/common/decorators/customize';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @Controller('likes')
 export class LikesController {
@@ -27,10 +28,14 @@ export class LikesController {
 
   @Post('toggle')
   @RequireAuth()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async toggle(@Req() req: Request & { user: { id: string } }, @Body() dto: { targetId: string; targetType: string }) {
+  async toggle(
+    @CurrentUser('id') userId: string,
+    @Body() dto: { targetId: string; targetType: string }
+  ) {
     const result = await this.toggleLikeUseCase.execute({
-      userId: req.user.id,
+      userId,
       targetId: dto.targetId,
       targetType: dto.targetType as TargetType,
     });
@@ -57,10 +62,14 @@ export class LikesController {
 
   @Get('status')
   @RequireAuth()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async getStatus(@Req() req: Request & { user: { id: string } }, @Query() dto: { targetId: string; targetType: string }) {
+  async getStatus(
+    @CurrentUser('id') userId: string,
+    @Query() dto: { targetId: string; targetType: string }
+  ) {
     const data = await this.getLikeStatusUseCase.execute({
-      userId: req.user.id,
+      userId,
       targetId: dto.targetId,
       targetType: dto.targetType as TargetType,
     });

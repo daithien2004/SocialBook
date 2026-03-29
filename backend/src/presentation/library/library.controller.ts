@@ -38,10 +38,10 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
+
 @Controller('library')
 @UseGuards(JwtAuthGuard)
 export class LibraryController {
@@ -59,10 +59,10 @@ export class LibraryController {
 
   @Get()
   async getLibrary(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Query('status') status: ReadingStatusResult = ReadingStatusResult.READING,
   ) {
-    const query = new GetLibraryQuery(req.user.id, status as any);
+    const query = new GetLibraryQuery(userId, status as any);
     const readingLists = await this.getLibraryUseCase.execute(query);
 
     return {
@@ -72,8 +72,8 @@ export class LibraryController {
   }
 
   @Post('status')
-  async updateStatus(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateLibraryStatusDto) {
-    const command = new UpdateStatusCommand(req.user.id, dto.bookId, dto.status);
+  async updateStatus(@CurrentUser('id') userId: string, @Body() dto: UpdateLibraryStatusDto) {
+    const command = new UpdateStatusCommand(userId, dto.bookId, dto.status);
     const readingList = await this.updateStatusUseCase.execute(command);
 
     return {
@@ -84,11 +84,11 @@ export class LibraryController {
 
   @Get('progress')
   async getChapterProgress(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Query('bookId') bookId: string,
     @Query('chapterId') chapterId: string,
   ) {
-    const query = new GetChapterProgressQuery(req.user.id, bookId, chapterId);
+    const query = new GetChapterProgressQuery(userId, bookId, chapterId);
     const result = await this.getChapterProgressUseCase.execute(query);
     return {
       message: 'Get chapter progress successfully',
@@ -97,10 +97,9 @@ export class LibraryController {
   }
 
   @Post('progress')
-  @UseGuards(JwtAuthGuard)
-  async updateProgress(@Req() req: Request & { user: { id: string } }, @Body() updateProgressDto: UpdateProgressDto) {
+  async updateProgress(@CurrentUser('id') userId: string, @Body() updateProgressDto: UpdateProgressDto) {
     const command = new UpdateProgressCommand(
-      req.user.id,
+      userId,
       updateProgressDto.bookId,
       updateProgressDto.chapterId,
       updateProgressDto.progress || 0
@@ -117,19 +116,18 @@ export class LibraryController {
   }
 
   @Post('reading-time')
-  @UseGuards(JwtAuthGuard)
-  async recordReadingTime(@Req() req: Request & { user: { id: string } }, @Body() dto: UpdateReadingTimeDto) {
+  async recordReadingTime(@CurrentUser('id') userId: string, @Body() dto: UpdateReadingTimeDto) {
     const command = new RecordReadingTimeCommand(
-      req.user.id,
+      userId,
       dto.bookId,
       dto.chapterId,
       dto.durationInSeconds
     );
-    const result = await this.recordReadingTimeUseCase.execute(command);
+    const result = await this.recordReadingTimeUseCase.execute(command) as any;
 
     if (result.timeSpentMinutes > 0) {
       await this.recordReadingUseCase.execute({
-        userId: req.user.id,
+        userId,
         xpAmount: Math.min(result.timeSpentMinutes, 50),
       });
     }
@@ -141,8 +139,8 @@ export class LibraryController {
   }
 
   @Patch('collections')
-  async updateCollections(@Req() req: Request & { user: { id: string } }, @Body() dto: AddToCollectionsDto) {
-    const command = new UpdateCollectionsCommand(req.user.id, dto.bookId, dto.collectionIds);
+  async updateCollections(@CurrentUser('id') userId: string, @Body() dto: AddToCollectionsDto) {
+    const command = new UpdateCollectionsCommand(userId, dto.bookId, dto.collectionIds);
     const readingList = await this.updateCollectionsUseCase.execute(command);
 
     return {
@@ -152,8 +150,8 @@ export class LibraryController {
   }
 
   @Delete(':bookId')
-  async remove(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
-    const command = new RemoveFromLibraryCommand(req.user.id, bookId);
+  async remove(@CurrentUser('id') userId: string, @Param('bookId') bookId: string) {
+    const command = new RemoveFromLibraryCommand(userId, bookId);
     await this.removeFromLibraryUseCase.execute(command);
 
     return {
@@ -162,8 +160,8 @@ export class LibraryController {
   }
 
   @Get('book/:bookId')
-  async getBookLibraryInfo(@Req() req: Request & { user: { id: string } }, @Param('bookId') bookId: string) {
-    const query = new GetBookLibraryInfoQuery(req.user.id, bookId);
+  async getBookLibraryInfo(@CurrentUser('id') userId: string, @Param('bookId') bookId: string) {
+    const query = new GetBookLibraryInfoQuery(userId, bookId);
     const result = await this.getBookLibraryInfoUseCase.execute(query);
 
     return {

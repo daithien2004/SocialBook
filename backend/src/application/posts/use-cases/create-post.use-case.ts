@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { BadRequestDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
+import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -13,7 +13,7 @@ import { CreatePostCommand } from './create-post.command';
 export class CreatePostUseCase {
   constructor(
     private readonly postRepository: IPostRepository,
-    private readonly cloudinaryService: CloudinaryService,
+    private readonly mediaService: IMediaService,
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
@@ -30,7 +30,7 @@ export class CreatePostUseCase {
     // Upload Images
     let imageUrls: string[] = [];
     if (files && files.length > 0) {
-      imageUrls = await this.cloudinaryService.uploadMultipleImages(files);
+      imageUrls = await this.mediaService.uploadMultipleImages(files);
     }
 
     // Prepare Post Entity

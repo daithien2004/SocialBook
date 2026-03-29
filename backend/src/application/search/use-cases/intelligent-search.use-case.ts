@@ -9,7 +9,7 @@ import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { SearchQuery as VectorSearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { GeminiService } from '@/infrastructure/external/gemini.service';
+import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
 import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 
@@ -25,7 +25,7 @@ export class IntelligentSearchUseCase {
         private readonly genreRepository: IGenreRepository,
         private readonly vectorRepository: IVectorRepository,
         @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
-        private readonly geminiService: GeminiService,
+        private readonly geminiService: IGeminiService,
         private readonly idGenerator: IIdGenerator,
     ) {}
 

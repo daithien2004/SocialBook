@@ -6,14 +6,12 @@ import {
   Param,
   Post,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
-
 
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 import { CreateFollowDto, FilterFollowDto } from '@/presentation/follows/dto/create-follow.dto';
 import { FollowResponseDto, FollowStatsResponseDto, FollowStatusResponseDto } from '@/presentation/follows/dto/follow.response.dto';
@@ -54,7 +52,6 @@ export class FollowsController {
   @Get('followers')
   @UseGuards(JwtAuthGuard)
   async getFollowersList(
-    @Req() req: Request & { user: { id: string } },
     @Query('targetUserId') targetUserId: string,
   ) {
     const result = await this.followRepository.findByTargetWithUserInfo(targetUserId);
@@ -69,10 +66,10 @@ export class FollowsController {
   @Get('status')
   @UseGuards(JwtAuthGuard)
   async getStatus(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Query('targetId') targetId: string,
   ) {
-    const query = new GetFollowStatusQuery(req.user.id, targetId);
+    const query = new GetFollowStatusQuery(userId, targetId);
     const result = await this.getFollowStatusUseCase.execute(query);
 
     return {
@@ -90,10 +87,10 @@ export class FollowsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Body() dto: CreateFollowDto,
   ) {
-    const command = new CreateFollowCommand(req.user.id, dto.targetId, dto.status);
+    const command = new CreateFollowCommand(userId, dto.targetId, dto.status);
     const follow = await this.createFollowUseCase.execute(command);
 
     return {
@@ -105,10 +102,10 @@ export class FollowsController {
   @Delete(':targetId')
   @UseGuards(JwtAuthGuard)
   async unfollow(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Param('targetId') targetId: string,
   ) {
-    const command = new DeleteFollowCommand(req.user.id, targetId);
+    const command = new DeleteFollowCommand(userId, targetId);
     await this.deleteFollowUseCase.execute(command);
 
     return {
@@ -119,7 +116,6 @@ export class FollowsController {
   @Get('stats')
   @Public()
   async getStats(@Query('userId') userId: string) {
-    // This would need a GetFollowStatsUseCase to be implemented
     return {
       message: 'Get follow stats not yet implemented',
       data: new FollowStatsResponseDto(0, 0, 0, 0, []),
