@@ -2,186 +2,193 @@
 
 ## Quick Reference
 
-- Before any task, read `.agent/context/`.
-- Apply the guidance in `.agent/context/CRAFTSMAN.md` across planning, implementation, testing, and review.
-- Prefer repo-specific instructions in this file over generic habits.
-- Keep changes scoped. Do not rewrite unrelated areas.
+- Before any task, read `.opencode/agents/CRAFTSMAN.md`
+- Apply guidance from `.opencode/agents/CRAFTSMAN.md` across planning, implementation, testing, and review
+- Prefer repo-specific instructions over generic habits
+- Keep changes scoped. Do not rewrite unrelated areas
 
 ## Project Overview
 
 SocialBook is a full-stack social network for book lovers.
 
-- Frontend: Next.js App Router, React 19, TypeScript, Tailwind CSS 4, Radix UI, Framer Motion
-- Backend: NestJS 11, TypeScript, MongoDB/Mongoose, Redis, Socket.IO
-- Infra: Docker Compose for Redis and ChromaDB
-- API docs: Swagger on the backend
+- **Frontend**: Next.js App Router, React 19, TypeScript, Tailwind CSS 4, Radix UI, Framer Motion
+- **Backend**: NestJS 11, TypeScript, MongoDB/Mongoose, Redis, Socket.IO
+- **Infra**: Docker Compose for Redis and ChromaDB
 
 ## Repository Layout
 
-```text
-.
-|- backend/      NestJS API and business logic
-|- frontend/     Next.js web app
-|- nginx/        Reverse proxy config
-|- .agent/       Local agent context and skills
-`- docker-compose.yml
+```
+backend/      NestJS API (Clean Architecture: domain/application/infrastructure/presentation)
+frontend/     Next.js web app (App Router)
+nginx/        Reverse proxy config
+docker-compose.yml
 ```
 
-### Backend layout
-
-The backend is organized around Clean Architecture style boundaries:
-
-- `backend/src/domain/`: core entities, value objects, repository contracts
-- `backend/src/application/`: use cases, DTOs, mappers
-- `backend/src/infrastructure/`: database adapters, external services, gateways
-- `backend/src/presentation/`: controllers and delivery layer
-- `backend/src/shared/`: shared abstractions and cross-cutting concerns
-
-There are also supporting folders such as `common/`, `config/`, `core/`, `dto/`, and `utils/`.
-
-### Frontend layout
-
-- `frontend/src/app/`: App Router routes, layouts, pages
-- `frontend/src/components/`: reusable UI building blocks
-- `frontend/src/features/`: feature-oriented UI and state code
-- `frontend/src/store/`: Redux store and slices
-- `frontend/src/lib/`, `hooks/`, `context/`, `constants/`, `types/`: shared frontend utilities
-
-## Required Workflow
-
-1. Read `.agent/context/` before doing anything else.
-2. Inspect the affected area before changing code.
-3. Prefer a small plan first, especially for non-trivial work.
-4. Make the smallest change that fully solves the task.
-5. Run targeted validation for the area you changed.
-6. Call out assumptions, risks, and anything not verified.
-
-## Local Skills
-
-Use local skills when the task matches them:
-
-- `.agent/skills/vercel-react-best-practices/`: use for Next.js, React, rendering, data flow, and performance-sensitive frontend work
-- `.agent/skills/mongodb/SKILLS.md`: use whenever reviewing or changing MongoDB queries, aggregation pipelines, or index strategy
-
-If a task touches MongoDB query performance, explicitly apply the MongoDB optimization guidance before proposing a solution.
-
-## Setup And Run Commands
+## Build & Test Commands
 
 ### Infrastructure
-
-From the repo root:
-
-```powershell
+```bash
 docker-compose up -d
 ```
 
 ### Backend
-
-```powershell
+```bash
 cd backend
-npm install
-npm run start:dev
+npm install && npm run start:dev
+
+# Build & lint
+npm run build && npm run lint
+
+# Run single test
+npm test -- test/unit/application/posts/get-posts.use-case.spec.ts
+npm test -- --testPathPattern="get-posts.use-case"
+
+# Test by type
+npm run test:unit        # Unit tests (test/unit/**/*.spec.ts)
+npm run test:integration # Integration tests (test/integration/**/*.spec.ts)
+npm run test:e2e         # E2E tests (test/e2e/**/*.e2e-spec.ts)
+npm run test:cov         # With coverage
+npm run format           # Format code with Prettier
+npm run seed             # Seed database
 ```
-
-Useful backend commands:
-
-- `npm run build`
-- `npm run lint`
-- `npm run test`
-- `npm run test:e2e`
-- `npm run seed`
 
 ### Frontend
-
-```powershell
+```bash
 cd frontend
-npm install
-npm run dev
+npm install && npm run dev
+npm run build && npm run lint
 ```
 
-Useful frontend commands:
+## TypeScript Configuration
 
-- `npm run build`
-- `npm run lint`
+**Backend** (`backend/tsconfig.json`): `strictNullChecks: true`, `noImplicitAny: false`, `@/*` → `src/*`
+**Frontend** (`frontend/tsconfig.json`): `strict: true`, `@/*` → `src/*`
+
+## Naming Conventions
+
+| Item | Convention | Example |
+|------|------------|---------|
+| Entities | `*.entity.ts` | `post.entity.ts` |
+| Use cases | `*.use-case.ts` | `get-posts.use-case.ts` |
+| Repositories | `*.repository.ts` | `post.repository.interface.ts` |
+| DTOs | `*.dto.ts` | `create-post.dto.ts` |
+| Schemas | `*.schema.ts` | `post.schema.ts` |
+| Interfaces | `*.interface.ts` | `book.interface.ts` |
+| Classes/Types | PascalCase | `ReadingProgress`, `BookStatus` |
+| Variables/Functions | camelCase | `getErrorMessage`, `isCompleted` |
+| Constants | SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT` |
+
+## Import Order
+
+1. External dependencies (`@nestjs/common`, `react`)
+2. Internal path aliases (`@/...`)
+3. Relative imports (`../`, `./`)
+
+**Backend path aliases** (required):
+```typescript
+import { Entity } from '@/shared/domain/entity.base';
+import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
+```
+
+## Code Patterns
+
+### Entities (DDD)
+```typescript
+export class ReadingProgress extends Entity<string> {
+    private _props: ReadingProgressProps;
+    private constructor(id: string, props: ReadingProgressProps, ...) {
+        super(id, createdAt, updatedAt);
+        this._props = props;
+    }
+    static create(props: { ... }): ReadingProgress { ... }
+    static reconstitute(props: { ... }): ReadingProgress { ... }
+    get userId(): UserId { return this._props.userId; }
+}
+```
+
+### Use Cases
+```typescript
+@Injectable()
+export class GetPostsUseCase {
+  constructor(private readonly postRepository: IPostRepository) {}
+  async execute(query: GetPostsQuery): Promise<PaginatedResult<Post>> {
+    return this.postRepository.findAll({ skip, limit });
+  }
+}
+```
+
+### React Components
+- Functional components with hooks
+- Extract types to `.interface.ts` or `.types.ts` files
+- Use Zod for form validation with react-hook-form
+
+## Error Handling
+
+**Backend**: NestJS built-in exceptions (`NotFoundException`, `BadRequestException`) + class-validator for DTO validation
+
+**Frontend**:
+```typescript
+export const getErrorMessage = (error: any): string => {
+  if (typeof error === 'string') return error;
+  if (Array.isArray(error?.data?.message)) return error.data.message.join(', ');
+  return error?.data?.message || error?.message || 'Đã có lỗi xảy ra.';
+};
+```
+
+## Formatting & Linting
+
+**Prettier**: `singleQuote: true`, `trailingComma: "all"`
+
+**Backend ESLint** (`eslint.config.mjs`):
+- `@typescript-eslint/no-explicit-any: error`
+- `@typescript-eslint/no-floating-promises: warn`
+
+**Frontend ESLint**: follows `next/core-web-vitals`, `next/typescript`
+
+## MongoDB Guidelines
+
+- Use indexes intentionally
+- Favor `$match` early in aggregation pipelines
+- Avoid unnecessary full-document fetches when projection is enough
+
+## Required Workflow
+
+1. Inspect affected area before changing code
+2. Prefer a small plan first for non-trivial work
+3. Make the smallest change that fully solves the task
+4. Run targeted validation (lint, tests) for the changed area
+
+## Local Skills
+
+- `.opencode/skills/vercel-react-best-practices/SKILL.md`: Next.js, React, rendering, data flow (index + rules)
+- `.opencode/skills/mongodb/SKILLS.md`: MongoDB queries, aggregation, index strategy
+- `.opencode/skills/shadcnui/SKILLS.md`: shadcn/ui components and theming
 
 ## Environment Notes
 
-### Backend `.env`
+**Backend `.env`**: `PORT`, `MONGO_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL`
+**Frontend `.env.local`**: `NEXT_PUBLIC_NEST_API_URL`, `NEXT_PUBLIC_SOCKET_URL`
 
-Backend expects values for keys such as:
-
-- `PORT`
-- `MONGO_URI`
-- `JWT_ACCESS_SECRET`
-- `JWT_REFRESH_SECRET`
-- `ACCESS_TOKEN_EXPIRES_IN`
-- `REFRESH_TOKEN_EXPIRES_IN`
-- `FRONTEND_URL`
-- `NODE_ENV`
-- mail credentials
-- Cloudinary credentials
-- Google API credentials
-- RapidAPI moderation settings
-
-### Frontend `.env.local`
-
-Frontend expects values such as:
-
-- `NEXT_PUBLIC_NEST_API_URL`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `NEXTAUTH_SECRET`
-- `NEXT_PUBLIC_SOCKET_URL`
-
-Never commit secrets or replace real environment values with placeholders unless the task is explicitly about docs/templates.
+Never commit secrets or replace real environment values with placeholders.
 
 ## Change Guidelines
 
-### Backend
+**Backend**: Preserve Clean Architecture boundaries. Put business rules in `domain/` or `application/`. Add/update tests when behavior changes.
 
-- Preserve architectural boundaries. Avoid coupling controllers directly to infrastructure details.
-- Put business rules in `domain/` or `application/`, not controllers.
-- Favor explicit DTOs and mappers over leaking persistence models across layers.
-- Reuse existing modules and patterns before introducing new abstractions.
-- Add or update tests when behavior changes.
-
-### Frontend
-
-- Preserve existing design language unless the task is a redesign.
-- Prefer feature-local changes when possible.
-- Keep client/server component boundaries intentional.
-- Follow existing state management patterns before introducing new ones.
-- Validate both loading and error states for user-facing flows.
-
-### MongoDB
-
-- Use indexes intentionally.
-- Check query shape before changing schemas or adding complexity.
-- Favor `$match` early in aggregation pipelines.
-- Avoid unnecessary full-document fetches when projection is enough.
-- If performance is the issue, propose `explain("executionStats")` verification and index updates based on ESR ordering.
-
-## Testing Expectations
-
-- Run the smallest meaningful test set for the change.
-- For backend logic changes, prefer targeted Jest coverage first, then broader validation if needed.
-- For frontend changes, at minimum run lint/build checks relevant to the edited area when practical.
-- If you cannot run verification, state exactly why.
+**Frontend**: Preserve existing design language. Prefer feature-local changes. Keep client/server component boundaries intentional.
 
 ## Review Checklist
 
-Before finishing, verify:
-
-- The change matches the user request
-- No unrelated files were modified intentionally
+- Change matches user request
+- No unrelated files modified
 - Imports, types, and paths are correct
-- New behavior is covered by validation or clearly marked as unverified
+- New behavior covered by tests or marked as unverified
 - Architectural boundaries remain clean
-- Sensitive values were not exposed
+- Sensitive values not exposed
 
-## Communication Rules For Agents
+## Communication Rules
 
-- Be concise, specific, and repo-aware.
-- Mention file paths and commands explicitly when they matter.
-- Surface tradeoffs early if a change could affect architecture, data shape, or API contracts.
-- If instructions conflict, follow direct user instructions first, then this file, then general preferences.
+- Be concise, specific, repo-aware
+- Mention file paths and commands explicitly
+- Surface tradeoffs early if a change affects architecture, data shape, or API contracts
+- Follow: user instructions > this file > general preferences
