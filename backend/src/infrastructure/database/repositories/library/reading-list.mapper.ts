@@ -1,4 +1,7 @@
-import { ReadingList, ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import {
+  ReadingList,
+  ReadingStatus,
+} from '@/domain/library/entities/reading-list.entity';
 import { ReadingListDocument } from '@/infrastructure/database/schemas/reading-list.schema';
 import { Types } from 'mongoose';
 
@@ -23,7 +26,7 @@ export class ReadingListMapper {
       lastReadChapterId: doc.lastReadChapterId?.toString() || null,
       collectionIds: doc.collectionIds.map((id: any) => id.toString()),
       createdAt: doc.createdAt as Date,
-      updatedAt: doc.updatedAt as Date
+      updatedAt: doc.updatedAt as Date,
     });
   }
 
@@ -33,12 +36,14 @@ export class ReadingListMapper {
       userId: new Types.ObjectId(readingList.userId.toString()),
       bookId: new Types.ObjectId(readingList.bookId.toString()),
       status: readingList.status,
-      lastReadChapterId: readingList.lastReadChapterId 
-        ? new Types.ObjectId(readingList.lastReadChapterId.toString()) 
+      lastReadChapterId: readingList.lastReadChapterId
+        ? new Types.ObjectId(readingList.lastReadChapterId.toString())
         : null,
-      collectionIds: readingList.collectionIds.map(id => new Types.ObjectId(id)),
+      collectionIds: readingList.collectionIds.map(
+        (id) => new Types.ObjectId(id),
+      ),
       createdAt: readingList.createdAt,
-      updatedAt: readingList.updatedAt
+      updatedAt: readingList.updatedAt,
     };
   }
 }

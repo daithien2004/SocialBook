@@ -1,9 +1,21 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Achievement, AchievementSchema } from '@/infrastructure/database/schemas/achievement.schema';
-import { DailyGoal, DailyGoalSchema } from '@/infrastructure/database/schemas/daily-goal.schema';
-import { UserAchievement, UserAchievementSchema } from '@/infrastructure/database/schemas/user-achievement.schema';
-import { UserGamification, UserGamificationSchema } from '@/infrastructure/database/schemas/user-gamification.schema';
+import {
+  Achievement,
+  AchievementSchema,
+} from '@/infrastructure/database/schemas/achievement.schema';
+import {
+  DailyGoal,
+  DailyGoalSchema,
+} from '@/infrastructure/database/schemas/daily-goal.schema';
+import {
+  UserAchievement,
+  UserAchievementSchema,
+} from '@/infrastructure/database/schemas/user-achievement.schema';
+import {
+  UserGamification,
+  UserGamificationSchema,
+} from '@/infrastructure/database/schemas/user-gamification.schema';
 import { IUserGamificationRepository } from '@/domain/gamification/repositories/user-gamification.repository.interface';
 import { UserGamificationRepository } from './user-gamification.repository';
 import { IUserAchievementRepository } from '@/domain/gamification/repositories/user-achievement.repository.interface';

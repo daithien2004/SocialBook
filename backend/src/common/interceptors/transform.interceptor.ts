@@ -10,7 +10,8 @@ import { ResponseDto } from '../../common/dto/response.dto';
 
 @Injectable()
 export class TransformInterceptor<T>
-  implements NestInterceptor<T, ResponseDto<T>> {
+  implements NestInterceptor<T, ResponseDto<T>>
+{
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -28,10 +29,7 @@ export class TransformInterceptor<T>
           success: true,
           statusCode,
           message: data?.message || 'Request successful',
-          data:
-            data?.data !== undefined
-              ? data.data
-              : null,
+          data: data?.data !== undefined ? data.data : null,
           meta: data?.meta || data?.metaData,
           path: request.url,
         });

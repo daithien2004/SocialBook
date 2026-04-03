@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserOnboarding, UserOnboardingSchema } from '@/infrastructure/database/schemas/user-onboarding.schema';
+import {
+  UserOnboarding,
+  UserOnboardingSchema,
+} from '@/infrastructure/database/schemas/user-onboarding.schema';
 import { IOnboardingRepository } from '@/domain/onboarding/repositories/onboarding.repository.interface';
 import { OnboardingRepository } from './onboarding.repository';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: UserOnboarding.name, schema: UserOnboardingSchema }]),
+    MongooseModule.forFeature([
+      { name: UserOnboarding.name, schema: UserOnboardingSchema },
+    ]),
   ],
   providers: [
     {
@@ -14,9 +19,6 @@ import { OnboardingRepository } from './onboarding.repository';
       useClass: OnboardingRepository,
     },
   ],
-  exports: [
-    MongooseModule,
-    IOnboardingRepository,
-  ],
+  exports: [MongooseModule, IOnboardingRepository],
 })
 export class OnboardingRepositoryModule {}

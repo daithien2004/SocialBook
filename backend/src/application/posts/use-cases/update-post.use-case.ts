@@ -15,19 +15,24 @@ export class UpdatePostUseCase {
     private readonly mediaService: IMediaService,
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
-  ) { }
+  ) {}
 
-  async execute(command: UpdatePostCommand, files?: Express.Multer.File[]): Promise<Post> {
+  async execute(
+    command: UpdatePostCommand,
+    files?: Express.Multer.File[],
+  ): Promise<Post> {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
-    // Check ownership if needed or handled by controller/guard. 
-    // Assuming command.userId is trustworthy (from JWT). 
-    // Logic: if not admin, must be owner. 
-    // But currently logic just finds post. 
+    // Check ownership if needed or handled by controller/guard.
+    // Assuming command.userId is trustworthy (from JWT).
+    // Logic: if not admin, must be owner.
+    // But currently logic just finds post.
 
     if (command.content) {
-      const moderationResult = await this.checkContentUseCase.execute(command.content);
+      const moderationResult = await this.checkContentUseCase.execute(
+        command.content,
+      );
       if (!moderationResult.isSafe) {
         const reason = moderationResult.reason || 'Nội dung không phù hợp';
         post.flag(reason);
@@ -40,7 +45,8 @@ export class UpdatePostUseCase {
 
     if (command.bookId) {
       const bookExists = await this.bookRepository.existsById(command.bookId);
-      if (!bookExists) throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
+      if (!bookExists)
+        throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
       post.updateBookId(command.bookId);
     }
 

@@ -3,18 +3,17 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Put,
-    Query,
-    UploadedFile,
-    UseGuards
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
-
 
 import { AuthorResponseDto } from '@/presentation/authors/dto/author.response.dto';
 import { CreateAuthorDto } from '@/presentation/authors/dto/create-author.dto';
@@ -37,116 +36,114 @@ import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.inte
 
 @Controller('authors')
 export class AuthorsController {
-    constructor(
-        private readonly createAuthorUseCase: CreateAuthorUseCase,
-        private readonly updateAuthorUseCase: UpdateAuthorUseCase,
-        private readonly getAuthorsUseCase: GetAuthorsUseCase,
-        private readonly getAuthorByIdUseCase: GetAuthorByIdUseCase,
-        private readonly deleteAuthorUseCase: DeleteAuthorUseCase,
-        private readonly mediaService: IMediaService,
-    ) { }
+  constructor(
+    private readonly createAuthorUseCase: CreateAuthorUseCase,
+    private readonly updateAuthorUseCase: UpdateAuthorUseCase,
+    private readonly getAuthorsUseCase: GetAuthorsUseCase,
+    private readonly getAuthorByIdUseCase: GetAuthorByIdUseCase,
+    private readonly deleteAuthorUseCase: DeleteAuthorUseCase,
+    private readonly mediaService: IMediaService,
+  ) {}
 
-    @Post()
-    @Roles('admin')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @ApiFileUpload('photoUrl', CreateAuthorDto)
-    async create(
-        @Body() createAuthorDto: CreateAuthorDto,
-        @UploadedFile() file?: Express.Multer.File,
-    ) {
-        const command = new CreateAuthorCommand(
-            createAuthorDto.name,
-            createAuthorDto.bio,
-            file ? await this.uploadFile(file) : createAuthorDto.photoUrl
-        );
+  @Post()
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFileUpload('photoUrl', CreateAuthorDto)
+  async create(
+    @Body() createAuthorDto: CreateAuthorDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const command = new CreateAuthorCommand(
+      createAuthorDto.name,
+      createAuthorDto.bio,
+      file ? await this.uploadFile(file) : createAuthorDto.photoUrl,
+    );
 
-        const author = await this.createAuthorUseCase.execute(command);
-        return {
-            message: 'Tạo tác giả thành công',
-            data: new AuthorResponseDto(author),
-        };
-    }
+    const author = await this.createAuthorUseCase.execute(command);
+    return {
+      message: 'Tạo tác giả thành công',
+      data: new AuthorResponseDto(author),
+    };
+  }
 
-    @Get('admin')
-    @Roles('admin')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    async findAll(
-        @Query() filter: FilterAuthorDto,
-    ) {
-        const query = new GetAuthorsQuery(
-            filter.actualPage,
-            filter.actualLimit,
-            filter.name,
-            filter.bio
-        );
+  @Get('admin')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async findAll(@Query() filter: FilterAuthorDto) {
+    const query = new GetAuthorsQuery(
+      filter.actualPage,
+      filter.actualLimit,
+      filter.name,
+      filter.bio,
+    );
 
-        const result = await this.getAuthorsUseCase.execute(query);
+    const result = await this.getAuthorsUseCase.execute(query);
 
-        return {
-            message: 'Lấy danh sách tác giả thành công',
-            data: result.data.map(author => new AuthorResponseDto(author)),
-            meta: result.meta,
-        };
-    }
+    return {
+      message: 'Lấy danh sách tác giả thành công',
+      data: result.data.map((author) => new AuthorResponseDto(author)),
+      meta: result.meta,
+    };
+  }
 
-    @Get(':id')
-    @Public()
-    async findOne(@Param('id') id: string) {
-        const query = new GetAuthorByIdQuery(id);
-        const author = await this.getAuthorByIdUseCase.execute(query);
-        return {
-            message: 'Lấy thông tin tác giả thành công',
-            data: new AuthorResponseDto(author),
-        };
-    }
+  @Get(':id')
+  @Public()
+  async findOne(@Param('id') id: string) {
+    const query = new GetAuthorByIdQuery(id);
+    const author = await this.getAuthorByIdUseCase.execute(query);
+    return {
+      message: 'Lấy thông tin tác giả thành công',
+      data: new AuthorResponseDto(author),
+    };
+  }
 
-    @Put(':id')
-    @Roles('admin')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @ApiFileUpload('photoUrl', UpdateAuthorDto)
-    async update(
-        @Param('id') id: string,
-        @Body() updateAuthorDto: UpdateAuthorDto,
-        @UploadedFile() file?: Express.Multer.File,
-    ) {
-        const command = new UpdateAuthorCommand(
-            id,
-            updateAuthorDto.name,
-            updateAuthorDto.bio,
-            file ? await this.uploadFile(file) : updateAuthorDto.photoUrl
-        );
+  @Put(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiFileUpload('photoUrl', UpdateAuthorDto)
+  async update(
+    @Param('id') id: string,
+    @Body() updateAuthorDto: UpdateAuthorDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const command = new UpdateAuthorCommand(
+      id,
+      updateAuthorDto.name,
+      updateAuthorDto.bio,
+      file ? await this.uploadFile(file) : updateAuthorDto.photoUrl,
+    );
 
-        const author = await this.updateAuthorUseCase.execute(command);
-        return {
-            message: 'Cập nhật tác giả thành công',
-            data: new AuthorResponseDto(author),
-        };
-    }
+    const author = await this.updateAuthorUseCase.execute(command);
+    return {
+      message: 'Cập nhật tác giả thành công',
+      data: new AuthorResponseDto(author),
+    };
+  }
 
-    @Delete(':id')
-    @Roles('admin')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    async remove(@Param('id') id: string) {
-        const command = new DeleteAuthorCommand(id);
-        await this.deleteAuthorUseCase.execute(command);
-        return {
-            message: 'Xóa tác giả thành công',
-        };
-    }
+  @Delete(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async remove(@Param('id') id: string) {
+    const command = new DeleteAuthorCommand(id);
+    await this.deleteAuthorUseCase.execute(command);
+    return {
+      message: 'Xóa tác giả thành công',
+    };
+  }
 
-    @Get()
-    @Public()
-    async getForSelect() {
-        const query = new GetAuthorsQuery(1, 1000);
-        const result = await this.getAuthorsUseCase.execute(query);
+  @Get()
+  @Public()
+  async getForSelect() {
+    const query = new GetAuthorsQuery(1, 1000);
+    const result = await this.getAuthorsUseCase.execute(query);
 
-        return {
-            message: 'Lấy danh sách tác giả thành công',
-            data: result.data.map(author => new AuthorResponseDto(author)),
-        };
-    }
+    return {
+      message: 'Lấy danh sách tác giả thành công',
+      data: result.data.map((author) => new AuthorResponseDto(author)),
+    };
+  }
 
-    private async uploadFile(file: Express.Multer.File): Promise<string> {
-        return await this.mediaService.uploadImage(file);
-    }
+  private async uploadFile(file: Express.Multer.File): Promise<string> {
+    return await this.mediaService.uploadImage(file);
+  }
 }

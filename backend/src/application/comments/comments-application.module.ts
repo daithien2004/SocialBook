@@ -9,10 +9,7 @@ import { CommentsRepositoryModule } from '@/infrastructure/database/repositories
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    CommentsRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [CommentsRepositoryModule, IdGeneratorModule],
   providers: [
     CreateCommentUseCase,
     DeleteCommentUseCase,
@@ -30,4 +27,4 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     UpdateCommentUseCase,
   ],
 })
-export class CommentsApplicationModule { }
+export class CommentsApplicationModule {}

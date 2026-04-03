@@ -7,23 +7,23 @@ import { ToggleBanCommand } from './toggle-ban.command';
 
 @Injectable()
 export class ToggleBanUseCase {
-    constructor(private readonly userRepository: IUserRepository) { }
+  constructor(private readonly userRepository: IUserRepository) {}
 
-    async execute(command: ToggleBanCommand): Promise<User> {
-        const userId = UserId.create(command.userId);
-        const user = await this.userRepository.findById(userId);
+  async execute(command: ToggleBanCommand): Promise<User> {
+    const userId = UserId.create(command.userId);
+    const user = await this.userRepository.findById(userId);
 
-        if (!user) {
-            throw new NotFoundDomainException('User not found');
-        }
-
-        if (user.isBanned) {
-            user.unban();
-        } else {
-            user.ban();
-        }
-
-        await this.userRepository.save(user);
-        return user;
+    if (!user) {
+      throw new NotFoundDomainException('User not found');
     }
+
+    if (user.isBanned) {
+      user.unban();
+    } else {
+      user.ban();
+    }
+
+    await this.userRepository.save(user);
+    return user;
+  }
 }

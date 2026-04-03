@@ -1,76 +1,75 @@
 import { Post } from '@/domain/posts/entities/post.entity';
 
 export class PostResponseDto {
+  id: string;
+
+  content: string;
+
+  imageUrls: string[];
+
+  isFlagged: boolean;
+
+  moderationStatus?: string;
+
+  user?: { id: string; username: string; image?: string };
+
+  book?: {
     id: string;
+    title: string;
+    slug?: string;
+    coverUrl?: string;
+    authorId?: { name: string; bio: string };
+  };
 
-    content: string;
+  likesCount?: number;
 
-    imageUrls: string[];
+  commentsCount?: number;
 
-    isFlagged: boolean;
+  likedByCurrentUser?: boolean;
 
-    moderationStatus?: string;
+  createdAt: Date;
 
-    user?: { id: string; username: string; image?: string };
+  updatedAt: Date;
 
-    book?: {
-        id: string;
-        title: string;
-        slug?: string;
-        coverUrl?: string;
-        authorId?: { name: string; bio: string };
-    };
+  constructor(post: Post) {
+    this.id = post.id.toString();
+    this.content = post.content;
+    this.imageUrls = post.imageUrls || [];
+    this.isFlagged = post.isFlagged || false;
+    this.moderationStatus = post.moderationStatus;
+    this.createdAt = post.createdAt;
+    this.updatedAt = post.updatedAt;
 
-    likesCount?: number;
-
-    commentsCount?: number;
-
-    likedByCurrentUser?: boolean;
-
-    createdAt: Date;
-
-    updatedAt: Date;
-
-
-    constructor(post: Post) {
-        this.id = post.id.toString();
-        this.content = post.content;
-        this.imageUrls = post.imageUrls || [];
-        this.isFlagged = post.isFlagged || false;
-        this.moderationStatus = post.moderationStatus;
-        this.createdAt = post.createdAt;
-        this.updatedAt = post.updatedAt;
-
-        // Handle populated author
-        if (post.author) {
-            this.user = {
-                id: post.author.id,
-                username: post.author.username,
-                image: post.author.image,
-            };
-        }
-
-        // Handle populated book
-        if (post.book) {
-            this.book = {
-                id: post.book.id,
-                title: post.book.title,
-                slug: post.book.slug,
-                coverUrl: post.book.coverUrl,
-                authorId: post.book.authorId,
-            };
-        }
-
-        this.likesCount = post.likesCount;
-        this.commentsCount = post.commentsCount;
-        this.likedByCurrentUser = post.likedByCurrentUser;
+    // Handle populated author
+    if (post.author) {
+      this.user = {
+        id: post.author.id,
+        username: post.author.username,
+        image: post.author.image,
+      };
     }
 
-    static fromDomain(post: Post): PostResponseDto {
-        return new PostResponseDto(post);
+    // Handle populated book
+    if (post.book) {
+      this.book = {
+        id: post.book.id,
+        title: post.book.title,
+        slug: post.book.slug,
+        coverUrl: post.book.coverUrl,
+        authorId: post.book.authorId,
+      };
     }
 
-    static fromArray(posts: Post[]): PostResponseDto[] {
-        return posts.map(post => new PostResponseDto(post));
-    }
+    this.likesCount = post.likesCount;
+    this.commentsCount = post.commentsCount;
+    this.likedByCurrentUser = post.likedByCurrentUser;
+  }
+
+  static fromDomain(post: Post): PostResponseDto {
+    return new PostResponseDto(post);
+  }
+
+  static fromArray(posts: Post[]): PostResponseDto[] {
+    return posts.map((post) => new PostResponseDto(post));
+  }
 }

@@ -10,39 +10,39 @@ import { GetUserProfileQuery } from './get-user-profile.query';
 
 @Injectable()
 export class GetUserProfileUseCase {
-    constructor(
-        private readonly userRepository: IUserRepository,
-        private readonly postsRepository: IPostRepository,
-        private readonly followsRepository: IFollowRepository,
-        private readonly readingListRepository: IReadingListRepository
-    ) { }
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly postsRepository: IPostRepository,
+    private readonly followsRepository: IFollowRepository,
+    private readonly readingListRepository: IReadingListRepository,
+  ) {}
 
-    async execute(query: GetUserProfileQuery) {
-        const userId = UserId.create(query.id);
-        const user = await this.userRepository.findById(userId);
+  async execute(query: GetUserProfileQuery) {
+    const userId = UserId.create(query.id);
+    const user = await this.userRepository.findById(userId);
 
-        if (!user) {
-            throw new NotFoundDomainException('User not found');
-        }
-
-        const targetId = TargetId.create(query.id);
-        const [postCount, readingListCount, followersCount] = await Promise.all([
-            this.postsRepository.countByUser(query.id),
-            this.readingListRepository.countByUser(query.id),
-            this.followsRepository.countFollowers(targetId),
-        ]);
-
-        return {
-            id: user.id.toString(),
-            username: user.username,
-            image: user.image,
-            bio: user.bio,
-            location: user.location,
-            website: user.website,
-            createdAt: user.createdAt,
-            postCount,
-            readingListCount,
-            followersCount
-        };
+    if (!user) {
+      throw new NotFoundDomainException('User not found');
     }
+
+    const targetId = TargetId.create(query.id);
+    const [postCount, readingListCount, followersCount] = await Promise.all([
+      this.postsRepository.countByUser(query.id),
+      this.readingListRepository.countByUser(query.id),
+      this.followsRepository.countFollowers(targetId),
+    ]);
+
+    return {
+      id: user.id.toString(),
+      username: user.username,
+      image: user.image,
+      bio: user.bio,
+      location: user.location,
+      website: user.website,
+      createdAt: user.createdAt,
+      postCount,
+      readingListCount,
+      followersCount,
+    };
+  }
 }

@@ -35,7 +35,9 @@ export class CommentMapper {
       userId: new Types.ObjectId(comment.userId.toString()),
       targetType: comment.targetType.toString(),
       targetId: new Types.ObjectId(comment.targetId.toString()),
-      parentId: comment.parentId ? new Types.ObjectId(comment.parentId.toString()) : null,
+      parentId: comment.parentId
+        ? new Types.ObjectId(comment.parentId.toString())
+        : null,
       content: comment.content.toString(),
       likesCount: comment.likesCount,
       isFlagged: comment.isFlagged,

@@ -5,7 +5,10 @@ import {
   Chapter,
   ChapterDocument,
 } from '@/infrastructure/database/schemas/chapter.schema';
-import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
+import {
+  Book,
+  BookDocument,
+} from '@/infrastructure/database/schemas/book.schema';
 
 @Injectable()
 export class ChaptersSeed {
@@ -35,20 +38,20 @@ export class ChaptersSeed {
       // Helper để tạo nội dung dài
       const generateParagraphs = (count: number) => {
         const baseParagraphs = [
-          "The morning sun filtered through the dense canopy of the ancient forest, casting dappled shadows on the mossy ground. Birds sang their melodious songs, unaware of the looming danger that threatened their peaceful existence.",
-          "In the distance, the sound of a rushing river could be heard, its waters cold and clear as they flowed from the snow-capped mountains. Ideally, one would stop to admire such beauty, but time was of the essence.",
-          "She tightened her grip on the worn leather strap of her satchel. Inside lay the map that had been passed down through generations, a map that promised to lead them to the lost city of Aethelgard.",
+          'The morning sun filtered through the dense canopy of the ancient forest, casting dappled shadows on the mossy ground. Birds sang their melodious songs, unaware of the looming danger that threatened their peaceful existence.',
+          'In the distance, the sound of a rushing river could be heard, its waters cold and clear as they flowed from the snow-capped mountains. Ideally, one would stop to admire such beauty, but time was of the essence.',
+          'She tightened her grip on the worn leather strap of her satchel. Inside lay the map that had been passed down through generations, a map that promised to lead them to the lost city of Aethelgard.',
           "He looked at her with concern in his eyes. 'Are you sure about this?' he asked, his voice barely a whisper. 'There's no turning back once we cross the bridge.'",
-          "The wind howled as they ascended the steep path. The air grew thinner, and every breath became a struggle. Yet, they pressed on, driven by a purpose greater than themselves.",
-          "Suddenly, a rustle in the bushes made them freeze. Hands instinctively went to hilts of swords and daggers. Silence descended upon the clearing, heavy and expectant.",
-          "It was just a rabbit, scurrying away in fear. They let out a collective sigh of relief, though the tension remained. The forest had eyes, and they knew they were being watched.",
-          "Night fell rapidly, wrapping the world in a blanket of stars. They set up camp in a small cave, the fire crackling and popping as it provided much-needed warmth and light.",
-          "Dreams that night were filled with visions of fire and shadow. A prophecy spoken long ago was beginning to unfold, and they were the key to its fulfillment or its prevention.",
-          "As dawn broke, painting the sky in hues of orange and pink, they packed their meager belongings. The journey ahead was long, but hope burned bright in their hearts."
+          'The wind howled as they ascended the steep path. The air grew thinner, and every breath became a struggle. Yet, they pressed on, driven by a purpose greater than themselves.',
+          'Suddenly, a rustle in the bushes made them freeze. Hands instinctively went to hilts of swords and daggers. Silence descended upon the clearing, heavy and expectant.',
+          'It was just a rabbit, scurrying away in fear. They let out a collective sigh of relief, though the tension remained. The forest had eyes, and they knew they were being watched.',
+          'Night fell rapidly, wrapping the world in a blanket of stars. They set up camp in a small cave, the fire crackling and popping as it provided much-needed warmth and light.',
+          'Dreams that night were filled with visions of fire and shadow. A prophecy spoken long ago was beginning to unfold, and they were the key to its fulfillment or its prevention.',
+          'As dawn broke, painting the sky in hues of orange and pink, they packed their meager belongings. The journey ahead was long, but hope burned bright in their hearts.',
         ];
-        
+
         return Array.from({ length: count }, (_, index) => ({
-          content: `${baseParagraphs[index % baseParagraphs.length]} (Paragraph ${index + 1})`
+          content: `${baseParagraphs[index % baseParagraphs.length]} (Paragraph ${index + 1})`,
         }));
       };
 

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { BadRequestDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
+import {
+  BadRequestDomainException,
+  ConflictDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
-import { CreateReviewDto } from '@/presentation/reviews/dto/create-review.dto';
+import { CreateReviewDto } from '@/application/reviews/dto/create-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Review } from '@/domain/reviews/entities/review.entity';
@@ -16,13 +19,18 @@ export class CreateReviewUseCase {
 
   async execute(userId: string, dto: CreateReviewDto): Promise<Review> {
     // Check intersection
-    const exists = await this.reviewRepository.existsByUserAndBook(userId, dto.bookId);
+    const exists = await this.reviewRepository.existsByUserAndBook(
+      userId,
+      dto.bookId,
+    );
     if (exists) {
-        throw new ConflictDomainException('Review already exists');
+      throw new ConflictDomainException('Review already exists');
     }
 
     // Content Moderation
-    const moderationResult = await this.checkContentUseCase.execute(dto.content);
+    const moderationResult = await this.checkContentUseCase.execute(
+      dto.content,
+    );
     if (!moderationResult.isSafe) {
       const reason = moderationResult.reason || 'Content is not safe';
       throw new BadRequestDomainException(`Review rejected: ${reason}`);
@@ -33,10 +41,9 @@ export class CreateReviewUseCase {
       userId,
       bookId: dto.bookId,
       content: dto.content,
-      rating: dto.rating
+      rating: dto.rating,
     });
 
     return this.reviewRepository.create(review);
   }
 }
-

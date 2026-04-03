@@ -3,12 +3,13 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Matches
+  Matches,
 } from 'class-validator';
 
-
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
-const PASSWORD_MESSAGE = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm: chữ hoa, chữ thường, số và ký tự đặc biệt';
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+const PASSWORD_MESSAGE =
+  'Mật khẩu phải có ít nhất 8 ký tự, bao gồm: chữ hoa, chữ thường, số và ký tự đặc biệt';
 
 export class SignupLocalDto {
   @IsString()
@@ -95,4 +96,3 @@ export class ResetPasswordDto {
   @Matches(PASSWORD_REGEX, { message: PASSWORD_MESSAGE })
   newPassword: string;
 }
-

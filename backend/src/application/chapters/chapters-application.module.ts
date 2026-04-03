@@ -10,10 +10,7 @@ import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-cha
 import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
 
 @Module({
-  imports: [
-    ChaptersRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [ChaptersRepositoryModule, IdGeneratorModule],
   providers: [
     CreateChapterUseCase,
     DeleteChapterUseCase,
@@ -33,4 +30,4 @@ import { EpubParserService } from '@/infrastructure/external/epub-parser.service
     EpubParserService,
   ],
 })
-export class ChaptersApplicationModule { }
+export class ChaptersApplicationModule {}

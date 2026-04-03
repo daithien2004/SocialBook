@@ -10,11 +10,15 @@ export class VerifyOtpUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly verifyOtpTokenUseCase: VerifyOtpTokenUseCase,
-  ) { }
+  ) {}
 
   async execute(command: VerifyOtpCommand): Promise<string> {
-    const verifyTokenCommand = new VerifyOtpTokenCommand(command.email, command.otp);
-    const isValid = await this.verifyOtpTokenUseCase.execute(verifyTokenCommand);
+    const verifyTokenCommand = new VerifyOtpTokenCommand(
+      command.email,
+      command.otp,
+    );
+    const isValid =
+      await this.verifyOtpTokenUseCase.execute(verifyTokenCommand);
     if (!isValid) {
       throw new BadRequestException('Mã OTP không hợp lệ');
     }

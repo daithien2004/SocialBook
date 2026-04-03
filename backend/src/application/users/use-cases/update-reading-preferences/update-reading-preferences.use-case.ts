@@ -7,20 +7,20 @@ import { UpdateReadingPreferencesCommand } from './update-reading-preferences.co
 
 @Injectable()
 export class UpdateReadingPreferencesUseCase {
-    constructor(private readonly userRepository: IUserRepository) { }
+  constructor(private readonly userRepository: IUserRepository) {}
 
-    async execute(command: UpdateReadingPreferencesCommand): Promise<User> {
-        const userId = UserId.create(command.userId);
-        const user = await this.userRepository.findById(userId);
+  async execute(command: UpdateReadingPreferencesCommand): Promise<User> {
+    const userId = UserId.create(command.userId);
+    const user = await this.userRepository.findById(userId);
 
-        if (!user) {
-            throw new NotFoundDomainException('User not found');
-        }
-
-        const { userId: _, ...preferences } = command;
-        user.updateReadingPreferences(preferences);
-        await this.userRepository.save(user);
-
-        return user;
+    if (!user) {
+      throw new NotFoundDomainException('User not found');
     }
+
+    const { userId: _, ...preferences } = command;
+    user.updateReadingPreferences(preferences);
+    await this.userRepository.save(user);
+
+    return user;
+  }
 }

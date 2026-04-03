@@ -5,9 +5,7 @@ import { LogoutCommand } from './logout.command';
 
 @Injectable()
 export class LogoutUseCase {
-  constructor(
-    private readonly userRepository: IUserRepository,
-  ) { }
+  constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(command: LogoutCommand): Promise<{ message: string }> {
     const id = UserId.create(command.userId);

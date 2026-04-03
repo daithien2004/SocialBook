@@ -6,9 +6,7 @@ import { RejectPostCommand } from './reject-post.command';
 
 @Injectable()
 export class RejectPostUseCase {
-  constructor(
-    private readonly postRepository: IPostRepository
-  ) { }
+  constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(command: RejectPostCommand) {
     const post = await this.postRepository.findById(command.postId);

@@ -1,3 +1,3 @@
 export class BookViewedEvent {
-    constructor(public readonly bookId: string) {}
+  constructor(public readonly bookId: string) {}
 }

@@ -6,15 +6,7 @@ import { NhaSachMienPhiStrategy } from './strategies/nhasachmienphi.strategy';
 
 @Module({
   imports: [HttpModule],
-  providers: [
-    ScraperFactory,
-    TruyenFullStrategy,
-    NhaSachMienPhiStrategy,
-  ],
-  exports: [
-    ScraperFactory,
-    TruyenFullStrategy,
-    NhaSachMienPhiStrategy,
-  ],
+  providers: [ScraperFactory, TruyenFullStrategy, NhaSachMienPhiStrategy],
+  exports: [ScraperFactory, TruyenFullStrategy, NhaSachMienPhiStrategy],
 })
 export class ScraperInfrastructureModule {}

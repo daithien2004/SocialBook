@@ -21,7 +21,10 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 import { FilterUserDto } from '@/presentation/users/dto/filter-user.dto';
 import { UpdateReadingPreferencesDto } from '@/presentation/users/dto/update-reading-preferences.dto';
-import { CreateUserDto, UpdateUserOverviewDto } from '@/presentation/users/dto/user.dto';
+import {
+  CreateUserDto,
+  UpdateUserOverviewDto,
+} from '@/presentation/users/dto/user.dto';
 import { UserResponseDto } from '@/presentation/users/dto/user.response.dto';
 
 import { CheckUserExistQuery } from '@/application/users/use-cases/check-user-exist/check-user-exist.query';
@@ -52,7 +55,7 @@ export class UsersController {
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     private readonly getUserByIdUseCase: GetUserByIdUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
@@ -62,8 +65,8 @@ export class UsersController {
     private readonly updateUserImageUseCase: UpdateUserImageUseCase,
     private readonly getReadingPreferencesUseCase: GetReadingPreferencesUseCase,
     private readonly updateReadingPreferencesUseCase: UpdateReadingPreferencesUseCase,
-    private readonly searchUsersUseCase: SearchUsersUseCase
-  ) { }
+    private readonly searchUsersUseCase: SearchUsersUseCase,
+  ) {}
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
@@ -74,7 +77,7 @@ export class UsersController {
       createUserDto.roleId,
       createUserDto.image,
       createUserDto.provider,
-      createUserDto.providerId
+      createUserDto.providerId,
     );
     const user = await this.createUserUseCase.execute(command);
     return {
@@ -86,9 +89,7 @@ export class UsersController {
   @Get('admin')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async findAllAdmin(
-    @Query() filter: FilterUserDto,
-  ) {
+  async findAllAdmin(@Query() filter: FilterUserDto) {
     const getUsersQuery = new GetUsersQuery(
       filter.actualPage,
       filter.actualLimit,
@@ -96,21 +97,19 @@ export class UsersController {
       filter.email,
       filter.roleId,
       filter.isBanned,
-      filter.isVerified
+      filter.isVerified,
     );
     const result = await this.getUsersUseCase.execute(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map(user => new UserResponseDto(user)),
+      data: result.data.map((user) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
 
   @Public()
   @Get()
-  async findAll(
-    @Query() filter: FilterUserDto,
-  ) {
+  async findAll(@Query() filter: FilterUserDto) {
     const getUsersQuery = new GetUsersQuery(
       filter.actualPage,
       filter.actualLimit,
@@ -118,12 +117,12 @@ export class UsersController {
       filter.email,
       filter.roleId,
       undefined,
-      undefined
+      undefined,
     );
     const result = await this.getUsersUseCase.execute(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map(user => new UserResponseDto(user)),
+      data: result.data.map((user) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
@@ -173,7 +172,7 @@ export class UsersController {
       dto.username,
       dto.bio,
       dto.location,
-      dto.website
+      dto.website,
     );
     const user = await this.updateUserUseCase.execute(command);
     return {
@@ -184,9 +183,11 @@ export class UsersController {
 
   @Patch('me/avatar')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 5 * 1024 * 1024 },
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async updateMyAvatar(
     @CurrentUser('id') userId: string,
     @UploadedFile() file: Express.Multer.File,
@@ -195,7 +196,7 @@ export class UsersController {
     const result = await this.updateUserImageUseCase.execute(command, file);
     return {
       message: 'Update avatar successfully',
-      data: result
+      data: result,
     };
   }
 
@@ -228,7 +229,7 @@ export class UsersController {
       dto.textAlign,
       dto.marginWidth,
       dto.preferredGenres,
-      dto.dailyReadingGoal
+      dto.dailyReadingGoal,
     );
 
     const user = await this.updateReadingPreferencesUseCase.execute(command);
@@ -241,18 +242,15 @@ export class UsersController {
 
   @Public()
   @Get('search')
-  async searchUsers(
-    @Query() filter: FilterUserDto,
-  ) {
+  async searchUsers(@Query() filter: FilterUserDto) {
     const keyword = filter.username || filter.email || '';
     const query = new SearchUsersQuery(keyword, filter.page, filter.limit);
     const result = await this.searchUsersUseCase.execute(query);
 
     return {
       message: 'Search users successfully',
-      data: result.data.map(user => new UserResponseDto(user)),
+      data: result.data.map((user) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
-
 }

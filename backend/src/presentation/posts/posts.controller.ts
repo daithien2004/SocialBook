@@ -63,14 +63,14 @@ export class PostsController {
     private readonly getFlaggedPostsUseCase: GetFlaggedPostsUseCase,
     private readonly approvePostUseCase: ApprovePostUseCase,
     private readonly rejectPostUseCase: RejectPostUseCase,
-  ) { }
+  ) {}
 
   @Public()
   @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(
     @CurrentUser('id') userId: string,
-    @Query() query: PaginationQueryDto & { cursor?: string }
+    @Query() query: PaginationQueryDto & { cursor?: string },
   ) {
     const limit = Math.min(query.actualLimit || 10, 100);
     const postsQuery = new GetPostsQuery(limit, query.cursor, userId);
@@ -91,7 +91,7 @@ export class PostsController {
   @Get('user')
   async findAllByUser(
     @CurrentUser('id') currentUserId: string,
-    @Query() query: PaginationUserDto & { cursor?: string }
+    @Query() query: PaginationUserDto & { cursor?: string },
   ) {
     if (!query.userId) throw new BadRequestException('userId is required');
     const limit = Math.min(query.actualLimit || 10, 100);
@@ -99,7 +99,7 @@ export class PostsController {
       query.userId,
       limit,
       query.cursor,
-      currentUserId
+      currentUserId,
     );
     const result = await this.getPostsByUserUseCase.execute(postsQuery);
     return {
@@ -116,10 +116,7 @@ export class PostsController {
   @Public()
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(
-    @CurrentUser('id') userId: string,
-    @Param('id') id: string
-  ) {
+  async findOne(@CurrentUser('id') userId: string, @Param('id') id: string) {
     const query = new GetPostQuery(id, userId);
     const data = await this.getPostUseCase.execute(query);
     return {
@@ -180,13 +177,19 @@ export class PostsController {
       }),
     )
     files?: Express.Multer.File[],
-    @CurrentUser('id') userId?: string
+    @CurrentUser('id') userId?: string,
   ) {
     if (userId && files && files.length > 10) {
       throw new BadRequestException('Maximum 10 images allowed');
     }
 
-    const command = new UpdatePostCommand(userId || '', id, dto.content, dto.bookId, dto.imageUrls);
+    const command = new UpdatePostCommand(
+      userId || '',
+      id,
+      dto.content,
+      dto.bookId,
+      dto.imageUrls,
+    );
     const data = await this.updatePostUseCase.execute(command, files);
     return {
       message: 'Update post successfully',
@@ -220,7 +223,7 @@ export class PostsController {
   async removeImage(
     @Param('id') id: string,
     @Body('imageUrl') imageUrl: string,
-    @CurrentUser('id') userId: string
+    @CurrentUser('id') userId: string,
   ) {
     if (!imageUrl) throw new BadRequestException('imageUrl is required');
 

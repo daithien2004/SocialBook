@@ -7,33 +7,41 @@ import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
 import { GetCollectionByIdQuery } from './get-collection-by-id.query';
 
 export interface GetCollectionByIdResult {
-    collection: Collection;
-    books: LibraryItemReadModel[];
+  collection: Collection;
+  books: LibraryItemReadModel[];
 }
 
 @Injectable()
 export class GetCollectionByIdUseCase {
-    constructor(
-        private readonly collectionRepository: ICollectionRepository,
-        private readonly readingListRepository: IReadingListRepository,
-    ) { }
+  constructor(
+    private readonly collectionRepository: ICollectionRepository,
+    private readonly readingListRepository: IReadingListRepository,
+  ) {}
 
-    async execute(query: GetCollectionByIdQuery): Promise<GetCollectionByIdResult | null> {
-        const collection = await this.collectionRepository.findById(query.collectionId);
+  async execute(
+    query: GetCollectionByIdQuery,
+  ): Promise<GetCollectionByIdResult | null> {
+    const collection = await this.collectionRepository.findById(
+      query.collectionId,
+    );
 
-        if (!collection) {
-            return null;
-        }
-
-        if (!collection.isPublic && collection.userId.toString() !== query.userId) {
-            throw new ForbiddenDomainException('You do not have permission to view this collection');
-        }
-
-        const books = await this.readingListRepository.findByCollectionId(collection.id);
-
-        return {
-            collection,
-            books
-        };
+    if (!collection) {
+      return null;
     }
+
+    if (!collection.isPublic && collection.userId.toString() !== query.userId) {
+      throw new ForbiddenDomainException(
+        'You do not have permission to view this collection',
+      );
+    }
+
+    const books = await this.readingListRepository.findByCollectionId(
+      collection.id,
+    );
+
+    return {
+      collection,
+      books,
+    };
+  }
 }

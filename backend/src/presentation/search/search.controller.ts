@@ -5,17 +5,19 @@ import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
 
 @Controller('search')
 export class SearchController {
-    constructor(private readonly intelligentSearchUseCase: IntelligentSearchUseCase) { }
+  constructor(
+    private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
+  ) {}
 
-    @Public()
-    @Get()
-    async search(@Query() searchQuery: SearchQueryDto) {
-        const result = await this.intelligentSearchUseCase.execute(searchQuery);
+  @Public()
+  @Get()
+  async search(@Query() searchQuery: SearchQueryDto) {
+    const result = await this.intelligentSearchUseCase.execute(searchQuery);
 
-        return {
-            message: 'Search completed successfully',
-            data: result.data,
-            meta: result.meta,
-        };
-    }
+    return {
+      message: 'Search completed successfully',
+      data: result.data,
+      meta: result.meta,
+    };
+  }
 }

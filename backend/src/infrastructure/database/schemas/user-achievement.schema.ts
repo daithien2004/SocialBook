@@ -26,6 +26,7 @@ export class UserAchievement extends BaseSchema {
   rewardXP: number;
 }
 
-export const UserAchievementSchema = SchemaFactory.createForClass(UserAchievement);
+export const UserAchievementSchema =
+  SchemaFactory.createForClass(UserAchievement);
 
 UserAchievementSchema.index({ userId: 1, achievementId: 1 }, { unique: true });

@@ -50,4 +50,5 @@ export class UserOnboarding {
   updatedAt: Date;
 }
 
-export const UserOnboardingSchema = SchemaFactory.createForClass(UserOnboarding);
+export const UserOnboardingSchema =
+  SchemaFactory.createForClass(UserOnboarding);

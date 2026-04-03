@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
+import {
+  NotFoundDomainException,
+  ConflictDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { Genre } from '@/domain/genres/entities/genre.entity';
 import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
@@ -9,36 +12,36 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class UpdateGenreUseCase {
-    constructor(
-        private readonly genreRepository: IGenreRepository
-    ) {}
+  constructor(private readonly genreRepository: IGenreRepository) {}
 
-    async execute(command: UpdateGenreCommand): Promise<Genre> {
-        const genreId = GenreId.create(command.id);
-        const genre = await this.genreRepository.findById(genreId);
-        
-        if (!genre) {
-            throw new NotFoundDomainException(ErrorMessages.GENRE_NOT_FOUND || 'Genre not found');
-        }
+  async execute(command: UpdateGenreCommand): Promise<Genre> {
+    const genreId = GenreId.create(command.id);
+    const genre = await this.genreRepository.findById(genreId);
 
-        if (command.name && command.name !== genre.name.toString()) {
-            const newName = GenreName.create(command.name);
-            const exists = await this.genreRepository.existsByName(newName, genreId);
-            
-            if (exists) {
-                throw new ConflictDomainException(ErrorMessages.GENRE_EXISTS || 'Genre name already exists');
-            }
-            
-            genre.changeName(command.name);
-        }
-
-        if (command.description !== undefined) {
-            genre.updateDescription(command.description);
-        }
-        await this.genreRepository.save(genre);
-
-        return genre;
+    if (!genre) {
+      throw new NotFoundDomainException(
+        ErrorMessages.GENRE_NOT_FOUND || 'Genre not found',
+      );
     }
+
+    if (command.name && command.name !== genre.name.toString()) {
+      const newName = GenreName.create(command.name);
+      const exists = await this.genreRepository.existsByName(newName, genreId);
+
+      if (exists) {
+        throw new ConflictDomainException(
+          ErrorMessages.GENRE_EXISTS || 'Genre name already exists',
+        );
+      }
+
+      genre.changeName(command.name);
+    }
+
+    if (command.description !== undefined) {
+      genre.updateDescription(command.description);
+    }
+    await this.genreRepository.save(genre);
+
+    return genre;
+  }
 }
-
-

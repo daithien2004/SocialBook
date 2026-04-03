@@ -5,12 +5,9 @@ import { TextToSpeech } from '@/domain/text-to-speech/entities/text-to-speech.en
 
 @Injectable()
 export class GetChapterAudioUseCase {
-    constructor(
-        private readonly ttsRepository: ITextToSpeechRepository,
-    ) {}
+  constructor(private readonly ttsRepository: ITextToSpeechRepository) {}
 
-    async execute(chapterId: string): Promise<TextToSpeech | null> {
-        return this.ttsRepository.findCompletedByChapterId(chapterId);
-    }
+  async execute(chapterId: string): Promise<TextToSpeech | null> {
+    return this.ttsRepository.findCompletedByChapterId(chapterId);
+  }
 }
-

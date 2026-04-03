@@ -1,4 +1,4 @@
-import { PaginationMeta } from "../interfaces/pagination.interface";
+import { PaginationMeta } from '../interfaces/pagination.interface';
 
 export class ResponseDto<T> {
   success: boolean;

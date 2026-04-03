@@ -8,6 +8,8 @@ import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get
 import { GetLibraryUseCase } from '@/application/library/use-cases/get-library/get-library.use-case';
 import { RecordReadingTimeCommand } from '@/application/library/use-cases/record-reading-time/record-reading-time.command';
 import { RecordReadingTimeUseCase } from '@/application/library/use-cases/record-reading-time/record-reading-time.use-case';
+import { ProcessReadingSessionCommand } from '@/application/library/use-cases/process-reading-session/process-reading-session.command';
+import { ProcessReadingSessionUseCase } from '@/application/library/use-cases/process-reading-session/process-reading-session.use-case';
 import { RemoveFromLibraryCommand } from '@/application/library/use-cases/remove-from-library/remove-from-library.command';
 import { RemoveFromLibraryUseCase } from '@/application/library/use-cases/remove-from-library/remove-from-library.use-case';
 import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
@@ -27,7 +29,7 @@ import {
   BookLibraryInfoResponseDto,
   ChapterProgressResponseDto,
   LibraryItemResponseDto,
-  RecordReadingTimeResponseDto
+  RecordReadingTimeResponseDto,
 } from '@/presentation/library/dto/library.response.dto';
 import {
   Body,
@@ -50,12 +52,12 @@ export class LibraryController {
     private readonly updateStatusUseCase: UpdateStatusUseCase,
     private readonly updateProgressUseCase: UpdateProgressUseCase,
     private readonly recordReadingTimeUseCase: RecordReadingTimeUseCase,
-    private readonly recordReadingUseCase: RecordReadingUseCase,
+    private readonly processReadingSessionUseCase: ProcessReadingSessionUseCase,
     private readonly updateCollectionsUseCase: UpdateCollectionsUseCase,
     private readonly removeFromLibraryUseCase: RemoveFromLibraryUseCase,
     private readonly getBookLibraryInfoUseCase: GetBookLibraryInfoUseCase,
     private readonly getChapterProgressUseCase: GetChapterProgressUseCase,
-  ) { }
+  ) {}
 
   @Get()
   async getLibrary(
@@ -67,12 +69,15 @@ export class LibraryController {
 
     return {
       message: 'Get library list successfully',
-      data: readingLists.map(rl => LibraryItemResponseDto.fromReadModel(rl)),
+      data: readingLists.map((rl) => LibraryItemResponseDto.fromReadModel(rl)),
     };
   }
 
   @Post('status')
-  async updateStatus(@CurrentUser('id') userId: string, @Body() dto: UpdateLibraryStatusDto) {
+  async updateStatus(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateLibraryStatusDto,
+  ) {
     const command = new UpdateStatusCommand(userId, dto.bookId, dto.status);
     const readingList = await this.updateStatusUseCase.execute(command);
 
@@ -97,12 +102,15 @@ export class LibraryController {
   }
 
   @Post('progress')
-  async updateProgress(@CurrentUser('id') userId: string, @Body() updateProgressDto: UpdateProgressDto) {
+  async updateProgress(
+    @CurrentUser('id') userId: string,
+    @Body() updateProgressDto: UpdateProgressDto,
+  ) {
     const command = new UpdateProgressCommand(
       userId,
       updateProgressDto.bookId,
       updateProgressDto.chapterId,
-      updateProgressDto.progress || 0
+      updateProgressDto.progress || 0,
     );
 
     const result = await this.updateProgressUseCase.execute(command);
@@ -110,27 +118,25 @@ export class LibraryController {
       message: 'Update progress successfully',
       data: {
         readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
-        readingProgress: ChapterProgressResponseDto.fromResult(result.readingProgress),
+        readingProgress: ChapterProgressResponseDto.fromResult(
+          result.readingProgress,
+        ),
       },
     };
   }
 
   @Post('reading-time')
-  async recordReadingTime(@CurrentUser('id') userId: string, @Body() dto: UpdateReadingTimeDto) {
-    const command = new RecordReadingTimeCommand(
+  async recordReadingTime(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateReadingTimeDto,
+  ) {
+    const command = new ProcessReadingSessionCommand(
       userId,
       dto.bookId,
       dto.chapterId,
-      dto.durationInSeconds
+      dto.durationInSeconds,
     );
-    const result = await this.recordReadingTimeUseCase.execute(command) as any;
-
-    if (result.timeSpentMinutes > 0) {
-      await this.recordReadingUseCase.execute({
-        userId,
-        xpAmount: Math.min(result.timeSpentMinutes, 50),
-      });
-    }
+    const result = await this.processReadingSessionUseCase.execute(command);
 
     return {
       message: 'Recorded reading time successfully',
@@ -139,8 +145,15 @@ export class LibraryController {
   }
 
   @Patch('collections')
-  async updateCollections(@CurrentUser('id') userId: string, @Body() dto: AddToCollectionsDto) {
-    const command = new UpdateCollectionsCommand(userId, dto.bookId, dto.collectionIds);
+  async updateCollections(
+    @CurrentUser('id') userId: string,
+    @Body() dto: AddToCollectionsDto,
+  ) {
+    const command = new UpdateCollectionsCommand(
+      userId,
+      dto.bookId,
+      dto.collectionIds,
+    );
     const readingList = await this.updateCollectionsUseCase.execute(command);
 
     return {
@@ -150,7 +163,10 @@ export class LibraryController {
   }
 
   @Delete(':bookId')
-  async remove(@CurrentUser('id') userId: string, @Param('bookId') bookId: string) {
+  async remove(
+    @CurrentUser('id') userId: string,
+    @Param('bookId') bookId: string,
+  ) {
     const command = new RemoveFromLibraryCommand(userId, bookId);
     await this.removeFromLibraryUseCase.execute(command);
 
@@ -160,7 +176,10 @@ export class LibraryController {
   }
 
   @Get('book/:bookId')
-  async getBookLibraryInfo(@CurrentUser('id') userId: string, @Param('bookId') bookId: string) {
+  async getBookLibraryInfo(
+    @CurrentUser('id') userId: string,
+    @Param('bookId') bookId: string,
+  ) {
     const query = new GetBookLibraryInfoQuery(userId, bookId);
     const result = await this.getBookLibraryInfoUseCase.execute(query);
 

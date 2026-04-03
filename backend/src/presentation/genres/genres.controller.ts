@@ -11,7 +11,17 @@ import { CreateGenreDto } from '@/presentation/genres/dto/create-genre.dto';
 import { FilterGenreDto } from '@/presentation/genres/dto/filter-genre.dto';
 import { GenreResponseDto } from '@/presentation/genres/dto/genre.response.dto';
 import { UpdateGenreDto } from '@/presentation/genres/dto/update-genre.dto';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { GetGenreByIdQuery } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.query';
 import { GetGenreByIdUseCase } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.use-case';
@@ -27,13 +37,16 @@ export class GenresController {
     private readonly getGenresUseCase: GetGenresUseCase,
     private readonly deleteGenreUseCase: DeleteGenreUseCase,
     private readonly getGenreByIdUseCase: GetGenreByIdUseCase,
-  ) { }
+  ) {}
 
   @Post()
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Body() createGenreDto: CreateGenreDto) {
-    const command = new CreateGenreCommand(createGenreDto.name, createGenreDto.description);
+    const command = new CreateGenreCommand(
+      createGenreDto.name,
+      createGenreDto.description,
+    );
     const genre = await this.createGenreUseCase.execute(command);
     return {
       message: 'Genre created successfully',
@@ -43,15 +56,17 @@ export class GenresController {
 
   @Public()
   @Get()
-  async findAll(
-    @Query() filter: FilterGenreDto,
-  ) {
-    const query = new GetGenresQuery(filter.actualPage, filter.actualLimit, filter.name);
+  async findAll(@Query() filter: FilterGenreDto) {
+    const query = new GetGenresQuery(
+      filter.actualPage,
+      filter.actualLimit,
+      filter.name,
+    );
     const result = await this.getGenresUseCase.execute(query);
 
     return {
       message: 'Get genres successfully',
-      data: result.data.map(genre => new GenreResponseDto(genre)),
+      data: result.data.map((genre) => new GenreResponseDto(genre)),
       meta: result.meta,
     };
   }
@@ -59,10 +74,12 @@ export class GenresController {
   @Get('admin')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async findAllAdmin(
-    @Query() filter: FilterGenreDto,
-  ) {
-    const query = new GetGenresQuery(filter.actualPage, filter.actualLimit, filter.name);
+  async findAllAdmin(@Query() filter: FilterGenreDto) {
+    const query = new GetGenresQuery(
+      filter.actualPage,
+      filter.actualLimit,
+      filter.name,
+    );
     const result = await this.getGenresUseCase.execute(query);
 
     return {
@@ -86,8 +103,15 @@ export class GenresController {
   @Patch(':id')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async update(@Param('id') id: string, @Body() updateGenreDto: UpdateGenreDto) {
-    const command = new UpdateGenreCommand(id, updateGenreDto.name, updateGenreDto.description);
+  async update(
+    @Param('id') id: string,
+    @Body() updateGenreDto: UpdateGenreDto,
+  ) {
+    const command = new UpdateGenreCommand(
+      id,
+      updateGenreDto.name,
+      updateGenreDto.description,
+    );
     const genre = await this.updateGenreUseCase.execute(command);
     return {
       message: 'Genre updated successfully',

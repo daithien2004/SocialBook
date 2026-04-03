@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  UseGuards
-} from '@nestjs/common';
-
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/customize';
@@ -34,7 +26,7 @@ export class GamificationController {
     private readonly getStreakUseCase: GetStreakUseCase,
     private readonly checkInUseCase: CheckInUseCase,
     private readonly getDailyGoalsUseCase: GetDailyGoalsUseCase,
-  ) { }
+  ) {}
 
   @Post('record-reading')
   @UseGuards(JwtAuthGuard)

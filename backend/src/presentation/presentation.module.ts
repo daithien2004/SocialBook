@@ -99,4 +99,4 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     UsersController,
   ],
 })
-export class PresentationModule { }
+export class PresentationModule {}

@@ -21,15 +21,18 @@ export class StartOnboardingUseCase {
       return existing;
     }
 
-    const newOnboarding = Onboarding.create(this.idGenerator.generate(), userId);
-    const savedOnboarding = await this.onboardingRepository.create(newOnboarding);
-    
+    const newOnboarding = Onboarding.create(
+      this.idGenerator.generate(),
+      userId,
+    );
+    const savedOnboarding =
+      await this.onboardingRepository.create(newOnboarding);
+
     // Update User with onboardingId
     await this.userRepository.updateOnboardingData(UserId.create(userId), {
-        onboardingId: savedOnboarding.id
+      onboardingId: savedOnboarding.id,
     });
 
     return savedOnboarding;
   }
 }
-

@@ -66,12 +66,15 @@ import { PresentationModule } from './presentation/presentation.module';
             host,
             port,
             password,
-            tls: host !== 'localhost' ? { rejectUnauthorized: false } : undefined,
+            tls:
+              host !== 'localhost' ? { rejectUnauthorized: false } : undefined,
             lazyConnect: true,
             maxRetriesPerRequest: 3,
             retryStrategy: (times: number) => {
               if (times > 3) {
-                console.warn('[Redis] Connection failed after 3 retries. Redis features will be disabled.');
+                console.warn(
+                  '[Redis] Connection failed after 3 retries. Redis features will be disabled.',
+                );
                 return null; // Stop retrying
               }
               return Math.min(times * 500, 2000); // Retry with delay
@@ -108,4 +111,4 @@ import { PresentationModule } from './presentation/presentation.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

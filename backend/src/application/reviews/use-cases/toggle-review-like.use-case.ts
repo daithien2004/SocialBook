@@ -5,9 +5,7 @@ import { Review } from '@/domain/reviews/entities/review.entity';
 
 @Injectable()
 export class ToggleReviewLikeUseCase {
-  constructor(
-    private readonly reviewRepository: IReviewRepository,
-  ) {}
+  constructor(private readonly reviewRepository: IReviewRepository) {}
 
   async execute(reviewId: string, userId: string): Promise<Review> {
     const result = await this.reviewRepository.toggleLike(reviewId, userId);
@@ -15,4 +13,3 @@ export class ToggleReviewLikeUseCase {
     return result;
   }
 }
-

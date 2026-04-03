@@ -8,9 +8,14 @@ export abstract class IReviewRepository {
   abstract findByBookId(bookId: string): Promise<Review[]>;
   abstract findByUserId(userId: string): Promise<Review[]>;
   abstract toggleLike(reviewId: string, userId: string): Promise<Review | null>;
-  abstract existsByUserAndBook(userId: string, bookId: string): Promise<boolean>;
-  abstract getStatsForBooks(bookIds: string[]): Promise<Map<string, { rating: number; count: number }>>;
-  
+  abstract existsByUserAndBook(
+    userId: string,
+    bookId: string,
+  ): Promise<boolean>;
+  abstract getStatsForBooks(
+    bookIds: string[],
+  ): Promise<Map<string, { rating: number; count: number }>>;
+
   // Statistics
   abstract countTotal(): Promise<number>;
 }

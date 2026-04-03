@@ -6,7 +6,7 @@ import {
   HttpStatus,
   Post,
   Query,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
@@ -24,7 +24,7 @@ export class LikesController {
     private readonly toggleLikeUseCase: ToggleLikeUseCase,
     private readonly getLikeCountUseCase: GetLikeCountUseCase,
     private readonly getLikeStatusUseCase: GetLikeStatusUseCase,
-  ) { }
+  ) {}
 
   @Post('toggle')
   @RequireAuth()
@@ -32,7 +32,7 @@ export class LikesController {
   @HttpCode(HttpStatus.OK)
   async toggle(
     @CurrentUser('id') userId: string,
-    @Body() dto: { targetId: string; targetType: string }
+    @Body() dto: { targetId: string; targetType: string },
   ) {
     const result = await this.toggleLikeUseCase.execute({
       userId,
@@ -66,7 +66,7 @@ export class LikesController {
   @HttpCode(HttpStatus.OK)
   async getStatus(
     @CurrentUser('id') userId: string,
-    @Query() dto: { targetId: string; targetType: string }
+    @Query() dto: { targetId: string; targetType: string },
   ) {
     const data = await this.getLikeStatusUseCase.execute({
       userId,

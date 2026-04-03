@@ -6,18 +6,8 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    GeminiRepositoryModule,
-    InfrastructureModule,
-    IdGeneratorModule,
-  ],
-  providers: [
-    GenerateTextUseCase,
-    SummarizeChapterUseCase,
-  ],
-  exports: [
-    GenerateTextUseCase,
-    SummarizeChapterUseCase,
-  ],
+  imports: [GeminiRepositoryModule, InfrastructureModule, IdGeneratorModule],
+  providers: [GenerateTextUseCase, SummarizeChapterUseCase],
+  exports: [GenerateTextUseCase, SummarizeChapterUseCase],
 })
 export class GeminiApplicationModule {}

@@ -17,13 +17,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     ScraperInfrastructureModule,
     IdGeneratorModule,
   ],
-  providers: [
-    ScrapeBookUseCase,
-    ScrapeChapterUseCase,
-  ],
-  exports: [
-    ScrapeBookUseCase,
-    ScrapeChapterUseCase,
-  ],
+  providers: [ScrapeBookUseCase, ScrapeChapterUseCase],
+  exports: [ScrapeBookUseCase, ScrapeChapterUseCase],
 })
 export class ScraperApplicationModule {}

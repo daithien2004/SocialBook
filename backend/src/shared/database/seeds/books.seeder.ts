@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
+import {
+  Book,
+  BookDocument,
+} from '@/infrastructure/database/schemas/book.schema';
 import {
   Author,
   AuthorDocument,

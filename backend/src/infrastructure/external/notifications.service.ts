@@ -1,24 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from '../../presentation/notification/dto/create-notification.dto';
+import { CreateNotificationDto } from '@/application/notifications/dto/create-notification.dto';
 import { Server } from 'socket.io';
-import { NotificationResponseDto } from '../../presentation/notification/dto/notification.response.dto';
-import { CreateNotificationUseCase } from '../../application/notifications/use-cases/create-notification/create-notification.use-case';
-import { GetUserNotificationsUseCase } from '../../application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
-import { GetUserNotificationsQuery } from '../../application/notifications/use-cases/get-user-notification/get-user-notifications.query';
-import { MarkNotificationReadUseCase } from '../../application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
-import { MarkNotificationReadCommand } from '../../application/notifications/use-cases/mark-notification/mark-notification-read.command';
-import { CreateNotificationCommand } from '../../application/notifications/use-cases/create-notification/create-notification.command';
+import { NotificationResponseDto } from '@/application/notifications/dto/notification-response.dto';
+import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
+import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
+import { GetUserNotificationsQuery } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.query';
+import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
+import { MarkNotificationReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.command';
+import { CreateNotificationCommand } from '@/application/notifications/use-cases/create-notification/create-notification.command';
 
 @Injectable()
 export class NotificationsService {
   private server: Server | null = null;
-  setServer(server: Server) { this.server = server; }
+  setServer(server: Server) {
+    this.server = server;
+  }
 
   constructor(
     private readonly createNotificationUseCase: CreateNotificationUseCase,
     private readonly getUserNotificationsUseCase: GetUserNotificationsUseCase,
     private readonly markNotificationReadUseCase: MarkNotificationReadUseCase,
-  ) { }
+  ) {}
 
   private userRoom(userId: string) {
     return `user:${userId}`;
@@ -31,7 +33,7 @@ export class NotificationsService {
       dto.message,
       dto.type,
       dto.meta,
-      dto.actionUrl
+      dto.actionUrl,
     );
     const notification = await this.createNotificationUseCase.execute(command);
 

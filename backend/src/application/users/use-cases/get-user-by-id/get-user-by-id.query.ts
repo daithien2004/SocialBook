@@ -1,5 +1,3 @@
 export class GetUserByIdQuery {
-    constructor(
-        public readonly id: string
-    ) { }
+  constructor(public readonly id: string) {}
 }

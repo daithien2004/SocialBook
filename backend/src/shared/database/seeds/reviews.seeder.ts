@@ -5,8 +5,14 @@ import {
   Review,
   ReviewDocument,
 } from '@/infrastructure/database/schemas/review.schema';
-import { User, UserDocument } from '@/infrastructure/database/schemas/user.schema';
-import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
+import {
+  User,
+  UserDocument,
+} from '@/infrastructure/database/schemas/user.schema';
+import {
+  Book,
+  BookDocument,
+} from '@/infrastructure/database/schemas/book.schema';
 
 @Injectable()
 export class ReviewsSeed {

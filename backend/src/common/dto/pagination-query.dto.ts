@@ -17,14 +17,20 @@ export class PaginationQueryDto {
   @Min(1)
   limit?: number;
 
-  @ApiPropertyOptional({ default: 1, description: 'Alias for page, used by ProTable' })
+  @ApiPropertyOptional({
+    default: 1,
+    description: 'Alias for page, used by ProTable',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   current?: number;
 
-  @ApiPropertyOptional({ default: 10, description: 'Alias for limit, used by ProTable' })
+  @ApiPropertyOptional({
+    default: 10,
+    description: 'Alias for limit, used by ProTable',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -50,4 +56,3 @@ export class PaginationQueryDto {
     return this.limit ?? this.pageSize ?? 10;
   }
 }
-

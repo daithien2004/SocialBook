@@ -20,7 +20,7 @@ export class Review extends BaseSchema {
     type: Number,
     min: 1,
     max: 5,
-    required: true
+    required: true,
   })
   rating: number;
 
@@ -39,7 +39,11 @@ export class Review extends BaseSchema {
   @Prop({ type: String })
   moderationReason?: string;
 
-  @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
+  @Prop({
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  })
   moderationStatus?: string;
 }
 

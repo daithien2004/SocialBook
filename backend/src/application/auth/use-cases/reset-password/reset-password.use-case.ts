@@ -13,7 +13,7 @@ export class ResetPasswordUseCase {
     private readonly userRepository: IUserRepository,
     private readonly verifyOtpUseCase: VerifyOtpUseCase,
     @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
-  ) { }
+  ) {}
 
   async execute(command: ResetPasswordCommand): Promise<string> {
     const emailVO = UserEmail.create(command.email);
@@ -22,11 +22,12 @@ export class ResetPasswordUseCase {
       throw new BadRequestException('Người dùng không tồn tại');
     }
 
-    const isSamePassword = await this.passwordHasher.compare(command.newPassword, user.password!);
+    const isSamePassword = await this.passwordHasher.compare(
+      command.newPassword,
+      user.password!,
+    );
     if (isSamePassword) {
-      throw new BadRequestException(
-        'Mật khẩu mới phải khác mật khẩu hiện tại',
-      );
+      throw new BadRequestException('Mật khẩu mới phải khác mật khẩu hiện tại');
     }
 
     try {

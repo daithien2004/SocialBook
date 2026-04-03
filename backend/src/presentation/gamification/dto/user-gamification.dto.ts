@@ -1,55 +1,60 @@
-import { IsMongoId, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
 
 export class CreateUserGamificationDto {
-    @IsMongoId()
-    @IsNotEmpty()
-    userId: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  userId: string;
 }
 
 export class RecordReadingDto {
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    xp?: number;
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  xp?: number;
 }
 
 export class AddXPDto {
-    @IsNumber()
-    @Min(1)
-    @IsNotEmpty()
-    amount: number;
+  @IsNumber()
+  @Min(1)
+  @IsNotEmpty()
+  amount: number;
 }
 
 export class UseStreakFreezeDto {
-    @IsMongoId()
-    @IsNotEmpty()
-    userId: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  userId: string;
 }
 
 import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 export class FilterUserGamificationDto extends PaginationQueryDto {
-    @IsOptional()
-    @IsNumber()
-    minStreak?: number;
+  @IsOptional()
+  @IsNumber()
+  minStreak?: number;
 
-    @IsOptional()
-    @IsNumber()
-    maxStreak?: number;
+  @IsOptional()
+  @IsNumber()
+  maxStreak?: number;
 
-    @IsOptional()
-    hasActiveStreak?: boolean;
+  @IsOptional()
+  hasActiveStreak?: boolean;
 }
 
 export class GamificationStatsDto {
-    totalXP: number;
+  totalXP: number;
 
-    activeStreaksCount: number;
+  activeStreaksCount: number;
 
-    usersWithStreakCount: number;
+  usersWithStreakCount: number;
 
-    topUsersByStreak: any[];
+  topUsersByStreak: any[];
 
-    topUsersByXP: any[];
+  topUsersByXP: any[];
 }
-

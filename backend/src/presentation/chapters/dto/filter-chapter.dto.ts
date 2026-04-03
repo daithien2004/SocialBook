@@ -14,4 +14,3 @@ export class FilterChapterDto extends PaginationQueryDto {
   @IsNumber()
   orderIndex?: number;
 }
-

@@ -38,7 +38,7 @@ import { GetChapterBySlugQuery } from '@/application/chapters/use-cases/get-chap
 import { GetChapterBySlugUseCase } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
 import { GetChaptersQuery } from '@/application/chapters/use-cases/get-chapters/get-chapters.query';
 import { UpdateChapterCommand } from '@/application/chapters/use-cases/update-chapter/update-chapter.command';
-import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
+import { ImportEpubPreviewUseCase } from '@/application/chapters/use-cases/import-epub-preview/import-epub-preview.use-case';
 
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
@@ -49,24 +49,27 @@ export class ChaptersController {
     private readonly getChapterBySlugUseCase: GetChapterBySlugUseCase,
     private readonly deleteChapterUseCase: DeleteChapterUseCase,
     private readonly getChapterByIdUseCase: GetChapterByIdUseCase,
-    private readonly epubParserService: EpubParserService,
-  ) { }
+    private readonly importEpubPreviewUseCase: ImportEpubPreviewUseCase,
+  ) {}
 
   @Post('import/preview')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FileInterceptor('file', {
-    limits: { fileSize: 20 * 1024 * 1024 },
-  }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 20 * 1024 * 1024 },
+    }),
+  )
   @HttpCode(HttpStatus.OK)
-  async importPreview(
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async importPreview(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new Error('No file uploaded');
     }
-    const chapters = await this.epubParserService.parseEpub(file.buffer, file.originalname);
-    return chapters;
+    const result = await this.importEpubPreviewUseCase.execute(
+      file.buffer,
+      file.originalname,
+    );
+    return result;
   }
 
   @Public()
@@ -107,9 +110,7 @@ export class ChaptersController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('admin/list')
-  async getAllChaptersAdmin(
-    @Query() filter: FilterChapterDto,
-  ) {
+  async getAllChaptersAdmin(@Query() filter: FilterChapterDto) {
     const query = new GetChaptersQuery(
       filter.page,
       filter.limit,
@@ -118,7 +119,7 @@ export class ChaptersController {
       undefined,
       filter.orderIndex,
       filter.sortBy as any,
-      filter.order as any
+      filter.order as any,
     );
 
     const result = await this.getChaptersUseCase.execute(query);
@@ -152,7 +153,10 @@ export class ChaptersController {
 
   @Public()
   @Get(':chapterSlug')
-  async getChapterBySlug(@Param('chapterSlug') chapterSlug: string, @Param('bookSlug') bookSlug: string) {
+  async getChapterBySlug(
+    @Param('chapterSlug') chapterSlug: string,
+    @Param('bookSlug') bookSlug: string,
+  ) {
     const query = new GetChapterBySlugQuery(chapterSlug, bookSlug);
     const result = await this.getChapterBySlugUseCase.execute(query);
     return {
@@ -170,7 +174,7 @@ export class ChaptersController {
       createChapterDto.bookId,
       createChapterDto.paragraphs,
       createChapterDto.slug,
-      createChapterDto.orderIndex
+      createChapterDto.orderIndex,
     );
 
     const chapterResult = await this.createChapterUseCase.execute(command);
@@ -185,7 +189,7 @@ export class ChaptersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   async update(
     @Param('chapterId') chapterId: string,
-    @Body() updateChapterDto: UpdateChapterDto
+    @Body() updateChapterDto: UpdateChapterDto,
   ) {
     const command = new UpdateChapterCommand(
       chapterId,
@@ -193,7 +197,7 @@ export class ChaptersController {
       updateChapterDto.bookId,
       updateChapterDto.paragraphs,
       updateChapterDto.slug,
-      updateChapterDto.orderIndex
+      updateChapterDto.orderIndex,
     );
 
     const chapterResult = await this.updateChapterUseCase.execute(command);

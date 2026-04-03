@@ -4,6 +4,7 @@ import { GetEngagementStatsUseCase } from './use-cases/get-engagement-stats.use-
 import { GetGrowthStatsUseCase } from './use-cases/get-growth-stats.use-case';
 import { GetOverviewStatsUseCase } from './use-cases/get-overview-stats.use-case';
 import { GetUserStatsUseCase } from './use-cases/get-user-stats.use-case';
+import { CheckUserLocationsUseCase } from './use-cases/check-user-locations/check-user-locations.use-case';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
@@ -28,6 +29,7 @@ import { ProgressRepositoryModule } from '@/infrastructure/database/repositories
     GetGrowthStatsUseCase,
     GetOverviewStatsUseCase,
     GetUserStatsUseCase,
+    CheckUserLocationsUseCase,
   ],
   exports: [
     GetBookStatsUseCase,
@@ -35,6 +37,7 @@ import { ProgressRepositoryModule } from '@/infrastructure/database/repositories
     GetGrowthStatsUseCase,
     GetOverviewStatsUseCase,
     GetUserStatsUseCase,
+    CheckUserLocationsUseCase,
   ],
 })
-export class StatisticsApplicationModule { }
+export class StatisticsApplicationModule {}

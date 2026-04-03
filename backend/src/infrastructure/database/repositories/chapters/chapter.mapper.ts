@@ -39,7 +39,7 @@ export class ChapterMapper {
       bookId: document.bookId?.toString() || '',
       paragraphs: (document.paragraphs || []).map((p) => ({
         id: p._id?.toString(),
-        content: p.content
+        content: p.content,
       })),
       viewsCount: document.viewsCount || 0,
       orderIndex: document.orderIndex || 0,
@@ -56,7 +56,7 @@ export class ChapterMapper {
       slug: chapter.slug,
       bookId: new Types.ObjectId(chapter.bookId.toString()),
       paragraphs: chapter.paragraphs.map((p) => ({
-        content: p.content
+        content: p.content,
       })),
       viewsCount: chapter.viewsCount,
       orderIndex: chapter.orderIndex.getValue(),

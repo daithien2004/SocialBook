@@ -7,18 +7,16 @@ import { GetUserByIdQuery } from './get-user-by-id.query';
 
 @Injectable()
 export class GetUserByIdUseCase {
-    constructor(
-        private readonly userRepository: IUserRepository
-    ) { }
+  constructor(private readonly userRepository: IUserRepository) {}
 
-    async execute(query: GetUserByIdQuery): Promise<User> {
-        const userId = UserId.create(query.id);
-        const user = await this.userRepository.findById(userId);
+  async execute(query: GetUserByIdQuery): Promise<User> {
+    const userId = UserId.create(query.id);
+    const user = await this.userRepository.findById(userId);
 
-        if (!user) {
-            throw new NotFoundDomainException('User not found');
-        }
-
-        return user;
+    if (!user) {
+      throw new NotFoundDomainException('User not found');
     }
+
+    return user;
+  }
 }

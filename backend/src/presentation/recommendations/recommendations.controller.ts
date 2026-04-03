@@ -8,7 +8,7 @@ import { GetRecommendationsDto } from './dto/get-recommendations.dto';
 export class RecommendationsController {
   constructor(
     private readonly getPersonalizedRecommendationsUseCase: GetPersonalizedRecommendationsUseCase,
-  ) { }
+  ) {}
 
   @Get('personalized')
   async getPersonalizedRecommendations(
@@ -16,7 +16,11 @@ export class RecommendationsController {
     @Query() filter: GetRecommendationsDto,
   ) {
     const userId = req.user.id;
-    const result = await this.getPersonalizedRecommendationsUseCase.execute(userId, filter.page, filter.limit);
+    const result = await this.getPersonalizedRecommendationsUseCase.execute(
+      userId,
+      filter.page,
+      filter.limit,
+    );
 
     return {
       message: 'Recommendations generated successfully',
@@ -31,7 +35,7 @@ export class RecommendationsController {
           hasPrevPage: result.hasPrevPage,
         },
         analysis: result.analysis,
-      }
+      },
     };
   }
 }

@@ -9,8 +9,9 @@ import { Review, ReviewDocument } from '../../schemas/review.schema';
 @Injectable()
 export class ReviewRepository implements IReviewRepository {
   constructor(
-    @InjectModel(Review.name) private readonly reviewModel: Model<ReviewDocument>,
-  ) { }
+    @InjectModel(Review.name)
+    private readonly reviewModel: Model<ReviewDocument>,
+  ) {}
 
   async create(review: ReviewEntity): Promise<ReviewEntity> {
     const persistenceModel = ReviewMapper.toPersistence(review);
@@ -23,16 +24,18 @@ export class ReviewRepository implements IReviewRepository {
   async update(review: ReviewEntity): Promise<ReviewEntity> {
     const persistenceModel = ReviewMapper.toPersistence(review);
     // We only update specific fields, avoiding overwriting immutable ones if needed
-    const updated = await this.reviewModel.findByIdAndUpdate(
-      review.id,
-      {
-        content: review.content,
-        rating: review.rating,
-        moderationStatus: review.moderationStatus,
-        updatedAt: new Date(),
-      },
-      { new: true }
-    ).populate('userId', 'username image');
+    const updated = await this.reviewModel
+      .findByIdAndUpdate(
+        review.id,
+        {
+          content: review.content,
+          rating: review.rating,
+          moderationStatus: review.moderationStatus,
+          updatedAt: new Date(),
+        },
+        { new: true },
+      )
+      .populate('userId', 'username image');
 
     if (!updated) throw new Error('Review not found');
     return ReviewMapper.toDomain(updated);
@@ -43,7 +46,10 @@ export class ReviewRepository implements IReviewRepository {
   }
 
   async findById(id: string): Promise<ReviewEntity | null> {
-    const review = await this.reviewModel.findById(id).populate('userId', 'username image').populate('bookId', 'title coverUrl');
+    const review = await this.reviewModel
+      .findById(id)
+      .populate('userId', 'username image')
+      .populate('bookId', 'title coverUrl');
     return review ? ReviewMapper.toDomain(review) : null;
   }
 
@@ -63,25 +69,29 @@ export class ReviewRepository implements IReviewRepository {
     return reviews.map(ReviewMapper.toDomain);
   }
 
-  async toggleLike(reviewId: string, userId: string): Promise<ReviewEntity | null> {
+  async toggleLike(
+    reviewId: string,
+    userId: string,
+  ): Promise<ReviewEntity | null> {
     const uid = new Types.ObjectId(userId);
 
     // Kiểm tra xem user đã like chưa bằng 1 query siêu tốc độ (lean, select _id)
-    const existing = await this.reviewModel.findOne(
-      { _id: new Types.ObjectId(reviewId), likedBy: uid },
-      { _id: 1 }
-    ).lean().exec();
+    const existing = await this.reviewModel
+      .findOne({ _id: new Types.ObjectId(reviewId), likedBy: uid }, { _id: 1 })
+      .lean()
+      .exec();
 
     const updateQuery = existing
       ? { $pull: { likedBy: uid }, $inc: { likesCount: -1 } }
       : { $addToSet: { likedBy: uid }, $inc: { likesCount: 1 } };
 
     // Update Atomic và populate trả về ngay lập tức
-    const updated = await this.reviewModel.findOneAndUpdate(
-      { _id: new Types.ObjectId(reviewId) },
-      updateQuery,
-      { new: true }
-    ).populate('userId', 'username image').exec();
+    const updated = await this.reviewModel
+      .findOneAndUpdate({ _id: new Types.ObjectId(reviewId) }, updateQuery, {
+        new: true,
+      })
+      .populate('userId', 'username image')
+      .exec();
 
     if (!updated) return null;
 
@@ -91,29 +101,33 @@ export class ReviewRepository implements IReviewRepository {
   async existsByUserAndBook(userId: string, bookId: string): Promise<boolean> {
     const count = await this.reviewModel.countDocuments({
       userId: new Types.ObjectId(userId),
-      bookId: new Types.ObjectId(bookId)
+      bookId: new Types.ObjectId(bookId),
     });
     return count > 0;
   }
 
-  async getStatsForBooks(bookIds: string[]): Promise<Map<string, { rating: number; count: number }>> {
-    const objectIds = bookIds.map(id => new Types.ObjectId(id));
-    const results = await this.reviewModel.aggregate([
-      { $match: { bookId: { $in: objectIds } } },
-      {
-        $group: {
-          _id: '$bookId',
-          avgRating: { $avg: '$rating' },
-          reviewCount: { $sum: 1 }
-        }
-      }
-    ]).exec();
+  async getStatsForBooks(
+    bookIds: string[],
+  ): Promise<Map<string, { rating: number; count: number }>> {
+    const objectIds = bookIds.map((id) => new Types.ObjectId(id));
+    const results = await this.reviewModel
+      .aggregate([
+        { $match: { bookId: { $in: objectIds } } },
+        {
+          $group: {
+            _id: '$bookId',
+            avgRating: { $avg: '$rating' },
+            reviewCount: { $sum: 1 },
+          },
+        },
+      ])
+      .exec();
 
     const map = new Map<string, { rating: number; count: number }>();
-    results.forEach(item => {
+    results.forEach((item) => {
       map.set(item._id.toString(), {
         rating: Math.round((item.avgRating || 0) * 10) / 10,
-        count: item.reviewCount
+        count: item.reviewCount,
       });
     });
     return map;
@@ -124,4 +138,3 @@ export class ReviewRepository implements IReviewRepository {
     return this.reviewModel.countDocuments().exec();
   }
 }
-

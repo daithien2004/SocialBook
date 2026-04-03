@@ -15,7 +15,7 @@ export class DailyGoal extends BaseSchema {
 
   @Prop({
     type: Object,
-    default: {}
+    default: {},
   })
   goals: {
     pages?: {

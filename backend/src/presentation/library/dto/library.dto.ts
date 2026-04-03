@@ -34,7 +34,11 @@ export class AddToCollectionsDto {
 
   @IsArray()
   @IsString({ each: true })
-  @IsMongoId({ each: true, message: 'Each value in collectionIds must be a valid 24-character hexadecimal MongoDB ID' })
+  @IsMongoId({
+    each: true,
+    message:
+      'Each value in collectionIds must be a valid 24-character hexadecimal MongoDB ID',
+  })
   collectionIds: string[];
 }
 
@@ -48,4 +52,3 @@ export class UpdateReadingTimeDto {
   @IsNumber()
   durationInSeconds: number;
 }
-

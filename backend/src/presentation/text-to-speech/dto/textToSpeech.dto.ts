@@ -1,20 +1,28 @@
-import { IsEnum, IsOptional, IsString, IsNumber, Min, Max, IsBoolean } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsNumber,
+  Min,
+  Max,
+  IsBoolean,
+} from 'class-validator';
 
 export class TextToSpeechDto {
   @IsString()
   text: string;
 
   @IsOptional()
-  @IsEnum(["en-us", "en-gb", "en-au", "vi-vn"], {
-    message: "voice must be one of: en-us, en-gb, en-au, vi-vn",
+  @IsEnum(['en-us', 'en-gb', 'en-au', 'vi-vn'], {
+    message: 'voice must be one of: en-us, en-gb, en-au, vi-vn',
   })
-  voice: string = "en-au";
+  voice: string = 'en-au';
 
   @IsOptional()
-  @IsEnum(["mp3", "wav", "ogg"], {
-    message: "format must be one of: mp3, wav, ogg",
+  @IsEnum(['mp3', 'wav', 'ogg'], {
+    message: 'format must be one of: mp3, wav, ogg',
   })
-  format: string = "mp3";
+  format: string = 'mp3';
 }
 
 export class GenerateChapterAudioDto {
@@ -39,7 +47,7 @@ export class GenerateChapterAudioDto {
   language?: string;
 
   @IsOptional()
-  @IsEnum(["mp3", "wav", "ogg"])
+  @IsEnum(['mp3', 'wav', 'ogg'])
   format?: string;
 
   @IsOptional()
@@ -63,7 +71,7 @@ export class GenerateBookAudioDto {
   language?: string;
 
   @IsOptional()
-  @IsEnum(["mp3", "wav", "ogg"])
+  @IsEnum(['mp3', 'wav', 'ogg'])
   format?: string;
 
   @IsOptional()

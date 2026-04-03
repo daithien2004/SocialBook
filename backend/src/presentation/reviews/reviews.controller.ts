@@ -29,25 +29,25 @@ export class ReviewsController {
     private readonly updateReviewUseCase: UpdateReviewUseCase,
     private readonly deleteReviewUseCase: DeleteReviewUseCase,
     private readonly toggleReviewLikeUseCase: ToggleReviewLikeUseCase,
-  ) { }
+  ) {}
 
   @Public()
   @UseGuards(JwtAuthGuard)
   @Get('book/:bookId')
   async findAllByBook(
     @CurrentUser('id') userId: string | undefined,
-    @Param('bookId') bookId: string
+    @Param('bookId') bookId: string,
   ) {
     const reviews = await this.getBookReviewsUseCase.execute(bookId);
-    
-    const responseDtos = reviews.map(review => {
-        const responseDto = new ReviewResponseDto(review);
-        return {
-            ...responseDto,
-            isLiked: userId ? review.likedBy.includes(userId) : false
-        };
+
+    const responseDtos = reviews.map((review) => {
+      const responseDto = new ReviewResponseDto(review);
+      return {
+        ...responseDto,
+        isLiked: userId ? review.likedBy.includes(userId) : false,
+      };
     });
-    
+
     return {
       message: 'Get reviews successfully',
       data: responseDtos,
@@ -56,7 +56,10 @@ export class ReviewsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@CurrentUser('id') userId: string, @Body() dto: CreateReviewDto) {
+  async create(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateReviewDto,
+  ) {
     const review = await this.createReviewUseCase.execute(userId, dto);
     return {
       message: 'Review created successfully',
@@ -86,8 +89,8 @@ export class ReviewsController {
     return {
       message: 'Toggle like review successfully',
       data: {
-          likesCount: review.likesCount,
-          isLiked: isLiked
+        likesCount: review.likesCount,
+        isLiked: isLiked,
       },
     };
   }
@@ -102,6 +105,6 @@ export class ReviewsController {
   }
 
   private toResponse(review: Review): ReviewResponseDto {
-      return new ReviewResponseDto(review);
+    return new ReviewResponseDto(review);
   }
 }

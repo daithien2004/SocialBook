@@ -45,7 +45,7 @@ export class Notification extends BaseSchema {
       actorId: { type: Types.ObjectId, ref: 'User' },
       username: { type: String },
       image: { type: String || undefined },
-      targetId: { type: Types.ObjectId }
+      targetId: { type: Types.ObjectId },
     },
   })
   meta: {
@@ -72,6 +72,6 @@ NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
 NotificationSchema.index({ userId: 1, isRead: 1 });
 
 NotificationSchema.index(
-  { 'userId': 1, 'type': 1, 'meta.actorId': 1, 'meta.targetId': 1 },
-  { unique: true }
+  { userId: 1, type: 1, 'meta.actorId': 1, 'meta.targetId': 1 },
+  { unique: true },
 );

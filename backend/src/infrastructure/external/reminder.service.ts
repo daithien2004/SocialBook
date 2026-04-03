@@ -3,10 +3,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ReminderService {
-  constructor(
-    // private readonly notificationsService: NotificationsService,
-    // Inject other services like GamificationService, local UsersService if needed
-  ) {}
+  constructor() {} // Inject other services like GamificationService, local UsersService if needed // private readonly notificationsService: NotificationsService,
 
   async checkDailyGoals() {
     // Run every day

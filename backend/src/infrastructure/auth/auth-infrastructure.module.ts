@@ -6,18 +6,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
 @Module({
-  imports: [
-    PassportModule,
-    ConfigModule,
-    UsersRepositoryModule,
-  ],
-  providers: [
-    JwtStrategy,
-    JwtRefreshStrategy,
-  ],
-  exports: [
-    JwtStrategy,
-    JwtRefreshStrategy,
-  ],
+  imports: [PassportModule, ConfigModule, UsersRepositoryModule],
+  providers: [JwtStrategy, JwtRefreshStrategy],
+  exports: [JwtStrategy, JwtRefreshStrategy],
 })
 export class AuthInfrastructureModule {}

@@ -19,7 +19,7 @@ export class RefreshTokenUseCase {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
-  ) { }
+  ) {}
 
   async execute(command: RefreshTokenCommand) {
     const { userId, refreshToken } = command;
@@ -29,7 +29,10 @@ export class RefreshTokenUseCase {
     if (!user || !user.hashedRt) {
       throw new UnauthorizedDomainException('Từ chối truy cập');
     }
-    const rtMatches = await this.passwordHasher.compare(refreshToken, user.hashedRt);
+    const rtMatches = await this.passwordHasher.compare(
+      refreshToken,
+      user.hashedRt,
+    );
     if (!rtMatches) {
       throw new UnauthorizedDomainException('Từ chối truy cập');
     }
@@ -39,7 +42,11 @@ export class RefreshTokenUseCase {
       const role = await this.rolesRepository.findById(user.roleId);
       if (role) roleName = role.name;
     }
-    return this.tokenService.signTokens(user.id.toString(), user.email.value, roleName);
+    return this.tokenService.signTokens(
+      user.id.toString(),
+      user.email.value,
+      roleName,
+    );
   }
 
   async validateRefreshToken(token: string) {

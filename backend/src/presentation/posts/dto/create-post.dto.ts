@@ -1,9 +1,4 @@
-import {
-  IsBoolean,
-  IsMongoId,
-  IsOptional,
-  IsString
-} from 'class-validator';
+import { IsBoolean, IsMongoId, IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
   @IsMongoId()

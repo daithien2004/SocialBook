@@ -14,10 +14,7 @@ import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    LibraryRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [LibraryRepositoryModule, IdGeneratorModule],
   providers: [
     CreateCollectionUseCase,
     GetAllCollectionsUseCase,

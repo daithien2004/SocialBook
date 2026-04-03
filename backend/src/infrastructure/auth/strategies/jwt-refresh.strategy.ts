@@ -5,13 +5,17 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: Request) => req?.cookies?.['refresh_token']
-          || (req?.body as any)?.refreshToken
-          || (req?.headers['x-refresh-token'] as string) // tuỳ chọn
+        (req: Request) =>
+          req?.cookies?.['refresh_token'] ||
+          req?.body?.refreshToken ||
+          (req?.headers['x-refresh-token'] as string), // tuỳ chọn
       ]),
       secretOrKey: configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
       passReqToCallback: true,

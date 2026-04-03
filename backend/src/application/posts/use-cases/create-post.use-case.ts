@@ -17,15 +17,21 @@ export class CreatePostUseCase {
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
-  ) { }
+  ) {}
 
-  async execute(command: CreatePostCommand, files?: Express.Multer.File[]): Promise<Post> {
+  async execute(
+    command: CreatePostCommand,
+    files?: Express.Multer.File[],
+  ): Promise<Post> {
     // Validate Book
     const bookExists = await this.bookRepository.existsById(command.bookId);
-    if (!bookExists) throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
+    if (!bookExists)
+      throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
 
     // Content Moderation
-    const moderationResult = await this.checkContentUseCase.execute(command.content);
+    const moderationResult = await this.checkContentUseCase.execute(
+      command.content,
+    );
 
     // Upload Images
     let imageUrls: string[] = [];
@@ -39,15 +45,18 @@ export class CreatePostUseCase {
       userId: command.userId,
       bookId: command.bookId,
       content: command.content,
-      imageUrls
+      imageUrls,
     });
 
     // Apply Moderation Flags
     if (!moderationResult.isSafe) {
-      const reason = moderationResult.reason ||
-        (moderationResult.isSpoiler ? 'Phát hiện nội dung spoiler' :
-          moderationResult.isToxic ? 'Phát hiện nội dung độc hại' :
-            'Nội dung không phù hợp');
+      const reason =
+        moderationResult.reason ||
+        (moderationResult.isSpoiler
+          ? 'Phát hiện nội dung spoiler'
+          : moderationResult.isToxic
+            ? 'Phát hiện nội dung độc hại'
+            : 'Nội dung không phù hợp');
       post.flag(reason);
     }
 

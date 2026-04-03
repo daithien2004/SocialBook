@@ -1,8 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Chapter, ChapterSchema } from '@/infrastructure/database/schemas/chapter.schema';
-import { Book, BookSchema } from '@/infrastructure/database/schemas/book.schema';
-import { TextToSpeech, TextToSpeechSchema } from '@/infrastructure/database/schemas/text-to-speech.schema';
+import {
+  Chapter,
+  ChapterSchema,
+} from '@/infrastructure/database/schemas/chapter.schema';
+import {
+  Book,
+  BookSchema,
+} from '@/infrastructure/database/schemas/book.schema';
+import {
+  TextToSpeech,
+  TextToSpeechSchema,
+} from '@/infrastructure/database/schemas/text-to-speech.schema';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { ChapterRepository } from './chapter.repository';
 
@@ -20,9 +29,6 @@ import { ChapterRepository } from './chapter.repository';
       useClass: ChapterRepository,
     },
   ],
-  exports: [
-    IChapterRepository,
-    MongooseModule,
-  ],
+  exports: [IChapterRepository, MongooseModule],
 })
-export class ChaptersRepositoryModule { }
+export class ChaptersRepositoryModule {}

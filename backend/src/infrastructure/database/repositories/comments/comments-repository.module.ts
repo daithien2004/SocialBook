@@ -1,9 +1,15 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Comment, CommentSchema } from '@/infrastructure/database/schemas/comment.schema';
+import {
+  Comment,
+  CommentSchema,
+} from '@/infrastructure/database/schemas/comment.schema';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentRepository } from './comment.repository';
-import { Like, LikeSchema } from '@/infrastructure/database/schemas/like.schema';
+import {
+  Like,
+  LikeSchema,
+} from '@/infrastructure/database/schemas/like.schema';
 
 @Module({
   imports: [
@@ -18,9 +24,6 @@ import { Like, LikeSchema } from '@/infrastructure/database/schemas/like.schema'
       useClass: CommentRepository,
     },
   ],
-  exports: [
-    ICommentRepository,
-    MongooseModule,
-  ],
+  exports: [ICommentRepository, MongooseModule],
 })
 export class CommentsRepositoryModule {}

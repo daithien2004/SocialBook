@@ -37,6 +37,8 @@ import { UpdateBookCommand } from '@/application/books/use-cases/update-book/upd
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
 import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
+import { ToggleBookLikeUseCase } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.use-case';
+import { ToggleBookLikeCommand } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.command';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
@@ -56,10 +58,8 @@ export class BooksController {
     private readonly getBookByIdUseCase: GetBookByIdUseCase,
     private readonly getFiltersUseCase: GetFiltersUseCase,
     private readonly getBookFiltersUseCase: GetBookFiltersUseCase,
-    private readonly toggleLikeUseCase: ToggleLikeUseCase,
-    private readonly getLikeCountUseCase: GetLikeCountUseCase,
-    private readonly bookRepository: IBookRepository,
-  ) { }
+    private readonly toggleBookLikeUseCase: ToggleBookLikeUseCase,
+  ) {}
 
   @Post()
   @RequireAuth('admin')
@@ -76,7 +76,7 @@ export class BooksController {
       createBookDto.publishedYear,
       file ? await this.uploadFile(file) : createBookDto.coverUrl,
       createBookDto.status,
-      createBookDto.tags
+      createBookDto.tags,
     );
 
     const book = await this.createBookUseCase.execute(command);
@@ -88,9 +88,7 @@ export class BooksController {
 
   @Get('admin/all')
   @RequireAuth('admin')
-  async findAllAdmin(
-    @Query() filter: FilterBookDto,
-  ) {
+  async findAllAdmin(@Query() filter: FilterBookDto) {
     const query = new GetBooksQuery(
       filter.page,
       filter.limit,
@@ -102,14 +100,16 @@ export class BooksController {
       filter.search,
       filter.publishedYear,
       filter.sortBy as any,
-      filter.order as any
+      filter.order as any,
     );
 
     const result = await this.getBooksUseCase.execute(query);
 
     return {
       message: 'Lấy danh sách sách (Admin) thành công',
-      data: result.data.map(readModel => BookResponseDto.fromReadModel(readModel)),
+      data: result.data.map((readModel) =>
+        BookResponseDto.fromReadModel(readModel),
+      ),
       meta: result.meta,
     };
   }
@@ -128,9 +128,7 @@ export class BooksController {
 
   @Public()
   @Get()
-  async findAll(
-    @Query() filter: FilterBookDto,
-  ) {
+  async findAll(@Query() filter: FilterBookDto) {
     const query = new GetBooksQuery(
       filter.page,
       filter.limit,
@@ -142,14 +140,16 @@ export class BooksController {
       filter.search,
       filter.publishedYear,
       filter.sortBy as any,
-      filter.order as any
+      filter.order as any,
     );
 
     const result = await this.getBooksUseCase.execute(query);
 
     return {
       message: 'Lấy danh sách sách thành công',
-      data: result.data.map(readModel => BookResponseDto.fromReadModel(readModel)),
+      data: result.data.map((readModel) =>
+        BookResponseDto.fromReadModel(readModel),
+      ),
       meta: result.meta,
     };
   }
@@ -170,34 +170,20 @@ export class BooksController {
   @UseGuards(JwtAuthGuard)
   async toggleLike(
     @Param('slug') slug: string,
-    @CurrentUser('id') userId: string
+    @CurrentUser('id') userId: string,
   ) {
-    const book = await this.getBookBySlugUseCase.execute(new GetBookBySlugQuery(slug));
-    const bookId = BookId.create(book.id);
-
-    const result = await this.toggleLikeUseCase.execute({
-      userId,
-      targetId: book.id,
-      targetType: TargetType.BOOK,
-    });
-
-    if (result.isLiked) {
-      await this.bookRepository.addLike(bookId, userId);
-    } else {
-      await this.bookRepository.removeLike(bookId, userId);
-    }
-
-    const likesCount = await this.getLikeCountUseCase.execute({
-      targetId: book.id,
-      targetType: TargetType.BOOK,
-    });
+    const book = await this.getBookBySlugUseCase.execute(
+      new GetBookBySlugQuery(slug),
+    );
+    const command = new ToggleBookLikeCommand(book.id, userId);
+    const result = await this.toggleBookLikeUseCase.execute(command);
 
     return {
       message: result.isLiked ? 'Liked successfully' : 'Unliked successfully',
       data: {
         slug: book.slug,
         isLiked: result.isLiked,
-        likes: likesCount.count,
+        likes: result.likes,
       },
     };
   }
@@ -231,7 +217,7 @@ export class BooksController {
       updateBookDto.publishedYear,
       file ? await this.uploadFile(file) : updateBookDto.coverUrl,
       updateBookDto.status,
-      updateBookDto.tags
+      updateBookDto.tags,
     );
 
     const book = await this.updateBookUseCase.execute(command);

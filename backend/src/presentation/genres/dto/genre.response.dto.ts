@@ -1,34 +1,32 @@
 import { Genre } from '@/domain/genres/entities/genre.entity';
 
 export class GenreResponseDto {
-    id: string;
+  id: string;
 
-    name: string;
+  name: string;
 
-    slug: string;
+  slug: string;
 
-    description?: string;
+  description?: string;
 
-    createdAt: Date;
+  createdAt: Date;
 
-    updatedAt: Date;
+  updatedAt: Date;
 
+  constructor(genre: Genre) {
+    this.id = genre.id.toString();
+    this.name = genre.name.toString();
+    this.slug = genre.slug;
+    this.description = genre.description;
+    this.createdAt = genre.createdAt;
+    this.updatedAt = genre.updatedAt;
+  }
 
-    constructor(genre: Genre) {
-        this.id = genre.id.toString();
-        this.name = genre.name.toString();
-        this.slug = genre.slug;
-        this.description = genre.description;
-        this.createdAt = genre.createdAt;
-        this.updatedAt = genre.updatedAt;
-    }
+  static fromDomain(genre: Genre): GenreResponseDto {
+    return new GenreResponseDto(genre);
+  }
 
-    static fromDomain(genre: Genre): GenreResponseDto {
-        return new GenreResponseDto(genre);
-    }
-
-    static fromArray(genres: Genre[]): GenreResponseDto[] {
-        return genres.map(genre => new GenreResponseDto(genre));
-    }
+  static fromArray(genres: Genre[]): GenreResponseDto[] {
+    return genres.map((genre) => new GenreResponseDto(genre));
+  }
 }
-

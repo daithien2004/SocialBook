@@ -14,7 +14,7 @@ export class OnboardingController {
     private readonly startOnboardingUseCase: StartOnboardingUseCase,
     private readonly updateOnboardingStepUseCase: UpdateOnboardingStepUseCase,
     private readonly completeOnboardingUseCase: CompleteOnboardingUseCase,
-  ) { }
+  ) {}
 
   @Get('status')
   async getStatus(@CurrentUser('id') userId: string) {
@@ -27,8 +27,15 @@ export class OnboardingController {
   }
 
   @Post('update-step')
-  async updateStep(@CurrentUser('id') userId: string, @Body() body: { step: number; data: Record<string, unknown> }) {
-    return this.updateOnboardingStepUseCase.execute(userId, body.step, body.data);
+  async updateStep(
+    @CurrentUser('id') userId: string,
+    @Body() body: { step: number; data: Record<string, unknown> },
+  ) {
+    return this.updateOnboardingStepUseCase.execute(
+      userId,
+      body.step,
+      body.data,
+    );
   }
 
   @Post('complete')

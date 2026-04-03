@@ -5,18 +5,51 @@ import {
   Author,
   AuthorSchema,
 } from '@/infrastructure/database/schemas/author.schema';
-import { Book, BookSchema } from '@/infrastructure/database/schemas/book.schema';
-import { Genre, GenreSchema } from '@/infrastructure/database/schemas/genre.schema';
-import { Review, ReviewSchema } from '@/infrastructure/database/schemas/review.schema';
-import { Chapter, ChapterSchema } from '@/infrastructure/database/schemas/chapter.schema';
-import { User, UserSchema } from '@/infrastructure/database/schemas/user.schema';
-import { Role, RoleSchema } from '@/infrastructure/database/schemas/role.schema';
+import {
+  Book,
+  BookSchema,
+} from '@/infrastructure/database/schemas/book.schema';
+import {
+  Genre,
+  GenreSchema,
+} from '@/infrastructure/database/schemas/genre.schema';
+import {
+  Review,
+  ReviewSchema,
+} from '@/infrastructure/database/schemas/review.schema';
+import {
+  Chapter,
+  ChapterSchema,
+} from '@/infrastructure/database/schemas/chapter.schema';
+import {
+  User,
+  UserSchema,
+} from '@/infrastructure/database/schemas/user.schema';
+import {
+  Role,
+  RoleSchema,
+} from '@/infrastructure/database/schemas/role.schema';
 import { TextToSpeech } from '@/domain/text-to-speech/entities/text-to-speech.entity';
-import { Post, PostSchema } from '@/infrastructure/database/schemas/post.schema';
-import { Notification, NotificationSchema } from '@/infrastructure/database/schemas/notification.schema';
-import { Progress, ProgressSchema } from '@/infrastructure/database/schemas/progress.schema';
-import { Follow, FollowSchema } from '@/infrastructure/database/schemas/follow.schema';
-import { Like, LikeSchema } from '@/infrastructure/database/schemas/like.schema';
+import {
+  Post,
+  PostSchema,
+} from '@/infrastructure/database/schemas/post.schema';
+import {
+  Notification,
+  NotificationSchema,
+} from '@/infrastructure/database/schemas/notification.schema';
+import {
+  Progress,
+  ProgressSchema,
+} from '@/infrastructure/database/schemas/progress.schema';
+import {
+  Follow,
+  FollowSchema,
+} from '@/infrastructure/database/schemas/follow.schema';
+import {
+  Like,
+  LikeSchema,
+} from '@/infrastructure/database/schemas/like.schema';
 import {
   Comment,
   CommentSchema,
@@ -84,5 +117,4 @@ import { TextToSpeechSchema } from '@/infrastructure/database/schemas/text-to-sp
   ],
   exports: [SeederService],
 })
-export class DatabaseSeedModule { }
-
+export class DatabaseSeedModule {}

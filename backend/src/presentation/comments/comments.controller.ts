@@ -16,9 +16,21 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-import { CommentResponseDto, CommentStatsDto } from '@/presentation/comments/dto/comment.response.dto';
-import { CommentCountDto, CreateCommentDto, FlagCommentDto, ModerateCommentDto, UpdateCommentDto } from '@/presentation/comments/dto/create-comment.dto';
-import { FilterCommentDto, GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
+import {
+  CommentResponseDto,
+  CommentStatsDto,
+} from '@/presentation/comments/dto/comment.response.dto';
+import {
+  CommentCountDto,
+  CreateCommentDto,
+  FlagCommentDto,
+  ModerateCommentDto,
+  UpdateCommentDto,
+} from '@/presentation/comments/dto/create-comment.dto';
+import {
+  FilterCommentDto,
+  GetCommentsDto,
+} from '@/presentation/comments/dto/filter-comment.dto';
 
 import { CreateCommentUseCase } from '@/application/comments/use-cases/create-comment/create-comment.use-case';
 import { DeleteCommentUseCase } from '@/application/comments/use-cases/delete-comment/delete-comment.use-case';
@@ -43,17 +55,20 @@ export class CommentsController {
     private readonly updateCommentUseCase: UpdateCommentUseCase,
     private readonly deleteCommentUseCase: DeleteCommentUseCase,
     private readonly moderateCommentUseCase: ModerateCommentUseCase,
-  ) { }
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@CurrentUser('id') userId: string, @Body() dto: CreateCommentDto) {
+  async create(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateCommentDto,
+  ) {
     const command = new CreateCommentCommand(
       userId,
       dto.targetType,
       dto.targetId,
       dto.content,
-      dto.parentId
+      dto.parentId,
     );
 
     const comment = await this.createCommentUseCase.execute(command);
@@ -69,7 +84,7 @@ export class CommentsController {
   @Get('target')
   async getByTarget(
     @CurrentUser('id') userId: string | undefined,
-    @Query() query: GetCommentsDto
+    @Query() query: GetCommentsDto,
   ) {
     const getQuery = new GetCommentsQuery(
       query.targetId,
@@ -122,7 +137,7 @@ export class CommentsController {
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
-    @Body() dto: UpdateCommentDto
+    @Body() dto: UpdateCommentDto,
   ) {
     const command = new UpdateCommentCommand(id, userId, dto.content);
 
@@ -136,10 +151,7 @@ export class CommentsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async remove(
-    @Param('id') id: string,
-    @CurrentUser() user: any
-  ) {
+  async remove(@Param('id') id: string, @CurrentUser() user: any) {
     const isAdmin = user.roles?.includes('admin') || false;
     const command = new DeleteCommentCommand(id, user.id, isAdmin);
 
@@ -188,7 +200,10 @@ export class CommentsController {
   async getPendingModeration(@Query() filter: FilterCommentDto) {
     return {
       message: 'Get pending moderation not yet implemented',
-      data: { comments: [], meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 } },
+      data: {
+        comments: [],
+        meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 },
+      },
     };
   }
 
@@ -198,7 +213,10 @@ export class CommentsController {
   async getFlagged(@Query() filter: FilterCommentDto) {
     return {
       message: 'Get flagged comments not yet implemented',
-      data: { comments: [], meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 } },
+      data: {
+        comments: [],
+        meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 },
+      },
     };
   }
 }

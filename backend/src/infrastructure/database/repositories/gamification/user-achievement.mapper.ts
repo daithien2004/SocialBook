@@ -13,7 +13,9 @@ interface UserAchievementPersistence {
 }
 
 export class UserAchievementMapper {
-  static toDomain(document: UserAchievementDocument | any): UserAchievementEntity {
+  static toDomain(
+    document: UserAchievementDocument | any,
+  ): UserAchievementEntity {
     return UserAchievementEntity.reconstitute({
       id: document._id.toString(),
       userId: document.userId?.toString() || '',
@@ -23,19 +25,23 @@ export class UserAchievementMapper {
       unlockedAt: document.unlockedAt || null,
       rewardXP: document.rewardXP || 0,
       createdAt: document.createdAt,
-      updatedAt: document.updatedAt
+      updatedAt: document.updatedAt,
     });
   }
 
-  static toPersistence(userAchievement: UserAchievementEntity): UserAchievementPersistence {
+  static toPersistence(
+    userAchievement: UserAchievementEntity,
+  ): UserAchievementPersistence {
     return {
       userId: new Types.ObjectId(userAchievement.userId.toString()),
-      achievementId: new Types.ObjectId(userAchievement.achievementId.toString()),
+      achievementId: new Types.ObjectId(
+        userAchievement.achievementId.toString(),
+      ),
       progress: userAchievement.progress,
       isUnlocked: userAchievement.isUnlocked,
       unlockedAt: userAchievement.unlockedAt || undefined,
       rewardXP: userAchievement.rewardXP.getValue(),
-      updatedAt: userAchievement.updatedAt
+      updatedAt: userAchievement.updatedAt,
     };
   }
 }

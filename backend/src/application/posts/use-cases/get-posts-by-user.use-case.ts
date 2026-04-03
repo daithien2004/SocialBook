@@ -8,11 +8,11 @@ import { GetPostsByUserQuery } from './get-posts-by-user.query';
 
 @Injectable()
 export class GetPostsByUserUseCase {
-  constructor(
-    private readonly postRepository: IPostRepository,
-  ) { }
+  constructor(private readonly postRepository: IPostRepository) {}
 
-  async execute(query: GetPostsByUserQuery): Promise<CursorPaginatedResult<Post>> {
+  async execute(
+    query: GetPostsByUserQuery,
+  ): Promise<CursorPaginatedResult<Post>> {
     const { userId, limit, cursor, viewerUserId } = query;
     if (!userId) throw new BadRequestDomainException(ErrorMessages.INVALID_ID);
     return this.postRepository.findAll({ limit, cursor, userId, viewerUserId });

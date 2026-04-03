@@ -10,12 +10,11 @@ import { GetBooksUseCase } from './use-cases/get-books/get-books.use-case';
 import { GetFiltersUseCase } from './use-cases/get-filters/get-filters.use-case';
 import { GetBookFiltersUseCase } from './use-cases/get-book-filters/get-book-filters.use-case';
 import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case';
+import { ToggleBookLikeUseCase } from './use-cases/toggle-book-like/toggle-book-like.use-case';
+import { LikesApplicationModule } from '@/application/likes/likes-application.module';
 
 @Module({
-  imports: [
-    BooksRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [BooksRepositoryModule, IdGeneratorModule, LikesApplicationModule],
   providers: [
     CreateBookUseCase,
     DeleteBookUseCase,
@@ -25,6 +24,7 @@ import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case'
     GetFiltersUseCase,
     GetBookFiltersUseCase,
     UpdateBookUseCase,
+    ToggleBookLikeUseCase,
     BookViewedHandler,
   ],
   exports: [
@@ -36,6 +36,7 @@ import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case'
     GetFiltersUseCase,
     GetBookFiltersUseCase,
     UpdateBookUseCase,
+    ToggleBookLikeUseCase,
   ],
 })
-export class BooksApplicationModule { }
+export class BooksApplicationModule {}

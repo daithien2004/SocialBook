@@ -87,4 +87,4 @@ import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.mo
     GatewaysModule,
   ],
 })
-export class InfrastructureModule { }
+export class InfrastructureModule {}

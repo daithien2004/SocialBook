@@ -3,7 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { INotificationRepository } from '@/domain/notifications/repositories/notification.repository.interface';
 import { Notification } from '@/domain/notifications/entities/notification.entity';
-import { NotificationDocument, Notification as NotificationSchemaClass } from '../../schemas/notification.schema';
+import {
+  NotificationDocument,
+  Notification as NotificationSchemaClass,
+} from '../../schemas/notification.schema';
 import { NotificationMapper } from './notification.mapper';
 
 @Injectable()
@@ -11,16 +14,17 @@ export class NotificationRepository implements INotificationRepository {
   constructor(
     @InjectModel(NotificationSchemaClass.name)
     private readonly notificationModel: Model<NotificationDocument>,
-  ) { }
+  ) {}
 
   async save(notification: Notification): Promise<Notification> {
     const persistenceModel = this.mapToPersistence(notification);
     if (notification.id && Types.ObjectId.isValid(notification.id)) {
-      await this.notificationModel.findByIdAndUpdate(
-        notification.id,
-        persistenceModel,
-        { upsert: true, new: true }
-      ).exec();
+      await this.notificationModel
+        .findByIdAndUpdate(notification.id, persistenceModel, {
+          upsert: true,
+          new: true,
+        })
+        .exec();
       return notification;
     } else {
       const created = await this.notificationModel.create(persistenceModel);
@@ -33,7 +37,12 @@ export class NotificationRepository implements INotificationRepository {
     return doc ? this.mapToDomain(doc) : null;
   }
 
-  async findAllByUser(userId: string, limit = 50, offset = 0, isRead?: boolean): Promise<Notification[]> {
+  async findAllByUser(
+    userId: string,
+    limit = 50,
+    offset = 0,
+    isRead?: boolean,
+  ): Promise<Notification[]> {
     const query: any = { userId: new Types.ObjectId(userId) };
     if (isRead !== undefined) {
       query.isRead = isRead;
@@ -49,17 +58,24 @@ export class NotificationRepository implements INotificationRepository {
   }
 
   async markAsRead(userId: string, notificationId: string): Promise<void> {
-    await this.notificationModel.updateOne(
-      { _id: new Types.ObjectId(notificationId), userId: new Types.ObjectId(userId) },
-      { $set: { isRead: true } },
-    ).exec();
+    await this.notificationModel
+      .updateOne(
+        {
+          _id: new Types.ObjectId(notificationId),
+          userId: new Types.ObjectId(userId),
+        },
+        { $set: { isRead: true } },
+      )
+      .exec();
   }
 
   async countUnread(userId: string): Promise<number> {
-    return this.notificationModel.countDocuments({
-      userId: new Types.ObjectId(userId),
-      isRead: false,
-    }).exec();
+    return this.notificationModel
+      .countDocuments({
+        userId: new Types.ObjectId(userId),
+        isRead: false,
+      })
+      .exec();
   }
 
   private mapToDomain(doc: any): Notification {
@@ -70,4 +86,3 @@ export class NotificationRepository implements INotificationRepository {
     return NotificationMapper.toPersistence(entity);
   }
 }
-

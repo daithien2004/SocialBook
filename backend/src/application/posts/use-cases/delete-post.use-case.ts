@@ -6,9 +6,7 @@ import { DeletePostCommand } from './delete-post.command';
 
 @Injectable()
 export class DeletePostUseCase {
-  constructor(
-    private readonly postRepository: IPostRepository,
-  ) { }
+  constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(command: DeletePostCommand): Promise<void> {
     const post = await this.postRepository.findById(command.postId);
