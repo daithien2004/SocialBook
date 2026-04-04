@@ -1,3 +1,8 @@
+---
+name: shadcnui
+description: Shadcn/UI component patterns, theming, and best practices for React. Triggers on tasks involving Shadcn components, UI theming, or component customization.
+---
+
 # Shadcn/UI Best Practices cho React
 
 > Dành cho Senior Developer — cập nhật theo Shadcn v2 + React 18+
