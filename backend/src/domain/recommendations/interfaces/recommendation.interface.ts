@@ -22,12 +22,12 @@ export interface RecommendationResponse {
 }
 
 export interface PaginatedRecommendationResponse {
-    analysis: RecommendationAnalysis;
-    recommendations: EnrichedRecommendation[];
-    currentPage: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
+  analysis: RecommendationAnalysis;
+  recommendations: EnrichedRecommendation[];
+  currentPage: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }

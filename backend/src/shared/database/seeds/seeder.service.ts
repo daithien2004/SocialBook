@@ -22,7 +22,7 @@ export class SeederService {
     private readonly commentsSeed: CommentsSeed,
     private readonly rolesSeed: RolesSeed,
     private readonly textToSpeechSeed: TextToSpeechSeed,
-  ) { }
+  ) {}
 
   async seed() {
     try {

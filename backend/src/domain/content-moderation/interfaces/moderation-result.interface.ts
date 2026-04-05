@@ -1,6 +1,6 @@
 export interface ModerationResult {
-    isSafe: boolean;
-    isSpoiler: boolean;
-    isToxic: boolean;
-    reason?: string;
+  isSafe: boolean;
+  isSpoiler: boolean;
+  isToxic: boolean;
+  reason?: string;
 }

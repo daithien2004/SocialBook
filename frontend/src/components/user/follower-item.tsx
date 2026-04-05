@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
     FollowingUser,
@@ -9,6 +10,7 @@ import { UserCheck, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { cn } from "@/lib/utils";
 
 const FollowerItem = (props: FollowingUser) => {
     const auth = useSelector((state: RootState) => state.auth);
@@ -45,15 +47,20 @@ const FollowerItem = (props: FollowingUser) => {
         >
             {/* Left */}
             <div className="flex items-center gap-3">
-                <img
-                    src={props.image}
-                    alt={props.username}
+                <div
                     onClick={() => {
                         route.push(`/users/${props.id}`)
                     }}
-                    className="h-10 w-10 rounded-full object-cover
-            border border-slate-200 dark:border-gray-700 cursor-pointer"
-                />
+                    className="relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 dark:border-gray-700 cursor-pointer"
+                >
+                    <Image
+                        src={props.image || '/user.png'}
+                        alt={props.username}
+                        fill
+                        sizes="40px"
+                        className="object-cover"
+                    />
+                </div>
 
                 <div className="flex flex-col">
                     <span className="font-semibold text-slate-800 dark:text-gray-100">
@@ -78,37 +85,19 @@ const FollowerItem = (props: FollowingUser) => {
                     variant="ghost"
                     disabled={isToggling}
                     onClick={() => router.push(`/users/${props.id}`)}
-                    className="
-            rounded-md text-xs font-medium tracking-wide
-            bg-teal-600 text-white
-            hover:bg-teal-500
-            dark:bg-teal-700 dark:hover:bg-teal-600
-            shadow-sm
-          "
+                    className="rounded-md text-xs font-medium tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                 >
                     Xem hồ sơ
                 </Button>
             ) : (
                 <Button
-                    variant="ghost"
+                    variant={isFollowing ? "default" : "outline"}
                     disabled={isToggling}
                     onClick={handleToggleFollow}
-                    className={`rounded-md text-xs font-medium tracking-wide
-            transition-all
-            ${isFollowing
-                            ? `
-                  bg-teal-600 text-white
-                  hover:bg-teal-500
-                  dark:bg-teal-700 dark:hover:bg-teal-600
-                  shadow-sm
-                `
-                            : `
-                  bg-white dark:bg-gray-900
-                  border border-slate-200 dark:border-gray-700
-                  text-slate-700 dark:text-gray-200
-                  hover:bg-slate-100 dark:hover:bg-gray-800
-                `
-                        }`}
+                    className={cn(
+                        "rounded-md text-xs font-medium tracking-wide transition-all shadow-sm",
+                        isFollowing ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent"
+                    )}
                 >
                     {isFollowing ? (
                         <>

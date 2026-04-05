@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { ChangeEvent, FormEvent, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useCreateBookMutation } from '@/features/books/api/bookApi';
 import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
+import { AuthorOption, GenreOption } from '@/features/admin/types/bookRelation.interface';
 import { getErrorMessage } from '@/lib/utils';
 
 const DEFAULT_COVER = '/abstract-book-pattern.png';
@@ -42,11 +44,14 @@ const initialForm: FormData = {
   tagsInput: '',
 };
 
+const EMPTY_AUTHORS: AuthorOption[] = [];
+const EMPTY_GENRES: GenreOption[] = [];
+
 export default function CreateBook() {
   const router = useRouter();
   const [createBook, { isLoading }] = useCreateBookMutation();
-  const { data: authors = [], isLoading: loadingAuthors } = useGetAuthorsQuery();
-  const { data: genres = [], isLoading: loadingGenres } = useGetGenresQuery();
+  const { data: authors = EMPTY_AUTHORS, isLoading: loadingAuthors } = useGetAuthorsQuery();
+  const { data: genres = EMPTY_GENRES, isLoading: loadingGenres } = useGetGenresQuery();
   const [formData, setFormData] = useState<FormData>(initialForm);
   const [coverPreview, setCoverPreview] = useState<string>(DEFAULT_COVER);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -199,10 +204,13 @@ export default function CreateBook() {
               {/* Book Cover Section */}
               <div className="flex-none">
                 <div className="w-64 h-96 relative rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 group">
-                  <img
+                  <Image
                     src={coverPreview}
                     alt="Bìa sách"
-                    className="w-full h-full object-cover"
+                    fill
+                    unoptimized
+                    sizes="256px"
+                    className="object-cover"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="text-center text-white">

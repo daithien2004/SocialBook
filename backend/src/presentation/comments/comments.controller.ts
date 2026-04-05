@@ -7,20 +7,30 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
-
 
 import { Public } from '@/common/decorators/customize';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-import { CommentResponseDto, CommentStatsDto } from '@/presentation/comments/dto/comment.response.dto';
-import { CommentCountDto, CreateCommentDto, FlagCommentDto, ModerateCommentDto, UpdateCommentDto } from '@/presentation/comments/dto/create-comment.dto';
-import { FilterCommentDto, GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
+import {
+  CommentResponseDto,
+  CommentStatsDto,
+} from '@/presentation/comments/dto/comment.response.dto';
+import {
+  CommentCountDto,
+  CreateCommentDto,
+  FlagCommentDto,
+  ModerateCommentDto,
+  UpdateCommentDto,
+} from '@/presentation/comments/dto/create-comment.dto';
+import {
+  FilterCommentDto,
+  GetCommentsDto,
+} from '@/presentation/comments/dto/filter-comment.dto';
 
 import { CreateCommentUseCase } from '@/application/comments/use-cases/create-comment/create-comment.use-case';
 import { DeleteCommentUseCase } from '@/application/comments/use-cases/delete-comment/delete-comment.use-case';
@@ -40,22 +50,25 @@ import { UpdateCommentCommand } from '@/application/comments/use-cases/update-co
 export class CommentsController {
   constructor(
     private readonly createCommentUseCase: CreateCommentUseCase,
-    private readonly getCommentsUseCase: GetCommentsUseCase,
+    private readonly getUsersUseCase: GetCommentsUseCase,
     private readonly getCommentCountUseCase: GetCommentCountUseCase,
     private readonly updateCommentUseCase: UpdateCommentUseCase,
     private readonly deleteCommentUseCase: DeleteCommentUseCase,
     private readonly moderateCommentUseCase: ModerateCommentUseCase,
-  ) { }
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateCommentDto) {
+  async create(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateCommentDto,
+  ) {
     const command = new CreateCommentCommand(
-      req.user.id,
+      userId,
       dto.targetType,
       dto.targetId,
       dto.content,
-      dto.parentId
+      dto.parentId,
     );
 
     const comment = await this.createCommentUseCase.execute(command);
@@ -67,8 +80,12 @@ export class CommentsController {
   }
 
   @Public()
+  @UseGuards(JwtAuthGuard)
   @Get('target')
-  async getByTarget(@Query() query: GetCommentsDto) {
+  async getByTarget(
+    @CurrentUser('id') userId: string | undefined,
+    @Query() query: GetCommentsDto,
+  ) {
     const getQuery = new GetCommentsQuery(
       query.targetId,
       query.parentId,
@@ -76,9 +93,10 @@ export class CommentsController {
       query.limit,
       query.cursor,
       query.sortBy as any,
-      query.order as any
+      query.order as any,
+      userId,
     );
-    const result = await this.getCommentsUseCase.execute(getQuery);
+    const result = await this.getUsersUseCase.execute(getQuery);
 
     return {
       message: 'Comments retrieved successfully',
@@ -118,10 +136,10 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
-    @Req() req: Request & { user: { id: string } },
-    @Body() dto: UpdateCommentDto
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateCommentDto,
   ) {
-    const command = new UpdateCommentCommand(id, req.user.id, dto.content);
+    const command = new UpdateCommentCommand(id, userId, dto.content);
 
     const comment = await this.updateCommentUseCase.execute(command);
 
@@ -133,13 +151,9 @@ export class CommentsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  async remove(
-    @Param('id') id: string,
-    @Req() req: Request & {
-      user: { id: string; roles?: string[] }
-    }) {
-    const isAdmin = req.user.roles?.includes('admin') || false;
-    const command = new DeleteCommentCommand(id, req.user.id, isAdmin);
+  async remove(@Param('id') id: string, @CurrentUser() user: any) {
+    const isAdmin = user.roles?.includes('admin') || false;
+    const command = new DeleteCommentCommand(id, user.id, isAdmin);
 
     await this.deleteCommentUseCase.execute(command);
 
@@ -151,7 +165,6 @@ export class CommentsController {
   @Post(':id/flag')
   @UseGuards(JwtAuthGuard)
   async flag(@Param('id') id: string, @Body() dto: FlagCommentDto) {
-    // This would need a FlagCommentUseCase to be implemented
     return {
       message: 'Flag comment not yet implemented',
       data: null,
@@ -175,7 +188,6 @@ export class CommentsController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getStats() {
-    // This would need a GetCommentStatsUseCase to be implemented
     return {
       message: 'Get comment stats not yet implemented',
       data: new CommentStatsDto(0, 0, 0, 0, 0, {}),
@@ -186,10 +198,12 @@ export class CommentsController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getPendingModeration(@Query() filter: FilterCommentDto) {
-    // This would need a GetPendingModerationUseCase to be implemented
     return {
       message: 'Get pending moderation not yet implemented',
-      data: { comments: [], meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 } },
+      data: {
+        comments: [],
+        meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 },
+      },
     };
   }
 
@@ -197,10 +211,12 @@ export class CommentsController {
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getFlagged(@Query() filter: FilterCommentDto) {
-    // This would need a GetFlaggedCommentsUseCase to be implemented
     return {
       message: 'Get flagged comments not yet implemented',
-      data: { comments: [], meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 } },
+      data: {
+        comments: [],
+        meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 },
+      },
     };
   }
 }

@@ -2,23 +2,27 @@
 
 import { Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { ElementType, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+import React, { ElementType, memo, useCallback, useEffect, useRef, useState } from 'react';
 
-import AddToLibraryModal from '@/components/library/AddToLibraryModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
 import { cn, formatCompact } from '@/lib/utils';
 
-export function BookCard({ book }: { book: Book }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+import { useModalStore } from '@/store/useModalStore';
 
-  const handleAddToLibrary = (e: React.MouseEvent) => {
+export const BookCard = memo(function BookCard({ book }: { book: Book }) {
+  const { openAddToLibrary, isAddToLibraryOpen, addToLibraryData } = useModalStore();
+  const isCurrentBookOpen = isAddToLibraryOpen && addToLibraryData?.bookId === book.id;
+
+  const handleAddToLibrary = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsModalOpen(true);
-  };
+    openAddToLibrary({ bookId: book.id });
+  }, [book.id, openAddToLibrary]);
 
   return (
     <>
@@ -28,10 +32,12 @@ export function BookCard({ book }: { book: Book }) {
       >
         <Card className="overflow-hidden border-gray-200 dark:border-white/10 transition-all duration-500 hover:border-gray-400 dark:hover:border-white/30 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] bg-card text-card-foreground">
           <div className="relative aspect-[2/3] w-full overflow-hidden">
-            <img
+            <Image
               src={book.coverUrl}
               alt={book.title}
-              className="h-full w-full object-cover opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-hover:contrast-125"
+              fill
+              sizes="(max-width: 768px) 160px, 220px"
+              className="object-cover opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-hover:contrast-125"
             />
 
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
@@ -71,6 +77,7 @@ export function BookCard({ book }: { book: Book }) {
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Thêm vào danh sách đọc"
                 onClick={handleAddToLibrary}
                 className="h-8 w-8 text-muted-foreground hover:text-red-600 dark:hover:text-white hover:bg-transparent"
                 title="Save to Library"
@@ -78,22 +85,16 @@ export function BookCard({ book }: { book: Book }) {
                 <Bookmark
                   size={16}
                   className="transition-transform hover:scale-110"
-                  fill={isModalOpen ? 'currentColor' : 'none'}
+                  fill={isCurrentBookOpen ? 'currentColor' : 'none'}
                 />
               </Button>
             </div>
           </CardContent>
         </Card>
       </Link>
-
-      <AddToLibraryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        bookId={book.id}
-      />
     </>
   );
-}
+});
 
 // BookSection Component with Dark Mode Support
 interface BookSectionProps {
@@ -146,6 +147,9 @@ export function BookSection({
     }
   };
 
+  const handleScrollLeft = useCallback(() => scroll('left'), []);
+  const handleScrollRight = useCallback(() => scroll('right'), []);
+
   if (!books || books.length === 0) return null;
 
   return (
@@ -167,7 +171,7 @@ export function BookSection({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => scroll('left')}
+            onClick={handleScrollLeft}
             disabled={!canScrollLeft}
             className={cn(
               "rounded-full border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300",
@@ -181,7 +185,7 @@ export function BookSection({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => scroll('right')}
+            onClick={handleScrollRight}
             disabled={!canScrollRight}
             className={cn(
               "rounded-full border-gray-300 dark:border-white/20 hover:border-red-600 dark:hover:border-white hover:bg-red-50 dark:hover:bg-white/10 text-gray-700 dark:text-white transition-all duration-300",

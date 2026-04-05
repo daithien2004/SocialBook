@@ -22,7 +22,7 @@ export class LikeMapper {
       targetType: doc.targetType as TargetType,
       status: doc.status,
       createdAt: doc.createdAt as Date,
-      updatedAt: doc.updatedAt as Date
+      updatedAt: doc.updatedAt as Date,
     });
   }
 
@@ -34,7 +34,7 @@ export class LikeMapper {
       targetType: like.targetType,
       status: like.status,
       createdAt: like.createdAt,
-      updatedAt: like.updatedAt
+      updatedAt: like.updatedAt,
     };
   }
 }

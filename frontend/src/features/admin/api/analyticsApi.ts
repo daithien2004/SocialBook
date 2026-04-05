@@ -53,7 +53,7 @@ export const analyticsApi = createApi({
       providesTags: ['ActiveUsers'],
     }),
 
-    seedReadingHistory: builder.mutation<any, { days?: number }>({
+    seedReadingHistory: builder.mutation<void, { days?: number }>({
       query: ({ days = 30 }) => ({
         url: NESTJS_ANALYTICS_ENDPOINTS.seedReadingHistory,
         method: 'POST',

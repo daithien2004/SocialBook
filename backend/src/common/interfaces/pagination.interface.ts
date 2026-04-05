@@ -27,7 +27,11 @@ export interface SortOptions<T extends string = string> {
   order?: 'asc' | 'desc';
 }
 
-export function buildPaginationMeta(page: number, limit: number, total: number): PaginationMeta {
+export function buildPaginationMeta(
+  page: number,
+  limit: number,
+  total: number,
+): PaginationMeta {
   return {
     current: page,
     pageSize: limit,

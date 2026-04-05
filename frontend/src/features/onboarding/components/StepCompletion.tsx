@@ -1,17 +1,19 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 
 export default function StepCompletion({ onSubmit }: any) {
   useEffect(() => {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#4f46e5', '#818cf8', '#fbbf24', '#ffffff'], // Indigo-ish colors
+    import('canvas-confetti').then((confettiModule) => {
+      const confetti = confettiModule.default || confettiModule;
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#4f46e5', '#818cf8', '#fbbf24', '#ffffff'], // Indigo-ish colors
+      });
     });
   }, []);
 
@@ -21,9 +23,9 @@ export default function StepCompletion({ onSubmit }: any) {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="max-w-lg w-full bg-white dark:bg-[#111] rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800"
+        className="max-w-lg w-full bg-white dark:bg-zinc-950 rounded-3xl shadow-2xl overflow-hidden border border-border"
       >
-        <div className="bg-indigo-600 dark:bg-indigo-900 p-8 text-center relative overflow-hidden">
+        <div className="bg-primary p-8 text-center relative overflow-hidden">
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -72,13 +74,13 @@ export default function StepCompletion({ onSubmit }: any) {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, type: 'spring' }}
-            className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl p-6 mb-8 text-center"
+            className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mb-8 text-center"
           >
             <div className="text-5xl mb-3">🏅</div>
-            <p className="text-indigo-600 dark:text-indigo-400 font-semibold text-sm uppercase tracking-wide mb-1">
+            <p className="text-primary font-semibold text-sm uppercase tracking-wide mb-1">
               Phần thưởng đầu tiên
             </p>
-            <p className="text-gray-900 dark:text-white text-lg font-bold">
+            <p className="text-foreground text-lg font-bold">
               Huy hiệu Người Mới đã được mở khóa!
             </p>
           </motion.div>
@@ -91,7 +93,7 @@ export default function StepCompletion({ onSubmit }: any) {
             <Button
               onClick={() => onSubmit({})}
               size="lg"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500 font-semibold py-6 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              className="w-full h-14 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               Bắt đầu khám phá ngay →
             </Button>

@@ -1,4 +1,7 @@
-import { Genre, GenreDocument } from '@/infrastructure/database/schemas/genre.schema';
+import {
+  Genre,
+  GenreDocument,
+} from '@/infrastructure/database/schemas/genre.schema';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -9,7 +12,7 @@ export class GenresSeed {
 
   constructor(
     @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
-  ) { }
+  ) {}
 
   async run() {
     try {
@@ -25,62 +28,74 @@ export class GenresSeed {
         {
           name: 'Fiction',
           slug: 'fiction',
-          description: 'Literary works featuring imaginary characters and events.',
+          description:
+            'Literary works featuring imaginary characters and events.',
         },
         {
           name: 'Mystery',
           slug: 'mystery',
-          description: 'Stories focused on solving crimes or uncovering secrets.',
+          description:
+            'Stories focused on solving crimes or uncovering secrets.',
         },
         {
           name: 'Horror',
           slug: 'horror',
-          description: 'Works intended to frighten, scare, or unsettle readers.',
+          description:
+            'Works intended to frighten, scare, or unsettle readers.',
         },
         {
           name: 'Romance',
           slug: 'romance',
-          description: 'Stories centered on romantic relationships between characters.',
+          description:
+            'Stories centered on romantic relationships between characters.',
         },
         {
           name: 'Science Fiction',
           slug: 'science-fiction',
-          description: 'Speculative fiction based on scientific and technological advances.',
+          description:
+            'Speculative fiction based on scientific and technological advances.',
         },
         {
           name: 'Adventure',
           slug: 'adventure',
-          description: 'Exciting tales of journeys, challenges, and exploration.',
+          description:
+            'Exciting tales of journeys, challenges, and exploration.',
         },
         {
           name: 'Fantasy',
           slug: 'fantasy',
-          description: 'Imaginative worlds with magic, mythical creatures, and supernatural elements.',
+          description:
+            'Imaginative worlds with magic, mythical creatures, and supernatural elements.',
         },
         {
           name: 'Comedy',
           slug: 'comedy',
-          description: 'Humorous works designed to entertain and amuse readers.',
+          description:
+            'Humorous works designed to entertain and amuse readers.',
         },
         {
           name: 'Historical',
           slug: 'historical',
-          description: 'Stories set in significant historical periods or events.',
+          description:
+            'Stories set in significant historical periods or events.',
         },
         {
           name: 'Psychological',
           slug: 'psychological',
-          description: 'Deep exploration of characters\' minds and inner emotions.',
+          description:
+            "Deep exploration of characters' minds and inner emotions.",
         },
         {
           name: 'Action',
           slug: 'action',
-          description: 'Fast-paced stories with intense fighting and thrilling sequences.',
+          description:
+            'Fast-paced stories with intense fighting and thrilling sequences.',
         },
         {
           name: 'Young Adult',
           slug: 'young-adult',
-          description: 'Coming-of-age stories about teenage experiences and growth.',
+          description:
+            'Coming-of-age stories about teenage experiences and growth.',
         },
         {
           name: 'Contemporary',
@@ -90,27 +105,32 @@ export class GenresSeed {
         {
           name: 'Short Stories',
           slug: 'short-stories',
-          description: 'Collections of brief narratives exploring various themes.',
+          description:
+            'Collections of brief narratives exploring various themes.',
         },
         {
           name: 'Thriller',
           slug: 'thriller',
-          description: 'Suspenseful tales with tension, danger, and unexpected twists.',
+          description:
+            'Suspenseful tales with tension, danger, and unexpected twists.',
         },
         {
           name: 'Paranormal',
           slug: 'paranormal',
-          description: 'Stories featuring supernatural phenomena and unexplained mysteries.',
+          description:
+            'Stories featuring supernatural phenomena and unexplained mysteries.',
         },
         {
           name: 'Crime',
           slug: 'crime',
-          description: 'Narratives centered on criminal activities and investigations.',
+          description:
+            'Narratives centered on criminal activities and investigations.',
         },
         {
           name: 'Drama',
           slug: 'drama',
-          description: 'Emotional stories exploring human conflicts and relationships.',
+          description:
+            'Emotional stories exploring human conflicts and relationships.',
         },
       ];
 

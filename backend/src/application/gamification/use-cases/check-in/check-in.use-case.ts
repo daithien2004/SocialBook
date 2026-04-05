@@ -8,43 +8,49 @@ import { CheckInCommand } from './check-in.command';
 
 @Injectable()
 export class CheckInUseCase {
-    private readonly logger = new Logger(CheckInUseCase.name);
-    private readonly CHECK_IN_XP = 10; // 10 XP for daily check-in
+  private readonly logger = new Logger(CheckInUseCase.name);
+  private readonly CHECK_IN_XP = 10; // 10 XP for daily check-in
 
-    constructor(
-        private readonly userGamificationRepository: IUserGamificationRepository,
-        private readonly idGenerator: IIdGenerator
-    ) {}
+  constructor(
+    private readonly userGamificationRepository: IUserGamificationRepository,
+    private readonly idGenerator: IIdGenerator,
+  ) {}
 
-    async execute(command: CheckInCommand): Promise<UserGamification> {
-        try {
-            const userId = UserId.create(command.userId);
-            
-            // Find or create user gamification
-            let gamification = await this.userGamificationRepository.findByUser(userId);
-            
-            if (!gamification) {
-                gamification = UserGamification.create({ 
-                    id: UserGamificationId.create(this.idGenerator.generate()),
-                    userId: command.userId 
-                });
-            }
+  async execute(command: CheckInCommand): Promise<UserGamification> {
+    try {
+      const userId = UserId.create(command.userId);
 
-            // Record check-in to update streak
-            gamification.recordReading();
-            
-            // Add XP for check-in
-            gamification.addXP(this.CHECK_IN_XP);
+      // Find or create user gamification
+      let gamification =
+        await this.userGamificationRepository.findByUser(userId);
 
-            // Save to repository
-            await this.userGamificationRepository.save(gamification);
+      if (!gamification) {
+        gamification = UserGamification.create({
+          id: UserGamificationId.create(this.idGenerator.generate()),
+          userId: command.userId,
+        });
+      }
 
-            this.logger.log(`Check-in recorded for user ${command.userId}, XP awarded: ${this.CHECK_IN_XP}`);
+      // Record check-in to update streak
+      gamification.recordReading();
 
-            return gamification;
-        } catch (error) {
-            this.logger.error(`Failed to record check-in for user ${command.userId}`, error);
-            throw error;
-        }
+      // Add XP for check-in
+      gamification.addXP(this.CHECK_IN_XP);
+
+      // Save to repository
+      await this.userGamificationRepository.save(gamification);
+
+      this.logger.log(
+        `Check-in recorded for user ${command.userId}, XP awarded: ${this.CHECK_IN_XP}`,
+      );
+
+      return gamification;
+    } catch (error) {
+      this.logger.error(
+        `Failed to record check-in for user ${command.userId}`,
+        error,
+      );
+      throw error;
     }
+  }
 }

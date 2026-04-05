@@ -49,7 +49,7 @@ export function DailyGoalWidget() {
 
             <div className="h-2 w-full rounded-full overflow-hidden bg-gray-200 dark:bg-white/10">
               <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${isCompleted ? 'bg-yellow-500' : 'bg-blue-600'}`}
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${isCompleted ? 'bg-yellow-500' : 'bg-primary'}`}
                 style={{ width: `${progress}%` }}
               />
             </div>

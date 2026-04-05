@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useGetFiltersQuery } from '@/features/books/api/bookApi';
 import { BookCard } from '@/components/book/BookCard';
 import { Search } from 'lucide-react';
@@ -49,10 +50,13 @@ export default function BooksPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 relative transition-colors duration-300">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
           alt="Background"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40"
         />
         <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70"></div>
       </div>

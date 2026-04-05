@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -21,7 +26,7 @@ export class RegisterUseCase {
     private readonly getRoleByNameUseCase: GetRoleByNameUseCase,
     private readonly sendOtpUseCase: SendOtpUseCase,
     @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
-  ) { }
+  ) {}
 
   async execute(command: RegisterCommand): Promise<string> {
     const emailVO = UserEmail.create(command.email);
@@ -44,8 +49,12 @@ export class RegisterUseCase {
     const roleQuery = new GetRoleByNameQuery('user');
     const userRole = await this.getRoleByNameUseCase.execute(roleQuery);
     if (!userRole) {
-      this.logger.error('User role not found in database during signup - role may not be seeded');
-      throw new InternalServerErrorException('Đã có lỗi xảy ra trong quá trình đăng ký');
+      this.logger.error(
+        'User role not found in database during signup - role may not be seeded',
+      );
+      throw new InternalServerErrorException(
+        'Đã có lỗi xảy ra trong quá trình đăng ký',
+      );
     }
 
     const createUserCommand = new CreateUserCommand(
@@ -54,7 +63,7 @@ export class RegisterUseCase {
       command.password,
       userRole.id,
       undefined,
-      'local'
+      'local',
     );
     await this.createUserUseCase.execute(createUserCommand);
 

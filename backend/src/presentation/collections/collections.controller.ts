@@ -3,8 +3,14 @@ import { GetAllCollectionsUseCase } from '@/application/library/use-cases/get-al
 import { GetCollectionByIdUseCase } from '@/application/library/use-cases/get-collection-by-id/get-collection-by-id.use-case';
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { CreateCollectionDto, UpdateCollectionDto } from '@/presentation/library/dto/collection.dto';
-import { CollectionDetailResponseDto, CollectionResponseDto } from '@/presentation/library/dto/library.response.dto';
+import {
+  CreateCollectionDto,
+  UpdateCollectionDto,
+} from '@/presentation/library/dto/collection.dto';
+import {
+  CollectionDetailResponseDto,
+  CollectionResponseDto,
+} from '@/presentation/library/dto/library.response.dto';
 import {
   Body,
   Controller,
@@ -28,10 +34,13 @@ export class CollectionsController {
     private readonly createCollectionUseCase: CreateCollectionUseCase,
     private readonly getAllCollectionsUseCase: GetAllCollectionsUseCase,
     private readonly getCollectionByIdUseCase: GetCollectionByIdUseCase,
-  ) { }
+  ) {}
 
   @Post()
-  async create(@Req() req: Request & { user: { id: string } }, @Body() dto: CreateCollectionDto) {
+  async create(
+    @Req() req: Request & { user: { id: string } },
+    @Body() dto: CreateCollectionDto,
+  ) {
     const collection = await this.createCollectionUseCase.execute({
       userId: req.user.id,
       name: dto.name,
@@ -48,10 +57,14 @@ export class CollectionsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(@Query('userId') userId?: string) {
-    const results = await this.getAllCollectionsUseCase.execute({ userId: userId || '' });
+    const results = await this.getAllCollectionsUseCase.execute({
+      userId: userId || '',
+    });
     return {
       message: 'Get collections successfully',
-      data: results.map(r => CollectionResponseDto.fromResult(r.collection, r.bookCount)),
+      data: results.map((r) =>
+        CollectionResponseDto.fromResult(r.collection, r.bookCount),
+      ),
     };
   }
 
@@ -68,20 +81,33 @@ export class CollectionsController {
     });
     return {
       message: 'Get collection successfully',
-      data: result ? CollectionDetailResponseDto.fromResultDetail(result.collection, result.books) : null,
+      data: result
+        ? CollectionDetailResponseDto.fromResultDetail(
+            result.collection,
+            result.books,
+          )
+        : null,
     };
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  async findOne(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
+  async findOne(
+    @Req() req: Request & { user: { id: string } },
+    @Param('id') id: string,
+  ) {
     const result = await this.getCollectionByIdUseCase.execute({
       userId: req.user.id,
       collectionId: id,
     });
     return {
       message: 'Get collection successfully',
-      data: result ? CollectionDetailResponseDto.fromResultDetail(result.collection, result.books) : null,
+      data: result
+        ? CollectionDetailResponseDto.fromResultDetail(
+            result.collection,
+            result.books,
+          )
+        : null,
     };
   }
 
@@ -101,7 +127,10 @@ export class CollectionsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async remove(@Req() req: Request & { user: { id: string } }, @Param('id') id: string) {
+  async remove(
+    @Req() req: Request & { user: { id: string } },
+    @Param('id') id: string,
+  ) {
     // TODO: Implement DeleteCollectionUseCase
     return {
       message: 'Collection deletion not implemented yet',

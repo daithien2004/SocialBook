@@ -9,32 +9,40 @@ import { UpdateCollectionsCommand } from './update-collections.command';
 
 @Injectable()
 export class UpdateCollectionsUseCase {
-    constructor(
-        private readonly readingListRepository: IReadingListRepository,
-        private readonly idGenerator: IIdGenerator,
-    ) { }
+  constructor(
+    private readonly readingListRepository: IReadingListRepository,
+    private readonly idGenerator: IIdGenerator,
+  ) {}
 
-    async execute(command: UpdateCollectionsCommand): Promise<LibraryItemReadModel> {
-        const userId = UserId.create(command.userId);
-        const bookId = BookId.create(command.bookId);
+  async execute(
+    command: UpdateCollectionsCommand,
+  ): Promise<LibraryItemReadModel> {
+    const userId = UserId.create(command.userId);
+    const bookId = BookId.create(command.bookId);
 
-        let readingList = await this.readingListRepository.findByUserIdAndBookId(userId, bookId);
+    let readingList = await this.readingListRepository.findByUserIdAndBookId(
+      userId,
+      bookId,
+    );
 
-        if (!readingList) {
-            readingList = ReadingList.create({
-                id: this.idGenerator.generate(),
-                userId: command.userId,
-                bookId: command.bookId
-            });
-        }
-
-        readingList.updateCollections(command.collectionIds);
-        await this.readingListRepository.save(readingList);
-
-        const result = await this.readingListRepository.findDetailByUserIdAndBookId(userId, bookId);
-        if (!result) {
-            throw new Error('Failed to retrieve updated reading list detail');
-        }
-        return result;
+    if (!readingList) {
+      readingList = ReadingList.create({
+        id: this.idGenerator.generate(),
+        userId: command.userId,
+        bookId: command.bookId,
+      });
     }
+
+    readingList.updateCollections(command.collectionIds);
+    await this.readingListRepository.save(readingList);
+
+    const result = await this.readingListRepository.findDetailByUserIdAndBookId(
+      userId,
+      bookId,
+    );
+    if (!result) {
+      throw new Error('Failed to retrieve updated reading list detail');
+    }
+    return result;
+  }
 }

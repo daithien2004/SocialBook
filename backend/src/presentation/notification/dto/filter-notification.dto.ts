@@ -8,4 +8,3 @@ export class FilterNotificationDto extends PaginationQueryDto {
   @IsBoolean()
   isRead?: boolean;
 }
-

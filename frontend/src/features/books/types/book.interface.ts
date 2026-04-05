@@ -1,3 +1,4 @@
+import type { PaginatedApiResult, PaginationMeta } from '@/lib/api-response';
 import { TabType } from "../books.constants";
 
 export interface Book {
@@ -91,12 +92,7 @@ export interface BookForAdmin {
   };
 }
 
-export interface BackendPagination {
-  current: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
+export type BackendPagination = PaginationMeta;
 
 export const BOOK_STATUS = {
   DRAFT: 'draft',
@@ -149,10 +145,7 @@ export interface BookStats {
   chapterCount: number;
 }
 
-export interface AdminBooksData {
-  data: BookForAdmin[];
-  meta: BackendPagination;
-}
+export type AdminBooksData = PaginatedApiResult<BookForAdmin>;
 
 export interface FiltersData {
   genres: Array<{
@@ -173,15 +166,7 @@ export interface LikeResult {
   likes: number;
 }
 
-export interface PaginatedData<T> {
-  data: T[];
-  meta: {
-    current: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-}
+export type PaginatedData<T> = PaginatedApiResult<T>;
 
 export interface TabState {
   books: Book[];

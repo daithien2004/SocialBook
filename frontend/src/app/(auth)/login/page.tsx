@@ -13,6 +13,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
+import { AppButton } from '@/components/common/AppButton';
+import { AppLoading } from '@/components/common/AppLoading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -108,7 +110,7 @@ export default function LoginPage() {
   if (isAuthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+        <AppLoading size={48} text="Đang tải thông tin..." />
       </div>
     );
   }
@@ -129,7 +131,7 @@ export default function LoginPage() {
             <h1 className="text-5xl font-bold leading-tight font-serif mb-4">
               LES MISERABLES
             </h1>
-            <p className="text-2xl text-teal-100 font-serif italic border-l-4 border-teal-500 pl-4">
+            <p className="text-2xl text-primary-foreground/90 font-serif italic border-l-4 border-primary pl-4">
               "Even the darkest night will end and the sun will rise."
             </p>
             <p className="mt-4 text-lg font-medium">— Victor Hugo</p>
@@ -152,16 +154,16 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button
+            <AppButton
               variant="outline"
               type="button"
               onClick={handleGoogleSignin}
               disabled={isAnyLoading}
-              className="w-full py-5 text-base font-medium relative"
+              loading={isGoogleLoading}
+              className="w-full py-6 text-base font-medium relative"
+              aria-label="Đăng nhập bằng Google"
             >
-              {isGoogleLoading ? (
-                <div className="w-5 h-5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin mr-2" />
-              ) : (
+              {!isGoogleLoading && (
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
@@ -182,7 +184,7 @@ export default function LoginPage() {
                 </svg>
               )}
               Đăng nhập bằng Google
-            </Button>
+            </AppButton>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -246,7 +248,7 @@ export default function LoginPage() {
                           variant="ghost"
                           size="icon"
                           className="absolute right-0 top-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={() => setShowPassword((prev) => !prev)}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -260,20 +262,15 @@ export default function LoginPage() {
                   )}
                 />
 
-                <Button
+                <AppButton
                   type="submit"
                   className="w-full h-11 text-base font-semibold mt-2"
                   disabled={isAnyLoading}
+                  loading={isCredentialsLoading}
+                  loadingText="Đang đăng nhập..."
                 >
-                  {isCredentialsLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                      Đang đăng nhập...
-                    </>
-                  ) : (
-                    'Đăng nhập'
-                  )}
-                </Button>
+                  Đăng nhập
+                </AppButton>
               </form>
             </Form>
 

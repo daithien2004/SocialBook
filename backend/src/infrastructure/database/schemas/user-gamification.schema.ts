@@ -26,5 +26,5 @@ export class UserGamification extends BaseSchema {
   totalXP: number;
 }
 
-export const UserGamificationSchema = SchemaFactory.createForClass(UserGamification);
-
+export const UserGamificationSchema =
+  SchemaFactory.createForClass(UserGamification);

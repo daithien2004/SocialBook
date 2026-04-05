@@ -26,12 +26,12 @@ import { IncrementPlayCountUseCase } from '@/application/text-to-speech/use-case
 @Controller('text-to-speech')
 export class TextToSpeechController {
   constructor(
-      private readonly generateChapterAudioUseCase: GenerateChapterAudioUseCase,
-      private readonly getChapterAudioUseCase: GetChapterAudioUseCase,
-      private readonly deleteChapterAudioUseCase: DeleteChapterAudioUseCase,
-      private readonly generateBookAudioUseCase: GenerateBookAudioUseCase,
-      private readonly incrementPlayCountUseCase: IncrementPlayCountUseCase,
-  ) { }
+    private readonly generateChapterAudioUseCase: GenerateChapterAudioUseCase,
+    private readonly getChapterAudioUseCase: GetChapterAudioUseCase,
+    private readonly deleteChapterAudioUseCase: DeleteChapterAudioUseCase,
+    private readonly generateBookAudioUseCase: GenerateBookAudioUseCase,
+    private readonly incrementPlayCountUseCase: IncrementPlayCountUseCase,
+  ) {}
 
   /**
    * Generate audio for a single chapter (admin only)
@@ -43,7 +43,10 @@ export class TextToSpeechController {
     @Param('chapterId') chapterId: string,
     @Body() dto: GenerateChapterAudioDto,
   ) {
-    const result = await this.generateChapterAudioUseCase.execute(chapterId, dto);
+    const result = await this.generateChapterAudioUseCase.execute(
+      chapterId,
+      dto,
+    );
     return {
       message: 'Audio generated successfully',
       data: result,

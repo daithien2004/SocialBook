@@ -1,79 +1,84 @@
-import { BookDetailReadModel, ChapterSummary } from '@/domain/books/read-models/book-detail.read-model';
+import {
+  BookDetailReadModel,
+  ChapterSummary,
+} from '@/domain/books/read-models/book-detail.read-model';
 
 export class ChapterResponseDto {
-    id: string;
-    title: string;
-    slug: string;
-    content: string;
-    orderIndex: number;
-    viewsCount: number;
-    createdAt: Date;
-    updatedAt?: Date;
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  orderIndex: number;
+  viewsCount: number;
+  createdAt: Date;
+  updatedAt?: Date;
 
-    private constructor(chapter: ChapterSummary) {
-        this.id = chapter.id;
-        this.title = chapter.title;
-        this.slug = chapter.slug;
-        this.content = chapter.content;
-        this.orderIndex = chapter.orderIndex;
-        this.viewsCount = chapter.viewsCount;
-        this.createdAt = chapter.createdAt;
-        this.updatedAt = chapter.updatedAt;
-    }
+  private constructor(chapter: ChapterSummary) {
+    this.id = chapter.id;
+    this.title = chapter.title;
+    this.slug = chapter.slug;
+    this.content = chapter.content;
+    this.orderIndex = chapter.orderIndex;
+    this.viewsCount = chapter.viewsCount;
+    this.createdAt = chapter.createdAt;
+    this.updatedAt = chapter.updatedAt;
+  }
 
-    static fromReadModel(chapter: ChapterSummary): ChapterResponseDto {
-        return new ChapterResponseDto(chapter);
-    }
+  static fromReadModel(chapter: ChapterSummary): ChapterResponseDto {
+    return new ChapterResponseDto(chapter);
+  }
 }
 
 export class BookDetailResponseDto {
-    id: string;
-    title: string;
-    slug: string;
-    authorId: string;
-    genres: { id: string; name: string; slug: string }[];
-    description: string;
-    publishedYear: string;
-    coverUrl: string;
-    status: string;
-    tags: string[];
-    likedBy: string[];
-    stats: {
-        views: number;
-        likes: number;
-        chapterCount: number;
-        averageRating: number;
-        totalRatings: number;
+  id: string;
+  title: string;
+  slug: string;
+  authorId: string;
+  genres: { id: string; name: string; slug: string }[];
+  description: string;
+  publishedYear: string;
+  coverUrl: string;
+  status: string;
+  tags: string[];
+  likedBy: string[];
+  stats: {
+    views: number;
+    likes: number;
+    chapterCount: number;
+    averageRating: number;
+    totalRatings: number;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+  chapters: ChapterResponseDto[];
+
+  private constructor(readModel: BookDetailReadModel) {
+    this.id = readModel.id;
+    this.title = readModel.title;
+    this.slug = readModel.slug;
+    this.authorId = readModel.authorId;
+    this.genres = readModel.genres;
+    this.description = readModel.description;
+    this.publishedYear = readModel.publishedYear;
+    this.coverUrl = readModel.coverUrl;
+    this.status = readModel.status;
+    this.tags = readModel.tags;
+    this.likedBy = readModel.likedBy;
+    this.stats = {
+      views: readModel.stats.views,
+      likes: readModel.stats.likes,
+      chapterCount: readModel.stats.chapterCount,
+      averageRating: 0,
+      totalRatings: 0,
     };
-    createdAt: Date;
-    updatedAt: Date;
-    chapters: ChapterResponseDto[];
+    this.createdAt = readModel.createdAt;
+    this.updatedAt = readModel.updatedAt;
+    this.chapters = readModel.chapters.map((ch) =>
+      ChapterResponseDto.fromReadModel(ch),
+    );
+  }
 
-    private constructor(readModel: BookDetailReadModel) {
-        this.id = readModel.id;
-        this.title = readModel.title;
-        this.slug = readModel.slug;
-        this.authorId = readModel.authorId;
-        this.genres = readModel.genres;
-        this.description = readModel.description;
-        this.publishedYear = readModel.publishedYear;
-        this.coverUrl = readModel.coverUrl;
-        this.status = readModel.status;
-        this.tags = readModel.tags;
-        this.likedBy = readModel.likedBy;
-        this.stats = {
-            views: readModel.stats.views,
-            likes: readModel.stats.likes,
-            chapterCount: readModel.stats.chapterCount,
-            averageRating: 0,
-            totalRatings: 0
-        };
-        this.createdAt = readModel.createdAt;
-        this.updatedAt = readModel.updatedAt;
-        this.chapters = readModel.chapters.map(ch => ChapterResponseDto.fromReadModel(ch));
-    }
-
-    static fromReadModel(readModel: BookDetailReadModel): BookDetailResponseDto {
-        return new BookDetailResponseDto(readModel);
-    }
+  static fromReadModel(readModel: BookDetailReadModel): BookDetailResponseDto {
+    return new BookDetailResponseDto(readModel);
+  }
 }

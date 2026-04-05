@@ -6,7 +6,10 @@ import {
   Comment,
   CommentDocument,
 } from '@/infrastructure/database/schemas/comment.schema';
-import { Book, BookDocument } from '@/infrastructure/database/schemas/book.schema';
+import {
+  Book,
+  BookDocument,
+} from '@/infrastructure/database/schemas/book.schema';
 import {
   Chapter,
   ChapterDocument,

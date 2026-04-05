@@ -6,10 +6,7 @@ import { NotificationsRepositoryModule } from '@/infrastructure/database/reposit
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    NotificationsRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [NotificationsRepositoryModule, IdGeneratorModule],
   providers: [
     CreateNotificationUseCase,
     GetUserNotificationsUseCase,
@@ -21,4 +18,4 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     MarkNotificationReadUseCase,
   ],
 })
-export class NotificationsApplicationModule { }
+export class NotificationsApplicationModule {}

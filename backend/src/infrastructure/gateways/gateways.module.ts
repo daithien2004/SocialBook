@@ -6,17 +6,17 @@ import { NotificationsService } from '../external/notifications.service';
 import { NotificationsGateway } from './notifications.gateway';
 
 @Module({
-    imports: [
-        NotificationsApplicationModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get<string>('env.JWT_ACCESS_SECRET'),
-            }),
-        }),
-    ],
-    providers: [NotificationsGateway, NotificationsService],
-    exports: [NotificationsService],
+  imports: [
+    NotificationsApplicationModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('env.JWT_ACCESS_SECRET'),
+      }),
+    }),
+  ],
+  providers: [NotificationsGateway, NotificationsService],
+  exports: [NotificationsService],
 })
-export class GatewaysModule { }
+export class GatewaysModule {}

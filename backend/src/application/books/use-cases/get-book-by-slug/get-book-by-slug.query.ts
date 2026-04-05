@@ -1,5 +1,3 @@
 export class GetBookBySlugQuery {
-    constructor(
-        public readonly slug: string
-    ) { }
+  constructor(public readonly slug: string) {}
 }

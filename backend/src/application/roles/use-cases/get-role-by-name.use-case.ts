@@ -5,9 +5,7 @@ import { GetRoleByNameQuery } from './get-role-by-name.query';
 
 @Injectable()
 export class GetRoleByNameUseCase {
-  constructor(
-    private readonly roleRepository: IRoleRepository,
-  ) { }
+  constructor(private readonly roleRepository: IRoleRepository) {}
 
   async execute(query: GetRoleByNameQuery): Promise<Role | null> {
     return this.roleRepository.findByName(query.name);

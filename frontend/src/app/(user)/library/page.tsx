@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,25 +12,22 @@ import {
   Plus,
   Folder,
   ChevronRight,
-  MoreVertical,
 } from 'lucide-react';
 
 import {
   useGetLibraryBooksQuery,
   useGetCollectionsQuery,
-  useCreateCollectionMutation,
 } from '@/features/library/api/libraryApi';
 import { LibraryStatus } from '@/features/library/types/library.interface';
-import { toast } from 'sonner';
 import { useAppAuth } from '@/hooks/useAppAuth';
+import { useModalStore } from '@/store/useModalStore';
 
 export default function LibraryPage() {
   const [activeTab, setActiveTab] = useState<LibraryStatus>(
     LibraryStatus.READING
   );
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState('');
   const { user, isAuthenticated } = useAppAuth();
+  const { openCreateCollection } = useModalStore();
 
   const {
     data: libraryData,
@@ -43,33 +40,12 @@ export default function LibraryPage() {
   const currentUserId = user?.id;
   const router = useRouter();
 
-  const { data: collections, isLoading: isLoadingCollections } =
+  const { data: collections, isLoading: isLoadingCollections, refetch: refetchCollections } =
     useGetCollectionsQuery(currentUserId, {
       skip: !currentUserId,
     });
 
-  const [createCollection, { isLoading: isCreatingCollection }] =
-    useCreateCollectionMutation();
-
   const books = libraryData || [];
-
-  const handleCreateCollection = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCollectionName.trim()) return;
-    try {
-      await createCollection({
-        name: newCollectionName,
-        isPublic: false,
-      }).unwrap();
-      setNewCollectionName('');
-      setIsCreateModalOpen(false);
-      toast.success('Đã tạo bộ sưu tập mới');
-    } catch (error: any) {
-      if (error?.status !== 401) {
-        toast.error('Không thể tạo bộ sưu tập. Vui lòng thử lại.');
-      }
-    }
-  };
 
   if (!isAuthenticated) {
     return (
@@ -112,10 +88,13 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] pb-20 transition-colors duration-300 font-sans selection:bg-blue-500 selection:text-white relative">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
           alt="Background Texture"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40"
         />
         <div className="absolute inset-0 bg-white/80 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>
@@ -135,7 +114,7 @@ export default function LibraryPage() {
                 Bộ sưu tập
               </h2>
               <button
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={() => openCreateCollection({ onSuccess: refetchCollections })}
                 className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
               >
                 <Plus size={16} /> Tạo mới
@@ -154,7 +133,7 @@ export default function LibraryPage() {
             ) : (
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                 <button
-                  onClick={() => setIsCreateModalOpen(true)}
+                  onClick={() => openCreateCollection({ onSuccess: refetchCollections })}
                   className="flex-none w-40 h-20 border-2 border-dashed border-gray-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors bg-white dark:bg-white/5"
                 >
                   <Plus size={24} />
@@ -300,46 +279,6 @@ export default function LibraryPage() {
             )}
           </div>
         </div>
-        {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl border border-gray-200 dark:border-white/10 w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Tạo bộ sưu tập mới
-              </h3>
-              <form onSubmit={handleCreateCollection}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Tên bộ sưu tập
-                  </label>
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder="Ví dụ: Truyện hay tháng 10..."
-                    className="w-full px-4 py-2 bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                    value={newCollectionName}
-                    onChange={(e) => setNewCollectionName(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors font-medium"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isCreatingCollection || !newCollectionName.trim()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                  >
-                    {isCreatingCollection ? 'Đang tạo...' : 'Tạo mới'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

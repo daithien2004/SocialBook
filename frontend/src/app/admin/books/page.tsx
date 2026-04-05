@@ -1,6 +1,5 @@
 'use client';
 
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
 import { useDeleteBookMutation, useGetAdminBooksQuery } from '@/features/books/api/bookApi';
 import { BackendPagination, BookForAdmin } from '@/features/books/types/book.interface';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -11,6 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useModalStore } from '@/store/useModalStore';
 
 type BookStatus = 'draft' | 'published' | 'completed';
 type StatusFilter = BookStatus | 'all';
@@ -31,6 +31,7 @@ export default function AdminBooksPage() {
   });
 
   const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
+  const { openDeleteBook } = useModalStore();
   const books: BookForAdmin[] = data?.data || [];
   const pagination: BackendPagination | undefined = data?.meta;
 
@@ -209,18 +210,17 @@ export default function AdminBooksPage() {
                             <Link href={`/admin/books/edit/${book.id}`} className="p-2 hover:bg-green-50 rounded-lg transition-colors" title="Chỉnh sửa">
                               <Edit className="w-5 h-5 text-green-600" />
                             </Link>
-                            <ConfirmDelete
-                              title="Xóa sách"
-                              description={`Bạn có chắc chắn muốn xóa sách "${book.title}"?`}
-                              onConfirm={() => handleDelete(book.id)}
-                            >
-                              <button
+                            <button
+                                onClick={() => openDeleteBook({
+                                    book,
+                                    isDeleting,
+                                    onConfirm: () => handleDelete(book.id)
+                                })}
                                 className="p-2 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Xóa sách"
-                              >
+                            >
                                 <Trash2 className="w-5 h-5 text-red-600" />
-                              </button>
-                            </ConfirmDelete>
+                            </button>
                           </div>
                         </td>
                       </tr>

@@ -2,21 +2,29 @@ import { Book as BookEntity } from '@/domain/books/entities/book.entity';
 import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 import { Types } from 'mongoose';
-import { BookPersistence, RawBookDetailAggregation, RawBookDocument, RawGenre } from './book.raw-types';
+import {
+  BookPersistence,
+  RawBookDetailAggregation,
+  RawBookDocument,
+  RawGenre,
+} from './book.raw-types';
 
 export class BookMapper {
   static toDomain(document: RawBookDocument): BookEntity {
     const genres = (document.genres || []).map((g) => {
-      if (typeof g === 'object' && 'name' in g) return (g as RawGenre)._id.toString();
+      if (typeof g === 'object' && 'name' in g) return g._id.toString();
       return g.toString();
     });
 
     const author = document.authorId as any;
-    const authorName = (typeof author === 'object' && 'name' in author) ? author.name : undefined;
-    const authorIdStr = (typeof author === 'object' && author !== null && '_id' in author)
-      ? author._id.toString()
-      : (document.authorId ? document.authorId.toString() : '');
-
+    const authorName =
+      typeof author === 'object' && 'name' in author ? author.name : undefined;
+    const authorIdStr =
+      typeof author === 'object' && author !== null && '_id' in author
+        ? author._id.toString()
+        : document.authorId
+          ? document.authorId.toString()
+          : '';
 
     return BookEntity.reconstitute({
       id: document._id.toString(),
@@ -27,7 +35,8 @@ export class BookMapper {
       description: document.description || '',
       publishedYear: document.publishedYear || '',
       coverUrl: document.coverUrl || '',
-      status: (document.status as 'draft' | 'published' | 'completed') || 'draft',
+      status:
+        (document.status as 'draft' | 'published' | 'completed') || 'draft',
       tags: document.tags || [],
       views: document.views || 0,
       likes: document.likes || 0,
@@ -40,11 +49,14 @@ export class BookMapper {
 
   static toListReadModel(document: RawBookDocument): BookListReadModel {
     const author = document.authorId as any;
-    const authorName = (typeof author === 'object' && 'name' in author) ? author.name : undefined;
-    const authorIdStr = (typeof author === 'object' && author !== null && '_id' in author)
-      ? author._id.toString()
-      : (document.authorId ? document.authorId.toString() : '');
-
+    const authorName =
+      typeof author === 'object' && 'name' in author ? author.name : undefined;
+    const authorIdStr =
+      typeof author === 'object' && author !== null && '_id' in author
+        ? author._id.toString()
+        : document.authorId
+          ? document.authorId.toString()
+          : '';
 
     return {
       id: document._id.toString(),
@@ -80,7 +92,7 @@ export class BookMapper {
       title: book.title.toString(),
       slug: book.slug,
       authorId: new Types.ObjectId(book.authorId.toString()),
-      genres: book.genres.map(genre => new Types.ObjectId(genre.toString())),
+      genres: book.genres.map((genre) => new Types.ObjectId(genre.toString())),
       description: book.description,
       publishedYear: book.publishedYear,
       coverUrl: book.coverUrl,
@@ -88,7 +100,7 @@ export class BookMapper {
       tags: book.tags,
       views: book.views,
       likes: book.likes,
-      likedBy: book.likedBy.map(id => new Types.ObjectId(id)),
+      likedBy: book.likedBy.map((id) => new Types.ObjectId(id)),
       updatedAt: book.updatedAt,
     };
   }

@@ -164,7 +164,7 @@ export const libraryApi = createApi({
       invalidatesTags: ['Collection'],
     }),
 
-    recordReadingTime: builder.mutation<any, { bookId: string; chapterId: string; durationInSeconds: number }>({
+    recordReadingTime: builder.mutation<void, { bookId: string; chapterId: string; durationInSeconds: number }>({
       query: (body) => ({
         url: NESTJS_LIBRARY_ENDPOINTS.readingTime,
         method: 'POST',

@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ConflictDomainException, InternalServerDomainException } from '@/shared/domain/common-exceptions';
+import {
+  ConflictDomainException,
+  InternalServerDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Genre } from '@/domain/genres/entities/genre.entity';
@@ -10,29 +13,29 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class CreateGenreUseCase {
-    constructor(
-        private readonly genreRepository: IGenreRepository,
-        private readonly idGenerator: IIdGenerator
-    ) {}
+  constructor(
+    private readonly genreRepository: IGenreRepository,
+    private readonly idGenerator: IIdGenerator,
+  ) {}
 
-    async execute(command: CreateGenreCommand): Promise<Genre> {
-        const name = GenreName.create(command.name);
-        const exists = await this.genreRepository.existsByName(name);
-        
-        if (exists) {
-            throw new ConflictDomainException(ErrorMessages.GENRE_EXISTS || 'Genre already exists');
-        }
+  async execute(command: CreateGenreCommand): Promise<Genre> {
+    const name = GenreName.create(command.name);
+    const exists = await this.genreRepository.existsByName(name);
 
-        const genre = Genre.create({
-            id: GenreId.create(this.idGenerator.generate()),
-            name: command.name,
-            description: command.description
-        });
-
-        await this.genreRepository.save(genre);
-
-        return genre;
+    if (exists) {
+      throw new ConflictDomainException(
+        ErrorMessages.GENRE_EXISTS || 'Genre already exists',
+      );
     }
+
+    const genre = Genre.create({
+      id: GenreId.create(this.idGenerator.generate()),
+      name: command.name,
+      description: command.description,
+    });
+
+    await this.genreRepository.save(genre);
+
+    return genre;
+  }
 }
-
-

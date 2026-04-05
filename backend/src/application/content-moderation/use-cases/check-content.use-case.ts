@@ -4,12 +4,9 @@ import { ModerationResult } from '@/domain/content-moderation/interfaces/moderat
 
 @Injectable()
 export class CheckContentUseCase {
-  constructor(
-    private readonly moderationService: IContentModerationService,
-  ) {}
+  constructor(private readonly moderationService: IContentModerationService) {}
 
   async execute(text: string): Promise<ModerationResult> {
     return this.moderationService.checkContent(text);
   }
 }
-

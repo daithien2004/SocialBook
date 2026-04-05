@@ -1,11 +1,6 @@
 'use client';
 
-import { NotificationBell } from '@/components/notification/NotificationBell';
-import {
-  useCheckInStreakMutation,
-  useGetDailyGoalQuery,
-  useGetStreakQuery,
-} from '@/features/gamification/api/gamificationApi';
+import dynamic from 'next/dynamic';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import {
   BookOpen,
@@ -18,16 +13,13 @@ import {
   Search,
   Settings,
   Sun,
-  Target,
-  Trophy,
   User,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { toast } from 'sonner';
 import { logout } from '../features/auth/slice/authSlice';
 import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
 
@@ -42,8 +34,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
-export function HeaderClient() {
+const LazyNotificationBell = dynamic(
+  () =>
+    import('@/components/notification/NotificationBell').then(
+      (module) => module.NotificationBell
+    ),
+  { ssr: false }
+);
+
+const LazyHeaderGamificationSummary = dynamic(
+  () => import('@/components/header/HeaderGamificationSummary'),
+  { ssr: false }
+);
+
+export const HeaderClient = memo(function HeaderClient() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -53,78 +59,31 @@ export function HeaderClient() {
   const userId = user?.id;
   const avatarUrl = user?.image;
 
-  const { data: streakData } = useGetStreakQuery(undefined, {
-    skip: isGuest,
-  });
-
-  const [checkInStreak] = useCheckInStreakMutation();
-
-  const { data: dailyGoal } = useGetDailyGoalQuery(undefined, {
-    skip: isGuest,
-  });
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const checkInKey = `streak-checked-in-${userId}-${todayStr}`;
-    if (localStorage.getItem(checkInKey)) return; 
-
-    const performCheckIn = async () => {
-      try {
-        const result = await checkInStreak().unwrap();
-        localStorage.setItem(checkInKey, 'true');
-        if (result.message === 'Streak updated') {
-          toast.success(`Streak updated! ${result.currentStreak} day(s) 🔥`, {
-            icon: '🔥',
-            style: { borderRadius: '10px', background: '#333', color: '#fff' },
-          });
-        }
-      } catch (error) { }
-    };
-
-    performCheckIn();
-  }, [isAuthenticated]);
-
   useEffect(() => {
     setMounted(true);
-    if (!dailyGoal || !userId) return;
-
-    const minutesGoal = dailyGoal.goals?.minutes;
-    const current = minutesGoal?.current || 0;
-    const target = minutesGoal?.target || 90;
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const celebrationKey = `daily-goal-celebrated-${userId}-${todayStr}`;
-    const hasCelebratedToday = localStorage.getItem(celebrationKey);
-
-    if (current >= target && !hasCelebratedToday) {
-      localStorage.setItem(celebrationKey, 'true');
-      import('canvas-confetti').then((confetti) => {
-        confetti.default({
-          particleCount: 150,
-          spread: 100,
-          origin: { y: 0.3 },
-          colors: ['#FFD700', '#FFA500', '#ffffff'],
-        });
-      });
-      toast.success('Xuất sắc! Bạn đã đạt mục tiêu hôm nay! 🎉');
-    }
-  }, [dailyGoal, userId]);
+  }, []);
 
   const dispatch = useDispatch();
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     dispatch(recommendationsApi.util.resetApiState());
     dispatch(logout());
     await signOut({ redirect: false });
     router.push('/login');
-  };
+  }, [dispatch, router]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     if (!mounted) return;
     setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
+  }, [mounted, theme, setTheme]);
+
+  const navigateToHome = useCallback(() => router.push('/'), [router]);
+  const navigateToBooks = useCallback(() => router.push('/books'), [router]);
+  const navigateToPosts = useCallback(() => router.push('/posts'), [router]);
+  const navigateToLibrary = useCallback(() => router.push('/library'), [router]);
+  const navigateToProfile = useCallback(() => router.push(`/users/${userId}`), [router, userId]);
+  const navigateToOnboarding = useCallback(() => router.push('/onboarding'), [router]);
+  const navigateToFollowing = useCallback(() => router.push(`/users/${userId}/following`), [router, userId]);
 
   return (
     <header className="fixed top-0 z-50 w-full h-16 bg-background/80 backdrop-blur-md border-b border-border transition-colors duration-300">
@@ -132,7 +91,7 @@ export function HeaderClient() {
         <div className="flex items-center justify-between h-full">
           <div
             className="flex items-center gap-3 cursor-pointer"
-            onClick={() => router.push('/')}
+            onClick={navigateToHome}
           >
             <BookOpen className="w-6 h-6 text-foreground stroke-[1.5px] hover:scale-110 transition-transform duration-300" />
             <h1 className="text-2xl font-serif font-bold text-foreground tracking-tight hover:text-muted-foreground transition-colors">
@@ -141,15 +100,15 @@ export function HeaderClient() {
           </div>
 
           <nav className="hidden md:flex items-center gap-2">
-            <Button variant="ghost" onClick={() => router.push('/books')} className="gap-2 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" onClick={navigateToBooks} className="gap-2 text-muted-foreground hover:text-foreground">
               <Search className="w-4 h-4" />
               Tìm Kiếm Sách
             </Button>
-            <Button variant="ghost" onClick={() => router.push('/posts')} className="gap-2 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" onClick={navigateToPosts} className="gap-2 text-muted-foreground hover:text-foreground">
               <Globe className="w-4 h-4" />
               Bảng Feed
             </Button>
-            <Button variant="ghost" onClick={() => router.push('/library')} className="gap-2 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" onClick={navigateToLibrary} className="gap-2 text-muted-foreground hover:text-foreground">
               <Library className="w-4 h-4" />
               Thư viện
             </Button>
@@ -161,7 +120,7 @@ export function HeaderClient() {
               size="icon"
               onClick={toggleTheme}
               className="rounded-full text-muted-foreground hover:text-foreground"
-              title="Đổi giao diện"
+              title="Ä á»•i giao diá»‡n"
             >
               {mounted && theme === 'dark' ? (
                 <Sun className="w-5 h-5" />
@@ -172,43 +131,9 @@ export function HeaderClient() {
 
             {isAuthenticated && user ? (
               <>
-                {/* Daily Goal Display */}
-                {dailyGoal && (
-                  <div
-                    className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors ${(dailyGoal.goals?.minutes?.current || 0) >= (dailyGoal.goals?.minutes?.target || 90)
-                      ? 'bg-yellow-100 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-500/30 text-yellow-700 dark:text-yellow-400'
-                      : 'bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400'
-                      }`}
-                    title="Mục tiêu đọc sách hôm nay"
-                  >
-                    {(dailyGoal.goals?.minutes?.current || 0) >= (dailyGoal.goals?.minutes?.target || 90) ? (
-                      <Trophy className="w-4 h-4" />
-                    ) : (
-                      <Target className="w-4 h-4" />
-                    )}
-                    <span className="text-sm font-bold font-mono">
-                      {dailyGoal.goals?.minutes?.current || 0}/{dailyGoal.goals?.minutes?.target || 90}p
-                    </span>
-                  </div>
-                )}
+                {!isGuest ? <LazyHeaderGamificationSummary userId={userId} /> : null}
 
-                {/* Streak Display */}
-                <div
-                  className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 text-orange-600 dark:text-orange-400"
-                  title="Chuỗi ngày đọc sách liên tiếp"
-                >
-                  <Flame
-                    className={`w-4 h-4 ${streakData?.currentStreak > 0
-                      ? 'fill-orange-500 text-orange-500'
-                      : 'text-orange-300'
-                      }`}
-                  />
-                  <span className="text-sm font-bold font-mono">
-                    {streakData?.currentStreak || 0}
-                  </span>
-                </div>
-
-                <NotificationBell />
+                <LazyNotificationBell />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -229,21 +154,21 @@ export function HeaderClient() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {!user.onboardingCompleted && (
-                      <DropdownMenuItem onClick={() => router.push('/onboarding')} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10">
+                    {!user.onboardingCompleted ? (
+                      <DropdownMenuItem onClick={navigateToOnboarding} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10">
                         <Flame className="mr-2 h-4 w-4" />
                         <span>Tiếp tục Onboarding</span>
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={() => router.push(`/users/${userId}`)}>
+                    ) : null}
+                    <DropdownMenuItem onClick={navigateToProfile}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Hồ sơ của tôi</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/library')}>
+                    <DropdownMenuItem onClick={navigateToLibrary}>
                       <Library className="mr-2 h-4 w-4" />
                       <span>Thư viện</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {/* router.push('/settings') */ }}>
+                    <DropdownMenuItem onClick={() => router.push('/settings')}>
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Cài đặt</span>
                     </DropdownMenuItem>
@@ -255,39 +180,47 @@ export function HeaderClient() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Mobile Menu */}
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="md:hidden">
                       <Menu className="w-5 h-5" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="right">
-                    <div className="flex flex-col gap-4 mt-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Avatar>
+                  <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                    <div className="flex flex-col gap-4 mt-8">
+                      <div className="flex items-center gap-3 mb-6 p-2 rounded-xl bg-gray-50 dark:bg-zinc-900">
+                        <Avatar className="h-12 w-12 border-2 border-white dark:border-zinc-800 shadow-sm">
                           <AvatarImage src={avatarUrl} />
-                          <AvatarFallback>{user.username?.[0]}</AvatarFallback>
+                          <AvatarFallback className="bg-blue-600 text-white font-bold">{user.username?.[0]?.toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div className="flex flex-col">
-                          <span className="font-bold">{user.name}</span>
-                          <span className="text-xs text-muted-foreground">{user.email}</span>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="font-bold text-lg truncate">{user.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                         </div>
                       </div>
-                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push(`/users/${userId}`)}>
-                        <User className="w-4 h-4" /> Hồ sơ
-                      </Button>
-                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push('/books')}>
-                        <Search className="w-4 h-4" /> Tìm sách
-                      </Button>
-                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push('/posts')}>
-                        <Globe className="w-4 h-4" /> Bảng feed
-                      </Button>
-                      <Button variant="ghost" className="justify-start gap-2" onClick={() => router.push('/library')}>
-                        <Library className="w-4 h-4" /> Thư viện
-                      </Button>
-                      <Button variant="ghost" className="justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleLogout}>
-                        <LogOut className="w-4 h-4" /> Đăng xuất
+                      
+                      <div className="space-y-1">
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={navigateToProfile}>
+                          <User className="w-5 h-5 text-muted-foreground" /> Hồ sơ cá nhân
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={() => router.push('/settings')}>
+                          <Settings className="w-5 h-5 text-muted-foreground" /> Cài đặt tài khoản
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={navigateToBooks}>
+                          <Search className="w-5 h-5 text-muted-foreground" /> Tìm kiếm sách
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={navigateToPosts}>
+                          <Globe className="w-5 h-5 text-muted-foreground" /> Bảng tin cộng đồng
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={navigateToLibrary}>
+                          <Library className="w-5 h-5 text-muted-foreground" /> Thư viện của tôi
+                        </Button>
+                      </div>
+
+                      <Separator className="my-2" />
+
+                      <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 font-bold" onClick={handleLogout}>
+                        <LogOut className="w-5 h-5" /> Đăng xuất
                       </Button>
                     </div>
                   </SheetContent>
@@ -306,5 +239,7 @@ export function HeaderClient() {
         </div>
       </div>
     </header>
-  );
-}
+  )
+})
+
+

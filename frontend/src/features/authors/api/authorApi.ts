@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { normalizeArrayResponse } from '@/lib/api-response';
 import { NESTJS_AUTHORS_ENDPOINTS } from '@/constants/server-endpoints';
 import {
   Author,
@@ -26,6 +27,7 @@ export const authorApi = createApi({
           name: params.name,
         },
       }),
+      transformResponse: normalizeArrayResponse<Author>,
       providesTags: (result) =>
         result?.data
           ? [

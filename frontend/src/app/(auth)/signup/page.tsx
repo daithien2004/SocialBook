@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 
+import { AppButton } from '@/components/common/AppButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -70,7 +71,7 @@ export default function SignupPage() {
             <h1 className="text-5xl font-bold leading-tight font-serif mb-4">
               LES MISERABLES
             </h1>
-            <p className="text-2xl text-teal-100 font-serif italic border-l-4 border-teal-500 pl-4">
+            <p className="text-2xl text-primary-foreground/90 font-serif italic border-l-4 border-primary pl-4">
               "To love another person is to see the face of God."
             </p>
             <p className="mt-4 text-lg font-medium">— Victor Hugo</p>
@@ -155,7 +156,7 @@ export default function SignupPage() {
                           variant="ghost"
                           size="icon"
                           className="absolute right-0 top-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={() => setShowPassword((prev) => !prev)}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -190,7 +191,7 @@ export default function SignupPage() {
                           variant="ghost"
                           size="icon"
                           className="absolute right-0 top-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() => setShowConfirmPassword((prev) => !prev)}
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -204,20 +205,14 @@ export default function SignupPage() {
                   )}
                 />
 
-                <Button
+                <AppButton
                   type="submit"
-                  className="w-full h-11 text-base font-semibold mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={isLoading}
+                  className="w-full h-11 text-base font-semibold mt-4"
+                  loading={isLoading}
+                  loadingText="Đang tạo tài khoản..."
                 >
-                  {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Đang tạo tài khoản...
-                    </>
-                  ) : (
-                    'Tạo Tài Khoản'
-                  )}
-                </Button>
+                  Tạo Tài Khoản
+                </AppButton>
               </form>
             </Form>
 

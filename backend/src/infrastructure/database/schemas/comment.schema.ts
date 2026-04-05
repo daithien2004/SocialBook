@@ -36,22 +36,37 @@ export class Comment extends BaseSoftDeleteSchema {
   @Prop({ type: String })
   moderationReason?: string;
 
-  @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
+  @Prop({
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  })
   moderationStatus?: string;
 }
-
 
 export type CommentDocument = HydratedDocument<Comment>;
 export const CommentSchema = SchemaFactory.createForClass(Comment);
 
 // Lấy comment theo target (post/chapter...), lọc soft-delete, sắp xếp mới nhất
-CommentSchema.index({ targetId: 1, targetType: 1, createdAt: -1 }, { partialFilterExpression: { isDeleted: false } });
+CommentSchema.index(
+  { targetId: 1, targetType: 1, createdAt: -1 },
+  { partialFilterExpression: { isDeleted: false } },
+);
 
 // Lấy replies theo comment cha
-CommentSchema.index({ parentId: 1 }, { partialFilterExpression: { isDeleted: false } });
+CommentSchema.index(
+  { parentId: 1 },
+  { partialFilterExpression: { isDeleted: false } },
+);
 
 // Lấy comment của 1 user
-CommentSchema.index({ userId: 1 }, { partialFilterExpression: { isDeleted: false } });
+CommentSchema.index(
+  { userId: 1 },
+  { partialFilterExpression: { isDeleted: false } },
+);
 
 // Admin: lọc theo trạng thái kiểm duyệt
-CommentSchema.index({ moderationStatus: 1, createdAt: -1 }, { partialFilterExpression: { isDeleted: false } });
+CommentSchema.index(
+  { moderationStatus: 1, createdAt: -1 },
+  { partialFilterExpression: { isDeleted: false } },
+);

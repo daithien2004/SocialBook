@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BadRequestDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
+import {
+  BadRequestDomainException,
+  ConflictDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Follow } from '@/domain/follows/entities/follow.entity';
@@ -11,50 +14,56 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class CreateFollowUseCase {
-    private readonly logger = new Logger(CreateFollowUseCase.name);
+  private readonly logger = new Logger(CreateFollowUseCase.name);
 
-    constructor(
-        private readonly followRepository: IFollowRepository,
-        private readonly idGenerator: IIdGenerator
-    ) {}
+  constructor(
+    private readonly followRepository: IFollowRepository,
+    private readonly idGenerator: IIdGenerator,
+  ) {}
 
-    async execute(command: CreateFollowCommand): Promise<Follow> {
-        try {
-            // Validate user ID and target ID
-            const userId = UserId.create(command.userId);
-            const targetId = TargetId.create(command.targetId);
+  async execute(command: CreateFollowCommand): Promise<Follow> {
+    try {
+      // Validate user ID and target ID
+      const userId = UserId.create(command.userId);
+      const targetId = TargetId.create(command.targetId);
 
-            // Check if user is trying to follow themselves
-            if (userId.getValue() === targetId.getValue()) {
-                throw new BadRequestDomainException('User cannot follow themselves');
-            }
+      // Check if user is trying to follow themselves
+      if (userId.getValue() === targetId.getValue()) {
+        throw new BadRequestDomainException('User cannot follow themselves');
+      }
 
-            // Check if follow already exists
-            const existingFollow = await this.followRepository.exists(userId, targetId);
-            
-            if (existingFollow) {
-                throw new ConflictDomainException('Follow relationship already exists');
-            }
+      // Check if follow already exists
+      const existingFollow = await this.followRepository.exists(
+        userId,
+        targetId,
+      );
 
-            // Create the follow
-            const follow = Follow.create({
-                id: FollowId.create(this.idGenerator.generate()),
-                userId: command.userId,
-                targetId: command.targetId,
-                status: command.status !== undefined ? command.status : true
-            });
+      if (existingFollow) {
+        throw new ConflictDomainException('Follow relationship already exists');
+      }
 
-            // Save to repository
-            await this.followRepository.save(follow);
+      // Create the follow
+      const follow = Follow.create({
+        id: FollowId.create(this.idGenerator.generate()),
+        userId: command.userId,
+        targetId: command.targetId,
+        status: command.status !== undefined ? command.status : true,
+      });
 
-            this.logger.log(`Follow created successfully: ${follow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`);
+      // Save to repository
+      await this.followRepository.save(follow);
 
-            return follow;
-        } catch (error) {
-            this.logger.error(`Failed to create follow: ${command.userId} -> ${command.targetId}`, error);
-            throw error;
-        }
+      this.logger.log(
+        `Follow created successfully: ${follow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
+      );
+
+      return follow;
+    } catch (error) {
+      this.logger.error(
+        `Failed to create follow: ${command.userId} -> ${command.targetId}`,
+        error,
+      );
+      throw error;
     }
+  }
 }
-
-

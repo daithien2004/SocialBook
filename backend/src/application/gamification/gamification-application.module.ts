@@ -9,10 +9,7 @@ import { GamificationRepositoryModule } from '@/infrastructure/database/reposito
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    GamificationRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [GamificationRepositoryModule, IdGeneratorModule],
   providers: [
     GetGamificationStatsUseCase,
     GetStreakUseCase,

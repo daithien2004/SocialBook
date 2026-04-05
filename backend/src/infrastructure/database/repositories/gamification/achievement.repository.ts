@@ -1,9 +1,18 @@
-import { PaginatedResult, PaginationOptions } from '@/common/interfaces/pagination.interface';
+import {
+  PaginatedResult,
+  PaginationOptions,
+} from '@/common/interfaces/pagination.interface';
 import { Achievement as AchievementEntity } from '@/domain/gamification/entities/achievement.entity';
-import { AchievementFilter, IAchievementRepository } from '@/domain/gamification/repositories/achievement.repository.interface';
+import {
+  AchievementFilter,
+  IAchievementRepository,
+} from '@/domain/gamification/repositories/achievement.repository.interface';
 import { AchievementCode } from '@/domain/gamification/value-objects/achievement-code.vo';
 import { AchievementId } from '@/domain/gamification/value-objects/achievement-id.vo';
-import { Achievement, AchievementDocument } from '@/infrastructure/database/schemas/achievement.schema';
+import {
+  Achievement,
+  AchievementDocument,
+} from '@/infrastructure/database/schemas/achievement.schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
@@ -12,118 +21,156 @@ import { AchievementMapper } from './achievement.mapper';
 import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
 
 @Injectable()
-export class AchievementRepository extends BaseMongoRepository<AchievementEntity, AchievementDocument, AchievementId> implements IAchievementRepository {
-    constructor(@InjectModel(Achievement.name) private readonly achievementModel: Model<AchievementDocument>) {
-        super(achievementModel);
+export class AchievementRepository
+  extends BaseMongoRepository<
+    AchievementEntity,
+    AchievementDocument,
+    AchievementId
+  >
+  implements IAchievementRepository
+{
+  constructor(
+    @InjectModel(Achievement.name)
+    private readonly achievementModel: Model<AchievementDocument>,
+  ) {
+    super(achievementModel);
+  }
+
+  protected toDomain(doc: AchievementDocument): AchievementEntity {
+    return this.mapToEntity(doc);
+  }
+
+  protected toPersistence(entity: AchievementEntity): any {
+    return this.mapToDocument(entity);
+  }
+
+  async findById(id: AchievementId): Promise<AchievementEntity | null> {
+    const document = await this.achievementModel
+      .findById(id.toString())
+      .lean()
+      .exec();
+    return document ? this.mapToEntity(document) : null;
+  }
+
+  async findByCode(code: AchievementCode): Promise<AchievementEntity | null> {
+    const document = await this.achievementModel
+      .findOne({ code: code.toString() })
+      .lean()
+      .exec();
+    return document ? this.mapToEntity(document) : null;
+  }
+
+  async findAll(
+    filter: AchievementFilter,
+    pagination: PaginationOptions,
+  ): Promise<PaginatedResult<AchievementEntity>> {
+    const queryFilter: FilterQuery<AchievementDocument> = {};
+
+    if (filter.category) {
+      queryFilter.category = filter.category;
     }
 
-    protected toDomain(doc: AchievementDocument): AchievementEntity {
-        return this.mapToEntity(doc);
+    if (filter.isActive !== undefined) {
+      queryFilter.isActive = filter.isActive;
     }
 
-    protected toPersistence(entity: AchievementEntity): any {
-        return this.mapToDocument(entity);
+    if (filter.search) {
+      queryFilter.$or = [
+        { name: { $regex: filter.search, $options: 'i' } },
+        { description: { $regex: filter.search, $options: 'i' } },
+      ];
     }
 
-    async findById(id: AchievementId): Promise<AchievementEntity | null> {
-        const document = await this.achievementModel.findById(id.toString()).lean().exec();
-        return document ? this.mapToEntity(document) : null;
-    }
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 10;
+    const skip = (page - 1) * limit;
 
-    async findByCode(code: AchievementCode): Promise<AchievementEntity | null> {
-        const document = await this.achievementModel.findOne({ code: code.toString() }).lean().exec();
-        return document ? this.mapToEntity(document) : null;
-    }
+    let query = this.achievementModel.find(queryFilter);
+    query = query.sort({ createdAt: -1 }).skip(skip).limit(limit);
 
-    async findAll(filter: AchievementFilter, pagination: PaginationOptions): Promise<PaginatedResult<AchievementEntity>> {
-        const queryFilter: FilterQuery<AchievementDocument> = {};
+    const [documents, total] = await Promise.all([
+      query.lean().exec(),
+      this.achievementModel.countDocuments(queryFilter).exec(),
+    ]);
 
-        if (filter.category) {
-            queryFilter.category = filter.category;
-        }
+    return {
+      data: documents.map((doc) => this.mapToEntity(doc)),
+      meta: this.buildMeta(page, limit, total),
+    };
+  }
 
-        if (filter.isActive !== undefined) {
-            queryFilter.isActive = filter.isActive;
-        }
+  async save(achievement: AchievementEntity): Promise<void> {
+    return this.baseSave(achievement);
+  }
 
-        if (filter.search) {
-            queryFilter.$or = [
-                { name: { $regex: filter.search, $options: 'i' } },
-                { description: { $regex: filter.search, $options: 'i' } }
-            ];
-        }
+  async delete(id: AchievementId): Promise<void> {
+    return this.baseDelete(id);
+  }
 
-        const page = pagination.page || 1;
-        const limit = pagination.limit || 10;
-        const skip = (page - 1) * limit;
+  async findByCategory(category: string): Promise<AchievementEntity[]> {
+    const documents = await this.achievementModel
+      .find({ category, isActive: true })
+      .lean()
+      .exec();
+    return documents.map((doc) => this.mapToEntity(doc));
+  }
 
-        let query = this.achievementModel.find(queryFilter);
-        query = query.sort({ createdAt: -1 }).skip(skip).limit(limit);
+  async findActive(): Promise<AchievementEntity[]> {
+    const documents = await this.achievementModel
+      .find({ isActive: true })
+      .lean()
+      .exec();
+    return documents.map((doc) => this.mapToEntity(doc));
+  }
 
-        const [documents, total] = await Promise.all([
-            query.lean().exec(),
-            this.achievementModel.countDocuments(queryFilter).exec()
-        ]);
+  async findByRequirementType(type: string): Promise<AchievementEntity[]> {
+    const documents = await this.achievementModel
+      .find({
+        'requirement.type': type,
+        isActive: true,
+      })
+      .lean()
+      .exec();
+    return documents.map((doc) => this.mapToEntity(doc));
+  }
 
-        return {
-            data: documents.map(doc => this.mapToEntity(doc)),
-            meta: this.buildMeta(page, limit, total)
-        };
-    }
+  async existsByCode(code: AchievementCode): Promise<boolean> {
+    const count = await this.achievementModel
+      .countDocuments({ code: code.toString() })
+      .exec();
+    return count > 0;
+  }
 
-    async save(achievement: AchievementEntity): Promise<void> {
-        return this.baseSave(achievement);
-    }
+  async countByCategory(): Promise<Record<string, number>> {
+    const result = await this.achievementModel
+      .aggregate([
+        { $match: { isActive: true } },
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+      ])
+      .exec();
 
-    async delete(id: AchievementId): Promise<void> {
-        return this.baseDelete(id);
-    }
+    return result.reduce(
+      (acc, item) => {
+        acc[item._id] = item.count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+  }
 
-    async findByCategory(category: string): Promise<AchievementEntity[]> {
-        const documents = await this.achievementModel.find({ category, isActive: true }).lean().exec();
-        return documents.map(doc => this.mapToEntity(doc));
-    }
+  async countActive(): Promise<number> {
+    return await this.achievementModel
+      .countDocuments({ isActive: true })
+      .exec();
+  }
 
-    async findActive(): Promise<AchievementEntity[]> {
-        const documents = await this.achievementModel.find({ isActive: true }).lean().exec();
-        return documents.map(doc => this.mapToEntity(doc));
-    }
+  private mapToEntity(document: any): AchievementEntity {
+    return AchievementMapper.toDomain(document);
+  }
 
-    async findByRequirementType(type: string): Promise<AchievementEntity[]> {
-        const documents = await this.achievementModel.find({
-            'requirement.type': type,
-            isActive: true
-        }).lean().exec();
-        return documents.map(doc => this.mapToEntity(doc));
-    }
-
-    async existsByCode(code: AchievementCode): Promise<boolean> {
-        const count = await this.achievementModel.countDocuments({ code: code.toString() }).exec();
-        return count > 0;
-    }
-
-    async countByCategory(): Promise<Record<string, number>> {
-        const result = await this.achievementModel.aggregate([
-            { $match: { isActive: true } },
-            { $group: { _id: '$category', count: { $sum: 1 } } }
-        ]).exec();
-
-        return result.reduce((acc, item) => {
-            acc[item._id] = item.count;
-            return acc;
-        }, {} as Record<string, number>);
-    }
-
-    async countActive(): Promise<number> {
-        return await this.achievementModel.countDocuments({ isActive: true }).exec();
-    }
-
-    private mapToEntity(document: any): AchievementEntity {
-        return AchievementMapper.toDomain(document);
-    }
-
-    private mapToDocument(achievement: AchievementEntity): Partial<AchievementDocument> {
-        return AchievementMapper.toPersistence(achievement);
-    }
+  private mapToDocument(
+    achievement: AchievementEntity,
+  ): Partial<AchievementDocument> {
+    return AchievementMapper.toPersistence(achievement);
+  }
 }
-

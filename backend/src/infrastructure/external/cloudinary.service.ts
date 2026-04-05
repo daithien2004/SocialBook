@@ -6,13 +6,19 @@ import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.inte
 
 @Injectable()
 export class CloudinaryService implements IMediaService, OnModuleInit {
-  constructor(private configService: ConfigService) { }
+  constructor(private configService: ConfigService) {}
 
   onModuleInit() {
     cloudinary.config({
-      cloud_name: this.configService.get<string>('env.CLOUDINARY_CLOUD_NAME') || this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key: this.configService.get<string>('env.CLOUDINARY_API_KEY') || this.configService.get<string>('CLOUDINARY_API_KEY'),
-      api_secret: this.configService.get<string>('env.CLOUDINARY_API_SECRET') || this.configService.get<string>('CLOUDINARY_API_SECRET'),
+      cloud_name:
+        this.configService.get<string>('env.CLOUDINARY_CLOUD_NAME') ||
+        this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+      api_key:
+        this.configService.get<string>('env.CLOUDINARY_API_KEY') ||
+        this.configService.get<string>('CLOUDINARY_API_KEY'),
+      api_secret:
+        this.configService.get<string>('env.CLOUDINARY_API_SECRET') ||
+        this.configService.get<string>('CLOUDINARY_API_SECRET'),
     });
   }
 
@@ -78,4 +84,3 @@ export class CloudinaryService implements IMediaService, OnModuleInit {
     });
   }
 }
-

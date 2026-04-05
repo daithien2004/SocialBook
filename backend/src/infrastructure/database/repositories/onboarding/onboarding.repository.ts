@@ -4,17 +4,23 @@ import { OnboardingMapper } from '@/infrastructure/database/repositories/onboard
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { UserOnboarding, UserOnboardingDocument } from '../../schemas/user-onboarding.schema';
+import {
+  UserOnboarding,
+  UserOnboardingDocument,
+} from '../../schemas/user-onboarding.schema';
 
 @Injectable()
 export class OnboardingRepository implements IOnboardingRepository {
   constructor(
     @InjectModel(UserOnboarding.name)
     private readonly model: Model<UserOnboardingDocument>,
-  ) { }
+  ) {}
 
   async findByUserId(userId: string): Promise<Onboarding | null> {
-    const document = await this.model.findOne({ userId: new Types.ObjectId(userId) }).lean().exec();
+    const document = await this.model
+      .findOne({ userId: new Types.ObjectId(userId) })
+      .lean()
+      .exec();
     return OnboardingMapper.toDomain(document);
   }
 
@@ -36,4 +42,3 @@ export class OnboardingRepository implements IOnboardingRepository {
     return domain;
   }
 }
-

@@ -19,41 +19,50 @@ export class ScrapeChapterUseCase {
     private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute(bookIdStr: string, chapterUrl: string, orderIndexNum: number): Promise<any> {
+  async execute(
+    bookIdStr: string,
+    chapterUrl: string,
+    orderIndexNum: number,
+  ): Promise<any> {
     try {
       const bookId = BookId.create(bookIdStr);
       const book = await this.bookRepository.findById(bookId);
       if (!book) throw new Error('Book not found');
 
       const strategy = this.scraperFactory.getStrategy(chapterUrl);
-      const chapterData: ScrapedChapterData = await strategy.scrapeChapter(chapterUrl);
+      const chapterData: ScrapedChapterData =
+        await strategy.scrapeChapter(chapterUrl);
 
       // Check existing
-      const slug = this.extractSlug(chapterUrl) || chapterData.title; 
-      
+      const slug = this.extractSlug(chapterUrl) || chapterData.title;
+
       const chapter = Chapter.create({
-          id: ChapterId.create(this.idGenerator.generate()),
-          bookId: bookIdStr, 
-          title: chapterData.title,
-          paragraphs: (chapterData.paragraphs || []).map(p => ({ content: p.content })),
-          orderIndex: orderIndexNum,
+        id: ChapterId.create(this.idGenerator.generate()),
+        bookId: bookIdStr,
+        title: chapterData.title,
+        paragraphs: (chapterData.paragraphs || []).map((p) => ({
+          content: p.content,
+        })),
+        orderIndex: orderIndexNum,
       });
 
       await this.chapterRepository.save(chapter);
       return chapter;
-
     } catch (error) {
-      this.logger.error(`Failed to scrape chapter ${chapterUrl}: ${error.message}`);
+      this.logger.error(
+        `Failed to scrape chapter ${chapterUrl}: ${error.message}`,
+      );
       throw error;
     }
   }
 
   private extractSlug(url: string): string {
-      try {
-          const u = new URL(url);
-          const parts = u.pathname.split('/').filter(p => !!p);
-          return parts[parts.length - 1];
-      } catch { return ''; }
+    try {
+      const u = new URL(url);
+      const parts = u.pathname.split('/').filter((p) => !!p);
+      return parts[parts.length - 1];
+    } catch {
+      return '';
+    }
   }
 }
-

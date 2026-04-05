@@ -51,9 +51,9 @@ export function BookGrid({
         })}
       </div>
 
-      {isFetching && isInitialized && <LoadingMoreIndicator />}
+      {isFetching && isInitialized ? <LoadingMoreIndicator /> : null}
 
-      {!hasMore && books.length > 0 && <EndOfListMessage />}
+      {!hasMore && books.length > 0 ? <EndOfListMessage /> : null}
     </>
   );
 }

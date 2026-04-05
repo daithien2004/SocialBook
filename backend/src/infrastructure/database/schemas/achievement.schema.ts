@@ -19,16 +19,22 @@ export class Achievement extends BaseSchema {
   @Prop({
     type: String,
     enum: ['reading', 'streak', 'social', 'special', 'onboarding'],
-    required: true
+    required: true,
   })
   category: string;
 
   @Prop({
     type: Object,
-    required: true
+    required: true,
   })
   requirement: {
-    type: 'books_completed' | 'pages_read' | 'streak_days' | 'reviews_written' | 'custom' | 'onboarding';
+    type:
+      | 'books_completed'
+      | 'pages_read'
+      | 'streak_days'
+      | 'reviews_written'
+      | 'custom'
+      | 'onboarding';
     value: number;
     condition?: string;
   };

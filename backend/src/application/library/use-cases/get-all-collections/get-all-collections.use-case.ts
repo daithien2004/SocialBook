@@ -5,29 +5,37 @@ import { Injectable } from '@nestjs/common';
 import { GetAllCollectionsQuery } from './get-all-collections.query';
 
 export interface GetAllCollectionsResult {
-    collection: Collection;
-    bookCount: number;
+  collection: Collection;
+  bookCount: number;
 }
 
 @Injectable()
 export class GetAllCollectionsUseCase {
-    constructor(
-        private readonly collectionRepository: ICollectionRepository,
-        private readonly readingListRepository: IReadingListRepository,
-    ) { }
+  constructor(
+    private readonly collectionRepository: ICollectionRepository,
+    private readonly readingListRepository: IReadingListRepository,
+  ) {}
 
-    async execute(query: GetAllCollectionsQuery): Promise<GetAllCollectionsResult[]> {
-        const collections = await this.collectionRepository.findByUserId(query.userId);
+  async execute(
+    query: GetAllCollectionsQuery,
+  ): Promise<GetAllCollectionsResult[]> {
+    const collections = await this.collectionRepository.findByUserId(
+      query.userId,
+    );
 
-        const results = await Promise.all(collections.map(async (collection) => {
-            const bookCount = await this.readingListRepository.countByCollectionId(collection.id);
+    const results = await Promise.all(
+      collections.map(async (collection) => {
+        const bookCount = await this.readingListRepository.countByCollectionId(
+          collection.id,
+        );
 
-            return {
-                collection,
-                bookCount
-            };
-        }));
+        return {
+          collection,
+          bookCount,
+        };
+      }),
+    );
 
-        return results;
-    }
+    return results;
+  }
 }

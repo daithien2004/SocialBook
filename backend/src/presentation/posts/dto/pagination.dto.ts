@@ -9,4 +9,3 @@ export class PaginationUserDto extends PaginationQueryDto {
   @Type(() => Types.ObjectId)
   userId?: string;
 }
-

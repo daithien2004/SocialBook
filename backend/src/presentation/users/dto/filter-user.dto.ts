@@ -25,4 +25,3 @@ export class FilterUserDto extends PaginationQueryDto {
   @IsBoolean()
   isVerified?: boolean;
 }
-

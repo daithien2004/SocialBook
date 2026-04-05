@@ -1,5 +1,13 @@
-import { Injectable, ConflictException, InternalServerErrorException, Logger } from '@nestjs/common';
-import { UnauthorizedDomainException, UserBannedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
+import {
+  Injectable,
+  ConflictException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
+import {
+  UnauthorizedDomainException,
+  UserBannedDomainException,
+} from '@/domain/auth/exceptions/auth-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
@@ -17,7 +25,7 @@ export class GoogleAuthUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly rolesRepository: IRoleRepository,
     private readonly tokenService: TokenService,
-  ) { }
+  ) {}
 
   async execute(command: GoogleAuthCommand) {
     try {
@@ -42,14 +50,18 @@ export class GoogleAuthUseCase {
           userRole.id.toString(),
           command.image,
           'google',
-          command.googleId
+          command.googleId,
         );
         const newUser = await this.createUserUseCase.execute(createCommand);
         // Verify automatically for Google
         newUser.verify();
         await this.userRepository.save(newUser);
 
-        const tokens = await this.tokenService.signTokens(newUser.id.toString(), newUser.email.value, 'user');
+        const tokens = await this.tokenService.signTokens(
+          newUser.id.toString(),
+          newUser.email.value,
+          'user',
+        );
 
         return {
           accessToken: tokens.accessToken,
@@ -68,13 +80,19 @@ export class GoogleAuthUseCase {
 
       // Handle existing user login
       if (!existingUser.isVerified) {
-        this.logger.warn(`Google login failed: Account not verified for ${command.email}`);
+        this.logger.warn(
+          `Google login failed: Account not verified for ${command.email}`,
+        );
         throw new UnauthorizedDomainException('Tài khoản chưa được xác thực');
       }
 
       if (existingUser.isBanned) {
-        this.logger.warn(`Google login failed: Account banned for ${command.email}`);
-        throw new UserBannedDomainException('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.');
+        this.logger.warn(
+          `Google login failed: Account banned for ${command.email}`,
+        );
+        throw new UserBannedDomainException(
+          'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+        );
       }
 
       if (existingUser.provider === 'local') {
@@ -120,8 +138,13 @@ export class GoogleAuthUseCase {
       ) {
         throw error;
       }
-      this.logger.error(`Unexpected error during Google login for ${command.email}: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Đã có lỗi xảy ra khi đăng nhập bằng Google');
+      this.logger.error(
+        `Unexpected error during Google login for ${command.email}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        'Đã có lỗi xảy ra khi đăng nhập bằng Google',
+      );
     }
   }
 }

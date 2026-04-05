@@ -6,9 +6,12 @@ import { MarkNotificationReadCommand } from './mark-notification-read.command';
 export class MarkNotificationReadUseCase {
   constructor(
     private readonly notificationRepository: INotificationRepository,
-  ) { }
+  ) {}
 
   async execute(command: MarkNotificationReadCommand): Promise<void> {
-    await this.notificationRepository.markAsRead(command.userId, command.notificationId);
+    await this.notificationRepository.markAsRead(
+      command.userId,
+      command.notificationId,
+    );
   }
 }

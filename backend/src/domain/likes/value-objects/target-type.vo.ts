@@ -1,6 +1,6 @@
 export enum TargetType {
-    POST = 'post',
-    COMMENT = 'comment',
-    BOOK = 'book',
-    CHAPTER = 'chapter',
+  POST = 'post',
+  COMMENT = 'comment',
+  BOOK = 'book',
+  CHAPTER = 'chapter',
 }

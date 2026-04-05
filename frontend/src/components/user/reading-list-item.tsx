@@ -49,6 +49,7 @@ export function ReadingListItem(props: ReadingListItemProps) {
                         bookId={c.bookId.id}
                         bookName={c.bookId.title}
                         authorName={c.bookId.authorId.name}
+                        showStats={false}
                     />
                 ))}
             </div>

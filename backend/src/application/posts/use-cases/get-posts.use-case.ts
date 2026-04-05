@@ -6,14 +6,13 @@ import { GetPostsQuery } from './get-posts.query';
 
 @Injectable()
 export class GetPostsUseCase {
-  constructor(
-    private readonly postRepository: IPostRepository,
-  ) { }
+  constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(query: GetPostsQuery): Promise<CursorPaginatedResult<Post>> {
     return this.postRepository.findAll({
       limit: query.limit,
       cursor: query.cursor,
+      viewerUserId: query.viewerUserId,
     });
   }
 }

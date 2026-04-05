@@ -1,20 +1,26 @@
-export class LanguageDetectorService {
-    static detect(text: string): { code: string; voice: string; name: string } {
-        const vietnamesePattern = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
-        const hasVietnamese = vietnamesePattern.test(text);
+import {
+  ILanguageDetector,
+  LanguageDetectionResult,
+} from '../interfaces/language-detector.interface';
 
-        if (hasVietnamese) {
-            return {
-                code: 'vi-VN',
-                voice: 'vi-VN',
-                name: 'Vietnamese',
-            };
-        }
+export class LanguageDetectorService implements ILanguageDetector {
+  detect(text: string): LanguageDetectionResult {
+    const vietnamesePattern =
+      /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+    const hasVietnamese = vietnamesePattern.test(text);
 
-        return {
-            code: 'en-US',
-            voice: 'en-US',
-            name: 'English',
-        };
+    if (hasVietnamese) {
+      return {
+        code: 'vi-VN',
+        voice: 'vi-VN',
+        name: 'Vietnamese',
+      };
     }
+
+    return {
+      code: 'en-US',
+      voice: 'en-US',
+      name: 'English',
+    };
+  }
 }

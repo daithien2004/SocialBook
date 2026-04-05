@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Like, LikeSchema } from '@/infrastructure/database/schemas/like.schema';
+import {
+  Like,
+  LikeSchema,
+} from '@/infrastructure/database/schemas/like.schema';
 import { ILikeRepository } from '@/domain/likes/repositories/like.repository.interface';
 import { LikeRepository } from './like.repository';
 
@@ -14,9 +17,6 @@ import { LikeRepository } from './like.repository';
       useClass: LikeRepository,
     },
   ],
-  exports: [
-    ILikeRepository,
-    MongooseModule,
-  ],
+  exports: [ILikeRepository, MongooseModule],
 })
 export class LikesRepositoryModule {}

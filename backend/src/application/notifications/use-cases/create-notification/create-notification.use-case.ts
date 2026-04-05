@@ -9,7 +9,7 @@ export class CreateNotificationUseCase {
   constructor(
     private readonly notificationRepository: INotificationRepository,
     private readonly idGenerator: IIdGenerator,
-  ) { }
+  ) {}
 
   async execute(command: CreateNotificationCommand): Promise<Notification> {
     const notification = Notification.create(
@@ -19,7 +19,7 @@ export class CreateNotificationUseCase {
       command.message,
       command.type,
       command.meta,
-      command.actionUrl
+      command.actionUrl,
     );
     return this.notificationRepository.save(notification);
   }

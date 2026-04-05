@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { TTSStatus, TTSVoiceType } from '@/domain/text-to-speech/entities/text-to-speech.entity';
+import {
+  TTSStatus,
+  TTSVoiceType,
+} from '@/domain/text-to-speech/entities/text-to-speech.entity';
 
 export { TTSStatus, TTSVoiceType };
 
@@ -26,7 +29,12 @@ export class TextToSpeech {
   @Prop({ default: 1.0 })
   speed: number;
 
-  @Prop({ type: String, enum: TTSStatus, default: TTSStatus.PENDING, index: true })
+  @Prop({
+    type: String,
+    enum: TTSStatus,
+    default: TTSStatus.PENDING,
+    index: true,
+  })
   status: TTSStatus;
 
   @Prop()
@@ -55,7 +63,7 @@ export class TextToSpeech {
 
   @Prop()
   lastPlayedAt?: Date;
-  
+
   @Prop()
   processedAt?: Date;
 
@@ -64,4 +72,3 @@ export class TextToSpeech {
 }
 
 export const TextToSpeechSchema = SchemaFactory.createForClass(TextToSpeech);
-

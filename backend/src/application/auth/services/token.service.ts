@@ -1,4 +1,3 @@
-
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -27,7 +26,9 @@ export class TokenService {
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
 
     if (!accessSecret || !refreshSecret) {
-      this.logger.error('JWT secrets not configured - check JWT_ACCESS_SECRET and JWT_REFRESH_SECRET environment variables');
+      this.logger.error(
+        'JWT secrets not configured - check JWT_ACCESS_SECRET and JWT_REFRESH_SECRET environment variables',
+      );
       throw new InternalServerErrorException('JWT secrets chưa được cấu hình');
     }
 
@@ -43,13 +44,13 @@ export class TokenService {
     ]);
 
     const hashedRt = await this.passwordHasher.hash(refreshToken);
-    
+
     // Update hashed RT
     const id = UserId.create(userId);
     const user = await this.userRepository.findById(id);
     if (user) {
-        user.updateHashedRt(hashedRt);
-        await this.userRepository.save(user);
+      user.updateHashedRt(hashedRt);
+      await this.userRepository.save(user);
     }
 
     return { accessToken, refreshToken };

@@ -1,89 +1,104 @@
-// src/components/admin/book/DeleteBookModal.tsx
-'use client';
+'use client'
 
-import { X, AlertTriangle, Loader2 } from 'lucide-react';
-import { BookForAdmin } from '@/features/books/types/book.interface';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { buttonVariants } from "@/components/ui/button";
+import { useModalStore } from '@/store/useModalStore';
 
-interface DeleteBookModalProps {
-    book: BookForAdmin | null;
-    isOpen: boolean;
-    isDeleting: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-}
+export default function DeleteBookModal() {
+    const { isDeleteBookOpen, closeDeleteBook, deleteBookData } = useModalStore();
 
-export default function DeleteBookModal({
-    book,
-    isOpen,
-    isDeleting,
-    onClose,
-    onConfirm,
-}: DeleteBookModalProps) {
-    if (!isOpen || !book) return null;
+    if (!deleteBookData) return null;
+
+    const { book, isDeleting, onConfirm } = deleteBookData;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+        <AlertDialog open={isDeleteBookOpen} onOpenChange={closeDeleteBook}>
+            <AlertDialogContent className="max-w-md w-full overflow-hidden p-0 border-none shadow-2xl">
                 {/* Header */}
-                <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                            <AlertTriangle className="w-5 h-5 text-red-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-900">Xác nhận xóa sách</h2>
+                <AlertDialogHeader className="bg-red-50 px-6 py-6 border-b border-red-100 flex-row items-center gap-4 space-y-0">
+                    <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-6 h-6 text-red-600" />
                     </div>
-                    <button
-                        onClick={onClose}
-                        disabled={isDeleting}
-                        className="p-2 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                        <X className="w-5 h-5 text-gray-600" />
-                    </button>
-                </div>
+                    <div>
+                        <AlertDialogTitle className="text-xl font-bold text-gray-900">
+                            Xác nhận xóa sách
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-red-600/80 text-xs font-medium mt-0.5 uppercase tracking-wider">
+                            Hành động không thể hoàn tác
+                        </AlertDialogDescription>
+                    </div>
+                </AlertDialogHeader>
 
                 {/* Content */}
-                <div className="p-6">
-                    <p className="text-gray-700 mb-4">
+                <div className="p-6 bg-white">
+                    <p className="text-gray-700 leading-relaxed">
                         Bạn có chắc chắn muốn xóa sách{' '}
-                        <span className="font-bold text-gray-900">"{book.title}"</span>?
+                        <span className="font-bold text-gray-900">"{book?.title}"</span>?
                     </p>
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                        <p className="text-sm text-yellow-800">
-                            <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác. Tất cả dữ liệu liên quan đến sách này sẽ bị xóa vĩnh viễn.
+                    
+                    <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                        <p className="text-sm text-amber-800 leading-relaxed">
+                            <strong>Lưu ý:</strong> Tất cả dữ liệu liên quan bao gồm chương, lượt xem và audio sẽ bị xóa vĩnh viễn khỏi hệ thống.
                         </p>
                     </div>
-                    <div className="text-sm text-gray-600 space-y-1">
-                        <p>• Tác giả: <span className="font-medium">{book.authorId?.name || 'N/A'}</span></p>
-                        <p>• Số chương: <span className="font-medium">{book.stats.chapters}</span></p>
-                        <p>• Lượt xem: <span className="font-medium">{book.stats.views.toLocaleString()}</span></p>
+
+                    <div className="mt-6 grid grid-cols-3 gap-4">
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Chương</p>
+                            <p className="text-lg font-bold text-gray-900">{book?.stats.chapterCount}</p>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lượt xem</p>
+                            <p className="text-lg font-bold text-gray-900">{book?.stats.views.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Yêu thích</p>
+                            <p className="text-lg font-bold text-gray-900">{book?.stats.likes || '0'}</p>
+                        </div>
                     </div>
                 </div>
 
                 {/* Actions */}
-                <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end">
-                    <button
-                        onClick={onClose}
+                <AlertDialogFooter className="bg-gray-50 px-6 py-4 gap-3 sm:gap-0 border-t border-gray-100">
+                    <AlertDialogCancel 
                         disabled={isDeleting}
-                        className="px-5 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors disabled:opacity-50"
+                        onClick={closeDeleteBook}
+                        className="rounded-xl border-gray-200 hover:bg-gray-100 font-semibold px-6"
                     >
                         Hủy
-                    </button>
-                    <button
-                        onClick={onConfirm}
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onConfirm();
+                        }}
                         disabled={isDeleting}
-                        className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className={buttonVariants({ 
+                            variant: "destructive", 
+                            className: "rounded-xl font-bold px-8 shadow-lg shadow-red-500/20" 
+                        })}
                     >
                         {isDeleting ? (
                             <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                 Đang xóa...
                             </>
                         ) : (
-                            'Xóa sách'
+                            'Xóa vĩnh viễn'
                         )}
-                    </button>
-                </div>
-            </div>
-        </div>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }

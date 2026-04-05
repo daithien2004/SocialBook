@@ -20,4 +20,3 @@ export class UpdateOnboardingStepUseCase {
     return this.onboardingRepository.update(onboarding);
   }
 }
-

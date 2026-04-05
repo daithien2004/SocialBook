@@ -20,4 +20,3 @@ export class ScraperFactory {
     throw new BadRequestException('Unsupported URL domain');
   }
 }
-

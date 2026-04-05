@@ -6,28 +6,36 @@ import {
   Param,
   Post,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
-
 
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-import { CreateFollowDto, FilterFollowDto } from '@/presentation/follows/dto/create-follow.dto';
-import { FollowResponseDto, FollowStatsResponseDto, FollowStatusResponseDto } from '@/presentation/follows/dto/follow.response.dto';
+import {
+  CreateFollowDto,
+  FilterFollowDto,
+} from '@/presentation/follows/dto/create-follow.dto';
+import {
+  FollowResponseDto,
+  FollowStatsResponseDto,
+  FollowStatusResponseDto,
+} from '@/presentation/follows/dto/follow.response.dto';
 
 import { CreateFollowUseCase } from '@/application/follows/use-cases/create-follow/create-follow.use-case';
 import { DeleteFollowUseCase } from '@/application/follows/use-cases/delete-follow/delete-follow.use-case';
 import { GetFollowStatusUseCase } from '@/application/follows/use-cases/get-follow-status/get-follow-status.use-case';
 import { GetFollowsUseCase } from '@/application/follows/use-cases/get-follows/get-follows.use-case';
+import { GetFollowingUseCase } from '@/application/follows/use-cases/get-following-with-user-info/get-following.use-case';
+import { GetFollowersUseCase } from '@/application/follows/use-cases/get-followers-with-user-info/get-followers.use-case';
 
 import { CreateFollowCommand } from '@/application/follows/use-cases/create-follow/create-follow.command';
 import { DeleteFollowCommand } from '@/application/follows/use-cases/delete-follow/delete-follow.command';
 import { GetFollowStatusQuery } from '@/application/follows/use-cases/get-follow-status/get-follow-status.query';
 import { GetFollowsQuery } from '@/application/follows/use-cases/get-follows/get-follows.query';
-import { FollowRepository } from '@/infrastructure/database/repositories/follows/follow.repository';
+import { GetFollowingQuery } from '@/application/follows/use-cases/get-following-with-user-info/get-following.query';
+import { GetFollowersQuery } from '@/application/follows/use-cases/get-followers-with-user-info/get-followers.query';
 
 @Controller('follows')
 export class FollowsController {
@@ -36,32 +44,32 @@ export class FollowsController {
     private readonly getFollowsUseCase: GetFollowsUseCase,
     private readonly getFollowStatusUseCase: GetFollowStatusUseCase,
     private readonly deleteFollowUseCase: DeleteFollowUseCase,
-    private readonly followRepository: FollowRepository,
-  ) { }
+    private readonly getFollowingUseCase: GetFollowingUseCase,
+    private readonly getFollowersUseCase: GetFollowersUseCase,
+  ) {}
 
   @Public()
   @Get('following')
   async getFollowingList(@Query('userId') userId: string) {
-    const result = await this.followRepository.findByUserWithUserInfo(userId);
-    
+    const query = new GetFollowingQuery(userId);
+    const result = await this.getFollowingUseCase.execute(query);
+
     return {
       message: 'Get following list successfully',
-      data: result.data.map(item => new FollowResponseDto(item)),
+      data: result.data.map((item) => new FollowResponseDto(item)),
       meta: result.meta,
     };
   }
 
   @Get('followers')
   @UseGuards(JwtAuthGuard)
-  async getFollowersList(
-    @Req() req: Request & { user: { id: string } },
-    @Query('targetUserId') targetUserId: string,
-  ) {
-    const result = await this.followRepository.findByTargetWithUserInfo(targetUserId);
+  async getFollowersList(@Query('targetUserId') targetUserId: string) {
+    const query = new GetFollowersQuery(targetUserId);
+    const result = await this.getFollowersUseCase.execute(query);
 
     return {
       message: 'Get followers list successfully',
-      data: result.data.map(item => new FollowResponseDto(item)),
+      data: result.data.map((item) => new FollowResponseDto(item)),
       meta: result.meta,
     };
   }
@@ -69,10 +77,10 @@ export class FollowsController {
   @Get('status')
   @UseGuards(JwtAuthGuard)
   async getStatus(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Query('targetId') targetId: string,
   ) {
-    const query = new GetFollowStatusQuery(req.user.id, targetId);
+    const query = new GetFollowStatusQuery(userId, targetId);
     const result = await this.getFollowStatusUseCase.execute(query);
 
     return {
@@ -82,7 +90,7 @@ export class FollowsController {
         result.targetId,
         result.isFollowing,
         result.isOwner,
-        result.followId
+        result.followId,
       ),
     };
   }
@@ -90,10 +98,10 @@ export class FollowsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Body() dto: CreateFollowDto,
   ) {
-    const command = new CreateFollowCommand(req.user.id, dto.targetId, dto.status);
+    const command = new CreateFollowCommand(userId, dto.targetId, dto.status);
     const follow = await this.createFollowUseCase.execute(command);
 
     return {
@@ -105,10 +113,10 @@ export class FollowsController {
   @Delete(':targetId')
   @UseGuards(JwtAuthGuard)
   async unfollow(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Param('targetId') targetId: string,
   ) {
-    const command = new DeleteFollowCommand(req.user.id, targetId);
+    const command = new DeleteFollowCommand(userId, targetId);
     await this.deleteFollowUseCase.execute(command);
 
     return {
@@ -119,7 +127,6 @@ export class FollowsController {
   @Get('stats')
   @Public()
   async getStats(@Query('userId') userId: string) {
-    // This would need a GetFollowStatsUseCase to be implemented
     return {
       message: 'Get follow stats not yet implemented',
       data: new FollowStatsResponseDto(0, 0, 0, 0, []),
@@ -128,20 +135,18 @@ export class FollowsController {
 
   @Get('all')
   @Public()
-  async getAll(
-    @Query() filter: FilterFollowDto,
-  ) {
+  async getAll(@Query() filter: FilterFollowDto) {
     const query = new GetFollowsQuery(
       filter.userId,
       filter.targetId,
       filter.page,
-      filter.limit
+      filter.limit,
     );
     const result = await this.getFollowsUseCase.execute(query);
 
     return {
       message: 'Get all follows successfully',
-      data: result.data.map(follow => new FollowResponseDto(follow)),
+      data: result.data.map((follow) => new FollowResponseDto(follow)),
       meta: result.meta,
     };
   }

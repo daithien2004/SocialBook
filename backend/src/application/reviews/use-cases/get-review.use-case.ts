@@ -5,9 +5,7 @@ import { Review } from '@/domain/reviews/entities/review.entity';
 
 @Injectable()
 export class GetReviewUseCase {
-  constructor(
-    private readonly reviewRepository: IReviewRepository,
-  ) {}
+  constructor(private readonly reviewRepository: IReviewRepository) {}
 
   async execute(id: string): Promise<Review> {
     const review = await this.reviewRepository.findById(id);
@@ -15,4 +13,3 @@ export class GetReviewUseCase {
     return review;
   }
 }
-

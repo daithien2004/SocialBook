@@ -6,8 +6,8 @@ export class RoleMapper {
     return Role.reconstitute({
       id: roleDoc._id.toString(),
       name: roleDoc.name,
-      createdAt: roleDoc.createdAt as Date,
-      updatedAt: roleDoc.updatedAt as Date,
+      createdAt: roleDoc.createdAt,
+      updatedAt: roleDoc.updatedAt,
     });
   }
 
@@ -17,4 +17,3 @@ export class RoleMapper {
     };
   }
 }
-

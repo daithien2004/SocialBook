@@ -10,9 +10,8 @@ import {
   HttpStatus,
   Post,
   Req,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
-
 
 // Use Cases
 import { ForgotPasswordCommand } from '@/application/auth/use-cases/forgot-password/forgot-password.command';
@@ -57,7 +56,7 @@ export class AuthController {
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly verifyOtpUseCase: VerifyOtpUseCase,
     private readonly resendOtpUseCase: ResendOtpUseCase,
-  ) { }
+  ) {}
 
   @Public()
   @Post('google/login')
@@ -67,12 +66,12 @@ export class AuthController {
       data.googleId,
       data.name,
       data.image,
-      data.name
+      data.name,
     );
     const result = await this.googleAuthUseCase.execute(command);
     return {
-      data: result
-    }
+      data: result,
+    };
   }
 
   @Public()
@@ -156,7 +155,8 @@ export class AuthController {
     }
 
     try {
-      const payload = await this.refreshTokenUseCase.validateRefreshToken(refreshToken);
+      const payload =
+        await this.refreshTokenUseCase.validateRefreshToken(refreshToken);
 
       const command = new RefreshTokenCommand(payload.sub, refreshToken);
       const { accessToken, refreshToken: newRefreshToken } =
@@ -170,7 +170,10 @@ export class AuthController {
         },
       };
     } catch (error) {
-      throw new HttpException('Refresh token không hợp lệ', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        'Refresh token không hợp lệ',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
   }
 
@@ -187,7 +190,11 @@ export class AuthController {
   @Public()
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    const command = new ResetPasswordCommand(dto.email, dto.otp, dto.newPassword);
+    const command = new ResetPasswordCommand(
+      dto.email,
+      dto.otp,
+      dto.newPassword,
+    );
     const result = await this.resetPasswordUseCase.execute(command);
     return { message: result };
   }

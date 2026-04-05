@@ -1,5 +1,3 @@
 export class GetRoleByNameQuery {
-    constructor(
-        public readonly name: string
-    ) { }
+  constructor(public readonly name: string) {}
 }

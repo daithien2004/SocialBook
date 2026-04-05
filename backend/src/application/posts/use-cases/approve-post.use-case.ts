@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundDomainException, BadRequestDomainException } from '@/shared/domain/common-exceptions';
+import {
+  NotFoundDomainException,
+  BadRequestDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { ApprovePostCommand } from './approve-post.command';
 
 @Injectable()
 export class ApprovePostUseCase {
-  constructor(
-    private readonly postRepository: IPostRepository,
-  ) { }
+  constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(command: ApprovePostCommand) {
     const post = await this.postRepository.findById(command.postId);

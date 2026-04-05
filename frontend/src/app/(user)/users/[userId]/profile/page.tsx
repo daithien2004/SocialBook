@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
     useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
@@ -186,13 +187,16 @@ const UserProfilePage = () => {
                         >
                             <div
                                 className="relative h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden">
-                                <img
+                                <Image
                                     src={
                                         previewUrl ??
                                         overview?.image ??
                                         "https://placehold.co/200x200?text=Avatar"
                                     }
                                     alt="User avatar"
+                                    fill
+                                    unoptimized={Boolean(previewUrl)}
+                                    sizes="96px"
                                     className="h-full w-full object-cover rounded-full"
                                 />
                             </div>

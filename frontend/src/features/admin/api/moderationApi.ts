@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { normalizeArrayResponse, PaginatedApiResult } from '@/lib/api-response';
 
 export interface FlaggedPost {
     id: string; // Backend TransformInterceptor converts _id → id
@@ -21,15 +22,7 @@ export interface FlaggedPost {
     updatedAt: string;
 }
 
-export interface FlaggedPostsResponse {
-    data: FlaggedPost[];
-    meta: {
-        page: number;
-        limit: number;
-        total: number;
-        totalPages: number;
-    };
-}
+export type FlaggedPostsResponse = PaginatedApiResult<FlaggedPost>;
 
 export const moderationApi = createApi({
     reducerPath: 'moderationApi',
@@ -42,10 +35,11 @@ export const moderationApi = createApi({
                 method: 'GET',
                 params: { page, limit },
             }),
+            transformResponse: normalizeArrayResponse<FlaggedPost>,
             providesTags: ['FlaggedPosts'],
         }),
 
-        approvePost: builder.mutation<any, string>({
+        approvePost: builder.mutation<void, string>({
             query: (postId) => ({
                 url: `/posts/admin/${postId}/approve`,
                 method: 'PATCH',
@@ -53,7 +47,7 @@ export const moderationApi = createApi({
             invalidatesTags: ['FlaggedPosts'],
         }),
 
-        rejectPost: builder.mutation<any, string>({
+        rejectPost: builder.mutation<void, string>({
             query: (postId) => ({
                 url: `/posts/admin/${postId}/reject`,
                 method: 'DELETE',

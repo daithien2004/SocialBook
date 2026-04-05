@@ -16,10 +16,16 @@ import {
     CommentRequest,
     EditCommentRequest,
     EditCommentResponse,
-    DeleteCommentRequest,
-    GetReplyCountByParentResponse,
-    GetReplyCountByParentRequest
+    DeleteCommentRequest
 } from '../types/comment.interface';
+
+type RawCommentsResponse = {
+    comments?: GetCommentsResponse['comments'];
+    meta?: {
+        nextCursor?: string | null;
+        hasMore?: boolean;
+    };
+};
 
 export const commentApi = createApi({
     reducerPath: 'commentApi',
@@ -32,6 +38,11 @@ export const commentApi = createApi({
                     url: NESTJS_COMMENTS_ENDPOINTS.getCommentsByTarget,
                     method: 'GET',
                     params: { targetId, parentId, cursor, limit },
+                }),
+                transformResponse: (response: RawCommentsResponse): GetCommentsResponse => ({
+                    comments: response.comments ?? [],
+                    nextCursor: response.meta?.nextCursor ?? null,
+                    hasMore: response.meta?.hasMore ?? false,
                 }),
                 providesTags: (result, error, arg) => {
                     const threadTag = {
@@ -159,23 +170,6 @@ export const commentApi = createApi({
                 },
             ],
         }),
-
-        getReplyCountByParent: builder.query<
-            GetReplyCountByParentResponse,
-            GetReplyCountByParentRequest
-        >({
-            query: ({ targetId, targetType, parentId }) => ({
-                url: NESTJS_COMMENTS_ENDPOINTS.getCount,
-                method: "GET",
-                params: { targetId, targetType, parentId },
-            }),
-            providesTags: (result, error, arg) => [
-                {
-                    type: 'Comment',
-                    id: `REPLY-COUNT-${arg.parentId}`,
-                },
-            ],
-        }),
     }),
 });
 
@@ -185,7 +179,6 @@ export const {
     useLazyGetResolveParentQuery,
     useGetCommentCountQuery,
     usePostToggleLikeMutation,
-    useGetReplyCountByParentQuery,
     useEditCommentMutation,
     useDeleteCommentMutation,
 } = commentApi;

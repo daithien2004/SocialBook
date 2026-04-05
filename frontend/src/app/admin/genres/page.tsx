@@ -1,28 +1,44 @@
 'use client';
 
-import { useState } from 'react';
-import { useGetGenresQuery, useDeleteGenreMutation } from '@/features/genres/api/genreApi';
-import Link from 'next/link';
+import { useDebounce } from '@/hooks/useDebounce';
+import { getErrorMessage } from '@/lib/utils';
+import {
+    useDeleteGenreMutation,
+    useGetGenresQuery,
+} from '@/features/genres/api/genreApi';
+import { Genre } from '@/features/genres/types/genre.interface';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Search, Plus, Loader2, Edit, Trash2, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
-import { Genre } from '@/features/genres/types/genre.interface';
+import {
+    ChevronLeft,
+    ChevronRight,
+    Edit,
+    Loader2,
+    Plus,
+    Search,
+    Tag,
+    Trash2,
+} from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { useDebounce } from '@/hooks/useDebounce';
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
+import { useModalStore } from '@/store/useModalStore';
 
 export default function AdminGenresPage() {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 500);
+    const { openConfirm, openGenreModal } = useModalStore();
 
-    const { data, isLoading, isFetching, refetch } = useGetGenresQuery({
-        page,
-        pageSize: 15,
-        name: debouncedSearch || undefined,
-    }, {
-        refetchOnMountOrArgChange: true,
-    });
+    const { data, isLoading, isFetching, refetch } = useGetGenresQuery(
+        {
+            page,
+            pageSize: 15,
+            name: debouncedSearch || undefined,
+        },
+        {
+            refetchOnMountOrArgChange: true,
+        }
+    );
 
     const [deleteGenre, { isLoading: isDeleting }] = useDeleteGenreMutation();
     const genres: Genre[] = data?.data || [];
@@ -33,36 +49,42 @@ export default function AdminGenresPage() {
             await deleteGenre(id).unwrap();
             toast.success('Xóa thể loại thành công!');
             refetch();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to delete genre:', error);
-            const errorMessage = error?.data?.message || 'Xóa thể loại thất bại!';
-            toast.error(errorMessage);
+            toast.error(
+                getErrorMessage(error) || `Xóa thể loại "${name}" thất bại!`
+            );
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header & Search Card */}
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
-                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
+            <div className="mb-6 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md">
+                <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Quản lý thể loại</h1>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Tổng cộng <span className="font-semibold text-gray-800">{meta?.total?.toLocaleString() || 0}</span> thể loại
+                        <h1 className="text-2xl font-bold text-gray-900">
+                            Quản lý thể loại
+                        </h1>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Tổng cộng{' '}
+                            <span className="font-semibold text-gray-800">
+                                {meta?.total?.toLocaleString() || 0}
+                            </span>{' '}
+                            thể loại
                         </p>
                     </div>
-                    <Link
-                        href="/admin/genres/new"
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
+                    <button
+                        onClick={() => openGenreModal({ onSuccess: refetch })}
+                        className="flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow active:scale-95"
                     >
-                        <Plus className="w-5 h-5" />
+                        <Plus className="h-5 w-5" />
                         Thêm thể loại mới
-                    </Link>
+                    </button>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50/50">
+                <div className="bg-gray-50/50 px-6 py-4">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
                             placeholder="Tìm kiếm tên thể loại..."
@@ -71,87 +93,127 @@ export default function AdminGenresPage() {
                                 setSearch(e.target.value);
                                 setPage(1);
                             }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                            className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 shadow-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                         />
                     </div>
                 </div>
             </div>
 
-            {/* Loading */}
             {(isLoading || isFetching) && (
-                <div className="flex justify-center items-center py-32">
-                    <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                <div className="flex items-center justify-center py-32">
+                    <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
                 </div>
             )}
 
-            {/* Table */}
             {!(isLoading || isFetching) && (
                 <div className="py-0">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
+                                <thead className="border-b border-gray-200 bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tên thể loại</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Slug</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Mô tả</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ngày tạo</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cập nhật</th>
-                                        <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Tên thể loại
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Slug
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Mô tả
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Ngày tạo
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Cập nhật
+                                        </th>
+                                        <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Hành động
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
                                     {genres.length === 0 ? (
                                         <tr>
-                                            <td colSpan={6} className="text-center py-16 text-gray-500 text-lg">
+                                            <td
+                                                colSpan={6}
+                                                className="py-16 text-center text-lg text-gray-500"
+                                            >
                                                 Không tìm thấy thể loại nào
                                             </td>
                                         </tr>
                                     ) : (
                                         genres.map((genre) => (
-                                            <tr key={genre.id} className="hover:bg-gray-50 transition-colors">
+                                            <tr
+                                                key={genre.id}
+                                                className="transition-colors hover:bg-gray-50"
+                                            >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
-                                                        <Tag className="w-5 h-5 text-blue-600" />
-                                                        <span className="font-semibold text-gray-900">{genre.name}</span>
+                                                        <Tag className="h-5 w-5 text-blue-600" />
+                                                        <span className="font-semibold text-gray-900">
+                                                            {genre.name}
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <code className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">{genre.slug}</code>
+                                                    <code className="rounded bg-gray-100 px-2 py-1 text-sm text-gray-600">
+                                                        {genre.slug}
+                                                    </code>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-600 max-w-md truncate">
-                                                        {genre.description || <span className="text-gray-400 italic">Chưa có mô tả</span>}
+                                                    <div className="max-w-md truncate text-sm text-gray-600">
+                                                        {genre.description || (
+                                                            <span className="italic text-gray-400">
+                                                                Chưa có mô tả
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {format(new Date(genre.createdAt), 'dd/MM/yyyy', { locale: vi })}
+                                                    {format(
+                                                        new Date(genre.createdAt),
+                                                        'dd/MM/yyyy',
+                                                        { locale: vi }
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {format(new Date(genre.updatedAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
+                                                    {format(
+                                                        new Date(genre.updatedAt),
+                                                        'dd/MM/yyyy HH:mm',
+                                                        { locale: vi }
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex justify-center gap-2">
-                                                        <Link
-                                                            href={`/admin/genres/edit/${genre.id}`}
-                                                            className="p-2 hover:bg-green-50 rounded-lg transition-colors"
+                                                        <button
+                                                            onClick={() => openGenreModal({
+                                                                genre: {
+                                                                    id: genre.id,
+                                                                    name: genre.name,
+                                                                    description: genre.description
+                                                                },
+                                                                onSuccess: refetch
+                                                            })}
+                                                            className="rounded-lg p-2 transition-colors hover:bg-green-50"
                                                             title="Chỉnh sửa"
                                                         >
-                                                            <Edit className="w-5 h-5 text-green-600" />
-                                                        </Link>
-                                                        <ConfirmDelete
+                                                            <Edit className="h-5 w-5 text-green-600" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openConfirm({
+                                                                title: "Xóa thể loại",
+                                                                description: `Bạn có chắc chắn muốn xóa thể loại "${genre.name}"?`,
+                                                                variant: "destructive",
+                                                                confirmText: "Xóa",
+                                                                onConfirm: () => handleDelete(genre.id, genre.name)
+                                                            })}
+                                                            className="rounded-lg p-2 transition-colors hover:bg-red-50"
                                                             title="Xóa thể loại"
-                                                            description={`Bạn có chắc chắn muốn xóa thể loại "${genre.name}"?`}
-                                                            onConfirm={() => handleDelete(genre.id, genre.name)}
+                                                            disabled={isDeleting}
                                                         >
-                                                            <button
-                                                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                                                title="Xóa thể loại"
-                                                                disabled={isDeleting}
-                                                            >
-                                                                <Trash2 className="w-5 h-5 text-red-600" />
-                                                            </button>
-                                                        </ConfirmDelete>
+                                                            <Trash2 className="h-5 w-5 text-red-600" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -161,27 +223,41 @@ export default function AdminGenresPage() {
                             </table>
                         </div>
 
-                        {/* Pagination */}
                         {meta && meta.totalPages > 1 && (
-                            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between text-sm">
+                            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4 text-sm">
                                 <div className="text-gray-600">
-                                    Hiển thị {(page - 1) * 15 + 1} - {Math.min(page * 15, meta.total)} trong {meta.total.toLocaleString()} thể loại
+                                    Hiển thị {(page - 1) * 15 + 1} -{' '}
+                                    {Math.min(page * 15, meta.total)} trong{' '}
+                                    {meta.total.toLocaleString()} thể loại
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <button
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        onClick={() =>
+                                            setPage((current) =>
+                                                Math.max(1, current - 1)
+                                            )
+                                        }
                                         disabled={page === 1}
-                                        className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="rounded-lg p-2 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        <ChevronLeft className="w-5 h-5" />
+                                        <ChevronLeft className="h-5 w-5" />
                                     </button>
-                                    <span className="font-medium">Trang {page} / {meta.totalPages}</span>
+                                    <span className="font-medium">
+                                        Trang {page} / {meta.totalPages}
+                                    </span>
                                     <button
-                                        onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+                                        onClick={() =>
+                                            setPage((current) =>
+                                                Math.min(
+                                                    meta.totalPages,
+                                                    current + 1
+                                                )
+                                            )
+                                        }
                                         disabled={page === meta.totalPages}
-                                        className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="rounded-lg p-2 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        <ChevronRight className="w-5 h-5" />
+                                        <ChevronRight className="h-5 w-5" />
                                     </button>
                                 </div>
                             </div>

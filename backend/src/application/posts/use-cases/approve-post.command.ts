@@ -1,5 +1,3 @@
 export class ApprovePostCommand {
-    constructor(
-        public readonly postId: string
-    ) { }
+  constructor(public readonly postId: string) {}
 }

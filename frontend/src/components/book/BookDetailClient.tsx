@@ -1,15 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
 import { HeaderClient } from '@/components/HeaderClient';
+import { useModalStore } from '@/store/useModalStore';
 
 import { useBookDetail } from '@/features/books/hooks/useBookDetail';
 import { BookHero } from './BookHero';
 import { BookDescription } from './BookDescription';
 import { BookSidebar } from './BookSidebar';
-import { BookModals } from './BookModals';
 import { ReviewSection } from './ReviewSection';
+
 
 interface BookDetailClientProps {
   bookSlug: string;
@@ -28,13 +31,12 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     defaultShareContent,
   } = useBookDetail(bookSlug);
 
-  const [isLibraryModalOpen, setLibraryModalOpen] = useState(false);
-  const [isShareModalOpen, setShareModalOpen] = useState(false);
+  const { openCreatePost, openAddToLibrary } = useModalStore();
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#161515] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -42,12 +44,12 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
   if (error || !book) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#161515] flex items-center justify-center flex-col">
-        <h1 className="text-2xl font-bold text-red-500 mb-4">
+        <h1 className="text-2xl font-bold text-destructive mb-4">
           Không tìm thấy sách
         </h1>
         <Link
           href="/books"
-          className="text-gray-900 dark:text-white border-b border-red-500"
+          className="text-foreground border-b border-primary hover:text-primary transition-colors"
         >
           Quay lại thư viện
         </Link>
@@ -56,14 +58,17 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground relative transition-colors duration-300">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
           alt="BG"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40"
         />
-        <div className="absolute inset-0 bg-white/80 dark:bg-[#0f0f0f]/70"></div>
+        <div className="absolute inset-0 bg-background/80 dark:bg-background/90"></div>
       </div>
 
       <div className="relative z-10">
@@ -75,8 +80,17 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
             isLiked={isLiked}
             isLiking={isLiking}
             onToggleLike={handleToggleLike}
-            onOpenLibrary={() => setLibraryModalOpen(true)}
-            onOpenShare={() => setShareModalOpen(true)}
+            onOpenLibrary={() => openAddToLibrary({ bookId: book.id })}
+            onOpenShare={() =>
+              openCreatePost({
+                title: `Chia sẻ sách "${book.title}"`,
+                contentPlaceholder: "Chia sẻ suy nghĩ của bạn về cuốn sách này...",
+                defaultContent: defaultShareContent,
+                onSubmit: async (data) => {
+                  await handleSharePost(data);
+                },
+              })
+            }
           />
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -96,19 +110,6 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
           </div>
         </div>
 
-        <BookModals
-          book={book}
-          isLibraryOpen={isLibraryModalOpen}
-          isShareOpen={isShareModalOpen}
-          closeLibrary={() => setLibraryModalOpen(false)}
-          closeShare={() => setShareModalOpen(false)}
-          onShareSubmit={async (data: any) => {
-            const success = await handleSharePost(data);
-            if (success) setShareModalOpen(false);
-          }}
-          defaultShareContent={defaultShareContent}
-          isSharing={isCreatingPost}
-        />
       </div>
     </div>
   );

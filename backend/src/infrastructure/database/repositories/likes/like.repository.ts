@@ -10,94 +10,127 @@ import { LikeDocument } from '../../schemas/like.schema';
 import { LikeMapper } from './like.mapper';
 
 interface LikePersistence {
-    _id: Types.ObjectId;
-    userId: Types.ObjectId;
-    targetId: Types.ObjectId;
-    targetType: string;
-    status: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  targetId: Types.ObjectId;
+  targetType: string;
+  status: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 @Injectable()
 export class LikeRepository implements ILikeRepository {
-    constructor(
-        @InjectModel('Like')
-        private readonly likeModel: Model<LikeDocument>
-    ) { }
+  constructor(
+    @InjectModel('Like')
+    private readonly likeModel: Model<LikeDocument>,
+  ) {}
 
-    private toDomain(doc: LikeDocument): Like {
-        return LikeMapper.toDomain(doc);
-    }
+  private toDomain(doc: LikeDocument): Like {
+    return LikeMapper.toDomain(doc);
+  }
 
-    private toPersistence(like: Like): LikePersistence {
-        return LikeMapper.toPersistence(like);
-    }
+  private toPersistence(like: Like): LikePersistence {
+    return LikeMapper.toPersistence(like);
+  }
 
-    async save(like: Like): Promise<void> {
-        const persistenceData = this.toPersistence(like);
+  async save(like: Like): Promise<void> {
+    const persistenceData = this.toPersistence(like);
 
-        await this.likeModel.findOneAndUpdate(
-            {
-                userId: persistenceData.userId,
-                targetId: persistenceData.targetId,
-                targetType: persistenceData.targetType
-            },
-            { $set: persistenceData },
-            { upsert: true, new: true }
-        ).exec();
-    }
+    await this.likeModel
+      .findOneAndUpdate(
+        {
+          userId: persistenceData.userId,
+          targetId: persistenceData.targetId,
+          targetType: persistenceData.targetType,
+        },
+        { $set: persistenceData },
+        { upsert: true, new: true },
+      )
+      .exec();
+  }
 
-    async findByUserAndTarget(userId: UserId, targetId: TargetId, targetType: TargetType): Promise<Like | null> {
-        const doc = await this.likeModel.findOne({
-            userId: new Types.ObjectId(userId.toString()),
-            targetId: new Types.ObjectId(targetId.toString()),
-            targetType
-        }).lean().exec();
+  async findByUserAndTarget(
+    userId: UserId,
+    targetId: TargetId,
+    targetType: TargetType,
+  ): Promise<Like | null> {
+    const doc = await this.likeModel
+      .findOne({
+        userId: new Types.ObjectId(userId.toString()),
+        targetId: new Types.ObjectId(targetId.toString()),
+        targetType,
+      })
+      .lean()
+      .exec();
 
-        return doc ? this.toDomain(doc) : null;
-    }
+    return doc ? this.toDomain(doc) : null;
+  }
 
-    async findByTarget(targetId: TargetId, targetType: TargetType): Promise<Like[]> {
-        const docs = await this.likeModel.find({
-            targetId: new Types.ObjectId(targetId.toString()),
-            targetType
-        }).lean().exec();
+  async findByTarget(
+    targetId: TargetId,
+    targetType: TargetType,
+  ): Promise<Like[]> {
+    const docs = await this.likeModel
+      .find({
+        targetId: new Types.ObjectId(targetId.toString()),
+        targetType,
+      })
+      .lean()
+      .exec();
 
-        return docs.map(doc => this.toDomain(doc));
-    }
+    return docs.map((doc) => this.toDomain(doc));
+  }
 
-    async countByTarget(targetId: TargetId, targetType: TargetType): Promise<number> {
-        return await this.likeModel.countDocuments({
-            targetId: new Types.ObjectId(targetId.toString()),
-            targetType,
-            status: true
-        }).exec();
-    }
+  async countByTarget(
+    targetId: TargetId,
+    targetType: TargetType,
+  ): Promise<number> {
+    return await this.likeModel
+      .countDocuments({
+        targetId: new Types.ObjectId(targetId.toString()),
+        targetType,
+        status: true,
+      })
+      .exec();
+  }
 
-    async findLikedTargets(userId: UserId, targetIds: TargetId[], targetType: TargetType): Promise<string[]> {
-        const docs = await this.likeModel.find({
-            userId: new Types.ObjectId(userId.toString()),
-            targetId: { $in: targetIds.map(id => new Types.ObjectId(id.toString())) },
-            targetType,
-            status: true
-        }).select('targetId').lean().exec();
+  async findLikedTargets(
+    userId: UserId,
+    targetIds: TargetId[],
+    targetType: TargetType,
+  ): Promise<string[]> {
+    const docs = await this.likeModel
+      .find({
+        userId: new Types.ObjectId(userId.toString()),
+        targetId: {
+          $in: targetIds.map((id) => new Types.ObjectId(id.toString())),
+        },
+        targetType,
+        status: true,
+      })
+      .select('targetId')
+      .lean()
+      .exec();
 
-        return docs.map(doc => doc.targetId.toString());
-    }
+    return docs.map((doc) => doc.targetId.toString());
+  }
 
-    async deleteById(id: string): Promise<void> {
-        await this.likeModel.findByIdAndDelete(id).exec();
-    }
+  async deleteById(id: string): Promise<void> {
+    await this.likeModel.findByIdAndDelete(id).exec();
+  }
 
-    async exists(userId: UserId, targetId: TargetId, targetType: TargetType): Promise<boolean> {
-        const result = await this.likeModel.exists({
-            userId: new Types.ObjectId(userId.toString()),
-            targetId: new Types.ObjectId(targetId.toString()),
-            targetType
-        });
+  async exists(
+    userId: UserId,
+    targetId: TargetId,
+    targetType: TargetType,
+  ): Promise<boolean> {
+    const result = await this.likeModel.exists({
+      userId: new Types.ObjectId(userId.toString()),
+      targetId: new Types.ObjectId(targetId.toString()),
+      targetType,
+    });
 
-        return !!result;
-    }
+    return !!result;
+  }
 }
-

@@ -8,24 +8,30 @@ import { LibraryApplicationMapper } from '../../mappers/library.mapper';
 
 @Injectable()
 export class GetChapterProgressUseCase {
-    constructor(
-        private readonly readingProgressRepository: IReadingProgressRepository
-    ) { }
+  constructor(
+    private readonly readingProgressRepository: IReadingProgressRepository,
+  ) {}
 
-    async execute(query: GetChapterProgressQuery): Promise<ReadingProgressResult | null> {
-        if (!query.bookId || !query.chapterId) {
-            return null;
-        }
-
-        const userId = UserId.create(query.userId);
-        const chapterId = ChapterId.create(query.chapterId);
-
-        const progress = await this.readingProgressRepository.findByUserIdAndChapterId(userId, chapterId);
-        
-        if (!progress) {
-            return null;
-        }
-
-        return LibraryApplicationMapper.toProgressResult(progress);
+  async execute(
+    query: GetChapterProgressQuery,
+  ): Promise<ReadingProgressResult | null> {
+    if (!query.bookId || !query.chapterId) {
+      return null;
     }
+
+    const userId = UserId.create(query.userId);
+    const chapterId = ChapterId.create(query.chapterId);
+
+    const progress =
+      await this.readingProgressRepository.findByUserIdAndChapterId(
+        userId,
+        chapterId,
+      );
+
+    if (!progress) {
+      return null;
+    }
+
+    return LibraryApplicationMapper.toProgressResult(progress);
+  }
 }

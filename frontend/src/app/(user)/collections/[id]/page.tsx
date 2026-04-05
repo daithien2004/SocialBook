@@ -18,69 +18,41 @@ import {
   useAddBookToCollectionsMutation,
   useDeleteCollectionMutation,
   useGetCollectionDetailQuery,
-  useUpdateCollectionMutation,
 } from '@/features/library/api/libraryApi';
 import { LibraryItem } from '@/features/library/types/library.interface';
 import { toast } from 'sonner';
+import { useModalStore } from '@/store/useModalStore';
 
 export default function CollectionDetailPage() {
   const router = useRouter();
   const params = useParams();
   const collectionId = params.id as string;
 
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [editName, setEditName] = useState('');
+  const { openEditCollection, openConfirm } = useModalStore();
 
   const {
     data: response,
     isLoading,
     error,
+    refetch,
   } = useGetCollectionDetailQuery(collectionId);
 
   const collection = response?.folder;
   const books = response?.books || [];
 
-  const [updateCollection, { isLoading: isUpdating }] =
-    useUpdateCollectionMutation();
   const [deleteCollection, { isLoading: isDeleting }] =
     useDeleteCollectionMutation();
   const [updateBookCollections] = useAddBookToCollectionsMutation();
 
-  const handleUpdateName = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editName.trim()) return;
-
-    try {
-      await updateCollection({
-        id: collectionId,
-        data: { name: editName },
-      }).unwrap();
-      setIsEditModalOpen(false);
-      setIsMenuOpen(false);
-    } catch (error) {
-      toast.error('Lỗi khi cập nhật tên bộ sưu tập');
-    }
-  };
-
   const handleDeleteCollection = async () => {
-    toast('Bạn có chắc muốn xóa bộ sưu tập này?', {
-      action: {
-        label: 'Xóa',
-        onClick: async () => {
-          try {
-            await deleteCollection(collectionId).unwrap();
-            router.push('/library');
-          } catch (error) {
-            toast.error('Lỗi khi xóa bộ sưu tập');
-          }
-        },
-      },
-      cancel: {
-        label: 'Hủy',
-        onClick: () => { },
-      },
-    });
+    try {
+      await deleteCollection(collectionId).unwrap();
+      toast.success('Đã xóa bộ sưu tập');
+      router.push('/library');
+    } catch (error) {
+      toast.error('Lỗi khi xóa bộ sưu tập');
+    }
   };
 
   const handleRemoveBookFromCollection = async (
@@ -99,16 +71,11 @@ export default function CollectionDetailPage() {
         bookId: book.bookId.id,
         collectionIds: newCollectionIds,
       }).unwrap();
+      toast.success('Đã gỡ sách khỏi bộ sưu tập');
     } catch (error) {
       console.error('Failed to remove book', error);
       toast.error('Không thể gỡ sách khỏi danh sách');
     }
-  };
-
-  const openEditModal = () => {
-    if (collection) setEditName(collection.name);
-    setIsEditModalOpen(true);
-    setIsMenuOpen(false);
   };
 
   if (isLoading) return <CollectionDetailSkeleton />;
@@ -136,10 +103,13 @@ export default function CollectionDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#161515] pb-20 transition-colors duration-300">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
           alt="Background Texture"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
         />
         <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
       </div>
@@ -166,7 +136,7 @@ export default function CollectionDetailPage() {
 
           <div className="relative z-50">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => setIsMenuOpen((prev) => !prev)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
             >
               <MoreVertical
@@ -181,20 +151,42 @@ export default function CollectionDetailPage() {
                   className="fixed inset-0 z-40"
                   onClick={() => setIsMenuOpen(false)}
                 />
-                <div className="absolute overflow-hidden right-0 top-full mt-2 w-48 bg-white dark:bg-[#1a1a1a] rounded-md shadow-md border border-gray-200 dark:border-white/20 z-50 animate-in fade-in zoom-in-95 duration-100 transition-colors">
+                <div className="absolute overflow-hidden right-0 top-full mt-2 w-56 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl border border-gray-200 dark:border-white/20 z-50 animate-in fade-in zoom-in-95 duration-100 transition-colors p-1.5">
                   <button
-                    onClick={openEditModal}
-                    className="w-full px-4 py-2.5 text-left text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 flex items-center gap-2 transition-colors"
+                    onClick={() => {
+                      openEditCollection({
+                        collectionId,
+                        currentName: collection.name,
+                        onSuccess: refetch,
+                      });
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 rounded-lg flex items-center gap-3 transition-colors"
                   >
-                    <Pencil size={16} /> Đổi tên
+                    <div className="w-8 h-8 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center">
+                      <Pencil size={16} className="text-amber-600 dark:text-amber-400" />
+                    </div>
+                    Đổi tên
                   </button>
+                  
                   <button
-                    onClick={handleDeleteCollection}
+                    onClick={() => {
+                      openConfirm({
+                        title: "Xóa bộ sưu tập",
+                        description: `Bạn có chắc chắn muốn xóa bộ sưu tập "${collection.name}"? Hành động này không thể hoàn tác.`,
+                        confirmText: "Xóa vĩnh viễn",
+                        variant: "destructive",
+                        onConfirm: handleDeleteCollection
+                      });
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-3 transition-colors disabled:opacity-50"
                     disabled={isDeleting}
-                    className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors disabled:opacity-50"
                   >
-                    <Trash2 size={16} />
-                    {isDeleting ? 'Đang xóa...' : 'Xóa bộ sưu tập'}
+                    <div className="w-8 h-8 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                      <Trash2 size={16} className="text-red-600 dark:text-red-400" />
+                    </div>
+                    Xóa bộ sưu tập
                   </button>
                 </div>
               </>
@@ -273,49 +265,6 @@ export default function CollectionDetailPage() {
           </div>
         )}
       </div>
-
-      {isEditModalOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-[100] animate-in fade-in duration-200"
-            onClick={() => setIsEditModalOpen(false)}
-          />
-
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200 pointer-events-auto transition-colors">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 transition-colors">
-                Đổi tên bộ sưu tập
-              </h3>
-              <form onSubmit={handleUpdateName}>
-                <input
-                  type="text"
-                  autoFocus
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-white/10 bg-white dark:bg-black/40 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none mb-4 transition-colors"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Nhập tên mới..."
-                />
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg font-medium transition-colors"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdating || !editName.trim()}
-                    className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 font-medium transition-colors"
-                  >
-                    {isUpdating ? 'Đang lưu...' : 'Lưu thay đổi'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

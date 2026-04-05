@@ -1,4 +1,8 @@
-import { Notification, NotificationType, NotificationMeta } from '@/domain/notifications/entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+  NotificationMeta,
+} from '@/domain/notifications/entities/notification.entity';
 import { NotificationDocument } from '@/infrastructure/database/schemas/notification.schema';
 import { Types } from 'mongoose';
 
@@ -33,7 +37,10 @@ export class NotificationMapper {
 
   static toPersistence(entity: Notification): NotificationPersistence {
     return {
-      _id: entity.id && Types.ObjectId.isValid(entity.id) ? new Types.ObjectId(entity.id) : undefined,
+      _id:
+        entity.id && Types.ObjectId.isValid(entity.id)
+          ? new Types.ObjectId(entity.id)
+          : undefined,
       userId: new Types.ObjectId(entity.userId),
       title: entity.title,
       message: entity.message,

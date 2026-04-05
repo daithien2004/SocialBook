@@ -1,222 +1,299 @@
 'use client';
 
-import WorldMap from '@/components/admin/analyst/WorldMap';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useGetActiveUsersQuery, useGetChapterEngagementQuery, useGetGeographicDistributionQuery, useGetReadingHeatmapQuery } from '@/features/admin/api/analyticsApi';
+import {
+  useGetActiveUsersQuery,
+  useGetChapterEngagementQuery,
+  useGetGeographicDistributionQuery,
+  useGetReadingHeatmapQuery,
+} from '@/features/admin/api/analyticsApi';
 import { Activity, Globe, TrendingUp, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import dynamic from 'next/dynamic';
+import { useEffect, useRef, useState } from 'react';
+
+const ReadingHeatmapChart = dynamic(
+  () =>
+    import('@/components/admin/analytics/ReadingHeatmapChart').then(
+      (module) => module.ReadingHeatmapChart
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-64 flex items-center justify-center text-gray-400">
+        Loading chart...
+      </div>
+    ),
+  }
+);
+
+const GeographicDistributionMap = dynamic(
+  () =>
+    import('@/components/admin/analytics/GeographicDistributionMap').then(
+      (module) => module.GeographicDistributionMap
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] flex items-center justify-center text-gray-400">
+        Loading map...
+      </div>
+    ),
+  }
+);
 
 export default function AnalyticsPage() {
-    return (
-        <div className="container mx-auto p-6 space-y-6 bg-gray-50 min-h-screen">
-            {/* Active Users Counter */}
-            <ActiveUsersCard />
+  return (
+    <div className="container mx-auto min-h-screen space-y-6 bg-gray-50 p-6">
+      <ActiveUsersCard />
 
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column */}
-                <div className="lg:col-span-2 space-y-6">
-                    <ReadingHeatmapCard />
-                    <div className="grid grid-cols-1 gap-6">
-                        <GeographicCard />
-                    </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="lg:col-span-1">
-                    <ChapterEngagementCard />
-                </div>
-            </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <ReadingHeatmapCard />
+          <div className="grid grid-cols-1 gap-6">
+            <GeographicCard />
+          </div>
         </div>
-    );
+
+        <div className="lg:col-span-1">
+          <ChapterEngagementCard />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// ============ Active Users Counter Component ============
 function ActiveUsersCard() {
-    const { data, isLoading, refetch } = useGetActiveUsersQuery();
-    const [count, setCount] = useState(0);
+  const { data, isLoading, refetch } = useGetActiveUsersQuery();
+  const [count, setCount] = useState(0);
+  const previousCountRef = useRef(0);
 
-    // Animate counter
-    useEffect(() => {
-        if (data?.count !== undefined) {
-            const start = count;
-            const end = data.count;
-            const duration = 1000;
-            const stepTime = 50;
-            const steps = duration / stepTime;
-            const increment = (end - start) / steps;
+  useEffect(() => {
+    if (data?.count === undefined) {
+      return;
+    }
 
-            let current = start;
-            const timer = setInterval(() => {
-                current += increment;
-                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
-                    setCount(end);
-                    clearInterval(timer);
-                } else {
-                    setCount(Math.round(current));
-                }
-            }, stepTime);
+    const start = previousCountRef.current;
+    const end = data.count;
+    const duration = 1000;
+    const stepTime = 50;
+    const steps = duration / stepTime;
+    const increment = (end - start) / steps;
 
-            return () => clearInterval(timer);
-        }
-    }, [data?.count]);
+    let current = start;
+    const timer = setInterval(() => {
+      current += increment;
 
-    // Auto-refresh every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            refetch();
-        }, 30000);
-        return () => clearInterval(interval);
-    }, [refetch]);
+      if (
+        (increment > 0 && current >= end) ||
+        (increment < 0 && current <= end)
+      ) {
+        previousCountRef.current = end;
+        setCount(end);
+        clearInterval(timer);
+        return;
+      }
 
-    return (
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <CardHeader className="pb-2 border-b border-gray-100">
-                <CardTitle className="flex items-center gap-3 text-2xl">
-                    <div className="p-2.5 bg-blue-50 rounded-lg">
-                        <Users className="h-6 w-6 text-blue-600" />
-                    </div>
-                    Độc giả đang hoạt động (Trực tiếp)
-                </CardTitle>
-                <CardDescription className="text-gray-500">Đang đọc trong 5 phút qua</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-                {isLoading ? (
-                    <div className="text-6xl font-bold text-gray-300">--</div>
-                ) : (
-                    <div className="text-7xl font-bold text-blue-600">{count}</div>
-                )}
-                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
-                    <p className="text-sm text-blue-700 font-medium">Trực tiếp • Cập nhật mỗi 30s</p>
-                </div>
-            </CardContent>
-        </Card>
-    );
+      setCount(Math.round(current));
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [data?.count]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  return (
+    <Card className="border-0 bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl">
+      <CardHeader className="border-b border-gray-100 pb-2">
+        <CardTitle className="flex items-center gap-3 text-2xl">
+          <div className="rounded-lg bg-blue-50 p-2.5">
+            <Users className="h-6 w-6 text-blue-600" />
+          </div>
+          Độc giả đang hoạt động (Trực tiếp)
+        </CardTitle>
+        <CardDescription className="text-gray-500">
+          Đang đọc trong 5 phút qua
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        {isLoading ? (
+          <div className="text-6xl font-bold text-gray-300">--</div>
+        ) : (
+          <div className="text-7xl font-bold text-blue-600">{count}</div>
+        )}
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-blue-600" />
+          <p className="text-sm font-medium text-blue-700">
+            Trực tiếp • Cập nhật mỗi 30s
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-// ============ Reading Heatmap Component ============
 function ReadingHeatmapCard() {
-    const { data, isLoading, error } = useGetReadingHeatmapQuery();
-    const heatmapData = Array.isArray(data) ? data : [];
+  const { data, isLoading, error } = useGetReadingHeatmapQuery();
+  const heatmapData = Array.isArray(data) ? data : [];
 
-    return (
-        <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="pb-3 border-b border-gray-100">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                    <div className="p-2 bg-amber-50 rounded-lg">
-                        <Activity className="h-5 w-5 text-amber-600" />
-                    </div>
-                    Biểu đồ nhiệt hoạt động đọc
-                </CardTitle>
-                <CardDescription>Hoạt động đọc theo giờ trong ngày</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-                {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>}
-                {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Error loading data</div>}
-                {heatmapData.length > 0 && (
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={heatmapData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="hour" label={{ value: 'Giờ trong ngày', position: 'insideBottom', offset: -5 }} stroke="#9ca3af" />
-                            <YAxis label={{ value: 'Lượt đọc', angle: -90, position: 'insideLeft' }} stroke="#9ca3af" />
-                            <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-                            <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                                {heatmapData.map((entry: any, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={`hsl(${(entry.hour / 24) * 360}, 75%, 55%)`} />
-                                ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                )}
-            </CardContent>
-        </Card>
-    );
+  return (
+    <Card className="border-0 bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
+      <CardHeader className="border-b border-gray-100 pb-3">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <div className="rounded-lg bg-amber-50 p-2">
+            <Activity className="h-5 w-5 text-amber-600" />
+          </div>
+          Biểu đồ nhiệt hoạt động đọc
+        </CardTitle>
+        <CardDescription>Hoạt động đọc theo giờ trong ngày</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        {isLoading && (
+          <div className="flex h-64 items-center justify-center text-gray-400">
+            Loading...
+          </div>
+        )}
+        {error && (
+          <div className="flex h-64 items-center justify-center font-medium text-red-500">
+            Error loading data
+          </div>
+        )}
+        {heatmapData.length > 0 && <ReadingHeatmapChart data={heatmapData} />}
+      </CardContent>
+    </Card>
+  );
 }
 
-// ============ Chapter Engagement Component ============
 function ChapterEngagementCard() {
-    const { data, isLoading, error } = useGetChapterEngagementQuery({ limit: 5 });
-    const engagementData = Array.isArray(data) ? data : [];
+  const { data, isLoading, error } = useGetChapterEngagementQuery({ limit: 5 });
+  const engagementData = Array.isArray(data) ? data : [];
 
-    return (
-        <Card className="bg-white border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="pb-3 border-b border-gray-100">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                    <div className="p-2 bg-green-50 rounded-lg">
-                        <TrendingUp className="h-5 w-5 text-green-600" />
-                    </div>
-                    Chương có tương tác cao nhất
-                </CardTitle>
-                <CardDescription>Các chương được đọc nhiều nhất với tỷ lệ hoàn thành</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-                {isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Đang tải...</div>}
-                {error && <div className="h-64 flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
-                {engagementData.length === 0 && !isLoading && <div className="h-64 flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>}
-                {engagementData.length > 0 && (
-                    <div className="space-y-4">
-                        {engagementData.map((chapter: any, idx: number) => (
-                            <div key={chapter.chapterId} className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 hover:bg-gray-50 transition-all duration-200">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-sm text-gray-900">{chapter.chapterTitle}</p>
-                                        <p className="text-xs text-gray-500 mt-1">{chapter.bookTitle}</p>
-                                    </div>
-                                    <div className="text-right ml-4">
-                                        <p className="text-sm font-bold text-gray-900">{chapter.viewCount}</p>
-                                        <p className="text-xs text-gray-500">lượt xem</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                        <div className="bg-green-500 h-2 rounded-full transition-all duration-500" style={{ width: `${chapter.completionRate}%` }} />
-                                    </div>
-                                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">{chapter.completionRate}%</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
+  return (
+    <Card className="border-0 bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
+      <CardHeader className="border-b border-gray-100 pb-3">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <div className="rounded-lg bg-green-50 p-2">
+            <TrendingUp className="h-5 w-5 text-green-600" />
+          </div>
+          Chương có tương tác cao nhất
+        </CardTitle>
+        <CardDescription>
+          Các chương được đọc nhiều nhất với tỷ lệ hoàn thành
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        {isLoading && (
+          <div className="flex h-64 items-center justify-center text-gray-400">
+            Đang tải...
+          </div>
+        )}
+        {error && (
+          <div className="flex h-64 items-center justify-center font-medium text-red-500">
+            Lỗi tải dữ liệu
+          </div>
+        )}
+        {engagementData.length === 0 && !isLoading && (
+          <div className="flex h-64 items-center justify-center text-gray-400">
+            Chưa có dữ liệu
+          </div>
+        )}
+        {engagementData.length > 0 && (
+          <div className="space-y-4">
+            {engagementData.map((chapter) => (
+              <div
+                key={chapter.chapterId}
+                className="rounded-lg border border-gray-100 p-4 transition-all duration-200 hover:border-gray-200 hover:bg-gray-50"
+              >
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {chapter.chapterTitle}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {chapter.bookTitle}
+                    </p>
+                  </div>
+                  <div className="ml-4 text-right">
+                    <p className="text-sm font-bold text-gray-900">
+                      {chapter.viewCount}
+                    </p>
+                    <p className="text-xs text-gray-500">lượt xem</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-2 flex-1 rounded-full bg-gray-200">
+                    <div
+                      className="h-2 rounded-full bg-green-500 transition-all duration-500"
+                      style={{ width: `${chapter.completionRate}%` }}
+                    />
+                  </div>
+                  <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600">
+                    {chapter.completionRate}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
-// ============ Geographic Distribution Component ============
 function GeographicCard() {
-    const { data, isLoading, error } = useGetGeographicDistributionQuery();
-    const geoData = Array.isArray(data) ? data : [];
+  const { data, isLoading, error } = useGetGeographicDistributionQuery();
+  const geoData = Array.isArray(data) ? data : [];
 
-    return (
-        <Card className="col-span-1 lg:col-span-2 bg-white border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="pb-3 border-b border-gray-100">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                    <div className="p-2 bg-cyan-50 rounded-lg">
-                        <Globe className="h-5 w-5 text-cyan-600" />
-                    </div>
-                    Phân bố địa lý
-                </CardTitle>
-                <CardDescription>Độc giả theo quốc gia (Bản đồ tương tác)</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-                {isLoading && <div className="h-[400px] flex items-center justify-center text-gray-400">Đang tải...</div>}
-                {error && <div className="h-[400px] flex items-center justify-center text-red-500 font-medium">Lỗi tải dữ liệu</div>}
-                {geoData.length > 0 && (
-                    <div className="w-full">
-                        <WorldMap data={geoData} />
-                        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {geoData.slice(0, 4).map((country: any, idx: number) => (
-                                <div key={idx} className="flex flex-col items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200">
-                                    <span className="font-semibold text-sm text-gray-900">{country.country}</span>
-                                    <span className="text-sm font-bold bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full mt-2">{country.userCount} người dùng</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
+  return (
+    <Card className="col-span-1 border-0 bg-white shadow-md transition-shadow duration-300 hover:shadow-lg lg:col-span-2">
+      <CardHeader className="border-b border-gray-100 pb-3">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <div className="rounded-lg bg-cyan-50 p-2">
+            <Globe className="h-5 w-5 text-cyan-600" />
+          </div>
+          Phân bố địa lý
+        </CardTitle>
+        <CardDescription>
+          Độc giả theo quốc gia (Bản đồ tương tác)
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        {isLoading && (
+          <div className="flex h-[400px] items-center justify-center text-gray-400">
+            Đang tải...
+          </div>
+        )}
+        {error && (
+          <div className="flex h-[400px] items-center justify-center font-medium text-red-500">
+            Lỗi tải dữ liệu
+          </div>
+        )}
+        {geoData.length > 0 && (
+          <div className="w-full">
+            <GeographicDistributionMap data={geoData} />
+            <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+              {geoData.slice(0, 4).map((country) => (
+                <div
+                  key={country.country}
+                  className="flex flex-col items-start justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 transition-all duration-200 hover:border-gray-300 hover:bg-gray-100"
+                >
+                  <span className="text-sm font-semibold text-gray-900">
+                    {country.country}
+                  </span>
+                  <span className="mt-2 rounded-full bg-cyan-100 px-3 py-1 text-sm font-bold text-cyan-700">
+                    {country.userCount} người dùng
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }

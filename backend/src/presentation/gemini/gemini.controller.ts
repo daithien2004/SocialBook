@@ -32,7 +32,7 @@ export class GeminiController {
   @Post('summarize-chapter/:chapterId')
   async summarizeChapter(
     @Param('chapterId') chapterId: string,
-    @Body() body: { userId: string }
+    @Body() body: { userId: string },
   ) {
     if (!chapterId || !body.userId) {
       throw new BadRequestException('Chapter ID and userId are required');

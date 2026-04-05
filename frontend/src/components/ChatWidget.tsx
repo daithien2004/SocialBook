@@ -121,7 +121,7 @@ export const ChatWidget = () => {
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen(false)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsOpen(false)} aria-label="Đóng chat">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -185,6 +185,7 @@ export const ChatWidget = () => {
               <Button
                 type="submit"
                 size="icon"
+                aria-label="Gửi tin nhắn"
                 disabled={isLoading || !input.trim()}
                 className={!input.trim() ? "opacity-50" : ""}
               >

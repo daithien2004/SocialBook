@@ -4,6 +4,22 @@ import { Providers } from '../context/Providers';
 import { Toaster } from 'sonner';
 import AuthSync from '../components/AuthSync';
 import { inter, merriweather, notoSans } from '@/components/book/Fonts';
+import CreatePostModal from '@/components/post/CreatePostModal';
+import EditPostModal from '@/components/post/EditPostModal';
+import SharePostModal from '@/components/post/SharePostModal';
+import ModalPostComment from '@/components/post/ModalPostComment';
+import AddToLibraryModal from '@/components/library/AddToLibraryModal';
+import { FollowersModal } from '@/components/user/FollowersModal';
+import ChapterSummaryModal from '@/components/chapter/ChapterSummaryModal';
+import { FileImportModal } from '@/components/chapter/FileImportModal';
+import DeleteBookModal from '@/components/admin/book/DeleteBookModal';
+import CreateCollectionModal from '@/components/library/CreateCollectionModal';
+import EditCollectionModal from '@/components/library/EditCollectionModal';
+import GlobalConfirmModal from '@/components/common/GlobalConfirmModal';
+import GenreModal from '@/components/admin/genre/GenreModal';
+import AuthorModal from '@/components/admin/author/AuthorModal';
+import ManageChapterModal from '@/components/admin/chapter/ManageChapterModal';
+import { ThemeProvider } from '@/context/ThemeProvider';
 
 export const metadata = {
   title: 'SocialBook',
@@ -17,12 +33,34 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${inter.variable} ${merriweather.variable} ${notoSans.variable} mdl-js`} suppressHydrationWarning>
       <body>
-        <Providers>
-          <ScrollToTop />
-          <AuthSync />
-          {children}
-        </Providers>
-        <Toaster richColors position="bottom-right" />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Providers>
+            <ScrollToTop />
+            <AuthSync />
+            {children}
+            <CreatePostModal />
+            <EditPostModal />
+            <SharePostModal />
+            <ModalPostComment />
+            <AddToLibraryModal />
+            <FollowersModal />
+            <ChapterSummaryModal />
+            <FileImportModal />
+            <DeleteBookModal />
+            <CreateCollectionModal />
+            <EditCollectionModal />
+            <GlobalConfirmModal />
+            <GenreModal />
+            <AuthorModal />
+            <ManageChapterModal />
+          </Providers>
+          <Toaster richColors position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

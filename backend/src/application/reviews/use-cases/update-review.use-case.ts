@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { BadRequestDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import {
+  BadRequestDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
-import { UpdateReviewDto } from '@/presentation/reviews/dto/update-review.dto';
+import { UpdateReviewDto } from '@/application/reviews/dto/update-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 
 @Injectable()
@@ -11,22 +14,32 @@ export class UpdateReviewUseCase {
     private readonly checkContentUseCase: CheckContentUseCase,
   ) {}
 
-  async execute(userId: string, reviewId: string, dto: UpdateReviewDto): Promise<any> {
+  async execute(
+    userId: string,
+    reviewId: string,
+    dto: UpdateReviewDto,
+  ): Promise<any> {
     const review = await this.reviewRepository.findById(reviewId);
     if (!review) {
       throw new NotFoundDomainException('Review not found');
     }
 
     if (review.userId !== userId) {
-      throw new BadRequestDomainException('You can only update your own review');
+      throw new BadRequestDomainException(
+        'You can only update your own review',
+      );
     }
 
     let updated = false;
 
     if (dto.content !== undefined) {
-      const moderationResult = await this.checkContentUseCase.execute(dto.content);
+      const moderationResult = await this.checkContentUseCase.execute(
+        dto.content,
+      );
       if (!moderationResult.isSafe) {
-         throw new BadRequestDomainException(`Content rejected: ${moderationResult.reason}`);
+        throw new BadRequestDomainException(
+          `Content rejected: ${moderationResult.reason}`,
+        );
       }
       review.updateContent(dto.content);
       updated = true;
@@ -36,12 +49,11 @@ export class UpdateReviewUseCase {
       review.updateRating(dto.rating);
       updated = true;
     }
-    
+
     if (updated) {
       return this.reviewRepository.update(review);
     }
-    
+
     return review;
   }
 }
-

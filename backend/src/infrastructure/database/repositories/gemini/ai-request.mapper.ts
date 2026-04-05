@@ -1,4 +1,7 @@
-import { AIRequest, AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
+import {
+  AIRequest,
+  AIRequestType,
+} from '@/domain/gemini/entities/ai-request.entity';
 import { AIRequestDocument } from '@/infrastructure/database/schemas/ai-request.schema';
 import { Types } from 'mongoose';
 
@@ -23,7 +26,7 @@ export class AIRequestMapper {
       userId: doc.userId,
       metadata: doc.metadata || {},
       createdAt: doc.createdAt as Date,
-      updatedAt: doc.updatedAt as Date
+      updatedAt: doc.updatedAt as Date,
     });
   }
 
@@ -36,7 +39,7 @@ export class AIRequestMapper {
       userId: request.userId.toString(),
       metadata: request.metadata,
       createdAt: request.createdAt,
-      updatedAt: request.updatedAt
+      updatedAt: request.updatedAt,
     };
   }
 }

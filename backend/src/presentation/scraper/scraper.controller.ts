@@ -13,13 +13,13 @@ export class ScraperController {
   @Public()
   @Post('start')
   async startScraping(@Body('listUrl') listUrl: string) {
-      return { success: false, message: 'Not implemented in refactor yet' };
+    return { success: false, message: 'Not implemented in refactor yet' };
   }
 
   @Public()
   @Post('full-book')
   async scrapeFullBook(@Body('bookUrl') bookUrl: string) {
-     return { success: false, message: 'Not implemented in refactor yet' };
+    return { success: false, message: 'Not implemented in refactor yet' };
   }
 
   @Public()
@@ -37,6 +37,6 @@ export class ScraperController {
   @Public()
   @Post('chapters')
   async scrapeChapters(@Body('bookId') bookId: string) {
-      return { success: false, message: 'Not implemented in refactor yet' };
+    return { success: false, message: 'Not implemented in refactor yet' };
   }
 }

@@ -1,25 +1,32 @@
 // notifications/notifications.gateway.ts
 import {
-  WebSocketGateway, WebSocketServer,
-  OnGatewayConnection, OnGatewayDisconnect,
-  ConnectedSocket, SubscribeMessage, MessageBody,
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  ConnectedSocket,
+  SubscribeMessage,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { NotificationsService } from '../external/notifications.service';
-import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto';
+import { CreateNotificationDto } from '@/application/notifications/dto/create-notification.dto';
 import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({
   namespace: '/notifications',
-  cors: { origin: '*' }, // dev
+  cors: { origin: '*' },
+  maxHttpBufferSize: 1e6,
 })
-export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
 
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly jwt: JwtService,
-  ) { }
+  ) {}
 
   afterInit() {
     this.notificationsService.setServer(this.server);
@@ -35,14 +42,13 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
         token = token[0];
       }
 
-
       if (!token || typeof token !== 'string') {
         console.log('No token, disconnect');
         socket.disconnect(true);
         return;
       }
 
-      const payload = this.jwt.verify(token) as { sub?: string; id?: string };
+      const payload = this.jwt.verify(token);
       const userId = payload.sub || payload.id;
       if (!userId) {
         socket.disconnect(true);
@@ -56,7 +62,6 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     }
   }
 
-
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     // cleanup nếu cần
   }
@@ -66,18 +71,23 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   async list(@ConnectedSocket() socket: Socket) {
     const userId = socket.data.userId as string;
     return this.notificationsService.findAllByUser(userId);
-
   }
 
   @SubscribeMessage('notification:markRead')
-  async markRead(@ConnectedSocket() socket: Socket, @MessageBody() body: { id: string }) {
+  async markRead(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: { id: string },
+  ) {
     const userId = socket.data.userId as string;
     return this.notificationsService.markRead(userId, body.id);
   }
 
   // (tuỳ chọn) cho phép backend khác emit qua gateway — hoặc gọi thẳng service.create()
   @SubscribeMessage('createNotification')
-  async createFromClient(@ConnectedSocket() socket: Socket, @MessageBody() dto: CreateNotificationDto) {
+  async createFromClient(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() dto: CreateNotificationDto,
+  ) {
     return this.notificationsService.create(dto);
   }
 }

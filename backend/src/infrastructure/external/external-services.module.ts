@@ -11,6 +11,11 @@ import { IContentModerationService } from '@/domain/content-moderation/interface
     { provide: IMediaService, useClass: CloudinaryService },
     { provide: IContentModerationService, useClass: ContentModerationService },
   ],
-  exports: [IMediaService, IContentModerationService, CloudinaryService, ContentModerationService],
+  exports: [
+    IMediaService,
+    IContentModerationService,
+    CloudinaryService,
+    ContentModerationService,
+  ],
 })
 export class ExternalServicesModule {}

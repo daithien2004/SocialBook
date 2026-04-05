@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useGetBooksQuery } from '../features/books/api/bookApi';
 import { TabType, TABS, PAGINATION } from '../features/books/books.constants';
@@ -98,10 +99,13 @@ export default function HomePage() {
 function PageBackground() {
   return (
     <div className="fixed inset-0 z-0">
-      <img
+      <Image
         src="/main-background.jpg"
-        alt="Background Texture"
-        className="w-full h-full object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
       />
       <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300" />
     </div>

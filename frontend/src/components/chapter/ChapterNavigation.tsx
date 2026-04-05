@@ -66,7 +66,7 @@ export default function ChapterNavigation({
         onClick={onNext}
         disabled={!hasNext}
         className={cn(
-          "rounded-full gap-2 shadow-lg shadow-blue-900/20 bg-blue-600 hover:bg-blue-500 text-white",
+          "rounded-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground",
           !hasNext && "bg-neutral-800 text-neutral-600 shadow-none hover:bg-neutral-800 cursor-not-allowed"
         )}
         aria-label="Chương sau"

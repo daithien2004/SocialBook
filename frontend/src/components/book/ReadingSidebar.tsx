@@ -3,15 +3,17 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
-import { LibraryStatus } from '@/features/library/types/library.interface';
+import { LibraryStatus, LibraryItem } from '@/features/library/types/library.interface';
 import { useAppAuth } from '@/hooks/useAppAuth';
 import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+const EMPTY_BOOKS: LibraryItem[] = [];
+
 export function ReadingSidebar() {
   const { isAuthenticated, isGuest } = useAppAuth();
-  const { data: books = [], isLoading } = useGetLibraryBooksQuery(
+  const { data: books = EMPTY_BOOKS, isLoading } = useGetLibraryBooksQuery(
     { status: LibraryStatus.READING },
     { skip: !isAuthenticated }
   );
@@ -159,7 +161,7 @@ export function ReadingSidebar() {
                 <div className="flex-1 min-w-0 flex flex-col">
                   <Link
                     href={`/books/${item.bookId.slug}`}
-                    className="font-semibold text-sm text-foreground line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-1"
+                    className="font-semibold text-sm text-foreground line-clamp-2 hover:text-primary transition-colors mb-1"
                   >
                     {item.bookId.title}
                   </Link>
@@ -169,7 +171,7 @@ export function ReadingSidebar() {
                       <p className="text-xs text-muted-foreground mb-2">
                         Chương {item.lastReadChapterId.orderIndex}
                       </p>
-                      <Button asChild size="sm" variant="outline" className="mt-auto w-full h-8 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-500/20 gap-1.5">
+                      <Button asChild size="sm" variant="outline" className="mt-auto w-full h-8 bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-foreground/90 border-primary/20 gap-1.5">
                         <Link href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}>
                           <BookOpen size={12} />
                           Đọc tiếp

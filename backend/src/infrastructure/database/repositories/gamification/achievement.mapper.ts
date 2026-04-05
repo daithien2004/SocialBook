@@ -8,7 +8,13 @@ interface AchievementPersistence {
   description: string;
   category: string;
   requirement: {
-    type: 'books_completed' | 'pages_read' | 'streak_days' | 'reviews_written' | 'custom' | 'onboarding';
+    type:
+      | 'books_completed'
+      | 'pages_read'
+      | 'streak_days'
+      | 'reviews_written'
+      | 'custom'
+      | 'onboarding';
     value: number;
     condition?: string;
   };
@@ -27,7 +33,7 @@ export class AchievementMapper {
       requirement: document.requirement,
       isActive: document.isActive,
       createdAt: document.createdAt,
-      updatedAt: document.updatedAt
+      updatedAt: document.updatedAt,
     });
   }
 
@@ -39,7 +45,7 @@ export class AchievementMapper {
       category: achievement.category,
       requirement: achievement.requirement,
       isActive: achievement.isActive,
-      updatedAt: achievement.updatedAt
+      updatedAt: achievement.updatedAt,
     };
   }
 }

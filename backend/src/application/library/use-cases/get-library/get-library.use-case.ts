@@ -7,14 +7,12 @@ import { GetLibraryQuery } from './get-library.query';
 
 @Injectable()
 export class GetLibraryUseCase {
-    constructor(
-        private readonly readingListRepository: IReadingListRepository
-    ) { }
+  constructor(private readonly readingListRepository: IReadingListRepository) {}
 
-    async execute(query: GetLibraryQuery): Promise<LibraryItemReadModel[]> {
-        const userId = UserId.create(query.userId);
-        const status = query.status || ReadingStatus.READING;
+  async execute(query: GetLibraryQuery): Promise<LibraryItemReadModel[]> {
+    const userId = UserId.create(query.userId);
+    const status = query.status || ReadingStatus.READING;
 
-        return this.readingListRepository.findAllDetailByUserId(userId, status);
-    }
+    return this.readingListRepository.findAllDetailByUserId(userId, status);
+  }
 }

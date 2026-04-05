@@ -25,7 +25,8 @@ export class UpdateBookDto {
   authorId?: string;
 
   @Transform(({ value }) => {
-    if (!value || (typeof value === 'string' && value.trim() === '')) return undefined;
+    if (!value || (typeof value === 'string' && value.trim() === ''))
+      return undefined;
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') return [value.trim()];
     return undefined;
@@ -52,10 +53,13 @@ export class UpdateBookDto {
   status?: 'draft' | 'published' | 'completed';
 
   @Transform(({ value }) => {
-    if (!value || (typeof value === 'string' && value.trim() === '')) return undefined;
+    if (!value || (typeof value === 'string' && value.trim() === ''))
+      return undefined;
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
-      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value.trim()];
+      return value.includes(',')
+        ? value.split(',').map((s) => s.trim())
+        : [value.trim()];
     }
     return undefined;
   })

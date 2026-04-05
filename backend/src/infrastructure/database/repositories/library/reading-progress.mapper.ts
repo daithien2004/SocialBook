@@ -1,4 +1,7 @@
-import { ReadingProgress, ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
+import {
+  ReadingProgress,
+  ChapterStatus,
+} from '@/domain/library/entities/reading-progress.entity';
 import { ProgressDocument } from '@/infrastructure/database/schemas/progress.schema';
 import { ReadingStatus } from '@/infrastructure/database/schemas/reading-list.schema';
 import { Types } from 'mongoose';
@@ -19,7 +22,7 @@ interface ReadingProgressPersistence {
 export class ReadingProgressMapper {
   static toDomain(doc: ProgressDocument | any): ReadingProgress {
     const status = ReadingProgressMapper.mapStatusToChapterStatus(doc.status);
-    
+
     return ReadingProgress.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),
@@ -30,22 +33,26 @@ export class ReadingProgressMapper {
       timeSpent: doc.timeSpent,
       lastReadAt: doc.lastReadAt,
       createdAt: doc.createdAt as Date,
-      updatedAt: doc.updatedAt as Date
+      updatedAt: doc.updatedAt as Date,
     });
   }
 
-  static toPersistence(readingProgress: ReadingProgress): ReadingProgressPersistence {
+  static toPersistence(
+    readingProgress: ReadingProgress,
+  ): ReadingProgressPersistence {
     return {
       _id: new Types.ObjectId(readingProgress.id),
       userId: new Types.ObjectId(readingProgress.userId.toString()),
       bookId: new Types.ObjectId(readingProgress.bookId.toString()),
       chapterId: new Types.ObjectId(readingProgress.chapterId.toString()),
       progress: readingProgress.progress,
-      status: ReadingProgressMapper.mapChapterStatusToStatus(readingProgress.status),
+      status: ReadingProgressMapper.mapChapterStatusToStatus(
+        readingProgress.status,
+      ),
       timeSpent: readingProgress.timeSpent,
       lastReadAt: readingProgress.lastReadAt || new Date(),
       createdAt: readingProgress.createdAt,
-      updatedAt: readingProgress.updatedAt
+      updatedAt: readingProgress.updatedAt,
     };
   }
 

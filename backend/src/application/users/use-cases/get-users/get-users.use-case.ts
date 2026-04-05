@@ -6,22 +6,18 @@ import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 
 @Injectable()
 export class GetUsersUseCase {
-    constructor(
-        private readonly userRepository: IUserRepository
-    ) {}
+  constructor(private readonly userRepository: IUserRepository) {}
 
-    async execute(query: GetUsersQuery): Promise<PaginatedResult<User>> {
-        return this.userRepository.findAll(
-            { 
-                username: query.username,
-                email: query.email,
-                roleId: query.roleId,
-                isBanned: query.isBanned,
-                isVerified: query.isVerified
-            },
-            { page: query.page, limit: query.limit }
-        );
-    }
+  async execute(query: GetUsersQuery): Promise<PaginatedResult<User>> {
+    return this.userRepository.findAll(
+      {
+        username: query.username,
+        email: query.email,
+        roleId: query.roleId,
+        isBanned: query.isBanned,
+        isVerified: query.isVerified,
+      },
+      { page: query.page, limit: query.limit },
+    );
+  }
 }
-
-

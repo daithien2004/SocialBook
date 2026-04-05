@@ -1,7 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
-
 export class CreateUserDto {
   username: string;
   email: string;
@@ -13,12 +12,11 @@ export class CreateUserDto {
   roleId?: string;
 }
 
-export class UpdateUserDto extends PartialType(CreateUserDto) { }
+export class UpdateUserDto extends PartialType(CreateUserDto) {}
 
 export class UpdateRefreshTokenDto {
   hashedRt: string | null;
 }
-
 
 export class UpdateUserOverviewDto {
   @IsOptional()
@@ -44,4 +42,3 @@ export class UpdateUserOverviewDto {
   @MaxLength(50)
   username?: string;
 }
-

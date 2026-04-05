@@ -1,100 +1,108 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export enum AchievementCategoryEnum {
-    READING = 'reading',
-    STREAK = 'streak',
-    SOCIAL = 'social',
-    SPECIAL = 'special',
-    ONBOARDING = 'onboarding'
+  READING = 'reading',
+  STREAK = 'streak',
+  SOCIAL = 'social',
+  SPECIAL = 'special',
+  ONBOARDING = 'onboarding',
 }
 
 export class CreateAchievementDto {
-    @IsString()
-    @IsNotEmpty()
-    code: string;
+  @IsString()
+  @IsNotEmpty()
+  code: string;
 
-    @IsString()
-    @IsNotEmpty()
-    name: string;
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsString()
-    @IsNotEmpty()
-    description: string;
+  @IsString()
+  @IsNotEmpty()
+  description: string;
 
-    @IsEnum(AchievementCategoryEnum)
-    category: AchievementCategoryEnum;
+  @IsEnum(AchievementCategoryEnum)
+  category: AchievementCategoryEnum;
 
-    @IsObject()
-    requirement: {
-        type: string;
-        value: number;
-        condition?: string;
-    };
+  @IsObject()
+  requirement: {
+    type: string;
+    value: number;
+    condition?: string;
+  };
 }
 
 export class UpdateAchievementDto {
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsString()
-    description?: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @IsOptional()
-    @IsObject()
-    requirement?: {
-        type: string;
-        value: number;
-        condition?: string;
-    };
+  @IsOptional()
+  @IsObject()
+  requirement?: {
+    type: string;
+    value: number;
+    condition?: string;
+  };
 
-    @IsOptional()
-    @IsBoolean()
-    isActive?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 export class FilterAchievementDto extends PaginationQueryDto {
-    @IsOptional()
-    @IsEnum(AchievementCategoryEnum)
-    category?: AchievementCategoryEnum;
+  @IsOptional()
+  @IsEnum(AchievementCategoryEnum)
+  category?: AchievementCategoryEnum;
 
-    @IsOptional()
-    @IsBoolean()
-    isActive?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 
-    @IsOptional()
-    @IsString()
-    search?: string;
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 
 export class AchievementResponseDto {
-    id: string;
+  id: string;
 
-    code: string;
+  code: string;
 
-    name: string;
+  name: string;
 
-    description: string;
+  description: string;
 
-    category: string;
+  category: string;
 
-    requirement: {
-        type: string;
-        value: number;
-        condition?: string;
-    };
+  requirement: {
+    type: string;
+    value: number;
+    condition?: string;
+  };
 
-    isActive: boolean;
+  isActive: boolean;
 
-    createdAt: Date;
+  createdAt: Date;
 
-    updatedAt: Date;
+  updatedAt: Date;
 
-
-    static fromArray(achievements: AchievementResponseDto[]): AchievementResponseDto[] {
-        return achievements;
-    }
+  static fromArray(
+    achievements: AchievementResponseDto[],
+  ): AchievementResponseDto[] {
+    return achievements;
+  }
 }

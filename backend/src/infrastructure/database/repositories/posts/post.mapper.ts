@@ -10,9 +10,15 @@ export class PostMapper {
 
     // Handle userId: could be ObjectId or populated User object
     let userId: string;
-    let author: { id: string; username: string; email: string; image: string } | undefined;
+    let author:
+      | { id: string; username: string; email: string; image: string }
+      | undefined;
 
-    if (postDoc.userId && typeof postDoc.userId === 'object' && 'username' in postDoc.userId) {
+    if (
+      postDoc.userId &&
+      typeof postDoc.userId === 'object' &&
+      'username' in postDoc.userId
+    ) {
       // Populated
       const userObj = postDoc.userId as any;
       userId = userObj._id.toString();
@@ -20,7 +26,7 @@ export class PostMapper {
         id: userObj._id.toString(),
         username: userObj.username,
         email: userObj.email,
-        image: userObj.image
+        image: userObj.image,
       };
     } else {
       userId = postDoc.userId?.toString() || '';
@@ -28,7 +34,15 @@ export class PostMapper {
 
     // Handle bookId: could be ObjectId or populated Book object
     let bookId: string | null = null;
-    let book: { id: string; title: string; coverUrl: string; authorId?: { name: string; bio: string } } | undefined;
+    let book:
+      | {
+          id: string;
+          title: string;
+          slug?: string;
+          coverUrl: string;
+          authorId?: { name: string; bio: string };
+        }
+      | undefined;
 
     if (postDoc.bookId) {
       if (typeof postDoc.bookId === 'object' && 'title' in postDoc.bookId) {
@@ -38,8 +52,9 @@ export class PostMapper {
         book = {
           id: bookObj._id.toString(),
           title: bookObj.title,
+          slug: bookObj.slug,
           coverUrl: bookObj.coverUrl,
-          authorId: bookObj.authorId // Keep as is if populated further
+          authorId: bookObj.authorId, // Keep as is if populated further
         };
       } else {
         bookId = postDoc.bookId.toString();
@@ -56,10 +71,13 @@ export class PostMapper {
       isFlagged: postDoc.isFlagged || false,
       moderationReason: postDoc.moderationReason,
       moderationStatus: postDoc.moderationStatus,
+      likesCount: (postDoc as any).likesCount,
+      commentsCount: (postDoc as any).commentsCount,
+      likedByCurrentUser: (postDoc as any).likedByCurrentUser,
       createdAt: postDoc.createdAt,
       updatedAt: postDoc.updatedAt,
       author,
-      book
+      book,
     });
   }
 
@@ -77,4 +95,3 @@ export class PostMapper {
     };
   }
 }
-

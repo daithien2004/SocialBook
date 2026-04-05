@@ -6,19 +6,8 @@ import { LikesRepositoryModule } from '@/infrastructure/database/repositories/li
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    LikesRepositoryModule,
-    IdGeneratorModule,
-  ],
-  providers: [
-    GetLikeCountUseCase,
-    GetLikeStatusUseCase,
-    ToggleLikeUseCase,
-  ],
-  exports: [
-    GetLikeCountUseCase,
-    GetLikeStatusUseCase,
-    ToggleLikeUseCase,
-  ],
+  imports: [LikesRepositoryModule, IdGeneratorModule],
+  providers: [GetLikeCountUseCase, GetLikeStatusUseCase, ToggleLikeUseCase],
+  exports: [GetLikeCountUseCase, GetLikeStatusUseCase, ToggleLikeUseCase],
 })
 export class LikesApplicationModule {}

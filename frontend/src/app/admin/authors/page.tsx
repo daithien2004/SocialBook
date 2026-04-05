@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useGetAuthorsQuery, useDeleteAuthorMutation } from '@/features/authors/api/authorApi';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Search, Plus, Loader2, Edit, Trash2, User, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -11,12 +10,13 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 
 import { useDebounce } from '@/hooks/useDebounce';
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
+import { useModalStore } from '@/store/useModalStore';
 
 export default function AdminAuthorsPage() {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 500);
+    const { openConfirm, openAuthorModal } = useModalStore();
 
     const { data, isLoading, isFetching, refetch } = useGetAuthorsQuery({
         page,
@@ -52,13 +52,13 @@ export default function AdminAuthorsPage() {
                             Tổng cộng <span className="font-semibold text-gray-800">{meta?.total?.toLocaleString() || 0}</span> tác giả
                         </p>
                     </div>
-                    <Link
-                        href="/admin/authors/new"
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
+                    <button
+                        onClick={() => openAuthorModal({ onSuccess: refetch })}
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow active:scale-95"
                     >
                         <Plus className="w-5 h-5" />
                         Thêm tác giả mới
-                    </Link>
+                    </button>
                 </div>
 
                 <div className="px-6 py-4 bg-gray-50/50">
@@ -138,26 +138,35 @@ export default function AdminAuthorsPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex justify-center gap-2">
-                                                        <Link
-                                                            href={`/admin/authors/edit/${author.id}`}
+                                                        <button
+                                                            onClick={() => openAuthorModal({
+                                                                author: {
+                                                                    id: author.id,
+                                                                    name: author.name,
+                                                                    bio: author.bio,
+                                                                    photoUrl: author.photoUrl
+                                                                },
+                                                                onSuccess: refetch
+                                                            })}
                                                             className="p-2 hover:bg-green-50 rounded-lg transition-colors"
                                                             title="Chỉnh sửa"
                                                         >
                                                             <Edit className="w-5 h-5 text-green-600" />
-                                                        </Link>
-                                                        <ConfirmDelete
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openConfirm({
+                                                                title: "Xóa tác giả",
+                                                                description: `Bạn có chắc chắn muốn xóa tác giả "${author.name}"?`,
+                                                                variant: "destructive",
+                                                                confirmText: "Xóa",
+                                                                onConfirm: () => handleDelete(author.id, author.name)
+                                                            })}
+                                                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
                                                             title="Xóa tác giả"
-                                                            description={`Bạn có chắc chắn muốn xóa tác giả "${author.name}"?`}
-                                                            onConfirm={() => handleDelete(author.id, author.name)}
+                                                            disabled={isDeleting}
                                                         >
-                                                            <button
-                                                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                                                title="Xóa tác giả"
-                                                                disabled={isDeleting}
-                                                            >
-                                                                <Trash2 className="w-5 h-5 text-red-600" />
-                                                            </button>
-                                                        </ConfirmDelete>
+                                                            <Trash2 className="w-5 h-5 text-red-600" />
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>

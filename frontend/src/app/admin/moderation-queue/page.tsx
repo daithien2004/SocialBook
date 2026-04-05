@@ -1,16 +1,22 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { useGetFlaggedPostsQuery, useApprovePostMutation, useRejectPostMutation } from '@/features/admin/api/moderationApi';
 import { toast } from 'sonner';
 import { Loader2, ChevronLeft, ChevronRight, Check, X, AlertTriangle, User, BookOpen } from 'lucide-react';
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
+import { useModalStore } from '@/store/useModalStore';
+
+function getModerationErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback;
+}
 
 const ModerationQueuePage = () => {
     const [page, setPage] = useState(1);
     const limit = 10;
 
     const { data, isLoading, isFetching, refetch } = useGetFlaggedPostsQuery({ page, limit });
+    const { openConfirm } = useModalStore();
     const [approvePost, { isLoading: isApproving }] = useApprovePostMutation();
     const [rejectPost, { isLoading: isRejecting }] = useRejectPostMutation();
 
@@ -66,52 +72,50 @@ const ModerationQueuePage = () => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <ConfirmDelete
-                                                title="Phê duyệt bài viết"
-                                                description="Bạn có chắc chắn muốn phê duyệt bài viết này?"
-                                                onConfirm={async () => {
-                                                    try {
-                                                        await approvePost(post.id).unwrap();
-                                                        toast.success('Bài viết đã được phê duyệt');
-                                                        refetch();
-                                                    } catch (error: any) {
-                                                        toast.error(error?.message || 'Phê duyệt thất bại');
+                                            <button
+                                                onClick={() => openConfirm({
+                                                    title: "Phê duyệt bài viết",
+                                                    description: "Bạn có chắc chắn muốn phê duyệt bài viết này?",
+                                                    confirmText: "Phê duyệt",
+                                                    onConfirm: async () => {
+                                                        try {
+                                                            await approvePost(post.id).unwrap();
+                                                            toast.success('Bài viết đã được phê duyệt');
+                                                            refetch();
+                                                        } catch (error: unknown) {
+                                                            toast.error(getModerationErrorMessage(error, 'Phê duyệt thất bại'));
+                                                        }
                                                     }
-                                                }}
-                                                okText="Phê duyệt"
+                                                })}
+                                                disabled={isApproving || isRejecting}
+                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
                                             >
-                                                <button
-                                                    disabled={isApproving || isRejecting}
-                                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
-                                                >
-                                                    <Check className="h-4 w-4" />
-                                                    Phê duyệt
-                                                </button>
-                                            </ConfirmDelete>
+                                                <Check className="h-4 w-4" />
+                                                Phê duyệt
+                                            </button>
 
-                                            <ConfirmDelete
-                                                title="Từ chối bài viết"
-                                                description="Bạn có chắc chắn muốn từ chối và xóa bài viết này?"
-                                                onConfirm={async () => {
-                                                    try {
-                                                        await rejectPost(post.id).unwrap();
-                                                        toast.success('Bài viết đã bị từ chối và xóa');
-                                                        refetch();
-                                                    } catch (error: any) {
-                                                        toast.error(error?.message || 'Từ chối thất bại');
+                                            <button
+                                                onClick={() => openConfirm({
+                                                    title: "Từ chối bài viết",
+                                                    description: "Bạn có chắc chắn muốn từ chối và xóa bài viết này?",
+                                                    confirmText: "Xóa",
+                                                    variant: "destructive",
+                                                    onConfirm: async () => {
+                                                        try {
+                                                            await rejectPost(post.id).unwrap();
+                                                            toast.success('Bài viết đã bị từ chối và xóa');
+                                                            refetch();
+                                                        } catch (error: unknown) {
+                                                            toast.error(getModerationErrorMessage(error, 'Từ chối thất bại'));
+                                                        }
                                                     }
-                                                }}
-                                                okText="Xóa"
-                                                okButtonProps={{ danger: true }}
+                                                })}
+                                                disabled={isApproving || isRejecting}
+                                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
                                             >
-                                                <button
-                                                    disabled={isApproving || isRejecting}
-                                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                    Từ chối
-                                                </button>
-                                            </ConfirmDelete>
+                                                <X className="h-4 w-4" />
+                                                Từ chối
+                                            </button>
                                         </div>
                                     </div>
 
@@ -121,12 +125,18 @@ const ModerationQueuePage = () => {
                                         {post.imageUrls && post.imageUrls.length > 0 && (
                                             <div className="grid grid-cols-4 gap-2 mt-4">
                                                 {post.imageUrls.map((url: string, idx: number) => (
-                                                    <img
+                                                    <div
                                                         key={idx}
-                                                        src={url}
-                                                        alt={`Post image ${idx + 1}`}
-                                                        className="rounded-md object-cover aspect-square border border-gray-200"
-                                                    />
+                                                        className="relative aspect-square overflow-hidden rounded-md border border-gray-200"
+                                                    >
+                                                        <Image
+                                                            src={url}
+                                                            alt={`Post image ${idx + 1}`}
+                                                            fill
+                                                            sizes="(max-width: 768px) 25vw, 160px"
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
                                                 ))}
                                             </div>
                                         )}

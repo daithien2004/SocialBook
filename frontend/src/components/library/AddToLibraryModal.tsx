@@ -36,17 +36,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
-interface AddToLibraryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  bookId: string;
-}
+import { useModalStore } from '@/store/useModalStore';
 
-export default function AddToLibraryModal({
-  isOpen,
-  onClose,
-  bookId,
-}: AddToLibraryModalProps) {
+export default function AddToLibraryModal() {
+  const { isAddToLibraryOpen, closeAddToLibrary, addToLibraryData } = useModalStore();
+  const bookId = addToLibraryData?.bookId || '';
+  
   const { user, isAuthenticated } = useAppAuth();
   const isLoggedIn = isAuthenticated;
   const router = useRouter();
@@ -59,16 +54,16 @@ export default function AddToLibraryModal({
   const [newCollectionName, setNewCollectionName] = useState('');
 
   useEffect(() => {
-    if (isOpen && !isAuthenticated) {
+    if (isAddToLibraryOpen && !isAuthenticated) {
       toast.info('Vui lòng đăng nhập để sử dụng tính năng này', {
         action: {
           label: 'Đăng nhập',
           onClick: () => router.push('/login'),
         },
       });
-      onClose();
+      closeAddToLibrary();
     }
-  }, [isOpen, isAuthenticated, onClose, router]);
+  }, [isAddToLibraryOpen, isAuthenticated, closeAddToLibrary, router]);
 
   const currentUserId = user?.id;
 
@@ -76,7 +71,7 @@ export default function AddToLibraryModal({
     skip: !isLoggedIn,
   });
   const { data: libraryInfo } = useGetBookLibraryInfoQuery(bookId, {
-    skip: !isOpen || !isAuthenticated,
+    skip: !isAddToLibraryOpen || !isAuthenticated || !bookId,
   });
 
   const [updateStatus] = useUpdateLibraryStatusMutation();
@@ -93,11 +88,11 @@ export default function AddToLibraryModal({
   }, [libraryInfo]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isAddToLibraryOpen) {
       setIsCreating(false);
       setNewCollectionName('');
     }
-  }, [isOpen]);
+  }, [isAddToLibraryOpen]);
 
   const handleStatusChange = async (status: LibraryStatus) => {
     setSelectedStatus(status);
@@ -149,10 +144,10 @@ export default function AddToLibraryModal({
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !bookId) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isAddToLibraryOpen} onOpenChange={(open) => !open && closeAddToLibrary()}>
       <DialogContent className="sm:max-w-md bg-white dark:bg-[#1a1a1a] gap-0 p-0 border-slate-100 dark:border-gray-800">
         <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
           <DialogTitle>Lưu vào thư viện</DialogTitle>
@@ -193,7 +188,7 @@ export default function AddToLibraryModal({
                 Bộ sưu tập của tôi
               </h4>
               {!isCreating && (
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700" onClick={() => setIsCreating(true)}>
+                <Button variant="ghost" size="sm" className="h-7 text-xs text-primary hover:text-primary/90 hover:bg-transparent" onClick={() => setIsCreating(true)}>
                   <Plus className="w-3 h-3 mr-1" />
                   Tạo mới
                 </Button>
@@ -221,34 +216,40 @@ export default function AddToLibraryModal({
 
             <ScrollArea className="h-44 pr-4 -mr-4">
               <div className="space-y-1">
-                {collections.map((col) => {
-                  const isSelected = selectedCollections.includes(col.id);
-                  return (
-                    <button
-                      key={col.id}
-                      onClick={() => handleToggleCollection(col.id)}
-                      className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-800/50 transition-colors group text-left"
-                    >
-                      <div className={`
-                                      flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors
-                                      ${isSelected
-                          ? 'bg-blue-600 border-blue-600'
-                          : 'border-slate-300 dark:border-gray-600 group-hover:border-blue-400'}
-                                  `}>
-                        {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                      </div>
-                      <span className="text-sm text-slate-700 dark:text-gray-300 flex-1 truncate">{col.name}</span>
-                      {col.isPublic ? <Globe size={13} className="text-slate-400" /> : <Lock size={13} className="text-slate-400" />}
-                    </button>
-                  );
-                })}
+                {collections.length > 0 ? (
+                  collections.map((col) => {
+                    const isSelected = selectedCollections.includes(col.id);
+                    return (
+                      <button
+                        key={col.id}
+                        onClick={() => handleToggleCollection(col.id)}
+                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-800/50 transition-colors group text-left"
+                      >
+                        <div className={`
+                                        flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors
+                                        ${isSelected
+                            ? 'bg-blue-600 border-blue-600'
+                            : 'border-slate-300 dark:border-gray-600 group-hover:border-blue-400'}
+                                    `}>
+                          {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                        </div>
+                        <span className="text-sm text-slate-700 dark:text-gray-300 flex-1 truncate">{col.name}</span>
+                        {col.isPublic ? <Globe size={13} className="text-slate-400" /> : <Lock size={13} className="text-slate-400" />}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="py-8 text-center">
+                    <p className="text-sm text-slate-500 dark:text-gray-400">Bạn chưa có bộ sưu tập nào</p>
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </div>
         </div>
 
         <DialogFooter className="px-6 py-4 bg-slate-50 dark:bg-gray-900 border-t border-slate-100 dark:border-gray-800">
-          <Button className="w-full" onClick={onClose}>
+          <Button className="w-full" onClick={closeAddToLibrary}>
             Xong
           </Button>
         </DialogFooter>

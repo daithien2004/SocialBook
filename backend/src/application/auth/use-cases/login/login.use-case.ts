@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { UnauthorizedDomainException, UserBannedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
+import {
+  UnauthorizedDomainException,
+  UserBannedDomainException,
+} from '@/domain/auth/exceptions/auth-exceptions';
 import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { LoginCommand } from './login.command';
@@ -10,7 +13,7 @@ export class LoginUseCase {
   constructor(
     private readonly tokenService: TokenService,
     private readonly rolesRepository: IRoleRepository,
-  ) { }
+  ) {}
 
   async execute(command: LoginCommand) {
     const user = command.user as User;
@@ -24,7 +27,9 @@ export class LoginUseCase {
     }
 
     if (user.isBanned) {
-      throw new UserBannedDomainException('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.');
+      throw new UserBannedDomainException(
+        'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+      );
     }
 
     let roleName = 'user';

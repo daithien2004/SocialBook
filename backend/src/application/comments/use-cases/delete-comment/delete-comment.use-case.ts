@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NotFoundDomainException, ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import {
+  NotFoundDomainException,
+  ForbiddenDomainException,
+} from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { DeleteCommentCommand } from './delete-comment.command';
@@ -7,39 +10,40 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class DeleteCommentUseCase {
-    private readonly logger = new Logger(DeleteCommentUseCase.name);
+  private readonly logger = new Logger(DeleteCommentUseCase.name);
 
-    constructor(
-        private readonly commentRepository: ICommentRepository
-    ) {}
+  constructor(private readonly commentRepository: ICommentRepository) {}
 
-    async execute(command: DeleteCommentCommand) {
-        try {
-            const commentId = CommentId.create(command.id);
-            
-            // Find the comment
-            const comment = await this.commentRepository.findById(commentId);
-            if (!comment) {
-                throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
-            }
+  async execute(command: DeleteCommentCommand) {
+    try {
+      const commentId = CommentId.create(command.id);
 
-            // Check if user can delete this comment
-            const canDelete = command.isAdmin || comment.canBeDeleted(command.userId);
-            if (!canDelete) {
-                throw new ForbiddenDomainException('You cannot delete this comment');
-            }
+      // Find the comment
+      const comment = await this.commentRepository.findById(commentId);
+      if (!comment) {
+        throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
+      }
 
-            // Delete the comment
-            await this.commentRepository.delete(commentId);
+      // Check if user can delete this comment
+      const canDelete = command.isAdmin || comment.canBeDeleted(command.userId);
+      if (!canDelete) {
+        throw new ForbiddenDomainException('You cannot delete this comment');
+      }
 
-            this.logger.log(`Comment deleted successfully: ${comment.id.toString()} by user ${command.userId}`);
+      // Delete the comment
+      await this.commentRepository.delete(commentId);
 
-            return { success: true };
-        } catch (error) {
-            this.logger.error(`Failed to delete comment ${command.id} by user ${command.userId}`, error);
-            throw error;
-        }
+      this.logger.log(
+        `Comment deleted successfully: ${comment.id.toString()} by user ${command.userId}`,
+      );
+
+      return { success: true };
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete comment ${command.id} by user ${command.userId}`,
+        error,
+      );
+      throw error;
     }
+  }
 }
-
-

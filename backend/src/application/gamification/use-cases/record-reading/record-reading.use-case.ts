@@ -9,44 +9,48 @@ import { RecordReadingCommand } from './record-reading.command';
 
 @Injectable()
 export class RecordReadingUseCase {
-    private readonly logger = new Logger(RecordReadingUseCase.name);
+  private readonly logger = new Logger(RecordReadingUseCase.name);
 
-    constructor(
-        private readonly userGamificationRepository: IUserGamificationRepository,
-        private readonly idGenerator: IIdGenerator
-    ) {}
+  constructor(
+    private readonly userGamificationRepository: IUserGamificationRepository,
+    private readonly idGenerator: IIdGenerator,
+  ) {}
 
-    async execute(command: RecordReadingCommand): Promise<UserGamification> {
-        try {
-            const userId = UserId.create(command.userId);
-            
-            // Find or create user gamification
-            let gamification = await this.userGamificationRepository.findByUser(userId);
-            
-            if (!gamification) {
-                gamification = UserGamification.create({ 
-                    id: UserGamificationId.create(this.idGenerator.generate()),
-                    userId: command.userId 
-                });
-            }
+  async execute(command: RecordReadingCommand): Promise<UserGamification> {
+    try {
+      const userId = UserId.create(command.userId);
 
-            // Record reading and update streak
-            gamification.recordReading();
-            
-            // Add XP
-            gamification.addXP(command.xpAmount);
+      // Find or create user gamification
+      let gamification =
+        await this.userGamificationRepository.findByUser(userId);
 
-            // Save to repository
-            await this.userGamificationRepository.save(gamification);
+      if (!gamification) {
+        gamification = UserGamification.create({
+          id: UserGamificationId.create(this.idGenerator.generate()),
+          userId: command.userId,
+        });
+      }
 
-            this.logger.log(`Reading recorded for user ${command.userId}, XP awarded: ${command.xpAmount}`);
+      // Record reading and update streak
+      gamification.recordReading();
 
-            return gamification;
-        } catch (error) {
-            this.logger.error(`Failed to record reading for user ${command.userId}`, error);
-            throw error;
-        }
+      // Add XP
+      gamification.addXP(command.xpAmount);
+
+      // Save to repository
+      await this.userGamificationRepository.save(gamification);
+
+      this.logger.log(
+        `Reading recorded for user ${command.userId}, XP awarded: ${command.xpAmount}`,
+      );
+
+      return gamification;
+    } catch (error) {
+      this.logger.error(
+        `Failed to record reading for user ${command.userId}`,
+        error,
+      );
+      throw error;
     }
+  }
 }
-
-

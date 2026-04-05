@@ -7,7 +7,7 @@ export function HeroSection() {
         {/* Main content */}
         <div className="mb-8">
           <h1 className="text-6xl md:text-7xl font-bold mb-6 text-balance">
-            <span className="bg-gradient-to-r from-blue-500 to-red-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
               SocialBook
             </span>
           </h1>

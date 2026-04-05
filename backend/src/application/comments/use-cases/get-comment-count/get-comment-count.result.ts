@@ -1,3 +1,3 @@
 export interface GetCommentCountResult {
-    count: number;
+  count: number;
 }
