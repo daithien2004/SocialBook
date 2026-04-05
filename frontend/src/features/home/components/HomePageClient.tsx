@@ -2,21 +2,21 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { useGetBooksQuery } from '../features/books/api/bookApi';
-import { TabType, TABS, PAGINATION } from '../features/books/books.constants';
-import { shouldLoadMore } from '../features/books/books.utils';
-import { useInfiniteScroll } from '../features/books/hooks/useInfiniteScroll';
-import { useTabsManager } from '../features/books/hooks/useTabsManager';
-import { BookOrderField } from '../features/books/types/book.interface';
-import { BannerSlider } from './book/BannerSlider';
-import { BookGrid } from './book/BookGrid';
-import { DailyGoalWidget } from './gamification/DailyGoalWidget';
-import { AchievementsWidget } from './gamification/AchievementsWidget';
-import { GenresSection } from './book/GenresSection';
-import { MobileReadingSection } from './book/MobileReadingSection';
-import { ReadingSidebar } from './book/ReadingSidebar';
-import { RecommendedForYouSection } from './book/RecommendedForYouSection';
-import { TabNavigation } from './book/TabNavigation';
+import { useGetBooksQuery } from '@/features/books/api/bookApi';
+import { TabType, TABS, PAGINATION } from '@/features/books/books.constants';
+import { shouldLoadMore } from '@/features/books/books.utils';
+import { useInfiniteScroll } from '@/features/books/hooks/useInfiniteScroll';
+import { useTabsManager } from '@/features/books/hooks/useTabsManager';
+import { BookOrderField } from '@/features/books/types/book.interface';
+import { BannerSlider } from '@/components/book/BannerSlider';
+import { BookGrid } from '@/components/book/BookGrid';
+import { DailyGoalWidget } from '@/components/gamification/DailyGoalWidget';
+import { AchievementsWidget } from '@/components/gamification/AchievementsWidget';
+import { GenresSection } from '@/components/book/GenresSection';
+import { MobileReadingSection } from '@/components/book/MobileReadingSection';
+import { ReadingSidebar } from '@/components/book/ReadingSidebar';
+import { RecommendedForYouSection } from '@/components/book/RecommendedForYouSection';
+import { TabNavigation } from '@/components/book/TabNavigation';
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabType>('trending');

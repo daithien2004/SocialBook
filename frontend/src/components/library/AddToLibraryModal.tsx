@@ -10,19 +10,13 @@ import {
   Plus,
   X
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import {
-  useAddBookToCollectionsMutation,
-  useCreateCollectionMutation,
-  useGetBookLibraryInfoQuery,
-  useGetCollectionsQuery,
-  useUpdateLibraryStatusMutation,
-} from '@/features/library/api/libraryApi';
+import { useAddToLibrary } from './hooks/useAddToLibrary';
 import { LibraryStatus } from '@/features/library/types/library.interface';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
+import { useModalStore } from '@/store/useModalStore';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,115 +30,49 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
-import { useModalStore } from '@/store/useModalStore';
-
 export default function AddToLibraryModal() {
   const { isAddToLibraryOpen, closeAddToLibrary, addToLibraryData } = useModalStore();
   const bookId = addToLibraryData?.bookId || '';
   
   const { user, isAuthenticated } = useAppAuth();
   const isLoggedIn = isAuthenticated;
-  const router = useRouter();
+  const currentUserId = user?.id;
 
-  const [selectedStatus, setSelectedStatus] = useState<LibraryStatus | null>(
-    null
-  );
-  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState('');
+  const {
+    selectedStatus,
+    selectedCollections,
+    collections,
+    isCreating,
+    newCollectionName,
+    setIsCreating,
+    setNewCollectionName,
+    handleStatusChange,
+    handleToggleCollection,
+    handleCreateCollection,
+  } = useAddToLibrary({
+    bookId,
+    userId: currentUserId,
+    isOpen: isAddToLibraryOpen,
+    isAuthenticated: isLoggedIn,
+  });
 
   useEffect(() => {
     if (isAddToLibraryOpen && !isAuthenticated) {
       toast.info('Vui lòng đăng nhập để sử dụng tính năng này', {
         action: {
           label: 'Đăng nhập',
-          onClick: () => router.push('/login'),
+          onClick: () => {
+            window.location.href = '/login';
+          },
         },
       });
       closeAddToLibrary();
     }
-  }, [isAddToLibraryOpen, isAuthenticated, closeAddToLibrary, router]);
-
-  const currentUserId = user?.id;
-
-  const { data: collectionsData } = useGetCollectionsQuery(currentUserId, {
-    skip: !isLoggedIn,
-  });
-  const { data: libraryInfo } = useGetBookLibraryInfoQuery(bookId, {
-    skip: !isAddToLibraryOpen || !isAuthenticated || !bookId,
-  });
-
-  const [updateStatus] = useUpdateLibraryStatusMutation();
-  const [updateCollections] = useAddBookToCollectionsMutation();
-  const [createCollection] = useCreateCollectionMutation();
-
-  const collections = collectionsData || [];
-
-  useEffect(() => {
-    if (libraryInfo) {
-      setSelectedStatus(libraryInfo.status);
-      setSelectedCollections(libraryInfo.collections.map((c) => c.id));
-    }
-  }, [libraryInfo]);
-
-  useEffect(() => {
-    if (isAddToLibraryOpen) {
-      setIsCreating(false);
-      setNewCollectionName('');
-    }
-  }, [isAddToLibraryOpen]);
-
-  const handleStatusChange = async (status: LibraryStatus) => {
-    setSelectedStatus(status);
-    try {
-      await updateStatus({ bookId, status }).unwrap();
-    } catch (error: any) {
-      if (error?.status !== 401) {
-        toast.error('Cập nhật trạng thái thất bại');
-      }
-    }
-  };
-
-  const handleToggleCollection = async (collectionId: string) => {
-    const isSelected = selectedCollections.includes(collectionId);
-    let newIds: string[] = [];
-
-    if (isSelected) {
-      newIds = selectedCollections.filter((id) => id !== collectionId);
-    } else {
-      newIds = [...selectedCollections, collectionId];
-    }
-
-    setSelectedCollections(newIds);
-
-    try {
-      await updateCollections({ bookId, collectionIds: newIds }).unwrap();
-    } catch (error: any) {
-      setSelectedCollections(selectedCollections); // Rollback
-      if (error?.status !== 401) {
-        toast.error('Cập nhật bộ sưu tập thất bại');
-      }
-    }
-  };
-
-  const handleCreateCollection = async () => {
-    if (!newCollectionName.trim()) return;
-    try {
-      const res = await createCollection({ name: newCollectionName }).unwrap();
-      const newColId = res.id;
-
-      await handleToggleCollection(newColId);
-
-      setNewCollectionName('');
-      setIsCreating(false);
-    } catch (error: any) {
-      if (error?.status !== 401) {
-        toast.error('Tạo danh sách thất bại');
-      }
-    }
-  };
+  }, [isAddToLibraryOpen, isAuthenticated, closeAddToLibrary]);
 
   if (!isAuthenticated || !bookId) return null;
+
+  const collectionsList = collections ?? [];
 
   return (
     <Dialog open={isAddToLibraryOpen} onOpenChange={(open) => !open && closeAddToLibrary()}>
@@ -216,8 +144,8 @@ export default function AddToLibraryModal() {
 
             <ScrollArea className="h-44 pr-4 -mr-4">
               <div className="space-y-1">
-                {collections.length > 0 ? (
-                  collections.map((col) => {
+                {collectionsList.length > 0 ? (
+                  collectionsList.map((col) => {
                     const isSelected = selectedCollections.includes(col.id);
                     return (
                       <button
@@ -258,7 +186,15 @@ export default function AddToLibraryModal() {
   );
 }
 
-function StatusButton({ active, onClick, icon: Icon, label, activeClass }: any) {
+interface StatusButtonProps {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  activeClass: string;
+}
+
+function StatusButton({ active, onClick, icon: Icon, label, activeClass }: StatusButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -270,5 +206,5 @@ function StatusButton({ active, onClick, icon: Icon, label, activeClass }: any) 
       <Icon size={20} className={active ? 'opacity-100' : 'opacity-70'} />
       <span className="text-xs font-medium">{label}</span>
     </button>
-  )
+  );
 }

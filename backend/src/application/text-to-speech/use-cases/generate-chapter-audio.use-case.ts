@@ -11,7 +11,6 @@ import {
   TextToSpeech,
   TTSStatus,
 } from '@/domain/text-to-speech/entities/text-to-speech.entity';
-import { LanguageDetectorService } from '@/domain/text-to-speech/services/language-detector.service';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
 interface GenerateAudioOptions {
@@ -20,6 +19,12 @@ interface GenerateAudioOptions {
   language?: string;
   format?: string;
   forceRegenerate?: boolean;
+}
+
+interface LanguageDetectionResult {
+  code: string;
+  voice: string;
+  name: string;
 }
 
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
@@ -31,8 +36,27 @@ export class GenerateChapterAudioUseCase {
     private readonly ttsProvider: ITextToSpeechProvider,
     private readonly chapterRepository: IChapterRepository,
     private readonly idGenerator: IIdGenerator,
-    private readonly languageDetector: LanguageDetectorService,
   ) {}
+
+  private detectLanguage(text: string): LanguageDetectionResult {
+    const vietnamesePattern =
+      /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+    const hasVietnamese = vietnamesePattern.test(text);
+
+    if (hasVietnamese) {
+      return {
+        code: 'vi-VN',
+        voice: 'vi-VN',
+        name: 'Vietnamese',
+      };
+    }
+
+    return {
+      code: 'en-US',
+      voice: 'en-US',
+      name: 'English',
+    };
+  }
 
   async execute(
     chapterIdStr: string,
@@ -54,7 +78,7 @@ export class GenerateChapterAudioUseCase {
     }
 
     // 4. Detect Language/Defaults
-    const detected = this.languageDetector.detect(text);
+    const detected = this.detectLanguage(text);
     const {
       voice = detected.voice,
       speed = 1.0,

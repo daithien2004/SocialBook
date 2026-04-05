@@ -7,6 +7,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "seed": "ts-node -r tsconfig-paths/register src/shared/database/seeds/run-seed.ts",
+    "seed:locations": "ts-node -r tsconfig-paths/register src/shared/database/seeds/seed-locations.script.ts",
+    "seed:reading-history": "ts-node -r tsconfig-paths/register src/shared/database/seeds/seed-reading-history.script.ts",
+    "seed:reading-history:30": "ts-node -r tsconfig-paths/register src/shared/database/seeds/seed-reading-history.script.ts --days=30",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

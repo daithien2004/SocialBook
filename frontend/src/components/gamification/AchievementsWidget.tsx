@@ -2,7 +2,7 @@
 
 import { useGetUserAchievementsQuery } from '@/features/gamification/api/gamificationApi';
 import { Trophy, Medal, Award } from 'lucide-react';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 
 export function AchievementsWidget() {
   const { isAuthenticated } = useAppAuth();

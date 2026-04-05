@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type {
-  IEpubParser,
   ParsedChapter,
 } from '@/domain/chapters/interfaces/epub-parser.interface';
+import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
 
 export interface ImportEpubPreviewResult {
   chapters: ParsedChapter[];
@@ -13,7 +13,7 @@ export interface ImportEpubPreviewResult {
 export class ImportEpubPreviewUseCase {
   private readonly logger = new Logger(ImportEpubPreviewUseCase.name);
 
-  constructor(private readonly epubParser: IEpubParser) {}
+  constructor(private readonly epubParserService: EpubParserService) {}
 
   async execute(
     fileBuffer: Buffer,
@@ -21,7 +21,7 @@ export class ImportEpubPreviewUseCase {
   ): Promise<ImportEpubPreviewResult> {
     try {
       this.logger.log(`Parsing EPUB file: ${fileName}`);
-      const chapters = await this.epubParser.parseEpub(fileBuffer, fileName);
+      const chapters = await this.epubParserService.parseEpub(fileBuffer, fileName);
 
       this.logger.log(`Parsed ${chapters.length} chapters from EPUB`);
 

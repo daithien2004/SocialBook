@@ -61,10 +61,11 @@ describe('GetPostsUseCase (Integration - Real DB)', () => {
   });
 
   it('should retrieve correctly mapped PostEntities with populated author', async () => {
-    const result = await useCase.execute(new GetPostsQuery(1, 1));
+    const result = await useCase.execute(new GetPostsQuery(1));
 
     expect(result).toHaveProperty('data');
-    expect(result).toHaveProperty('total');
+    expect(result).toHaveProperty('nextCursor');
+    expect(result).toHaveProperty('hasMore');
 
     if (result.data.length > 0) {
       const post = result.data[0];
@@ -78,15 +79,15 @@ describe('GetPostsUseCase (Integration - Real DB)', () => {
   });
 
   it('should NOT include soft-deleted posts', async () => {
-    const result = await useCase.execute(new GetPostsQuery(1, 50));
+    const result = await useCase.execute(new GetPostsQuery(50));
 
     result.data.forEach((post) => {
-      expect(post.isDelete).toBe(false);
+      expect(post.isDeleted).toBe(false);
     });
   });
 
   it('should sort posts by createdAt descending', async () => {
-    const result = await useCase.execute(new GetPostsQuery(1, 10));
+    const result = await useCase.execute(new GetPostsQuery(10));
 
     for (let i = 0; i < result.data.length - 1; i++) {
       expect(result.data[i].createdAt.getTime()).toBeGreaterThanOrEqual(
@@ -97,13 +98,14 @@ describe('GetPostsUseCase (Integration - Real DB)', () => {
 
   it('should calculate pagination correctly across pages', async () => {
     const limit = 2;
-    const page1 = await useCase.execute(new GetPostsQuery(1, limit));
-    const page2 = await useCase.execute(new GetPostsQuery(2, limit));
+    const page1 = await useCase.execute(new GetPostsQuery(limit));
+    const page2 = page1.nextCursor
+      ? await useCase.execute(new GetPostsQuery(limit, page1.nextCursor))
+      : null;
 
     expect(page1.data.length).toBeLessThanOrEqual(limit);
-    expect(page1.total).toBe(page2.total);
 
-    if (page1.data.length === limit && page2.data.length > 0) {
+    if (page1.data.length === limit && page2 && page2.data.length > 0) {
       const page1Ids = page1.data.map((p) => p.id);
       const overlap = page2.data.filter((p) => page1Ids.includes(p.id));
       expect(overlap).toHaveLength(0);

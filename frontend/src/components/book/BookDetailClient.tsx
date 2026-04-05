@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useState } from 'react';
 import Link from 'next/link';
-import { HeaderClient } from '@/components/HeaderClient';
+import { HeaderClient } from '@/components/header/HeaderClient';
 import { useModalStore } from '@/store/useModalStore';
 
 import { useBookDetail } from '@/features/books/hooks/useBookDetail';

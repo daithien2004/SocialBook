@@ -19,7 +19,7 @@ import {
   useGetCollectionsQuery,
 } from '@/features/library/api/libraryApi';
 import { LibraryStatus } from '@/features/library/types/library.interface';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { useModalStore } from '@/store/useModalStore';
 
 export default function LibraryPage() {

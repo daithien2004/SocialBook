@@ -2,19 +2,10 @@
 
 import type React from "react"
 import Image from "next/image";
-import { Facebook, Twitter, Mail } from "lucide-react"
 import {useGetFollowingListQuery, FollowingUser} from "@/features/follows/api/followApi";
 import {useRouter} from "next/navigation";
 import {formatDate} from "@/lib/utils";
-
-// ⬇️ THÊM: import các button share từ next-share
-import {
-  FacebookShareButton,
-  TwitterShareButton,
-  EmailShareButton,
-  PinterestShareButton,
-  TumblrShareButton,
-} from "next-share";
+import { useProfileShare } from './hooks';
 
 interface ProfileNavProps {
   profileUserId: string;
@@ -35,12 +26,7 @@ export function ProfileSidebar(props : ProfileNavProps) {
   });
   const router = useRouter();
   const topFollowing = following.slice(0, 7);
-
-  // ⬇️ THÊM: URL hồ sơ để share (dùng được cả localhost)
-  const origin =
-      typeof window !== "undefined" ? window.location.origin : "";
-  const profileUrl = `${origin}/users/${profileUserId}`;
-  const shareTitle = "Xem hồ sơ người dùng này";
+  const { shareButtons } = useProfileShare({ userId: profileUserId });
 
   return (
       <>
@@ -111,38 +97,11 @@ export function ProfileSidebar(props : ProfileNavProps) {
               </h4>
 
               <div className="flex gap-2">
-                <FacebookShareButton url={profileUrl} quote={shareTitle}>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3b5998] text-white shadow-sm dark:ring-1 dark:ring-white/10 hover:opacity-90">
-                    <Facebook className="h-4 w-4" />
-                  </div>
-                </FacebookShareButton>
-
-                <TwitterShareButton url={profileUrl} title={shareTitle}>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1da1f2] text-white shadow-sm dark:ring-1 dark:ring-white/10 hover:opacity-90">
-                    <Twitter className="h-4 w-4" />
-                  </div>
-                </TwitterShareButton>
-
-                <EmailShareButton url={profileUrl} subject={shareTitle}>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f96a0e] text-white shadow-sm dark:ring-1 dark:ring-white/10 hover:opacity-90">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                </EmailShareButton>
+                {shareButtons.map((share) => share.button)}
               </div>
             </div>
           </div>
         </div>
       </>
-  )
-}
-
-// Giữ nguyên SocialButton nếu bạn còn dùng chỗ khác
-function SocialButton({ color, icon }: { color: string; icon: React.ReactNode }) {
-  return (
-      <button
-          className={`${color} flex h-8 w-8 items-center justify-center rounded-full text-white transition-opacity hover:opacity-90`}
-      >
-        {icon}
-      </button>
   )
 }
