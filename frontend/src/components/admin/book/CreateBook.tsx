@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { ChangeEvent, FormEvent, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -18,31 +17,9 @@ import {
 import { useCreateBookMutation } from '@/features/books/api/bookApi';
 import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
 import { AuthorOption, GenreOption } from '@/features/admin/types/bookRelation.interface';
-import { getErrorMessage } from '@/lib/utils';
+import { useCreateBookForm, BookStatus } from './hooks/useCreateBookForm';
 
-const DEFAULT_COVER = '/abstract-book-pattern.png';
-
-type Status = 'draft' | 'published' | 'completed';
-
-interface FormData {
-  title: string;
-  authorId: string;
-  genres: string[];
-  description: string;
-  publishedYear: string;
-  status: Status;
-  tagsInput: string;
-}
-
-const initialForm: FormData = {
-  title: '',
-  authorId: '',
-  genres: [],
-  description: '',
-  publishedYear: new Date().getFullYear().toString(),
-  status: 'draft',
-  tagsInput: '',
-};
+type Status = BookStatus;
 
 const EMPTY_AUTHORS: AuthorOption[] = [];
 const EMPTY_GENRES: GenreOption[] = [];
@@ -52,44 +29,22 @@ export default function CreateBook() {
   const [createBook, { isLoading }] = useCreateBookMutation();
   const { data: authors = EMPTY_AUTHORS, isLoading: loadingAuthors } = useGetAuthorsQuery();
   const { data: genres = EMPTY_GENRES, isLoading: loadingGenres } = useGetGenresQuery();
-  const [formData, setFormData] = useState<FormData>(initialForm);
-  const [coverPreview, setCoverPreview] = useState<string>(DEFAULT_COVER);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [selectedGenreId, setSelectedGenreId] = useState('');
-  const [message, setMessage] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
-
-  const handleImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setCoverFile(file);
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setCoverPreview(event.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  }, []);
-
-  const handleAddGenre = () => {
-    if (!selectedGenreId) return;
-    if (formData.genres.includes(selectedGenreId)) {
-      setSelectedGenreId('');
-      return;
-    }
-    setFormData((prev) => ({ ...prev, genres: [...prev.genres, selectedGenreId] }));
-    setSelectedGenreId('');
-  };
-
-  const handleRemoveGenre = (id: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      genres: prev.genres.filter((g) => g !== id),
-    }));
-  };
+  
+  const {
+    formData,
+    coverPreview,
+    coverFile,
+    selectedGenreId,
+    setSelectedGenreId,
+    message,
+    isSubmitting,
+    setFormData,
+    handleImageUpload,
+    handleAddGenre,
+    handleRemoveGenre,
+    handleReset,
+    handleSubmit,
+  } = useCreateBookForm((payload) => createBook(payload).unwrap());
 
   const getGenreName = (genreId: string) => {
     const genre = genres.find((g: any) => (g.id ?? g._id) === genreId);
@@ -99,72 +54,6 @@ export default function CreateBook() {
   const getAuthorName = (authorId: string) => {
     const author = authors.find((a: any) => (a.id ?? a._id) === authorId);
     return author?.name || 'Chưa chọn';
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setMessage(null);
-
-    if (!formData.title.trim()) {
-      setMessage({ type: 'error', text: 'Vui lòng nhập tiêu đề sách' });
-      return;
-    }
-
-    if (!formData.authorId.trim()) {
-      setMessage({ type: 'error', text: 'Vui lòng chọn tác giả' });
-      return;
-    }
-
-    if (formData.genres.length === 0) {
-      setMessage({ type: 'error', text: 'Vui lòng chọn ít nhất 1 thể loại' });
-      return;
-    }
-
-    try {
-      const tags = formData.tagsInput
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean);
-
-      const formPayload = new FormData();
-
-      formPayload.append('title', formData.title.trim());
-      formPayload.append('authorId', formData.authorId.trim());
-      formPayload.append('description', formData.description.trim());
-      formPayload.append('status', formData.status);
-      formPayload.append('publishedYear', formData.publishedYear);
-
-      formData.genres.forEach((genreId) => {
-        formPayload.append('genres', genreId);
-      });
-
-      tags.forEach((tag) => {
-        formPayload.append('tags', tag);
-      });
-
-      if (coverFile) {
-        formPayload.append('coverUrl', coverFile);
-      }
-
-      const result = await createBook(formPayload).unwrap();
-
-      setMessage({
-        type: 'success',
-        text: 'Tạo sách thành công! Đang chuyển hướng...',
-      });
-
-      setFormData(initialForm);
-      setCoverPreview(DEFAULT_COVER);
-      setCoverFile(null);
-      setSelectedGenreId('');
-
-      setTimeout(() => {
-        router.push('/admin/books');
-      }, 1500);
-
-    } catch (err: any) {
-      setMessage({ type: 'error', text: getErrorMessage(err) });
-    }
   };
 
   return (
@@ -362,7 +251,7 @@ export default function CreateBook() {
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          status: e.target.value as Status,
+                          status: e.target.value as BookStatus,
                         }))
                       }
                       className="w-full px-4 py-3 pr-10 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition appearance-none bg-white"
@@ -529,10 +418,10 @@ export default function CreateBook() {
                 <div className="space-y-3">
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                     className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isLoading ? (
+                    {isSubmitting ? (
                       <>
                         <Loader2 size={18} className="animate-spin" />
                         Đang tạo sách...
@@ -547,13 +436,7 @@ export default function CreateBook() {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormData(initialForm);
-                      setCoverPreview(DEFAULT_COVER);
-                      setCoverFile(null);
-                      setSelectedGenreId('');
-                      setMessage(null);
-                    }}
+                    onClick={handleReset}
                     className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-colors"
                   >
                     Đặt lại form

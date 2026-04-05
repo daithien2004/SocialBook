@@ -1,19 +1,13 @@
 'use client';
 
-import {
-  useCheckInStreakMutation,
-  useGetDailyGoalQuery,
-  useGetStreakQuery,
-} from '@/features/gamification/api/gamificationApi';
 import { Flame, Target, Trophy } from 'lucide-react';
-import { useEffect } from 'react';
-import { toast } from 'sonner';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useGamificationCheckIn } from './hooks/useGamificationCheckIn';
 
 interface HeaderGamificationSummaryProps {
   userId?: string;
@@ -22,68 +16,20 @@ interface HeaderGamificationSummaryProps {
 export default function HeaderGamificationSummary({
   userId,
 }: HeaderGamificationSummaryProps) {
-  const { data: streakData } = useGetStreakQuery();
-  const { data: dailyGoal } = useGetDailyGoalQuery();
-  const [checkInStreak] = useCheckInStreakMutation();
+  const { dailyGoal, streakData, isLoading } = useGamificationCheckIn({ userId });
 
-  useEffect(() => {
-    if (!userId) return;
+  if (isLoading) {
+    return null;
+  }
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const checkInKey = `streak-checked-in-${userId}-${todayStr}`;
-    if (localStorage.getItem(checkInKey)) return;
-
-    const performCheckIn = async () => {
-      try {
-        const result = await checkInStreak().unwrap();
-        localStorage.setItem(checkInKey, 'true');
-        if (result.message === 'Streak updated') {
-          toast.success(`Chuỗi ngày đã cập nhật! ${result.currentStreak} ngày`, {
-            icon: '🔥',
-            style: { borderRadius: '10px', background: '#333', color: '#fff' },
-          });
-        }
-      } catch {
-        // Keep header resilient: silent failure here is acceptable.
-      }
-    };
-
-    performCheckIn();
-  }, [checkInStreak, userId]);
-
-  useEffect(() => {
-    if (!dailyGoal || !userId) return;
-
-    const minutesGoal = dailyGoal.goals?.minutes;
-    const current = minutesGoal?.current || 0;
-    const target = minutesGoal?.target || 90;
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const celebrationKey = `daily-goal-celebrated-${userId}-${todayStr}`;
-    const hasCelebratedToday = localStorage.getItem(celebrationKey);
-
-    if (current < target || hasCelebratedToday) return;
-
-    localStorage.setItem(celebrationKey, 'true');
-    import('canvas-confetti').then((confetti) => {
-      confetti.default({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.3 },
-        colors: ['#FFD700', '#FFA500', '#ffffff'],
-      });
-    });
-    toast.success('Xuất sắc! Bạn đã đạt mục tiêu hôm nay!');
-  }, [dailyGoal, userId]);
-
-  if (!dailyGoal && !streakData) {
+  if (!dailyGoal && streakData === 0) {
     return null;
   }
 
   const currentMinutes = dailyGoal?.goals?.minutes?.current || 0;
   const targetMinutes = dailyGoal?.goals?.minutes?.target || 90;
   const goalCompleted = currentMinutes >= targetMinutes;
-  const currentStreak = streakData?.currentStreak || 0;
+  const currentStreak = streakData;
 
   return (
     <TooltipProvider>

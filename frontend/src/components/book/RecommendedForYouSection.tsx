@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetPersonalizedRecommendationsQuery } from '@/features/recommendations/api/recommendationsApi';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { ChevronRight, LogIn, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

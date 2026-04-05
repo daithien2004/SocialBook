@@ -12,9 +12,12 @@ import { UpdateProgressUseCase } from './use-cases/update-progress/update-progre
 import { UpdateStatusUseCase } from './use-cases/update-status/update-status.use-case';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { ProcessReadingSessionUseCase } from './use-cases/process-reading-session/process-reading-session.use-case';
+import { RecordReadingUseCase } from '../gamification/use-cases/record-reading/record-reading.use-case';
+import { GamificationRepositoryModule } from '@/infrastructure/database/repositories/gamification/gamification-repository.module';
 
 @Module({
-  imports: [LibraryRepositoryModule, IdGeneratorModule],
+  imports: [LibraryRepositoryModule, GamificationRepositoryModule, IdGeneratorModule],
   providers: [
     CreateCollectionUseCase,
     GetAllCollectionsUseCase,
@@ -27,6 +30,8 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     UpdateCollectionsUseCase,
     UpdateProgressUseCase,
     UpdateStatusUseCase,
+    ProcessReadingSessionUseCase,
+    RecordReadingUseCase,
   ],
   exports: [
     CreateCollectionUseCase,
@@ -40,6 +45,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     UpdateCollectionsUseCase,
     UpdateProgressUseCase,
     UpdateStatusUseCase,
+    ProcessReadingSessionUseCase,
   ],
 })
 export class LibraryApplicationModule {}

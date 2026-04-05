@@ -17,6 +17,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { BookQueryProvider } from './book-query.provider';
 import { BookRepository } from './book.repository';
 import { Genre, GenreSchema } from '../../schemas/genre.schema';
+import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { Genre, GenreSchema } from '../../schemas/genre.schema';
     ]),
   ],
   providers: [
+    TextSimilarityService,
     {
       provide: IBookRepository,
       useClass: BookRepository,

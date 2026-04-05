@@ -1,9 +1,5 @@
 /* ---- Tailwind v4 imports ---- */
 
-@plugin "tailwindcss-animate";
-@import 'tailwindcss/preflight';
-@import 'tailwindcss/utilities';
-@import 'tailwindcss/theme';
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));

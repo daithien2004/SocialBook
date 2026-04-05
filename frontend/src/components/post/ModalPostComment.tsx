@@ -4,12 +4,12 @@ import Image from 'next/image';
 import ListComments from '@/components/comment/ListComments';
 import { usePostCreateMutation } from '@/features/comments/api/commentApi';
 import { Post } from '@/features/posts/types/post.interface';
-import { getErrorMessage, cn } from '@/lib/utils';
-import { Heart, MessageCircle, Send, X, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Heart, MessageCircle, Send, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import React, { useRef, useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import React from 'react';
 import { useModalStore } from '@/store/useModalStore';
+import { usePostComments } from './hooks/usePostComments';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,43 +27,28 @@ import { Separator } from "@/components/ui/separator";
 export default function ModalPostComment() {
     const { isPostCommentOpen, closePostComment, postCommentData, openSharePost } = useModalStore();
     const { theme } = useTheme();
-    const [commentText, setCommentText] = useState('');
     const [createComment, { isLoading: isPosting }] = usePostCreateMutation();
-    const commentInputRef = useRef<HTMLInputElement>(null);
 
     const post = postCommentData?.post;
     const handleLike = postCommentData?.handleLike;
     const likeStatus = postCommentData?.likeStatus;
     const likeCount = postCommentData?.likeCount;
 
-    useEffect(() => {
-        if (!isPostCommentOpen) {
-            setCommentText('');
-        }
-    }, [isPostCommentOpen]);
+    const {
+        commentText,
+        isSubmitting,
+        commentInputRef,
+        setCommentText,
+        handleSubmitComment,
+        handleKeyDown,
+    } = usePostComments({
+        postId: post?.id ?? '',
+        createComment: async (params) => {
+            await createComment(params).unwrap();
+        },
+    });
 
     if (!post) return null;
-
-    const onSubmitComment = async () => {
-        const content = commentText.trim();
-        if (!content) return;
-
-        try {
-            await createComment({
-                targetType: 'post',
-                targetId: post.id,
-                content,
-                parentId: null,
-            }).unwrap();
-
-            setCommentText('');
-            toast.success('Bình luận đã được gửi!');
-            setTimeout(() => commentInputRef.current?.focus(), 0);
-        } catch (e: any) {
-            console.error('Create comment failed:', e);
-            toast.error(getErrorMessage(e));
-        }
-    };
 
     const handleShareClick = () => {
         openSharePost({
@@ -228,16 +213,16 @@ export default function ModalPostComment() {
                                         onChange={(e) => setCommentText(e.target.value)}
                                         placeholder="Để lại cảm nghĩ của bạn..."
                                         className="flex-1 bg-slate-50 dark:bg-gray-900/50 border-none focus-visible:ring-1 focus-visible:ring-sky-500/30 rounded-full px-4 h-9 text-sm"
-                                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && onSubmitComment()}
+                                        onKeyDown={handleKeyDown}
                                     />
                                     <Button
-                                        disabled={!commentText.trim() || isPosting}
-                                        onClick={onSubmitComment}
+                                        disabled={!commentText.trim() || isSubmitting}
+                                        onClick={handleSubmitComment}
                                         size="sm"
                                         variant="ghost"
                                         className="font-bold text-sky-600 hover:text-sky-700 hover:bg-transparent px-2"
                                     >
-                                        {isPosting ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : 'Đăng'}
+                                        {isSubmitting ? <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" /> : 'Đăng'}
                                     </Button>
                                 </div>
                             </div>

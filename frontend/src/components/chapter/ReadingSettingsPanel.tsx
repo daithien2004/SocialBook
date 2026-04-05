@@ -28,7 +28,7 @@ import {
     useGetReadingPreferencesQuery,
     useUpdateReadingPreferencesMutation,
 } from '@/features/users/api/usersApi';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { useReadingSettings } from '@/store/useReadingSettings';
 import { AlertTriangle, Layout, Palette, RotateCcw, Type } from 'lucide-react';
 import { useEffect, useState } from 'react';

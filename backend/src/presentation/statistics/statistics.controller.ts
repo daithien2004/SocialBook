@@ -1,5 +1,4 @@
-import { LocationAndReadingSeeder } from '@/shared/database/seeds/location-and-reading.seeder';
-import { Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 
 import { Roles } from '@/common/decorators/roles.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -23,7 +22,6 @@ export class StatisticsController {
     private readonly getEngagementStatsUseCase: GetEngagementStatsUseCase,
     private readonly getGrowthStatsUseCase: GetGrowthStatsUseCase,
     private readonly checkUserLocationsUseCase: CheckUserLocationsUseCase,
-    private readonly locationSeeder: LocationAndReadingSeeder,
   ) {}
 
   @Get('overview')
@@ -124,25 +122,6 @@ export class StatisticsController {
     const result = await this.checkUserLocationsUseCase.execute();
     return {
       message: 'Location check completed',
-      data: result,
-    };
-  }
-
-  @Post('seed-locations')
-  async seedLocations() {
-    const result = await this.locationSeeder.seedLocations();
-    return {
-      message: 'Location seeding completed',
-      data: result,
-    };
-  }
-
-  @Post('seed-reading-history')
-  async seedReadingHistory(@Query('days') days?: string) {
-    const numDays = days ? parseInt(days, 10) : 30;
-    const result = await this.locationSeeder.seedReadingHistory(numDays);
-    return {
-      message: 'Reading history seeding completed',
       data: result,
     };
   }

@@ -16,7 +16,6 @@ export function useAppAuth() {
       isGuest,
       isAdmin,
       isLoading: status === 'loading',
-      // Helper specific to your app
       isOnboardingCompleted: user?.onboardingCompleted ?? false,
       accessToken: session?.accessToken,
       update,

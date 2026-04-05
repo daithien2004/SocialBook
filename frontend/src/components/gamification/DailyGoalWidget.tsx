@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetDailyGoalQuery } from '@/features/gamification/api/gamificationApi';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { Target, Trophy } from 'lucide-react';
 
 export function DailyGoalWidget() {
