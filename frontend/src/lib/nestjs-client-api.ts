@@ -1,6 +1,6 @@
 import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import { getSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
 const clientApi = axios.create({
@@ -9,12 +9,7 @@ const clientApi = axios.create({
 });
 
 clientApi.interceptors.request.use(
-  async (config) => {
-    const session = await getSession();
-    if (session?.accessToken) {
-      config.headers.Authorization = `Bearer ${session.accessToken}`;
-    }
-
+  (config) => {
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
@@ -35,13 +30,24 @@ export const axiosBaseQuery =
     unknown,
     { status: number; data: ErrorResponseDto }
   > =>
-    async ({ url, method = 'GET', body, headers, params }) => {
+    async ({ url, method = 'GET', body, headers, params }, { getState }) => {
       try {
+        const state = getState() as any;
+        const accessToken = state?.auth?.accessToken;
+
+        const requestHeaders: Record<string, string> = {
+          ...(headers as Record<string, string>),
+        };
+
+        if (accessToken) {
+          requestHeaders.Authorization = `Bearer ${accessToken}`;
+        }
+
         const result = await clientApi({
           url,
           method,
           data: body,
-          headers,
+          headers: requestHeaders,
           params,
         });
 

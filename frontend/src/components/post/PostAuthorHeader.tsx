@@ -23,7 +23,11 @@ export function PostAuthorHeader({
 }: PostAuthorHeaderProps) {
     const route = useRouter();
 
-    const navigateToUser = useCallback(() => route.push(`users/${post.user.id}`), [route, post.user.id]);
+    const navigateToUser = useCallback(() => {
+        if (post?.user?.id) {
+            route.push(`users/${post.user.id}`);
+        }
+    }, [route, post?.user?.id]);
 
     const createdDate = new Date(post.createdAt).toLocaleDateString('vi-VN', {
         day: '2-digit',
@@ -38,7 +42,7 @@ export function PostAuthorHeader({
                 name={post.user?.username}
                 displayName={post.user?.username || post.user?.email || 'Người dùng ẩn danh'}
                 subtitle={createdDate}
-                onClick={navigateToUser}
+                onClick={post?.user?.id ? navigateToUser : undefined}
             />
 
             {isOwner && (

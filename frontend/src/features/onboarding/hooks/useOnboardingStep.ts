@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
@@ -47,9 +47,15 @@ export function useOnboardingStep({
         readingTime: {},
     });
 
+    const hasStartedRef = useRef(false);
+
     useEffect(() => {
-        if (user && !user.onboardingId && !user.onboardingCompleted) {
-            startOnboarding();
+        if (user && !user.onboardingId && !user.onboardingCompleted && !hasStartedRef.current) {
+            hasStartedRef.current = true;
+            startOnboarding().catch((err) => {
+                hasStartedRef.current = false;
+                console.error(err);
+            });
         }
     }, [user, startOnboarding]);
 
