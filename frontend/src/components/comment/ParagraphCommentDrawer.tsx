@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { getErrorMessage } from '@/lib/utils';
 import { Loader2, MessageSquare, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';

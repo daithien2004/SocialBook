@@ -1,12 +1,13 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/lib/nestjs-client-api';
-import { NESTJS_ANALYTICS_ENDPOINTS } from '@/constants/server-endpoints';
+import { NESTJS_ANALYTICS_ENDPOINTS, NESTJS_STATISTICS_ENDPOINTS } from '@/constants/server-endpoints';
 import { ReadingHeatmapData, ChapterEngagementData, ReadingSpeedData, GeographicData, ActiveUsersData } from '../types/admin.interface';
+import { OverviewStats, BookStats, GrowthMetric } from '../types/dashboard.types';
 
 export const analyticsApi = createApi({
   reducerPath: 'analyticsApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Analytics', 'ActiveUsers'],
+  tagTypes: ['Analytics', 'ActiveUsers', 'Statistics'],
   endpoints: (builder) => ({
     getReadingHeatmap: builder.query<ReadingHeatmapData[], void>({
       query: () => ({
@@ -61,6 +62,30 @@ export const analyticsApi = createApi({
       }),
       invalidatesTags: ['Analytics'],
     }),
+
+    getOverviewStats: builder.query<OverviewStats, void>({
+      query: () => ({
+        url: NESTJS_STATISTICS_ENDPOINTS.overview,
+        method: 'GET',
+      }),
+      providesTags: ['Statistics'],
+    }),
+
+    getGrowthStats: builder.query<GrowthMetric[], { days: number; groupBy?: string }>({
+      query: ({ days, groupBy = 'day' }) => ({
+        url: `${NESTJS_STATISTICS_ENDPOINTS.growth(days)}&groupBy=${groupBy}`,
+        method: 'GET',
+      }),
+      providesTags: ['Statistics'],
+    }),
+
+    getBookStats: builder.query<BookStats, void>({
+      query: () => ({
+        url: NESTJS_STATISTICS_ENDPOINTS.books,
+        method: 'GET',
+      }),
+      providesTags: ['Statistics'],
+    }),
   }),
 });
 
@@ -71,5 +96,8 @@ export const {
   useGetGeographicDistributionQuery,
   useGetActiveUsersQuery,
   useSeedReadingHistoryMutation,
+  useGetOverviewStatsQuery,
+  useGetGrowthStatsQuery,
+  useGetBookStatsQuery,
 } = analyticsApi;
 

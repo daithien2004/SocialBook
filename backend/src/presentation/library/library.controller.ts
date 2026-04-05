@@ -1,4 +1,3 @@
-import { RecordReadingUseCase } from '@/application/gamification/use-cases/record-reading/record-reading.use-case';
 import { ReadingStatusResult } from '@/application/library/mappers/library.results';
 import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
 import { GetBookLibraryInfoUseCase } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case';
@@ -6,7 +5,6 @@ import { GetChapterProgressQuery } from '@/application/library/use-cases/get-cha
 import { GetChapterProgressUseCase } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.use-case';
 import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get-library.query';
 import { GetLibraryUseCase } from '@/application/library/use-cases/get-library/get-library.use-case';
-import { RecordReadingTimeCommand } from '@/application/library/use-cases/record-reading-time/record-reading-time.command';
 import { RecordReadingTimeUseCase } from '@/application/library/use-cases/record-reading-time/record-reading-time.use-case';
 import { ProcessReadingSessionCommand } from '@/application/library/use-cases/process-reading-session/process-reading-session.command';
 import { ProcessReadingSessionUseCase } from '@/application/library/use-cases/process-reading-session/process-reading-session.use-case';
@@ -51,13 +49,12 @@ export class LibraryController {
     private readonly getLibraryUseCase: GetLibraryUseCase,
     private readonly updateStatusUseCase: UpdateStatusUseCase,
     private readonly updateProgressUseCase: UpdateProgressUseCase,
-    private readonly recordReadingTimeUseCase: RecordReadingTimeUseCase,
     private readonly processReadingSessionUseCase: ProcessReadingSessionUseCase,
     private readonly updateCollectionsUseCase: UpdateCollectionsUseCase,
     private readonly removeFromLibraryUseCase: RemoveFromLibraryUseCase,
     private readonly getBookLibraryInfoUseCase: GetBookLibraryInfoUseCase,
     private readonly getChapterProgressUseCase: GetChapterProgressUseCase,
-  ) {}
+  ) { }
 
   @Get()
   async getLibrary(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { useGetPersonalizedRecommendationsQuery } from '@/features/recommendations/api/recommendationsApi';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';

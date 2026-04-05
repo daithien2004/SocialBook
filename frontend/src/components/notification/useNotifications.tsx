@@ -1,136 +1,53 @@
-// src/components/notifications/useNotifications.ts
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import type { Socket } from "socket.io-client";
+import { useState, useCallback } from 'react';
+import { useNotificationSocket, NotificationItem } from './useNotificationSocket';
 
-export type NotificationItem = {
-    id: string;
-    userId: string;
-    title: string;
-    message: string;
-    type:
-    | 'info'
-    | 'success'
-    | 'warning'
-    | 'error'
-    | 'system'
-    | 'message'
-    | 'comment'
-    | 'reply'
-    | 'like'
-    | 'follow';
-    isRead: boolean;
-    createdAt: string;
-    actionUrl: string | null;
-    meta: {
-        actorId: string;
-        name: string;
-        image: string;
-        targetId?: string;
-    };
-};
+export type { NotificationItem };
 
 export function useNotifications(userToken: string | undefined) {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const socketRef = useRef<Socket | null>(null);
-    const prevTokenRef = useRef<string | undefined>(undefined);
 
-    useEffect(() => {
-        let isCancelled = false;
+    const handleNotificationList = useCallback((data: NotificationItem[]) => {
+        setNotifications(data);
+        setUnreadCount(data.filter((n) => !n.isRead).length);
+    }, []);
 
-        if (userToken === prevTokenRef.current) return;
-        prevTokenRef.current = userToken;
+    const handleNewNotification = useCallback((payload: NotificationItem) => {
+        setNotifications((prev) => [payload, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+    }, []);
 
-        if (!userToken) {
-            socketRef.current?.disconnect();
-            socketRef.current = null;
-            setNotifications([]);
-            setUnreadCount(0);
-            return;
+    const handleReadNotification = useCallback(({ id }: { id: string }) => {
+        setNotifications((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+    }, []);
+
+    const { markAsRead, refetch, createNotification } = useNotificationSocket(
+        userToken,
+        {
+            onNotificationList: handleNotificationList,
+            onNewNotification: handleNewNotification,
+            onReadNotification: handleReadNotification,
         }
+    );
 
-        // Reconnect khi token thay đổi
-        if (socketRef.current) {
-            socketRef.current.disconnect();
-            socketRef.current = null;
-        }
+    const markAsReadLocal = useCallback((id: string) => {
+        setNotifications((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        markAsRead(id);
+    }, [markAsRead]);
 
-        void import("socket.io-client").then(({ io }) => {
-            if (isCancelled) return;
-
-            const socketInstance = io(
-                `${process.env.NEXT_PUBLIC_SOCKET_URL}/notifications`,
-                {
-                    auth: { token: userToken },
-                }
-            );
-
-            socketRef.current = socketInstance;
-
-            socketInstance.on("connect", () => {
-                socketInstance.emit("notification:list", (data: NotificationItem[]) => {
-                    setNotifications(data);
-                    setUnreadCount(data.filter((n) => !n.isRead).length);
-                });
-            });
-
-            socketInstance.on("notification:new", (payload: NotificationItem) => {
-                setNotifications((prev) => [payload, ...prev]);
-                setUnreadCount((prev) => prev + 1);
-            });
-
-            socketInstance.on("notification:read", ({ id }: { id: string }) => {
-                setNotifications((prev) =>
-                    prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-                );
-                setUnreadCount((prev) => Math.max(0, prev - 1));
-            });
-
-            socketInstance.on("error", (err: any) => {
-                console.log("WS error:", err);
-            });
-        });
-
-        return () => {
-            isCancelled = true;
-            socketRef.current?.disconnect();
-            socketRef.current = null;
-        };
-    }, [userToken]);
-
-    const markAsRead = (id: string) => {
-        const socket = socketRef.current;
-        if (!socket) return;
-
-        socket.emit("notification:markRead", { id }, (res: any) => {
-            // tùy bạn: có thể check res.ok === true
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-            );
-            setUnreadCount((prev) => Math.max(0, prev - 1));
-        });
+    return {
+        notifications,
+        unreadCount,
+        markAsRead: markAsReadLocal,
+        refetch,
+        createNotification,
     };
-
-    const refetch = () => {
-        const socket = socketRef.current;
-        if (!socket) return;
-
-        socket.emit("notification:list", (data: NotificationItem[]) => {
-            setNotifications(data);
-            setUnreadCount(data.filter((n) => !n.isRead).length);
-        });
-    };
-
-    const createNotification = (dto: NotificationItem) => {
-        const socket = socketRef.current;
-        if (!socket) return;
-
-        socket.emit("createNotification", dto, (res: any) => {
-            console.log("Notification created:", res);
-        });
-    };
-
-    return { notifications, unreadCount, markAsRead, refetch, createNotification };
 }

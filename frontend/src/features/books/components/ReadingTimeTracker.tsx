@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRecordReadingTimeMutation } from '@/features/library/api/libraryApi';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { useDispatch } from 'react-redux';
 import { gamificationApi } from '@/features/gamification/api/gamificationApi';
 

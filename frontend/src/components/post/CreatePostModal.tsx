@@ -1,17 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import { useAppAuth } from '@/hooks/useAppAuth';
-import { ImagePlus, Loader2, X } from 'lucide-react';
+import { useAppAuth } from '@/features/auth/hooks';
+import { ImagePlus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useModalStore } from '@/store/useModalStore';
-
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -19,19 +15,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { AppButton } from '../common/AppButton';
-
-const createPostSchema = z.object({
-  content: z.string().min(1, 'Vui lòng nhập nội dung bài viết'),
-  images: z.array(z.instanceof(File)).max(10, 'Chỉ có thể thêm tối đa 10 ảnh'),
-});
-
-type CreatePostFormValues = z.infer<typeof createPostSchema>;
+import { useCreatePost } from '@/features/posts/hooks/useCreatePost';
 
 export default function CreatePostModal() {
   const { isCreatePostOpen, closeCreatePost, createPostData } = useModalStore();
@@ -43,24 +33,21 @@ export default function CreatePostModal() {
     onSubmit: externalOnSubmit,
   } = createPostData;
 
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const { isAuthenticated } = useAppAuth();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<CreatePostFormValues>({
-    resolver: zodResolver(createPostSchema),
-    defaultValues: {
-      content: defaultContent,
-      images: [],
+  const { form, previewUrls, isSubmitting, handleFileSelect, handleRemoveImage, canAddMore, totalImages } = useCreatePost({
+    defaultContent,
+    maxImages,
+    onSubmit: async (values) => {
+      if (externalOnSubmit) {
+        await externalOnSubmit(values);
+      }
+      closeCreatePost();
+      form.reset();
     },
   });
-
-  const { watch, setValue, reset } = form;
-  const currentImages = watch('images') || [];
-  const currentContent = watch('content') || '';
 
   useEffect(() => {
     if (isCreatePostOpen && !isAuthenticated) {
@@ -74,80 +61,7 @@ export default function CreatePostModal() {
     }
   }, [isCreatePostOpen, isAuthenticated, closeCreatePost, router]);
 
-  useEffect(() => {
-    if (isCreatePostOpen) {
-      reset({
-        content: defaultContent,
-        images: [],
-      });
-      setPreviewUrls([]);
-    } else {
-      // Cleanup previews
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
-      setPreviewUrls([]);
-    }
-  }, [isCreatePostOpen, defaultContent, reset]);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const filesArray = Array.from(files);
-    const totalImages = currentImages.length + filesArray.length;
-
-    if (totalImages > maxImages) {
-      toast.error(`Chỉ có thể thêm tối đa ${maxImages} ảnh`);
-      return;
-    }
-
-    const validFiles = filesArray.filter((file) => {
-      const isValid = file.type.startsWith('image/');
-      if (!isValid) {
-        toast.error(`File ${file.name} không phải là hình ảnh`);
-      }
-      return isValid;
-    });
-
-    if (validFiles.length > 0) {
-      const updatedImages = [...currentImages, ...validFiles];
-      setValue('images', updatedImages);
-      const newPreviewUrls = validFiles.map((file) => URL.createObjectURL(file));
-      setPreviewUrls([...previewUrls, ...newPreviewUrls]);
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    URL.revokeObjectURL(previewUrls[index]);
-    const updatedImages = currentImages.filter((_, i) => i !== index);
-    const updatedPreviews = previewUrls.filter((_, i) => i !== index);
-    setValue('images', updatedImages);
-    setPreviewUrls(updatedPreviews);
-  };
-
-  const onSubmit = async (values: CreatePostFormValues) => {
-    if (!externalOnSubmit) return;
-    
-    setIsSubmitting(true);
-    try {
-      await externalOnSubmit(values);
-      closeCreatePost();
-      reset();
-    } catch (error) {
-      console.error('Submit failed:', error);
-      toast.error('Có lỗi xảy ra khi đăng bài');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (!isAuthenticated) return null;
-
-  const totalImages = currentImages.length;
-  const canAddMore = totalImages < maxImages;
 
   return (
     <Dialog open={isCreatePostOpen} onOpenChange={(open) => !open && closeCreatePost()}>
@@ -160,7 +74,7 @@ export default function CreatePostModal() {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(form.handleSubmit as any)}>
             <div className="p-6 pb-2">
               <ScrollArea className="max-h-[60vh]">
                 <div className="space-y-4">
@@ -217,7 +131,7 @@ export default function CreatePostModal() {
                   type="file"
                   multiple
                   accept="image/*"
-                  onChange={handleFileSelect}
+                  onChange={(e) => handleFileSelect(e.target.files)}
                   className="hidden"
                 />
                 <Button
@@ -246,7 +160,7 @@ export default function CreatePostModal() {
               <AppButton
                 type="submit"
                 loading={isSubmitting}
-                disabled={!currentContent.trim()}
+                disabled={!form.watch('content')?.trim()}
                 className="min-w-[100px]"
               >
                 Đăng bài

@@ -25,12 +25,12 @@ import ChapterNavigation from '@/components/chapter/ChapterNavigation';
 import CommentSection from '@/components/chapter/CommentSection';
 import ChapterHeader from '@/components/chapter/ChapterHeader';
 import { ChapterContent } from '@/components/chapter/ChapterContent';
-import { useReadingProgress } from '@/hooks/useReadingProgress';
-import AudiobookView from '@/components/chapter/AudiobookView';
-import ReadingSettingsPanel from '@/components/chapter/ReadingSettingsPanel';
-import ChapterListDrawer from '@/components/book/ChapterListDrawer';
+import { useReadingProgress, useReadingView } from '@/features/books/hooks';
+import { useAppAuth } from '@/features/auth/hooks';
 import { ReadingTimeTracker } from '@/features/books/components/ReadingTimeTracker';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import AudiobookView from '@/components/chapter/AudiobookView';
+import ChapterListDrawer from '@/components/book/ChapterListDrawer';
+import ReadingSettingsPanel from '@/components/chapter/ReadingSettingsPanel';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -44,13 +44,6 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const router = useRouter();
 
   const { isAuthenticated: isLoggedIn } = useAppAuth();
-
-  const [showTOC, setShowTOC] = useState(false);
-  const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
-  const [showSettings, setShowSettings] = useState(false);
-
-  const [isControlsVisible, setIsControlsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
   const { openCreatePost, openAddToLibrary, openChapterSummary } = useModalStore();
   const {
@@ -69,17 +62,24 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   const chapters = chaptersData?.chapters || [];
   const totalChapters = chaptersData?.total || 0;
 
+  const {
+    viewMode,
+    isControlsVisible,
+    showTOC,
+    showSettings,
+    setViewMode,
+    setShowTOC,
+    setShowSettings,
+  } = useReadingView();
+
   const { savedProgress, restoreScroll } = useReadingProgress(
     book?.id || '',
     chapter?.id || '',
     !isLoading && !!chapter && viewMode === 'read' && isLoggedIn
   );
 
-  const hasShownResumeToast = useRef(false);
-
   useEffect(() => {
-    if (savedProgress > 5 && !hasShownResumeToast.current) {
-      hasShownResumeToast.current = true;
+    if (savedProgress > 5) {
       setTimeout(() => {
         toast('Bạn đang đọc dở chương này', {
           description: `Tiếp tục tại vị trí ${Math.floor(savedProgress)}%?`,
@@ -92,21 +92,6 @@ export default function ChapterPage({ params }: ChapterPageProps) {
       }, 1000);
     }
   }, [savedProgress, restoreScroll]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsControlsVisible(false);
-      } else {
-        setIsControlsVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
 
   const defaultShareContent = useMemo(() => {
     if (!book || !chapter) return '';

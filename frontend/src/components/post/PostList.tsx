@@ -1,83 +1,23 @@
 'use client';
 
+import { memo } from 'react';
 import PostCard from '@/components/post/PostCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useGetPostsQuery } from '@/features/posts/api/postApi';
-import { Post } from '@/features/posts/types/post.interface';
+import { usePostsFeed } from '@/features/posts/hooks/usePostsFeed';
 import { cn } from '@/lib/utils';
-import { useUIStore } from '@/store/useUIStore';
+import { usePostListViewMode } from './hooks';
 import { AlertCircle, ArrowUp, LayoutGrid, List } from 'lucide-react';
-import React, { memo, useEffect, useRef, useState } from 'react';
 
-interface PostListProps {
-    currentUserId?: string;
-}
+const PostList: React.FC = memo(function PostList() {
+    const { viewMode, setViewMode, mounted } = usePostListViewMode();
+    const { posts, isLoading, isFetching, error, hasMore, observerTarget } = usePostsFeed({
+        limit: 10,
+    });
 
-const PostList: React.FC<PostListProps> = memo(function PostList() {
-    const [cursor, setCursor] = useState<string | undefined>(undefined);
-    const [allPosts, setAllPosts] = useState<Post[]>([]);
-    const limit = 10;
-
-    // Zustand Store
-    const { viewMode, setViewMode } = useUIStore();
-
-    const observerTarget = useRef<HTMLDivElement | null>(null);
-
-    const { data, isLoading, error, isFetching } = useGetPostsQuery(
-        { cursor, limit },
-        {
-            refetchOnMountOrArgChange: true,
-        }
-    );
-
-    const items = data?.data ?? [];
-    const hasMore = data?.meta?.hasMore ?? false;
-    const nextCursor = data?.meta?.nextCursor;
-
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    useEffect(() => {
-        if (!items.length && !hasMore) return;
-
-        setAllPosts((prev) => {
-            if (cursor === undefined) {
-                return items;
-            }
-
-            const newPosts = items.filter((post) => !prev.some((p) => p.id === post.id));
-            return [...prev, ...newPosts];
-        });
-    }, [items, cursor, hasMore]);
-
-    useEffect(() => {
-        const target = observerTarget.current;
-        if (!target) return;
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const entry = entries[0];
-
-                if (entry.isIntersecting && hasMore && !isFetching && nextCursor) {
-                    setCursor(nextCursor);
-                }
-            },
-            { threshold: 0.15 }
-        );
-
-        observer.observe(target);
-
-        return () => {
-            observer.disconnect();
-        };
-    }, [hasMore, isFetching]);
-
-    if (isLoading && cursor === undefined) {
+    if (isLoading) {
         return (
             <div className="flex justify-center items-center py-10">
                 <Spinner className="size-10 text-sky-500" />
@@ -95,17 +35,14 @@ const PostList: React.FC<PostListProps> = memo(function PostList() {
                         Đã xảy ra lỗi khi tải bài viết. Vui lòng thử lại.
                     </AlertDescription>
                 </Alert>
-                <Button
-                    onClick={() => window.location.reload()}
-                    variant="default"
-                >
+                <Button onClick={() => window.location.reload()} variant="default">
                     Thử tải lại
                 </Button>
             </div>
         );
     }
 
-    if (!allPosts.length && !isLoading) {
+    if (!posts.length) {
         return (
             <div className="flex flex-col items-center justify-center py-10 space-y-2 text-center">
                 <p className="text-sm font-medium text-slate-800 dark:text-gray-200">
@@ -120,12 +57,15 @@ const PostList: React.FC<PostListProps> = memo(function PostList() {
 
     return (
         <div className="space-y-6 relative">
-            {/* View Mode Toggle */}
             <div className="flex justify-between items-center bg-white dark:bg-[#1a1a1a] p-2 rounded-xl border border-slate-100 dark:border-gray-800 shadow-sm">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white px-2">Bảng tin</h2>
                 <div className="flex items-center gap-2">
                     {isFetching ? <Spinner className="size-4 text-sky-500" /> : null}
-                    <ToggleGroup type="single" value={viewMode} onValueChange={(val) => val && setViewMode(val as 'grid' | 'list')}>
+                    <ToggleGroup
+                        type="single"
+                        value={viewMode}
+                        onValueChange={(val) => val && setViewMode(val as 'grid' | 'list')}
+                    >
                         <ToggleGroupItem value="list" aria-label="List view" className="h-8 w-8 p-0">
                             <List className="h-4 w-4" />
                         </ToggleGroupItem>
@@ -136,18 +76,19 @@ const PostList: React.FC<PostListProps> = memo(function PostList() {
                 </div>
             </div>
 
-            {/* Posts Grid/List */}
-            <div className={cn(
-                mounted && viewMode === 'grid'
-                    ? "grid grid-cols-1 md:grid-cols-2 gap-5"
-                    : "space-y-6"
-            )}>
-                {allPosts.map((post: Post) => (
+            <div
+                className={cn(
+                    mounted && viewMode === 'grid'
+                        ? 'grid grid-cols-1 md:grid-cols-2 gap-5'
+                        : 'space-y-6'
+                )}
+            >
+                {posts.map((post) => (
                     <PostCard key={post.id} post={post} />
                 ))}
             </div>
 
-            {isFetching && cursor !== undefined ? (
+            {isFetching ? (
                 <div className="flex justify-center py-4 w-full">
                     <Spinner className="size-8 text-sky-500" />
                 </div>
@@ -155,7 +96,7 @@ const PostList: React.FC<PostListProps> = memo(function PostList() {
 
             {hasMore ? <div ref={observerTarget} className="h-10 w-full" /> : null}
 
-            {allPosts.length > 5 ? (
+            {posts.length > 5 ? (
                 <Button
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                     className="fixed bottom-8 right-8 rounded-full shadow-lg z-40 w-12 h-12"

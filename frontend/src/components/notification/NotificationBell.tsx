@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { timeAgo } from '@/lib/utils';
 import { Bell, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';

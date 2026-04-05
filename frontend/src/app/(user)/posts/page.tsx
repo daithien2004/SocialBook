@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import {useState} from 'react';
 import PostList from '@/components/post/PostList';
-import {useAppAuth} from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import {BookOpen, Users, Library, Quote, ImageIcon, PenSquare} from 'lucide-react';
 import {useRouter} from "next/navigation";
 import { useModalStore } from '@/store/useModalStore';
@@ -176,7 +176,7 @@ export default function Post() {
                         </div>
                     </div>
 
-                    <PostList currentUserId={currentUserId}/>
+                    <PostList />
                 </section>
 
                 {/* RIGHT SIDEBAR */}

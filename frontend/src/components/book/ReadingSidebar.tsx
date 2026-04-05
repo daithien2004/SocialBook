@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
 import { LibraryStatus, LibraryItem } from '@/features/library/types/library.interface';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
