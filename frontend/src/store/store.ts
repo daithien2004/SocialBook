@@ -28,11 +28,30 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
 import { chatBotApi } from '../features/chatbot/api/chatBotApi';
 import { onboardingApi } from '../features/onboarding/api/onboardingApi';
 import { gamificationApi } from '../features/gamification/api/gamificationApi';
 import { moderationApi } from '../features/admin/api/moderationApi';
+import { WebStorage } from 'redux-persist';
+
+const createNoopStorage = (): WebStorage => {
+  return {
+    getItem(_key: string) {
+      return Promise.resolve(null);
+    },
+    setItem(_key: string, value: any) {
+      return Promise.resolve(value);
+    },
+    removeItem(_key: string) {
+      return Promise.resolve();
+    },
+  };
+};
+
+const storage =
+  typeof window !== 'undefined'
+    ? require('redux-persist/lib/storage').default
+    : createNoopStorage();
 
 const recommendationsPersistConfig = {
   key: 'recommendations',

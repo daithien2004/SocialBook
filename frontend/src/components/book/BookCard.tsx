@@ -1,6 +1,7 @@
 import { Bookmark } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { SafeImage } from '../common/SafeImage';
 import React, { memo, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +46,7 @@ export const BookCard = memo(function BookCard({ book }: BookCardProps) {
 function BookCover({ book }: { book: Book }) {
     return (
         <div className="relative aspect-[2/3] w-full overflow-hidden">
-            <Image
+            <SafeImage
                 src={book.coverUrl}
                 alt={book.title}
                 fill

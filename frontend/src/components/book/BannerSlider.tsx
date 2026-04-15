@@ -7,6 +7,7 @@ import { formatCompact } from '@/lib/utils';
 import { BookOpen, ChevronLeft, ChevronRight, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { SafeImage } from '../common/SafeImage';
 import { useEffect, useState } from 'react';
 
 interface BannerSliderProps {
@@ -42,7 +43,7 @@ export function BannerSlider({ books }: BannerSliderProps) {
 
       <div className="relative z-10 h-full flex items-center justify-between px-6 md:px-12 lg:px-20">
         <div className="hidden md:block w-[280px] h-[420px] lg:w-[320px] lg:h-[480px] flex-shrink-0 mr-8 relative animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <Image
+          <SafeImage
             key={currentBook.coverUrl}
             src={currentBook.coverUrl}
             alt={currentBook.title}

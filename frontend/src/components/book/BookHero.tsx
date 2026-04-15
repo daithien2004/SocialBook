@@ -6,6 +6,7 @@ import { Book } from '@/features/books/types/book.interface';
 import { cn } from '@/lib/utils';
 import { BookOpen, Bookmark, Heart, Share2, Star } from 'lucide-react';
 import Image from 'next/image';
+import { SafeImage } from '../common/SafeImage';
 import Link from 'next/link';
 import { ElementType } from 'react';
 
@@ -32,10 +33,13 @@ export const BookHero = ({
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-none mx-auto lg:mx-0">
             <div className="w-[240px] h-[360px] md:w-[280px] md:h-[420px] relative rounded-lg overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)] dark:shadow-[0_0_40px_rgba(0,0,0,0.6)] group">
-              <Image
+              <SafeImage
                 src={book.coverUrl}
                 alt={book.title}
                 fill
+                priority
+                loading="eager"
+                sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 400px"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
