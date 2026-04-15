@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import {
   NotFoundDomainException,
   ConflictDomainException,
@@ -10,10 +10,17 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
+import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
 
 @Injectable()
 export class UpdateBookUseCase {
-  constructor(private readonly bookRepository: IBookRepository) {}
+  private readonly CACHE_TTL = 300;
+
+  constructor(
+    private readonly bookRepository: IBookRepository,
+    @Inject(CACHE_SERVICE) private readonly cache: ICacheService,
+  ) {}
 
   async execute(command: UpdateBookCommand): Promise<Book> {
     const bookId = BookId.create(command.id);
@@ -29,9 +36,7 @@ export class UpdateBookUseCase {
       const exists = await this.bookRepository.existsByTitle(newTitle, bookId);
 
       if (exists) {
-        throw new ConflictDomainException(
-          'Book with this title already exists',
-        );
+        throw new ConflictDomainException('Book with this title already exists');
       }
 
       book.changeTitle(command.title);
@@ -74,6 +79,34 @@ export class UpdateBookUseCase {
     }
 
     await this.bookRepository.save(book);
+
+    // Ghi DB xong mới cập nhật cache — đúng thứ tự
+    await this.cache.set(
+      `books:detail:${command.id}`,
+      {
+        id: book.id.toString(),
+        title: book.title.toString(),
+        slug: book.slug,
+        authorId: book.authorId.toString(),
+        genres: book.genres.map((g) => g.toString()),
+        description: book.description,
+        publishedYear: book.publishedYear,
+        coverUrl: book.coverUrl,
+        status: book.status.toString(),
+        tags: book.tags,
+        views: book.views,
+        likes: book.likes,
+        likedBy: book.likedBy,
+        createdAt: book.createdAt.toISOString(),
+        updatedAt: book.updatedAt.toISOString(),
+        authorName: book.authorName,
+        chapterCount: book.chapterCount,
+      },
+      this.CACHE_TTL,
+    );
+
+    // Nếu có key theo slug ở nơi khác, xóa để tránh stale
+    await this.cache.del(`books:slug:${book.slug.toString()}`);
 
     return book;
   }
