@@ -10,11 +10,10 @@ export class GetPostUseCase {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(query: GetPostQuery): Promise<Post> {
-    const post = await this.postRepository.findById(
-      query.postId,
-      query.viewerUserId,
-    );
-    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    const post = await this.postRepository.findById(query.postId);
+    if (!post || post.isFlagged) {
+      throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    }
     return post;
   }
 }
