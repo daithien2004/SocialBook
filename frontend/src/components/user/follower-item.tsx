@@ -2,23 +2,35 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
     FollowingUser,
+    useGetFollowStatusQuery,
     useToggleFollowMutation,
     useUnfollowMutation,
 } from "@/features/follows/api/followApi";
 import { RootState } from "@/store/store";
 import { UserCheck, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { cn } from "@/lib/utils";
+import { useModalStore } from "@/store/useModalStore";
 
 const FollowerItem = (props: FollowingUser) => {
     const auth = useSelector((state: RootState) => state.auth);
     const router = useRouter();
-    const [isFollowing, setIsFollowing] = useState(
-        props.isFollowedByCurrentUser
-    );
-    const route = useRouter();
+    const { closeFollowers } = useModalStore();
+    
+    const [isFollowing, setIsFollowing] = useState(props.isFollowedByCurrentUser);
+
+    const { data: statusData } = useGetFollowStatusQuery(props.userId, {
+        skip: !auth.isAuthenticated || auth?.user?.id === props.userId,
+    });
+
+    useEffect(() => {
+        if (statusData) {
+            setIsFollowing(statusData.isFollowing);
+        }
+    }, [statusData]);
+
     const [toggleFollow, { isLoading: isFollowLoading }] = useToggleFollowMutation();
     const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
     const isToggling = isFollowLoading || isUnfollowLoading;
@@ -26,9 +38,9 @@ const FollowerItem = (props: FollowingUser) => {
     const handleToggleFollow = async () => {
         try {
             if (isFollowing) {
-                await unfollow(props.id).unwrap();
+                await unfollow(props.userId).unwrap();
             } else {
-                await toggleFollow(props.id).unwrap();
+                await toggleFollow(props.userId).unwrap();
             }
             setIsFollowing((prev) => !prev);
         } catch (e: any) {
@@ -49,7 +61,8 @@ const FollowerItem = (props: FollowingUser) => {
             <div className="flex items-center gap-3">
                 <div
                     onClick={() => {
-                        route.push(`/users/${props.id}`)
+                        closeFollowers();
+                        router.push(`/users/${props.userId}`)
                     }}
                     className="relative h-10 w-10 overflow-hidden rounded-full border border-slate-200 dark:border-gray-700 cursor-pointer"
                 >
@@ -80,11 +93,14 @@ const FollowerItem = (props: FollowingUser) => {
             </div>
 
             {/* Right */}
-            {props.id === auth?.user?.id ? (
+            {props.userId === auth?.user?.id ? (
                 <Button
                     variant="ghost"
                     disabled={isToggling}
-                    onClick={() => router.push(`/users/${props.id}`)}
+                    onClick={() => {
+                        closeFollowers();
+                        router.push(`/users/${props.userId}`);
+                    }}
                     className="rounded-md text-xs font-medium tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                 >
                     Xem hồ sơ

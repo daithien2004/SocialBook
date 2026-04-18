@@ -27,7 +27,7 @@ export function useProfileShare({ userId, title = 'Xem hồ sơ người dùng n
     const shareButtons: ShareButton[] = useMemo(() => [
         {
             button: (
-                <FacebookShareButton url={profileUrl} quote={title}>
+                <FacebookShareButton key="facebook" url={profileUrl} quote={title}>
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3b5998] text-white shadow-sm dark:ring-1 dark:ring-white/10 hover:opacity-90">
                         <Facebook className="h-4 w-4" />
                     </div>
@@ -37,7 +37,7 @@ export function useProfileShare({ userId, title = 'Xem hồ sơ người dùng n
         },
         {
             button: (
-                <TwitterShareButton url={profileUrl} title={title}>
+                <TwitterShareButton key="twitter" url={profileUrl} title={title}>
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1da1f2] text-white shadow-sm dark:ring-1 dark:ring-white/10 hover:opacity-90">
                         <Twitter className="h-4 w-4" />
                     </div>
@@ -47,7 +47,7 @@ export function useProfileShare({ userId, title = 'Xem hồ sơ người dùng n
         },
         {
             button: (
-                <EmailShareButton url={profileUrl} subject={title}>
+                <EmailShareButton key="email" url={profileUrl} subject={title}>
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f96a0e] text-white shadow-sm dark:ring-1 dark:ring-white/10 hover:opacity-90">
                         <Mail className="h-4 w-4" />
                     </div>

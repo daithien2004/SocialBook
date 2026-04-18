@@ -12,6 +12,8 @@ export interface FollowStateResponse {
 
 export interface FollowingUser {
     id: string;
+    userId: string;
+    targetId: string;
     image?: string;
     username: string;
     postCount: number;

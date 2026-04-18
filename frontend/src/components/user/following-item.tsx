@@ -2,29 +2,45 @@
 import { Button } from "@/components/ui/button";
 import {
     FollowingUser,
+    useGetFollowStatusQuery,
     useToggleFollowMutation,
     useUnfollowMutation,
 } from "@/features/follows/api/followApi";
 import { UserCheck, UserPlus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { useModalStore } from "@/store/useModalStore";
 
 const FollowingItem = (props: FollowingUser) => {
-    const [isFollowing, setIsFollowing] = useState(
-        props.isFollowedByCurrentUser
-    );
+    const auth = useSelector((state: RootState) => state.auth);
+    const router = useRouter();
+    const { closeFollowers } = useModalStore();
+    
+    const [isFollowing, setIsFollowing] = useState(props.isFollowedByCurrentUser);
+
+    const { data: statusData } = useGetFollowStatusQuery(props.userId, {
+        skip: !auth.isAuthenticated || auth?.user?.id === props.userId,
+    });
+
+    useEffect(() => {
+        if (statusData) {
+            setIsFollowing(statusData.isFollowing);
+        }
+    }, [statusData]);
+
     const [toggleFollow, { isLoading: isFollowLoading }] = useToggleFollowMutation();
     const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
     const isToggling = isFollowLoading || isUnfollowLoading;
-    const router = useRouter();
 
     const handleToggleFollow = async () => {
         try {
             if (isFollowing) {
-                await unfollow(props.id).unwrap();
+                await unfollow(props.userId).unwrap();
             } else {
-                await toggleFollow(props.id).unwrap();
+                await toggleFollow(props.userId).unwrap();
             }
             setIsFollowing((prev) => !prev);
         } catch (e: any) {
@@ -63,7 +79,10 @@ const FollowingItem = (props: FollowingUser) => {
                 {/* Avatar */}
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2">
                     <div
-                        onClick={() => router.push(`/users/${props.id}`)}
+                        onClick={() => {
+                            closeFollowers();
+                            router.push(`/users/${props.userId}`);
+                        }}
                         className="
               cursor-pointer h-20 w-20 rounded-full overflow-hidden
               border-4 border-white dark:border-gray-800
@@ -93,39 +112,52 @@ const FollowingItem = (props: FollowingUser) => {
                     </h3>
                 </div>
 
-                {/* Follow Button */}
-                <Button
-                    variant="ghost"
-                    disabled={isToggling}
-                    onClick={handleToggleFollow}
-                    className={`w-full rounded-md text-xs font-medium tracking-wide transition-all
-            ${isFollowing
-                            ? `
-                  bg-primary text-primary-foreground
-                  hover:bg-primary/90
-                  dark:bg-primary dark:hover:bg-primary/80
-                  shadow-sm
-                `
-                            : `
-                  bg-white dark:bg-gray-900
-                  border border-neutral-200 dark:border-gray-700
-                  text-slate-700 dark:text-gray-200
-                  hover:bg-neutral-100 dark:hover:bg-gray-800
-                `
-                        }`}
-                >
-                    {isFollowing ? (
-                        <>
-                            <UserCheck className="mr-2 h-3.5 w-3.5" />
-                            Đang theo dõi
-                        </>
-                    ) : (
-                        <>
-                            <UserPlus className="mr-2 h-3.5 w-3.5" />
-                            Theo dõi
-                        </>
-                    )}
-                </Button>
+                {/* Follow Button / Profile Button */}
+                {props.targetId === auth?.user?.id ? (
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            closeFollowers();
+                            router.push(`/users/${props.userId}`);
+                        }}
+                        className="w-full rounded-md text-xs font-medium tracking-wide border-neutral-200 dark:border-gray-700 hover:bg-neutral-100 dark:hover:bg-gray-800"
+                    >
+                        Xem hồ sơ
+                    </Button>
+                ) : (
+                    <Button
+                        variant="ghost"
+                        disabled={isToggling}
+                        onClick={handleToggleFollow}
+                        className={`w-full rounded-md text-xs font-medium tracking-wide transition-all
+                ${isFollowing
+                                ? `
+                      bg-primary text-primary-foreground
+                      hover:bg-primary/90
+                      dark:bg-primary dark:hover:bg-primary/80
+                      shadow-sm
+                    `
+                                : `
+                      bg-white dark:bg-gray-900
+                      border border-neutral-200 dark:border-gray-700
+                      text-slate-700 dark:text-gray-200
+                      hover:bg-neutral-100 dark:hover:bg-gray-800
+                    `
+                            }`}
+                    >
+                        {isFollowing ? (
+                            <>
+                                <UserCheck className="mr-2 h-3.5 w-3.5" />
+                                Đang theo dõi
+                            </>
+                        ) : (
+                            <>
+                                <UserPlus className="mr-2 h-3.5 w-3.5" />
+                                Theo dõi
+                            </>
+                        )}
+                    </Button>
+                )}
             </div>
 
             {/* Stats */}
