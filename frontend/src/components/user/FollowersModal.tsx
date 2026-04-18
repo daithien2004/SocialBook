@@ -9,7 +9,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import FollowerItem from "@/components/user/follower-item";
 import { useGetFollowersListQuery, FollowingUser } from "@/features/follows/api/followApi";
-import { useParams } from "next/navigation";
 
 import { useModalStore } from "@/store/useModalStore";
 
