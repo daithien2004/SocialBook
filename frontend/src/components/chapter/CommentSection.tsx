@@ -3,7 +3,7 @@
 import ListComments from '@/components/comment/ListComments';
 import { Separator } from '@/components/ui/separator';
 import { useGetCommentCountQuery, usePostCreateMutation } from '@/features/comments/api/commentApi';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { getErrorMessage } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';

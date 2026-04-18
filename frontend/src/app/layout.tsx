@@ -1,8 +1,8 @@
 import './globals.css';
-import ScrollToTop from '../components/ScrollToTop';
+import ScrollToTop from '@/components/common/ScrollToTop';
 import { Providers } from '../context/Providers';
 import { Toaster } from 'sonner';
-import AuthSync from '../components/AuthSync';
+import AuthSync from '@/components/common/AuthSync';
 import { inter, merriweather, notoSans } from '@/components/book/Fonts';
 import CreatePostModal from '@/components/post/CreatePostModal';
 import EditPostModal from '@/components/post/EditPostModal';

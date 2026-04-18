@@ -4,13 +4,12 @@ import {
   LoginFormValues,
   loginSchema,
 } from '@/features/auth/types/auth.type';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useLoginFlow } from '@/features/auth/hooks/useLoginFlow';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signIn } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { AppButton } from '@/components/common/AppButton';
@@ -31,31 +30,21 @@ import { Eye, EyeOff } from 'lucide-react';
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAppAuth();
 
-  const [isCredentialsLoading, setIsCredentialsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      const userRole = user.role;
-      if (userRole === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/');
-      }
-    }
-  }, [isAuthenticated, user, router]);
+  const {
+    isLoading,
+    serverError,
+    showPassword,
+    setServerError,
+    setShowPassword,
+    handleSubmit,
+    handleGoogleSignin,
+    handleErrorFromParams,
+  } = useLoginFlow();
 
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error) {
-      setServerError('Sign in failed. Please try again.');
-      router.replace('/login');
-    }
-  }, [searchParams, router]);
+    handleErrorFromParams();
+  }, [handleErrorFromParams]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -66,54 +55,13 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    setIsCredentialsLoading(true);
-    setServerError(null);
-
-    try {
-      const result = await signIn('credentials', {
-        redirect: false,
-        email: data.email,
-        password: data.password,
-      });
-
-      if (result?.ok) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        const sessionResponse = await fetch('/api/auth/session');
-        const sessionData = await sessionResponse.json();
-        const userRole = sessionData?.user?.role;
-
-        if (userRole === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/');
-        }
-      } else {
-        setServerError(result?.error || 'Invalid email or password.');
-      }
-    } catch (error) {
-      setServerError('An unexpected error occurred.');
-    } finally {
-      setIsCredentialsLoading(false);
-    }
+  const onSubmit = (data: LoginFormValues) => {
+    handleSubmit(data);
   };
 
-  const handleGoogleSignin = async () => {
-    setIsGoogleLoading(true);
-    signIn('google', { redirect: true, callbackUrl: '/' });
+  const handleGoogleSigninWrapper = () => {
+    handleGoogleSignin();
   };
-
-  const isAnyLoading =
-    isCredentialsLoading || isGoogleLoading || isAuthLoading;
-
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <AppLoading size={48} text="Đang tải thông tin..." />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex">
@@ -122,6 +70,7 @@ export default function LoginPage() {
           src="https://res.cloudinary.com/dajg703uq/image/upload/v1763780207/snapedit_1763780184287_v11fnr.jpg"
           alt="Login background"
           fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover opacity-80"
           priority
         />
@@ -157,13 +106,13 @@ export default function LoginPage() {
             <AppButton
               variant="outline"
               type="button"
-              onClick={handleGoogleSignin}
-              disabled={isAnyLoading}
-              loading={isGoogleLoading}
+              onClick={handleGoogleSigninWrapper}
+              disabled={isLoading}
+              loading={false}
               className="w-full py-6 text-base font-medium relative"
               aria-label="Đăng nhập bằng Google"
             >
-              {!isGoogleLoading && (
+              {!isLoading && (
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
@@ -248,7 +197,7 @@ export default function LoginPage() {
                           variant="ghost"
                           size="icon"
                           className="absolute right-0 top-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowPassword((prev) => !prev)}
+                          onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -265,8 +214,8 @@ export default function LoginPage() {
                 <AppButton
                   type="submit"
                   className="w-full h-11 text-base font-semibold mt-2"
-                  disabled={isAnyLoading}
-                  loading={isCredentialsLoading}
+                  disabled={isLoading}
+                  loading={isLoading}
                   loadingText="Đang đăng nhập..."
                 >
                   Đăng nhập

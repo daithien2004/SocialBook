@@ -24,15 +24,7 @@ export default function PostModalOverlay() {
             onClick={() => router.push('/posts')}
         >
             <div onClick={(e) => e.stopPropagation()}>
-                <ModalPostComment
-                    post={post}
-                    isCommentOpen={true}
-                    closeCommentModal={() => router.push('/posts')}
-                    handleLike={() => {}}
-                    commentCount={post.totalComments ?? 0}
-                    likeStatus={post.likedByCurrentUser ?? false}
-                    likeCount={post.totalLikes ?? 0}
-                />
+                <ModalPostComment />
             </div>
         </div>
     );

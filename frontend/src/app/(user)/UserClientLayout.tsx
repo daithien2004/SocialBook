@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { ReactNode } from 'react';
 
 const ChatWidget = dynamic(
-  () => import('@/components/ChatWidget').then((module) => module.ChatWidget),
+  () => import('@/components/chat/ChatWidget').then((module) => module.ChatWidget),
   { ssr: false }
 );
 

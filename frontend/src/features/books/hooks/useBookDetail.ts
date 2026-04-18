@@ -5,7 +5,7 @@ import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { getErrorMessage } from '@/lib/utils';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 
 export const useBookDetail = (bookSlug: string) => {
   const { data: book, isLoading, error } = useGetBookBySlugQuery({ bookSlug });

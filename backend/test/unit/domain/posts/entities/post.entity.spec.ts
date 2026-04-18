@@ -6,7 +6,7 @@ describe('Post Entity', () => {
     post.reject();
 
     expect(post.moderationStatus).toBe('rejected');
-    expect(post.isDelete).toBe(true);
+    expect(post.isDeleted).toBe(true);
   });
 
   it('flag() → approve() should clear flagged state', () => {

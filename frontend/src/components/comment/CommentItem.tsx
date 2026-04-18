@@ -1,7 +1,6 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
-import { getErrorMessage } from '@/lib/utils';
+import { useAppAuth } from '@/features/auth/hooks';
 import {
     CornerDownRight,
     Heart,
@@ -9,19 +8,10 @@ import {
     MessageCircle,
     MoreVertical,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import React from 'react';
 
 import ListComments from './ListComments';
-
-import {
-    useDeleteCommentMutation,
-    useEditCommentMutation,
-    useLazyGetResolveParentQuery,
-    usePostCreateMutation,
-} from '@/features/comments/api/commentApi';
-import { CommentItem } from '@/features/comments/types/comment.interface';
-import { usePostToggleLikeMutation } from '@/features/likes/api/likeApi';
+import { useCommentActions } from './hooks/useCommentActions';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -33,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { CommentItem } from '@/features/comments/types/comment.interface';
 
 interface CommentItemProps {
     comment: CommentItem;
@@ -45,171 +36,43 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
     targetId,
     targetType,
 }) => {
-    const [showReplies, setShowReplies] = useState(false);
-    const [isReplying, setIsReplying] = useState(false);
-    const [replyText, setReplyText] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
-    const [editText, setEditText] = useState(comment.content);
-    const [optimisticLikeCount, setOptimisticLikeCount] = useState(
-        comment.likesCount ?? 0
-    );
-    const [optimisticIsLiked, setOptimisticIsLiked] = useState(
-        comment.isLiked ?? false
-    );
-    const [optimisticReplyCount, setOptimisticReplyCount] = useState(
-        comment.repliesCount ?? 0
-    );
-
     const { user } = useAppAuth();
-    const isOwner = comment.user.id === user?.id;
+    const userId = user?.id;
 
-    const [editComment, { isLoading: isEditingComment }] =
-        useEditCommentMutation();
-    const [deleteComment, { isLoading: isDeletingComment }] =
-        useDeleteCommentMutation();
-    const [postToggleLike] = usePostToggleLikeMutation();
-    const [createComment, { isLoading: isPostingReply }] =
-        usePostCreateMutation();
-
-    const hasReplyCount = comment.repliesCount !== undefined;
-
-    const [
-        triggerResolveParent,
-        { data: resolvedData, isLoading: isResolvingParent },
-    ] = useLazyGetResolveParentQuery();
-
-    const handleReplyClick = () => {
-        setShowReplies(true);
-        setIsReplying((prev) => !prev);
-    };
-
-    const handleEditComment = async () => {
-        const content = editText.trim();
-        if (!content || content === comment.content) {
-            setIsEditing(false);
-            return;
-        }
-
-        try {
-            await editComment({
-                id: comment.id,
-                content,
-                targetId,
-                parentId: comment.parentId ?? null,
-            }).unwrap();
-            toast.success('Bình luận đã được chỉnh sửa!');
-            setIsEditing(false);
-        } catch (error: unknown) {
-            const apiError = error as {
-                status?: number;
-                data?: { message?: string };
-            };
-
-            if (apiError?.status === 400 && apiError?.data?.message) {
-                toast.error(`Sửa thất bại: ${apiError.data.message}`);
-            } else if (apiError?.status !== 401) {
-                toast.error(getErrorMessage(error));
-            }
-        }
-    };
-
-    const handleDeleteComment = async () => {
-        try {
-            await deleteComment({
-                id: comment.id,
-                targetId,
-                parentId: comment.parentId ?? null,
-            }).unwrap();
-            toast.success('Bình luận đã được xóa!');
-        } catch (error: unknown) {
-            if ((error as { status?: number })?.status !== 401) {
-                toast.error(getErrorMessage(error));
-            }
-        }
-    };
-
-    useEffect(() => {
-        if (!showReplies || resolvedData) return;
-
-        triggerResolveParent({
-            targetId,
-            parentId: comment.id,
-            targetType,
-        });
-    }, [
+    const {
+        isOwner,
+        optimisticLikeCount,
+        optimisticIsLiked,
+        optimisticReplyCount,
+        isEditing,
+        editText,
+        setEditText,
+        isReplying,
+        replyText,
+        setReplyText,
         showReplies,
+        isEditingComment,
+        isDeletingComment,
+        isPostingReply,
+        isResolvingParent,
         resolvedData,
-        triggerResolveParent,
+        effectiveParentId,
+        setIsEditing,
+        handleEditComment,
+        handleDeleteComment,
+        handleSubmitReply,
+        handleLikeComment,
+        handleReplyClick,
+    } = useCommentActions({
+        comment,
         targetId,
-        comment.id,
         targetType,
-    ]);
+        userId,
+    });
 
-    const effectiveParentId = resolvedData?.parentId ?? comment.id;
     const level = resolvedData?.level;
-    const displayedLikeCount = optimisticLikeCount;
-    const displayedLikeStatus = optimisticIsLiked;
+    const hasReplyCount = comment.repliesCount !== undefined;
     const displayedReplyCount = hasReplyCount ? optimisticReplyCount : null;
-
-    useEffect(() => {
-        setOptimisticLikeCount(comment.likesCount ?? 0);
-    }, [comment.likesCount]);
-
-    useEffect(() => {
-        setOptimisticIsLiked(comment.isLiked ?? false);
-    }, [comment.isLiked]);
-
-    useEffect(() => {
-        if (hasReplyCount) {
-            setOptimisticReplyCount(comment.repliesCount ?? 0);
-        }
-    }, [comment.repliesCount, hasReplyCount]);
-
-    const handleSubmitReply = async () => {
-        const content = replyText.trim();
-        if (!content) return;
-
-        try {
-            await createComment({
-                targetType,
-                targetId,
-                content,
-                parentId: effectiveParentId,
-            }).unwrap();
-
-            setReplyText('');
-            setShowReplies(true);
-            setIsReplying(false);
-
-            if (hasReplyCount) {
-                setOptimisticReplyCount((prev) => prev + 1);
-            }
-        } catch (error: unknown) {
-            console.log('Create reply failed:', error);
-            toast.error(getErrorMessage(error));
-        }
-    };
-
-    const handleLikeComment = async () => {
-        try {
-            const nextLiked = !displayedLikeStatus;
-
-            setOptimisticIsLiked(nextLiked);
-            setOptimisticLikeCount((prev) =>
-                nextLiked ? prev + 1 : Math.max(0, prev - 1)
-            );
-
-            await postToggleLike({
-                targetId: comment.id,
-                targetType: 'comment',
-            }).unwrap();
-        } catch (error) {
-            setOptimisticIsLiked(comment.isLiked ?? false);
-            setOptimisticLikeCount(comment.likesCount ?? 0);
-
-            console.error('Like comment failed:', error);
-        }
-    };
 
     return (
         <div className="group flex w-full animate-in fade-in items-start gap-3 duration-300">
@@ -322,17 +185,17 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                         onClick={handleLikeComment}
                         className={cn(
                             'flex items-center gap-1.5 text-xs font-medium transition-colors hover:bg-transparent',
-                            displayedLikeStatus
+                            optimisticIsLiked
                                 ? 'text-red-500'
                                 : 'text-muted-foreground hover:text-red-500'
                         )}
                     >
                         <Heart
                             size={12}
-                            className={displayedLikeStatus ? 'fill-current' : ''}
+                            className={optimisticIsLiked ? 'fill-current' : ''}
                         />
-                        {displayedLikeCount > 0 && (
-                            <span>{displayedLikeCount}</span>
+                        {optimisticLikeCount > 0 && (
+                            <span>{optimisticLikeCount}</span>
                         )}
                         <span className="hidden sm:inline">Thích</span>
                     </button>

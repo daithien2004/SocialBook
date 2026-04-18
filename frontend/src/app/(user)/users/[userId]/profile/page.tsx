@@ -6,10 +6,9 @@ import {
     useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
     usePatchUpdateUserProfileOverviewMutation,
 } from '@/features/users/api/usersApi';
-import { getErrorMessage } from "@/lib/utils";
 import { useParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from "sonner";
+import { useUserProfile } from '@/components/profile/hooks/useUserProfile';
+
 const COUNTRIES = [
     "Việt Nam",
     "Hoa Kỳ (USA)",
@@ -30,123 +29,45 @@ const COUNTRIES = [
 const UserProfilePage = () => {
     const { userId } = useParams<{ userId: string }>();
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [savingAvatar, setSavingAvatar] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [updateOverview] = usePatchUpdateUserProfileOverviewMutation();
+    const [updateAvatar] = usePatchUpdateUserAvatarMutation();
 
-    const onPickAvatar = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ""; // reset để chọn lại cùng 1 file vẫn fire onChange
-        }
-        fileInputRef.current?.click();
-    };
-
-    const onAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setSelectedFile(file);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-    };
-
-    // dọn URL tránh leak bộ nhớ
-    useEffect(() => {
-        return () => {
-            if (previewUrl) URL.revokeObjectURL(previewUrl);
-        };
-    }, [previewUrl]);
-
-    const handleCancelAvatar = () => {
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        setSelectedFile(null);
-        setPreviewUrl(null);
-        if (fileInputRef.current) fileInputRef.current.value = ''; // quan trọng
-    };
-
-    const { data: overview, isLoading: isOverviewLoading } =
+    const { data: overview } =
         useGetUserOverviewQuery(userId, { skip: !userId });
 
-    const [updateOverview, { isLoading: isSaving }] =
-        usePatchUpdateUserProfileOverviewMutation();
-
-    const [updateAvatar, { isLoading: isSavingAvatarApi }] =
-        usePatchUpdateUserAvatarMutation();
-
-    // form state
-    const [form, setForm] = useState({
-        displayName: '',
-        website: '',
-        location: '',
-        bio: '',
-    });
-
-    const handleSaveAvatar = async () => {
-        if (!selectedFile || !userId) return;
-        try {
-            setSavingAvatar(true);
-
-            // Gọi RTK Query mutation upload avatar
-            const res = await updateAvatar({
-                userId,
-                file: selectedFile,
-            }).unwrap();
-
-            toast.success('Thay đổi hình ảnh thành công');
-
-            handleCancelAvatar();
-        } catch (err: any) {
-            console.log(getErrorMessage(err));
-            // toast.error(getErrorMessage(err));
-        } finally {
-            setSavingAvatar(false);
-        }
-    };
-
-
-    useEffect(() => {
-        if (!overview) return;
-        setForm({
-            displayName: overview.username ?? '',
-            website: overview.website ?? '',
-            location: overview.location ?? '',
-            bio: overview.bio ?? '',
-        });
-    }, [overview]);
-
-    const isDirty = useMemo(() => {
-        if (!overview) return false;
-        return (
-            (form.website ?? '') !== (overview.website ?? '') ||
-            (form.location ?? '') !== (overview.location ?? '') ||
-            (form.bio ?? '') !== (overview.bio ?? '') ||
-            (form.displayName ?? '') !== (overview.username ?? '')
-        );
-    }, [overview, form.website, form.location, form.bio, form.displayName]);
-
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-    ) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleSave = async () => {
-        try {
-            const res = await updateOverview({
-                userId,
+    const {
+        form,
+        isDirty,
+        isSaving,
+        isSavingAvatar,
+        previewUrl,
+        selectedFile,
+        fileInputRef,
+        handleChange,
+        handleSave,
+        handleAvatarChange,
+        handlePickAvatar,
+        handleCancelAvatar,
+        handleSaveAvatar,
+        handleResetForm,
+    } = useUserProfile({
+        userId,
+        overview,
+        updateOverview: async (params) => {
+            await updateOverview({
+                ...params,
                 body: {
-                    username: form.displayName,
-                    bio: form.bio,
-                    location: form.location,
-                    website: form.website,
+                    username: params.body.username || '',
+                    bio: params.body.bio || '',
+                    location: params.body.location || '',
+                    website: params.body.website || '',
                 },
             }).unwrap();
-            toast.success('Cập nhật hồ sơ thành công');
-        } catch (err: any) {
-            console.log(getErrorMessage(err));
-        }
-    };
+        },
+        updateAvatar: async (params) => {
+            await updateAvatar(params).unwrap();
+        },
+    });
 
     return (
         <div
@@ -173,12 +94,12 @@ const UserProfilePage = () => {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={onAvatarFileChange}
+                            onChange={handleAvatarChange}
                         />
 
                         <button
-                            onClick={onPickAvatar}
-                            disabled={savingAvatar}
+                            onClick={handlePickAvatar}
+                            disabled={isSavingAvatar}
                             className="
               relative group rounded-full
               ring-4 ring-white dark:ring-gray-800
@@ -216,7 +137,7 @@ const UserProfilePage = () => {
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
                                 <button
                                     onClick={handleCancelAvatar}
-                                    disabled={savingAvatar}
+                                    disabled={isSavingAvatar}
                                     className="
                   px-2 py-1 rounded-full text-[10px]
                   border border-slate-200 dark:border-gray-700
@@ -229,7 +150,7 @@ const UserProfilePage = () => {
                                 </button>
                                 <button
                                     onClick={handleSaveAvatar}
-                                    disabled={savingAvatar}
+                                    disabled={isSavingAvatar}
                                     className="
                   px-3 py-1 rounded-full text-[10px]
                   bg-gray-900 dark:bg-neutral-900
@@ -238,7 +159,7 @@ const UserProfilePage = () => {
                   disabled:opacity-60
                 "
                                 >
-                                    {savingAvatar ? "Đang lưu..." : "Lưu"}
+                                    {isSavingAvatar ? "Đang lưu..." : "Lưu"}
                                 </button>
                             </div>
                         )}
@@ -344,14 +265,7 @@ const UserProfilePage = () => {
                             <Button
                                 variant="secondary"
                                 disabled={isSaving}
-                                onClick={() =>
-                                    setForm({
-                                        displayName: overview?.username ?? '',
-                                        website: overview?.website ?? '',
-                                        location: overview?.location ?? '',
-                                        bio: overview?.bio ?? '',
-                                    })
-                                }
+                                onClick={handleResetForm}
                                 className="
                 bg-slate-100 dark:bg-gray-800
                 text-slate-700 dark:text-gray-200

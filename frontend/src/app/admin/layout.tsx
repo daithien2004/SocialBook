@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut, PenLine, Shapes, AlertTriangle } from 'lucide-react';

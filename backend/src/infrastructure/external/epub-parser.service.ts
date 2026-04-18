@@ -80,8 +80,9 @@ export class EpubParserService implements IEpubParser {
 
       return chapters;
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       throw new BadRequestException(
-        `Không thể parse file EPUB: ${error.message}`,
+        `Không thể parse file EPUB: ${message}`,
       );
     } finally {
       await fs.unlink(tmpFile).catch(() => null);

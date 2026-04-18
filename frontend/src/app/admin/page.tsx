@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { Users, BookOpen, FileText, MessageSquare, BarChart2, Download } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { StatCard } from '@/components/admin/dashboard/StatCard';
@@ -28,7 +28,7 @@ export default function AdminPage() {
   const [timeRange, setTimeRange] = useState('30');
 
   const { stats, growthData, bookStats, loading, error, refetch } = useDashboardData(timeRange, viewType);
-  const { exportCSV, exporting } = useExportStatistics();
+  const { exportCSV, exporting } = useExportStatistics(timeRange);
 
   // Reset time range when view type changes
   const handleViewTypeChange = (newViewType: ViewType) => {
@@ -102,7 +102,7 @@ export default function AdminPage() {
           <ViewTypeSelector value={viewType} onChange={handleViewTypeChange} />
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} viewType={viewType} />
           <button
-            onClick={() => exportCSV(timeRange)}
+            onClick={() => exportCSV()}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >

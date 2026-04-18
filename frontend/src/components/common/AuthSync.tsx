@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { useDispatch } from 'react-redux';
-import { logout, setCredentials } from '../features/auth/slice/authSlice';
+import { logout, setCredentials } from '@/features/auth/slice/authSlice';
 
 export default function AuthSync() {
   const { user, accessToken, isAuthenticated } = useAppAuth();

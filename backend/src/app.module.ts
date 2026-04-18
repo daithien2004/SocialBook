@@ -68,16 +68,27 @@ import { PresentationModule } from './presentation/presentation.module';
             password,
             tls:
               host !== 'localhost' ? { rejectUnauthorized: false } : undefined,
-            lazyConnect: true,
-            maxRetriesPerRequest: 3,
+            connectTimeout: 10000,
+            maxRetriesPerRequest: 5,
             retryStrategy: (times: number) => {
-              if (times > 3) {
-                console.warn(
-                  '[Redis] Connection failed after 3 retries. Redis features will be disabled.',
+              if (times > 5) {
+                console.error(
+                  '[Redis] Connection failed after 5 retries. Redis features will be disabled.',
                 );
-                return null; // Stop retrying
+                return null;
               }
-              return Math.min(times * 500, 2000); // Retry with delay
+              return Math.min(times * 500, 2000);
+            },
+            reconnectOnError: (err) => {
+              const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
+              if (
+                targetErrors.some((e) =>
+                  err.message.includes(e),
+                )
+              ) {
+                return true;
+              }
+              return false;
             },
           },
         };
