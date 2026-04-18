@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import {
   ConflictDomainException,
   NotFoundDomainException,
@@ -9,12 +9,17 @@ import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { CreateBookCommand } from './create-book.command';
+import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
 
 @Injectable()
 export class CreateBookUseCase {
+  private readonly CACHE_TTL = 300;
+
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
+    @Inject(CACHE_SERVICE) private readonly cache: ICacheService,
   ) {}
 
   async execute(command: CreateBookCommand): Promise<Book> {
@@ -49,6 +54,30 @@ export class CreateBookUseCase {
     });
 
     await this.bookRepository.save(book);
+    // cập nhật lại cache
+    await this.cache.set(
+      `books:detail:${book.id.toString()}`,
+      {
+        id: book.id.toString(),
+        title: book.title.toString(),
+        slug: book.slug,
+        authorId: book.authorId.toString(),
+        genres: book.genres.map((g) => g.toString()),
+        description: book.description,
+        publishedYear: book.publishedYear,
+        coverUrl: book.coverUrl,
+        status: book.status.toString(),
+        tags: book.tags,
+        views: book.views,
+        likes: book.likes,
+        likedBy: book.likedBy,
+        createdAt: book.createdAt.toISOString(),
+        updatedAt: book.updatedAt.toISOString(),
+        authorName: book.authorName,
+        chapterCount: book.chapterCount,
+      },
+      this.CACHE_TTL,
+    );
 
     return book;
   }
