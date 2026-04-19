@@ -13,7 +13,7 @@ export class OtpRepository implements IOtpRepository {
   private readonly RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds
   private readonly logger = new Logger(OtpRepository.name);
 
-  constructor(@Inject(CACHE_SERVICE) private readonly cacheService: ICacheService) {}
+  constructor(@Inject(CACHE_SERVICE) private readonly cacheService: ICacheService) { }
 
   async save(otp: Otp): Promise<void> {
     // Store OTP code with TTL

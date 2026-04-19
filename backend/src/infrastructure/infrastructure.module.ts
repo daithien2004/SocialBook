@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthInfrastructureModule } from './auth/auth-infrastructure.module';
+import { CacheInfrastructureModule } from './cache/cache-infrastructure.module';
 import { IdGeneratorModule } from './database/id/id-generator.module';
 import { AuthorsRepositoryModule } from './database/repositories/authors/authors-repository.module';
 import { BooksRepositoryModule } from './database/repositories/books/books-repository.module';
@@ -26,9 +27,11 @@ import { ProvidersModule } from './external/providers.module';
 import { GatewaysModule } from './gateways/gateways.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
 import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
+import { ChaptersImportModule } from './queues/chapters-import/chapters-import.module';
 
 @Module({
   imports: [
+    CacheInfrastructureModule,
     AuthInfrastructureModule,
     UsersRepositoryModule,
     BooksRepositoryModule,
@@ -56,8 +59,10 @@ import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.mo
     RecommendationsInfrastructureModule,
     IdGeneratorModule,
     GatewaysModule,
+    ChaptersImportModule,
   ],
   exports: [
+    CacheInfrastructureModule,
     AuthInfrastructureModule,
     UsersRepositoryModule,
     BooksRepositoryModule,
@@ -85,6 +90,7 @@ import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.mo
     RecommendationsInfrastructureModule,
     IdGeneratorModule,
     GatewaysModule,
+    ChaptersImportModule,
   ],
 })
 export class InfrastructureModule {}

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef } from 'react';
 import { Loader2, Upload, Check, X, Eye } from 'lucide-react';
 import { useImportChaptersPreviewMutation } from '@/features/chapters/api/chaptersApi';
@@ -64,21 +66,33 @@ export function FileImportModal({
         formData.append('file', file);
 
         try {
-            const chapters = await importPreview({ bookSlug, formData }).unwrap();
-            console.log('FileImportModal response:', chapters);
+            const response = await importPreview({ bookSlug, formData }).unwrap();
+            console.log('FileImportModal response:', response);
 
-            if (!Array.isArray(chapters)) {
-                throw new Error('Invalid response format from server');
+            // Backend returns { chapters: [...], totalChapters: N }
+            const chaptersArray: { title: string; content: string }[] =
+                Array.isArray(response)
+                    ? response
+                    : (response as { chapters?: { title: string; content: string }[] } | null)?.chapters ?? [];
+
+
+            if (chaptersArray.length === 0) {
+                throw new Error('Không tìm thấy chương nào trong file. Vui lòng thử file khác.');
             }
 
             setParsedChapters(
-                chapters.map((chapter) => ({ ...chapter, selected: true }))
+                chaptersArray.map((chapter) => ({ ...chapter, selected: true }))
             );
             setStep('preview');
             setSelectedChapterIndex(0);
-        } catch (error: any) {
-            console.error('Error parsing file:', JSON.stringify(error, null, 2));
-            toast.error(getErrorMessage(error));
+        } catch (error: unknown) {
+            const errorObj = error as { data?: { message?: string }; message?: string };
+            const message =
+                errorObj?.data?.message ||
+                errorObj?.message ||
+                'Không thể đọc file. Vui lòng kiểm tra định dạng file (EPUB/MOBI).';
+            console.error('Error parsing file:', error);
+            toast.error(message);
         }
     };
 

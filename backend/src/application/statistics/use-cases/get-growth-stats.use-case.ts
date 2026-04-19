@@ -17,7 +17,16 @@ export class GetGrowthStatsUseCase {
     groupBy: 'day' | 'month' | 'year' = 'day',
   ): Promise<GrowthMetric[]> {
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Set start date back by 'days'
+    if (groupBy === 'day') {
+      startDate.setDate(startDate.getDate() - days);
+    } else if (groupBy === 'month') {
+      startDate.setMonth(startDate.getMonth() - days / 30);
+    } else {
+      startDate.setFullYear(startDate.getFullYear() - days / 365);
+    }
 
     const [userGrowth, bookGrowth, postGrowth] = await Promise.all([
       this.userRepository.getGrowthMetrics(startDate, groupBy),
@@ -25,45 +34,50 @@ export class GetGrowthStatsUseCase {
       this.postRepository.getGrowthMetrics(startDate, groupBy),
     ]);
 
-    // Build a unified map keyed by date string
     const metricsMap = new Map<string, GrowthMetric>();
 
-    for (const entry of userGrowth) {
-      metricsMap.set(entry._id, {
-        date: entry._id,
-        users: entry.count,
+    // Helper to generate date ranges
+    const now = new Date();
+    const current = new Date(startDate);
+
+    while (current <= now) {
+      let dateKey: string;
+      if (groupBy === 'day') {
+        dateKey = current.toISOString().split('T')[0];
+        current.setDate(current.getDate() + 1);
+      } else if (groupBy === 'month') {
+        dateKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+        current.setMonth(current.getMonth() + 1);
+      } else {
+        dateKey = `${current.getFullYear()}`;
+        current.setFullYear(current.getFullYear() + 1);
+      }
+
+      metricsMap.set(dateKey, {
+        date: dateKey,
+        users: 0,
         books: 0,
         posts: 0,
       });
     }
+
+    // Merge actual data
+    for (const entry of userGrowth) {
+      if (metricsMap.has(entry._id)) {
+        metricsMap.get(entry._id)!.users = entry.count;
+      }
+    }
     for (const entry of bookGrowth) {
-      const existing = metricsMap.get(entry._id);
-      if (existing) {
-        existing.books = entry.count;
-      } else {
-        metricsMap.set(entry._id, {
-          date: entry._id,
-          users: 0,
-          books: entry.count,
-          posts: 0,
-        });
+      if (metricsMap.has(entry._id)) {
+        metricsMap.get(entry._id)!.books = entry.count;
       }
     }
     for (const entry of postGrowth) {
-      const existing = metricsMap.get(entry._id);
-      if (existing) {
-        existing.posts = entry.count;
-      } else {
-        metricsMap.set(entry._id, {
-          date: entry._id,
-          users: 0,
-          books: 0,
-          posts: entry.count,
-        });
+      if (metricsMap.has(entry._id)) {
+        metricsMap.get(entry._id)!.posts = entry.count;
       }
     }
 
-    // Sort by date ascending
     return Array.from(metricsMap.values()).sort((a, b) =>
       a.date.localeCompare(b.date),
     );

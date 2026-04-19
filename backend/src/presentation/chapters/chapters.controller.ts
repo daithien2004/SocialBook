@@ -39,6 +39,11 @@ import { GetChapterBySlugUseCase } from '@/application/chapters/use-cases/get-ch
 import { GetChaptersQuery } from '@/application/chapters/use-cases/get-chapters/get-chapters.query';
 import { UpdateChapterCommand } from '@/application/chapters/use-cases/update-chapter/update-chapter.command';
 import { ImportEpubPreviewUseCase } from '@/application/chapters/use-cases/import-epub-preview/import-epub-preview.use-case';
+import { StartChaptersImportUseCase } from '@/application/chapters/use-cases/start-chapters-import/start-chapters-import.use-case';
+import { GetChaptersImportStatusUseCase } from '@/application/chapters/use-cases/get-chapters-import-status/get-chapters-import-status.use-case';
+import { StartChaptersImportCommand } from '@/application/chapters/use-cases/start-chapters-import/start-chapters-import.command';
+import { GetChaptersImportStatusQuery } from '@/application/chapters/use-cases/get-chapters-import-status/get-chapters-import-status.query';
+import { StartChaptersImportDto } from './dto/start-chapters-import.dto';
 
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
@@ -50,6 +55,8 @@ export class ChaptersController {
     private readonly deleteChapterUseCase: DeleteChapterUseCase,
     private readonly getChapterByIdUseCase: GetChapterByIdUseCase,
     private readonly importEpubPreviewUseCase: ImportEpubPreviewUseCase,
+    private readonly startChaptersImportUseCase: StartChaptersImportUseCase,
+    private readonly getChaptersImportStatusUseCase: GetChaptersImportStatusUseCase,
   ) {}
 
   @Post('import/preview')
@@ -69,7 +76,34 @@ export class ChaptersController {
       file.buffer,
       file.originalname,
     );
-    return result;
+    return {
+      message: 'File parsed successfully',
+      data: result,
+    };
+  }
+
+  @Post('import/start')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async startImport(@Body() dto: StartChaptersImportDto) {
+    const command = new StartChaptersImportCommand(dto.bookId, dto.chapters);
+    const result = await this.startChaptersImportUseCase.execute(command);
+    return {
+      message: 'Import job started successfully',
+      data: result,
+    };
+  }
+
+  @Get('import/status/:jobId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async getImportStatus(@Param('jobId') jobId: string) {
+    const query = new GetChaptersImportStatusQuery(jobId);
+    const result = await this.getChaptersImportStatusUseCase.execute(query);
+    return {
+      message: 'Get import status successfully',
+      data: result,
+    };
   }
 
   @Public()

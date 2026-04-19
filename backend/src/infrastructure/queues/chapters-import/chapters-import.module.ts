@@ -1,6 +1,6 @@
-import { ChaptersApplicationModule } from '@/application/chapters/chapters-application.module';
+import { forwardRef, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
+import { ChaptersApplicationModule } from '@/application/chapters/chapters-application.module';
 
 import { ChaptersImportProcessor, CHAPTERS_IMPORT_QUEUE } from './chapters-import.processor';
 import { ChaptersImportService } from './chapters-import.service';
@@ -10,7 +10,7 @@ import { ChaptersImportService } from './chapters-import.service';
     BullModule.registerQueue({
       name: CHAPTERS_IMPORT_QUEUE,
     }),
-    ChaptersApplicationModule,
+    forwardRef(() => ChaptersApplicationModule),
   ],
   providers: [ChaptersImportProcessor, ChaptersImportService],
   exports: [ChaptersImportService],

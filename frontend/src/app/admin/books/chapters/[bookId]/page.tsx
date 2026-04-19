@@ -1,475 +1,62 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { useGetBookByIdQuery } from '@/features/books/api/bookApi';
-import {
-  useGetAdminChaptersQuery,
-  useCreateChapterMutation,
-  useUpdateChapterMutation,
-  useDeleteChapterMutation,
-  useGetChapterByIdQuery,
-  useLazyGetChapterByIdQuery,
-  useStartChaptersImportMutation,
-  useLazyGetChaptersImportStatusQuery,
-} from '@/features/chapters/api/chaptersApi';
-import {
-  useGenerateChapterAudioMutation,
-  useGenerateBookAudioMutation,
-  useGetChapterAudioQuery,
-} from '@/features/tts/api/ttsApi';
-import { Chapter, Paragraph } from '@/features/chapters/types/chapter.interface';
-import { Plus, ChevronDown, ChevronRight, Edit2, Trash2, Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { useGetChapterByIdQuery } from '@/features/chapters/api/chaptersApi';
+import { 
+  Plus, ChevronDown, ChevronRight, Edit2, Trash2, 
+  Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload 
+} from 'lucide-react';
 import { FileImportModal } from '@/components/chapter/FileImportModal';
+import { useChapterManagement } from '@/components/admin/chapter/useChapterManagement';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function ChapterManagementPage() {
-  const params = useParams();
-  const bookId = params.bookId as string;
-
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const observerTarget = useRef<HTMLDivElement>(null);
-
-  const { data: bookData, isLoading: isLoadingBook } = useGetBookByIdQuery(bookId);
-
-  const { data: chaptersData, isFetching: isFetchingChapters, isLoading: isLoadingChapters, refetch: refetchChaptersQuery } = useGetAdminChaptersQuery({
-    bookSlug: bookData?.slug || '',
+  const {
+    bookId,
+    book,
+    chapters,
+    isLoadingBook,
+    isLoadingChapters,
+    isFetchingChapters,
+    isFetchingDetails,
+    isCreating,
+    isUpdating,
+    isGeneratingAllAudio,
+    isStartingImport,
     page,
-    limit: 20
-  }, {
-    skip: !bookData?.slug,
-  });
-
-  const refetchChapters = () => {
-    setPage(1);
-    setChapters([]);
-    refetchChaptersQuery();
-  };
-
-  // Infinite Scroll Effect
-  useEffect(() => {
-    if (chaptersData?.chapters) {
-      if (page === 1) {
-        setChapters(chaptersData.chapters);
-      } else {
-        setChapters(prev => [...prev, ...chaptersData.chapters]);
-      }
-      // Check if we reached the total or if returned less than limit
-      const total = chaptersData.total || 0;
-      const currentCount = (page - 1) * 20 + chaptersData.chapters.length;
-      setHasMore(currentCount < total);
-    }
-  }, [chaptersData, page]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore && !isFetchingChapters) {
-          setPage(prev => prev + 1);
-        }
-      },
-      { threshold: 0.1, rootMargin: '500px' } // Load 500px before reaching bottom
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, isFetchingChapters]);
-
-  const [triggerGetChapter, { isFetching: isFetchingDetails }] = useLazyGetChapterByIdQuery();
-  const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
-  const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
-  const [deleteChapter] = useDeleteChapterMutation();
-  const [startChaptersImport, { isLoading: isStartingImport }] = useStartChaptersImportMutation();
-  const [triggerImportStatus] = useLazyGetChaptersImportStatusQuery();
-
-  // TTS mutations
-  const [generateChapterAudio, { isLoading: isGeneratingAudio }] = useGenerateChapterAudioMutation();
-  const [generateBookAudio, { isLoading: isGeneratingAllAudio }] = useGenerateBookAudioMutation();
-
-  const [expandedChapterId, setExpandedChapterId] = useState<string | null>(null);
-  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState('');
-  const [editingParagraphs, setEditingParagraphs] = useState<Paragraph[]>([]);
-  const [showNewChapterForm, setShowNewChapterForm] = useState(false);
-  const [newChapterTitle, setNewChapterTitle] = useState('');
-  const [newChapterParagraphs, setNewChapterParagraphs] = useState<Paragraph[]>([
-    { id: uuidv4(), content: '' },
-  ]);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-
-  const newChapterBottomRef = useRef<HTMLDivElement>(null);
-  const editChapterBottomRef = useRef<HTMLDivElement>(null);
-
-  const book = bookData;
-  // const chapters = chaptersData?.chapters || []; // Removed old derivation
-
-
-
-  const handleToggleExpand = (chapterId: string, e?: React.MouseEvent) => {
-    if (expandedChapterId === chapterId) {
-      setExpandedChapterId(null);
-      setEditingChapterId(null);
-    } else {
-      setExpandedChapterId(chapterId);
-    }
-  };
-
-  const handleStartEdit = async (chapter: Chapter) => {
-    if (!book?.slug) return;
-
-    setEditingChapterId(chapter.id);
-    setEditingTitle(chapter.title);
-    setEditingParagraphs([]); // Clear while loading
-
-    try {
-      const fullChapter = await triggerGetChapter({
-        bookSlug: book.slug,
-        chapterId: chapter.id
-      }).unwrap();
-
-      setEditingTitle(fullChapter.title);
-      const paras = fullChapter.paragraphs && fullChapter.paragraphs.length > 0
-        ? fullChapter.paragraphs
-        : [{ id: uuidv4(), content: '' }];
-      setEditingParagraphs(paras);
-    } catch (error) {
-      console.error('Failed to fetch chapter details for editing:', error);
-      setEditingChapterId(null);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingChapterId(null);
-    setEditingTitle('');
-    setEditingParagraphs([]);
-  };
-
-  const handleSaveEdit = async (chapterId: string) => {
-    if (!book?.slug) return;
-
-    try {
-      await updateChapter({
-        bookSlug: book.slug,
-        chapterId,
-        data: {
-          title: editingTitle,
-          paragraphs: editingParagraphs.filter(p => p.content.trim()).length > 0
-            ? editingParagraphs.filter(p => p.content.trim())
-            : [{ id: uuidv4(), content: ' ' }],
-        },
-      }).unwrap();
-      setEditingChapterId(null);
-      setEditingTitle('');
-      setEditingParagraphs([]);
-    } catch (error) {
-      console.error('Failed to update chapter:', error);
-    }
-  };
-
-  const handleDeleteChapter = async (chapterId: string) => {
-    if (!book?.slug) return;
-    if (!confirm('Bạn có chắc muốn xóa chương này?')) return;
-
-    try {
-      await deleteChapter({ bookSlug: book.slug, chapterId }).unwrap();
-      if (expandedChapterId === chapterId) {
-        setExpandedChapterId(null);
-      }
-    } catch (error) {
-      console.error('Failed to delete chapter:', error);
-    }
-  };
-
-  const handleParagraphChange = (
-    index: number,
-    content: string,
-    paragraphs: Paragraph[],
-    setParagraphs: (p: Paragraph[]) => void,
-    onPaste?: () => void
-  ) => {
-    
-    const isPaste = content.length - paragraphs[index].content.length > 5;
-
-    if (content.includes('\n') || (isPaste && /[.!?]\s/.test(content))) {
-      
-      const segments = content
-        .split(/(?<=[.!?])\s+|\n+/)
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-
-      if (segments.length > 1) {
-        const newParagraphs = paragraphs.map(p => ({ ...p }));
-
-        // Đoạn đầu tiên vào current index
-        newParagraphs[index].content = segments[0];
-
-        // Các đoạn tiếp theo tạo ô mới
-        const newItems = segments.slice(1).map(line => ({
-          id: uuidv4(),
-          content: line
-        }));
-
-        newParagraphs.splice(index + 1, 0, ...newItems);
-        setParagraphs(newParagraphs);
-
-        // Scroll to bottom if pasting
-        if (onPaste) {
-          setTimeout(onPaste, 100);
-        }
-        return;
-      }
-    }
-
-    // Nếu chỉ gõ bình thường hoặc không có đoạn nào tách được
-    const newParagraphs = paragraphs.map(p => ({ ...p }));
-    newParagraphs[index].content = content;
-    setParagraphs(newParagraphs);
-  };
-
-  const handleParagraphKeyDown = (
-    e: React.KeyboardEvent<HTMLTextAreaElement>,
-    index: number,
-    paragraphs: Paragraph[],
-    setParagraphs: (p: Paragraph[]) => void
-  ) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-
-      const cursorPosition = e.currentTarget.selectionStart;
-      const content = paragraphs[index].content;
-
-      const leftPart = content.slice(0, cursorPosition);
-      const rightPart = content.slice(cursorPosition);
-
-      const newParagraphs = paragraphs.map(p => ({ ...p }));
-
-      // Update current
-      newParagraphs[index].content = leftPart;
-
-      // Create new with right part
-      newParagraphs.splice(index + 1, 0, { id: uuidv4(), content: rightPart });
-
-      setParagraphs(newParagraphs);
-
-      setTimeout(() => {
-        const allTextareas = Array.from(document.querySelectorAll('textarea'));
-        const currentIdx = allTextareas.indexOf(e.currentTarget);
-        if (currentIdx !== -1 && currentIdx + 1 < allTextareas.length) {
-          const nextTextarea = allTextareas[currentIdx + 1] as HTMLTextAreaElement;
-          nextTextarea.focus();
-          nextTextarea.setSelectionRange(0, 0);
-        }
-      }, 0);
-    } else if (e.key === 'Backspace' && paragraphs[index].content === '' && paragraphs.length > 1) {
-      e.preventDefault();
-
-      const newParagraphs = paragraphs
-        .map(p => ({ ...p }))
-        .filter((_, i) => i !== index);
-
-      setParagraphs(newParagraphs);
-
-      setTimeout(() => {
-        const allTextareas = Array.from(document.querySelectorAll('textarea'));
-        const newTextareas = document.querySelectorAll('textarea');
-        if (index > 0 && newTextareas[index - 1]) {
-          const el = newTextareas[index - 1] as HTMLTextAreaElement;
-          el.focus();
-          el.setSelectionRange(el.value.length, el.value.length);
-        }
-      }, 0);
-    }
-  };
-
-
-  const handleDeleteParagraph = (
-    index: number,
-    paragraphs: Paragraph[],
-    setParagraphs: (p: Paragraph[]) => void
-  ) => {
-    if (paragraphs.length === 1) return;
-
-    const newParagraphs = paragraphs
-      .map(p => ({ ...p }))
-      .filter((_, i) => i !== index);
-
-    setParagraphs(newParagraphs);
-  };
-
-  const handleCreateChapter = async () => {
-    if (!bookId) {
-      console.error('Cannot create chapter: bookId is missing', { bookId, book, bookData });
-      toast.error('Không tìm thấy ID sách. Vui lòng tải lại trang.');
-      return;
-    }
-
-    if (!newChapterTitle.trim()) {
-      toast.info('Vui lòng nhập tiêu đề chương');
-      return;
-    }
-
-    console.log('Creating chapter with:', {
-      bookId, // Backend expects bookId (ObjectId), not slug
-      bookSlug: book?.slug,
-      title: newChapterTitle,
-      paragraphs: newChapterParagraphs
-    });
-
-    try {
-      // Note: The mutation parameter is named "bookSlug" but we're passing bookId
-      // because the backend route expects an ObjectId, not a slug
-      const result = await createChapter({
-        bookSlug: book?.slug || '',
-        data: {
-          title: newChapterTitle,
-          bookId: bookId,
-          paragraphs: newChapterParagraphs.filter(p => p.content.trim()),
-        },
-      }).unwrap();
-
-
-      console.log('Chapter created successfully:', result);
-      setShowNewChapterForm(false);
-      setNewChapterTitle('');
-      setNewChapterParagraphs([{ id: uuidv4(), content: '' }]);
-    } catch (error: any) {
-      console.error('Failed to create chapter:', {
-        error,
-        errorData: error?.data,
-        errorMessage: error?.message,
-        errorStatus: error?.status,
-      });
-      toast.error(`Tạo chương thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
-    }
-  };
-
-  // TTS handlers - NO hardcoded options to allow backend auto-detection
-  const handleGenerateAudio = async (chapterId: string) => {
-    try {
-      const ttsResult = await generateChapterAudio({
-        chapterId,
-      }).unwrap();
-      toast.success('Tạo audio thành công!');
-
-      // Optimistic update: cập nhật ngay local state trước khi refetch
-      setChapters(prev => prev.map(ch =>
-        ch.id === chapterId
-          ? { ...ch, ttsStatus: 'completed' as const, audioUrl: ttsResult.audioUrl }
-          : ch
-      ));
-
-      // Refetch để đồng bộ với server (ttsApi và chaptersApi là 2 instance riêng)
-      refetchChaptersQuery();
-    } catch (error: any) {
-      console.error('Failed to generate audio:', error);
-      toast.error(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
-    }
-  };
-
-  const handleGenerateAllAudio = async () => {
-    if (!bookId) return;
-    if (!confirm(`Bạn có chắc muốn tạo audio cho tất cả ${chapters.length} chương?`)) return;
-
-    try {
-      const result = await generateBookAudio({
-        bookId,
-      }).unwrap();
-
-      alert(
-        `Hoàn thành tạo audio!\n` +
-        `Thành công: ${result.successful}/${result.total}\n` +
-        `Thất bại: ${result.failed}`
-      );
-
-      // Refetch để lấy trạng thái mới nhất từ server
-      setPage(1);
-      setChapters([]);
-      refetchChaptersQuery();
-    } catch (error: any) {
-      console.error('Failed to generate all audio:', error);
-      alert(`Tạo audio thất bại: ${error?.data?.message || error?.message || 'Lỗi không xác định'}`);
-    }
-  };
-
-  const handleImportChapters = async (importedChapters: { title: string; content: string }[]) => {
-    setIsImportModalOpen(false);
-    if (!book?.slug) {
-      toast.error('Book information missing');
-      return;
-    }
-
-    const toastId = toast.loading(`Đang tạo job import ${importedChapters.length} chương...`);
-
-    try {
-      const { jobId } = await startChaptersImport({
-        bookSlug: book.slug,
-        data: {
-          bookId,
-          chapters: importedChapters,
-        },
-      }).unwrap();
-
-      toast.loading(`Đang import... (job: ${jobId})`, { id: toastId });
-
-      // Poll status until completed/failed
-      const startedAt = Date.now();
-      const POLL_MS = 2000;
-      const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        if (Date.now() - startedAt > TIMEOUT_MS) {
-          toast.error('Import quá lâu, vui lòng kiểm tra lại sau.', { id: toastId });
-          break;
-        }
-
-        const status = await triggerImportStatus({ bookSlug: book.slug, jobId }).unwrap();
-
-        if (status?.state === 'completed') {
-          const result = status.result;
-          if (result && result.failed > 0) {
-            const topFailures = result.failures.slice(0, 5);
-            const detail = topFailures
-              .map((f, idx) => `${idx + 1}. ${f.title}: ${f.reason}`)
-              .join('\n');
-
-            toast.warning(
-              `Import xong nhưng có lỗi: ${result.successful}/${result.total} thành công, ${result.failed} thất bại.`,
-              { id: toastId },
-            );
-
-            // Show detail as a blocking dialog so admin can see why it skipped
-            alert(
-              `Import hoàn tất.\n` +
-              `Thành công: ${result.successful}/${result.total}\n` +
-              `Thất bại: ${result.failed}\n\n` +
-              `Chi tiết (tối đa 5 lỗi đầu):\n${detail}`,
-            );
-          } else {
-            toast.success('Import hoàn tất!', { id: toastId });
-          }
-          refetchChapters();
-          break;
-        }
-
-        if (status?.state === 'failed') {
-          toast.error(`Import thất bại: ${status.failedReason || 'Lỗi không xác định'}`, { id: toastId });
-          break;
-        }
-
-        await new Promise((r) => setTimeout(r, POLL_MS));
-      }
-    } catch (error: unknown) {
-      console.error('Failed to start import job:', error);
-      toast.error('Không thể bắt đầu import.', { id: toastId });
-    }
-  };
+    expandedChapterId,
+    editingChapterId,
+    editingTitle,
+    editingParagraphs,
+    showNewChapterForm,
+    newChapterTitle,
+    newChapterParagraphs,
+    isImportModalOpen,
+    observerTarget,
+    newChapterBottomRef,
+    editChapterBottomRef,
+    setEditingTitle,
+    setEditingParagraphs,
+    setShowNewChapterForm,
+    setNewChapterTitle,
+    setNewChapterParagraphs,
+    setIsImportModalOpen,
+    handleToggleExpand,
+    handleExpandAndEdit,
+    handleStartEdit,
+    handleCancelEdit,
+    handleSaveEdit,
+    handleDeleteChapter,
+    handleParagraphChange,
+    handleParagraphKeyDown,
+    handleDeleteParagraph,
+    handleCreateChapter,
+    handleGenerateAudio,
+    handleGenerateAllAudio,
+    handleImportChapters,
+  } = useChapterManagement();
 
   if (isLoadingBook || isLoadingChapters) {
     return (
@@ -491,10 +78,10 @@ export default function ChapterManagementPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <button
+            <Button
               onClick={handleGenerateAllAudio}
               disabled={isGeneratingAllAudio || chapters.length === 0}
-              className="flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white transition-all shadow-sm group"
             >
               {isGeneratingAllAudio ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -502,21 +89,22 @@ export default function ChapterManagementPage() {
                 <Volume2 className="w-5 h-5" />
               )}
               <span>Tạo Audio</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setShowNewChapterForm(!showNewChapterForm)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow hover:-translate-y-0.5 group"
+              className="flex items-center gap-2 transition-all shadow-sm group"
             >
               <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
               <span>Thêm chương</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setIsImportModalOpen(true)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow hover:-translate-y-0.5 group"
+              variant="outline"
+              className="flex items-center gap-2 text-emerald-700 border-emerald-600 hover:bg-emerald-50 transition-all shadow-sm group"
             >
               <Upload className="w-5 h-5" />
               <span>Import File</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -526,19 +114,19 @@ export default function ChapterManagementPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           {/* New Chapter Form */}
           {showNewChapterForm && (
-            <div className="border-b border-gray-200 p-6 bg-blue-50">
+            <div className="border-b border-gray-200 p-6 bg-blue-50/50">
               <h3 className="font-semibold text-lg mb-4">Tạo chương mới</h3>
-              <input
+              <Input
                 type="text"
                 placeholder="Tiêu đề chương..."
                 value={newChapterTitle}
                 onChange={(e) => setNewChapterTitle(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="mb-4 bg-white"
               />
               <div className="space-y-2">
                 {newChapterParagraphs.map((para, index) => (
                   <div key={para.id} className="flex gap-2">
-                    <textarea
+                    <Textarea
                       value={para.content}
                       onChange={(e) => handleParagraphChange(
                         index,
@@ -549,41 +137,43 @@ export default function ChapterManagementPage() {
                       )}
                       onKeyDown={(e) => handleParagraphKeyDown(e, index, newChapterParagraphs, setNewChapterParagraphs)}
                       placeholder={`Đoạn ${index + 1} (Nhấn Enter để tạo đoạn mới)...`}
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 outline-none"
-                      rows={3}
+                      className="resize-none bg-white min-h-[80px]"
                     />
                     {newChapterParagraphs.length > 1 && (
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleDeleteParagraph(index, newChapterParagraphs, setNewChapterParagraphs)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-100 flex-shrink-0"
                       >
                         <Trash2 className="w-5 h-5" />
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
                 <div ref={newChapterBottomRef} />
               </div>
               <div className="flex gap-2 mt-4">
-                <button
+                <Button
                   onClick={handleCreateChapter}
                   disabled={isCreating || !newChapterTitle.trim()}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                  className="flex items-center gap-2"
                 >
                   {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                   Tạo chương
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setShowNewChapterForm(false);
                     setNewChapterTitle('');
-                    setNewChapterParagraphs([{ id: uuidv4(), content: '' }]);
+                    setNewChapterParagraphs([{ id: crypto.randomUUID(), content: '' }]);
                   }}
-                  className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                  className="flex items-center gap-2"
                 >
                   <X className="w-4 h-4" />
                   Hủy
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -628,25 +218,24 @@ export default function ChapterManagementPage() {
                         audioUrl={chapter.audioUrl}
                         onGenerate={handleGenerateAudio}
                       />
-                      <button
-                        onClick={() => {
-                          if (expandedChapterId !== chapter.id) {
-                            setExpandedChapterId(chapter.id);
-                          }
-                          handleStartEdit(chapter);
-                        }}
-                        className="p-2 hover:bg-green-50 rounded-lg transition-colors"
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleExpandAndEdit(chapter)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-100"
                         title="Chỉnh sửa"
                       >
-                        <Edit2 className="w-5 h-5 text-green-600" />
-                      </button>
-                      <button
+                        <Edit2 className="w-5 h-5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleDeleteChapter(chapter.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-100"
                         title="Xóa"
                       >
-                        <Trash2 className="w-5 h-5 text-red-600" />
-                      </button>
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
                     </div>
                   </div>
 
@@ -655,23 +244,23 @@ export default function ChapterManagementPage() {
                     <div className="px-4 pb-4 bg-gray-50">
                       {editingChapterId === chapter.id ? (
                         // Edit Mode
-                        <div className="space-y-4">
+                        <div className="space-y-4 pt-4">
                           {isFetchingDetails ? (
                             <div className="flex justify-center py-4">
                               <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                             </div>
                           ) : (
                             <>
-                              <input
+                              <Input
                                 type="text"
                                 value={editingTitle}
                                 onChange={(e) => setEditingTitle(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-semibold"
+                                className="font-semibold bg-white"
                               />
                               <div className="space-y-2">
                                 {editingParagraphs.map((para, index) => (
                                   <div key={para.id} className="flex gap-2">
-                                    <textarea
+                                    <Textarea
                                       value={para.content}
                                       onChange={(e) => handleParagraphChange(
                                         index,
@@ -682,54 +271,58 @@ export default function ChapterManagementPage() {
                                       )}
                                       onKeyDown={(e) => handleParagraphKeyDown(e, index, editingParagraphs, setEditingParagraphs)}
                                       placeholder={`Đoạn ${index + 1} (Nhấn Enter để tạo đoạn mới)...`}
-                                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 outline-none"
-                                      rows={3}
+                                      className="resize-none bg-white min-h-[80px]"
                                     />
                                     {editingParagraphs.length > 1 && (
-                                      <button
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => handleDeleteParagraph(index, editingParagraphs, setEditingParagraphs)}
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                        className="text-red-600 hover:text-red-700 hover:bg-red-100 flex-shrink-0"
                                       >
                                         <Trash2 className="w-5 h-5" />
-                                      </button>
+                                      </Button>
                                     )}
                                   </div>
                                 ))}
                                 <div ref={editChapterBottomRef} />
                               </div>
                               <div className="flex gap-2">
-                                <button
+                                <Button
                                   onClick={() => handleSaveEdit(chapter.id)}
                                   disabled={isUpdating}
-                                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50"
+                                  className="flex items-center gap-2"
                                 >
                                   {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                   Lưu thay đổi
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                  variant="outline"
                                   onClick={handleCancelEdit}
-                                  className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                                  className="flex items-center gap-2"
                                 >
                                   <X className="w-4 h-4" />
                                   Hủy
-                                </button>
+                                </Button>
                               </div>
                             </>
                           )}
                         </div>
                       ) : (
                         // View Mode
-                        <ChapterDetailView bookSlug={book!.slug} chapterId={chapter.id} />
+                        <div className="pt-4">
+                          <ChapterDetailView bookSlug={book!.slug} chapterId={chapter.id} />
+                        </div>
                       )}
                     </div>
                   )}
-                  {/* Loading Sentinel */}
-                  <div ref={observerTarget} className="flex justify-center items-center">
-                    {isFetchingChapters && page > 1 && <Loader2 className="w-6 h-6 animate-spin text-blue-500" />}
-                  </div>
                 </div>
               ))
             )}
+          </div>
+          {/* Loading Sentinel for infinite scroll — must be OUTSIDE the map */}
+          <div ref={observerTarget} className="flex justify-center items-center py-4">
+            {isFetchingChapters && page > 1 && <Loader2 className="w-6 h-6 animate-spin text-blue-500" />}
           </div>
         </div>
       </div>
@@ -764,8 +357,8 @@ function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterI
 
   return (
     <div className="space-y-3">
-      {chapter.paragraphs.map((para, index) => (
-        <p key={para.id} className="text-gray-800">
+      {chapter.paragraphs.map((para) => (
+        <p key={para.id} className="text-gray-800 leading-relaxed">
           {para.content}
         </p>
       ))}
@@ -773,7 +366,6 @@ function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterI
   );
 }
 
-// Status Badge Component
 function TTSStatusBadge({ status }: { status?: 'pending' | 'processing' | 'completed' | 'failed' }) {
   if (!status) {
     return <span className="text-xs text-gray-400">🔇 Chưa có audio</span>;
@@ -790,7 +382,6 @@ function TTSStatusBadge({ status }: { status?: 'pending' | 'processing' | 'compl
   return null;
 }
 
-// TTS Button Component
 function TTSButton({
   chapterId,
   status,
@@ -816,58 +407,64 @@ function TTSButton({
   if (status) {
     if (status === 'completed') {
       return (
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={(e) => {
             e.stopPropagation();
             if (audioUrl) {
               window.open(audioUrl, '_blank');
             }
           }}
-          className="p-2 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
+          className="text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 border-transparent"
           title="Audio đã tạo - Click để nghe"
         >
-          <CheckCircle className="w-5 h-5 text-green-600" />
-        </button>
+          <CheckCircle className="w-5 h-5" />
+        </Button>
       );
     } else if (status === 'processing' || status === 'pending') {
       return (
-        <button className="p-2 bg-yellow-100 rounded-lg" title="Đang tạo audio...">
+        <Button variant="outline" size="icon" disabled className="bg-yellow-50 border-transparent">
           <Clock className="w-5 h-5 text-yellow-600" />
-        </button>
+        </Button>
       );
     } else if (status === 'failed') {
       return (
-        <button
+        <Button
+          variant="outline"
+          size="icon"
           onClick={(e) => {
             e.stopPropagation();
             handleGenerate();
           }}
           disabled={isGenerating}
-          className="p-2 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
+          className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border-transparent"
           title="Lỗi - Click để thử lại"
         >
-          <XCircle className="w-5 h-5 text-red-600" />
-        </button>
+          <XCircle className="w-5 h-5" />
+        </Button>
       );
     }
   }
 
   // No audio yet
   return (
-    <button
+    <Button
+      variant="outline"
+      size="icon"
       onClick={(e) => {
         e.stopPropagation();
         handleGenerate();
       }}
       disabled={isGenerating}
-      className="p-2 bg-purple-100 hover:bg-purple-200 disabled:opacity-50 rounded-lg transition-colors"
+      className="text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 border-transparent disabled:opacity-50"
       title="Tạo audio"
     >
       {isGenerating ? (
-        <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+        <Loader2 className="w-5 h-5 animate-spin" />
       ) : (
-        <Volume2 className="w-5 h-5 text-purple-600" />
+        <Volume2 className="w-5 h-5" />
       )}
-    </button>
+    </Button>
   );
 }
