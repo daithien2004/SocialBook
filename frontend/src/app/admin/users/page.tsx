@@ -14,28 +14,33 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+
+import { useUserManagement } from '@/features/admin/hooks/users/useUserManagement';
 
 const UsersPage = () => {
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const { data, isLoading, isFetching, refetch } = useGetUsersQuery(
-        `current=${page}&pageSize=${pageSize}`
-    );
-    const { openConfirm } = useModalStore();
-    const [banUser, { isLoading: isBanning }] = useBanUserMutation();
-    const users = data?.data || [];
-    const total = data?.meta?.total || 0;
-    const totalPages = data?.meta?.totalPages || Math.ceil(total / pageSize);
-
-    const handleBan = async (id: string) => {
-        try {
-            await banUser(id).unwrap();
-            toast.success('Cập nhật trạng thái người dùng thành công');
-            refetch();
-        } catch (error: unknown) {
-            toast.error(getErrorMessage(error));
-        }
-    };
+    const {
+        page,
+        setPage,
+        pageSize,
+        users,
+        total,
+        totalPages,
+        isLoading,
+        isFetching,
+        isBanning,
+        handleBan,
+        openConfirm
+    } = useUserManagement();
 
     return (
         <div className="min-h-screen rounded-lg bg-gray-50">
@@ -48,174 +53,138 @@ const UsersPage = () => {
             {!(isLoading || isFetching) && (
                 <div className="py-6">
                     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="border-b border-gray-200 bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Username
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Email
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Provider
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Trạng thái
-                                        </th>
-                                        <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Hành động
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {users.length === 0 ? (
-                                        <tr>
-                                            <td
-                                                colSpan={5}
-                                                className="py-16 text-center text-lg text-gray-500"
-                                            >
-                                                Không tìm thấy người dùng nào
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        users.map((user) => (
-                                            <tr
-                                                key={user.id}
-                                                className="transition-colors hover:bg-gray-50"
-                                            >
-                                                <td className="px-6 py-4">
-                                                    <div className="font-semibold text-gray-900">
-                                                        {user.username}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2 text-gray-600">
-                                                        <Mail className="h-4 w-4" />
-                                                        {user.email}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span
-                                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                                                            user.provider ===
-                                                            'google'
-                                                                ? 'bg-red-100 text-red-800'
-                                                                : user.provider ===
-                                                                    'facebook'
-                                                                  ? 'bg-blue-100 text-blue-800'
-                                                                  : 'bg-gray-100 text-gray-800'
-                                                        }`}
+                        <Table>
+                            <TableHeader className="border-b border-gray-200 bg-gray-50">
+                                <TableRow>
+                                    <TableHead>Username</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Provider</TableHead>
+                                    <TableHead>Trạng thái</TableHead>
+                                    <TableHead className="text-center">Hành động</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {users.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="py-16 text-center text-lg text-gray-500 italic">
+                                            Không tìm thấy người dùng nào
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    users.map((user) => (
+                                        <TableRow key={user.id} className="group hover:bg-gray-50/80 transition-colors">
+                                            <TableCell>
+                                                <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                                    {user.username}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2 text-gray-600 font-medium">
+                                                    <Mail className="h-4 w-4 text-gray-400" />
+                                                    {user.email}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`capitalize font-semibold border shadow-none px-2.5 ${
+                                                        user.provider === 'google'
+                                                            ? 'bg-rose-50 text-rose-700 border-rose-100'
+                                                            : user.provider === 'facebook'
+                                                                ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                                                : 'bg-slate-50 text-slate-700 border-slate-100'
+                                                    }`}
+                                                >
+                                                    {user.provider}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1.5 w-fit">
+                                                    <Badge
+                                                        variant={user.isBanned ? 'destructive' : 'outline'}
+                                                        className={`gap-1 shadow-none ${!user.isBanned ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : ''}`}
                                                     >
-                                                        {user.provider}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex items-center gap-2">
-                                                            {user.isBanned ? (
-                                                                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                                                                    <XCircle className="h-3 w-3" />
-                                                                    Banned
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                                                                    <CheckCircle className="h-3 w-3" />
-                                                                    Active
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            {user.isVerified ? (
-                                                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                                                                    <Shield className="h-3 w-3" />
-                                                                    Verified
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
-                                                                    <Shield className="h-3 w-3" />
-                                                                    Unverified
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex justify-center">
-                                                        <button
-                                                            onClick={() => openConfirm({
-                                                                title: user.isBanned ? 'Mở khóa người dùng' : 'Khóa người dùng',
-                                                                description: user.isBanned 
-                                                                    ? `Bạn có chắc chắn muốn mở khóa người dùng "${user.username}"?`
-                                                                    : `Bạn có chắc chắn muốn khóa người dùng "${user.username}"? Hành động này sẽ tạm dừng quyền truy cập của họ.`,
-                                                                confirmText: user.isBanned ? 'Mở khóa' : 'Khóa người dùng',
-                                                                variant: user.isBanned ? 'default' : 'destructive',
-                                                                onConfirm: () => handleBan(user.id)
-                                                            })}
-                                                            className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium shadow-sm transition-all ${
-                                                                user.isBanned
-                                                                    ? 'border-blue-600 bg-blue-600 text-white hover:bg-blue-500'
-                                                                    : 'border-dashed border-red-200 bg-white text-red-500 hover:border-red-400 hover:text-red-600'
-                                                            }`}
-                                                            title={user.isBanned ? 'Unban User' : 'Ban User'}
-                                                            disabled={isBanning}
-                                                        >
-                                                            {user.isBanned ? 'Unban' : 'Ban'}
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                                        {user.isBanned ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                                                        {user.isBanned ? 'Banned' : 'Active'}
+                                                    </Badge>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={`gap-1 shadow-none ${user.isVerified ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}
+                                                    >
+                                                        <Shield className="h-3 w-3" />
+                                                        {user.isVerified ? 'Verified' : 'Unverified'}
+                                                    </Badge>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex justify-center">
+                                                    <Button
+                                                        variant={user.isBanned ? 'default' : 'outline'}
+                                                        size="sm"
+                                                        onClick={() => openConfirm({
+                                                            title: user.isBanned ? 'Mở khóa người dùng' : 'Khóa người dùng',
+                                                            description: user.isBanned 
+                                                                ? `Bạn có chắc chắn muốn mở khóa người dùng "${user.username}"?`
+                                                                : `Bạn có chắc chắn muốn khóa người dùng "${user.username}"? Hành động này sẽ tạm dừng quyền truy cập của họ.`,
+                                                            confirmText: user.isBanned ? 'Mở khóa' : 'Khóa người dùng',
+                                                            variant: user.isBanned ? 'default' : 'destructive',
+                                                            onConfirm: () => handleBan(user.id)
+                                                        })}
+                                                        className={`rounded-xl px-4 font-bold transition-all ${
+                                                            user.isBanned
+                                                                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20'
+                                                                : 'border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300'
+                                                        }`}
+                                                        disabled={isBanning}
+                                                    >
+                                                        {user.isBanned ? 'Unban' : 'Ban User'}
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
 
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4 text-sm">
+                            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4 text-sm font-medium">
                                 <div className="text-gray-600">
-                                    Hiển thị {(page - 1) * pageSize + 1} -{' '}
+                                    Hiển thị {(page - 1) * pageSize + 1} –{' '}
                                     {Math.min(page * pageSize, total)} trong{' '}
                                     {total.toLocaleString()} người dùng
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() =>
-                                            setPage((current) =>
-                                                Math.max(1, current - 1)
-                                            )
-                                        }
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setPage((c) => Math.max(1, c - 1))}
                                         disabled={page === 1}
-                                        className="rounded-lg p-2 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="rounded-xl"
                                     >
                                         <ChevronLeft className="h-5 w-5" />
-                                    </button>
-                                    <span className="font-medium">
+                                    </Button>
+                                    <span className="px-2">
                                         Trang {page} / {totalPages}
                                     </span>
-                                    <button
-                                        onClick={() =>
-                                            setPage((current) =>
-                                                Math.min(
-                                                    totalPages,
-                                                    current + 1
-                                                )
-                                            )
-                                        }
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setPage((c) => Math.min(totalPages, c + 1))}
                                         disabled={page === totalPages}
-                                        className="rounded-lg p-2 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="rounded-xl"
                                     >
                                         <ChevronRight className="h-5 w-5" />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         )}
+
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
-    );
+                )}
+            </div>
+        );
 };
 
 export default UsersPage;

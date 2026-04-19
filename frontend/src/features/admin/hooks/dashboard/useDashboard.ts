@@ -4,9 +4,9 @@ import {
     useGetGrowthStatsQuery,
     useGetBookStatsQuery,
     useGetActiveUsersQuery,
-} from '../api/analyticsApi';
-import { GrowthMetric } from '../types/dashboard.types';
-import { ViewType } from '@/components/admin/dashboard/ViewTypeSelector';
+} from '@/features/admin/api/analyticsApi';
+import { GrowthMetric } from '@/features/admin/types/dashboard.types';
+    import { ViewType } from '@/components/admin/dashboard/ViewTypeSelector';
 
 export function useDashboardData(timeRange: string, viewType: ViewType = 'day') {
     const days = Number(timeRange);

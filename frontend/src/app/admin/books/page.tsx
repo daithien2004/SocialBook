@@ -24,40 +24,27 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-type BookStatus = 'draft' | 'published' | 'completed';
-type StatusFilter = BookStatus | 'all';
+import { useBookManagement } from '@/features/admin/hooks/books/useBookManagement';
 
 export default function AdminBooksPage() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 500);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-
-  const { data, isLoading, isFetching, refetch } = useGetAdminBooksQuery({
+  const {
     page,
-    limit: 15,
-    search: debouncedSearch || undefined,
-    status: statusFilter === 'all' ? undefined : statusFilter,
-  }, {
-    refetchOnMountOrArgChange: true,
-  });
+    setPage,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    books,
+    pagination,
+    isLoading,
+    isFetching,
+    isDeleting,
+    handleDelete,
+    openDeleteBook
+  } = useBookManagement();
 
-  const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
-  const { openDeleteBook } = useModalStore();
-  const books: BookForAdmin[] = data?.data || [];
-  const pagination: BackendPagination | undefined = data?.meta;
-
-  // Delete handlers
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteBook(id).unwrap();
-      toast.success('Xóa sách thành công');
-      refetch();
-    } catch (error) {
-      console.error('Failed to delete book:', error);
-      toast.error('Xóa sách thất bại');
-    }
-  };
+  type BookStatus = 'draft' | 'published' | 'completed';
+  type StatusFilter = BookStatus | 'all';
 
   const getStatusBadge = (status: BookStatus) => {
     const styles: Record<BookStatus, string> = {
@@ -75,42 +62,39 @@ export default function AdminBooksPage() {
   return (
     <div className="min-h-screen bg-gray-50 rounded-lg">
       {/* Header & Filters Card */}
-      <div className="bg-white rounded-b-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 mb-6 overflow-hidden shadow-sm">
         {/* Top Header */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
+        <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Quản lý sách</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Tổng cộng <span className="font-semibold text-gray-800">{pagination?.total?.toLocaleString() || 0}</span> cuốn sách
+            <h1 className="text-xl font-bold text-slate-900">Quản lý sách</h1>
+            <p className="text-xs text-slate-500 mt-1 font-medium">
+                Tìm thấy <span className="text-indigo-600 font-bold">{pagination?.total?.toLocaleString() || 0}</span> cuốn sách trong kho
             </p>
           </div>
-          <Link
-            href="/admin/books/new"
-            className="flex items-center gap-2"
-          >
-            <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-none shadow-lg shadow-blue-500/20 px-6 py-5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95">
-              <Plus className="w-5 h-5 stroke-[2.5px]" />
+          <Link href="/admin/books/new">
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 h-10 rounded-lg font-semibold transition-all shadow-sm active:scale-95">
+              <Plus className="w-4 h-4 mr-2" />
               Thêm sách mới
             </Button>
           </Link>
         </div>
 
         {/* Filters Bar */}
-        <div className="px-6 py-5 bg-gradient-to-b from-white to-gray-50/50 flex flex-col sm:flex-row gap-4 items-center">
-          <div className="flex-1 w-full relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 group-focus-within:text-blue-500 transition-colors" />
+        <div className="px-6 py-4 bg-slate-50/50 flex flex-col sm:flex-row gap-4 items-center">
+          <div className="flex-1 w-full relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               type="text"
-              placeholder="Tìm kiếm tên sách hoặc tác giả..."
+              placeholder="Tìm tên sách hoặc tác giả..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="pl-11 pr-4 py-6 bg-white border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all shadow-sm"
+              className="pl-10 h-10 bg-white border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm"
             />
           </div>
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Select
               value={statusFilter}
               onValueChange={(value) => {
@@ -118,17 +102,17 @@ export default function AdminBooksPage() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="min-w-[200px] h-12 bg-white rounded-xl border-gray-200 focus:ring-4 focus:ring-blue-500/5 shadow-sm font-medium">
+              <SelectTrigger className="min-w-[180px] h-10 bg-white rounded-lg border-slate-200 focus:ring-2 focus:ring-indigo-500/10 text-sm font-medium">
                 <div className="flex items-center">
-                  <Filter className="w-4 h-4 text-gray-500 mr-2" />
-                  <SelectValue placeholder="Tất cả trạng thái" />
+                  <Filter className="w-3.5 h-3.5 text-slate-500 mr-2" />
+                  <SelectValue placeholder="Trạng thái" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-gray-100 shadow-xl">
-                <SelectItem value="all" className="rounded-lg">Tất cả trạng thái</SelectItem>
-                <SelectItem value="draft" className="rounded-lg">Bản nháp</SelectItem>
-                <SelectItem value="published" className="rounded-lg">Đang phát hành</SelectItem>
-                <SelectItem value="completed" className="rounded-lg">Hoàn thành</SelectItem>
+              <SelectContent className="rounded-lg border-slate-100 shadow-lg">
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                <SelectItem value="draft">Bản nháp</SelectItem>
+                <SelectItem value="published">Đang phát hành</SelectItem>
+                <SelectItem value="completed">Hoàn thành</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -169,8 +153,8 @@ export default function AdminBooksPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    books.map((book) => (
-                      <TableRow key={book.id}>
+                    books.map((book, index) => (
+                      <TableRow key={`${book.id}-${index}`}>
                         <TableCell className="px-6 py-4">
                           <div className="w-16 h-20 relative rounded-lg overflow-hidden shadow-md">
                             {book.coverUrl ? (
@@ -222,30 +206,30 @@ export default function AdminBooksPage() {
                           {(book.updatedAt || book.createdAt) ? format(new Date(book.updatedAt || book.createdAt), 'dd MMM, yyyy', { locale: vi }) : '—'}
                         </TableCell>
                         <TableCell>
-                          <div className="flex justify-center gap-1.5">
-                            <Button variant="ghost" size="icon" asChild className="text-violet-600 hover:text-violet-700 hover:bg-violet-100 rounded-xl transition-all">
+                          <div className="flex justify-center gap-1">
+                            <Button variant="ghost" size="icon" asChild className="text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg">
                               <Link href={`/admin/books/chapters/${book.id}`} title="Quản lý chương">
-                                <BookText className="w-5 h-5" />
+                                <BookText className="w-4.5 h-4.5" />
                               </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-xl transition-all">
+                            <Button variant="ghost" size="icon" asChild className="text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg">
                               <Link href={`/admin/books/${book.slug}`} title="Xem chi tiết">
-                                <Eye className="w-5 h-5" />
+                                <Eye className="w-4.5 h-4.5" />
                               </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" asChild className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 rounded-xl transition-all">
+                            <Button variant="ghost" size="icon" asChild className="text-slate-600 hover:text-emerald-600 hover:bg-slate-100 rounded-lg">
                               <Link href={`/admin/books/edit/${book.id}`} title="Chỉnh sửa">
-                                <Edit className="w-5 h-5" />
+                                <Edit className="w-4.5 h-4.5" />
                               </Link>
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => openDeleteBook({ book, isDeleting, onConfirm: () => handleDelete(book.id) })}
-                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 rounded-xl transition-all"
+                              className="text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-lg"
                               title="Xóa sách"
                             >
-                              <Trash2 className="w-5 h-5" />
+                              <Trash2 className="w-4.5 h-4.5" />
                             </Button>
                           </div>
                         </TableCell>
