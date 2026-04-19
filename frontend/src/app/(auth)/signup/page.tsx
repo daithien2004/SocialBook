@@ -62,6 +62,7 @@ export default function SignupPage() {
           src="https://res.cloudinary.com/dajg703uq/image/upload/v1763780207/snapedit_1763780184287_v11fnr.jpg"
           alt="Login background"
           fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover opacity-80"
           priority
         />

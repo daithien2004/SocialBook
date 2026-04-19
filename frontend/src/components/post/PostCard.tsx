@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { Loader2 } from 'lucide-react';
-import { usePostCard } from './hooks';
+import { usePostCard } from '@/features/posts/hooks/usePostCard';
 import { Post } from '@/features/posts/types/post.interface';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';

@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useReadingSettings } from '@/store/useReadingSettings';
-import { useChapterComments } from './hooks';
+import { useChapterComments } from '@/features/chapters/hooks/useChapterComments';
 import { MessageSquarePlus, Share2 } from 'lucide-react';
 import ParagraphCommentDrawer from '../comment/ParagraphCommentDrawer';
 

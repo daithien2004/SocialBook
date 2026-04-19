@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useCommentList } from './hooks';
+import { useCommentList } from '@/features/comments/hooks/useCommentList';
 import CommentItemCard from '@/components/comment/CommentItem';
 
 interface ListCommentsProps {

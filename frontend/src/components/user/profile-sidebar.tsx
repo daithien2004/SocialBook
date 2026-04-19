@@ -57,14 +57,14 @@ export function ProfileSidebar(props : ProfileNavProps) {
                   </h4>
 
                   <div className="flex gap-2">
-                    {topFollowing.map((user) => (
+                    {topFollowing.map((userFollowing: FollowingUser) => (
                         <Image
-                            key={user.id}
-                            src={user.image || "/user.png"}
-                            alt={user.username || "user"}
+                            key={userFollowing.id}
+                            src={userFollowing.image || "/user.png"}
+                            alt={userFollowing.username || "user"}
                             width={32}
                             height={32}
-                            onClick={() => router.push(`/users/${user.id}`)}
+                            onClick={() => router.push(`/users/${userFollowing.targetId}`)}
                             className="
                     h-8 w-8 rounded-full object-cover cursor-pointer
                     border border-slate-300 dark:border-gray-700

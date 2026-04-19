@@ -71,16 +71,33 @@ export const axiosBaseQuery =
         const status = err.response?.status || 500;
 
         if (status === 401) {
-          toast.info('Vui lòng đăng nhập để tiếp tục', {
-            id: 'auth-required',
-            description: 'Bạn có muốn về trang đăng nhập không?',
-            action: {
-              label: 'Đăng nhập',
-              onClick: () => {
-                window.location.href = '/login';
-              },
-            },
-          });
+          const session = await getSession(); // Kích hoạt refresh ở server side
+          
+          if (session?.accessToken) {
+            // Nếu lấy được token mới, thử lại request ngay lập tức
+            try {
+              const retryResult = await clientApi({
+                url,
+                method,
+                data: body,
+                headers: {
+                  ...requestHeaders,
+                  Authorization: `Bearer ${session.accessToken}`,
+                },
+                params,
+              });
+              
+              const responseData = retryResult.data;
+              return { data: responseData.data !== undefined ? responseData.data : responseData };
+            } catch (retryError) {
+              // Thử lại vẫn thất bại, tiếp tục xử lý báo lỗi bên dưới
+            }
+          } else {
+            // Refresh token không thành công (vd: refresh token cũng hết hạn)
+            await signOut({ redirect: false });
+            window.location.href = '/login?error=SessionExpired';
+            toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+          }
         }
 
         if (status === 403 && err.response?.data?.error === 'USER_BANNED') {

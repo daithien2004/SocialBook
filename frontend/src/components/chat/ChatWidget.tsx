@@ -2,7 +2,7 @@
 
 import { Bot, MessageCircle, Send, X } from 'lucide-react';
 import { useAskChatbotMutation } from '@/features/chatbot/api/chatBotApi';
-import { useChatWidget } from './hooks/useChatWidget';
+import { useChatWidget } from '@/features/chatbot/hooks/useChatWidget';
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
