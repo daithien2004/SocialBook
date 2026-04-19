@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import {
   ConflictDomainException,
   NotFoundDomainException,
@@ -9,12 +9,17 @@ import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { CreateBookCommand } from './create-book.command';
+import { BOOK_CACHE_SERVICE } from '@/domain/books/cache/book-cache.service.interface';
+import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.interface';
 
 @Injectable()
 export class CreateBookUseCase {
+  private readonly CACHE_TTL = 300;
+
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
+    @Inject(BOOK_CACHE_SERVICE) private readonly bookCache: IBookCacheService,
   ) {}
 
   async execute(command: CreateBookCommand): Promise<Book> {
@@ -49,6 +54,9 @@ export class CreateBookUseCase {
     });
 
     await this.bookRepository.save(book);
+
+    // cập nhật lại cache thông qua service chuyên biệt
+    await this.bookCache.setDetail(book);
 
     return book;
   }

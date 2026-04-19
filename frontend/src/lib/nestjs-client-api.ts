@@ -2,7 +2,8 @@ import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
 import { toast } from 'sonner';
-import { ErrorResponseDto, ResponseDto } from '../types/response';
+import { ErrorResponseDto } from '../types/response';
+
 const clientApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_NEST_API_URL,
   withCredentials: true,
@@ -31,13 +32,17 @@ export const axiosBaseQuery =
     { status: number; data: ErrorResponseDto }
   > =>
     async ({ url, method = 'GET', body, headers, params }, { getState }) => {
-      try {
-        const state = getState() as any;
-        const accessToken = state?.auth?.accessToken;
+      const requestHeaders: Record<string, string> = {
+        ...(headers as Record<string, string>),
+      };
 
-        const requestHeaders: Record<string, string> = {
-          ...(headers as Record<string, string>),
-        };
+      try {
+        const state = getState() as { auth?: { accessToken?: string | null } };
+        let accessToken: string | null | undefined = state?.auth?.accessToken;
+        if (!accessToken) {
+          const session = await getSession();
+          accessToken = (session as { accessToken?: string } | null)?.accessToken;
+        }
 
         if (accessToken) {
           requestHeaders.Authorization = `Bearer ${accessToken}`;
@@ -102,8 +107,7 @@ export const axiosBaseQuery =
             duration: 1000,
           });
 
-
-          await signOut({ redirect: false })
+          await signOut({ redirect: false });
         }
 
         return {

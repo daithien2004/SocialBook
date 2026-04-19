@@ -10,8 +10,6 @@ import { Genre } from '@/features/genres/types/genre.interface';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import {
-    ChevronLeft,
-    ChevronRight,
     Edit,
     Loader2,
     Plus,
@@ -22,6 +20,16 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useModalStore } from '@/store/useModalStore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 export default function AdminGenresPage() {
     const [page, setPage] = useState(1);
@@ -73,19 +81,19 @@ export default function AdminGenresPage() {
                             thể loại
                         </p>
                     </div>
-                    <button
+                    <Button
                         onClick={() => openGenreModal({ onSuccess: refetch })}
-                        className="flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow active:scale-95"
+                        className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-none shadow-lg shadow-violet-500/20 px-6 py-5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95"
                     >
-                        <Plus className="h-5 w-5" />
+                        <Plus className="h-5 w-5 stroke-[2.5px]" />
                         Thêm thể loại mới
-                    </button>
+                    </Button>
                 </div>
 
-                <div className="bg-gray-50/50 px-6 py-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                        <input
+                <div className="bg-gradient-to-b from-white to-gray-50/50 px-6 py-5 flex items-center">
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 z-10 group-focus-within:text-violet-500 transition-colors" />
+                        <Input
                             type="text"
                             placeholder="Tìm kiếm tên thể loại..."
                             value={search}
@@ -93,7 +101,7 @@ export default function AdminGenresPage() {
                                 setSearch(e.target.value);
                                 setPage(1);
                             }}
-                            className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 shadow-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            className="pl-11 pr-4 py-6 bg-white border-gray-200 rounded-xl focus:ring-4 focus:ring-violet-500/5 focus:border-violet-500 outline-none transition-all shadow-sm w-full"
                         />
                     </div>
                 </div>
@@ -109,156 +117,107 @@ export default function AdminGenresPage() {
                 <div className="py-0">
                     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                         <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="border-b border-gray-200 bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Tên thể loại
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Slug
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Mô tả
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Ngày tạo
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Cập nhật
-                                        </th>
-                                        <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                            Hành động
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {genres.length === 0 ? (
-                                        <tr>
-                                            <td
-                                                colSpan={6}
-                                                className="py-16 text-center text-lg text-gray-500"
-                                            >
-                                                Không tìm thấy thể loại nào
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        genres.map((genre) => (
-                                            <tr
-                                                key={genre.id}
-                                                className="transition-colors hover:bg-gray-50"
-                                            >
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Tag className="h-5 w-5 text-blue-600" />
-                                                        <span className="font-semibold text-gray-900">
-                                                            {genre.name}
-                                                        </span>
+                        <Table>
+                            <TableHeader className="border-b border-gray-200 bg-gray-50">
+                                <TableRow>
+                                    <TableHead>Tên thể loại</TableHead>
+                                    <TableHead>Slug</TableHead>
+                                    <TableHead>Mô tả</TableHead>
+                                    <TableHead>Ngày tạo</TableHead>
+                                    <TableHead>Cập nhật</TableHead>
+                                    <TableHead className="text-center">Hành động</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {genres.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="py-16 text-center text-lg text-gray-500">
+                                            Không tìm thấy thể loại nào
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    genres.map((genre) => (
+                                        <TableRow key={genre.id} className="group transition-colors hover:bg-gray-50/80">
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-violet-100 rounded-lg text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-all">
+                                                        <Tag className="h-4 w-4" />
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <code className="rounded bg-gray-100 px-2 py-1 text-sm text-gray-600">
-                                                        {genre.slug}
-                                                    </code>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="max-w-md truncate text-sm text-gray-600">
-                                                        {genre.description || (
-                                                            <span className="italic text-gray-400">
-                                                                Chưa có mô tả
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {format(
-                                                        new Date(genre.createdAt),
-                                                        'dd/MM/yyyy',
-                                                        { locale: vi }
+                                                    <span className="font-bold text-gray-900">{genre.name}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <code className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-600 border border-gray-200">
+                                                    {genre.slug}
+                                                </code>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="max-w-md truncate text-sm text-gray-600 font-medium">
+                                                    {genre.description || (
+                                                        <span className="italic text-gray-400">Chưa có mô tả</span>
                                                     )}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {format(
-                                                        new Date(genre.updatedAt),
-                                                        'dd/MM/yyyy HH:mm',
-                                                        { locale: vi }
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button
-                                                            onClick={() => openGenreModal({
-                                                                genre: {
-                                                                    id: genre.id,
-                                                                    name: genre.name,
-                                                                    description: genre.description
-                                                                },
-                                                                onSuccess: refetch
-                                                            })}
-                                                            className="rounded-lg p-2 transition-colors hover:bg-green-50"
-                                                            title="Chỉnh sửa"
-                                                        >
-                                                            <Edit className="h-5 w-5 text-green-600" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => openConfirm({
-                                                                title: "Xóa thể loại",
-                                                                description: `Bạn có chắc chắn muốn xóa thể loại "${genre.name}"?`,
-                                                                variant: "destructive",
-                                                                confirmText: "Xóa",
-                                                                onConfirm: () => handleDelete(genre.id, genre.name)
-                                                            })}
-                                                            className="rounded-lg p-2 transition-colors hover:bg-red-50"
-                                                            title="Xóa thể loại"
-                                                            disabled={isDeleting}
-                                                        >
-                                                            <Trash2 className="h-5 w-5 text-red-600" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-sm text-gray-500 font-medium">
+                                                {format(new Date(genre.createdAt), 'dd MMM, yyyy', { locale: vi })}
+                                            </TableCell>
+                                            <TableCell className="text-sm text-gray-400 font-medium">
+                                                {format(new Date(genre.updatedAt), 'HH:mm dd/MM', { locale: vi })}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex justify-center gap-1.5">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => openGenreModal({
+                                                            genre: { id: genre.id, name: genre.name, description: genre.description },
+                                                            onSuccess: refetch
+                                                        })}
+                                                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 rounded-xl transition-all"
+                                                        title="Chỉnh sửa"
+                                                    >
+                                                        <Edit className="h-5 w-5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => openConfirm({
+                                                            title: "Xóa thể loại",
+                                                            description: `Bạn có chắc chắn muốn xóa thể loại "${genre.name}"?`,
+                                                            variant: "destructive",
+                                                            confirmText: "Xóa",
+                                                            onConfirm: () => handleDelete(genre.id, genre.name)
+                                                        })}
+                                                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-100 rounded-xl transition-all"
+                                                        title="Xóa thể loại"
+                                                        disabled={isDeleting}
+                                                    >
+                                                        <Trash2 className="h-5 w-5" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
                         </div>
 
                         {meta && meta.totalPages > 1 && (
                             <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4 text-sm">
                                 <div className="text-gray-600">
-                                    Hiển thị {(page - 1) * 15 + 1} -{' '}
+                                    Hiển thị {(page - 1) * 15 + 1} –{' '}
                                     {Math.min(page * 15, meta.total)} trong{' '}
                                     {meta.total.toLocaleString()} thể loại
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() =>
-                                            setPage((current) =>
-                                                Math.max(1, current - 1)
-                                            )
-                                        }
-                                        disabled={page === 1}
-                                        className="rounded-lg p-2 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <ChevronLeft className="h-5 w-5" />
-                                    </button>
-                                    <span className="font-medium">
-                                        Trang {page} / {meta.totalPages}
-                                    </span>
-                                    <button
-                                        onClick={() =>
-                                            setPage((current) =>
-                                                Math.min(
-                                                    meta.totalPages,
-                                                    current + 1
-                                                )
-                                            )
-                                        }
-                                        disabled={page === meta.totalPages}
-                                        className="rounded-lg p-2 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <ChevronRight className="h-5 w-5" />
-                                    </button>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="icon" onClick={() => setPage((c) => Math.max(1, c - 1))} disabled={page === 1}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                    </Button>
+                                    <span className="font-medium px-2">Trang {page} / {meta.totalPages}</span>
+                                    <Button variant="outline" size="icon" onClick={() => setPage((c) => Math.min(meta.totalPages, c + 1))} disabled={page === meta.totalPages}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                    </Button>
                                 </div>
                             </div>
                         )}

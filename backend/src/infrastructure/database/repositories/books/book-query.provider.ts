@@ -92,7 +92,7 @@ export class BookQueryProvider implements IBookQueryProvider {
               },
               {
                 $lookup: {
-                  from: 'users',
+                  from: 'authors',
                   localField: 'authorId',
                   foreignField: '_id',
                   pipeline: [{ $project: { _id: 1, name: 1 } }],

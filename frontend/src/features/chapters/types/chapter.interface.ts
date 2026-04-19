@@ -94,3 +94,48 @@ export interface ChapterPreview {
   title: string;
   content: string;
 }
+
+// xử lí tác vụ chạy ngầm để import chương
+export interface StartChaptersImportParams {
+  bookSlug: string;
+  data: {
+    bookId: string;
+    chapters: { title: string; content: string }[];
+  };
+}
+
+export interface StartChaptersImportResponse {
+  jobId: string;
+}
+
+export interface ChaptersImportFailure {
+  title: string;
+  reason: string;
+}
+
+export interface ChaptersImportResult {
+  total: number;
+  successful: number;
+  failed: number;
+  failures: ChaptersImportFailure[];
+}
+
+export interface ChaptersImportProgress {
+  total: number;
+  processed: number;
+  currentTitle?: string;
+  successful: number;
+  failed: number;
+}
+
+export interface ChaptersImportStatus {
+  state: 'completed' | 'failed' | 'active' | 'waiting' | 'delayed' | 'paused' | 'unknown';
+  progress: number | ChaptersImportProgress | null;
+  result?: ChaptersImportResult;
+  failedReason?: string;
+}
+
+export interface GetChaptersImportStatusParams {
+  bookSlug: string;
+  jobId: string;
+}

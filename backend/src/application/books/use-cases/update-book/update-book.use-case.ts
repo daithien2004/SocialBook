@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import {
   NotFoundDomainException,
   ConflictDomainException,
-  BadRequestDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
@@ -10,10 +9,15 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
+import { BOOK_CACHE_SERVICE } from '@/domain/books/cache/book-cache.service.interface';
+import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.interface';
 
 @Injectable()
 export class UpdateBookUseCase {
-  constructor(private readonly bookRepository: IBookRepository) {}
+  constructor(
+    private readonly bookRepository: IBookRepository,
+    @Inject(BOOK_CACHE_SERVICE) private readonly bookCache: IBookCacheService,
+  ) {}
 
   async execute(command: UpdateBookCommand): Promise<Book> {
     const bookId = BookId.create(command.id);
@@ -29,9 +33,7 @@ export class UpdateBookUseCase {
       const exists = await this.bookRepository.existsByTitle(newTitle, bookId);
 
       if (exists) {
-        throw new ConflictDomainException(
-          'Book with this title already exists',
-        );
+        throw new ConflictDomainException('Book with this title already exists');
       }
 
       book.changeTitle(command.title);
@@ -74,6 +76,10 @@ export class UpdateBookUseCase {
     }
 
     await this.bookRepository.save(book);
+
+    // Sử dụng service chuyên biệt để cập nhật và xóa cache liên quan
+    await this.bookCache.setDetail(book);
+    await this.bookCache.invalidateDetail(book.id.toString(), book.slug);
 
     return book;
   }

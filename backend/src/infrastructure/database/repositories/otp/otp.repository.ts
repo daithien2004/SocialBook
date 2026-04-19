@@ -1,74 +1,61 @@
-import {
-  Injectable,
-  BadRequestException,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
-import Redis from 'ioredis';
-import { InjectRedis } from '@nestjs-modules/ioredis';
+import { Injectable, BadRequestException, Logger, Inject } from '@nestjs/common';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/otp/entities/otp.entity';
+import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
 
 @Injectable()
 export class OtpRepository implements IOtpRepository {
   private readonly OTP_PREFIX = 'otp:';
   private readonly OTP_COUNT_PREFIX = 'otp_count:';
-  private readonly OTP_EXPIRY = 300; // 5 minutes
+  private readonly OTP_EXPIRY = 300; // 5 minutes in seconds
   private readonly MAX_OTP_ATTEMPTS = 10;
-  private readonly RATE_LIMIT_WINDOW = 3600; // 1 hour
+  private readonly RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds
   private readonly logger = new Logger(OtpRepository.name);
 
-  constructor(@InjectRedis() private readonly redis: Redis) {}
+  constructor(@Inject(CACHE_SERVICE) private readonly cacheService: ICacheService) { }
 
   async save(otp: Otp): Promise<void> {
-    const key = `${this.OTP_PREFIX}${otp.email}`;
-    // We only save the code and reply on Redis TTL for expiry
-    await this.redis.setex(key, this.OTP_EXPIRY, otp.code);
+    // Store OTP code with TTL
+    const otpKey = `${this.OTP_PREFIX}${otp.email}`;
+    await this.cacheService.set(otpKey, otp.code, this.OTP_EXPIRY);
 
-    // Track rate limiting
+    // Track rate limiting — increment count, set TTL only on first request
     const rateLimitKey = `${this.OTP_COUNT_PREFIX}${otp.email}`;
-    const currentCount = await this.redis.incr(rateLimitKey);
-    if (currentCount === 1) {
-      await this.redis.expire(rateLimitKey, this.RATE_LIMIT_WINDOW);
-    }
+    const existing = await this.cacheService.get<number>(rateLimitKey);
+    const newCount = (existing ?? 0) + 1;
+    const ttl = existing !== null ? undefined : this.RATE_LIMIT_WINDOW;
+    await this.cacheService.set(rateLimitKey, newCount, ttl);
+
+    this.logger.log(`[OTP] Saved OTP for ${otp.email}, attempt #${newCount}`);
   }
 
   async findByEmail(email: string): Promise<Otp | null> {
-    const key = `${this.OTP_PREFIX}${email}`;
-    const code = await this.redis.get(key);
+    const otpKey = `${this.OTP_PREFIX}${email}`;
+    const code = await this.cacheService.get<string>(otpKey);
     if (!code) return null;
 
-    // Redis TTL handles expiry, so if found, it's valid time-wise
-    const ttl = await this.redis.ttl(key);
-    const expiredAt = new Date(Date.now() + ttl * 1000);
-
+    // TTL is managed by Redis — use a fixed expiry approximation
+    const expiredAt = new Date(Date.now() + this.OTP_EXPIRY * 1000);
     return new Otp({ email, code, expiredAt });
   }
 
   async deleteByEmail(email: string): Promise<void> {
-    const key = `${this.OTP_PREFIX}${email}`;
-    await this.redis.del(key);
-    // Also clear rate limit on successful verification? Logic in service was:
-    // await this.redis.del(`${this.OTP_COUNT_PREFIX}${email}`);
-    // Let's keep specific method or doing it here
-    await this.redis.del(`${this.OTP_COUNT_PREFIX}${email}`);
+    await this.cacheService.del(`${this.OTP_PREFIX}${email}`);
+    await this.cacheService.del(`${this.OTP_COUNT_PREFIX}${email}`);
   }
 
   async checkRateLimit(email: string): Promise<void> {
     const rateLimitKey = `${this.OTP_COUNT_PREFIX}${email}`;
-    const count = await this.redis.get(rateLimitKey);
+    const count = await this.cacheService.get<number>(rateLimitKey);
 
-    if (count && parseInt(count) >= this.MAX_OTP_ATTEMPTS) {
-      const ttl = await this.redis.ttl(rateLimitKey);
-      const minutes = Math.ceil(ttl / 60);
-      throw new BadRequestException(
-        `Too many OTP requests. Please try again in ${minutes} minute(s).`,
-      );
+    if (count !== null && count >= this.MAX_OTP_ATTEMPTS) {
+      this.logger.warn(`[OTP] Rate limit exceeded for ${email}`);
+      throw new BadRequestException(`Too many OTP requests. Please try again later.`);
     }
   }
 
-  async getTtl(email: string): Promise<number> {
-    const key = `${this.OTP_PREFIX}${email}`;
-    return await this.redis.ttl(key);
+  async getTtl(_email: string): Promise<number> {
+    return this.OTP_EXPIRY;
   }
 }

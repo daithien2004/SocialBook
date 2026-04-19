@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config';
@@ -93,6 +94,17 @@ import { PresentationModule } from './presentation/presentation.module';
           },
         };
       },
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('env.REDIS_HOST', 'localhost'),
+          port: configService.get<number>('env.REDIS_PORT', 6379),
+          password: configService.get<string>('env.REDIS_PASSWORD'),
+        },
+      }),
     }),
     ThrottlerModule.forRoot([
       {

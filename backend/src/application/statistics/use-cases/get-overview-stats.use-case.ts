@@ -27,14 +27,8 @@ export class GetOverviewStatsUseCase {
 
     const [
       totalUsers,
-      activeUsers, // Users created in last 30 days? Or active sessions? The service used 'created in last 30 days' as 'activeUsers' which is misleading but let's stick to refactoring logic first.
-      // Wait, original service: activeUsers = createdAt >= thirtyDaysAgo. That's "New Users".
-      // AND "previousMonthUsers" = createdAt < 30 days ago AND >= 60 days ago.
-      // AND "growth" was based on these.
-      // Okay, I will implement `countByDate` calls.
-      bannedUsers, // isBanned: true (Need to ensure I have a way to count banned users. findAll with filter? or new method?)
-      // I added `countByStatus` to BookRepo, but UserRepo filter supports isBanned. I can use findAll or just countDocuments in repo.
-      // I added `countByDate`.
+      activeUsers,
+      bannedUsers,
 
       totalBooks,
       totalChapters,
@@ -45,14 +39,14 @@ export class GetOverviewStatsUseCase {
       totalComments,
       totalReviews,
     ] = await Promise.all([
-      this.userRepository.countByDate(new Date(0)), // Total? Or findAll? I added countByDate. I can use countByDate(0) for total or findAll. I should have added `countTotal` to UserRepo too. I can use `countByDate` with epoch.
+      this.userRepository.countByDate(new Date(0)),
       this.userRepository.countByDate(thirtyDaysAgo),
       this.userRepository
         .findAll({ isBanned: true }, { page: 1, limit: 1 })
-        .then((r) => r.meta.total), // Less efficient but works if I didn't add countTotalBanned.
+        .then((r) => r.meta.total),
 
       this.bookRepository.countTotal(),
-      this.chapterRepository.countChaptersForBooks([]).then(() => 0), // Wait, chapter repo needs countTotal. Original service used `countDocuments()`. I missed adding `countTotal` to ChapterRepo.
+      this.chapterRepository.countTotal(),
 
       this.postRepository.countTotal(),
       this.postRepository.countActive(),
@@ -61,8 +55,6 @@ export class GetOverviewStatsUseCase {
       this.reviewRepository.countTotal(),
     ]);
 
-    // Fix Chapter Count: I need to add countTotal to ChapterRepo or use existing method.
-    // Fix User Growth:
     const previousMonthUsers = await this.userRepository.countByDate(
       sixtyDaysAgo,
       thirtyDaysAgo,
@@ -71,13 +63,7 @@ export class GetOverviewStatsUseCase {
       previousMonthUsers > 0
         ? ((activeUsers - previousMonthUsers) / previousMonthUsers) * 100
         : 100;
-
-    // Fix Banned Users: I'll assume findAll returns total count in meta.
-
-    // Wait, ChapterRepo. I need to check `IChapterRepository`.
-    // If I can't count chapters efficiently, I might need to add it.
-    // For now let's assume I can add it or find a workaround.
-
+    
     return {
       users: {
         total: totalUsers,
@@ -87,7 +73,7 @@ export class GetOverviewStatsUseCase {
       },
       books: {
         total: totalBooks,
-        chapters: 0, // Placeholder until I fix ChapterRepo
+        chapters: totalChapters,
       },
       posts: {
         total: totalPosts,
