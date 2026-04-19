@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { BaseQueryFn } from '@reduxjs/toolkit/query';
+import { getSession, signOut } from 'next-auth/react';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
 import { toast } from 'sonner';
 
@@ -55,12 +56,35 @@ export const axiosNextJsBaseQuery =
         const err = axiosError as AxiosError<ErrorResponseDto>;
         const status = err.response?.status || 500;
 
-        // Xử lý lỗi 401 (Unauthorized)
+        // Xử lý lỗi 401 (Unauthorized) - Lớp 3 bảo vệ
         if (status === 401) {
-          toast.error('Vui lòng đăng nhập để tiếp tục');
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 1500);
+          const session = await getSession();
+          
+          if (session?.accessToken) {
+            // Nếu có token mới, thử lại request ngay lập tức
+            try {
+              const retryResult = await clientApi({
+                url,
+                method,
+                data: body,
+                headers: {
+                  ...headers,
+                  Authorization: `Bearer ${session.accessToken}`,
+                },
+                params,
+              });
+              
+              const responseData = retryResult.data as ResponseDto<unknown>;
+              return { data: responseData.data };
+            } catch (retryError) {
+              // Thử lại thất bại, báo lỗi
+            }
+          } else {
+            // Refresh thất bại hoàn toàn
+            await signOut({ redirect: false });
+            window.location.href = '/login?error=SessionExpired';
+            toast.error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
+          }
         }
 
         if (status === 403 && (err.response?.data as any)?.error === 'USER_BANNED') {

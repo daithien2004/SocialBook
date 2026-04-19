@@ -102,7 +102,6 @@ export class FollowRepository
         status: true,
       }),
     ]);
-
     return {
       data: rows.map((r) => ({
         id: r._id?.toString() ?? r.id?.toString(),
