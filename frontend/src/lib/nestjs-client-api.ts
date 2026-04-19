@@ -32,6 +32,10 @@ export const axiosBaseQuery =
     { status: number; data: ErrorResponseDto }
   > =>
     async ({ url, method = 'GET', body, headers, params }, { getState }) => {
+      const requestHeaders: Record<string, string> = {
+        ...(headers as Record<string, string>),
+      };
+
       try {
         const state = getState() as { auth?: { accessToken?: string | null } };
         let accessToken: string | null | undefined = state?.auth?.accessToken;
@@ -39,10 +43,6 @@ export const axiosBaseQuery =
           const session = await getSession();
           accessToken = (session as { accessToken?: string } | null)?.accessToken;
         }
-
-        const requestHeaders: Record<string, string> = {
-          ...(headers as Record<string, string>),
-        };
 
         if (accessToken) {
           requestHeaders.Authorization = `Bearer ${accessToken}`;
