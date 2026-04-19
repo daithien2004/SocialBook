@@ -96,10 +96,7 @@ const FollowerItem = (props: FollowingUser) => {
                         closeFollowers();
                         router.push(`/users/${props.userId}`);
                     }}
-                    className={cn(
-                        "rounded-md text-xs font-medium tracking-wide shadow-sm",
-                        "bg-primary text-primary-foreground hover:bg-primary/90",
-                    )}
+                    className="rounded-md text-xs font-medium tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                 >
                     Xem hồ sơ
                 </Button>
