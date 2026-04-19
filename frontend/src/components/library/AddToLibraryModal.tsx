@@ -13,7 +13,7 @@ import {
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { useAddToLibrary } from './hooks/useAddToLibrary';
+import { useAddToLibrary } from '@/features/library/hooks/useAddToLibrary';
 import { LibraryStatus } from '@/features/library/types/library.interface';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useModalStore } from '@/store/useModalStore';

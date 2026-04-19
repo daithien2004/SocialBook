@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Heart, MessageCircle, Send, Star } from 'lucide-react';
-import { useReviewForm } from './hooks/useReviewForm';
+import { useReviewForm } from '@/features/reviews/hooks/useReviewForm';
 
 export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: string }) => {
     const {

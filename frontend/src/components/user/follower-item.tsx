@@ -1,52 +1,21 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import {
-    FollowingUser,
-    useGetFollowStatusQuery,
-    useToggleFollowMutation,
-    useUnfollowMutation,
-} from "@/features/follows/api/followApi";
-import { RootState } from "@/store/store";
-import { UserCheck, UserPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { cn } from "@/lib/utils";
-import { useModalStore } from "@/store/useModalStore";
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { FollowingUser } from '@/features/follows/api/followApi';
+import { useFollowerItem } from '@/features/follows/hooks/useFollowerItem';
+import { UserCheck, UserPlus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const FollowerItem = (props: FollowingUser) => {
-    const auth = useSelector((state: RootState) => state.auth);
-    const router = useRouter();
-    const { closeFollowers } = useModalStore();
-    
-    const [isFollowing, setIsFollowing] = useState(props.isFollowedByCurrentUser);
-
-    const { data: statusData } = useGetFollowStatusQuery(props.userId, {
-        skip: !auth.isAuthenticated || auth?.user?.id === props.userId,
+    const {
+        isFollowing,
+        isToggling,
+        isCurrentUser,
+        handleToggleFollow,
+        handleNavigateToProfile,
+    } = useFollowerItem({
+        userId: props.userId,
+        isFollowedByCurrentUser: props.isFollowedByCurrentUser,
     });
-
-    useEffect(() => {
-        if (statusData) {
-            setIsFollowing(statusData.isFollowing);
-        }
-    }, [statusData]);
-
-    const [toggleFollow, { isLoading: isFollowLoading }] = useToggleFollowMutation();
-    const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
-    const isToggling = isFollowLoading || isUnfollowLoading;
-
-    const handleToggleFollow = async () => {
-        try {
-            if (isFollowing) {
-                await unfollow(props.userId).unwrap();
-            } else {
-                await toggleFollow(props.userId).unwrap();
-            }
-            setIsFollowing((prev) => !prev);
-        } catch (e: any) {
-            console.log("Toggle follow failed:", e);
-        }
-    };
 
     return (
         <div
@@ -55,10 +24,7 @@ const FollowerItem = (props: FollowingUser) => {
             {/* Left */}
             <div className="flex items-center gap-3">
                 <div
-                    onClick={() => {
-                        closeFollowers();
-                        router.push(`/users/${props.userId}`)
-                    }}
+                    onClick={handleNavigateToProfile}
                     className="relative h-10 w-10 overflow-hidden rounded-full cursor-pointer border border-slate-200 dark:border-gray-700"
                 >
                     <Image
@@ -80,7 +46,7 @@ const FollowerItem = (props: FollowingUser) => {
                             `${props.readingListCount} Danh sách đọc`}
                         {props.readingListCount > 0 &&
                             props.followersCount > 0 &&
-                            " • "}
+                            ' • '}
                         {props.followersCount > 0 &&
                             `Người theo dõi ${props.followersCount}`}
                     </span>
@@ -88,28 +54,25 @@ const FollowerItem = (props: FollowingUser) => {
             </div>
 
             {/* Right */}
-            {props.userId === auth?.user?.id ? (
+            {isCurrentUser ? (
                 <Button
                     variant="ghost"
                     disabled={isToggling}
-                    onClick={() => {
-                        closeFollowers();
-                        router.push(`/users/${props.userId}`);
-                    }}
+                    onClick={handleNavigateToProfile}
                     className="rounded-md text-xs font-medium tracking-wide bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                 >
                     Xem hồ sơ
                 </Button>
             ) : (
                 <Button
-                    variant={isFollowing ? "default" : "outline"}
+                    variant={isFollowing ? 'default' : 'outline'}
                     disabled={isToggling}
                     onClick={handleToggleFollow}
                     className={cn(
-                        "rounded-md text-xs font-medium tracking-wide transition-all shadow-sm",
+                        'rounded-md text-xs font-medium tracking-wide transition-all shadow-sm',
                         isFollowing
-                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                            : "hover:bg-accent",
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                            : 'hover:bg-accent',
                     )}
                 >
                     {isFollowing ? (

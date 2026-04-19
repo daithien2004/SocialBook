@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from 'react';
-import { useNotificationSocket, NotificationItem } from './useNotificationSocket';
+import { useNotificationSocket, NotificationItem } from '@/features/notifications/hooks/useNotificationSocket';
 
 export type { NotificationItem };
 

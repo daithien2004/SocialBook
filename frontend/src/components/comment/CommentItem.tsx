@@ -11,7 +11,7 @@ import {
 import React from 'react';
 
 import ListComments from './ListComments';
-import { useCommentActions } from './hooks/useCommentActions';
+import { useCommentActions } from '@/features/comments/hooks/useCommentActions';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

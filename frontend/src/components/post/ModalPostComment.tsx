@@ -9,7 +9,7 @@ import { Heart, MessageCircle, Send, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import React from 'react';
 import { useModalStore } from '@/store/useModalStore';
-import { usePostComments } from './hooks/usePostComments';
+import { usePostComments } from '@/features/posts/hooks/usePostComments';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useGamificationCheckIn } from './hooks/useGamificationCheckIn';
+import { useGamificationCheckIn } from '@/features/gamification/hooks/useGamificationCheckIn';
 
 interface HeaderGamificationSummaryProps {
   userId?: string;

@@ -17,7 +17,7 @@ import {
 import { useCreateBookMutation } from '@/features/books/api/bookApi';
 import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
 import { AuthorOption, GenreOption } from '@/features/admin/types/bookRelation.interface';
-import { useCreateBookForm, BookStatus } from './hooks/useCreateBookForm';
+import { useCreateBookForm, BookStatus } from '@/features/admin/hooks/useCreateBookForm';
 
 type Status = BookStatus;
 

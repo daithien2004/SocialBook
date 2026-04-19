@@ -7,7 +7,7 @@ import {
     usePatchUpdateUserProfileOverviewMutation,
 } from '@/features/users/api/usersApi';
 import { useParams } from 'next/navigation';
-import { useUserProfile } from '@/components/profile/hooks/useUserProfile';
+import { useUserProfile } from '@/features/users/hooks/useUserProfile';
 
 const COUNTRIES = [
     "Việt Nam",
