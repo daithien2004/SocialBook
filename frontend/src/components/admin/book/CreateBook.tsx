@@ -17,7 +17,7 @@ import {
 import { useCreateBookMutation } from '@/features/books/api/bookApi';
 import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
 import { AuthorOption, GenreOption } from '@/features/admin/types/bookRelation.interface';
-import { useCreateBookForm, BookStatus } from '@/features/admin/hooks/useCreateBookForm';
+import { useCreateBookForm, BookStatus } from '@/features/admin/hooks/books/useCreateBookForm';
 
 type Status = BookStatus;
 
@@ -59,20 +59,20 @@ export default function CreateBook() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-6">
+        <div className="mb-8">
           <button
             onClick={() => router.push('/admin/books')}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 mb-6 transition-colors uppercase tracking-widest"
           >
-            <ArrowLeft size={18} />
-            Quay lại danh sách sách
+            <ArrowLeft size={14} />
+            Quay lại danh sách
           </button>
 
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Thêm sách mới
           </h1>
-          <p className="text-lg text-gray-600">
-            Điền đầy đủ thông tin để xuất bản sách trên SocialBook
+          <p className="text-slate-500 font-medium">
+            Điền đầy đủ thông tin để xuất bản sách trên hệ thống SocialBook
           </p>
         </div>
 
@@ -92,32 +92,27 @@ export default function CreateBook() {
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Book Cover Section */}
               <div className="flex-none">
-                <div className="w-64 h-96 relative rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 group">
+                <div className="w-56 h-80 relative rounded-lg overflow-hidden border border-slate-200 shadow-sm group">
                   <Image
                     src={coverPreview}
                     alt="Bìa sách"
                     fill
                     unoptimized
-                    sizes="256px"
+                    sizes="224px"
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="text-center text-white">
-                      <Upload size={32} className="mx-auto mb-2" />
-                      <p className="text-sm font-medium">Thay đổi ảnh bìa</p>
+                      <Upload size={24} className="mx-auto mb-2" />
+                      <p className="text-xs font-bold uppercase tracking-wide">Thay đổi bìa</p>
                     </div>
                   </div>
                 </div>
 
                 <label className="block mt-4">
-                  <div className="flex flex-col items-center justify-center gap-2 py-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                    <Upload size={20} className="text-gray-500" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Tải ảnh bìa lên
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      JPG, PNG, WebP • &lt; 5MB
-                    </span>
+                  <div className="flex flex-col items-center justify-center gap-2 py-4 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-colors">
+                    <Upload size={20} className="text-slate-400" />
+                    <span className="text-xs font-bold text-slate-700 uppercase">Tải ảnh bìa</span>
                   </div>
                   <input
                     type="file"
@@ -126,17 +121,6 @@ export default function CreateBook() {
                     className="hidden"
                   />
                 </label>
-
-                {coverFile && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-xs text-blue-800 font-medium truncate">
-                      📎 {coverFile.name}
-                    </p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      {(coverFile.size / 1024).toFixed(2)} KB
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Book Info Form */}
@@ -419,7 +403,7 @@ export default function CreateBook() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm active:scale-95"
                   >
                     {isSubmitting ? (
                       <>

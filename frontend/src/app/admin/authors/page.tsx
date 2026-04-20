@@ -9,70 +9,67 @@ import { Author } from '@/features/authors/types/author.interface';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
-import { useDebounce } from '@/hooks/useDebounce';
-import { useModalStore } from '@/store/useModalStore';
+import { useAuthorManagement } from '@/features/admin/hooks/authors/useAuthorManagement';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 export default function AdminAuthorsPage() {
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState('');
-    const debouncedSearch = useDebounce(search, 500);
-    const { openConfirm, openAuthorModal } = useModalStore();
-
-    const { data, isLoading, isFetching, refetch } = useGetAuthorsQuery({
+    const {
         page,
-        pageSize: 15,
-        name: debouncedSearch || undefined,
-    }, {
-        refetchOnMountOrArgChange: true,
-    });
-
-    const [deleteAuthor, { isLoading: isDeleting }] = useDeleteAuthorMutation();
-    const authors: Author[] = data?.data || [];
-    const meta = data?.meta;
-
-    const handleDelete = async (id: string, name: string) => {
-        try {
-            await deleteAuthor(id).unwrap();
-            toast.success('Xóa tác giả thành công');
-            refetch();
-        } catch (error) {
-            console.error('Failed to delete author:', error);
-            toast.error('Xóa tác giả thất bại!');
-        }
-    };
+        setPage,
+        search,
+        setSearch,
+        authors,
+        meta,
+        isLoading,
+        isFetching,
+        isDeleting,
+        refetch,
+        handleDelete,
+        openAuthorModal,
+        openConfirm
+    } = useAuthorManagement();
 
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header & Search Card */}
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
-                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
+            <div className="bg-white rounded-lg border border-slate-200 mb-6 overflow-hidden shadow-sm">
+                <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Quản lý tác giả</h1>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Tổng cộng <span className="font-semibold text-gray-800">{meta?.total?.toLocaleString() || 0}</span> tác giả
+                        <h1 className="text-xl font-bold text-slate-900">Quản lý tác giả</h1>
+                        <p className="text-xs text-slate-500 mt-1 font-medium">
+                            Tìm thấy <span className="text-indigo-600 font-bold">{meta?.total?.toLocaleString() || 0}</span> tác giả trong hệ thống
                         </p>
                     </div>
-                    <button
+                    <Button
                         onClick={() => openAuthorModal({ onSuccess: refetch })}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow active:scale-95"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 h-10 rounded-lg font-semibold transition-all shadow-sm active:scale-95"
                     >
-                        <Plus className="w-5 h-5" />
-                        Thêm tác giả mới
-                    </button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Thêm tác giả
+                    </Button>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50/50">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
+                <div className="bg-slate-50/50 px-6 py-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Input
                             type="text"
-                            placeholder="Tìm kiếm tên tác giả..."
+                            placeholder="Tìm kiếm theo tên tác giả..."
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
                                 setPage(1);
                             }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                            className="pl-10 h-11 bg-white border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm"
                         />
                     </div>
                 </div>
@@ -89,120 +86,126 @@ export default function AdminAuthorsPage() {
             {!(isLoading || isFetching) && (
                 <div className="py-0">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ảnh</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tên tác giả</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tiểu sử</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ngày tạo</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cập nhật</th>
-                                        <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {authors.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} className="text-center py-16 text-gray-500 text-lg">
-                                                Không tìm thấy tác giả nào
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        authors.map((author) => (
-                                            <tr key={author.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="w-12 h-12 relative rounded-full overflow-hidden shadow-md">
-                                                        {author.photoUrl ? (
-                                                            <Image src={author.photoUrl} alt={author.name} fill className="object-cover" sizes="48px" />
-                                                        ) : (
-                                                            <div className="bg-gray-200 w-full h-full flex items-center justify-center">
-                                                                <User className="w-6 h-6 text-gray-400" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="font-semibold text-gray-900">{author.name}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-600 max-w-md truncate">
-                                                        {author.bio || <span className="text-gray-400 italic">Chưa có tiểu sử</span>}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {format(new Date(author.createdAt), 'dd/MM/yyyy', { locale: vi })}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {format(new Date(author.updatedAt), 'dd/MM/yyyy HH:mm', { locale: vi })}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex justify-center gap-2">
-                                                        <button
-                                                            onClick={() => openAuthorModal({
-                                                                author: {
-                                                                    id: author.id,
-                                                                    name: author.name,
-                                                                    bio: author.bio,
-                                                                    photoUrl: author.photoUrl
-                                                                },
-                                                                onSuccess: refetch
-                                                            })}
-                                                            className="p-2 hover:bg-green-50 rounded-lg transition-colors"
-                                                            title="Chỉnh sửa"
-                                                        >
-                                                            <Edit className="w-5 h-5 text-green-600" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => openConfirm({
-                                                                title: "Xóa tác giả",
-                                                                description: `Bạn có chắc chắn muốn xóa tác giả "${author.name}"?`,
-                                                                variant: "destructive",
-                                                                confirmText: "Xóa",
-                                                                onConfirm: () => handleDelete(author.id, author.name)
-                                                            })}
-                                                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                                            title="Xóa tác giả"
-                                                            disabled={isDeleting}
-                                                        >
-                                                            <Trash2 className="w-5 h-5 text-red-600" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                           <Table>
+                            <TableHeader className="bg-gray-50 border-b border-gray-200">
+                                <TableRow>
+                                    <TableHead className="w-[80px]">Ảnh</TableHead>
+                                    <TableHead>Tên tác giả</TableHead>
+                                    <TableHead>Tiểu sử</TableHead>
+                                    <TableHead>Ngày tạo</TableHead>
+                                    <TableHead>Cập nhật</TableHead>
+                                    <TableHead className="text-center">Hành động</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {authors.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-16 text-gray-500 text-lg italic">
+                                            Không tìm thấy tác giả nào
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    authors.map((author) => (
+                                        <TableRow key={author.id} className="group hover:bg-gray-50/80 transition-colors">
+                                            <TableCell>
+                                                <div className="w-12 h-12 relative rounded-full overflow-hidden shadow-sm ring-2 ring-gray-100 group-hover:ring-indigo-100 transition-all">
+                                                    {author.photoUrl ? (
+                                                        <Image src={author.photoUrl} alt={author.name} fill className="object-cover" sizes="48px" />
+                                                    ) : (
+                                                        <div className="bg-gray-100 w-full h-full flex items-center justify-center">
+                                                            <User className="w-6 h-6 text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{author.name}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-sm text-gray-600 max-w-md truncate font-medium">
+                                                    {author.bio || <span className="text-gray-400 italic font-normal">Chưa có tiểu sử</span>}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-sm text-gray-500 font-medium">
+                                                {format(new Date(author.createdAt), 'dd MMM, yyyy', { locale: vi })}
+                                            </TableCell>
+                                            <TableCell className="text-sm text-gray-400 font-medium">
+                                                {format(new Date(author.updatedAt), 'HH:mm dd/MM', { locale: vi })}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex justify-center gap-1.5">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => openAuthorModal({
+                                                            author: {
+                                                                id: author.id,
+                                                                name: author.name,
+                                                                bio: author.bio,
+                                                                photoUrl: author.photoUrl
+                                                            },
+                                                            onSuccess: refetch
+                                                        })}
+                                                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all"
+                                                        title="Chỉnh sửa"
+                                                    >
+                                                        <Edit className="w-5 h-5" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => openConfirm({
+                                                            title: "Xóa tác giả",
+                                                            description: `Bạn có chắc chắn muốn xóa tác giả "${author.name}"?`,
+                                                            variant: "destructive",
+                                                            confirmText: "Xóa",
+                                                            onConfirm: () => handleDelete(author.id, author.name)
+                                                        })}
+                                                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-all"
+                                                        title="Xóa tác giả"
+                                                        disabled={isDeleting}
+                                                    >
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
 
-                        {/* Pagination */}
+                    {/* Pagination */}
                         {meta && meta.totalPages > 1 && (
                             <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between text-sm">
                                 <div className="text-gray-600">
-                                    Hiển thị {(page - 1) * 15 + 1} - {Math.min(page * 15, meta.total)} trong {meta.total.toLocaleString()} tác giả
+                                    Hiển thị {(page - 1) * 15 + 1} – {Math.min(page * 15, meta.total)} trong {meta.total.toLocaleString()} tác giả
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <button
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
                                         onClick={() => setPage(p => Math.max(1, p - 1))}
                                         disabled={page === 1}
-                                        className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="rounded-xl"
                                     >
                                         <ChevronLeft className="w-5 h-5" />
-                                    </button>
-                                    <span className="font-medium">Trang {page} / {meta.totalPages}</span>
-                                    <button
+                                    </Button>
+                                    <span className="font-medium px-2">Trang {page} / {meta.totalPages}</span>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
                                         onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
                                         disabled={page === meta.totalPages}
-                                        className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="rounded-xl"
                                     >
                                         <ChevronRight className="w-5 h-5" />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         )}
                     </div>
-                </div>
             )}
         </div>
     );
