@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import type { Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 
 export interface NotificationItem {
     id: string;
@@ -50,8 +50,6 @@ export function useNotificationSocket(
     }, []);
 
     useEffect(() => {
-        let isCancelled = false;
-
         if (userToken === prevTokenRef.current) return;
         prevTokenRef.current = userToken;
 
@@ -62,38 +60,40 @@ export function useNotificationSocket(
 
         disconnect();
 
-        void import('socket.io-client').then(({ io }) => {
-            if (isCancelled) return;
+        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+        const cleanToken = userToken.startsWith('Bearer ') ? userToken.substring(7) : userToken;
 
-            const socketInstance = io(
-                `${process.env.NEXT_PUBLIC_SOCKET_URL}/notifications`,
-                { auth: { token: userToken } }
-            );
+        console.log(`--- [Socket] Đang kết nối tới: ${socketUrl}/notifications ---`);
 
-            socketRef.current = socketInstance;
+        const socketInstance = io(`${socketUrl}/notifications`, {
+            auth: { token: cleanToken },
+            transports: ['websocket', 'polling'],
+        });
 
-            socketInstance.on('connect', () => {
-                socketInstance.emit('notification:list', (data: NotificationItem[]) => {
-                    onNotificationList(data);
-                });
-            });
+        socketRef.current = socketInstance;
 
-            socketInstance.on('notification:new', (payload: NotificationItem) => {
-                onNewNotification(payload);
-            });
-
-            socketInstance.on('notification:read', (data: { id: string }) => {
-                onReadNotification(data);
-            });
-
-            socketInstance.on('error', (err: any) => {
-                console.log('WS error:', err);
+        socketInstance.on('connect', () => {
+            console.log('--- [Socket] Kết nối thành công! ---');
+            socketInstance.emit('notification:list', (data: NotificationItem[]) => {
+                console.log('--- [Socket] Đã nạp danh sách thông báo ---', data);
+                onNotificationList(data);
             });
         });
 
+        socketInstance.on('notification:new', (payload: NotificationItem) => {
+            console.log('--- [Socket] Có thông báo mới! ---', payload);
+            onNewNotification(payload);
+        });
+
+        socketInstance.on('notification:read', (data: { id: string }) => {
+            onReadNotification(data);
+        });
+
+        socketInstance.on('connect_error', (err) => {
+            console.error('--- [Socket] Lỗi kết nối: ---', err.message);
+        });
+
         return () => {
-            isCancelled = true;
-            disconnect();
         };
     }, [userToken, disconnect, onNotificationList, onNewNotification, onReadNotification]);
 

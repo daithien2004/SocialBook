@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -19,6 +20,7 @@ export class CreateCommentUseCase {
   constructor(
     private readonly commentRepository: ICommentRepository,
     private readonly idGenerator: IIdGenerator,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: CreateCommentCommand): Promise<Comment> {
@@ -47,6 +49,14 @@ export class CreateCommentUseCase {
       this.logger.log(
         `Comment created successfully: ${comment.id.toString()} by user ${command.userId}`,
       );
+
+      this.eventEmitter.emit('comment.created', {
+        commentId: comment.id.toString(),
+        userId: command.userId,
+        targetId: command.targetId,
+        targetType: command.targetType,
+        parentId: comment.parentId?.toString(),
+      });
 
       return comment;
     } catch (error) {

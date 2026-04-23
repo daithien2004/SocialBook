@@ -44,7 +44,6 @@ export class NotificationsService {
         .to(this.userRoom(dto.userId))
         .emit('notification:new', responseDto);
     }
-
     return responseDto;
   }
 
