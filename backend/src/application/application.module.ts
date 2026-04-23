@@ -17,11 +17,9 @@ import { LibraryApplicationModule } from './library/library-application.module';
 import { LikesApplicationModule } from './likes/likes-application.module';
 import { StatisticsApplicationModule } from './statistics/statistics-application.module';
 import { ChromaApplicationModule } from './chroma/chroma-application.module';
-import { GamificationApplicationModule } from './gamification/gamification-application.module';
 import { ScraperApplicationModule } from './scraper/scraper-application.module';
 import { SearchApplicationModule } from './search/search-application.module';
 import { TextToSpeechApplicationModule } from './text-to-speech/text-to-speech-application.module';
-import { OnboardingApplicationModule } from './onboarding/onboarding-application.module';
 import { GeminiApplicationModule } from './gemini/gemini-application.module';
 import { RecommendationsApplicationModule } from './recommendations/recommendations-application.module';
 
@@ -45,11 +43,9 @@ import { RecommendationsApplicationModule } from './recommendations/recommendati
     LikesApplicationModule,
     StatisticsApplicationModule,
     ChromaApplicationModule,
-    GamificationApplicationModule,
     ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
-    OnboardingApplicationModule,
     GeminiApplicationModule,
     RecommendationsApplicationModule,
   ],
@@ -72,11 +68,9 @@ import { RecommendationsApplicationModule } from './recommendations/recommendati
     LikesApplicationModule,
     StatisticsApplicationModule,
     ChromaApplicationModule,
-    GamificationApplicationModule,
     ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
-    OnboardingApplicationModule,
     GeminiApplicationModule,
     RecommendationsApplicationModule,
   ],

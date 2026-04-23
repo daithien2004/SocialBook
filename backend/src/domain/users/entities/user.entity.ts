@@ -20,7 +20,7 @@ export interface UserProps {
   location?: string;
   website?: string;
   hashedRt?: string;
-  onboardingCompleted: boolean;
+  favoriteGenres: string[];
   readingPreferences?: ReadingPreferences;
 }
 
@@ -63,7 +63,7 @@ export class User extends Entity<UserId> {
       location: undefined,
       website: undefined,
       hashedRt: undefined,
-      onboardingCompleted: false,
+      favoriteGenres: [],
       readingPreferences: undefined,
     });
   }
@@ -83,7 +83,7 @@ export class User extends Entity<UserId> {
     location?: string;
     website?: string;
     hashedRt?: string;
-    onboardingCompleted: boolean;
+    favoriteGenres: string[];
     readingPreferences?: IReadingPreferences;
     createdAt: Date;
     updatedAt: Date;
@@ -104,7 +104,7 @@ export class User extends Entity<UserId> {
         location: props.location,
         website: props.website,
         hashedRt: props.hashedRt,
-        onboardingCompleted: props.onboardingCompleted,
+        favoriteGenres: props.favoriteGenres,
         readingPreferences: props.readingPreferences
           ? ReadingPreferences.create(props.readingPreferences)
           : undefined,
@@ -153,8 +153,8 @@ export class User extends Entity<UserId> {
   get hashedRt(): string | undefined {
     return this._props.hashedRt;
   }
-  get onboardingCompleted(): boolean {
-    return this._props.onboardingCompleted;
+  get favoriteGenres(): string[] {
+    return this._props.favoriteGenres;
   }
   get readingPreferences(): ReadingPreferences | undefined {
     return this._props.readingPreferences;
@@ -185,11 +185,16 @@ export class User extends Entity<UserId> {
       ...current,
       ...props,
     });
+
+    if (props.preferredGenres) {
+      this._props.favoriteGenres = props.preferredGenres;
+    }
+
     this.markAsUpdated();
   }
 
-  completeOnboarding(): void {
-    this._props.onboardingCompleted = true;
+  updateFavoriteGenres(genres: string[]): void {
+    this._props.favoriteGenres = genres;
     this.markAsUpdated();
   }
 

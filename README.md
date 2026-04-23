@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**A feature-rich social network platform for book lovers — combining reading tracking, social interaction, gamification, and AI-powered features.**
+**A feature-rich social network platform for book lovers — combining reading tracking, social interaction, and AI-powered features.**
 
 [![NestJS](https://img.shields.io/badge/Backend-NestJS%2011-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js%2015-000000?style=flat-square&logo=nextdotjs)](https://nextjs.org/)
@@ -20,11 +20,10 @@
 |---|---|
 | 📚 **Book Management** | Browse, read, and track books with chapter and review support |
 | 🤝 **Social Interaction** | Follow users, like books/comments, and receive real-time notifications |
-| 🎮 **Gamification** | Earn achievements, maintain reading streaks, and complete daily goals for XP |
 | 🤖 **AI Integration** | Chapter summaries (Gemini AI), Text-to-Speech, and vector search (ChromaDB) |
-| 🔐 **Auth & Onboarding** | Secure JWT-based auth with user preference setup |
+| 🔐 **Authentication** | Secure JWT-based auth with user profile support |
 | 🔍 **Search & Recommendations** | Full-text search and AI-powered book recommendations |
-| 📊 **Statistics** | Personal reading stats and gamification progress tracking |
+| 📊 **Statistics** | Personal reading stats and progress tracking |
 
 ---
 
@@ -90,7 +89,7 @@ backend/src/
 ```
 
 ### Domain Modules
-`auth` · `users` · `books` · `chapters` · `authors` · `genres` · `comments` · `likes` · `follows` · `reviews` · `library` · `posts` · `notifications` · `gamification` · `statistics` · `search` · `recommendations` · `onboarding` · `scraper` · `chroma` · `gemini` · `text-to-speech`
+`auth` · `users` · `books` · `chapters` · `authors` · `genres` · `comments` · `likes` · `follows` · `reviews` · `library` · `posts` · `notifications` · `statistics` · `search` · `recommendations` · `scraper` · `chroma` · `gemini` · `text-to-speech`
 
 ---
 
