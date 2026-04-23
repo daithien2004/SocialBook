@@ -7,13 +7,11 @@ import { BooksRepositoryModule } from './database/repositories/books/books-repos
 import { ChaptersRepositoryModule } from './database/repositories/chapters/chapters-repository.module';
 import { CommentsRepositoryModule } from './database/repositories/comments/comments-repository.module';
 import { FollowsRepositoryModule } from './database/repositories/follows/follows-repository.module';
-import { GamificationRepositoryModule } from './database/repositories/gamification/gamification-repository.module';
 import { GeminiRepositoryModule } from './database/repositories/gemini/gemini-repository.module';
 import { GenresRepositoryModule } from './database/repositories/genres/genres-repository.module';
 import { LibraryRepositoryModule } from './database/repositories/library/library-repository.module';
 import { LikesRepositoryModule } from './database/repositories/likes/likes-repository.module';
 import { NotificationsRepositoryModule } from './database/repositories/notifications/notifications-repository.module';
-import { OnboardingRepositoryModule } from './database/repositories/onboarding/onboarding-repository.module';
 import { OtpRepositoryModule } from './database/repositories/otp/otp-repository.module';
 import { PostsRepositoryModule } from './database/repositories/posts/posts-repository.module';
 import { ProgressRepositoryModule } from './database/repositories/progress/progress-repository.module';
@@ -46,8 +44,6 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     LikesRepositoryModule,
     LibraryRepositoryModule,
     RolesRepositoryModule,
-    GamificationRepositoryModule,
-    OnboardingRepositoryModule,
     OtpRepositoryModule,
     ProgressRepositoryModule,
     GeminiRepositoryModule,
@@ -77,8 +73,6 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     LikesRepositoryModule,
     LibraryRepositoryModule,
     RolesRepositoryModule,
-    GamificationRepositoryModule,
-    OnboardingRepositoryModule,
     OtpRepositoryModule,
     ProgressRepositoryModule,
     GeminiRepositoryModule,

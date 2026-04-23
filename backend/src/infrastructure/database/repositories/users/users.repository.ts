@@ -29,7 +29,7 @@ interface UserPersistence {
   location?: string;
   website?: string;
   hashedRt?: string;
-  onboardingCompleted: boolean;
+  favoriteGenres: Types.ObjectId[];
   readingPreferences?: IReadingPreferences;
   createdAt: Date;
   updatedAt: Date;
@@ -173,24 +173,15 @@ export class UsersRepository implements IUserRepository {
     return docs.map((doc) => this.toDomain(doc));
   }
 
-  async updateOnboardingData(
+  async updateFavoriteGenres(
     id: UserId,
-    data: {
-      onboardingId?: string;
-      gamificationId?: string;
-      onboardingCompleted?: boolean;
-    },
+    genres: string[],
   ): Promise<void> {
-    const update: any = {};
-    if (data.onboardingId)
-      update.onboardingId = new Types.ObjectId(data.onboardingId);
-    if (data.gamificationId)
-      update.gamificationId = new Types.ObjectId(data.gamificationId);
-    if (data.onboardingCompleted !== undefined)
-      update.onboardingCompleted = data.onboardingCompleted;
-
+    const genreObjectIds = genres.map((g) => new Types.ObjectId(g));
     await this.userModel
-      .findByIdAndUpdate(id.toString(), { $set: update })
+      .findByIdAndUpdate(id.toString(), {
+        $set: { favoriteGenres: genreObjectIds },
+      })
       .exec();
   }
 

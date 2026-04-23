@@ -145,21 +145,6 @@ export const NESTJS_RECOMMENDATIONS_ENDPOINTS = {
     getPersonalized: '/recommendations/personalized',
 };
 
-export const NESTJS_ONBOARDING_ENDPOINTS = {
-    status: '/onboarding/status',
-    start: '/onboarding/start',
-    updateStep: '/onboarding/update-step',
-    complete: '/onboarding/complete',
-};
-
-export const NESTJS_GAMIFICATION_ENDPOINTS = {
-    stats: '/gamification/stats',
-    achievements: '/gamification/achievements',
-    dailyGoals: '/gamification/daily-goals',
-    streak: '/gamification/streak',
-    streakCheckIn: '/gamification/streak/check-in',
-};
-
 export const NESTJS_ANALYTICS_ENDPOINTS = {
     getReadingHeatmap: '/statistics/analytics/reading-heatmap',
     getChapterEngagement: '/statistics/analytics/chapter-engagement',

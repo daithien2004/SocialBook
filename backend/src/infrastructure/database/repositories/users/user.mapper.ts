@@ -18,7 +18,7 @@ interface UserPersistence {
   location?: string;
   website?: string;
   hashedRt?: string;
-  onboardingCompleted: boolean;
+  favoriteGenres: Types.ObjectId[];
   readingPreferences?: IReadingPreferences;
   createdAt: Date;
   updatedAt: Date;
@@ -41,7 +41,7 @@ export class UserMapper {
       location: doc.location,
       website: doc.website,
       hashedRt: doc.hashedRt,
-      onboardingCompleted: doc.onboardingCompleted,
+      favoriteGenres: (doc.favoriteGenres || []).map((g: any) => g.toString()),
       readingPreferences: doc.readingPreferences,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
@@ -64,7 +64,7 @@ export class UserMapper {
       location: entity.location,
       website: entity.website,
       hashedRt: entity.hashedRt,
-      onboardingCompleted: entity.onboardingCompleted,
+      favoriteGenres: (entity.favoriteGenres || []).map((g) => new Types.ObjectId(g)),
       readingPreferences: entity.readingPreferences,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,

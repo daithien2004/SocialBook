@@ -53,7 +53,6 @@ export class LoginUseCase {
         username: user.username,
         image: user.image,
         role: roleName,
-        onboardingCompleted: user.onboardingCompleted,
       },
     };
   }

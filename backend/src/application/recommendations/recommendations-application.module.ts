@@ -6,7 +6,7 @@ import { GenresRepositoryModule } from '@/infrastructure/database/repositories/g
 import { ChromaRepositoryModule } from '@/infrastructure/database/repositories/chroma/chroma-repository.module';
 import { LikesRepositoryModule } from '@/infrastructure/database/repositories/likes/likes-repository.module';
 import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/reviews/reviews-repository.module';
-import { OnboardingRepositoryModule } from '@/infrastructure/database/repositories/onboarding/onboarding-repository.module';
+import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
 
 @Module({
@@ -17,7 +17,7 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     ChromaRepositoryModule,
     LikesRepositoryModule,
     ReviewsRepositoryModule,
-    OnboardingRepositoryModule,
+    UsersRepositoryModule,
     InfrastructureModule,
   ],
   providers: [GetPersonalizedRecommendationsUseCase],
