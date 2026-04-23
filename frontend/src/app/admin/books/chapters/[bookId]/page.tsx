@@ -7,7 +7,7 @@ import {
   Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload 
 } from 'lucide-react';
 import { FileImportModal } from '@/components/chapter/FileImportModal';
-import { useChapterManagement } from '@/components/admin/chapter/useChapterManagement';
+import { useChapterManagement } from '@/features/admin/hooks/chapters/useChapterManagement';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -125,7 +125,7 @@ export default function ChapterManagementPage() {
               />
               <div className="space-y-2">
                 {newChapterParagraphs.map((para, index) => (
-                  <div key={para.id} className="flex gap-2">
+                  <div key={`${para.id}-${index}`} className="flex gap-2">
                     <Textarea
                       value={para.content}
                       onChange={(e) => handleParagraphChange(
@@ -185,8 +185,8 @@ export default function ChapterManagementPage() {
                 Chưa có chương nào. Nhấn "Thêm chương mới" để bắt đầu.
               </div>
             ) : (
-              chapters.map((chapter) => (
-                <div key={chapter.id} className="hover:bg-gray-50 transition-colors">
+              chapters.map((chapter, index) => (
+                <div key={`${chapter.id}-${index}`} className="hover:bg-gray-50 transition-colors">
                   {/* Chapter Header */}
                   <div
                     className="flex items-center justify-between px-4 py-3 cursor-pointer sticky top-0 z-10 bg-white border-b border-gray-50"
@@ -259,7 +259,7 @@ export default function ChapterManagementPage() {
                               />
                               <div className="space-y-2">
                                 {editingParagraphs.map((para, index) => (
-                                  <div key={para.id} className="flex gap-2">
+                                  <div key={`${para.id}-${index}`} className="flex gap-2">
                                     <Textarea
                                       value={para.content}
                                       onChange={(e) => handleParagraphChange(
@@ -357,8 +357,8 @@ function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterI
 
   return (
     <div className="space-y-3">
-      {chapter.paragraphs.map((para) => (
-        <p key={para.id} className="text-gray-800 leading-relaxed">
+      {chapter.paragraphs.map((para, index) => (
+        <p key={`${para.id}-${index}`} className="text-gray-800 leading-relaxed">
           {para.content}
         </p>
       ))}

@@ -1,15 +1,9 @@
 'use client';
 
+import { useActiveUsers, useAnalyticsData } from '@/features/admin/hooks/analytics/useAnalytics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  useGetActiveUsersQuery,
-  useGetChapterEngagementQuery,
-  useGetGeographicDistributionQuery,
-  useGetReadingHeatmapQuery,
-} from '@/features/admin/api/analyticsApi';
 import { Activity, Globe, TrendingUp, Users } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState } from 'react';
 
 const ReadingHeatmapChart = dynamic(
   () =>
@@ -63,49 +57,7 @@ export default function AnalyticsPage() {
 }
 
 function ActiveUsersCard() {
-  const { data, isLoading, refetch } = useGetActiveUsersQuery();
-  const [count, setCount] = useState(0);
-  const previousCountRef = useRef(0);
-
-  useEffect(() => {
-    if (data?.count === undefined) {
-      return;
-    }
-
-    const start = previousCountRef.current;
-    const end = data.count;
-    const duration = 1000;
-    const stepTime = 50;
-    const steps = duration / stepTime;
-    const increment = (end - start) / steps;
-
-    let current = start;
-    const timer = setInterval(() => {
-      current += increment;
-
-      if (
-        (increment > 0 && current >= end) ||
-        (increment < 0 && current <= end)
-      ) {
-        previousCountRef.current = end;
-        setCount(end);
-        clearInterval(timer);
-        return;
-      }
-
-      setCount(Math.round(current));
-    }, stepTime);
-
-    return () => clearInterval(timer);
-  }, [data?.count]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [refetch]);
+  const { count, isLoading } = useActiveUsers();
 
   return (
     <Card className="border-0 bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl">
@@ -138,8 +90,7 @@ function ActiveUsersCard() {
 }
 
 function ReadingHeatmapCard() {
-  const { data, isLoading, error } = useGetReadingHeatmapQuery();
-  const heatmapData = Array.isArray(data) ? data : [];
+  const { heatmap: { data: heatmapData, isLoading, error } } = useAnalyticsData();
 
   return (
     <Card className="border-0 bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
@@ -170,8 +121,7 @@ function ReadingHeatmapCard() {
 }
 
 function ChapterEngagementCard() {
-  const { data, isLoading, error } = useGetChapterEngagementQuery({ limit: 5 });
-  const engagementData = Array.isArray(data) ? data : [];
+  const { engagement: { data: engagementData, isLoading, error } } = useAnalyticsData();
 
   return (
     <Card className="border-0 bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
@@ -246,8 +196,7 @@ function ChapterEngagementCard() {
 }
 
 function GeographicCard() {
-  const { data, isLoading, error } = useGetGeographicDistributionQuery();
-  const geoData = Array.isArray(data) ? data : [];
+  const { geographic: { data: geoData, isLoading, error } } = useAnalyticsData();
 
   return (
     <Card className="col-span-1 border-0 bg-white shadow-md transition-shadow duration-300 hover:shadow-lg lg:col-span-2">
