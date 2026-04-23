@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { ChromaClient } from 'chromadb';
+import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import { Document } from '@langchain/core/documents';
 
 import {
@@ -20,24 +21,33 @@ import { ContentType } from '@/domain/chroma/value-objects/content-type.vo';
 export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   private readonly logger = new Logger(ChromaVectorRepository.name);
   private vectorStore: Chroma;
-  private embeddings: GoogleGenerativeAIEmbeddings;
+  private embeddings: HuggingFaceInferenceEmbeddings;
   private isInitialized = false;
 
   constructor(private configService: ConfigService) {}
 
   async onModuleInit() {
     try {
-      this.embeddings = new GoogleGenerativeAIEmbeddings({
-        apiKey: this.configService.get('GOOGLE_API_KEY'),
-        model: 'text-embedding-004',
+      const hfKey = this.configService.get('env.HUGGINGFACE_API_KEY');
+      if (!hfKey) {
+        this.logger.error('❌ HUGGINGFACE_API_KEY is missing in configuration!');
+      } else {
+        this.logger.log(`🔑 Using HuggingFace API Key: ${hfKey.substring(0, 5)}...${hfKey.substring(hfKey.length - 4)}`);
+      }
+
+      this.embeddings = new HuggingFaceInferenceEmbeddings({
+        apiKey: hfKey,
+        model: 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
       });
 
+      const chromaUrl = this.configService.get('env.CHROMA_URL', 'http://localhost:8000');
+      const collectionName = this.configService.get('env.CHROMA_COLLECTION', 'socialbook_vectors');
+      
+      this.logger.log(`🌐 Connecting to Chroma at: ${chromaUrl}, Collection: ${collectionName}`);
+
       this.vectorStore = new Chroma(this.embeddings, {
-        collectionName: this.configService.get(
-          'CHROMA_COLLECTION',
-          'socialbook_vectors',
-        ),
-        url: this.configService.get('CHROMA_URL', 'http://localhost:8000'),
+        collectionName,
+        url: chromaUrl,
       });
 
       this.isInitialized = true;
@@ -57,6 +67,18 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   // Document operations
   async save(document: VectorDocument): Promise<void> {
     this.ensureInitialized();
+
+    // Diagnostic: Try to embed the content manually to see if it works
+    try {
+      const testEmbedding = await this.embeddings.embedQuery(document.content.substring(0, 50));
+      if (!testEmbedding || testEmbedding.length === 0) {
+        this.logger.error(`❌ Embedding generation returned empty for document: ${document.contentId}`);
+      } else {
+        this.logger.debug(`✅ Successfully generated embedding of length ${testEmbedding.length}`);
+      }
+    } catch (e) {
+      this.logger.error(`❌ Error during manual embedding test: ${e.message}`);
+    }
 
     const langchainDoc = new Document({
       pageContent: document.content,
@@ -165,17 +187,53 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      const results = await this.vectorStore.similaritySearch(
+      // Build metadata filter
+      const filter: Record<string, any> = {};
+      if (query.contentType) {
+        filter.contentType = query.contentType.toString();
+      }
+      
+      if (query.filters) {
+        Object.assign(filter, query.filters);
+      }
+
+      // Perform search with score
+      // Note: Chroma returns distance (L2 or Cosine), usually lower distance means higher similarity
+      const results = await this.vectorStore.similaritySearchWithScore(
         query.query,
         query.limit,
+        Object.keys(filter).length > 0 ? filter : undefined,
       );
 
+      this.logger.debug(`Raw search results for "${query.query}": ${results.length}`);
+
+      const queryKeywords = query.query.toLowerCase().split(/\s+/).filter(kw => kw.length > 0);
+
       return results
-        .map((doc, index) => ({
-          document: this.mapLangchainDocToDocument(doc),
-          score: 1.0 - index / results.length, // Simple scoring based on position
-        }))
-        .filter((result) => result.score >= query.threshold);
+        .map(([doc, score]) => {
+          let boost = 0;
+          const contentLower = doc.pageContent.toLowerCase();
+          const titleLower = (doc.metadata?.title as string || '').toLowerCase();
+          
+          for (const kw of queryKeywords) {
+            if (titleLower.includes(kw)) {
+              boost += 0.5;
+            } else if (contentLower.includes(kw)) {
+              boost += 0.5;
+            }
+          }
+
+          const similarity = (1 / (1 + score)) + boost;
+
+          this.logger.debug(`Result: ${doc.pageContent.substring(0, 40)} | Raw Distance: ${score.toFixed(4)} | Boosted Similarity: ${similarity.toFixed(4)}`);
+
+          return {
+            document: this.mapLangchainDocToDocument(doc),
+            score: similarity,
+          };
+        })
+        .filter((result) => result.score >= query.threshold)
+        .sort((a, b) => b.score - a.score); 
     } catch (error) {
       this.logger.error(`Search failed for query: ${query.query}`, error);
       throw error;
@@ -310,11 +368,33 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      // This would need to be implemented using Chroma's delete collection API
-      this.logger.warn('Clear collection not implemented for Chroma');
+      const collectionName = this.configService.get('env.CHROMA_COLLECTION', 'socialbook_vectors');
+      const chromaUrl = this.configService.get('env.CHROMA_URL', 'http://localhost:8000');
+      
+      this.logger.log(`🗑️ Permanently deleting collection: ${collectionName} at ${chromaUrl}`);
+      
+      const client = new ChromaClient({ path: chromaUrl });
+      try {
+        await client.deleteCollection({ name: collectionName });
+      } catch (e) {
+        this.logger.warn(`Collection ${collectionName} does not exist, skipping delete`);
+      }
+      
+      await client.createCollection({
+        name: collectionName,
+        metadata: { 'hnsw:space': 'cosine' },
+      });
+      
+      this.logger.log(`✅ Collection ${collectionName} has been recreated in Chroma server`);
+
+      // Re-initialize to create a fresh collection with correct dimensions
+      this.isInitialized = false;
+      await this.onModuleInit();
     } catch (error) {
-      this.logger.error('Failed to clear collection', error);
-      throw error;
+      this.logger.error('❌ Failed to clear collection:', error);
+      // If the error is that the collection doesn't exist, we should still re-init
+      this.isInitialized = false;
+      await this.onModuleInit();
     }
   }
 

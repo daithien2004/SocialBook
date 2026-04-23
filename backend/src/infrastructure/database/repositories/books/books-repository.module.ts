@@ -19,6 +19,8 @@ import { BookRepository } from './book.repository';
 import { Genre, GenreSchema } from '../../schemas/genre.schema';
 import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
 
+import { ChromaRepositoryModule } from '../chroma/chroma-repository.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -27,6 +29,7 @@ import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
       { name: Author.name, schema: AuthorSchema },
       { name: Genre.name, schema: GenreSchema },
     ]),
+    ChromaRepositoryModule,
   ],
   providers: [
     TextSimilarityService,

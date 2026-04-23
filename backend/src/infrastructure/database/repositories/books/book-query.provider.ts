@@ -15,12 +15,16 @@ import { Book, BookDocument } from '../../schemas/book.schema';
 import { Genre, GenreDocument } from '../../schemas/genre.schema';
 import { BookMapper } from './book.mapper';
 import { RawBookDocument } from './book.raw-types';
+import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
+import { SearchQuery } from '@/domain/chroma/entities/search-query.entity';
+import { ContentType } from '@/domain/chroma/value-objects/content-type.vo';
 
 @Injectable()
 export class BookQueryProvider implements IBookQueryProvider {
   constructor(
     @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
     @InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>,
+    private readonly vectorRepository: IVectorRepository,
   ) {}
 
   private buildQueryFilter(filter: BookFilter): FilterQuery<BookDocument> {
@@ -65,21 +69,71 @@ export class BookQueryProvider implements IBookQueryProvider {
       filter.genres = validIds;
     }
 
+    // 1. Handle Vector Search Integration
+    let orderedIds: string[] = [];
+    let isVectorSearch = false;
+
+    if (filter.search && filter.search.trim().length > 0) {
+      try {
+        const searchQuery = SearchQuery.create({
+          id: new Types.ObjectId().toString(),
+          query: filter.search,
+          embedding: [],
+          contentType: 'book',
+          limit: pagination.limit * 2, // Get more for filtering
+          threshold: 0.1, // Very low threshold to let the booster do its job
+        });
+
+        const vectorResults = await this.vectorRepository.search(searchQuery);
+        if (vectorResults.length > 0) {
+          orderedIds = vectorResults.map(r => r.document.contentId);
+          isVectorSearch = true;
+          // Clear standard search to avoid MongoDB text search interference
+          delete filter.search;
+          // Add IDs to filter
+          filter.ids = orderedIds;
+        }
+      } catch (error) {
+        console.error('Vector search integration failed:', error);
+        // Fallback to standard search
+      }
+    }
+
     const queryFilter = this.buildQueryFilter(filter);
     const skip = (pagination.page - 1) * pagination.limit;
 
-    const sortStage: Record<string, 1 | -1> = sort?.sortBy
-      ? { [sort.sortBy]: sort.order === 'desc' ? -1 : 1 }
-      : { createdAt: -1 };
+    // Build sort stage
+    let sortStage: any;
+    if (isVectorSearch && orderedIds.length > 0) {
+      // Custom sort to maintain Chroma order
+      sortStage = {
+        $addFields: {
+          __searchOrder: { $indexOfArray: [orderedIds, { $toString: '$_id' }] }
+        }
+      };
+    } else {
+      sortStage = sort?.sortBy
+        ? { $sort: { [sort.sortBy]: sort.order === 'desc' ? -1 : 1 } }
+        : { $sort: { createdAt: -1 } };
+    }
+
+    const pipeline: any[] = [{ $match: queryFilter }];
+
+    // If vector search, add the order field and sort by it
+    if (isVectorSearch) {
+      pipeline.push(sortStage);
+      pipeline.push({ $sort: { __searchOrder: 1 } });
+    } else if (sortStage.$sort) {
+      pipeline.push(sortStage);
+    }
 
     const [result] = await this.bookModel
       .aggregate([
-        { $match: queryFilter },
+        ...pipeline,
         {
           $facet: {
             metadata: [{ $count: 'total' }],
             data: [
-              { $sort: sortStage },
               { $skip: skip },
               { $limit: pagination.limit },
               {

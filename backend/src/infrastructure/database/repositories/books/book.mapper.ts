@@ -18,7 +18,7 @@ export class BookMapper {
 
     const author = document.authorId as any;
     const authorName =
-      typeof author === 'object' && 'name' in author ? author.name : undefined;
+      typeof author === 'object' && author !== null && 'name' in author ? author.name : undefined;
     const authorIdStr =
       typeof author === 'object' && author !== null && '_id' in author
         ? author._id.toString()
@@ -44,13 +44,20 @@ export class BookMapper {
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
       authorName,
+      genreObjects: (document.genres || [])
+        .filter((g: any) => typeof g === 'object' && 'name' in g)
+        .map((g: any) => ({
+          id: g._id.toString(),
+          name: g.name,
+          slug: g.slug,
+        })),
     });
   }
 
   static toListReadModel(document: RawBookDocument): BookListReadModel {
     const author = document.authorId as any;
     const authorName =
-      typeof author === 'object' && 'name' in author ? author.name : undefined;
+      typeof author === 'object' && author !== null && 'name' in author ? author.name : undefined;
     const authorIdStr =
       typeof author === 'object' && author !== null && '_id' in author
         ? author._id.toString()

@@ -30,7 +30,7 @@ export class ChromaController {
     private readonly clearCollectionUseCase: ClearCollectionUseCase,
     private readonly getCollectionStatsUseCase: GetCollectionStatsUseCase,
     private readonly reindexAllUseCase: ReindexAllUseCase,
-  ) {}
+  ) { }
 
   @Public()
   @Post('search')
@@ -103,8 +103,7 @@ export class ChromaController {
     };
   }
 
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Public()
   @Post('clear')
   async clearCollection() {
     const result = await this.clearCollectionUseCase.execute();

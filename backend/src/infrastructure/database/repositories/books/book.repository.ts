@@ -129,6 +129,8 @@ export class BookRepository
     const documents = (await query
       .skip(skip)
       .limit(pagination.limit)
+      .populate('authorId', 'name')
+      .populate('genres', 'name slug')
       .lean()
       .exec()) as unknown as RawBookDocument[];
 
