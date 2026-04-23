@@ -38,7 +38,7 @@ export default function CollectionDetailPage() {
     refetch,
   } = useGetCollectionDetailQuery(collectionId);
 
-  const collection = response?.folder;
+  const collection = response;
   const books = response?.books || [];
 
   const [deleteCollection, { isLoading: isDeleting }] =

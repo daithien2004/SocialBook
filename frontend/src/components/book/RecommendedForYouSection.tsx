@@ -99,29 +99,9 @@ export const RecommendedForYouSection = () => {
     );
   }
 
-  if (!data?.recommendations || data.recommendations.length === 0) {
-    return (
-      <section className="mb-12">
-        <div className="flex items-center gap-2 mb-6">
-          <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Gợi ý cho bạn
-          </h2>
-        </div>
-        <Card className="bg-gray-50 dark:bg-accent/5 border border-gray-200 dark:border-white/10 rounded-lg p-8 text-center">
-          <p className="text-muted-foreground font-medium mb-1">
-            Chưa có gợi ý
-          </p>
-          <p className="text-muted-foreground text-sm">
-            Đọc thêm sách để nhận gợi ý!
-          </p>
-        </Card>
-      </section>
-    );
-  }
 
   // Hiển thị đúng số lượng từ API (limit)
-  const displayedBooks = data.recommendations;
+  const displayedBooks = data?.recommendations || [];
 
   return (
     <section className="mb-12">
@@ -129,7 +109,7 @@ export const RecommendedForYouSection = () => {
       <div className="flex items-center gap-2 mb-6">
         <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Gợi ý cho bạn
+          Sách hay cho bạn
         </h2>
       </div>
 

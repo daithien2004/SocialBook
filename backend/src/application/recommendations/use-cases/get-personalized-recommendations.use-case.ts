@@ -124,7 +124,7 @@ export class GetPersonalizedRecommendationsUseCase {
   private async buildUserProfile(userId: string): Promise<UserProfile> {
     const userObjectId = new Types.ObjectId(userId);
 
-    const [readingLists, progresses, reviews, likedBooks, user] =
+    const [readingLists, progresses, reviews, likedBooks] =
       await Promise.all([
         this.readingListModel
           .find({ userId: userObjectId })
@@ -143,11 +143,6 @@ export class GetPersonalizedRecommendationsUseCase {
         this.bookModel
           .find({ likedBy: userObjectId })
           .populate('genres')
-          .lean<any[]>(),
-        this.userModel
-          .findById(userObjectId)
-          .populate('favoriteGenres')
-          .lean<{ favoriteGenres: any[] }>(),
       ]);
 
     const validReadingLists = readingLists.filter((rl) => rl.bookId != null);
@@ -199,14 +194,6 @@ export class GetPersonalizedRecommendationsUseCase {
         });
       }
     });
-
-    if (user?.favoriteGenres) {
-      user.favoriteGenres.forEach((genre) => {
-        if (genre && genre.name) {
-          genreCounts.set(genre.name, (genreCounts.get(genre.name) || 0) + 3);
-        }
-      });
-    }
 
     const favoriteGenres = Array.from(genreCounts.entries())
       .sort((a, b) => b[1] - a[1])

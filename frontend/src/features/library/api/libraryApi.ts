@@ -56,11 +56,14 @@ export const libraryApi = createApi({
       keepUnusedDataFor: 0,
     }),
 
-    updateReadingProgress: builder.mutation<LibraryItem, UpdateProgressRequest>(
+    updateReadingProgress: builder.mutation<
+      { readingList: LibraryItem; readingProgress: { progress: number } },
+      UpdateProgressRequest
+    >(
       {
         query: (data) => ({
           url: NESTJS_LIBRARY_ENDPOINTS.updateProgress,
-          method: 'PATCH',
+          method: 'POST',
           body: data,
         }),
         invalidatesTags: [

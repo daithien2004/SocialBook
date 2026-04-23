@@ -9,13 +9,13 @@ export class GeminiService implements IGeminiService {
   private readonly model: any;
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('env.GEMINI_API_KEY');
+    const apiKey = this.configService.get<string>('env.GOOGLE_API_KEY');
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not configured');
+      throw new Error('GOOGLE_API_KEY is not configured');
     }
 
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   async generateText(prompt: string): Promise<string> {
