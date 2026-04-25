@@ -1,6 +1,6 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
-import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
 import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
 
@@ -17,7 +17,7 @@ export class SearchQueryExpansionService {
   private static readonly CACHE_TTL_SECONDS = 86400; // 24h
 
   constructor(
-    @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
+    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
     @Inject(CACHE_SERVICE)
     private readonly cacheService: ICacheService,
