@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IContentModerationService } from '@/domain/content-moderation/interfaces/content-moderation.service.interface';
 import { ModerationResult } from '@/domain/content-moderation/interfaces/moderation-result.interface';
-import { containsVietnameseToxicWords } from '@/infrastructure/utils/vietnamese-profanity';
-import { containsSpoilers } from '@/infrastructure/utils/spoiler-detection';
+import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
+import { containsSpoilers } from '@/domain/content-moderation/utils/spoiler-detection';
 
 @Injectable()
 export class ContentModerationService implements IContentModerationService {

@@ -1,6 +1,6 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { GeminiService } from '../../external/gemini.service';
-import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import {
   IRecommendationStrategy,
   UserProfile,
@@ -35,7 +35,7 @@ export class AIRecommendationStrategy implements IRecommendationStrategy {
   private readonly logger = new Logger(AIRecommendationStrategy.name);
 
   constructor(
-    @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
+    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private geminiService: GeminiService,
     private fallbackStrategy: FallbackRecommendationStrategy,
   ) {}

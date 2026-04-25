@@ -19,7 +19,7 @@ import { ReviewsRepositoryModule } from './database/repositories/reviews/reviews
 import { RolesRepositoryModule } from './database/repositories/roles/roles-repository.module';
 import { TextToSpeechRepositoryModule } from './database/repositories/text-to-speech/text-to-speech-repository.module';
 import { UsersRepositoryModule } from './database/repositories/users/users-repository.module';
-import { ApplicationServicesModule } from './external/application-services.module';
+
 import { ExternalServicesModule } from './external/external-services.module';
 import { ProvidersModule } from './external/providers.module';
 import { GatewaysModule } from './gateways/gateways.module';
@@ -49,7 +49,6 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
     ExternalServicesModule,
-    ApplicationServicesModule,
     ScraperInfrastructureModule,
     ProvidersModule,
     RecommendationsInfrastructureModule,
@@ -78,7 +77,6 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
     ExternalServicesModule,
-    ApplicationServicesModule,
     ScraperInfrastructureModule,
     ProvidersModule,
     RecommendationsInfrastructureModule,

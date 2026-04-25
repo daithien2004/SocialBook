@@ -13,7 +13,7 @@ import { IVectorRepository } from '@/domain/chroma/repositories/vector.repositor
 import { SearchQuery as VectorSearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
-import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class IntelligentSearchUseCase {
     private readonly reviewRepository: IReviewRepository,
     private readonly genreRepository: IGenreRepository,
     private readonly vectorRepository: IVectorRepository,
-    @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
+    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
     private readonly idGenerator: IIdGenerator,
   ) {}
@@ -44,9 +44,6 @@ export class IntelligentSearchUseCase {
       } = queryDto;
       const q = query;
 
-      // AI Analysis (Optional/Mocked for now)
-      const aiAnalysis = await this.analyzeQueryWithAI(q);
-
       // STEP 1: Semantic Search (Candidate Generation)
       const semanticCandidates = await this.semanticSearch(q);
 
@@ -58,26 +55,15 @@ export class IntelligentSearchUseCase {
         bookScoreMap.set(c.id, { score: c.score * 50, matchType: 'semantic' }),
       );
 
-      // STEP 2 & 3: Keyword Search & Author Expansion (Simplified for now)
-      // We can add author boosting if needed, but for now relying on semantic + filters.
-
       const candidateIds = Array.from(bookScoreMap.keys());
       const isSemantic = candidateIds.length > 0;
 
-      // STEP 4: Apply Filters (intersect with candidates)
+      // STEP 2: Apply Filters
       let genreIds: string[] = [];
       if (genres) {
         const slugs = genres.split(',');
         const genresFound = await this.genreRepository.findBySlugs(slugs);
         genreIds = genresFound.map((g) => g.id.toString());
-      } else if (aiAnalysis?.targetGenres) {
-        for (const gName of aiAnalysis.targetGenres) {
-          try {
-            const gNameVO = GenreName.create(gName);
-            const g = await this.genreRepository.findByName(gNameVO);
-            if (g) genreIds.push(g.id.toString());
-          } catch (e) {}
-        }
       }
 
       // Fetch Full Book Data
@@ -202,9 +188,6 @@ export class IntelligentSearchUseCase {
     }
   }
 
-  private async analyzeQueryWithAI(query: string): Promise<any> {
-    return null;
-  }
 
   private async semanticSearch(
     query: string,

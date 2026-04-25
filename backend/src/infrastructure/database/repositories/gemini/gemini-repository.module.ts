@@ -6,7 +6,7 @@ import {
 } from '@/infrastructure/database/schemas/ai-request.schema';
 import { GeminiService } from '../../../external/gemini.service';
 import { AIRequestRepository } from './ai-request.repository';
-import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 @Module({
   imports: [
@@ -16,18 +16,18 @@ import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
   ],
   providers: [
     {
-      provide: INFRASTRUCTURE_TOKENS.GEMINI_SERVICE,
+      provide: GEMINI_TOKENS.GEMINI_SERVICE,
       useClass: GeminiService,
     },
     {
-      provide: INFRASTRUCTURE_TOKENS.AI_REQUEST_REPOSITORY,
+      provide: GEMINI_TOKENS.AI_REQUEST_REPOSITORY,
       useClass: AIRequestRepository,
     },
   ],
   exports: [
     MongooseModule,
-    INFRASTRUCTURE_TOKENS.GEMINI_SERVICE,
-    INFRASTRUCTURE_TOKENS.AI_REQUEST_REPOSITORY,
+    GEMINI_TOKENS.GEMINI_SERVICE,
+    GEMINI_TOKENS.AI_REQUEST_REPOSITORY,
   ],
 })
 export class GeminiRepositoryModule {}
