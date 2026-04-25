@@ -9,7 +9,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { NotificationsService } from '../external/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateNotificationDto } from '@/application/notifications/dto/create-notification.dto';
 import { JwtService } from '@nestjs/jwt';
 

@@ -1,6 +1,7 @@
 /**
  * Vietnamese Spoiler Detection
  * Detects content that reveals plot points
+ * Belongs to domain layer – pure business logic, no framework dependencies
  */
 
 // Spoiler indicator patterns
@@ -11,7 +12,7 @@ const SPOILER_PATTERNS = [
 
   // Character fate reveals (nam chính/main ... chết/cưới)
   /(nam chính|nữ chính|nhân vật chính|main|nvc|na9|nu9|nam 9|nữ 9|protagonist).*?(chết|sẽ chết|bị giết|hy sinh|tử trận|bay màu|sống|kết hôn|ly hôn|cưới|về với|thành đôi|chia tay|giết|bị đâm|phản bội|bỏ nhau)/i,
-  /(male lead|female lead|main character|protagonist).*?(die|dies|died|dead|death|will die|will be dead|gonna die|going to die|marry|marries|married|divorce|divorces|betray|betrays|betrayed|kill|kills|killed|will kill|will be killed|gets killed|will be betrayed|will betray|betrayed|betray|betrayed|betray|betrayed|betray)/i,
+  /(male lead|female lead|main character|protagonist).*?(die|dies|died|dead|death|will die|will be dead|gonna die|going to die|marry|marries|married|divorce|divorces|betray|betrays|betrayed|kill|kills|killed|will kill|will be killed|gets killed|will be betrayed|will betray)/i,
 
   // Ending spoilers (kết thúc/cuối ... chết/cưới)
   /(kết thúc|ending|cuối cùng|cuối truyện|kết truyện|hết truyện|finally|in the end).*?(chết|sống|về với|bên nhau|thành đôi|kết hôn|cưới|có thai|sinh con|có hậu|bi thảm|buồn|vui vẻ|hạnh phúc)/i,

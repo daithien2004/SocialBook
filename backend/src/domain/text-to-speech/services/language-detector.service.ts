@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 
 export interface LanguageDetectionResult {
   code: string;
@@ -6,7 +5,6 @@ export interface LanguageDetectionResult {
   name: string;
 }
 
-@Injectable()
 export class LanguageDetectorService {
   private readonly vietnamesePattern =
     /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;

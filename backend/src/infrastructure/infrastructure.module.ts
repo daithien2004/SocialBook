@@ -19,9 +19,13 @@ import { ReviewsRepositoryModule } from './database/repositories/reviews/reviews
 import { RolesRepositoryModule } from './database/repositories/roles/roles-repository.module';
 import { TextToSpeechRepositoryModule } from './database/repositories/text-to-speech/text-to-speech-repository.module';
 import { UsersRepositoryModule } from './database/repositories/users/users-repository.module';
-import { ApplicationServicesModule } from './external/application-services.module';
-import { ExternalServicesModule } from './external/external-services.module';
-import { ProvidersModule } from './external/providers.module';
+import { AIInfrastructureModule } from './ai/ai-infrastructure.module';
+import { FilesInfrastructureModule } from './files/files-infrastructure.module';
+import { MediaInfrastructureModule } from './media/media-infrastructure.module';
+import { ModerationInfrastructureModule } from './moderation/moderation-infrastructure.module';
+import { NotificationsInfrastructureModule } from './notifications/notifications-infrastructure.module';
+import { SchedulingInfrastructureModule } from './scheduling/scheduling-infrastructure.module';
+import { TtsInfrastructureModule } from './text-to-speech/tts-infrastructure.module';
 import { GatewaysModule } from './gateways/gateways.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
 import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
@@ -48,10 +52,14 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     ProgressRepositoryModule,
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
-    ExternalServicesModule,
-    ApplicationServicesModule,
+    AIInfrastructureModule,
+    FilesInfrastructureModule,
+    MediaInfrastructureModule,
+    ModerationInfrastructureModule,
+    NotificationsInfrastructureModule,
+    SchedulingInfrastructureModule,
+    TtsInfrastructureModule,
     ScraperInfrastructureModule,
-    ProvidersModule,
     RecommendationsInfrastructureModule,
     IdGeneratorModule,
     GatewaysModule,
@@ -77,10 +85,14 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     ProgressRepositoryModule,
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
-    ExternalServicesModule,
-    ApplicationServicesModule,
+    AIInfrastructureModule,
+    FilesInfrastructureModule,
+    MediaInfrastructureModule,
+    ModerationInfrastructureModule,
+    NotificationsInfrastructureModule,
+    SchedulingInfrastructureModule,
+    TtsInfrastructureModule,
     ScraperInfrastructureModule,
-    ProvidersModule,
     RecommendationsInfrastructureModule,
     IdGeneratorModule,
     GatewaysModule,

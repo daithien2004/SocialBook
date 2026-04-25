@@ -11,7 +11,7 @@ import { RemovePostImageUseCase } from './use-cases/remove-post-image.use-case';
 import { UpdatePostUseCase } from './use-cases/update-post.use-case';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
-import { ExternalServicesModule } from '@/infrastructure/external/external-services.module';
+import { MediaInfrastructureModule } from '@/infrastructure/media/media-infrastructure.module';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
@@ -19,7 +19,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
   imports: [
     PostsRepositoryModule,
     BooksRepositoryModule,
-    ExternalServicesModule,
+    MediaInfrastructureModule,
     ContentModerationModule,
     IdGeneratorModule,
   ],

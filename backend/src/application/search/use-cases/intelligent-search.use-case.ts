@@ -98,6 +98,7 @@ export class IntelligentSearchUseCase {
           totalPages: Math.ceil(total / (limit || 1)),
         },
       };
+
     } catch (e) {
       this.logger.error(`Search process failed: ${e.message}`);
       throw e;

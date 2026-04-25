@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
 import type { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
 import {
@@ -23,9 +23,9 @@ export interface SummarizeChapterResponse {
 @Injectable()
 export class SummarizeChapterUseCase {
   constructor(
-    @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
+    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
-    @Inject(INFRASTRUCTURE_TOKENS.AI_REQUEST_REPOSITORY)
+    @Inject(GEMINI_TOKENS.AI_REQUEST_REPOSITORY)
     private readonly aiRequestRepository: IAIRequestRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}

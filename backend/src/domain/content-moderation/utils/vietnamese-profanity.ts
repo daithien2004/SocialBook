@@ -1,3 +1,8 @@
+/**
+ * Vietnamese Profanity / Toxic Words Dictionary
+ * Belongs to domain layer – pure business logic, no framework dependencies
+ */
+
 // Common Vietnamese profanity and toxic terms
 export const VIETNAMESE_TOXIC_WORDS = [
   // Profanity - Variations, no accent, spaced, masked
@@ -152,7 +157,7 @@ export const VIETNAMESE_TOXIC_WORDS = [
   'd*m',
   'dcmay',
 
-  // Variants “tách chữ, biến thể, misspell cố tình”
+  // Variants "tách chữ, biến thể, misspell cố tình"
   'đ m',
   'd m',
   'd.m',
