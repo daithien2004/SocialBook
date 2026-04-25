@@ -5,6 +5,19 @@ import { IVectorRepository } from '@/domain/chroma/repositories/vector.repositor
 import { VectorDocument } from '@/domain/chroma/entities/vector-document.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
+interface IndexStats {
+  total: number;
+  successful: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface ReindexResult {
+  success: boolean;
+  message: string;
+  details?: { authors: IndexStats; books: IndexStats };
+}
+
 @Injectable()
 export class ReindexAllUseCase {
   private readonly logger = new Logger(ReindexAllUseCase.name);
@@ -16,11 +29,7 @@ export class ReindexAllUseCase {
     private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute(): Promise<{
-    success: boolean;
-    message: string;
-    details?: any;
-  }> {
+  async execute(): Promise<ReindexResult> {
     try {
       this.logger.log('🚀 Starting full reindexing process...');
 
@@ -63,8 +72,7 @@ export class ReindexAllUseCase {
 
     for (const author of authors) {
       try {
-        // Prepare content for vectorization: Name + Bio
-        const content = `Author: ${author.name.toString()}\nBiography: ${author.bio}`;
+        const content = `Tác giả: ${author.name.toString()}\nTiểu sử: ${author.bio}`;
 
         const document = VectorDocument.createAuthorDocument(
           this.idGenerator.generate(),
@@ -98,24 +106,30 @@ export class ReindexAllUseCase {
   }
 
   private async reindexBooks() {
-    this.logger.log('📖 Reindexing books...');
-    // Fetch all books (using a large limit for now)
+    this.logger.log('📖 Fetching all books from database...');
     const result = await this.bookRepository.findAll({}, { page: 1, limit: 2000 });
     const books = result.data;
+    this.logger.log(`📖 Found ${books.length} books to index. Starting...`);
 
     let successful = 0;
     let failed = 0;
     const errors: string[] = [];
+    const PROGRESS_INTERVAL = 5; // Log mỗi 5 cuốn
 
-    for (const book of books) {
+    for (let i = 0; i < books.length; i++) {
+      const book = books[i];
       try {
         const titleStr = book.title.toString();
-        const authorStr = book.authorName || 'Unknown';
-        const genreStr = book.genreObjects?.map(g => g.name).join(', ') || 'None';
-        const tagStr = book.tags?.length > 0 ? book.tags.join(', ') : 'None';
-        
-        // 1. Index Main Document (Title + Author + Genres + Tags) - HIGH IMPORTANCE
-        const mainContent = `Book: ${titleStr}\nAuthor: ${authorStr}\nGenres: ${genreStr}\nTags: ${tagStr}`;
+        const authorStr = book.authorName || 'Không rõ tác giả';
+        const genreStr = book.genreObjects?.map(g => g.name).join(', ') || '';
+        const tagStr = book.tags?.length > 0 ? book.tags.join(', ') : '';
+
+        // 1. Index Main Document (Title + Author + Genres + Tags) — HIGH IMPORTANCE
+        const mainParts = [`Tên sách: ${titleStr}`, `Tác giả: ${authorStr}`];
+        if (genreStr) mainParts.push(`Thể loại: ${genreStr}`);
+        if (tagStr) mainParts.push(`Từ khóa: ${tagStr}`);
+        const mainContent = mainParts.join('\n');
+
         const mainDoc = VectorDocument.createBookDocument(
           this.idGenerator.generate(),
           book.id.toString(),
@@ -125,16 +139,16 @@ export class ReindexAllUseCase {
             slug: book.slug,
             authorName: authorStr,
             coverUrl: book.coverUrl,
-            type: 'main'
+            type: 'main',
           },
-          []
+          [],
         );
         await this.vectorRepository.save(mainDoc);
 
         // 2. Index Description Chunks
         const descriptionChunks = this.chunkText(book.description);
         for (const chunk of descriptionChunks) {
-          const chunkContent = `Book: ${titleStr}\nGenres: ${genreStr}\nExcerpt: ${chunk}`;
+          const chunkContent = `Tên sách: ${titleStr}\nThể loại: ${genreStr}\nMô tả: ${chunk}`;
           const chunkDoc = VectorDocument.createBookDocument(
             this.idGenerator.generate(),
             book.id.toString(),
@@ -144,23 +158,33 @@ export class ReindexAllUseCase {
               slug: book.slug,
               authorName: authorStr,
               coverUrl: book.coverUrl,
-              type: 'excerpt'
+              type: 'excerpt',
             },
-            []
+            [],
           );
           await this.vectorRepository.save(chunkDoc);
         }
 
         successful++;
+
+        // Log tiến trình mỗi PROGRESS_INTERVAL cuốn
+        if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === books.length) {
+          const pct = Math.round(((i + 1) / books.length) * 100);
+          this.logger.log(
+            `📖 [${i + 1}/${books.length}] ${pct}% — "${titleStr}" ✅ (${descriptionChunks.length} chunks)`,
+          );
+        }
       } catch (error) {
-        this.logger.error(`Failed to index book ${book.id.toString()}: ${error.message}`);
+        this.logger.error(
+          `[${i + 1}/${books.length}] ❌ Failed: "${book.title}" — ${error.message}`,
+        );
         errors.push(`${book.id.toString()}: ${error.message}`);
         failed++;
       }
     }
 
-    this.logger.log(`📊 Book indexing completed: ${successful} successful, ${failed} failed`);
-    
+    this.logger.log(`📊 Book indexing completed: ${successful}/${books.length} successful, ${failed} failed`);
+
     return {
       total: books.length,
       successful,
