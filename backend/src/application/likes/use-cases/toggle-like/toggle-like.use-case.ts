@@ -1,3 +1,4 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ILikeRepository } from '@/domain/likes/repositories/like.repository.interface';
 import { UserId } from '@/domain/likes/value-objects/user-id.vo';
 import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
@@ -22,6 +23,7 @@ export class ToggleLikeUseCase {
   constructor(
     private readonly likeRepository: ILikeRepository,
     private readonly idGenerator: IIdGenerator,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(request: ToggleLikeRequest): Promise<ToggleLikeResponse> {
@@ -55,6 +57,13 @@ export class ToggleLikeUseCase {
       });
 
       await this.likeRepository.save(newLike);
+
+      this.eventEmitter.emit('like.toggled', {
+        userId: request.userId,
+        targetId: request.targetId,
+        targetType: request.targetType,
+        isLiked: true,
+      });
 
       return {
         isLiked: true,
