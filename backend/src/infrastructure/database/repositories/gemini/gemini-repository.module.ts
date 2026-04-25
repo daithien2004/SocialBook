@@ -4,7 +4,7 @@ import {
   AIRequest,
   AIRequestSchema,
 } from '@/infrastructure/database/schemas/ai-request.schema';
-import { GeminiService } from '../../../external/gemini.service';
+import { GeminiService } from '../../../ai/gemini.service';
 import { AIRequestRepository } from './ai-request.repository';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 

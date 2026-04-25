@@ -1,5 +1,5 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { GeminiService } from '../../external/gemini.service';
+import { GeminiService } from '../../ai/gemini.service';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import {
   IRecommendationStrategy,

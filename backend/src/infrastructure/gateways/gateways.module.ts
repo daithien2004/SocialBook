@@ -2,7 +2,7 @@ import { NotificationsApplicationModule } from '@/application/notifications/noti
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { NotificationsService } from '../external/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationEventHandler } from './notification-event.handler';
 import { PostsRepositoryModule } from '../database/repositories/posts/posts-repository.module';

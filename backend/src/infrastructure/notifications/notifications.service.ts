@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from '@/application/notifications/dto/create-notification.dto';
 import { Server } from 'socket.io';
+import { CreateNotificationDto } from '@/application/notifications/dto/create-notification.dto';
 import { NotificationResponseDto } from '@/application/notifications/dto/notification-response.dto';
 import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
 import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';

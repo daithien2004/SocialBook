@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type {
   ParsedChapter,
 } from '@/domain/chapters/interfaces/epub-parser.interface';
-import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
+import { EpubParserService } from '@/infrastructure/files/epub-parser.service';
 
 export interface ImportEpubPreviewResult {
   chapters: ParsedChapter[];
