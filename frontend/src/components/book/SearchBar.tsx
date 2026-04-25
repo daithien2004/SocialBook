@@ -57,6 +57,9 @@ export const SearchBar = ({
       if (value.trim()) {
         onSearch(value);
         lastSearchedValue.current = value;
+      } else {
+        onClear();
+        lastSearchedValue.current = '';
       }
     }, debounceMs);
   }, [onSearch, debounceMs]);
@@ -79,6 +82,9 @@ export const SearchBar = ({
       if (value.trim()) {
         onSearch(value);
         lastSearchedValue.current = value;
+      } else {
+        onClear();
+        lastSearchedValue.current = '';
       }
     }, debounceMs);
   };

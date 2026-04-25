@@ -114,6 +114,14 @@ export class GenresRepository
     );
   }
 
+  async findByNames(names: string[]): Promise<GenreEntity[]> {
+    const docs = await this.genreModel
+      .find({ name: { $in: names.map((n) => new RegExp(`^${n}$`, 'i')) } })
+      .lean()
+      .exec();
+    return docs.map((doc) => this.toDomain(doc));
+  }
+
   async existsByName(name: GenreName, excludeId?: GenreId): Promise<boolean> {
     const query: FilterQuery<GenreDocument> = { name: name.toString() };
     if (excludeId) {

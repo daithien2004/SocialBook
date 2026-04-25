@@ -35,6 +35,7 @@ import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-boo
 import { GetFiltersUseCase } from '@/application/books/use-cases/get-filters/get-filters.use-case';
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
+import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelligent-search.use-case';
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
 import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
 import { ToggleBookLikeUseCase } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.use-case';
@@ -59,6 +60,7 @@ export class BooksController {
     private readonly getFiltersUseCase: GetFiltersUseCase,
     private readonly getBookFiltersUseCase: GetBookFiltersUseCase,
     private readonly toggleBookLikeUseCase: ToggleBookLikeUseCase,
+    private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
   ) {}
 
   @Post()
@@ -129,6 +131,33 @@ export class BooksController {
   @Public()
   @Get()
   async findAll(@Query() filter: FilterBookDto) {
+    // Nếu có từ khóa tìm kiếm, sử dụng Intelligent Search
+    if (filter.search) {
+      const result = await this.intelligentSearchUseCase.execute({
+        query: filter.search,
+        page: filter.page,
+        limit: filter.limit,
+        genres: filter.genres?.join(','),
+        sortBy: filter.sortBy as 'createdAt' | 'updatedAt' | 'views' | 'likes' | 'rating' | 'score',
+        order: filter.order as 'asc' | 'desc',
+      });
+
+      return {
+        message: 'Tìm kiếm sách thành công',
+        data: result.data.map(item => ({
+          ...item,
+          id: item.id,
+          _id: item.id,
+          authorId: {
+            id: item.authorId._id,
+            name: item.authorId.name
+          }
+        })),
+        meta: result.meta,
+      };
+    }
+
+    // Nếu không search, dùng logic GetBooks bình thường (Danh sách trang chủ)
     const query = new GetBooksQuery(
       filter.page,
       filter.limit,

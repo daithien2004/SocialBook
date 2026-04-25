@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
-import { ChromaClient, type Where } from 'chromadb';
+import { ChromaClient, type Where, type Collection } from 'chromadb';
 import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import { Document } from '@langchain/core/documents';
 
@@ -31,6 +31,8 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   private vectorStore: Chroma;
   private embeddings: HuggingFaceInferenceEmbeddings;
   private isInitialized = false;
+  private chromaClient: ChromaClient;
+  private collection: Collection;
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -46,10 +48,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
         `🔑 Using HuggingFace API Key: ${hfKey.substring(0, 5)}...${hfKey.substring(hfKey.length - 4)}`,
       );
 
-      // keepitreal/vietnamese-sbert:
-      // - Chuyên biệt cho tiếng Việt, train trên Vietnamese NLI + STS datasets
-      // - Standard sentence-transformers (RoBERTa + mean pooling), hỗ trợ HF Inference API
-      // - 768 dimensions, max 256 tokens
+      // model cho tiếng Việt
       this.embeddings = new HuggingFaceInferenceEmbeddings({
         apiKey: hfKey,
         model: 'keepitreal/vietnamese-sbert',
@@ -62,6 +61,12 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
       );
 
       this.logger.log(`🌐 Connecting to Chroma at: ${chromaUrl}, Collection: ${collectionName}`);
+
+      this.chromaClient = new ChromaClient({ path: chromaUrl });
+      this.collection = await this.chromaClient.getOrCreateCollection({
+        name: collectionName,
+        metadata: { 'hnsw:space': 'cosine' },
+      });
 
       this.vectorStore = new Chroma(this.embeddings, {
         collectionName,
@@ -110,36 +115,49 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   async saveBatch(documents: VectorDocument[]): Promise<BatchIndexResult> {
     this.ensureInitialized();
 
-    const errors: Array<{ contentId: string; error: string }> = [];
-    let successful = 0;
-    let failed = 0;
-
-    for (const document of documents) {
-      try {
-        await this.save(document);
-        successful++;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        errors.push({ contentId: document.contentId, error: message });
-        failed++;
-      }
+    if (documents.length === 0) {
+      return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
     }
 
-    return { totalProcessed: documents.length, successful, failed, errors };
+    try {
+      const langchainDocs = documents.map(
+        (doc) =>
+          new Document({
+            pageContent: doc.content,
+            metadata: {
+              id: doc.id.toString(),
+              contentId: doc.contentId,
+              contentType: doc.contentType.toString(),
+              ...doc.metadata,
+            },
+          }),
+      );
+
+      await this.vectorStore.addDocuments(langchainDocs);
+
+      return {
+        totalProcessed: documents.length,
+        successful: documents.length,
+        failed: 0,
+        errors: [],
+      };
+    } catch (error) {
+      this.logger.error('Batch save failed', error);
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        totalProcessed: documents.length,
+        successful: 0,
+        failed: documents.length,
+        errors: documents.map((d) => ({ contentId: d.contentId, error: message })),
+      };
+    }
   }
 
   async findById(id: VectorId): Promise<VectorDocument | null> {
     this.ensureInitialized();
 
     try {
-      const chromaUrl = this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000');
-      const collectionName = this.configService.get<string>(
-        'env.CHROMA_COLLECTION',
-        'socialbook_vectors',
-      );
-      const client = new ChromaClient({ path: chromaUrl });
-      const collection = await client.getCollection({ name: collectionName });
-      const result = await collection.get({
+      const result = await this.collection.get({
         where: { id: id.toString() },
         limit: 1,
       });
@@ -172,20 +190,12 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      const chromaUrl = this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000');
-      const collectionName = this.configService.get<string>(
-        'env.CHROMA_COLLECTION',
-        'socialbook_vectors',
-      );
-      const client = new ChromaClient({ path: chromaUrl });
-      const collection = await client.getCollection({ name: collectionName });
-
       const where: Record<string, string> = { contentId };
       if (contentType) {
         where.contentType = contentType.toString();
       }
 
-      const result = await collection.get({ where, limit: 100 });
+      const result = await this.collection.get({ where, limit: 100 });
 
       return (result.documents || []).map((doc, index) => {
         const metadata = (result.metadatas?.[index] || {}) as ChromaMetadata;
@@ -210,14 +220,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      const chromaUrl = this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000');
-      const collectionName = this.configService.get<string>(
-        'env.CHROMA_COLLECTION',
-        'socialbook_vectors',
-      );
-      const client = new ChromaClient({ path: chromaUrl });
-      const collection = await client.getCollection({ name: collectionName });
-      await collection.delete({ where: { id: id.toString() } });
+      await this.collection.delete({ where: { id: id.toString() } });
     } catch (error) {
       this.logger.error(`Failed to delete document by ID: ${id.toString()}`, error);
       throw error;
@@ -228,20 +231,12 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      const chromaUrl = this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000');
-      const collectionName = this.configService.get<string>(
-        'env.CHROMA_COLLECTION',
-        'socialbook_vectors',
-      );
-      const client = new ChromaClient({ path: chromaUrl });
-      const collection = await client.getCollection({ name: collectionName });
-
       const where: Record<string, string> = { contentId };
       if (contentType) {
         where.contentType = contentType.toString();
       }
 
-      await collection.delete({ where });
+      await this.collection.delete({ where });
     } catch (error) {
       this.logger.error(`Failed to delete documents by content ID: ${contentId}`, error);
       throw error;
@@ -350,31 +345,24 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
         'env.CHROMA_COLLECTION',
         'socialbook_vectors',
       );
-      const chromaUrl = this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000');
 
-      this.logger.log(`🗑️ Permanently deleting collection: ${collectionName} at ${chromaUrl}`);
+      this.logger.log(`🗑️ Permanently deleting collection: ${collectionName}`);
 
-      const client = new ChromaClient({ path: chromaUrl });
       try {
-        await client.deleteCollection({ name: collectionName });
+        await this.chromaClient.deleteCollection({ name: collectionName });
       } catch {
         this.logger.warn(`Collection ${collectionName} does not exist, skipping delete`);
       }
 
-      await client.createCollection({
+      this.collection = await this.chromaClient.createCollection({
         name: collectionName,
         metadata: { 'hnsw:space': 'cosine' },
       });
 
       this.logger.log(`✅ Collection ${collectionName} has been recreated in Chroma server`);
-
-      // Re-initialize to create a fresh collection with correct dimensions
-      this.isInitialized = false;
-      await this.onModuleInit();
     } catch (error) {
       this.logger.error('❌ Failed to clear collection:', error);
-      this.isInitialized = false;
-      await this.onModuleInit();
+      throw error;
     }
   }
 
@@ -382,15 +370,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      const chromaUrl = this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000');
-      const collectionName = this.configService.get<string>(
-        'env.CHROMA_COLLECTION',
-        'socialbook_vectors',
-      );
-      const client = new ChromaClient({ path: chromaUrl });
-      const collection = await client.getCollection({ name: collectionName });
-      const count = await collection.count();
-
+      const count = await this.collection.count();
       return {
         totalDocuments: count,
         documentsByType: {},

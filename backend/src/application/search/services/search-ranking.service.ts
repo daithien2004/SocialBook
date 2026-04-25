@@ -14,7 +14,7 @@ export interface RankedCandidate {
 export class SearchRankingService {
   private readonly logger = new Logger(SearchRankingService.name);
 
-  private static readonly SEMANTIC_THRESHOLD = 0.7;
+  private static readonly SEMANTIC_THRESHOLD = 0.5;
   private static readonly SEMANTIC_SEARCH_LIMIT = 50;
   private static readonly TITLE_KEYWORD_BOOST = 0.2;
   private static readonly CONTENT_KEYWORD_BOOST = 0.08;
@@ -48,6 +48,7 @@ export class SearchRankingService {
         embedding,
         limit: SearchRankingService.SEMANTIC_SEARCH_LIMIT,
         threshold: SearchRankingService.SEMANTIC_THRESHOLD,
+        contentType: 'book',
       });
 
       const results = await this.vectorRepository.search(searchQuery);
@@ -77,11 +78,6 @@ export class SearchRankingService {
           else if (contentLower.includes(phrase)) keywordBoost += SearchRankingService.CONTENT_NGRAM_BOOST;
         }
 
-        // 3. Individual keyword boost
-        for (const kw of tokens) {
-          if (titleLower.includes(kw)) keywordBoost += SearchRankingService.TITLE_KEYWORD_BOOST;
-          else if (contentLower.includes(kw)) keywordBoost += SearchRankingService.CONTENT_KEYWORD_BOOST;
-        }
 
         const existing = bookScores.get(bookId);
         if (!existing || r.score > existing.vectorScore) {

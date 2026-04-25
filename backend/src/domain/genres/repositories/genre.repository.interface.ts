@@ -22,6 +22,7 @@ export abstract class IGenreRepository {
     pagination: PaginationOptions,
   ): Promise<PaginatedResult<Genre>>;
   abstract findAllSimple(): Promise<Genre[]>;
+  abstract findByNames(names: string[]): Promise<Genre[]>;
 
   abstract save(genre: Genre): Promise<void>;
   abstract delete(id: GenreId): Promise<void>;
