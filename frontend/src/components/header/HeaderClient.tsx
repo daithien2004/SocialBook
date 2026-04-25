@@ -27,15 +27,11 @@ const LazyNotificationBell = dynamic(
     { ssr: false }
 );
 
-const LazyHeaderGamificationSummary = dynamic(
-    () => import('@/components/header/HeaderGamificationSummary'),
-    { ssr: false }
-);
 
 export const HeaderClient = memo(function HeaderClient() {
     const { user, isAuthenticated, isGuest } = useAppAuth();
     const { handleLogout } = useLogout();
-    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToProfile, navigateToOnboarding, navigateToSettings, navigateToLogin } = useHeaderNavigation();
+    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToProfile, navigateToSettings, navigateToLogin } = useHeaderNavigation();
     const { theme, toggleTheme, mounted } = useHeaderTheme();
 
     const userId = user?.id;
@@ -54,7 +50,6 @@ export const HeaderClient = memo(function HeaderClient() {
 
                         {isAuthenticated && user ? (
                             <>
-                                {!isGuest && <LazyHeaderGamificationSummary userId={userId} />}
                                 <LazyNotificationBell />
                                 <UserDropdown
                                     user={user}
@@ -62,7 +57,6 @@ export const HeaderClient = memo(function HeaderClient() {
                                     onProfile={() => userId && navigateToProfile(userId)}
                                     onLibrary={navigateToLibrary}
                                     onSettings={navigateToSettings}
-                                    onOnboarding={navigateToOnboarding}
                                     onLogout={handleLogout}
                                 />
                                 <MobileMenu
@@ -133,16 +127,15 @@ function ThemeToggle({ mounted, theme, onToggle }: { mounted: boolean; theme: st
 }
 
 interface UserDropdownProps {
-    user: { name?: string | null; email?: string | null; username?: string; onboardingCompleted?: boolean };
+    user: { name?: string | null; email?: string | null; username?: string };
     avatarUrl?: string;
     onProfile: () => void;
     onLibrary: () => void;
     onSettings: () => void;
-    onOnboarding: () => void;
     onLogout: () => void;
 }
 
-function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onOnboarding, onLogout }: UserDropdownProps) {
+function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onLogout }: UserDropdownProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -161,12 +154,6 @@ function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onOnb
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {!user.onboardingCompleted && (
-                    <DropdownMenuItem onClick={onOnboarding} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10">
-                        <Flame className="mr-2 h-4 w-4" />
-                        <span>Tiếp tục Onboarding</span>
-                    </DropdownMenuItem>
-                )}
                 <DropdownMenuItem onClick={onProfile}>
                     <span className="mr-2 h-4 w-4">👤</span>
                     <span>Hồ sơ của tôi</span>

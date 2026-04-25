@@ -3,8 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRecordReadingTimeMutation } from '@/features/library/api/libraryApi';
 import { useAppAuth } from '@/features/auth/hooks';
-import { useDispatch } from 'react-redux';
-import { gamificationApi } from '@/features/gamification/api/gamificationApi';
+
 
 interface ReadingTimeTrackerProps {
   bookId: string;
@@ -19,7 +18,6 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
   const accumulatedSeconds = useRef(0);
 
   const recordReadingTimeRef = useRef(recordReadingTime);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     recordReadingTimeRef.current = recordReadingTime;
@@ -44,9 +42,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
                 durationInSeconds: secondsToRecord
              })
              .then((result) => {
-                 if ('data' in result) {
-                     dispatch(gamificationApi.util.invalidateTags(['DailyGoals', 'GamificationStats']));
-                 }
+                 // Successfully recorded reading time
              })
              .catch(console.error);
           }
@@ -58,7 +54,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [bookId, chapterId, isAuthenticated, dispatch]);
+  }, [bookId, chapterId, isAuthenticated]);
 
   return null;
 }

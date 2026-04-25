@@ -39,14 +39,7 @@ export abstract class IUserRepository {
   ): Promise<boolean>;
   abstract existsById(id: UserId): Promise<boolean>;
   abstract findByIds(ids: UserId[]): Promise<User[]>;
-  abstract updateOnboardingData(
-    id: UserId,
-    data: {
-      onboardingId?: string;
-      gamificationId?: string;
-      onboardingCompleted?: boolean;
-    },
-  ): Promise<void>;
+  abstract updateFavoriteGenres(id: UserId, genres: string[]): Promise<void>;
 
   // Statistics
   abstract countByDate(startDate: Date, endDate?: Date): Promise<number>;

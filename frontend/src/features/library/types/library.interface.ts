@@ -29,8 +29,7 @@ export interface Collection {
   createdAt: string;
 }
 
-export interface CollectionDetailResponse {
-  folder: Collection;
+export interface CollectionDetailResponse extends Collection {
   books: LibraryItem[];
 }
 

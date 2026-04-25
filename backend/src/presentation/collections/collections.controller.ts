@@ -1,6 +1,9 @@
 import { CreateCollectionUseCase } from '@/application/library/use-cases/create-collection/create-collection.use-case';
 import { GetAllCollectionsUseCase } from '@/application/library/use-cases/get-all-collections/get-all-collections.use-case';
 import { GetCollectionByIdUseCase } from '@/application/library/use-cases/get-collection-by-id/get-collection-by-id.use-case';
+import { UpdateCollectionUseCase } from '@/application/library/use-cases/update-collection/update-collection.use-case';
+import { DeleteCollectionUseCase } from '@/application/library/use-cases/delete-collection/delete-collection.use-case';
+import { UpdateCollectionCommand } from '@/application/library/use-cases/update-collection/update-collection.command';
 import { Public } from '@/common/decorators/customize';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import {
@@ -34,6 +37,8 @@ export class CollectionsController {
     private readonly createCollectionUseCase: CreateCollectionUseCase,
     private readonly getAllCollectionsUseCase: GetAllCollectionsUseCase,
     private readonly getCollectionByIdUseCase: GetCollectionByIdUseCase,
+    private readonly updateCollectionUseCase: UpdateCollectionUseCase,
+    private readonly deleteCollectionUseCase: DeleteCollectionUseCase,
   ) {}
 
   @Post()
@@ -118,10 +123,17 @@ export class CollectionsController {
     @Param('id') id: string,
     @Body() dto: UpdateCollectionDto,
   ) {
-    // TODO: Implement UpdateCollectionUseCase
+    const command = new UpdateCollectionCommand(
+      id,
+      req.user.id,
+      dto.name,
+      dto.description,
+      dto.isPublic,
+    );
+    const collection = await this.updateCollectionUseCase.execute(command);
     return {
-      message: 'Collection update not implemented yet',
-      data: null,
+      message: 'Collection updated successfully',
+      data: CollectionResponseDto.fromResult(collection),
     };
   }
 
@@ -131,9 +143,9 @@ export class CollectionsController {
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
   ) {
-    // TODO: Implement DeleteCollectionUseCase
+    await this.deleteCollectionUseCase.execute(id, req.user.id);
     return {
-      message: 'Collection deletion not implemented yet',
+      message: 'Collection deleted successfully',
     };
   }
 }

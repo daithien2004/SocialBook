@@ -48,14 +48,8 @@ export class User extends BaseSchema {
   @Prop()
   hashedRt?: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'UserGamification' })
-  gamificationId?: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'UserOnboarding' })
-  onboardingId?: Types.ObjectId;
-
-  @Prop({ default: false })
-  onboardingCompleted: boolean;
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Genre' }], default: [] })
+  favoriteGenres: Types.ObjectId[];
 
   @Prop({
     type: {

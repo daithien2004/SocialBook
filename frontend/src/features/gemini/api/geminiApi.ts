@@ -6,10 +6,11 @@ export const geminiApi = createApi({
   reducerPath: 'geminiApi',
   baseQuery: axiosBaseQuery(),
   endpoints: (builder) => ({
-    summarizeChapter: builder.mutation<string, string>({
-      query: (chapterId) => ({
+    summarizeChapter: builder.mutation<string, { chapterId: string; userId?: string }>({
+      query: ({ chapterId, userId }) => ({
         url: NESTJS_GEMINI_ENDPOINTS.summarizeChapter(chapterId),
         method: 'POST',
+        body: { userId },
       }),
     }),
   }),

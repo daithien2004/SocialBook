@@ -65,23 +65,24 @@ export class FallbackRecommendationStrategy implements IRecommendationStrategy {
       }
     }
 
-    // 2. Popularity-based fallback
+    // 2. Popularity-based fallback (Recent & Popular)
     if (recommendations.length < limit) {
       const existingIds = new Set(recommendations.map((r) => r.bookId));
 
-      // Sort available books by popularity
+      // Sort available books by a combination of views and likes
       const additional = availableBooks
         .filter((b) => !existingIds.has(b._id.toString()))
-        .sort(
-          (a, b) =>
-            (b.views || 0) + (b.likes || 0) - ((a.views || 0) + (a.likes || 0)),
-        )
+        .sort((a, b) => {
+          const scoreA = (a.views || 0) + (a.likes || 0) * 2;
+          const scoreB = (b.views || 0) + (b.likes || 0) * 2;
+          return scoreB - scoreA;
+        })
         .slice(0, limit - recommendations.length)
         .map((book) => ({
           bookId: book._id.toString(),
           title: book.title,
-          reason: `Sách phổ biến được nhiều người đọc`,
-          matchScore: 60,
+          reason: `Sách hay được nhiều người quan tâm`,
+          matchScore: 50,
           slug: book.slug,
           book: book,
         }));

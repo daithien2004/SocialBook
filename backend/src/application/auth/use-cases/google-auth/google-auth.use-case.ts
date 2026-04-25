@@ -72,8 +72,6 @@ export class GoogleAuthUseCase {
             username: newUser.username,
             image: newUser.image,
             role: 'user',
-            onboardingCompleted: newUser.onboardingCompleted,
-            onboardingId: undefined,
           },
         };
       }
@@ -125,8 +123,6 @@ export class GoogleAuthUseCase {
           username: existingUser.username,
           image: existingUser.image,
           role: roleName,
-          onboardingCompleted: existingUser.onboardingCompleted,
-          onboardingId: undefined,
         },
       };
     } catch (error) {

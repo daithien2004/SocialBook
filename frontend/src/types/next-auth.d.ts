@@ -6,8 +6,6 @@ declare module 'next-auth' {
     role:string;
     accessToken: string;
     refreshToken: string;
-    onboardingCompleted: boolean;
-    onboardingId: string;
   }
 
   interface Session {
@@ -15,8 +13,6 @@ declare module 'next-auth' {
       id: string;
       username: string;
       role: string;
-      onboardingCompleted: boolean;
-      onboardingId: string;
     } & DefaultSession['user'];
 
     accessToken: string;
@@ -32,7 +28,5 @@ declare module 'next-auth/jwt' {
     role: string; 
     accessToken: string;
     refreshToken: string;
-    onboardingCompleted: boolean;
-    onboardingId: string;
   }
 }

@@ -29,8 +29,6 @@ import {
   REGISTER,
 } from 'redux-persist';
 import { chatBotApi } from '../features/chatbot/api/chatBotApi';
-import { onboardingApi } from '../features/onboarding/api/onboardingApi';
-import { gamificationApi } from '../features/gamification/api/gamificationApi';
 import { moderationApi } from '../features/admin/api/moderationApi';
 import { WebStorage } from 'redux-persist';
 
@@ -85,8 +83,6 @@ export const store = configureStore({
     [geminiApi.reducerPath]: geminiApi.reducer,
     [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
     [chatBotApi.reducerPath]: chatBotApi.reducer,
-    [onboardingApi.reducerPath]: onboardingApi.reducer,
-    [gamificationApi.reducerPath]: gamificationApi.reducer,
     [moderationApi.reducerPath]: moderationApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -114,8 +110,6 @@ export const store = configureStore({
       .concat(geminiApi.middleware)
       .concat(recommendationsApi.middleware)
       .concat(chatBotApi.middleware)
-      .concat(onboardingApi.middleware)
-      .concat(gamificationApi.middleware)
       .concat(moderationApi.middleware)
 });
 

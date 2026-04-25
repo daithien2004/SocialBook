@@ -22,9 +22,9 @@ import {
   LikeDocument,
 } from '@/infrastructure/database/schemas/like.schema';
 import {
-  UserOnboarding,
-  UserOnboardingDocument,
-} from '@/infrastructure/database/schemas/user-onboarding.schema';
+  User,
+  UserDocument,
+} from '@/infrastructure/database/schemas/user.schema';
 import { AIRecommendationStrategy } from '@/infrastructure/recommendations/strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from '@/infrastructure/recommendations/strategies/fallback-recommendation.strategy';
 import { UserProfile } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
@@ -46,8 +46,8 @@ export class GetPersonalizedRecommendationsUseCase {
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(Like.name) private likeModel: Model<LikeDocument>,
-    @InjectModel(UserOnboarding.name)
-    private userOnboardingModel: Model<UserOnboardingDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
     private aiStrategy: AIRecommendationStrategy,
     private fallbackStrategy: FallbackRecommendationStrategy,
   ) {}
@@ -124,7 +124,7 @@ export class GetPersonalizedRecommendationsUseCase {
   private async buildUserProfile(userId: string): Promise<UserProfile> {
     const userObjectId = new Types.ObjectId(userId);
 
-    const [readingLists, progresses, reviews, likedBooks, userOnboarding] =
+    const [readingLists, progresses, reviews, likedBooks] =
       await Promise.all([
         this.readingListModel
           .find({ userId: userObjectId })
@@ -143,11 +143,6 @@ export class GetPersonalizedRecommendationsUseCase {
         this.bookModel
           .find({ likedBy: userObjectId })
           .populate('genres')
-          .lean<any[]>(),
-        this.userOnboardingModel
-          .findOne({ userId: userObjectId })
-          .populate('favoriteGenres')
-          .lean<{ favoriteGenres: any[] }>(),
       ]);
 
     const validReadingLists = readingLists.filter((rl) => rl.bookId != null);
@@ -199,14 +194,6 @@ export class GetPersonalizedRecommendationsUseCase {
         });
       }
     });
-
-    if (userOnboarding?.favoriteGenres) {
-      userOnboarding.favoriteGenres.forEach((genre) => {
-        if (genre && genre.name) {
-          genreCounts.set(genre.name, (genreCounts.get(genre.name) || 0) + 3);
-        }
-      });
-    }
 
     const favoriteGenres = Array.from(genreCounts.entries())
       .sort((a, b) => b[1] - a[1])

@@ -5,6 +5,7 @@ import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
 import { useSummarizeChapterMutation } from '@/features/gemini/api/geminiApi';
 import { toast } from 'sonner';
 import { useModalStore } from '@/store/useModalStore';
+import { useAppAuth } from '@/features/auth/hooks';
 import {
     Dialog,
     DialogContent,
@@ -14,6 +15,7 @@ import {
 
 export default function ChapterSummaryModal() {
     const { isChapterSummaryOpen, closeChapterSummary, chapterSummaryData } = useModalStore();
+    const { user } = useAppAuth();
     const [summarize, { isLoading, error, data: summary }] = useSummarizeChapterMutation();
     const [hasFetched, setHasFetched] = useState(false);
 
@@ -30,7 +32,7 @@ export default function ChapterSummaryModal() {
     const handleSummarize = async () => {
         if (!chapterId) return;
         try {
-            await summarize(chapterId).unwrap();
+            await summarize({ chapterId, userId: user?.id }).unwrap();
             setHasFetched(true);
         } catch (err) {
             console.error('Summarize failed', err);
