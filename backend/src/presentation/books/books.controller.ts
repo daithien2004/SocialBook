@@ -32,18 +32,13 @@ import { GetBookFiltersQuery } from '@/application/books/use-cases/get-book-filt
 import { GetBookFiltersUseCase } from '@/application/books/use-cases/get-book-filters/get-book-filters.use-case';
 import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
 import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
-import { GetFiltersUseCase } from '@/application/books/use-cases/get-filters/get-filters.use-case';
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
 import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelligent-search.use-case';
-import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
-import { ToggleLikeUseCase } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
+import { IntelligentSearchQuery } from '@/application/search/use-cases/intelligent-search.query';
 import { ToggleBookLikeUseCase } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.use-case';
 import { ToggleBookLikeCommand } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.command';
-import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
-import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
-import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
@@ -57,7 +52,6 @@ export class BooksController {
     private readonly deleteBookUseCase: DeleteBookUseCase,
     private readonly mediaService: IMediaService,
     private readonly getBookByIdUseCase: GetBookByIdUseCase,
-    private readonly getFiltersUseCase: GetFiltersUseCase,
     private readonly getBookFiltersUseCase: GetBookFiltersUseCase,
     private readonly toggleBookLikeUseCase: ToggleBookLikeUseCase,
     private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
@@ -70,16 +64,15 @@ export class BooksController {
     @Body() createBookDto: CreateBookDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const command = new CreateBookCommand(
-      createBookDto.title,
-      createBookDto.authorId,
-      createBookDto.genres,
-      createBookDto.description,
-      createBookDto.publishedYear,
-      file ? await this.uploadFile(file) : createBookDto.coverUrl,
-      createBookDto.status,
-      createBookDto.tags,
-    );
+    // Xử lý upload file trước khi tạo command
+    const coverUrl = file
+      ? await this.uploadFile(file)
+      : createBookDto.coverUrl;
+
+    const command = new CreateBookCommand({
+      ...createBookDto,
+      coverUrl,
+    });
 
     const book = await this.createBookUseCase.execute(command);
     return {
@@ -91,27 +84,16 @@ export class BooksController {
   @Get('admin/all')
   @RequireAuth('admin')
   async findAllAdmin(@Query() filter: FilterBookDto) {
-    const query = new GetBooksQuery(
-      filter.page,
-      filter.limit,
-      filter.title,
-      filter.authorId,
-      filter.genres,
-      filter.tags,
-      filter.status,
-      filter.search,
-      filter.publishedYear,
-      filter.sortBy as any,
-      filter.order as any,
-    );
+    const query = new GetBooksQuery({
+      ...filter,
+      sortBy: filter.sortBy,
+    });
 
     const result = await this.getBooksUseCase.execute(query);
 
     return {
       message: 'Lấy danh sách sách (Admin) thành công',
-      data: result.data.map((readModel) =>
-        BookResponseDto.fromReadModel(readModel),
-      ),
+      data: BookResponseDto.fromArray(result.data),
       meta: result.meta,
     };
   }
@@ -133,55 +115,35 @@ export class BooksController {
   async findAll(@Query() filter: FilterBookDto) {
     // Nếu có từ khóa tìm kiếm, sử dụng Intelligent Search
     if (filter.search) {
-      const result = await this.intelligentSearchUseCase.execute({
+      const query = new IntelligentSearchQuery({
         query: filter.search,
-        page: filter.page,
-        limit: filter.limit,
-        genres: filter.genres?.join(','),
-        sortBy: filter.sortBy as 'createdAt' | 'updatedAt' | 'views' | 'likes' | 'rating' | 'score',
-        order: filter.order as 'asc' | 'desc',
+        ...filter,
       });
+
+      const result = await this.intelligentSearchUseCase.execute(query);
 
       return {
         message: 'Tìm kiếm sách thành công',
-        data: result.data.map(item => ({
-          ...item,
-          id: item.id,
-          _id: item.id,
-          authorId: {
-            id: item.authorId._id,
-            name: item.authorId.name
-          }
-        })),
+        data: BookResponseDto.fromSearchResults(result.data),
         meta: result.meta,
       };
     }
 
     // Nếu không search, dùng logic GetBooks bình thường (Danh sách trang chủ)
-    const query = new GetBooksQuery(
-      filter.page,
-      filter.limit,
-      filter.title,
-      filter.authorId,
-      filter.genres,
-      filter.tags,
-      filter.status,
-      filter.search,
-      filter.publishedYear,
-      filter.sortBy as any,
-      filter.order as any,
-    );
+    const query = new GetBooksQuery({
+      ...filter,
+      search: undefined, // Explicitly clear search for fallback flow
+    });
 
     const result = await this.getBooksUseCase.execute(query);
 
     return {
       message: 'Lấy danh sách sách thành công',
-      data: result.data.map((readModel) =>
-        BookResponseDto.fromReadModel(readModel),
-      ),
+      data: BookResponseDto.fromArray(result.data),
       meta: result.meta,
     };
   }
+
   @Get(':slug')
   @Public()
   async findOne(@Param('slug') slug: string) {
@@ -204,7 +166,10 @@ export class BooksController {
     const book = await this.getBookBySlugUseCase.execute(
       new GetBookBySlugQuery(slug),
     );
-    const command = new ToggleBookLikeCommand(book.id, userId);
+    const command = new ToggleBookLikeCommand({
+      bookId: book.id,
+      userId,
+    });
     const result = await this.toggleBookLikeUseCase.execute(command);
 
     return {
@@ -237,17 +202,16 @@ export class BooksController {
     @Body() updateBookDto: UpdateBookDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const command = new UpdateBookCommand(
+    // Xử lý upload file nếu có
+    const coverUrl = file
+      ? await this.uploadFile(file)
+      : updateBookDto.coverUrl;
+
+    const command = new UpdateBookCommand({
       id,
-      updateBookDto.title,
-      updateBookDto.authorId,
-      updateBookDto.genres,
-      updateBookDto.description,
-      updateBookDto.publishedYear,
-      file ? await this.uploadFile(file) : updateBookDto.coverUrl,
-      updateBookDto.status,
-      updateBookDto.tags,
-    );
+      ...updateBookDto,
+      coverUrl,
+    });
 
     const book = await this.updateBookUseCase.execute(command);
     return {

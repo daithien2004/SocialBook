@@ -2,9 +2,9 @@ export interface SearchQuery {
   query: string;
   page?: number;
   limit?: number;
-  genres?: string; // Comma separated slugs
+  genres?: string[]; // Slugs
   author?: string; // Author ID
-  tags?: string; // Comma separated
+  tags?: string[];
   sortBy?:
     | 'views'
     | 'likes'
@@ -12,6 +12,8 @@ export interface SearchQuery {
     | 'popular'
     | 'createdAt'
     | 'updatedAt'
+    | 'title'
+    | 'publishedYear'
     | 'score';
   order?: 'asc' | 'desc';
 }

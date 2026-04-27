@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SearchQuery as AppSearchQuery } from '@/domain/search/models/search-query.model';
+import { IntelligentSearchQuery } from './intelligent-search.query';
 import {
   PaginatedSearchResult,
   SearchResultBook,
@@ -9,8 +9,6 @@ import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repos
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
-import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
-import { AuthorId } from '@/domain/authors/value-objects/author-id.vo';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { SearchQueryExpansionService, QueryAnalysis } from '../services/search-query-expansion.service';
@@ -40,7 +38,7 @@ export class IntelligentSearchUseCase {
     private readonly rankingService: SearchRankingService,
   ) { }
 
-  async execute(queryDto: AppSearchQuery): Promise<PaginatedSearchResult> {
+  async execute(queryDto: IntelligentSearchQuery): Promise<PaginatedSearchResult> {
     const start = performance.now();
     const { query, page = 1, limit = 10, genres, sortBy = 'score', order = 'desc' } = queryDto;
 
@@ -211,11 +209,11 @@ export class IntelligentSearchUseCase {
   }
 
   private async resolveGenreIds(
-    genres: string | undefined,
+    genres: string[] | undefined,
     analysis: QueryAnalysis | null,
   ): Promise<string[]> {
-    if (genres) {
-      const found = await this.genreRepository.findBySlugs(genres.split(','));
+    if (genres && genres.length > 0) {
+      const found = await this.genreRepository.findBySlugs(genres);
       return found.map((g) => g.id.toString());
     }
     const targetNames = analysis?.targetGenres ?? [];

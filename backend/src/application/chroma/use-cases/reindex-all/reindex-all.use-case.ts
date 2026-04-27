@@ -20,6 +20,9 @@ export interface ReindexResult {
 @Injectable()
 export class ReindexAllUseCase {
   private readonly logger = new Logger(ReindexAllUseCase.name);
+  private readonly BATCH_THRESHOLD = 500;
+  private readonly PAGE_LIMIT = 100;
+  private readonly MAX_ERRORS_IN_STATS = 100;
 
   constructor(
     private readonly authorRepository: IAuthorRepository,
@@ -33,14 +36,17 @@ export class ReindexAllUseCase {
       this.logger.log('🚀 Starting full reindexing process...');
 
       // 1. Clear existing collection
+      // Lưu ý: Hiện tại Repository chưa hỗ trợ cơ chế Swap Collection (Blue-Green).
+      // Chúng ta chấp nhận rủi ro downtime ngắn trong lúc reindex.
       await this.vectorRepository.clearCollection();
       this.logger.log('🗑️ Vector collection cleared.');
 
-      // 2. Reindex Authors
-      const authorStats = await this.reindexAuthors();
-
-      // 3. Reindex Books
-      const bookStats = await this.reindexBooks();
+      // 2. Run Reindexing in Parallel for performance
+      this.logger.log('⚡ Running Author and Book reindexing in parallel...');
+      const [authorStats, bookStats] = await Promise.all([
+        this.reindexAuthors(),
+        this.reindexBooks(),
+      ]);
 
       this.logger.log('✨ Full reindexing process completed!');
 
@@ -50,115 +56,195 @@ export class ReindexAllUseCase {
       };
     } catch (error) {
       this.logger.error('❌ Full reindexing failed:', error);
-      throw error; 
+      throw error;
     }
   }
 
   private async reindexAuthors(): Promise<IndexStats> {
     const stats: IndexStats = { total: 0, successful: 0, failed: 0, errors: [] };
-    const authors = await this.authorRepository.findAllSimple();
-    stats.total = authors.length;
+    let currentPage = 1;
+    let totalPages = 1;
+    let batchBuffer: VectorDocument[] = [];
+    const failedEntityIds = new Set<string>();
 
-    this.logger.log(`📚 Indexing ${authors.length} authors...`);
+    this.logger.log('📚 Starting author reindexing...');
 
-    const authorDocs: VectorDocument[] = [];
+    do {
+      const result = await this.authorRepository.findAll(
+        {},
+        { page: currentPage, limit: this.PAGE_LIMIT },
+      );
+      const authors = result.data;
+      totalPages = result.meta.totalPages;
 
-    for (const author of authors) {
-      try {
-        const bioClean = this.stripHtml(author.bio);
-        const content = `Tác giả: ${author.name.toString()}\nTiểu sử: ${bioClean}`;
-
-        const document = VectorDocument.createAuthorDocument(
-          this.idGenerator.generate(),
-          author.id.toString(),
-          content,
-          { name: author.name.toString(), type: 'author' },
-          [],
+      if (currentPage === 1) {
+        stats.total = result.meta.total;
+        this.logger.log(
+          `📚 Total authors: ${stats.total} (${totalPages} pages)`,
         );
-        authorDocs.push(document);
-      } catch (error) {
-        stats.failed++;
-        stats.errors.push(`Author ${author.id}: ${error.message}`);
       }
+
+      for (const author of authors) {
+        try {
+          const bioClean = this.stripHtml(author.bio);
+          const content = `Tác giả: ${author.name.toString()}\nTiểu sử: ${bioClean}`;
+
+          const document = VectorDocument.createAuthorDocument(
+            this.idGenerator.generate(),
+            author.id.toString(),
+            content,
+            { name: author.name.toString(), type: 'author' },
+            [],
+          );
+          batchBuffer.push(document);
+
+          if (batchBuffer.length >= this.BATCH_THRESHOLD) {
+            await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
+            batchBuffer = [];
+          }
+        } catch (error) {
+          failedEntityIds.add(author.id.toString());
+          this.addError(stats.errors, `Author ${author.id}: ${error.message}`);
+        }
+      }
+      currentPage++;
+    } while (currentPage <= totalPages);
+
+    if (batchBuffer.length > 0) {
+      await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
     }
 
-    if (authorDocs.length > 0) {
-      const result = await this.vectorRepository.saveBatch(authorDocs);
-      stats.successful = result.successful;
-      stats.failed += result.failed;
-      stats.errors.push(...result.errors.map((e) => `Batch error: ${e.error}`));
-    }
-
+    stats.failed = failedEntityIds.size;
+    stats.successful = stats.total - stats.failed;
     return stats;
   }
 
   private async reindexBooks(): Promise<IndexStats> {
     const stats: IndexStats = { total: 0, successful: 0, failed: 0, errors: [] };
-    const result = await this.bookRepository.findAll({}, { page: 1, limit: 1000 });
-    const books = result.data;
-    stats.total = books.length;
-
-    this.logger.log(`📖 Indexing ${books.length} books with "Big Batch" strategy...`);
-
-    const BATCH_THRESHOLD = 500; // Gom 500 documents rồi mới gửi 1 lần
+    let currentPage = 1;
+    let totalPages = 1;
     let batchBuffer: VectorDocument[] = [];
+    const failedEntityIds = new Set<string>();
 
-    for (const book of books) {
+    this.logger.log('📖 Starting book reindexing...');
+
+    do {
+      const result = await this.bookRepository.findAll(
+        {},
+        { page: currentPage, limit: this.PAGE_LIMIT },
+      );
+      const books = result.data;
+      totalPages = result.meta.totalPages;
+
+      if (currentPage === 1) {
+        stats.total = result.meta.total;
+        this.logger.log(`📖 Total books: ${stats.total} (${totalPages} pages)`);
+      }
+
+      for (const book of books) {
+        try {
+          const titleStr = book.title.toString();
+          const authorStr = book.authorName || 'Không rõ';
+          const genreStr =
+            book.genreObjects?.map((g) => g.name).join(', ') || '';
+
+          const contextHeader = `Sách: ${titleStr} | Tác giả: ${authorStr} | Thể loại: ${genreStr}\nNội dung: `;
+
+          const descriptionClean = this.stripHtml(book.description);
+          const chunks = this.chunkText(descriptionClean, 500);
+
+          for (let i = 0; i < chunks.length; i++) {
+            const document = VectorDocument.createBookDocument(
+              this.idGenerator.generate(),
+              book.id.toString(),
+              contextHeader + chunks[i],
+              {
+                title: titleStr,
+                author: authorStr,
+                genres: genreStr,
+                slug: book.slug,
+                chunkIndex: i,
+                totalChunks: chunks.length,
+                type: 'book',
+                bookId: book.id.toString(),
+              },
+              [],
+            );
+            batchBuffer.push(document);
+
+            if (batchBuffer.length >= this.BATCH_THRESHOLD) {
+              await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
+              batchBuffer = [];
+            }
+          }
+        } catch (error) {
+          failedEntityIds.add(book.id.toString());
+          this.addError(stats.errors, `Book ${book.id}: ${error.message}`);
+        }
+      }
+
+      currentPage++;
+    } while (currentPage <= totalPages);
+
+    if (batchBuffer.length > 0) {
+      await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
+    }
+
+    stats.failed = failedEntityIds.size;
+    stats.successful = stats.total - stats.failed;
+    return stats;
+  }
+
+  private async flushBatch(
+    batch: VectorDocument[],
+    failedIds: Set<string>,
+    errorList: string[],
+  ): Promise<void> {
+    const MAX_RETRIES = 3;
+    let attempt = 0;
+
+    while (attempt < MAX_RETRIES) {
       try {
-        const titleStr = book.title.toString();
-        const authorStr = book.authorName || 'Không rõ';
-        const genreStr = book.genreObjects?.map(g => g.name).join(', ') || '';
-        
-        // Tạo header ngữ cảnh cho mỗi mảnh
-        const contextHeader = `Sách: ${titleStr} | Tác giả: ${authorStr} | Thể loại: ${genreStr}\nNội dung: `;
-        
-        const descriptionClean = this.stripHtml(book.description);
-        const chunks = this.chunkText(descriptionClean, 500); 
-
-        for (let i = 0; i < chunks.length; i++) {
-          const document = VectorDocument.createBookDocument(
-            this.idGenerator.generate(),
-            book.id.toString(),
-            contextHeader + chunks[i], // Hợp nhất ngữ cảnh vào nội dung vector
-            {
-              title: titleStr,
-              author: authorStr,
-              genres: genreStr,
-              slug: book.slug,
-              chunkIndex: i,
-              totalChunks: chunks.length,
-              type: 'book',
-              bookId: book.id.toString(),
-            },
-            [],
-          );
-          batchBuffer.push(document);
-
-          // Nếu xe đã đầy thì khởi hành!
-          if (batchBuffer.length >= BATCH_THRESHOLD) {
-            const batchResult = await this.vectorRepository.saveBatch(batchBuffer);
-            stats.successful += (batchBuffer.length / chunks.length); 
-            batchBuffer = []; // Đổ hàng xong, làm trống xe
+        const result = await this.vectorRepository.saveBatch(batch);
+        if (result.failed > 0) {
+          for (const err of result.errors) {
+            failedIds.add(err.contentId);
+            this.addError(
+              errorList,
+              `Vector error for ${err.contentId}: ${err.error}`,
+            );
           }
         }
-        
-        this.logger.debug(`Processed metadata for book: ${book.title}`);
+        return; // Success or handled
       } catch (error) {
-        stats.failed++;
-        stats.errors.push(`Book ${book.id}: ${error.message}`);
+        attempt++;
+        if (attempt >= MAX_RETRIES) {
+          // If all retries failed, mark all entities in this batch as failed
+          for (const doc of batch) {
+            failedIds.add(doc.contentId);
+          }
+          this.addError(
+            errorList,
+            `Critical batch failure after ${MAX_RETRIES} attempts: ${error.message}`,
+          );
+          break;
+        }
+        // Exponential backoff
+        const delay = Math.pow(2, attempt) * 1000;
+        this.logger.warn(
+          `Batch save failed, retrying in ${delay}ms (Attempt ${attempt}/${MAX_RETRIES})...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
+  }
 
-    // Chuyến xe cuối cùng: Gửi nốt những món còn sót lại trong xe
-    if (batchBuffer.length > 0) {
-      await this.vectorRepository.saveBatch(batchBuffer);
-      this.logger.log(`🚚 Final batch of ${batchBuffer.length} documents delivered.`);
+  private addError(errorList: string[], message: string): void {
+    if (errorList.length < this.MAX_ERRORS_IN_STATS) {
+      errorList.push(message);
+    } else if (errorList.length === this.MAX_ERRORS_IN_STATS) {
+      errorList.push('... (Too many errors, further errors suppressed)');
     }
-
-    // Cập nhật lại stats chính xác hơn
-    stats.successful = stats.total - stats.failed;
-
-    return stats;
   }
 
   private stripHtml(html: string): string {
@@ -169,24 +255,40 @@ export class ReindexAllUseCase {
       .trim();
   }
 
-  private chunkText(text: string, size: number): string[] {
+  private chunkText(
+    text: string,
+    size: number,
+    overlap: number = 100,
+  ): string[] {
     if (!text) return [];
+    if (text.length <= size) return [text.trim()];
+
     const chunks: string[] = [];
     let current = 0;
 
     while (current < text.length) {
       let end = current + size;
+
       if (end < text.length) {
-        // Cố gắng cắt ở khoảng trắng gần nhất để không bị đứt từ
+        const lookbackRange = Math.floor(size * 0.2);
         const lastSpace = text.lastIndexOf(' ', end);
-        if (lastSpace > current) {
+
+        if (lastSpace > end - lookbackRange && lastSpace > current) {
           end = lastSpace;
         }
       }
-      chunks.push(text.substring(current, end).trim());
-      current = end + 1;
+
+      const chunk = text.substring(current, end).trim();
+      if (chunk.length > 0) {
+        chunks.push(chunk);
+      }
+
+      if (end >= text.length) break;
+
+      const nextStep = end - overlap;
+      current = nextStep > current ? nextStep : end;
     }
 
-    return chunks.filter(c => c.length > 0);
+    return chunks;
   }
 }
