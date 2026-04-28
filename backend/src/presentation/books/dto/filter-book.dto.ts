@@ -59,4 +59,34 @@ export class FilterBookDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   publishedYear?: string;
+
+  @IsOptional()
+  @IsEnum(
+    [
+      'createdAt',
+      'updatedAt',
+      'title',
+      'views',
+      'likes',
+      'publishedYear',
+      'rating',
+      'score',
+    ],
+    {
+      message: 'Trường sắp xếp không hợp lệ',
+    },
+  )
+  override sortBy?:
+    | 'createdAt'
+    | 'updatedAt'
+    | 'title'
+    | 'views'
+    | 'likes'
+    | 'publishedYear'
+    | 'rating'
+    | 'score' = undefined;
+
+  @IsOptional()
+  @IsEnum(['asc', 'desc'], { message: 'Thứ tự sắp xếp phải là asc hoặc desc' })
+  override order: 'asc' | 'desc' = 'desc';
 }

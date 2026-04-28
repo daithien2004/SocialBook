@@ -45,7 +45,7 @@ export class SearchQuery {
         query: props.query.trim(),
         embedding: EmbeddingVector.create(props.embedding),
         limit: props.limit || 10,
-        threshold: props.threshold || 0.7,
+        threshold: props.threshold || 0.5,
         contentType: props.contentType
           ? ContentType.create(props.contentType)
           : undefined,
@@ -71,7 +71,7 @@ export class SearchQuery {
         query: props.query,
         embedding: EmbeddingVector.create(props.embedding),
         limit: props.limit || 10,
-        threshold: props.threshold || 0.7,
+        threshold: props.threshold || 0.5,
         contentType: props.contentType
           ? ContentType.create(props.contentType)
           : undefined,
@@ -98,7 +98,7 @@ export class SearchQuery {
     return this._props.limit || 10;
   }
   get threshold(): number {
-    return this._props.threshold || 0.7;
+    return this._props.threshold || 0.5;
   }
 
   // Business methods

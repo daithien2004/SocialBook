@@ -20,6 +20,7 @@ export type BookSortField =
 export interface BookFilter {
   title?: string;
   authorId?: string;
+  authorIds?: string[];
   genres?: string[];
   tags?: string[];
   status?: 'draft' | 'published' | 'completed';
@@ -87,5 +88,6 @@ export abstract class IBookRepository {
   abstract countByTags(): Promise<Array<{ name: string; count: number }>>;
 
   abstract findByIds(ids: BookId[]): Promise<Book[]>;
+  abstract findIdsByFilter(filter: BookFilter): Promise<string[]>;
   abstract getFilters(): Promise<BookFilters>;
 }

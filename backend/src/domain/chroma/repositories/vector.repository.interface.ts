@@ -32,6 +32,7 @@ export interface CollectionStats {
 export abstract class IVectorRepository {
   // Document operations
   abstract save(document: VectorDocument): Promise<void>;
+  abstract saveBatch(documents: VectorDocument[]): Promise<BatchIndexResult>;
   abstract findById(id: VectorId): Promise<VectorDocument | null>;
   abstract findByContentId(
     contentId: string,
@@ -42,6 +43,9 @@ export abstract class IVectorRepository {
     contentId: string,
     contentType?: ContentType,
   ): Promise<void>;
+
+  // Embedding
+  abstract embedQuery(text: string): Promise<number[]>;
 
   // Search operations
   abstract search(query: SearchQuery): Promise<SearchResult[]>;
@@ -56,36 +60,12 @@ export abstract class IVectorRepository {
     threshold?: number,
   ): Promise<SearchResult[]>;
 
-  // Batch operations
-  abstract saveBatch(documents: VectorDocument[]): Promise<BatchIndexResult>;
-  abstract deleteBatch(ids: VectorId[]): Promise<BatchIndexResult>;
-  abstract deleteByContentType(contentType: ContentType): Promise<void>;
-
   // Collection operations
   abstract clearCollection(): Promise<void>;
   abstract getCollectionStats(): Promise<CollectionStats>;
-  abstract optimizeCollection(): Promise<void>;
 
-  // Content type specific operations
+  // Content type specific operations (used by BatchIndexUseCase)
   abstract indexBooks(bookIds: string[]): Promise<BatchIndexResult>;
   abstract indexAuthors(authorIds: string[]): Promise<BatchIndexResult>;
   abstract indexChapters(chapterIds: string[]): Promise<BatchIndexResult>;
-
-  // Reindexing operations
-  abstract reindexContent(
-    contentId: string,
-    contentType: ContentType,
-  ): Promise<IndexResult>;
-  abstract reindexAll(): Promise<BatchIndexResult>;
-
-  // Utility operations
-  abstract existsByContentId(
-    contentId: string,
-    contentType?: ContentType,
-  ): Promise<boolean>;
-  abstract countByContentType(contentType: ContentType): Promise<number>;
-  abstract getDocumentsByContentType(
-    contentType: ContentType,
-    limit?: number,
-  ): Promise<VectorDocument[]>;
 }

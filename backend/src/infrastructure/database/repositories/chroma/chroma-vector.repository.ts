@@ -1,13 +1,13 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { ChromaClient, type Where, type Collection } from 'chromadb';
+import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import { Document } from '@langchain/core/documents';
 
 import {
   IVectorRepository,
   SearchResult,
-  IndexResult,
   BatchIndexResult,
   CollectionStats,
 } from '@/domain/chroma/repositories/vector.repository.interface';
@@ -16,28 +16,62 @@ import { SearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { VectorId } from '@/domain/chroma/value-objects/vector-id.vo';
 import { ContentType } from '@/domain/chroma/value-objects/content-type.vo';
 
+type ContentTypeValue = 'book' | 'author' | 'chapter';
+
+interface ChromaMetadata {
+  id: string;
+  contentId: string;
+  contentType: ContentTypeValue;
+  [key: string]: string | number | boolean;
+}
+
 @Injectable()
 export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   private readonly logger = new Logger(ChromaVectorRepository.name);
   private vectorStore: Chroma;
-  private embeddings: GoogleGenerativeAIEmbeddings;
+  private embeddings: HuggingFaceInferenceEmbeddings;
   private isInitialized = false;
+  private chromaClient: ChromaClient;
+  private collection: Collection;
+  private readonly DEFAULT_SEARCH_LIMIT = 10;
 
-  constructor(private configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) {}
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     try {
-      this.embeddings = new GoogleGenerativeAIEmbeddings({
-        apiKey: this.configService.get('GOOGLE_API_KEY'),
-        model: 'text-embedding-004',
+      const hfKey = this.configService.get<string>('env.HUGGINGFACE_API_KEY');
+      if (!hfKey) {
+        this.logger.error('❌ HUGGINGFACE_API_KEY is missing in configuration!');
+        return;
+      }
+
+      this.logger.log(
+        `🔑 Using HuggingFace API Key: ${hfKey.substring(0, 5)}...${hfKey.substring(hfKey.length - 4)}`,
+      );
+
+      // model cho tiếng Việt
+      this.embeddings = new HuggingFaceInferenceEmbeddings({
+        apiKey: hfKey,
+        model: 'keepitreal/vietnamese-sbert',
+      });
+
+      const chromaUrl = this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000');
+      const collectionName = this.configService.get<string>(
+        'env.CHROMA_COLLECTION',
+        'socialbook_vectors',
+      );
+
+      this.logger.log(`🌐 Connecting to Chroma at: ${chromaUrl}, Collection: ${collectionName}`);
+
+      this.chromaClient = new ChromaClient({ path: chromaUrl });
+      this.collection = await this.chromaClient.getOrCreateCollection({
+        name: collectionName,
+        metadata: { 'hnsw:space': 'cosine' },
       });
 
       this.vectorStore = new Chroma(this.embeddings, {
-        collectionName: this.configService.get(
-          'CHROMA_COLLECTION',
-          'socialbook_vectors',
-        ),
-        url: this.configService.get('CHROMA_URL', 'http://localhost:8000'),
+        collectionName,
+        url: chromaUrl,
       });
 
       this.isInitialized = true;
@@ -48,49 +82,96 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     }
   }
 
-  private ensureInitialized() {
+  private ensureInitialized(): void {
     if (!this.isInitialized) {
       throw new Error('Vector store not initialized');
     }
   }
 
-  // Document operations
+  // ─── Embedding ───────────────────────────────────
+
+  async embedQuery(text: string): Promise<number[]> {
+    this.ensureInitialized();
+    return this.embeddings.embedQuery(text);
+  }
+
+  // ─── Document Operations ─────────────────────────
+
   async save(document: VectorDocument): Promise<void> {
     this.ensureInitialized();
 
-    const langchainDoc = new Document({
-      pageContent: document.content,
-      metadata: {
-        id: document.id.toString(),
-        contentId: document.contentId,
-        contentType: document.contentType.toString(),
-        ...document.metadata,
-      },
-    });
+    await this.vectorStore.addDocuments([this.toLangchainDocument(document)]);
+  }
 
-    await this.vectorStore.addDocuments([langchainDoc]);
+  async saveBatch(documents: VectorDocument[]): Promise<BatchIndexResult> {
+    this.ensureInitialized();
+
+    if (documents.length === 0) {
+      return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
+    }
+
+    try {
+      const langchainDocs = documents.map((doc) => this.toLangchainDocument(doc));
+      await this.vectorStore.addDocuments(langchainDocs);
+
+      return {
+        totalProcessed: documents.length,
+        successful: documents.length,
+        failed: 0,
+        errors: [],
+      };
+    } catch (error) {
+      this.logger.warn(`Batch save failed for ${documents.length} docs, attempting split-and-retry. Error: ${error.message}`);
+      
+      // Granular Error Handling: Split and retry if batch is large
+      if (documents.length > 1) {
+        const mid = Math.floor(documents.length / 2);
+        const leftHalf = documents.slice(0, mid);
+        const rightHalf = documents.slice(mid);
+
+        const [leftResult, rightResult] = await Promise.all([
+          this.saveBatch(leftHalf),
+          this.saveBatch(rightHalf),
+        ]);
+
+        return {
+          totalProcessed: leftResult.totalProcessed + rightResult.totalProcessed,
+          successful: leftResult.successful + rightResult.successful,
+          failed: leftResult.failed + rightResult.failed,
+          errors: [...leftResult.errors, ...rightResult.errors],
+        };
+      }
+
+      // If single document failed, return it as failure
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        totalProcessed: 1,
+        successful: 0,
+        failed: 1,
+        errors: [{ contentId: documents[0].contentId, error: message }],
+      };
+    }
   }
 
   async findById(id: VectorId): Promise<VectorDocument | null> {
     this.ensureInitialized();
 
     try {
-      const results = await this.vectorStore.similaritySearchWithScore(
-        `id:${id.toString()}`,
-        1,
-      );
+      // ✅ Use direct ID lookup for better performance
+      const result = await this.collection.get({
+        ids: [id.toString()],
+      });
 
-      if (results.length === 0) {
+      if (!result.ids || result.ids.length === 0) {
         return null;
       }
 
-      const result = results[0];
-      return this.mapLangchainResultToDocument(result);
-    } catch (error) {
-      this.logger.error(
-        `Failed to find document by ID: ${id.toString()}`,
-        error,
+      return this.mapToVectorDocument(
+        result.documents[0] as string,
+        result.metadatas[0] as unknown as ChromaMetadata,
       );
+    } catch (error) {
+      this.logger.error(`Failed to find document by ID: ${id.toString()}`, error);
       return null;
     }
   }
@@ -102,21 +183,28 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      const filter = contentType
-        ? `contentId:${contentId} AND contentType:${contentType.toString()}`
-        : `contentId:${contentId}`;
+      const where: Record<string, string> = { contentId };
+      if (contentType) {
+        where.contentType = contentType.toString();
+      }
 
-      const results = await this.vectorStore.similaritySearchWithScore(
-        filter,
-        100,
-      );
+      const result = await this.collection.get({ where, limit: 100 });
 
-      return results.map((result) => this.mapLangchainResultToDocument(result));
+      return (result.documents || []).map((doc, index) => {
+        const metadata = (result.metadatas?.[index] || {}) as ChromaMetadata;
+        return VectorDocument.reconstitute({
+          id: metadata.id || '',
+          contentId: metadata.contentId || contentId,
+          contentType: this.parseContentType(metadata.contentType),
+          content: doc || '',
+          metadata,
+          embedding: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      });
     } catch (error) {
-      this.logger.error(
-        `Failed to find documents by content ID: ${contentId}`,
-        error,
-      );
+      this.logger.error(`Failed to find documents by content ID: ${contentId}`, error);
       return [];
     }
   }
@@ -125,57 +213,59 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      // Chroma doesn't have a direct delete by ID method
-      // This would need to be implemented using Chroma's delete API
-      this.logger.warn(
-        `Delete by ID not implemented for Chroma: ${id.toString()}`,
-      );
+      await this.collection.delete({ where: { id: id.toString() } });
     } catch (error) {
-      this.logger.error(
-        `Failed to delete document by ID: ${id.toString()}`,
-        error,
-      );
+      this.logger.error(`Failed to delete document by ID: ${id.toString()}`, error);
       throw error;
     }
   }
 
-  async deleteByContentId(
-    contentId: string,
-    contentType?: ContentType,
-  ): Promise<void> {
+  async deleteByContentId(contentId: string, contentType?: ContentType): Promise<void> {
     this.ensureInitialized();
 
     try {
-      // Chroma doesn't have a direct delete method
-      // This would need to be implemented using Chroma's delete API
-      this.logger.warn(
-        `Delete by content ID not implemented for Chroma: ${contentId}`,
-      );
+      const where: Record<string, string> = { contentId };
+      if (contentType) {
+        where.contentType = contentType.toString();
+      }
+
+      await this.collection.delete({ where });
     } catch (error) {
-      this.logger.error(
-        `Failed to delete documents by content ID: ${contentId}`,
-        error,
-      );
+      this.logger.error(`Failed to delete documents by content ID: ${contentId}`, error);
       throw error;
     }
   }
 
-  // Search operations
+  // ─── Search Operations ───────────────────────────
+
   async search(query: SearchQuery): Promise<SearchResult[]> {
     this.ensureInitialized();
 
     try {
-      const results = await this.vectorStore.similaritySearch(
+      const filter: Where = {};
+      if (query.contentType) {
+        filter.contentType = query.contentType.toString();
+      }
+
+      if (query.filters) {
+        Object.assign(filter, query.filters);
+      }
+
+      const results = await this.vectorStore.similaritySearchWithScore(
         query.query,
         query.limit,
+        Object.keys(filter).length > 0 ? filter : undefined,
       );
 
+      this.logger.debug(`Raw search results for "${query.query}": ${results.length}`);
+
       return results
-        .map((doc, index) => ({
-          document: this.mapLangchainDocToDocument(doc),
-          score: 1.0 - index / results.length, // Simple scoring based on position
+        .map(([doc, distance]) => ({
+          document: this.mapToVectorDocument(doc.pageContent, doc.metadata as ChromaMetadata),
+          score: this.calculateSimilarityScore(distance),
         }))
-        .filter((result) => result.score >= query.threshold);
+        .filter((result) => result.score >= query.threshold)
+        .sort((a, b) => b.score - a.score);
     } catch (error) {
       this.logger.error(`Search failed for query: ${query.query}`, error);
       throw error;
@@ -190,14 +280,20 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      const results = await this.vectorStore.similaritySearch(
+      const filter: Where = {};
+      if (contentType) {
+        filter.contentType = contentType.toString();
+      }
+
+      const results = await this.vectorStore.similaritySearchWithScore(
         content,
         limit || 10,
+        Object.keys(filter).length > 0 ? filter : undefined,
       );
 
-      return results.map((doc, index) => ({
-        document: this.mapLangchainDocToDocument(doc),
-        score: 1.0 - index / results.length,
+      return results.map(([doc, distance]) => ({
+        document: this.mapToVectorDocument(doc.pageContent, doc.metadata as ChromaMetadata),
+        score: this.calculateSimilarityScore(distance),
       }));
     } catch (error) {
       this.logger.error(`Content search failed for: ${content}`, error);
@@ -218,15 +314,20 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
         return [];
       }
 
-      const results = await this.vectorStore.similaritySearch(
+      const filter: Where = {
+        contentType: document.contentType.toString(),
+      };
+
+      const results = await this.vectorStore.similaritySearchWithScore(
         document.content,
-        limit || 10,
+        limit || this.DEFAULT_SEARCH_LIMIT,
+        filter,
       );
 
       return results
-        .map((doc, index) => ({
-          document: this.mapLangchainDocToDocument(doc),
-          score: 1.0 - index / results.length,
+        .map(([doc, distance]) => ({
+          document: this.mapToVectorDocument(doc.pageContent, doc.metadata as ChromaMetadata),
+          score: this.calculateSimilarityScore(distance),
         }))
         .filter((result) => result.score >= (threshold || 0.7));
     } catch (error) {
@@ -238,82 +339,39 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     }
   }
 
-  // Batch operations
-  async saveBatch(documents: VectorDocument[]): Promise<BatchIndexResult> {
-    this.ensureInitialized();
+  // ─── Collection Operations ───────────────────────
 
-    const errors: Array<{ contentId: string; error: string }> = [];
-    let successful = 0;
-    let failed = 0;
-
-    for (const document of documents) {
-      try {
-        await this.save(document);
-        successful++;
-      } catch (error) {
-        errors.push({
-          contentId: document.contentId,
-          error: error.message,
-        });
-        failed++;
-      }
-    }
-
-    return {
-      totalProcessed: documents.length,
-      successful,
-      failed,
-      errors,
-    };
-  }
-
-  async deleteBatch(ids: VectorId[]): Promise<BatchIndexResult> {
-    this.ensureInitialized();
-
-    // Chroma doesn't have batch delete implemented
-    // This would need to be implemented using Chroma's delete API
-    this.logger.warn(
-      `Batch delete not implemented for ${ids.length} documents`,
-    );
-
-    return {
-      totalProcessed: ids.length,
-      successful: 0,
-      failed: ids.length,
-      errors: ids.map((id) => ({
-        contentId: id.toString(),
-        error: 'Delete not implemented',
-      })),
-    };
-  }
-
-  async deleteByContentType(contentType: ContentType): Promise<void> {
-    this.ensureInitialized();
-
-    try {
-      // Chroma doesn't have delete by metadata implemented
-      // This would need to be implemented using Chroma's delete API
-      this.logger.warn(
-        `Delete by content type not implemented for: ${contentType.toString()}`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to delete by content type: ${contentType.toString()}`,
-        error,
-      );
-      throw error;
-    }
-  }
-
-  // Collection operations
   async clearCollection(): Promise<void> {
     this.ensureInitialized();
 
     try {
-      // This would need to be implemented using Chroma's delete collection API
-      this.logger.warn('Clear collection not implemented for Chroma');
+      const collectionName = this.configService.get<string>(
+        'env.CHROMA_COLLECTION',
+        'socialbook_vectors',
+      );
+
+      this.logger.log(`🗑️ Permanently deleting collection: ${collectionName}`);
+
+      try {
+        await this.chromaClient.deleteCollection({ name: collectionName });
+      } catch {
+        this.logger.warn(`Collection ${collectionName} does not exist, skipping delete`);
+      }
+
+      this.collection = await this.chromaClient.createCollection({
+        name: collectionName,
+        metadata: { 'hnsw:space': 'cosine' },
+      });
+
+      this.vectorStore = new Chroma(this.embeddings, {
+        collectionName,
+        url: this.configService.get<string>('env.CHROMA_URL', 'http://localhost:8000'),
+      });
+
+      this.isInitialized = true;
+      this.logger.log(`✅ Collection ${collectionName} has been recreated`);
     } catch (error) {
-      this.logger.error('Failed to clear collection', error);
+      this.logger.error('❌ Failed to clear collection:', error);
       throw error;
     }
   }
@@ -322,14 +380,12 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     this.ensureInitialized();
 
     try {
-      // This would need to be implemented using Chroma's get collection API
-      this.logger.warn('Collection stats not fully implemented for Chroma');
-
+      const count = await this.collection.count();
       return {
-        totalDocuments: 0,
+        totalDocuments: count,
         documentsByType: {},
-        totalEmbeddings: 0,
-        collectionSize: 0,
+        totalEmbeddings: count,
+        collectionSize: count,
         lastUpdated: new Date(),
       };
     } catch (error) {
@@ -338,157 +394,72 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     }
   }
 
-  async optimizeCollection(): Promise<void> {
-    this.ensureInitialized();
+  // ─── Content Type Specific Operations ─────────────
+  // These are stubs — actual indexing is done by ReindexAllUseCase
 
-    try {
-      // Chroma handles optimization automatically
-      this.logger.log('Collection optimization completed');
-    } catch (error) {
-      this.logger.error('Failed to optimize collection', error);
-      throw error;
-    }
-  }
-
-  // Content type specific operations
   async indexBooks(bookIds: string[]): Promise<BatchIndexResult> {
-    this.logger.warn(
-      `Book indexing not implemented in Chroma repository. Use external indexing service.`,
-    );
-    return {
-      totalProcessed: bookIds.length,
-      successful: 0,
-      failed: bookIds.length,
-      errors: bookIds.map((id) => ({
-        contentId: id,
-        error: 'Book indexing not implemented in Chroma repository',
-      })),
-    };
+    throw new Error('Not implemented — use ReindexAllUseCase');
   }
 
   async indexAuthors(authorIds: string[]): Promise<BatchIndexResult> {
-    this.logger.warn(
-      `Author indexing not implemented in Chroma repository. Use external indexing service.`,
-    );
-    return {
-      totalProcessed: authorIds.length,
-      successful: 0,
-      failed: authorIds.length,
-      errors: authorIds.map((id) => ({
-        contentId: id,
-        error: 'Author indexing not implemented in Chroma repository',
-      })),
-    };
+    throw new Error('Not implemented — use ReindexAllUseCase');
   }
 
   async indexChapters(chapterIds: string[]): Promise<BatchIndexResult> {
-    this.logger.warn(
-      `Chapter indexing not implemented in Chroma repository. Use external indexing service.`,
-    );
-    return {
-      totalProcessed: chapterIds.length,
-      successful: 0,
-      failed: chapterIds.length,
-      errors: chapterIds.map((id) => ({
-        contentId: id,
-        error: 'Chapter indexing not implemented in Chroma repository',
-      })),
-    };
+    throw new Error('Not implemented — use ReindexAllUseCase');
   }
 
-  // Reindexing operations
-  async reindexContent(
-    contentId: string,
-    contentType: ContentType,
-  ): Promise<IndexResult> {
-    this.logger.warn(
-      `Reindexing not implemented in Chroma repository. Use external indexing service.`,
-    );
-    return {
-      success: false,
-      error: 'Reindexing not implemented in Chroma repository',
-    };
+  // ─── Private Helpers ─────────────────────────────
+
+  /**
+   * Unified mapping from Chroma raw data to VectorDocument domain entity.
+   */
+  private mapToVectorDocument(pageContent: string, metadata: ChromaMetadata): VectorDocument {
+    const contentType = this.parseContentType(metadata?.contentType);
+    return VectorDocument.reconstitute({
+      id: metadata?.id || '',
+      contentId: metadata?.contentId || '',
+      contentType,
+      content: pageContent || '',
+      metadata: {
+        title: metadata?.title || '',
+        author: metadata?.author || '',
+        genres: metadata?.genres || [],
+        tags: metadata?.tags || [],
+        timestamp: metadata?.timestamp || Date.now(),
+        chunkIndex: metadata?.chunkIndex,
+      },
+      embedding: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   }
 
-  async reindexAll(): Promise<BatchIndexResult> {
-    this.logger.warn(
-      `Reindex all not implemented in Chroma repository. Use external indexing service.`,
-    );
-    return {
-      totalProcessed: 0,
-      successful: 0,
-      failed: 0,
-      errors: [],
-    };
+  private toLangchainDocument(doc: VectorDocument): Document {
+    return new Document({
+      pageContent: doc.content,
+      metadata: {
+        id: doc.id.toString(),
+        contentId: doc.contentId,
+        contentType: doc.contentType.toString(),
+        ...doc.metadata,
+      },
+    });
   }
 
-  // Utility operations
-  async existsByContentId(
-    contentId: string,
-    contentType?: ContentType,
-  ): Promise<boolean> {
-    const documents = await this.findByContentId(contentId, contentType);
-    return documents.length > 0;
+  private calculateSimilarityScore(distance: number): number {
+    // Chroma with cosine space returns distance in [0, 2]: 0 = identical, 2 = opposite
+    // Similarity = 1 - distance / 2
+    const similarity = 1 - distance / 2;
+    return Math.max(0, Math.min(1, similarity));
   }
 
-  async countByContentType(contentType: ContentType): Promise<number> {
-    const documents = await this.findByContentId('', contentType);
-    return documents.length;
-  }
-
-  async getDocumentsByContentType(
-    contentType: ContentType,
-    limit?: number,
-  ): Promise<VectorDocument[]> {
-    this.ensureInitialized();
-
-    try {
-      const results = await this.vectorStore.similaritySearchWithScore(
-        `contentType:${contentType.toString()}`,
-        limit || 100,
-      );
-
-      return results.map((result) => this.mapLangchainResultToDocument(result));
-    } catch (error) {
-      this.logger.error(
-        `Failed to get documents by content type: ${contentType.toString()}`,
-        error,
-      );
-      return [];
+  private parseContentType(value: string | undefined): ContentTypeValue {
+    const valid: ContentTypeValue[] = ['book', 'author', 'chapter'];
+    if (value && valid.includes(value as ContentTypeValue)) {
+      return value as ContentTypeValue;
     }
-  }
-
-  private mapLangchainDocToDocument(doc: any): VectorDocument {
-    const metadata = doc.metadata || {};
-
-    return VectorDocument.reconstitute({
-      id: metadata.id || this.generateId(),
-      contentId: metadata.contentId || '',
-      contentType: metadata.contentType || 'book',
-      content: doc.pageContent,
-      metadata: metadata,
-      embedding: [], // Embedding not available in search results
-      createdAt: new Date(), // Not available in Chroma results
-      updatedAt: new Date(), // Not available in Chroma results
-    });
-  }
-
-  private mapLangchainResultToDocument(result: any): VectorDocument {
-    const metadata = result.metadata || {};
-
-    return VectorDocument.reconstitute({
-      id: metadata.id || this.generateId(),
-      contentId: metadata.contentId || '',
-      contentType: metadata.contentType || 'book',
-      content: result.pageContent,
-      metadata: metadata,
-      embedding: [], // Embedding not available in search results
-      createdAt: new Date(), // Not available in Chroma results
-      updatedAt: new Date(), // Not available in Chroma results
-    });
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+    this.logger.warn(`⚠️ Unknown contentType: "${value}", defaulting to 'book'`);
+    return 'book';
   }
 }

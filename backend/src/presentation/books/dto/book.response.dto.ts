@@ -3,6 +3,7 @@ import {
   BookListReadModel,
   GenreSummary,
 } from '@/domain/books/read-models/book-list.read-model';
+import { SearchResultBook } from '@/domain/search/models/search-result.model';
 
 export class BookResponseDto {
   id: string;
@@ -108,5 +109,37 @@ export class BookResponseDto {
     })[],
   ): BookResponseDto[] {
     return readModels.map((rm) => BookResponseDto.fromReadModel(rm));
+  }
+
+  static fromSearchResult(result: SearchResultBook): BookResponseDto {
+    return new BookResponseDto({
+      id: result.id,
+      title: result.title,
+      slug: result.slug,
+      authorId: result.authorId._id,
+      authorName: result.authorId.name,
+      genres: result.genres.map((g) => ({
+        id: g._id,
+        name: g.name,
+        slug: g.slug,
+      })),
+      description: result.description || '',
+      publishedYear: '',
+      coverUrl: result.coverUrl || '',
+      status: result.status,
+      tags: result.tags || [],
+      likedBy: [],
+      stats: {
+        views: result.stats.views,
+        likes: result.stats.likes,
+        chapterCount: result.stats.chapters,
+      },
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    });
+  }
+
+  static fromSearchResults(results: SearchResultBook[]): BookResponseDto[] {
+    return results.map((result) => BookResponseDto.fromSearchResult(result));
   }
 }

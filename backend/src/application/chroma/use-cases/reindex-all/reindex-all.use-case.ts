@@ -1,223 +1,294 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
-import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { IVectorRepository, BatchIndexResult } from '@/domain/chroma/repositories/vector.repository.interface';
 import { VectorDocument } from '@/domain/chroma/entities/vector-document.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+
+interface IndexStats {
+  total: number;
+  successful: number;
+  failed: number;
+  errors: string[];
+}
+
+export interface ReindexResult {
+  success: boolean;
+  details: { authors: IndexStats; books: IndexStats };
+}
 
 @Injectable()
 export class ReindexAllUseCase {
   private readonly logger = new Logger(ReindexAllUseCase.name);
+  private readonly BATCH_THRESHOLD = 500;
+  private readonly PAGE_LIMIT = 100;
+  private readonly MAX_ERRORS_IN_STATS = 100;
 
   constructor(
-    private readonly vectorRepository: IVectorRepository,
-    private readonly bookRepository: IBookRepository,
     private readonly authorRepository: IAuthorRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly bookRepository: IBookRepository,
+    private readonly vectorRepository: IVectorRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute() {
-    this.logger.log('Starting full reindex of all content types');
+  async execute(): Promise<ReindexResult> {
+    try {
+      this.logger.log('🚀 Starting full reindexing process...');
 
-    await this.vectorRepository.clearCollection();
+      // 1. Clear existing collection
+      // Lưu ý: Hiện tại Repository chưa hỗ trợ cơ chế Swap Collection (Blue-Green).
+      // Chúng ta chấp nhận rủi ro downtime ngắn trong lúc reindex.
+      await this.vectorRepository.clearCollection();
+      this.logger.log('🗑️ Vector collection cleared.');
 
-    // Tạm thời chỉ reindex authors để test cho nhanh
-    const booksResult = {
-      totalProcessed: 0,
-      successful: 0,
-      failed: 0,
-      errors: [] as Array<{ contentId: string; error: string }>,
-    };
-    const authorsResult = await this.indexAuthors();
-    const chaptersResult = {
-      totalProcessed: 0,
-      successful: 0,
-      failed: 0,
-      errors: [] as Array<{ contentId: string; error: string }>,
-    };
+      // 2. Run Reindexing in Parallel for performance
+      this.logger.log('⚡ Running Author and Book reindexing in parallel...');
+      const [authorStats, bookStats] = await Promise.all([
+        this.reindexAuthors(),
+        this.reindexBooks(),
+      ]);
 
-    return {
-      books: booksResult,
-      authors: authorsResult,
-      chapters: chaptersResult,
-      total:
-        booksResult.successful +
-        authorsResult.successful +
-        chaptersResult.successful,
-    };
+      this.logger.log('✨ Full reindexing process completed!');
+
+      return {
+        success: true,
+        details: { authors: authorStats, books: bookStats },
+      };
+    } catch (error) {
+      this.logger.error('❌ Full reindexing failed:', error);
+      throw error;
+    }
   }
 
-  private async indexBooks() {
-    try {
+  private async reindexAuthors(): Promise<IndexStats> {
+    const stats: IndexStats = { total: 0, successful: 0, failed: 0, errors: [] };
+    let currentPage = 1;
+    let totalPages = 1;
+    let batchBuffer: VectorDocument[] = [];
+    const failedEntityIds = new Set<string>();
+
+    this.logger.log('📚 Starting author reindexing...');
+
+    do {
+      const result = await this.authorRepository.findAll(
+        {},
+        { page: currentPage, limit: this.PAGE_LIMIT },
+      );
+      const authors = result.data;
+      totalPages = result.meta.totalPages;
+
+      if (currentPage === 1) {
+        stats.total = result.meta.total;
+        this.logger.log(
+          `📚 Total authors: ${stats.total} (${totalPages} pages)`,
+        );
+      }
+
+      for (const author of authors) {
+        try {
+          const bioClean = this.stripHtml(author.bio);
+          const content = `Tác giả: ${author.name.toString()}\nTiểu sử: ${bioClean}`;
+
+          const document = VectorDocument.createAuthorDocument(
+            this.idGenerator.generate(),
+            author.id.toString(),
+            content,
+            { name: author.name.toString(), type: 'author' },
+            [],
+          );
+          batchBuffer.push(document);
+
+          if (batchBuffer.length >= this.BATCH_THRESHOLD) {
+            await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
+            batchBuffer = [];
+          }
+        } catch (error) {
+          failedEntityIds.add(author.id.toString());
+          this.addError(stats.errors, `Author ${author.id}: ${error.message}`);
+        }
+      }
+      currentPage++;
+    } while (currentPage <= totalPages);
+
+    if (batchBuffer.length > 0) {
+      await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
+    }
+
+    stats.failed = failedEntityIds.size;
+    stats.successful = stats.total - stats.failed;
+    return stats;
+  }
+
+  private async reindexBooks(): Promise<IndexStats> {
+    const stats: IndexStats = { total: 0, successful: 0, failed: 0, errors: [] };
+    let currentPage = 1;
+    let totalPages = 1;
+    let batchBuffer: VectorDocument[] = [];
+    const failedEntityIds = new Set<string>();
+
+    this.logger.log('📖 Starting book reindexing...');
+
+    do {
       const result = await this.bookRepository.findAll(
         {},
-        { page: 1, limit: 10000 },
+        { page: currentPage, limit: this.PAGE_LIMIT },
       );
       const books = result.data;
+      totalPages = result.meta.totalPages;
 
-      if (!books || books.length === 0) {
-        return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
+      if (currentPage === 1) {
+        stats.total = result.meta.total;
+        this.logger.log(`📖 Total books: ${stats.total} (${totalPages} pages)`);
       }
 
-      const documents = books
-        .map((book) => {
-          try {
-            const titleStr = book.title ? book.title.toString() : 'Unknown';
-            const tagsStr = Array.isArray(book.tags) ? book.tags.join(' ') : '';
-            const descStr = book.description || '';
-            const content =
-              `${titleStr} ${descStr} ${tagsStr}`.trim() || 'No content';
+      for (const book of books) {
+        try {
+          const titleStr = book.title.toString();
+          const authorStr = book.authorName || 'Không rõ';
+          const genreStr =
+            book.genreObjects?.map((g) => g.name).join(', ') || '';
 
-            return VectorDocument.create({
-              id: this.idGenerator.generate(),
-              contentId: book.id
-                ? book.id.toString()
-                : this.idGenerator.generate(),
-              contentType: 'book',
-              content,
-              metadata: {
+          const contextHeader = `Sách: ${titleStr} | Tác giả: ${authorStr} | Thể loại: ${genreStr}\nNội dung: `;
+
+          const descriptionClean = this.stripHtml(book.description);
+          const chunks = this.chunkText(descriptionClean, 500);
+
+          for (let i = 0; i < chunks.length; i++) {
+            const document = VectorDocument.createBookDocument(
+              this.idGenerator.generate(),
+              book.id.toString(),
+              contextHeader + chunks[i],
+              {
                 title: titleStr,
-                authorId: book.authorId ? book.authorId.toString() : 'Unknown',
+                author: authorStr,
+                genres: genreStr,
+                slug: book.slug,
+                chunkIndex: i,
+                totalChunks: chunks.length,
+                type: 'book',
+                bookId: book.id.toString(),
               },
-              // Dùng embedding mặc định đơn giản để tránh mảng rỗng gây lỗi phía Chroma
-              embedding: [0.0],
-            });
-          } catch (mapErr) {
-            this.logger.error(`Error mapping book ${book?.id}`, mapErr);
-            return null; // Filtered out below
-          }
-        })
-        .filter((doc): doc is VectorDocument => doc !== null);
+              [],
+            );
+            batchBuffer.push(document);
 
-      if (documents.length === 0) {
-        return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
+            if (batchBuffer.length >= this.BATCH_THRESHOLD) {
+              await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
+              batchBuffer = [];
+            }
+          }
+        } catch (error) {
+          failedEntityIds.add(book.id.toString());
+          this.addError(stats.errors, `Book ${book.id}: ${error.message}`);
+        }
       }
 
-      return await this.vectorRepository.saveBatch(documents);
-    } catch (error) {
-      this.logger.error(`Failed to index books: ${error.message}`, error);
-      return {
-        totalProcessed: 0,
-        successful: 0,
-        failed: 0,
-        errors: [{ contentId: 'all', error: error.message }],
-      };
+      currentPage++;
+    } while (currentPage <= totalPages);
+
+    if (batchBuffer.length > 0) {
+      await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
+    }
+
+    stats.failed = failedEntityIds.size;
+    stats.successful = stats.total - stats.failed;
+    return stats;
+  }
+
+  private async flushBatch(
+    batch: VectorDocument[],
+    failedIds: Set<string>,
+    errorList: string[],
+  ): Promise<void> {
+    const MAX_RETRIES = 3;
+    let attempt = 0;
+
+    while (attempt < MAX_RETRIES) {
+      try {
+        const result = await this.vectorRepository.saveBatch(batch);
+        if (result.failed > 0) {
+          for (const err of result.errors) {
+            failedIds.add(err.contentId);
+            this.addError(
+              errorList,
+              `Vector error for ${err.contentId}: ${err.error}`,
+            );
+          }
+        }
+        return; // Success or handled
+      } catch (error) {
+        attempt++;
+        if (attempt >= MAX_RETRIES) {
+          // If all retries failed, mark all entities in this batch as failed
+          for (const doc of batch) {
+            failedIds.add(doc.contentId);
+          }
+          this.addError(
+            errorList,
+            `Critical batch failure after ${MAX_RETRIES} attempts: ${error.message}`,
+          );
+          break;
+        }
+        // Exponential backoff
+        const delay = Math.pow(2, attempt) * 1000;
+        this.logger.warn(
+          `Batch save failed, retrying in ${delay}ms (Attempt ${attempt}/${MAX_RETRIES})...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
   }
 
-  private async indexAuthors() {
-    try {
-      const authors = await this.authorRepository.findAll(
-        {},
-        { page: 1, limit: 10000 },
-      );
-
-      if (!authors.data || authors.data.length === 0) {
-        return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
-      }
-
-      const documents = authors.data
-        .map((author) => {
-          try {
-            const nameStr = author.name ? author.name.toString() : 'Unknown';
-            const content =
-              `${nameStr} ${author.bio || ''}`.trim() || 'No content';
-            return VectorDocument.create({
-              id: this.idGenerator.generate(),
-              contentId: author.id
-                ? author.id.toString()
-                : this.idGenerator.generate(),
-              contentType: 'author',
-              content,
-              metadata: {
-                name: nameStr,
-              },
-              // Dùng embedding mặc định đơn giản để tránh mảng rỗng gây lỗi phía Chroma
-              embedding: [0.0],
-            });
-          } catch (mapErr) {
-            this.logger.error(`Error mapping author ${author?.id}`, mapErr);
-            return null;
-          }
-        })
-        .filter((doc): doc is VectorDocument => doc !== null);
-
-      if (documents.length === 0) {
-        return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
-      }
-
-      return await this.vectorRepository.saveBatch(documents);
-    } catch (error) {
-      this.logger.error(`Failed to index authors: ${error.message}`, error);
-      return {
-        totalProcessed: 0,
-        successful: 0,
-        failed: 0,
-        errors: [{ contentId: 'all', error: error.message }],
-      };
+  private addError(errorList: string[], message: string): void {
+    if (errorList.length < this.MAX_ERRORS_IN_STATS) {
+      errorList.push(message);
+    } else if (errorList.length === this.MAX_ERRORS_IN_STATS) {
+      errorList.push('... (Too many errors, further errors suppressed)');
     }
   }
 
-  private async indexChapters() {
-    try {
-      const chapters = await this.chapterRepository.findAll(
-        {},
-        { page: 1, limit: 50000 },
-      ); // chapters can be many
+  private stripHtml(html: string): string {
+    if (!html) return '';
+    return html
+      .replace(/<[^>]*>?/gm, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 
-      if (!chapters.data || chapters.data.length === 0) {
-        return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
+  private chunkText(
+    text: string,
+    size: number,
+    overlap: number = 100,
+  ): string[] {
+    if (!text) return [];
+    if (text.length <= size) return [text.trim()];
+
+    const chunks: string[] = [];
+    let current = 0;
+
+    while (current < text.length) {
+      let end = current + size;
+
+      if (end < text.length) {
+        const lookbackRange = Math.floor(size * 0.2);
+        const lastSpace = text.lastIndexOf(' ', end);
+
+        if (lastSpace > end - lookbackRange && lastSpace > current) {
+          end = lastSpace;
+        }
       }
 
-      const documents = chapters.data
-        .map((chapter) => {
-          try {
-            const titleStr = chapter.title
-              ? chapter.title.toString()
-              : 'Unknown';
-            const paragraphs = chapter.paragraphs || [];
-            const textContent = paragraphs
-              .map((p) => p.content || '')
-              .join('\n');
-            const content =
-              `${titleStr} ${textContent || ''}`.trim() || 'No content';
-
-            return VectorDocument.create({
-              id: this.idGenerator.generate(),
-              contentId: chapter.id
-                ? chapter.id.toString()
-                : this.idGenerator.generate(),
-              contentType: 'chapter',
-              content,
-              metadata: {
-                title: titleStr,
-                bookId: chapter.bookId ? chapter.bookId.toString() : 'Unknown',
-              },
-              // Dùng embedding mặc định đơn giản để tránh mảng rỗng gây lỗi phía Chroma
-              embedding: [0.0],
-            });
-          } catch (mapErr) {
-            this.logger.error(`Error mapping chapter ${chapter?.id}`, mapErr);
-            return null;
-          }
-        })
-        .filter((doc): doc is VectorDocument => doc !== null);
-
-      if (documents.length === 0) {
-        return { totalProcessed: 0, successful: 0, failed: 0, errors: [] };
+      const chunk = text.substring(current, end).trim();
+      if (chunk.length > 0) {
+        chunks.push(chunk);
       }
 
-      return await this.vectorRepository.saveBatch(documents);
-    } catch (error) {
-      this.logger.error(`Failed to index chapters: ${error.message}`, error);
-      return {
-        totalProcessed: 0,
-        successful: 0,
-        failed: 0,
-        errors: [{ contentId: 'all', error: error.message }],
-      };
+      if (end >= text.length) break;
+
+      const nextStep = end - overlap;
+      current = nextStep > current ? nextStep : end;
     }
+
+    return chunks;
   }
 }

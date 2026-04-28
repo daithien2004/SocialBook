@@ -83,8 +83,10 @@ export class BookRepository
     if (filter.title) {
       queryFilter.title = { $regex: filter.title, $options: 'i' };
     }
-    if (filter.authorId) {
-      queryFilter.authorId = filter.authorId;
+    if (filter.authorIds && filter.authorIds.length > 0) {
+      queryFilter.authorId = { $in: filter.authorIds.map(id => new Types.ObjectId(id)) };
+    } else if (filter.authorId) {
+      queryFilter.authorId = new Types.ObjectId(filter.authorId);
     }
     if (filter.genres && filter.genres.length > 0) {
       queryFilter.genres = { $in: filter.genres };
@@ -129,6 +131,8 @@ export class BookRepository
     const documents = (await query
       .skip(skip)
       .limit(pagination.limit)
+      .populate('authorId', 'name')
+      .populate('genres', 'name slug')
       .lean()
       .exec()) as unknown as RawBookDocument[];
 
@@ -407,6 +411,16 @@ export class BookRepository
       .exec()) as unknown as RawBookDocument[];
 
     return documents.map((doc) => BookMapper.toDomain(doc));
+  }
+
+  async findIdsByFilter(filter: BookFilter): Promise<string[]> {
+    const queryFilter = this.buildQueryFilter(filter);
+    const documents = await this.bookModel
+      .find(queryFilter, { _id: 1 })
+      .lean()
+      .exec();
+
+    return documents.map((doc) => doc._id.toString());
   }
 
   async getFilters(): Promise<BookFilters> {

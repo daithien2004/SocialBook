@@ -1,6 +1,9 @@
 export class ToggleBookLikeCommand {
-  constructor(
-    public readonly bookId: string,
-    public readonly userId: string,
-  ) {}
+  public readonly bookId: string;
+  public readonly userId: string;
+
+  constructor(props: { bookId: string; userId: string }) {
+    this.bookId = props.bookId;
+    this.userId = props.userId;
+  }
 }

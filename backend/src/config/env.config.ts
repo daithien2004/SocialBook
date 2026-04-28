@@ -33,6 +33,11 @@ export default registerAs('env', () => ({
   GOOGLE_API_KEY:
     process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '', // Fallback or alias
   VOICERSS_API_KEY: process.env.VOICERSS_API_KEY || '',
+  HUGGINGFACE_API_KEY: process.env.HUGGINGFACE_API_KEY || '',
+
+  // Chroma
+  CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
+  CHROMA_COLLECTION: process.env.CHROMA_COLLECTION || 'socialbook_vectors',
 
   // Cache
   CACHE_TTL: parseInt(process.env.CACHE_TTL ?? '', 10) || 900,
