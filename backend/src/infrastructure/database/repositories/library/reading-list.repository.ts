@@ -123,14 +123,18 @@ export class ReadingListRepository implements IReadingListRepository {
 
   async findAllDetailByUserId(
     userId: UserId,
-    status?: ReadingStatus,
+    status?: ReadingStatus | ReadingStatus[],
   ): Promise<LibraryItemReadModel[]> {
     const query: FilterQuery<ReadingListDocument> = {
       userId: new Types.ObjectId(userId.toString()),
     };
 
     if (status) {
-      query.status = status;
+      if (Array.isArray(status)) {
+        query.status = { $in: status };
+      } else {
+        query.status = status;
+      }
     }
 
     const docs = await this.readingListModel

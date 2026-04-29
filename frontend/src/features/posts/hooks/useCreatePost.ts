@@ -7,12 +7,16 @@ import { toast } from 'sonner';
 export const createPostSchema = z.object({
   content: z.string().min(1, 'Vui lòng nhập nội dung bài viết'),
   images: z.array(z.instanceof(File)).max(10, 'Chỉ có thể thêm tối đa 10 ảnh'),
+  bookId: z.string().min(1, 'Vui lòng chọn một cuốn sách'),
+  bookTitle: z.string().optional(),
 });
 
 export type CreatePostFormValues = z.infer<typeof createPostSchema>;
 
 interface UseCreatePostOptions {
   defaultContent?: string;
+  defaultBookId?: string;
+  defaultBookTitle?: string;
   maxImages?: number;
   onSubmit: (values: CreatePostFormValues) => Promise<void>;
 }
@@ -25,11 +29,14 @@ interface UseCreatePostReturn {
   handleRemoveImage: (index: number) => void;
   canAddMore: boolean;
   totalImages: number;
+  onSubmit: (values: CreatePostFormValues) => Promise<void>;
 }
 
 export function useCreatePost(options: UseCreatePostOptions): UseCreatePostReturn {
   const {
     defaultContent = '',
+    defaultBookId = '',
+    defaultBookTitle = '',
     maxImages = 10,
     onSubmit: externalOnSubmit,
   } = options;
@@ -41,6 +48,8 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
     resolver: zodResolver(createPostSchema),
     defaultValues: {
       content: defaultContent,
+      bookId: defaultBookId,
+      bookTitle: defaultBookTitle,
       images: [],
     },
   });
@@ -52,6 +61,8 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
   useEffect(() => {
     reset({
       content: defaultContent,
+      bookId: defaultBookId,
+      bookTitle: defaultBookTitle,
       images: [],
     });
     setPreviewUrls([]);
@@ -124,5 +135,6 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
     handleRemoveImage,
     canAddMore,
     totalImages,
+    onSubmit,
   };
 }

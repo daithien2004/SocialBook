@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useGetBooksQuery } from '@/features/books/api/bookApi';
+import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
 import { Book, BookOrderField } from '@/features/books/types/book.interface';
+import { LibraryStatus } from '@/features/library/types/library.interface';
 import { ChevronDown, Search, X, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -12,6 +14,7 @@ interface BookSelectorProps {
   onChange: (bookId: string, book?: Book) => void;
   disabled?: boolean;
   placeholder?: string;
+  onlyLibrary?: boolean;
 }
 
 export default function BookSelector({
@@ -19,6 +22,7 @@ export default function BookSelector({
   onChange,
   disabled = false,
   placeholder = 'Chọn sách...',
+  onlyLibrary = false,
 }: BookSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,19 +33,39 @@ export default function BookSelector({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, isFetching } = useGetBooksQuery({
+  const { 
+    data: normalBooksData, 
+    isLoading: isNormalLoading, 
+    isFetching: isNormalFetching 
+  } = useGetBooksQuery({
     page,
     limit: 20,
     sortBy: 'trending' as BookOrderField,
-  });
+  }, { skip: onlyLibrary });
 
-  const books = data?.data || [];
-  const meta = data?.meta;
+  const {
+    data: libraryData,
+    isLoading: isLibraryLoading,
+    isFetching: isLibraryFetching
+  } = useGetLibraryBooksQuery({
+    status: 'READING,COMPLETED'
+  }, { skip: !onlyLibrary });
+
+  const books = useMemo(() => {
+    if (onlyLibrary) {
+      return libraryData?.map(item => item.bookId) || [];
+    }
+    return normalBooksData?.data || [];
+  }, [onlyLibrary, normalBooksData, libraryData]);
+
+  const meta = normalBooksData?.meta;
+  const isLoading = onlyLibrary ? isLibraryLoading : isNormalLoading;
+  const isFetching = onlyLibrary ? isLibraryFetching : isNormalFetching;
 
   useEffect(() => {
-    if (books.length > 0 && meta) {
+    if (books.length > 0) {
       setAllBooks((prev) => {
-        if (page === 1) {
+        if (page === 1 || onlyLibrary) { // Reset if first page or in library mode (which is not paginated on frontend yet)
           return books;
         }
         const uniqueBooks = books.filter(
@@ -50,9 +74,13 @@ export default function BookSelector({
         return [...prev, ...uniqueBooks];
       });
 
-      setHasMore(meta.current < meta.totalPages);
+      if (meta) {
+        setHasMore(meta.current < meta.totalPages);
+      } else if (onlyLibrary) {
+        setHasMore(false); // Library list is usually all-in-one in this API
+      }
     }
-  }, [books, page, meta]);
+  }, [books, page, meta, onlyLibrary]);
 
   const selectedBook = allBooks.find((book) => book.id === value);
   const filteredBooks = allBooks.filter(
@@ -77,7 +105,7 @@ export default function BookSelector({
 
   const lastBookRef = useCallback(
     (node: HTMLButtonElement | null) => {
-      if (isFetching || !hasMore || searchQuery) return;
+      if (isFetching || !hasMore || searchQuery || onlyLibrary) return;
 
       const observer = new IntersectionObserver(
         (entries) => {

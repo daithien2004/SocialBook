@@ -10,6 +10,7 @@ import { useTheme } from 'next-themes';
 import React from 'react';
 import { useModalStore } from '@/store/useModalStore';
 import { usePostComments } from '@/features/posts/hooks/usePostComments';
+import { usePostActions } from '@/features/posts/hooks/usePostActions';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,9 +31,12 @@ export default function ModalPostComment() {
     const [createComment, { isLoading: isPosting }] = usePostCreateMutation();
 
     const post = postCommentData?.post;
-    const handleLike = postCommentData?.handleLike;
-    const likeStatus = postCommentData?.likeStatus;
-    const likeCount = postCommentData?.likeCount;
+
+    const { isLiked, likeCount, toggleLike } = usePostActions({
+        postId: post?.id ?? '',
+        initialLikeCount: postCommentData?.likeCount ?? 0,
+        initialLikeStatus: postCommentData?.likeStatus ?? false,
+    });
 
     const {
         commentText,
@@ -113,15 +117,6 @@ export default function ModalPostComment() {
                                 </p>
                             )}
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={closePostComment}
-                            className="rounded-full hover:bg-slate-100 dark:hover:bg-gray-800"
-                            aria-label="Đóng"
-                        >
-                            <X className="w-5 h-5 text-slate-500" />
-                        </Button>
                     </div>
 
                     {/* Post Content & Comments Area */}
@@ -173,10 +168,10 @@ export default function ModalPostComment() {
                                         variant="ghost"
                                         size="icon"
                                         className="hover:text-rose-500 rounded-full"
-                                        onClick={() => handleLike?.(post.id)}
-                                        aria-label={likeStatus ? "Bỏ thích" : "Thích"}
+                                        onClick={() => toggleLike()}
+                                        aria-label={isLiked ? "Bỏ thích" : "Thích"}
                                     >
-                                        <Heart className={cn("w-6 h-6 transition-all", likeStatus ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-700 dark:text-gray-300')} />
+                                        <Heart className={cn("w-6 h-6 transition-all", isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-700 dark:text-gray-300')} />
                                     </Button>
                                     <Button
                                         variant="ghost"

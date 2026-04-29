@@ -196,6 +196,7 @@ export default function EditPostModal() {
                                                         value={field.value}
                                                         onChange={(id) => field.onChange(id)}
                                                         disabled={isLoading}
+                                                        onlyLibrary
                                                     />
                                                 </FormControl>
                                                 <FormMessage />

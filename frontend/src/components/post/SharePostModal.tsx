@@ -59,7 +59,7 @@ export default function SharePostModal() {
 
   return (
     <Dialog open={isSharePostOpen} onOpenChange={(open) => !open && closeSharePost()}>
-      <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-gray-800">
+      <DialogContent className="flex flex-col">
         <DialogHeader className="px-6 py-5 border-b border-slate-100 dark:border-gray-800">
           <DialogTitle className="text-xl font-bold text-slate-900 dark:text-gray-100">
             Chia sẻ bài viết
@@ -127,18 +127,20 @@ export default function SharePostModal() {
           </div>
 
           {/* Copy Link Section */}
-          <div className="flex items-center gap-2 bg-slate-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 rounded-2xl p-2.5">
-            <div className="bg-white dark:bg-gray-800 p-2 rounded-xl border border-slate-100 dark:border-gray-700">
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 rounded-2xl p-2.5">
+            <div className="flex-shrink-0 bg-white dark:bg-gray-800 p-2 rounded-xl border border-slate-100 dark:border-gray-700">
               <Link2 className="h-4 w-4 text-slate-400 dark:text-gray-500" />
             </div>
-            <span className="text-sm text-slate-600 dark:text-gray-400 truncate flex-1 px-1">
-              {postUrl}
-            </span>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <span className="text-sm text-slate-600 dark:text-gray-400 truncate block px-1">
+                {postUrl}
+              </span>
+            </div>
             <Button
               onClick={handleCopyLink}
               className={cn(
-                "rounded-xl font-semibold text-sm transition-all h-10 px-5",
-                copied ? "bg-emerald-500 hover:bg-emerald-600 text-white" : ""
+                "flex-shrink-0 rounded-xl font-semibold text-sm transition-all h-10 px-5",
+                copied ? "bg-emerald-500 hover:bg-emerald-600 text-white border-none" : ""
               )}
               variant={copied ? "default" : "outline"}
             >
