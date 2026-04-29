@@ -89,10 +89,6 @@ export function useNotificationSocket(
             onReadNotification(data);
         });
 
-        socketInstance.on('connect_error', (err) => {
-            console.error('--- [Socket] Lỗi kết nối: ---', err.message);
-        });
-
         return () => {
         };
     }, [userToken, disconnect, onNotificationList, onNewNotification, onReadNotification]);

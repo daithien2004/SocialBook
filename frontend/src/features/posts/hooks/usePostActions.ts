@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDeletePostImageMutation, useDeletePostMutation } from '@/features/posts/api/postApi';
 import { usePostToggleLikeMutation } from '@/features/likes/api/likeApi';
 import { toast } from 'sonner';
@@ -25,6 +25,11 @@ export function usePostActions(options: UsePostActionsOptions): UsePostActionsRe
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isLiked, setIsLiked] = useState(initialLikeStatus);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    setLikeCount(initialLikeCount);
+    setIsLiked(initialLikeStatus);
+  }, [postId, initialLikeCount, initialLikeStatus]);
 
   const [deletePostMutation] = useDeletePostMutation();
   const [deleteImageMutation] = useDeletePostImageMutation();

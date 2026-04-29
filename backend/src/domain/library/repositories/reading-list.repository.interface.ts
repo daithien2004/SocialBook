@@ -22,6 +22,6 @@ export abstract class IReadingListRepository {
   ): Promise<LibraryItemReadModel | null>;
   abstract findAllDetailByUserId(
     userId: UserId,
-    status?: ReadingStatus,
+    status?: ReadingStatus | ReadingStatus[],
   ): Promise<LibraryItemReadModel[]>;
 }
