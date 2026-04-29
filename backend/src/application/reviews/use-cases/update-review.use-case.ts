@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ErrorMessages } from '@/common/constants/error-messages';
 import {
   BadRequestDomainException,
   NotFoundDomainException,
@@ -21,12 +22,12 @@ export class UpdateReviewUseCase {
   ): Promise<any> {
     const review = await this.reviewRepository.findById(reviewId);
     if (!review) {
-      throw new NotFoundDomainException('Review not found');
+      throw new NotFoundDomainException(ErrorMessages.REVIEW_NOT_FOUND);
     }
 
     if (review.userId !== userId) {
       throw new BadRequestDomainException(
-        'You can only update your own review',
+        ErrorMessages.REVIEW_UPDATE_FORBIDDEN,
       );
     }
 
@@ -38,7 +39,7 @@ export class UpdateReviewUseCase {
       );
       if (!moderationResult.isSafe) {
         throw new BadRequestDomainException(
-          `Content rejected: ${moderationResult.reason}`,
+          `Nội dung bị từ chối: ${moderationResult.reason}`,
         );
       }
       review.updateContent(dto.content);

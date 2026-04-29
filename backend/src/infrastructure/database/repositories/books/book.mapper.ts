@@ -69,15 +69,13 @@ export class BookMapper {
       id: document._id.toString(),
       title: document.title,
       slug: document.slug,
-      authorId: authorIdStr,
-      authorName,
-      genres: (document.genres || [])
-        .filter((g): g is RawGenre => typeof g === 'object' && 'name' in g)
-        .map((g) => ({
-          id: g._id.toString(),
-          name: g.name,
-          slug: g.slug,
-        })),
+      authorId: author?._id?.toString() || '',
+      authorName: author?.name,
+      genres: (document.genres as RawGenre[] || []).map((g) => ({
+        id: g._id.toString(),
+        name: g.name,
+        slug: g.slug,
+      })),
       description: document.description || '',
       publishedYear: document.publishedYear || '',
       coverUrl: document.coverUrl || '',

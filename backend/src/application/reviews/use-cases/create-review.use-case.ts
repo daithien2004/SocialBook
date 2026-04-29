@@ -8,6 +8,7 @@ import { CreateReviewDto } from '@/application/reviews/dto/create-review.dto';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Review } from '@/domain/reviews/entities/review.entity';
+import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class CreateReviewUseCase {
@@ -24,7 +25,7 @@ export class CreateReviewUseCase {
       dto.bookId,
     );
     if (exists) {
-      throw new ConflictDomainException('Review already exists');
+      throw new ConflictDomainException(ErrorMessages.REVIEW_ALREADY_EXISTS);
     }
 
     // Content Moderation
@@ -32,8 +33,8 @@ export class CreateReviewUseCase {
       dto.content,
     );
     if (!moderationResult.isSafe) {
-      const reason = moderationResult.reason || 'Content is not safe';
-      throw new BadRequestDomainException(`Review rejected: ${reason}`);
+      const reason = moderationResult.reason || 'Nội dung không phù hợp';
+      throw new BadRequestDomainException(`${reason}`);
     }
 
     const review = Review.create({

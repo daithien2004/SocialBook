@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ErrorMessages } from '@/common/constants/error-messages';
 import {
   NotFoundDomainException,
   ForbiddenDomainException,
@@ -11,11 +12,11 @@ export class DeleteReviewUseCase {
 
   async execute(id: string, userId: string): Promise<void> {
     const review = await this.reviewRepository.findById(id);
-    if (!review) throw new NotFoundDomainException('Review not found');
+    if (!review) throw new NotFoundDomainException(ErrorMessages.REVIEW_NOT_FOUND);
 
     if (review.userId.toString() !== userId) {
       throw new ForbiddenDomainException(
-        'You can only delete your own reviews',
+        'Bạn chỉ có thể xóa bình luận của chính mình',
       );
     }
 

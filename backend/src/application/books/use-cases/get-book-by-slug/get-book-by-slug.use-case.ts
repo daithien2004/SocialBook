@@ -9,11 +9,11 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
 import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
+import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { GetBookBySlugQuery } from './get-book-by-slug.query';
 
 @Injectable()
 export class GetBookBySlugUseCase {
-  private readonly CACHE_TTL = 300;
 
   constructor(
     private readonly bookQueryProvider: IBookQueryProvider,
@@ -46,7 +46,7 @@ export class GetBookBySlugUseCase {
       }
 
       // 3. Set vào cache
-      await this.cache.set(cacheKey, book, this.CACHE_TTL);
+      await this.cache.set(cacheKey, book, CACHE_TTL.DEFAULT);
       bookDetail = book;
       viewBookId = book.id;
     }
