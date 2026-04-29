@@ -14,7 +14,6 @@ import {
 
 @Injectable()
 export class GetBookByIdUseCase {
-  private readonly CACHE_TTL = 300;
 
   constructor(
     private readonly bookRepository: IBookRepository,

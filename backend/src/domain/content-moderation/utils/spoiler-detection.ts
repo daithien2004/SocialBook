@@ -1,59 +1,92 @@
+import { normalizeForModeration } from './text-normalization';
+
 /**
  * Vietnamese Spoiler Detection
- * Detects content that reveals plot points
- * Belongs to domain layer – pure business logic, no framework dependencies
+ *
+ * Strategy:
+ * 1. Check raw text against accent-aware patterns
+ * 2. Normalize then check for variations
  */
 
-// Spoiler indicator patterns
-const SPOILER_PATTERNS = [
-  // Chapter references with outcomes (chương ... chết/cưới/...)
-  /chương\s+\d+.*?(chết|sống|hồi sinh|kết hôn|ly hôn|cưới|lấy nhau|thành đôi|chia tay|về với|phản bội|bỏ nhau)/i,
-  /chapter\s+\d+.*?(die|dies|died|death|alive|live|marry|married|divorce|betray|betrayed|kill|killed)/i,
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-  // Character fate reveals (nam chính/main ... chết/cưới)
-  /(nam chính|nữ chính|nhân vật chính|main|nvc|na9|nu9|nam 9|nữ 9|protagonist).*?(chết|sẽ chết|bị giết|hy sinh|tử trận|bay màu|sống|kết hôn|ly hôn|cưới|về với|thành đôi|chia tay|giết|bị đâm|phản bội|bỏ nhau)/i,
-  /(male lead|female lead|main character|protagonist).*?(die|dies|died|dead|death|will die|will be dead|gonna die|going to die|marry|marries|married|divorce|divorces|betray|betrays|betrayed|kill|kills|killed|will kill|will be killed|gets killed|will be betrayed|will betray)/i,
+export interface SpoilerMatch {
+  pattern: string;
+  group: string;
+  input: 'original' | 'normalized';
+}
 
-  // Ending spoilers (kết thúc/cuối ... chết/cưới)
-  /(kết thúc|ending|cuối cùng|cuối truyện|kết truyện|hết truyện|finally|in the end).*?(chết|sống|về với|bên nhau|thành đôi|kết hôn|cưới|có thai|sinh con|có hậu|bi thảm|buồn|vui vẻ|hạnh phúc)/i,
-  /(happy ending|sad ending|bad ending|good ending|tragic ending|he|se|oe|kết thúc có hậu|kết thúc buồn|kết thúc bi thảm|kết thúc vui vẻ)/i,
+// ─── Pattern Groups ───────────────────────────────────────────────────────────
 
-  // Plot reveals
-  /(thực ra|hóa ra|sự thật là|bật mí).*?(là|không phải|chính là|mới là)/i,
-  /actually.*?(is|isn't|the real)/i,
-  /spoiler.*?:/i,
-  /reveals?.*?that/i,
+interface PatternGroup {
+  group: string;
+  raw?: RegExp[];
+  normalized?: RegExp[];
+}
+
+const PATTERN_GROUPS: PatternGroup[] = [
+  {
+    group: 'chapter-outcome',
+    raw: [
+      /(chương|chap|tập)\s+\d+.*?(chết|sống|cưới|ly hôn|phản bội|giết|kết hôn)/i,
+    ],
+    normalized: [
+      /(chuong|chap|tap)\s+\d+.*?(chet|song|cuoi|ly hon|phan boi|giet|ket hon)/i,
+    ],
+  },
+  {
+    group: 'character-fate',
+    raw: [
+      /(nam chính|nữ chính|main|na9|nu9|nvc).*?(chết|sống|kết hôn|cưới|hy sinh|tử trận|bay màu)/i,
+    ],
+    normalized: [
+      /(nam chinh|nu chinh|main|na9|nu9|nvc).*?(chet|song|ket hon|cuoi|hy sinh|tu tran|bay mau)/i,
+    ],
+  },
+  {
+    group: 'ending',
+    raw: [
+      /(kết thúc|cuối cùng|cuối truyện|kết truyện|hết truyện).*?(chết|sống|thành đôi|kết hôn|có hậu|bi thảm)/i,
+    ],
+    normalized: [
+      /(ket thuc|cuoi cung|cuoi truyen|ket truyen|het truyen).*?(chet|song|thanh doi|ket hon|co hau|bi tham)/i,
+      /\b(happy ending|sad ending|bad ending|he|se|oe)\b/i,
+    ],
+  },
+  {
+    group: 'explicit-tags',
+    raw: [
+      /(tiết lộ|hóa ra|sự thật là).*?(:|là|rằng)/i,
+    ],
+    normalized: [
+      /(spoiler|spoil|leak|tiet lo|hoa ra|su that la).*?(:|la|rang)/i,
+    ],
+  },
 ];
 
-// Spoiler keywords
-const SPOILER_KEYWORDS = [
-  'spoiler',
-  'spoil',
-  'tiết lộ cốt truyện',
-  'leak plot',
-  'plot twist',
-];
+// ─── Main Detection ───────────────────────────────────────────────────────────
 
 /**
- * Check if content contains spoilers
- * Returns true if spoiler detected
+ * Check if text contains spoilers using structured pattern matching
  */
 export function containsSpoilers(text: string): boolean {
-  if (!text) return false;
+  if (!text?.trim()) return false;
 
-  const normalized = text.toLowerCase().trim();
+  const normalized = normalizeForModeration(text);
 
-  // Check for explicit spoiler keywords
-  for (const keyword of SPOILER_KEYWORDS) {
-    if (normalized.includes(keyword.toLowerCase())) {
-      return true;
+  for (const { raw, normalized: normalizedPatterns } of PATTERN_GROUPS) {
+    // 1. Check raw text
+    for (const pattern of raw ?? []) {
+      if (pattern.test(text)) {
+        return true;
+      }
     }
-  }
 
-  // Check for spoiler patterns
-  for (const pattern of SPOILER_PATTERNS) {
-    if (pattern.test(text)) {
-      return true;
+    // 2. Check normalized text
+    for (const pattern of normalizedPatterns ?? []) {
+      if (pattern.test(normalized)) {
+        return true;
+      }
     }
   }
 

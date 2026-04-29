@@ -14,7 +14,6 @@ import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.
 
 @Injectable()
 export class CreateBookUseCase {
-  private readonly CACHE_TTL = 300;
 
   constructor(
     private readonly bookRepository: IBookRepository,

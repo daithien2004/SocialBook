@@ -42,7 +42,7 @@ export class ContentModerationService implements IContentModerationService {
     // Check Vietnamese toxic words first (faster, local)
     const vietnameseMatch = containsVietnameseToxicWords(text);
     if (vietnameseMatch) {
-      this.logger.debug(`Vietnamese toxic word detected: ${vietnameseMatch}`);
+      this.logger.debug(`Phát hiện ngôn ngữ độc hại: ${vietnameseMatch.group} (via ${vietnameseMatch.input})`);
       return {
         isSafe: false,
         isSpoiler: false,
@@ -54,7 +54,7 @@ export class ContentModerationService implements IContentModerationService {
     // Check for spoilers
     const hasSpoilers = containsSpoilers(text);
     if (hasSpoilers) {
-      this.logger.debug(`Spoiler content detected`);
+      this.logger.debug(`Phát hiện nội dụng spoiler`);
       return {
         isSafe: false,
         isSpoiler: true,

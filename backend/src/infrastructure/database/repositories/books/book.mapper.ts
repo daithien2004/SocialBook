@@ -56,28 +56,18 @@ export class BookMapper {
 
   static toListReadModel(document: RawBookDocument): BookListReadModel {
     const author = document.authorId as any;
-    const authorName =
-      typeof author === 'object' && author !== null && 'name' in author ? author.name : undefined;
-    const authorIdStr =
-      typeof author === 'object' && author !== null && '_id' in author
-        ? author._id.toString()
-        : document.authorId
-          ? document.authorId.toString()
-          : '';
-
+    
     return {
       id: document._id.toString(),
       title: document.title,
       slug: document.slug,
-      authorId: authorIdStr,
-      authorName,
-      genres: (document.genres || [])
-        .filter((g): g is RawGenre => typeof g === 'object' && 'name' in g)
-        .map((g) => ({
-          id: g._id.toString(),
-          name: g.name,
-          slug: g.slug,
-        })),
+      authorId: author?._id?.toString() || '',
+      authorName: author?.name,
+      genres: (document.genres as RawGenre[] || []).map((g) => ({
+        id: g._id.toString(),
+        name: g.name,
+        slug: g.slug,
+      })),
       description: document.description || '',
       publishedYear: document.publishedYear || '',
       coverUrl: document.coverUrl || '',

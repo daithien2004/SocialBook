@@ -2,11 +2,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.interface';
 import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
 import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
+import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { Book } from '@/domain/books/entities/book.entity';
 
 @Injectable()
 export class BookCacheService implements IBookCacheService {
-  private readonly TTL = 300;
 
   constructor(
     @Inject(CACHE_SERVICE) private readonly cache: ICacheService,
@@ -55,7 +55,7 @@ export class BookCacheService implements IBookCacheService {
       chapterCount: book.chapterCount,
     };
 
-    await this.cache.set(key, cacheData, this.TTL);
+    await this.cache.set(key, cacheData, CACHE_TTL.DEFAULT);
   }
 
   async invalidateDetail(bookId: string, slug?: string): Promise<void> {

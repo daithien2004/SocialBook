@@ -1,81 +1,77 @@
 export enum ErrorMessages {
   // Common
-  INVALID_ID = 'Invalid ID format',
-  NOT_FOUND = 'Resource not found',
-  PERMISSION_DENIED = 'You do not have permission',
-  SEARCH_REQUIRED = 'Search keyword is required',
+  INVALID_ID = 'Định dạng ID không hợp lệ',
+  NOT_FOUND = 'Không tìm thấy tài nguyên',
+  PERMISSION_DENIED = 'Bạn không có quyền thực hiện hành động này',
+  SEARCH_REQUIRED = 'Vui lòng nhập từ khóa tìm kiếm',
 
   // User
-  USER_NOT_FOUND = 'User not found',
-  EMAIL_EXISTS = 'Email already exists',
-  USERNAME_TAKEN = 'Username is already taken',
+  USER_NOT_FOUND = 'Không tìm thấy người dùng',
+  EMAIL_EXISTS = 'Email này đã tồn tại trong hệ thống',
+  USERNAME_TAKEN = 'Tên đăng nhập đã được sử dụng',
 
   // File/Image
-  IMAGE_REQUIRED = 'Image file is required',
-  FILE_NOT_IMAGE = 'File must be an image',
-  IMAGE_TOO_LARGE = 'Image is too large (max 5MB)',
+  IMAGE_REQUIRED = 'Vui lòng tải lên tệp hình ảnh',
+  FILE_NOT_IMAGE = 'Tệp tải lên phải là hình ảnh',
+  IMAGE_TOO_LARGE = 'Kích thước ảnh quá lớn (tối đa 5MB)',
 
   // Book
-  BOOK_NOT_FOUND = 'Book not found',
+  BOOK_NOT_FOUND = 'Không tìm thấy sách',
 
   // Chapter
-  CHAPTER_NOT_FOUND = 'Chapter not found',
-  CHAPTER_MISSING_BOOK = 'Chapter is missing book reference',
-  NO_CHAPTERS_FOUND = 'No chapters found for this book',
+  CHAPTER_NOT_FOUND = 'Không tìm thấy chương',
+  CHAPTER_MISSING_BOOK = 'Chương thiếu thông tin tham chiếu sách',
+  NO_CHAPTERS_FOUND = 'Không tìm thấy chương nào cho cuốn sách này',
 
   // Review
-  REVIEW_NOT_FOUND = 'Review not found',
-  REVIEW_ALREADY_EXISTS = 'You have already reviewed this book',
-  REVIEW_CREATE_FAILED = 'Failed to create review',
-  REVIEW_UPDATE_FORBIDDEN = 'You do not have permission to update this review',
-  REVIEW_DELETE_FORBIDDEN = 'You do not have permission to delete this review',
+  REVIEW_NOT_FOUND = 'Không tìm thấy đánh giá',
+  REVIEW_ALREADY_EXISTS = 'Bạn đã đánh giá cuốn sách này rồi',
+  REVIEW_CREATE_FAILED = 'Tạo đánh giá thất bại',
+  REVIEW_UPDATE_FORBIDDEN = 'Bạn không có quyền cập nhật đánh giá này',
+  REVIEW_DELETE_FORBIDDEN = 'Bạn không có quyền xóa đánh giá này',
 
   // Post
-  POST_NOT_FOUND = 'Post not found',
-  POST_UPDATE_FORBIDDEN = 'You do not have permission to update this post',
-  POST_DELETE_FORBIDDEN = 'You do not have permission to delete this post',
+  POST_NOT_FOUND = 'Không tìm thấy bài viết',
+  POST_UPDATE_FORBIDDEN = 'Bạn không có quyền cập nhật bài viết này',
+  POST_DELETE_FORBIDDEN = 'Bạn không có quyền xóa bài viết này',
 
   // Comment
-  COMMENT_NOT_FOUND = 'Comment not found',
-  PARENT_COMMENT_NOT_FOUND = 'Parent comment not found',
-  COMMENT_UPDATE_FORBIDDEN = 'You do not have permission to update this comment',
-  COMMENT_DELETE_FORBIDDEN = 'You do not have permission to delete this comment',
+  COMMENT_NOT_FOUND = 'Không tìm thấy bình luận',
+  PARENT_COMMENT_NOT_FOUND = 'Không tìm thấy bình luận cha',
+  COMMENT_UPDATE_FORBIDDEN = 'Bạn không có quyền cập nhật bình luận này',
+  COMMENT_DELETE_FORBIDDEN = 'Bạn không có quyền xóa bình luận này',
 
   // Author
-  AUTHOR_NOT_FOUND = 'Author not found',
+  AUTHOR_NOT_FOUND = 'Không tìm thấy tác giả',
+  AUTHOR_EXISTS = 'Tác giả với tên này đã tồn tại',
 
   // Genre
-  GENRE_NOT_FOUND = 'Genre not found',
+  GENRE_NOT_FOUND = 'Không tìm thấy thể loại',
+  GENRE_EXISTS = 'Thể loại với tên này đã tồn tại',
 
   // Collection
-  COLLECTION_NOT_FOUND = 'Collection not found',
+  COLLECTION_NOT_FOUND = 'Không tìm thấy bộ sưu tập',
 
   // Follow
-  FOLLOW_USER_NOT_FOUND = 'User to follow not found',
-  CANNOT_FOLLOW_SELF = 'You cannot follow yourself',
-
-  // Author
-  AUTHOR_EXISTS = 'Author with this name already exists',
-
-  // Genre
-  GENRE_EXISTS = 'Genre with this name already exists',
+  FOLLOW_USER_NOT_FOUND = 'Không tìm thấy người dùng để theo dõi',
+  CANNOT_FOLLOW_SELF = 'Bạn không thể tự theo dõi chính mình',
 
   // Auth
-  INVALID_CREDENTIALS = 'Invalid email or password',
-  TOKEN_EXPIRED = 'Token has expired',
-  TOKEN_INVALID = 'Invalid token',
+  INVALID_CREDENTIALS = 'Email hoặc mật khẩu không chính xác',
+  TOKEN_EXPIRED = 'Phiên đăng nhập đã hết hạn',
+  TOKEN_INVALID = 'Mã xác thực không hợp lệ',
 
   // TTS
-  TTS_UPDATE_FAILED = 'Failed to update TTS record',
-  TTS_API_KEY_NOT_FOUND = 'VoiceRSS API key not found',
-  TTS_API_ERROR = 'VoiceRSS API error',
+  TTS_UPDATE_FAILED = 'Cập nhật bản ghi TTS thất bại',
+  TTS_API_KEY_NOT_FOUND = 'Không tìm thấy API key của VoiceRSS',
+  TTS_API_ERROR = 'Lỗi từ API VoiceRSS',
 
   // Onboarding
-  ONBOARDING_NOT_FOUND = 'Onboarding session not found',
+  ONBOARDING_NOT_FOUND = 'Không tìm thấy phiên hướng dẫn',
 }
 
 export enum SuccessMessages {
-  CREATED = 'Created successfully',
-  UPDATED = 'Updated successfully',
-  DELETED = 'Deleted successfully',
+  CREATED = 'Tạo thành công',
+  UPDATED = 'Cập nhật thành công',
+  DELETED = 'Xóa thành công',
 }

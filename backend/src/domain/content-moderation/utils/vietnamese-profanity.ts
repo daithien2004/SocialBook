@@ -1,263 +1,150 @@
-/**
- * Vietnamese Profanity / Toxic Words Dictionary
- * Belongs to domain layer – pure business logic, no framework dependencies
- */
+import { normalizeForModeration } from './text-normalization';
 
-// Common Vietnamese profanity and toxic terms
-export const VIETNAMESE_TOXIC_WORDS = [
-  // Profanity - Variations, no accent, spaced, masked
-  'dm',
-  'dmm',
-  'dmml',
-  'dmm',
-  'dml',
-  'djt',
-  'dit me',
-  'dit me may',
-  'dit me m',
-  'deo',
-  'deo the',
-  'deo hieu',
-  'de0',
-  'd3o',
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-  // Genital references (with proper diacritics)
-  'lồn',
-  'lon',
-  'l*n',
-  'l0n',
-  'cặc',
-  'cac',
-  'cacl',
-  'cak',
-  'cakc',
-  'cứt',
+export interface ToxicMatch {
+  pattern: string;
+  group: string;
+  input: 'original' | 'normalized';
+}
 
-  // Common combinations
-  'cl',
-  'c*l',
-  'clm',
-  'clmm',
-  'clmml',
-  'cc',
-  'c*c',
-  'c**',
-  'vl',
-  'vkl',
-  'v~l',
-  'vllll',
-  'vleu',
+// ─── Pattern Groups ───────────────────────────────────────────────────────────
 
-  // Strong insults
-  'ngu lồn',
-  'cái đồ mất nết',
-  'đồ điếm thúi',
-  'đồ mất dạy',
-  'mất nết',
-  'đồ láo toét',
-  'láo chó',
-  'hỗn láo',
-  'bất hiếu',
-  'khốn nạn',
-  'đểu cáng',
-  'đê tiện',
-  'đồ hèn',
-  'đồ tồi',
-  'tồi tệ',
-  'đồ mặt dày',
-  'mặt chó',
-  'mặt lồn',
-  'mặt l*n',
-  'mặt cặc',
-  'mặt cac',
-  'mặt như cái bồn cầu',
+interface PatternGroup {
+  group: string;
+  /** Chạy trên text GỐC (có dấu tiếng Việt) */
+  raw?: RegExp[];
+  /** Chạy trên text ĐÃ normalize (bỏ dấu, leet → letter) */
+  normalized?: RegExp[];
+}
 
-  // Threat / Aggressive expressions
-  'tao giết mày',
-  'đập chết',
-  'đấm vỡ mặt',
-  'đấm chết',
-  'tát vỡ mồm',
-  'chặt đầu',
-  'cắt cổ',
-  'giết mẹ mày',
-  'đập cho vỡ mặt',
-  'đập cho sml',
-  'cho mày ăn đấm',
-  'bố sút mày',
+const PATTERN_GROUPS: PatternGroup[] = [
+  {
+    group: 'dit/du/dm',
+    raw: [
+      /đ[ịi]t/i,           // địt
+      /đụ/i,               // đụ
+      /đ[éè]\s*m/i,        // đéo mẹ
+    ],
+    normalized: [
+      // Sau khi normalize: đ→d, bỏ dấu
+      // Bắt: djt, d1t, d-i-t, d.i.t, d*t
+      /d[\s.\-_*]*[i1j*][\s.\-_*]*t/i,
+      // Bắt: dm, d.m, d-m (abbreviation)
+      /\bd[\s.\-_*]*m\b/i,
+    ],
+  },
 
-  // Family insults
-  'bố mày',
-  'ông nội mày',
-  'cha mày',
-  'mẹ mày',
-  'con mẹ mày',
-  'đồ mất dạy giống mẹ mày',
-  'bà nội mày',
-  'đụ mẹ mày',
-  'địt mẹ mày',
+  {
+    group: 'lon',
+    raw: [
+      /l[ồổõọo]n/i,        // lồn, lổn, lõn...
+    ],
+    normalized: [
+      // Bắt: l0n, l*n, l o n, l-o-n, l*n
+      /l[\s.\-_*0]*[o0u*][\s.\-_*0]*n/i,
+    ],
+  },
 
-  // Animal-based insults (expanded)
-  'chó',
-  'con chó',
-  'thằng chó',
-  'chó chết',
-  'đồ chó',
-  'như chó',
-  'đồ chó má',
-  'con đĩ chó',
-  'đồ khỉ',
-  'đồ mọi rợ',
-  'đồ đười ươi',
-  'đồ trâu bò',
-  'bò lú',
-  'trâu đực',
-  'phản trắc như chó',
-  'cẩu nô tài',
+  {
+    group: 'cac/cut',
+    raw: [
+      /c[ặắầấ]c/i,         // cặc, cắc...
+      /c[ứủũụu]t/i,        // cứt, củt...
+    ],
+    normalized: [
+      // Bắt: c4c, c*c, cac, cuk
+      /c[\s.\-_*]*[a4u*][\s.\-_*]*[ck]/i,
+      // Bắt: cut, c-u-t
+      /c[\s.\-_*]*[u*][\s.\-_*]*t/i,
+    ],
+  },
 
-  // Slang toxic – Gen Z style
-  'óc chó vcl',
-  'óc chó vl',
-  'não phẳng',
-  'não cún',
-  'não cá vàng vcl',
-  'não bò',
-  'nohope',
-  'trash',
-  'đú trend ngu',
-  'như cc',
-  'mày bị ngu à',
-  'adn ngu',
-  'ngáo đá',
-  'ngáo ngơ',
-  'ngáo vl',
-  'phèn vãi',
-  'tục vãi',
-  'bố tát cho hết ngu',
-  'sml',
-  'sấp mặt lờ',
-  'lồi cu',
-  'mày tuổi gì',
+  {
+    group: 'vcl/vkl',
+    raw: [
+      /v[ã]\s*i?\s*l[ồổ]n/i,  // vãi lồn, vãi lồn...
+    ],
+    normalized: [
+      // Bắt: vcl, vkl — nhưng phải là word boundary để tránh "vocal"
+      /\bv[ck]l\b/i,
+    ],
+  },
 
-  // Sexual insults (expanded)
-  'mặt lồn',
-  'đồ dâm đãng',
-  'dâm dê',
-  'biến thái',
-  'ấu dâm',
-  'sex toy sống',
-  'hám của lạ',
-  'hám trai',
-  'hám gái',
-  'con đĩ rẻ tiền',
-  'đồ lẳng lơ',
-  'bà già dê',
-  'dê xồm',
-  'kích dục',
-  'd*m',
-  'dcmay',
+  {
+    group: 'ngu/idiot',
+    raw: [
+      /\bng[uú]+\b/i,      // ngu, ngú — word boundary tránh "ngủ dậy"
+      /\bđần\b/i,
+      /\bbần\s*tiện\b/i,
+    ],
+    normalized: [
+      /\bn[\s.\-_*]*[gq][\s.\-_*]*u+\b/i,
+    ],
+  },
 
-  // Variants "tách chữ, biến thể, misspell cố tình"
-  'đ m',
-  'd m',
-  'd.m',
-  'd-m',
-  'đ..m',
-  'dcm',
-  'l o n',
-  'l-0-n',
-  'c a c',
-  'đ ! t',
-  'đ!t',
-  'djt me',
-  'fak',
-  'phak',
-  'lonz',
-  'ch0',
-  'ch0 m3',
-  'm3 m@y',
-  'ngu ngục',
-  'nguu',
-  'nqu',
-  'nguu vl',
-  'n.g.u',
-  'n g u',
-
-  // Hate speech
-  'đồ mọi',
-  'mọi rợ',
-  'rác rưởi xã hội',
-  'ký sinh trùng',
-  'đồ bệnh hoạn',
-  'đồ thấp kém',
-  'đồ dị hợm',
-  'loại cặn bã',
-
-  // Toxic imperative
-  'cút',
-  'cút xéo',
-  'cút mẹ mày đi',
-  'biến',
-  'biến mẹ đi',
-  'câm',
-  'câm mồm',
-  'câm cái mồm chó lại',
-  'im mẹ mày đi',
-  'ngậm mồm',
-  'câm lặng đi',
-  'im cái họng chó',
-
-  // Mocking / sarcasm insulting
-  'đồ tấu hài',
-  'mày hề thật sự',
-  'ảo ma canada',
-  'ảo thật đấy',
-  'não cá vàng quốc dân',
-  'đồ sống ảo',
-  'đồ lừa lọc',
+  {
+    group: 'threat/family-insult',
+    raw: [
+      /m[eẹ]\s*m[àa]y/i,        // mẹ mày
+      /b[ốo]\s*m[àa]y/i,        // bố mày
+      /gi[eế]t\s*m[àa]y/i,      // giết mày
+      /đ[eé]\s*m[àa]y/i,        // đéo mày
+    ],
+  },
 ];
 
-export function normalizeVietnamese(text: string): string {
-  if (!text) return '';
-
-  // Convert to lowercase
-  let normalized = text.toLowerCase();
-
-  // Remove extra spaces
-  normalized = normalized.replace(/\s+/g, ' ').trim();
-
-  // Remove dots, commas, special chars but keep letters and numbers
-  normalized = normalized.replace(/[.,!?;:'"(){}[\]]/g, ' ');
-
-  // Replace multiple spaces with single space
-  normalized = normalized.replace(/\s+/g, ' ').trim();
-
-  return normalized;
-}
+// ─── Main Detection ───────────────────────────────────────────────────────────
 
 /**
- * Escape special regex characters
+ * Kiểm tra text có chứa nội dung toxic không.
+ * Trả về match đầu tiên tìm được, hoặc null nếu sạch.
  */
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+export function containsVietnameseToxicWords(text: string): ToxicMatch | null {
+  if (!text?.trim()) return null;
 
-/**
- * Check if text contains Vietnamese toxic words
- */
-export function containsVietnameseToxicWords(text: string): string | null {
-  const normalized = normalizeVietnamese(text);
+  const normalized = normalizeForModeration(text);
 
-  for (const word of VIETNAMESE_TOXIC_WORDS) {
-    const normalizedWord = normalizeVietnamese(word);
-    const escapedWord = escapeRegex(normalizedWord);
+  for (const { group, raw, normalized: normalizedPatterns } of PATTERN_GROUPS) {
+    // 1. Check raw text (accent-aware)
+    for (const pattern of raw ?? []) {
+      if (pattern.test(text)) {
+        return { pattern: pattern.source, group, input: 'original' };
+      }
+    }
 
-    // Check if the toxic word appears as a whole word or phrase
-    const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
-    if (regex.test(normalized)) {
-      return word;
+    // 2. Check normalized text (leet/bypass-aware)
+    for (const pattern of normalizedPatterns ?? []) {
+      if (pattern.test(normalized)) {
+        return { pattern: pattern.source, group, input: 'normalized' };
+      }
     }
   }
 
   return null;
+}
+
+/**
+ * Lấy tất cả matches (dùng cho logging/analytics)
+ */
+export function getAllToxicMatches(text: string): ToxicMatch[] {
+  if (!text?.trim()) return [];
+
+  const normalized = normalizeForModeration(text);
+  const matches: ToxicMatch[] = [];
+
+  for (const { group, raw, normalized: normalizedPatterns } of PATTERN_GROUPS) {
+    for (const pattern of raw ?? []) {
+      if (pattern.test(text)) {
+        matches.push({ pattern: pattern.source, group, input: 'original' });
+      }
+    }
+    for (const pattern of normalizedPatterns ?? []) {
+      if (pattern.test(normalized)) {
+        matches.push({ pattern: pattern.source, group, input: 'normalized' });
+      }
+    }
+  }
+
+  return matches;
 }
