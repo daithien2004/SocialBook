@@ -56,7 +56,15 @@ export class BookMapper {
 
   static toListReadModel(document: RawBookDocument): BookListReadModel {
     const author = document.authorId as any;
-    
+    const authorName =
+      typeof author === 'object' && author !== null && 'name' in author ? author.name : undefined;
+    const authorIdStr =
+      typeof author === 'object' && author !== null && '_id' in author
+        ? author._id.toString()
+        : document.authorId
+          ? document.authorId.toString()
+          : '';
+
     return {
       id: document._id.toString(),
       title: document.title,
