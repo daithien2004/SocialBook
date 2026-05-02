@@ -30,6 +30,7 @@ import {
 } from 'redux-persist';
 import { chatBotApi } from '../features/chatbot/api/chatBotApi';
 import { moderationApi } from '../features/admin/api/moderationApi';
+import { readingRoomsApi } from '../features/reading-rooms/api/readingRoomsApi';
 import { WebStorage } from 'redux-persist';
 
 const createNoopStorage = (): WebStorage => {
@@ -84,6 +85,7 @@ export const store = configureStore({
     [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
     [chatBotApi.reducerPath]: chatBotApi.reducer,
     [moderationApi.reducerPath]: moderationApi.reducer,
+    [readingRoomsApi.reducerPath]: readingRoomsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -111,6 +113,7 @@ export const store = configureStore({
       .concat(recommendationsApi.middleware)
       .concat(chatBotApi.middleware)
       .concat(moderationApi.middleware)
+      .concat(readingRoomsApi.middleware)
 });
 
 setupListeners(store.dispatch);

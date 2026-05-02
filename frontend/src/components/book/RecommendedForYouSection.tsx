@@ -115,7 +115,7 @@ export const RecommendedForYouSection = () => {
 
       {/* Books List - Single Column */}
       <div className="flex flex-col gap-3">
-        {displayedBooks.map((rec) => (
+        {displayedBooks.map((rec, index) => (
           <div
             key={rec.bookId}
             className="relative"
@@ -134,6 +134,8 @@ export const RecommendedForYouSection = () => {
                     src={rec.book.coverUrl}
                     alt={rec.book.title}
                     fill
+                    sizes="64px"
+                    priority={index < 4}
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (

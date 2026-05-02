@@ -5,4 +5,4 @@ export { MessageList } from './MessageList';
 export { ChatWidget } from './ChatWidget';
 export { ChatSidebar } from './ChatSidebar';
 export { ChatMainArea } from './ChatMainArea';
-export { useChatSocket } from './hooks/useChatSocket';
+export { useChatSocket } from '@/features/chat/hooks/useChatSocket';

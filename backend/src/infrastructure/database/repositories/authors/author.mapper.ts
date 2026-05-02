@@ -10,7 +10,7 @@ interface AuthorPersistence {
 }
 
 export class AuthorMapper {
-  static toDomain(document: AuthorDocument | any): AuthorEntity {
+  static toDomain(document: AuthorDocument): AuthorEntity {
     return AuthorEntity.reconstitute({
       id: document._id.toString(),
       name: document.name,

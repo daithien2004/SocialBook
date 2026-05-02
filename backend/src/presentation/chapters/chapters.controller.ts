@@ -17,7 +17,10 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+
+
 
 import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response.dto';
@@ -45,6 +48,17 @@ import { StartChaptersImportCommand } from '@/application/chapters/use-cases/sta
 import { GetChaptersImportStatusQuery } from '@/application/chapters/use-cases/get-chapters-import-status/get-chapters-import-status.query';
 import { StartChaptersImportDto } from './dto/start-chapters-import.dto';
 
+import { GetChapterKnowledgeUseCase } from '@/application/chapters/use-cases/get-chapter-knowledge/get-chapter-knowledge.use-case';
+import { GetChapterKnowledgeQuery } from '@/application/chapters/use-cases/get-chapter-knowledge/get-chapter-knowledge.query';
+import { AskChapterAIUseCase } from '@/application/chapters/use-cases/ask-ai/ask-chapter-ai.use-case';
+import { AskChapterAICommand } from '@/application/chapters/use-cases/ask-ai/ask-chapter-ai.command';
+import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dto';
+
+
+
+
+
+
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
   constructor(
@@ -57,7 +71,46 @@ export class ChaptersController {
     private readonly importEpubPreviewUseCase: ImportEpubPreviewUseCase,
     private readonly startChaptersImportUseCase: StartChaptersImportUseCase,
     private readonly getChaptersImportStatusUseCase: GetChaptersImportStatusUseCase,
+    private readonly getChapterKnowledgeUseCase: GetChapterKnowledgeUseCase,
+    private readonly askChapterAIUseCase: AskChapterAIUseCase,
   ) {}
+
+
+  @Get(':chapterId/knowledge')
+  @UseGuards(JwtAuthGuard)
+  async getKnowledge(
+    @Param('chapterId') chapterId: string,
+    @Query('force') force?: string,
+  ) {
+    const query = new GetChapterKnowledgeQuery(chapterId, force === 'true');
+    const result = await this.getChapterKnowledgeUseCase.execute(query);
+    return {
+      message: 'Get chapter knowledge successfully',
+      data: ChapterKnowledgeResponseDto.fromEntity(result),
+    };
+  }
+
+
+
+
+  @Post(':chapterId/ask-ai')
+  @UseGuards(JwtAuthGuard)
+  async askAI(
+    @Param('bookSlug') bookSlug: string,
+    @Param('chapterId') chapterId: string,
+    @Body('question') question: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    const result = await this.askChapterAIUseCase.execute(
+      new AskChapterAICommand(chapterId, bookSlug, userId, question),
+    );
+    
+    return {
+      message: 'AI response generated successfully',
+      data: result,
+    };
+  }
+
 
   @Post('import/preview')
   @Roles('admin')

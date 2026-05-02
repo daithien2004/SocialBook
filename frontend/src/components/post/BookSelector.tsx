@@ -169,6 +169,7 @@ export default function BookSelector({
                   src={selectedBook.coverUrl}
                   alt={selectedBook.title}
                   fill
+                  sizes="32px"
                   className="object-cover"
                 />
               </div>

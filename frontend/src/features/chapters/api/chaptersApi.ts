@@ -4,12 +4,14 @@ import { NESTJS_CHAPTERS_ENDPOINTS } from '@/constants/server-endpoints';
 import {
   Chapter,
   ChapterDetailData,
+  ChapterKnowledge,
   ChapterPreview,
   ChaptersImportStatus,
   ChaptersListData,
   CreateChapterParams,
   DeleteChapterParams,
   GetChapterByIdParams,
+  GetChapterKnowledgeParams,
   GetChapterParams,
   GetChaptersImportStatusParams,
   GetChaptersParams,
@@ -164,6 +166,26 @@ export const chaptersApi = createApi({
       }),
       keepUnusedDataFor: 0,
     }),
+
+    getChapterKnowledge: builder.query<ChapterKnowledge, GetChapterKnowledgeParams>({
+      query: ({ bookSlug, chapterId, force }) => ({
+        url: NESTJS_CHAPTERS_ENDPOINTS.getChapterKnowledge(bookSlug, chapterId),
+        method: 'GET',
+        params: { force: force ? 'true' : undefined },
+      }),
+      providesTags: (result, error, { chapterId }) => [
+        { type: CHAPTER_TAGS.CHAPTER, id: `KNOWLEDGE_${chapterId}` },
+      ],
+    }),
+
+
+    askChapterAI: builder.mutation<{ answer: string; createdAt: string }, { bookSlug: string; chapterId: string; question: string }>({
+      query: ({ bookSlug, chapterId, question }) => ({
+        url: `${NESTJS_CHAPTERS_ENDPOINTS.getChapters(bookSlug)}/${chapterId}/ask-ai`,
+        method: 'POST',
+        body: { question },
+      }),
+    }),
   }),
 });
 
@@ -179,4 +201,8 @@ export const {
   useImportChaptersPreviewMutation,
   useStartChaptersImportMutation,
   useLazyGetChaptersImportStatusQuery,
+  useGetChapterKnowledgeQuery,
+  useAskChapterAIMutation,
 } = chaptersApi;
+
+

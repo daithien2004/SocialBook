@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useCallback } from 'react';
+import { useSocket } from '@/context/SocketProvider';
 
 export interface NotificationItem {
     id: string;
@@ -40,90 +40,82 @@ export function useNotificationSocket(
     userToken: string | undefined,
     options: UseNotificationSocketOptions
 ) {
-    const socketRef = useRef<Socket | null>(null);
-    const prevTokenRef = useRef<string | undefined>(undefined);
+    const { getSocket, connectSocket } = useSocket();
+    const socket = getSocket('/notifications');
     const { onNotificationList, onNewNotification, onReadNotification } = options;
 
-    const disconnect = useCallback(() => {
-        socketRef.current?.disconnect();
-        socketRef.current = null;
-    }, []);
-
     useEffect(() => {
-        if (userToken === prevTokenRef.current) return;
-        prevTokenRef.current = userToken;
+        if (!userToken) return;
 
-        if (!userToken) {
-            disconnect();
-            return;
-        }
+        const init = async () => {
+            const s = await connectSocket('/notifications');
+            if (!s) return;
 
-        disconnect();
-
-        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
-        const cleanToken = userToken.startsWith('Bearer ') ? userToken.substring(7) : userToken;
-
-        console.log(`--- [Socket] Đang kết nối tới: ${socketUrl}/notifications ---`);
-
-        const socketInstance = io(`${socketUrl}/notifications`, {
-            auth: { token: cleanToken },
-            transports: ['websocket', 'polling'],
-        });
-
-        socketRef.current = socketInstance;
-
-        socketInstance.on('connect', () => {
-            console.log('--- [Socket] Kết nối thành công! ---');
-            socketInstance.emit('notification:list', (data: NotificationItem[]) => {
-                console.log('--- [Socket] Đã nạp danh sách thông báo ---', data);
-                onNotificationList(data);
+            s.on('connect', () => {
+                console.log('--- [Socket] Notifications connected! ---');
+                s.emit('notification:list', (data: NotificationItem[]) => {
+                    onNotificationList(data);
+                });
             });
-        });
 
-        socketInstance.on('notification:new', (payload: NotificationItem) => {
-            console.log('--- [Socket] Có thông báo mới! ---', payload);
-            onNewNotification(payload);
-        });
+            s.on('notification:new', (payload: NotificationItem) => {
+                onNewNotification(payload);
+            });
 
-        socketInstance.on('notification:read', (data: { id: string }) => {
-            onReadNotification(data);
-        });
+            s.on('notification:read', (data: { id: string }) => {
+                onReadNotification(data);
+            });
+
+            s.on('connect_error', (err) => {
+                console.error('--- [Socket] Notifications connect error: ---', err.message);
+            });
+
+            // Nếu đã connected rồi (multiplexing), chủ động lấy list
+            if (s.connected) {
+                s.emit('notification:list', (data: NotificationItem[]) => {
+                    onNotificationList(data);
+                });
+            }
+        };
+
+        init();
 
         return () => {
+            socket.off('connect');
+            socket.off('notification:new');
+            socket.off('notification:read');
+            socket.off('connect_error');
         };
-    }, [userToken, disconnect, onNotificationList, onNewNotification, onReadNotification]);
+    }, [userToken, connectSocket, socket, onNotificationList, onNewNotification, onReadNotification]);
 
     const markAsRead = useCallback((id: string) => {
-        const socket = socketRef.current;
-        if (!socket) return;
+        if (!socket?.connected) return;
 
         socket.emit('notification:markRead', { id }, (res: any) => {
             console.log('Mark read response:', res);
         });
-    }, []);
+    }, [socket]);
 
     const refetch = useCallback(() => {
-        const socket = socketRef.current;
-        if (!socket) return;
+        if (!socket?.connected) return;
 
         socket.emit('notification:list', (data: NotificationItem[]) => {
             onNotificationList(data);
         });
-    }, [onNotificationList]);
+    }, [socket, onNotificationList]);
 
     const createNotification = useCallback((dto: NotificationItem) => {
-        const socket = socketRef.current;
-        if (!socket) return;
+        if (!socket?.connected) return;
 
         socket.emit('createNotification', dto, (res: any) => {
             console.log('Notification created:', res);
         });
-    }, []);
+    }, [socket]);
 
     return {
         markAsRead,
         refetch,
         createNotification,
-        isConnected: !!socketRef.current,
+        isConnected: !!socket?.connected,
     };
 }

@@ -12,8 +12,14 @@ import {
   TextToSpeech,
   TextToSpeechSchema,
 } from '@/infrastructure/database/schemas/text-to-speech.schema';
+import {
+  ChapterKnowledge,
+  ChapterKnowledgeSchema,
+} from '@/infrastructure/database/schemas/chapter-knowledge.schema';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { IChapterKnowledgeRepository } from '@/domain/chapters/repositories/chapter-knowledge.repository.interface';
 import { ChapterRepository } from './chapter.repository';
+import { ChapterKnowledgeRepository } from './chapter-knowledge.repository';
 
 @Module({
   imports: [
@@ -21,6 +27,7 @@ import { ChapterRepository } from './chapter.repository';
       { name: Chapter.name, schema: ChapterSchema },
       { name: Book.name, schema: BookSchema },
       { name: TextToSpeech.name, schema: TextToSpeechSchema },
+      { name: ChapterKnowledge.name, schema: ChapterKnowledgeSchema },
     ]),
   ],
   providers: [
@@ -28,7 +35,12 @@ import { ChapterRepository } from './chapter.repository';
       provide: IChapterRepository,
       useClass: ChapterRepository,
     },
+    {
+      provide: IChapterKnowledgeRepository,
+      useClass: ChapterKnowledgeRepository,
+    },
   ],
-  exports: [IChapterRepository, MongooseModule],
+  exports: [IChapterRepository, IChapterKnowledgeRepository, MongooseModule],
 })
+
 export class ChaptersRepositoryModule {}

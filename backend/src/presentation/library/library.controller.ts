@@ -122,7 +122,6 @@ export class LibraryController {
 
     const result = await this.updateProgressUseCase.execute(command);
     return {
-      message: 'Update progress successfully',
       data: {
         readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
         readingProgress: ChapterProgressResponseDto.fromResult(
@@ -146,7 +145,6 @@ export class LibraryController {
     const result = await this.processReadingSessionUseCase.execute(command);
 
     return {
-      message: 'Recorded reading time successfully',
       data: RecordReadingTimeResponseDto.fromResult(result.timeSpentMinutes),
     };
   }

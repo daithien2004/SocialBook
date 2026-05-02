@@ -138,7 +138,7 @@ export function MobileReadingSection() {
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          {displayBooks.filter(item => item.bookId).map((item) => (
+          {displayBooks.filter(item => item.bookId).map((item, index) => (
             <div key={item.bookId.slug} className="flex-none w-32">
               {/* Book Cover */}
               <Link
@@ -149,6 +149,8 @@ export function MobileReadingSection() {
                   src={item.bookId.coverUrl}
                   alt={item.bookId.title}
                   fill
+                  sizes="128px"
+                  priority={index < 4}
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
               </Link>

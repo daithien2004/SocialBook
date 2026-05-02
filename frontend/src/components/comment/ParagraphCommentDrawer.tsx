@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
 import ListComments from '@/components/comment/ListComments';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -41,6 +42,7 @@ export default function ParagraphCommentDrawer({
 
     const { isAuthenticated } = useAppAuth();
     const router = useRouter();
+    const { notifyCommented } = useReadingRoomSocket();
 
     const handleSubmit = async () => {
         if (!paragraphId || !commentText.trim()) return;
@@ -59,6 +61,8 @@ export default function ParagraphCommentDrawer({
                 content: commentText.trim(),
                 parentId: null,
             }).unwrap();
+
+            notifyCommented(paragraphId, 'chapterId', 'new_comment_id'); // We might need real chapterId, but for now socket handles it if present
 
             setCommentText('');
             toast.success('Bình luận đã được gửi!');

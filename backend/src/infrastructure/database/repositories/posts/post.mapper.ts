@@ -2,8 +2,49 @@ import { Post } from '@/domain/posts/entities/post.entity';
 import { PostDocument } from '@/infrastructure/database/schemas/post.schema';
 import { Types } from 'mongoose';
 
+interface PopulatedUser {
+  _id: Types.ObjectId;
+  username: string;
+  email: string;
+  image: string;
+}
+
+interface PopulatedBook {
+  _id: Types.ObjectId;
+  title: string;
+  slug?: string;
+  coverUrl: string;
+  authorId?: unknown;
+}
+
+function isPopulatedUser(field: unknown): field is PopulatedUser {
+  return typeof field === 'object' && field !== null && '_id' in field && 'username' in field;
+}
+
+function isPopulatedBook(field: unknown): field is PopulatedBook {
+  return typeof field === 'object' && field !== null && '_id' in field && 'title' in field;
+}
+
+interface PostWithVirtuals extends PostDocument {
+  likesCount?: number;
+  commentsCount?: number;
+  likedByCurrentUser?: boolean;
+}
+
+interface PostPersistence {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  bookId?: Types.ObjectId;
+  content: string;
+  imageUrls: string[];
+  isDeleted: boolean;
+  isFlagged: boolean;
+  moderationReason?: string;
+  moderationStatus?: string;
+}
+
 export class PostMapper {
-  static toDomain(postDoc: PostDocument): Post | null {
+  static toDomain(postDoc: PostWithVirtuals): Post | null {
     if (!postDoc) return null;
 
     const id = postDoc._id.toString();
@@ -14,22 +55,17 @@ export class PostMapper {
       | { id: string; username: string; email: string; image: string }
       | undefined;
 
-    if (
-      postDoc.userId &&
-      typeof postDoc.userId === 'object' &&
-      'username' in postDoc.userId
-    ) {
-      // Populated
-      const userObj = postDoc.userId as any;
-      userId = userObj._id.toString();
+    const userIdField = postDoc.userId;
+    if (isPopulatedUser(userIdField)) {
+      userId = userIdField._id.toString();
       author = {
-        id: userObj._id.toString(),
-        username: userObj.username,
-        email: userObj.email,
-        image: userObj.image,
+        id: userIdField._id.toString(),
+        username: userIdField.username,
+        email: userIdField.email,
+        image: userIdField.image,
       };
     } else {
-      userId = postDoc.userId?.toString() || '';
+      userId = userIdField?.toString() || '';
     }
 
     // Handle bookId: could be ObjectId or populated Book object
@@ -44,20 +80,18 @@ export class PostMapper {
         }
       | undefined;
 
-    if (postDoc.bookId) {
-      if (typeof postDoc.bookId === 'object' && 'title' in postDoc.bookId) {
-        // Populated
-        const bookObj = postDoc.bookId as any;
-        bookId = bookObj._id.toString();
+    const bookIdField = postDoc.bookId;
+    if (bookIdField) {
+      if (isPopulatedBook(bookIdField)) {
+        bookId = bookIdField._id.toString();
         book = {
-          id: bookObj._id.toString(),
-          title: bookObj.title,
-          slug: bookObj.slug,
-          coverUrl: bookObj.coverUrl,
-          authorId: bookObj.authorId, // Keep as is if populated further
+          id: bookIdField._id.toString(),
+          title: bookIdField.title,
+          slug: bookIdField.slug,
+          coverUrl: bookIdField.coverUrl,
         };
       } else {
-        bookId = postDoc.bookId.toString();
+        bookId = bookIdField.toString();
       }
     }
 
@@ -71,9 +105,9 @@ export class PostMapper {
       isFlagged: postDoc.isFlagged || false,
       moderationReason: postDoc.moderationReason,
       moderationStatus: postDoc.moderationStatus,
-      likesCount: (postDoc as any).likesCount,
-      commentsCount: (postDoc as any).commentsCount,
-      likedByCurrentUser: (postDoc as any).likedByCurrentUser,
+      likesCount: postDoc.likesCount,
+      commentsCount: postDoc.commentsCount,
+      likedByCurrentUser: postDoc.likedByCurrentUser,
       createdAt: postDoc.createdAt,
       updatedAt: postDoc.updatedAt,
       author,
@@ -81,7 +115,7 @@ export class PostMapper {
     });
   }
 
-  static toPersistence(post: Post): any {
+  static toPersistence(post: Post): PostPersistence {
     return {
       _id: new Types.ObjectId(post.id),
       userId: new Types.ObjectId(post.userId),

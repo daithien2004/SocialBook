@@ -31,6 +31,7 @@ import { ReadingTimeTracker } from '@/features/books/components/ReadingTimeTrack
 import AudiobookView from '@/components/chapter/AudiobookView';
 import ChapterListDrawer from '@/components/book/ChapterListDrawer';
 import ReadingSettingsPanel from '@/components/chapter/ReadingSettingsPanel';
+import { KnowledgeSidebar } from '@/features/reading-rooms/components/KnowledgeSidebar';
 
 interface ChapterPageProps {
   params: Promise<{
@@ -71,6 +72,9 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     setShowTOC,
     setShowSettings,
   } = useReadingView();
+
+  const [showAISidebar, setShowAISidebar] = useState(false);
+
 
   const { savedProgress, restoreScroll } = useReadingProgress(
     book?.id || '',
@@ -225,44 +229,61 @@ ${book.description?.slice(0, 100)}...
         }}
       />
 
-      <main className="relative z-10 pt-20 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl transition-opacity duration-500">
-        <ChapterHeader
-          bookTitle={book.title}
-          bookSlug={book.slug}
-          chapterTitle={chapter.title}
-          chapterOrder={chapter.orderIndex}
-          viewsCount={chapter.viewsCount}
-        />
+      <main className="relative z-10 pt-20 px-4 sm:px-6 lg:px-8 mx-auto transition-all duration-500 max-w-7xl">
+        <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
+          {/* Main Content */}
+          <div className={`flex-1 w-full max-w-3xl transition-all duration-500 ${showAISidebar ? 'lg:mr-0' : 'mx-auto'}`}>
+            <ChapterHeader
+              bookTitle={book.title}
+              bookSlug={book.slug}
+              chapterTitle={chapter.title}
+              chapterOrder={chapter.orderIndex}
+              viewsCount={chapter.viewsCount}
+            />
 
-        <ChapterContent
-          paragraphs={chapter.paragraphs}
-          chapterId={chapter.id}
-          bookId={book.id}
-          bookCoverImage={book.coverUrl}
-          bookTitle={book.title}
-        />
+            <ChapterContent
+              paragraphs={chapter.paragraphs}
+              chapterId={chapter.id}
+              bookId={book.id}
+              bookSlug={bookSlug}
+              bookCoverImage={book.coverUrl}
+              bookTitle={book.title}
+            />
 
-        <div className="mt-12 pt-8 border-t border-border">
-          <ChapterNavigation
-            hasPrevious={!!navigation?.previous}
-            hasNext={!!navigation?.next}
-            onPrevious={() =>
-              navigation?.previous &&
-              router.push(
-                `/books/${bookSlug}/chapters/${navigation.previous.slug}`
-              )
-            }
-            onNext={() =>
-              navigation?.next &&
-              router.push(`/books/${bookSlug}/chapters/${navigation.next.slug}`)
-            }
-          />
-        </div>
+            <div className="mt-12 pt-8 border-t border-border">
+              <ChapterNavigation
+                hasPrevious={!!navigation?.previous}
+                hasNext={!!navigation?.next}
+                onPrevious={() =>
+                  navigation?.previous &&
+                  router.push(
+                    `/books/${bookSlug}/chapters/${navigation.previous.slug}`
+                  )
+                }
+                onNext={() =>
+                  navigation?.next &&
+                  router.push(`/books/${bookSlug}/chapters/${navigation.next.slug}`)
+                }
+              />
+            </div>
 
-        <div className="mt-8">
-          <CommentSection targetId={chapter.id} targetType="chapter" />
+            <div className="mt-8">
+              <CommentSection targetId={chapter.id} targetType="chapter" />
+            </div>
+          </div>
+
+          {/* AI Sidebar */}
+          {showAISidebar && (
+            <aside className="w-full lg:w-80 sticky top-24 shrink-0 animate-in slide-in-from-right-4 duration-300">
+              <KnowledgeSidebar 
+                bookSlug={bookSlug} 
+                chapterId={chapter.id} 
+              />
+            </aside>
+          )}
         </div>
       </main>
+
 
       <div
         className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
@@ -310,13 +331,11 @@ ${book.description?.slice(0, 100)}...
           />
 
           <DockButton
-            icon={<Sparkles size={20} />}
-            label="Tóm tắt AI"
-            onClick={() => openChapterSummary({
-              chapterId: chapter.id,
-              chapterTitle: chapter.title
-            })}
+            icon={<Sparkles size={20} className={showAISidebar ? 'text-primary' : ''} />}
+            label="Trợ lý AI"
+            onClick={() => setShowAISidebar(!showAISidebar)}
           />
+
 
           <DockButton
             icon={<Settings size={20} />}

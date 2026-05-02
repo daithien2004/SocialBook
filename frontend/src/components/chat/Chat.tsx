@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import debounce from 'lodash.debounce';
 import { useAppAuth } from '@/features/auth/hooks';
-import { useChatSocket } from './hooks/useChatSocket';
+import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
 import { ChatSidebar } from './ChatSidebar';
 import { ChatMainArea } from './ChatMainArea';
 import type { Message } from '@/features/chat/types';

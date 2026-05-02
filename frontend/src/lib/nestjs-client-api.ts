@@ -62,6 +62,7 @@ export const axiosBaseQuery =
         if (method !== 'GET' && responseData?.message) {
           toast.success(responseData.message);
         }
+
         if (responseData.meta !== undefined) {
           return { data: { data: responseData.data, meta: responseData.meta } };
         }

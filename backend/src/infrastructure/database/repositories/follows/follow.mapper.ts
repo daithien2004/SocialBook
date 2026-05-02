@@ -10,7 +10,7 @@ interface FollowPersistence {
 }
 
 export class FollowMapper {
-  static toDomain(document: FollowDocument | any): FollowEntity {
+  static toDomain(document: FollowDocument): FollowEntity {
     return FollowEntity.reconstitute({
       id: document._id.toString(),
       userId: document.userId?.toString() || '',

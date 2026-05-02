@@ -139,3 +139,32 @@ export interface GetChaptersImportStatusParams {
   bookSlug: string;
   jobId: string;
 }
+
+export interface KnowledgeEntity {
+  name: string;
+  type: 'character' | 'location' | 'concept' | 'event' | 'vocabulary' | 'reference';
+  description: string;
+  importance: number;
+}
+
+export interface KnowledgeRelationship {
+  source: string;
+  target: string;
+  type: string;
+  description?: string;
+}
+
+export interface ChapterKnowledge {
+  chapterId: string;
+  entities: KnowledgeEntity[];
+  relationships: KnowledgeRelationship[];
+  summary?: string;
+}
+
+
+export interface GetChapterKnowledgeParams {
+  bookSlug: string;
+  chapterId: string;
+  force?: boolean;
+}
+
