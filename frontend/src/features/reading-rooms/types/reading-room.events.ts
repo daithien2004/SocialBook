@@ -1,0 +1,30 @@
+export enum ReadingRoomServerEvent {
+  ROOM_SNAPSHOT = 'room_snapshot',
+  PRESENCE_UPDATE = 'presence_update',
+  MEMBER_JOINED = 'member_joined',
+  MEMBER_LEFT = 'member_left',
+  CHAPTER_CHANGED = 'chapter_changed',
+  MODE_CHANGED = 'mode_changed',
+  ROOM_ENDED = 'room_ended',
+  HOST_CHANGED = 'host_changed',
+  NEW_HIGHLIGHT = 'new_highlight',
+  UPDATE_HIGHLIGHT_INSIGHT = 'update_highlight_insight',
+  NEW_CHAT_MESSAGE = 'new_chat_message',
+  ANNOTATION_ADDED = 'annotation_added',
+  ANNOTATION_REMOVED = 'annotation_removed',
+  ERROR = 'error',
+}
+
+export enum ReadingRoomClientEvent {
+  JOIN_ROOM = 'join_room',
+  LEAVE_ROOM = 'leave_room',
+  CHAPTER_CHANGE = 'chapter_change',
+  CHANGE_MODE = 'change_mode',
+  END_ROOM = 'end_room',
+  HEARTBEAT = 'heartbeat',
+  ADD_HIGHLIGHT = 'add_highlight',
+  ASK_AI = 'ask_ai',
+  SEND_CHAT_MESSAGE = 'send_chat_message',
+  PARAGRAPH_COMMENTED = 'paragraph_commented',
+  PARAGRAPH_COMMENT_DELETED = 'paragraph_comment_deleted',
+}

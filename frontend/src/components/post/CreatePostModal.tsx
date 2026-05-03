@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useAppAuth } from '@/features/auth/hooks';
-import { ImagePlus, X } from 'lucide-react';
+import { Book, ImagePlus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
@@ -19,9 +19,12 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { AppButton } from '../common/AppButton';
 import { useCreatePost } from '@/features/posts/hooks/useCreatePost';
+import { useCreatePostMutation } from '@/features/posts/api/postApi';
+import BookSelector from './BookSelector';
+import { getErrorMessage } from '@/lib/utils';
 
 export default function CreatePostModal() {
   const { isCreatePostOpen, closeCreatePost, createPostData } = useModalStore();
@@ -30,6 +33,8 @@ export default function CreatePostModal() {
     contentPlaceholder = 'Chia sẻ suy nghĩ của bạn...',
     maxImages = 10,
     defaultContent = '',
+    defaultBookId = '',
+    defaultBookTitle = '',
     onSubmit: externalOnSubmit,
   } = createPostData;
 
@@ -37,15 +42,39 @@ export default function CreatePostModal() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { form, previewUrls, isSubmitting, handleFileSelect, handleRemoveImage, canAddMore, totalImages } = useCreatePost({
+  const [createPost] = useCreatePostMutation();
+
+  const { form, previewUrls, isSubmitting, handleFileSelect, handleRemoveImage, canAddMore, totalImages, onSubmit } = useCreatePost({
     defaultContent,
+    defaultBookId,
+    defaultBookTitle,
     maxImages,
     onSubmit: async (values) => {
-      if (externalOnSubmit) {
-        await externalOnSubmit(values);
+      try {
+        if (externalOnSubmit) {
+          await externalOnSubmit(values as any);
+        } else {
+          const result = await createPost({
+            bookId: values.bookId,
+            content: values.content,
+            images: values.images,
+          }).unwrap();
+
+          if (result.isFlagged) {
+            toast.warning('Bài viết đang được xem xét', {
+              description: result.moderationReason,
+              duration: 5000,
+            });
+          } else {
+            toast.success('Đăng bài viết thành công!');
+          }
+        }
+        closeCreatePost();
+        form.reset();
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+        throw error;
       }
-      closeCreatePost();
-      form.reset();
     },
   });
 
@@ -74,10 +103,36 @@ export default function CreatePostModal() {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(form.handleSubmit as any)}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="p-6 pb-2">
               <ScrollArea className="max-h-[60vh]">
                 <div className="space-y-4">
+                                    <FormField
+                    control={form.control}
+                    name="bookId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-slate-700 dark:text-gray-300">
+                          Sách liên quan
+                        </FormLabel>
+                        <FormControl>
+                          <BookSelector
+                            value={field.value}
+                            onChange={(bookId, book) => {
+                              field.onChange(bookId);
+                              if (book) {
+                                form.setValue('bookTitle', book.title);
+                              }
+                            }}
+                            placeholder="Chọn sách cho bài viết..."
+                            onlyLibrary
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="content"

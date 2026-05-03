@@ -86,6 +86,8 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
                 title: `Chia sẻ sách "${book.title}"`,
                 contentPlaceholder: "Chia sẻ suy nghĩ của bạn về cuốn sách này...",
                 defaultContent: defaultShareContent,
+                defaultBookId: book.id,
+                defaultBookTitle: book.title,
                 onSubmit: async (data) => {
                   await handleSharePost(data);
                 },

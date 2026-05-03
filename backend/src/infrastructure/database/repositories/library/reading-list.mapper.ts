@@ -17,14 +17,14 @@ interface ReadingListPersistence {
 }
 
 export class ReadingListMapper {
-  static toDomain(doc: ReadingListDocument | any): ReadingList {
+  static toDomain(doc: ReadingListDocument): ReadingList {
     return ReadingList.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),
       bookId: doc.bookId.toString(),
       status: doc.status,
       lastReadChapterId: doc.lastReadChapterId?.toString() || null,
-      collectionIds: doc.collectionIds.map((id: any) => id.toString()),
+      collectionIds: doc.collectionIds.map((id: Types.ObjectId) => id.toString()),
       createdAt: doc.createdAt as Date,
       updatedAt: doc.updatedAt as Date,
     });

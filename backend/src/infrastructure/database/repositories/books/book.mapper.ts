@@ -9,6 +9,12 @@ import {
   RawGenre,
 } from './book.raw-types';
 
+type PopulatedAuthor = { _id: Types.ObjectId; name: string };
+
+function isPopulatedAuthor(field: unknown): field is PopulatedAuthor {
+  return typeof field === 'object' && field !== null && '_id' in field && 'name' in field;
+}
+
 export class BookMapper {
   static toDomain(document: RawBookDocument): BookEntity {
     const genres = (document.genres || []).map((g) => {
@@ -16,15 +22,12 @@ export class BookMapper {
       return g.toString();
     });
 
-    const author = document.authorId as any;
-    const authorName =
-      typeof author === 'object' && author !== null && 'name' in author ? author.name : undefined;
-    const authorIdStr =
-      typeof author === 'object' && author !== null && '_id' in author
-        ? author._id.toString()
-        : document.authorId
-          ? document.authorId.toString()
-          : '';
+    const authorId = document.authorId;
+    const isAuthorPopulated = isPopulatedAuthor(authorId);
+    const authorName = isAuthorPopulated ? authorId.name : undefined;
+    const authorIdStr = isAuthorPopulated
+      ? authorId._id.toString()
+      : authorId?.toString() ?? '';
 
     return BookEntity.reconstitute({
       id: document._id.toString(),
@@ -45,8 +48,8 @@ export class BookMapper {
       updatedAt: document.updatedAt,
       authorName,
       genreObjects: (document.genres || [])
-        .filter((g: any) => typeof g === 'object' && 'name' in g)
-        .map((g: any) => ({
+        .filter((g): g is RawGenre => typeof g === 'object' && 'name' in g)
+        .map((g) => ({
           id: g._id.toString(),
           name: g.name,
           slug: g.slug,
@@ -55,22 +58,19 @@ export class BookMapper {
   }
 
   static toListReadModel(document: RawBookDocument): BookListReadModel {
-    const author = document.authorId as any;
-    const authorName =
-      typeof author === 'object' && author !== null && 'name' in author ? author.name : undefined;
-    const authorIdStr =
-      typeof author === 'object' && author !== null && '_id' in author
-        ? author._id.toString()
-        : document.authorId
-          ? document.authorId.toString()
-          : '';
+    const authorId = document.authorId;
+    const isAuthorPopulated = isPopulatedAuthor(authorId);
+    const authorIdStr = isAuthorPopulated
+      ? authorId._id.toString()
+      : authorId?.toString() ?? '';
+    const authorName = isAuthorPopulated ? authorId.name : undefined;
 
     return {
       id: document._id.toString(),
       title: document.title,
       slug: document.slug,
-      authorId: author?._id?.toString() || '',
-      authorName: author?.name,
+      authorId: authorIdStr,
+      authorName,
       genres: (document.genres as RawGenre[] || []).map((g) => ({
         id: g._id.toString(),
         name: g.name,

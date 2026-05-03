@@ -19,7 +19,7 @@ export const libraryApi = createApi({
   baseQuery: axiosBaseQuery(),
   tagTypes: ['Library', 'Collection'],
   endpoints: (builder) => ({
-    getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus }>({
+    getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus | string }>({
       query: ({ status }) => ({
         url: NESTJS_LIBRARY_ENDPOINTS.getLibrary,
         method: 'GET',

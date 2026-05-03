@@ -20,7 +20,7 @@ import { SearchController } from './search/search.controller';
 import { StatisticsController } from './statistics/statistics.controller';
 import { TextToSpeechController } from './text-to-speech/text-to-speech.controller';
 import { UsersController } from './users/users.controller';
-
+import { ReadingRoomsPresentationModule } from './reading-rooms/reading-rooms-presentation.module';
 import { UsersApplicationModule } from '@/application/users/users-application.module';
 import { BooksApplicationModule } from '@/application/books/books-application.module';
 import { AuthorsApplicationModule } from '@/application/authors/authors-application.module';
@@ -65,6 +65,7 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     GeminiApplicationModule,
     RecommendationsApplicationModule,
     NotificationsApplicationModule,
+    ReadingRoomsPresentationModule,
     InfrastructureModule,
   ],
   controllers: [

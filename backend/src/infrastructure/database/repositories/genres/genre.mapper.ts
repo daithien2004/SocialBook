@@ -12,7 +12,7 @@ interface GenrePersistence {
 }
 
 export class GenreMapper {
-  static toDomain(doc: GenreDocument | any): GenreEntity {
+  static toDomain(doc: GenreDocument): GenreEntity {
     return GenreEntity.reconstitute({
       id: doc._id.toString(),
       name: doc.name,

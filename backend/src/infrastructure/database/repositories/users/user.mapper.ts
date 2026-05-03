@@ -25,7 +25,7 @@ interface UserPersistence {
 }
 
 export class UserMapper {
-  static toDomain(doc: UserDocument | any): UserEntity {
+  static toDomain(doc: UserDocument): UserEntity {
     return UserEntity.reconstitute({
       id: doc._id.toString(),
       roleId: doc.roleId.toString(),
@@ -41,7 +41,7 @@ export class UserMapper {
       location: doc.location,
       website: doc.website,
       hashedRt: doc.hashedRt,
-      favoriteGenres: (doc.favoriteGenres || []).map((g: any) => g.toString()),
+      favoriteGenres: (doc.favoriteGenres || []).map((g: Types.ObjectId) => g.toString()),
       readingPreferences: doc.readingPreferences,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,

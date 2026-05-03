@@ -17,7 +17,7 @@ interface AIRequestPersistence {
 }
 
 export class AIRequestMapper {
-  static toDomain(doc: AIRequestDocument | any): AIRequest {
+  static toDomain(doc: AIRequestDocument): AIRequest {
     return AIRequest.reconstitute({
       id: doc._id.toString(),
       prompt: doc.prompt,

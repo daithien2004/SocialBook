@@ -59,9 +59,19 @@ export class LibraryController {
   @Get()
   async getLibrary(
     @CurrentUser('id') userId: string,
-    @Query('status') status: ReadingStatusResult = ReadingStatusResult.READING,
+    @Query('status') status?: string,
   ) {
-    const query = new GetLibraryQuery(userId, status as any);
+    let readingStatuses: any;
+
+    if (status) {
+      readingStatuses = status.includes(',')
+        ? status.split(',').map((s) => s.trim())
+        : status;
+    } else {
+      readingStatuses = ReadingStatusResult.READING;
+    }
+
+    const query = new GetLibraryQuery(userId, readingStatuses);
     const readingLists = await this.getLibraryUseCase.execute(query);
 
     return {
@@ -112,7 +122,6 @@ export class LibraryController {
 
     const result = await this.updateProgressUseCase.execute(command);
     return {
-      message: 'Update progress successfully',
       data: {
         readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
         readingProgress: ChapterProgressResponseDto.fromResult(
@@ -136,7 +145,6 @@ export class LibraryController {
     const result = await this.processReadingSessionUseCase.execute(command);
 
     return {
-      message: 'Recorded reading time successfully',
       data: RecordReadingTimeResponseDto.fromResult(result.timeSpentMinutes),
     };
   }

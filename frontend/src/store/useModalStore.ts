@@ -5,11 +5,13 @@ import { Chapter } from '@/features/chapters/types/chapter.interface';
 
 interface CreatePostModalData {
   defaultContent?: string;
+  defaultBookId?: string;
+  defaultBookTitle?: string;
   title?: string;
   contentLabel?: string;
   contentPlaceholder?: string;
   maxImages?: number;
-  onSubmit?: (data: { content: string; images: File[] }) => Promise<void>;
+  onSubmit?: (data: { content: string; images: File[]; bookId: string }) => Promise<void>;
 }
 
 interface EditPostModalData {

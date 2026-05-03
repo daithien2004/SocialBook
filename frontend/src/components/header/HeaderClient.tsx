@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useAppAuth, useLogout } from '@/features/auth/hooks';
 import { useHeaderNavigation } from './hooks/useHeaderNavigation';
 import { useHeaderTheme } from './hooks/useHeaderTheme';
-import { BookOpen, Flame, Globe, Library, Moon, Search, Sun } from 'lucide-react';
+import { BookOpen, Flame, Globe, Library, Moon, Search, Sun, Users } from 'lucide-react';
 import { memo } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ const LazyNotificationBell = dynamic(
 export const HeaderClient = memo(function HeaderClient() {
     const { user, isAuthenticated, isGuest } = useAppAuth();
     const { handleLogout } = useLogout();
-    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToProfile, navigateToSettings, navigateToLogin } = useHeaderNavigation();
+    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToReadingRooms, navigateToProfile, navigateToSettings, navigateToLogin } = useHeaderNavigation();
     const { theme, toggleTheme, mounted } = useHeaderTheme();
 
     const userId = user?.id;
@@ -43,7 +43,7 @@ export const HeaderClient = memo(function HeaderClient() {
                 <div className="flex items-center justify-between h-full">
                     <Logo onClick={navigateToHome} />
 
-                    <HeaderNav onBooks={navigateToBooks} onPosts={navigateToPosts} onLibrary={navigateToLibrary} />
+                    <HeaderNav onBooks={navigateToBooks} onPosts={navigateToPosts} onLibrary={navigateToLibrary} onReadingRooms={navigateToReadingRooms} />
 
                     <div className="flex items-center gap-2">
                         <ThemeToggle mounted={mounted} theme={theme} onToggle={toggleTheme} />
@@ -66,6 +66,7 @@ export const HeaderClient = memo(function HeaderClient() {
                                     onBooks={navigateToBooks}
                                     onPosts={navigateToPosts}
                                     onLibrary={navigateToLibrary}
+                                    onReadingRooms={navigateToReadingRooms}
                                     onSettings={navigateToSettings}
                                     onLogout={handleLogout}
                                 />
@@ -93,7 +94,7 @@ function Logo({ onClick }: { onClick: () => void }) {
     );
 }
 
-function HeaderNav({ onBooks, onPosts, onLibrary }: { onBooks: () => void; onPosts: () => void; onLibrary: () => void }) {
+function HeaderNav({ onBooks, onPosts, onLibrary, onReadingRooms }: { onBooks: () => void; onPosts: () => void; onLibrary: () => void; onReadingRooms: () => void }) {
     return (
         <nav className="hidden md:flex items-center gap-2">
             <Button variant="ghost" onClick={onBooks} className="gap-2 text-muted-foreground hover:text-foreground">
@@ -107,6 +108,10 @@ function HeaderNav({ onBooks, onPosts, onLibrary }: { onBooks: () => void; onPos
             <Button variant="ghost" onClick={onLibrary} className="gap-2 text-muted-foreground hover:text-foreground">
                 <Library className="w-4 h-4" />
                 Thư viện
+            </Button>
+            <Button variant="ghost" onClick={onReadingRooms} className="gap-2 text-muted-foreground hover:text-foreground">
+                <Users className="w-4 h-4" />
+                Phòng Đọc
             </Button>
         </nav>
     );
@@ -127,7 +132,7 @@ function ThemeToggle({ mounted, theme, onToggle }: { mounted: boolean; theme: st
 }
 
 interface UserDropdownProps {
-    user: { name?: string | null; email?: string | null; username?: string };
+    user: { id: string; email?: string | null; image?: string | null; role?: string };
     avatarUrl?: string;
     onProfile: () => void;
     onLibrary: () => void;
@@ -141,15 +146,15 @@ function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onLog
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full px-0 hover:bg-transparent">
                     <Avatar className="h-9 w-9 border border-border shadow-sm">
-                        <AvatarImage src={avatarUrl} alt={user.name || 'User'} />
-                        <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                        <AvatarImage src={avatarUrl} alt={user.email || 'User'} />
+                        <AvatarFallback>{user.email?.split('@')[0]?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-sm font-medium leading-none">{user.email?.split('@')[0]}</p>
                         <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                     </div>
                 </DropdownMenuLabel>
@@ -177,17 +182,18 @@ function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onLog
 }
 
 interface MobileMenuProps {
-    user: { name?: string | null; email?: string | null; username?: string };
+    user: { id: string; email?: string | null; image?: string | null; role?: string };
     avatarUrl?: string;
     onProfile: () => void;
     onBooks: () => void;
     onPosts: () => void;
     onLibrary: () => void;
+    onReadingRooms: () => void;
     onSettings: () => void;
     onLogout: () => void;
 }
 
-function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, onSettings, onLogout }: MobileMenuProps) {
+function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, onReadingRooms, onSettings, onLogout }: MobileMenuProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>
@@ -205,10 +211,10 @@ function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, o
                     <div className="flex items-center gap-3 mb-6 p-2 rounded-xl bg-gray-50 dark:bg-zinc-900">
                         <Avatar className="h-12 w-12 border-2 border-white dark:border-zinc-800 shadow-sm">
                             <AvatarImage src={avatarUrl} />
-                            <AvatarFallback className="bg-blue-600 text-white font-bold">{user.username?.[0]?.toUpperCase()}</AvatarFallback>
+                            <AvatarFallback className="bg-blue-600 text-white font-bold">{user.email?.split('@')[0]?.[0]?.toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col overflow-hidden">
-                            <span className="font-bold text-lg truncate">{user.name}</span>
+                            <span className="font-bold text-lg truncate">{user.email?.split('@')[0]}</span>
                             <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                         </div>
                     </div>
@@ -228,6 +234,9 @@ function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, o
                         </Button>
                         <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={onLibrary}>
                             📚 Thư viện của tôi
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={onReadingRooms}>
+                            👥 Phòng Đọc Chung
                         </Button>
                     </div>
 

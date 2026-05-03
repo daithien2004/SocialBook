@@ -20,7 +20,7 @@ interface ReadingProgressPersistence {
 }
 
 export class ReadingProgressMapper {
-  static toDomain(doc: ProgressDocument | any): ReadingProgress {
+  static toDomain(doc: ProgressDocument): ReadingProgress {
     const status = ReadingProgressMapper.mapStatusToChapterStatus(doc.status);
 
     return ReadingProgress.reconstitute({

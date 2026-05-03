@@ -30,6 +30,7 @@ import { GatewaysModule } from './gateways/gateways.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
 import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
 import { ChaptersImportModule } from './queues/chapters-import/chapters-import.module';
+import { ReadingRoomsRepositoryModule } from './database/repositories/reading-rooms/reading-rooms-repository.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     TtsInfrastructureModule,
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
+    ReadingRoomsRepositoryModule,
     IdGeneratorModule,
     GatewaysModule,
     ChaptersImportModule,
@@ -94,6 +96,7 @@ import { ChaptersImportModule } from './queues/chapters-import/chapters-import.m
     TtsInfrastructureModule,
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
+    ReadingRoomsRepositoryModule,
     IdGeneratorModule,
     GatewaysModule,
     ChaptersImportModule,

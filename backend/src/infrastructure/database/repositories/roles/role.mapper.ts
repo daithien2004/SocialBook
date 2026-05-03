@@ -1,6 +1,10 @@
 import { Role } from '@/domain/roles/entities/role.entity';
 import { RoleDocument } from '@/infrastructure/database/schemas/role.schema';
 
+interface RolePersistence {
+  name: string;
+}
+
 export class RoleMapper {
   static toDomain(roleDoc: RoleDocument): Role {
     return Role.reconstitute({
@@ -11,7 +15,7 @@ export class RoleMapper {
     });
   }
 
-  static toPersistence(role: Role): any {
+  static toPersistence(role: Role): RolePersistence {
     return {
       name: role.name,
     };

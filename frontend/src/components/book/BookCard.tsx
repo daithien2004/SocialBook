@@ -13,9 +13,10 @@ import { useModalStore } from '@/store/useModalStore';
 
 interface BookCardProps {
     book: Book;
+    priority?: boolean;
 }
 
-export const BookCard = memo(function BookCard({ book }: BookCardProps) {
+export const BookCard = memo(function BookCard({ book, priority }: BookCardProps) {
     const { openAddToLibrary, isAddToLibraryOpen, addToLibraryData } = useModalStore();
     const isCurrentBookOpen = isAddToLibraryOpen && addToLibraryData?.bookId === book.id;
 
@@ -32,7 +33,7 @@ export const BookCard = memo(function BookCard({ book }: BookCardProps) {
                 className="group relative block w-full max-w-[220px]"
             >
                 <Card className="overflow-hidden border-gray-200 dark:border-white/10 transition-all duration-500 hover:border-gray-400 dark:hover:border-white/30 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] bg-card text-card-foreground">
-                    <BookCover book={book} />
+                    <BookCover book={book} priority={priority} />
                     <CardContent className="flex flex-col p-4 pt-2">
                         <BookInfo book={book} />
                         <BookStats book={book} handleAddToLibrary={handleAddToLibrary} isCurrentBookOpen={isCurrentBookOpen} />
@@ -43,24 +44,19 @@ export const BookCard = memo(function BookCard({ book }: BookCardProps) {
     );
 });
 
-function BookCover({ book }: { book: Book }) {
+function BookCover({ book, priority }: { book: Book, priority?: boolean }) {
     return (
         <div className="relative aspect-[2/3] w-full overflow-hidden">
             <SafeImage
                 src={book.coverUrl}
                 alt={book.title}
                 fill
+                priority={priority}
                 sizes="(max-width: 768px) 160px, 220px"
                 className="object-cover opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-hover:contrast-125"
             />
 
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
-
-            <div className="absolute top-3 w-full text-center">
-                <Badge variant="secondary" className="text-[9px] font-bold tracking-[0.3em] uppercase bg-background/80 backdrop-blur-sm border-none shadow-sm">
-                    {book.status === 'published' ? 'COMING SOON' : 'IN PRODUCTION'}
-                </Badge>
-            </div>
         </div>
     );
 }

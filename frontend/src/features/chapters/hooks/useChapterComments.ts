@@ -41,6 +41,8 @@ export function useChapterComments({ bookId, bookTitle }: UseChapterCommentsOpti
             title: `Chia sẻ trích dẫn${bookTitle ? ` từ "${bookTitle}"` : ''}`,
             contentPlaceholder: "Nội dung trích dẫn...",
             defaultContent: paragraph.content,
+            defaultBookId: bookId,
+            defaultBookTitle: bookTitle,
             onSubmit: async (data) => {
                 if (!bookId) {
                     toast.error('Không tìm thấy thông tin sách');

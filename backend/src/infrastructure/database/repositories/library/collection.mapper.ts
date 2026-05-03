@@ -1,4 +1,5 @@
 import { Collection } from '@/domain/library/entities/collection.entity';
+import { CollectionDocument } from '@/infrastructure/database/schemas/collection.schema';
 import { Types } from 'mongoose';
 
 export interface CollectionPersistence {
@@ -12,7 +13,7 @@ export interface CollectionPersistence {
 }
 
 export class CollectionMapper {
-  static toDomain(doc: any): Collection {
+  static toDomain(doc: CollectionDocument): Collection {
     return Collection.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),
