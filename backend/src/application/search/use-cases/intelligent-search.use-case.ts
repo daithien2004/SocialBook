@@ -11,6 +11,7 @@ import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
+import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { SearchQueryExpansionService, QueryAnalysis } from '../services/search-query-expansion.service';
 import { SearchRankingService } from '../services/search-ranking.service';
 
@@ -43,16 +44,49 @@ export class IntelligentSearchUseCase {
     const { query, page = 1, limit = 10, genres, sortBy = 'score', order = 'desc' } = queryDto;
 
     try {
-      // Kích hoạt CẢ 3 hệ thống TÌM KIẾM SONG SONG cùng lúc để tối đa hóa tốc độ!
-      const keywordPromise = this.getKeywordCandidates(query);
-      const expandPromise = this.queryExpansionService.expand(query);
-      // Đưa trực tiếp câu lệnh vào Vector Search để HuggingFace tự xử lý ngữ nghĩa, 
-      const semanticPromise = this.rankingService.search(query, query);
+      const normalizedQuery = query.toLowerCase().trim();
 
+      // 1. KIỂM TRA TÁC GIẢ & TÊN SÁCH TRƯỚC (Cực nhanh, local DB)
+      const [authors, exactBook] = await Promise.all([
+        this.authorRepository.searchByName(query, 1),
+        this.bookRepository.findByTitle(BookTitle.create(query)) 
+      ]);
+
+      const exactAuthor = authors.find(a => a.name.toString().toLowerCase() === normalizedQuery);
+      
+      // Nếu khớp chính xác Tác giả HOẶC Tên Sách
+      if ((exactAuthor || exactBook) && page === 1) {
+        this.logger.debug(`Exact match found (Author: ${!!exactAuthor}, Book: ${!!exactBook}). Breaking early.`);
+        
+        let candidateBooks: any[] = [];
+        let total = 0;
+
+        if (exactAuthor) {
+          candidateBooks = await this.bookRepository.findSearchCandidates({ authorIds: [exactAuthor.id.toString()], status: 'published' }, limit);
+          total = await this.bookRepository.countByAuthor(exactAuthor.id);
+        } else if (exactBook && exactBook.status.toString() === 'published') {
+          // Nếu khớp chính xác tên sách, đưa cuốn đó lên đầu
+          candidateBooks = [{ id: exactBook.id.toString(), title: exactBook.title.toString(), authorName: exactBook.authorName }];
+          total = 1;
+        }
+
+        if (candidateBooks.length > 0) {
+          const mockScoreMap = new Map(candidateBooks.map(b => [b.id, { finalScore: 100, matchType: 'keyword' as const }]));
+          const fullBooks = await this.bookRepository.findByIds(candidateBooks.map(b => BookId.create(b.id)));
+          const data = await this.enrichAndMap(fullBooks, mockScoreMap);
+
+          return {
+            data,
+            meta: { current: page, pageSize: limit, total, totalPages: Math.ceil(total / limit) }
+          };
+        }
+      }
+
+      // 2. Nếu không phải tìm tác giả chính xác, mới kích hoạt các hệ thống nặng
       const [keywordResults, analysis, semanticResults] = await Promise.all([
-        keywordPromise,
-        expandPromise,
-        semanticPromise
+        this.getKeywordCandidates(query),
+        this.queryExpansionService.expand(query),
+        this.rankingService.search(query, query)
       ]);
 
       const hybridMap = this.calculateHybridScores(semanticResults, keywordResults);
@@ -60,13 +94,13 @@ export class IntelligentSearchUseCase {
       let candidateIds = Array.from(hybridMap.keys());
       if (candidateIds.length === 0) return this.emptyResult(page, limit);
 
-      // 1. Genre Resolution 
+      // 3. Genre Resolution 
       let resolvedGenreIds: string[] | undefined = undefined;
       if (genres || analysis?.targetGenres?.length) {
         resolvedGenreIds = await this.resolveGenreIds(genres, analysis);
       }
 
-      // 2. MÀN LỌC QUYẾT ĐỊNH (Luôn chạy để đảm bảo total khớp với thực tế DB)
+      // 4. MÀN LỌC QUYẾT ĐỊNH (Luôn chạy để đảm bảo total khớp với thực tế DB)
       candidateIds = await this.bookRepository.findIdsByFilter({ 
         ids: candidateIds, 
         genres: resolvedGenreIds, 
@@ -108,27 +142,40 @@ export class IntelligentSearchUseCase {
     const normalizedQuery = query.toLowerCase().trim();
 
     // 1. Tìm tác giả theo tên
-    const authors = await this.authorRepository.searchByName(query, 10);
+    const authors = await this.authorRepository.searchByName(query, 5);
     const authorIds = authors.map((a) => a.id.toString());
+    
+    // Kiểm tra xem có tác giả nào khớp 100% tên không
+    const exactAuthor = authors.find(a => a.name.toString().toLowerCase() === normalizedQuery);
 
-    // 2. Tìm sách theo Title VÀ Sách của các Tác giả vừa tìm được
-    const [booksByTitle, booksByAuthor] = await Promise.all([
-      this.bookRepository.findAll({ search: query, status: 'published' }, { page: 1, limit: 100 }), 
-      authorIds.length > 0
-        ? this.bookRepository.findAll({ authorIds: authorIds, status: 'published' }, { page: 1, limit: 100 }) 
-        : Promise.resolve({ data: [] as Book[] }),
-    ]);
+    let allBooks: Array<{ id: string, title: string, authorName?: string, description?: string }> = [];
 
-    const allBooks = [...booksByTitle.data, ...booksByAuthor.data];
+    if (exactAuthor) {
+      // BREAK: Nếu khớp 100% tên tác giả, ưu tiên lấy sách của họ TRƯỚC và dừng tìm kiếm tiêu đề lan man
+      this.logger.debug(`Exact author match found: ${exactAuthor.name.toString()}. Breaking early.`);
+      allBooks = await this.bookRepository.findSearchCandidates({ 
+        authorIds: [exactAuthor.id.toString()], 
+        status: 'published' 
+      }, 50);
+    } else {
+      // Nếu không khớp chính xác tác giả, tìm kiếm song song như bình thường nhưng dùng "Lean" method
+      const [booksByTitle, booksByAuthor] = await Promise.all([
+        this.bookRepository.findSearchCandidates({ search: query, status: 'published' }, 50), 
+        authorIds.length > 0
+          ? this.bookRepository.findSearchCandidates({ authorIds: authorIds, status: 'published' }, 50) 
+          : Promise.resolve([]),
+      ]);
+      allBooks = [...booksByTitle, ...booksByAuthor];
+    }
 
     const stopWords = new Set(['có', 'là', 'và', 'của', 'những', 'người', 'trong', 'một', 'các', 'cho', 'với', 'này', 'được', 'đã', 'đang', 'không', 'thì', 'cũng', 'như', 'khi', 'đến', 'từ', 'hay', 'nhưng', 'rất', 'nên', 'bạn', 'thân', 'nào', 'còn', 'tôi', 'anh']);
     const significantTokens = normalizedQuery.split(/\s+/).filter(t => t.length > 2 && !stopWords.has(t));
 
     allBooks.forEach((book) => {
-      const bid = book.id.toString();
-      if (results.has(bid)) return; // Tránh trùng lặp
+      const bid = book.id;
+      if (results.has(bid)) return;
 
-      const title = book.title.toString().toLowerCase();
+      const title = (book.title || '').toLowerCase();
       const author = (book.authorName || '').toLowerCase();
       const desc = (book.description || '').toLowerCase();
       let score = 0;
@@ -140,10 +187,8 @@ export class IntelligentSearchUseCase {
       } else if (title.includes(normalizedQuery) || author.includes(normalizedQuery)) {
         score = 60;
       } else if (significantTokens.length > 0) {
-        // Fallback: Tìm các từ khóa quan trọng (bỏ qua từ nối)
         const matchedTokens = significantTokens.filter(t => title.includes(t) || author.includes(t) || desc.includes(t));
         if (matchedTokens.length > 0) {
-          // Tính điểm dựa trên tỷ lệ từ khóa khớp (20 - 40 điểm)
           score = 20 + (matchedTokens.length / significantTokens.length) * 20;
         }
       }

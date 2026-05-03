@@ -423,6 +423,29 @@ export class BookRepository
     return documents.map((doc) => doc._id.toString());
   }
 
+  async findSearchCandidates(
+    filter: BookFilter,
+    limit: number,
+  ): Promise<
+    Array<{ id: string; title: string; authorName?: string; description?: string }>
+  > {
+    const queryFilter = this.buildQueryFilter(filter);
+    const documents = await this.bookModel
+      .find(queryFilter)
+      .select('_id title authorId description')
+      .limit(limit)
+      .populate('authorId', 'name')
+      .lean()
+      .exec();
+
+    return documents.map((doc) => ({
+      id: doc._id.toString(),
+      title: doc.title,
+      authorName: (doc.authorId as any)?.name,
+      description: doc.description,
+    }));
+  }
+
   async getFilters(): Promise<BookFilters> {
     const [genresResult, tagsResult] = await Promise.all([
       this.bookModel

@@ -89,5 +89,7 @@ export abstract class IBookRepository {
 
   abstract findByIds(ids: BookId[]): Promise<Book[]>;
   abstract findIdsByFilter(filter: BookFilter): Promise<string[]>;
+  abstract findSearchCandidates(filter: BookFilter, limit: number)
+  : Promise<Array<{ id: string, title: string, authorName?: string, description?: string }>>;
   abstract getFilters(): Promise<BookFilters>;
 }
