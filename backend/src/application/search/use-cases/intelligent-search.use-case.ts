@@ -63,7 +63,7 @@ export class IntelligentSearchUseCase {
 
         if (exactAuthor) {
           candidateBooks = await this.bookRepository.findSearchCandidates({ authorIds: [exactAuthor.id.toString()], status: 'published' }, limit);
-          total = await this.bookRepository.countByAuthor(exactAuthor.id);
+          total = await this.bookRepository.countByAuthor(exactAuthor.id, 'published');
         } else if (exactBook && exactBook.status.toString() === 'published') {
           // Nếu khớp chính xác tên sách, đưa cuốn đó lên đầu
           candidateBooks = [{ id: exactBook.id.toString(), title: exactBook.title.toString(), authorName: exactBook.authorName }];

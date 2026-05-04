@@ -11,7 +11,11 @@ export class GetPostUseCase {
 
   async execute(query: GetPostQuery): Promise<Post> {
     const post = await this.postRepository.findById(query.postId);
-    if (!post || post.isFlagged) {
+    if (!post) {
+      throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    }
+
+    if (post.isFlagged && post.userId !== query.viewerUserId) {
       throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
     }
     return post;

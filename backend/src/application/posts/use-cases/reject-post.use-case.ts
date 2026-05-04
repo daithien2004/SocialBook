@@ -14,6 +14,6 @@ export class RejectPostUseCase {
 
     await this.postRepository.delete(command.postId);
 
-    return { success: true, message: 'Post rejected and deleted' };
+    return { success: true};
   }
 }

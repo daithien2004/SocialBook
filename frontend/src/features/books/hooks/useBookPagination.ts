@@ -73,7 +73,7 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
 
     return {
         books: allBooks,
-        isLoading: isLoading && page === 1,
+        isLoading: (isLoading || isFetching) && page === 1,
         isFetchingMore: isFetching && page > 1,
         hasMore,
         lastBookRef,

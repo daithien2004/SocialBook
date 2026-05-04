@@ -22,7 +22,6 @@ export function useModerationManagement() {
     const handleApprove = async (postId: string) => {
         try {
             await approvePost(postId).unwrap();
-            toast.success('Bài viết đã được phê duyệt');
             refetch();
         } catch (error: unknown) {
             toast.error(getModerationErrorMessage(error, 'Phê duyệt thất bại'));
@@ -32,7 +31,6 @@ export function useModerationManagement() {
     const handleReject = async (postId: string) => {
         try {
             await rejectPost(postId).unwrap();
-            toast.success('Bài viết đã bị từ chối và xóa');
             refetch();
         } catch (error: unknown) {
             toast.error(getModerationErrorMessage(error, 'Từ chối thất bại'));

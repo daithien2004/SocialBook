@@ -115,7 +115,6 @@ export default function EditPostModal() {
                     images: values.images && values.images.length > 0 ? values.images : undefined,
                 },
             }).unwrap();
-            toast.success('Cập nhật bài viết thành công! 🎉');
             closeEditPost();
         } catch (error: any) {
             console.error('Failed to update post:', error);

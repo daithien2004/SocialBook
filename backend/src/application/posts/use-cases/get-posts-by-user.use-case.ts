@@ -15,6 +15,13 @@ export class GetPostsByUserUseCase {
   ): Promise<CursorPaginatedResult<Post>> {
     const { userId, limit, cursor, viewerUserId } = query;
     if (!userId) throw new BadRequestDomainException(ErrorMessages.INVALID_ID);
-    return this.postRepository.findAll({ limit, cursor, userId, viewerUserId });
+    const isOwner = viewerUserId === userId;
+    return this.postRepository.findAll({
+      limit,
+      cursor,
+      userId,
+      viewerUserId,
+      isFlagged: isOwner ? undefined : false,
+    });
   }
 }

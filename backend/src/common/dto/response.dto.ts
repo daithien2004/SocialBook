@@ -4,6 +4,7 @@ export class ResponseDto<T> {
   success: boolean;
   statusCode: number;
   message: string;
+  warning?: string;
   data?: T;
   meta?: PaginationMeta;
   timestamp: string;

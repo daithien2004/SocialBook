@@ -22,7 +22,7 @@ export class CreatePostUseCase {
   async execute(
     command: CreatePostCommand,
     files?: Express.Multer.File[],
-  ): Promise<Post> {
+  ): Promise<{ post: Post; warning?: string }> {
     // Validate Book
     const bookExists = await this.bookRepository.existsById(command.bookId);
     if (!bookExists)
@@ -49,19 +49,24 @@ export class CreatePostUseCase {
     });
 
     // Apply Moderation Flags
+    let moderationMessage: string | null = null;
     if (!moderationResult.isSafe) {
-      const reason =
+      moderationMessage =
         moderationResult.reason ||
         (moderationResult.isSpoiler
-          ? 'Phát hiện nội dung spoiler'
+          ? '⚠️ CẢNH BÁO: Bài viết của bạn chứa nội dung tiết lộ tình tiết truyện (Spoiler). Bài viết đã được tạm ẩn để Admin kiểm duyệt.'
           : moderationResult.isToxic
-            ? 'Phát hiện nội dung độc hại'
-            : 'Nội dung không phù hợp');
-      post.flag(reason);
+            ? '🚫 VI PHẠM: Bài viết chứa ngôn từ không chuẩn mực hoặc độc hại. Bài viết đang được gửi tới Ban quản trị để xem xét.'
+            : '📝 Bài viết của bạn đang được xem xét nội dung trước khi hiển thị công khai.');
+      post.flag(moderationMessage);
     }
 
     // Save
     const createdPost = await this.postRepository.create(post);
-    return createdPost;
+
+    return {
+      post: createdPost,
+      warning: moderationMessage || undefined,
+    };
   }
 }

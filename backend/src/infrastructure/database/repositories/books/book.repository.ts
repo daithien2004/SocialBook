@@ -303,22 +303,36 @@ export class BookRepository
       .exec();
   }
 
-  async countByAuthor(authorId: AuthorId): Promise<number> {
-    return await this.bookModel
-      .countDocuments({
-        authorId: authorId.toString(),
-        isDeleted: false,
-      })
-      .exec();
+  async countByAuthor(
+    authorId: AuthorId,
+    status?: 'draft' | 'published' | 'completed',
+  ): Promise<number> {
+    const query: FilterQuery<BookDocument> = {
+      authorId: new Types.ObjectId(authorId.toString()),
+      isDeleted: false,
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    return await this.bookModel.countDocuments(query).exec();
   }
 
-  async countByGenre(genreId: string): Promise<number> {
-    return await this.bookModel
-      .countDocuments({
-        genres: { $in: [genreId] },
-        isDeleted: false,
-      })
-      .exec();
+  async countByGenre(
+    genreId: string,
+    status?: 'draft' | 'published' | 'completed',
+  ): Promise<number> {
+    const query: FilterQuery<BookDocument> = {
+      genres: { $in: [new Types.ObjectId(genreId)] },
+      isDeleted: false,
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    return await this.bookModel.countDocuments(query).exec();
   }
 
   async countByStatus(

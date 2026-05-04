@@ -13,6 +13,7 @@ export class GetPostsUseCase {
       limit: query.limit,
       cursor: query.cursor,
       viewerUserId: query.viewerUserId,
+      isFlagged: false,
     });
   }
 }

@@ -75,8 +75,8 @@ export abstract class IBookRepository {
   abstract addLike(id: BookId, userId: string): Promise<void>;
   abstract removeLike(id: BookId, userId: string): Promise<void>;
 
-  abstract countByAuthor(authorId: AuthorId): Promise<number>;
-  abstract countByGenre(genreId: string): Promise<number>;
+  abstract countByAuthor(authorId: AuthorId, status?: 'draft' | 'published' | 'completed'): Promise<number>;
+  abstract countByGenre(genreId: string, status?: 'draft' | 'published' | 'completed'): Promise<number>;
   abstract countByStatus(
     status: 'draft' | 'published' | 'completed',
   ): Promise<number>;

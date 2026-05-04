@@ -16,6 +16,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button';
 import { PostAuthorHeader } from './PostAuthorHeader';
 import { PostActions } from './PostActions';
@@ -49,6 +50,38 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
                         onDelete={actions.openDeleteConfirm}
                     />
                 </CardHeader>
+
+                {post.isFlagged && (
+                    <Alert className="mx-4 mb-4 overflow-hidden rounded-xl border border-amber-200/50 dark:border-amber-500/20 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 shadow-sm p-0">
+                        <div className="flex items-stretch">
+                            <div className="w-1.5 bg-amber-400 dark:bg-amber-600" />
+                            <div className="flex-1 p-3.5">
+                                <AlertTitle className="flex items-center gap-2 mb-1.5">
+                                    <div className="p-1 rounded-full bg-amber-100 dark:bg-amber-900/50">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 dark:text-amber-400">
+                                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                            <path d="M12 9v4" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm font-bold text-amber-900 dark:text-amber-100 uppercase tracking-tight">
+                                        Đang chờ phê duyệt
+                                    </span>
+                                </AlertTitle>
+                                <AlertDescription>
+                                    <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2.5 border border-amber-100 dark:border-amber-800/30">
+                                        <p className="text-[13px] text-amber-800 dark:text-amber-200 leading-relaxed font-medium">
+                                            {post.moderationReason || 'Bài viết chứa nội dung cần quản trị viên xem xét trước khi hiển thị công khai.'}
+                                        </p>
+                                    </div>
+                                    <p className="mt-2 text-[11px] text-amber-700/60 dark:text-amber-400/60 font-medium italic">
+                                        * Chỉ bạn mới có thể thấy bài viết này trong lúc chờ kiểm duyệt.
+                                    </p>
+                                </AlertDescription>
+                            </div>
+                        </div>
+                    </Alert>
+                )}
 
                 <CardContent className="p-4 pt-0">
                     <p className="text-[15px] leading-relaxed text-slate-800 dark:text-gray-200 whitespace-pre-wrap">

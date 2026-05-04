@@ -59,7 +59,6 @@ export function usePostActions(options: UsePostActionsOptions): UsePostActionsRe
     setIsDeleting(true);
     try {
       await deletePostMutation(postId).unwrap();
-      toast.success('Xóa bài viết thành công!');
     } catch (error) {
       console.error('Failed to delete post:', error);
       if ((error as { status?: number })?.status !== 401) {
@@ -78,7 +77,6 @@ export function usePostActions(options: UsePostActionsOptions): UsePostActionsRe
           id: postId,
           data: { imageUrl },
         }).unwrap();
-        toast.success('Xóa ảnh thành công!');
       } catch (error) {
         console.error('Failed to delete image:', error);
         if ((error as { status?: number })?.status !== 401) {

@@ -20,22 +20,24 @@ export class UpdatePostUseCase {
   async execute(
     command: UpdatePostCommand,
     files?: Express.Multer.File[],
-  ): Promise<Post> {
+  ): Promise<{ post: Post; warning?: string }> {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
-    // Check ownership if needed or handled by controller/guard.
-    // Assuming command.userId is trustworthy (from JWT).
-    // Logic: if not admin, must be owner.
-    // But currently logic just finds post.
-
+    let moderationMessage: string | null = null;
     if (command.content) {
       const moderationResult = await this.checkContentUseCase.execute(
         command.content,
       );
       if (!moderationResult.isSafe) {
-        const reason = moderationResult.reason || 'Nội dung không phù hợp';
-        post.flag(reason);
+        moderationMessage =
+          moderationResult.reason ||
+          (moderationResult.isSpoiler
+            ? '⚠️ CẢNH BÁO: Bài viết của bạn chứa nội dung tiết lộ tình tiết truyện (Spoiler). Bài viết đã được tạm ẩn để Admin kiểm duyệt.'
+            : moderationResult.isToxic
+              ? '🚫 VI PHẠM: Bài viết chứa ngôn từ không chuẩn mực hoặc độc hại. Bài viết đang được gửi tới Ban quản trị để xem xét.'
+              : '📝 Bài viết của bạn đang được xem xét nội dung trước khi hiển thị công khai.');
+        post.flag(moderationMessage);
       } else {
         post.approve();
         post.clearModeration();
@@ -55,6 +57,10 @@ export class UpdatePostUseCase {
       post.updateImages([...post.imageUrls, ...newImageUrls]);
     }
 
-    return this.postRepository.update(post);
+    const updatedPost = await this.postRepository.update(post);
+    return {
+      post: updatedPost,
+      warning: moderationMessage || undefined,
+    };
   }
 }

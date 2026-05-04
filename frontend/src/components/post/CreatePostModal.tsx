@@ -66,7 +66,6 @@ export default function CreatePostModal() {
               duration: 5000,
             });
           } else {
-            toast.success('Đăng bài viết thành công!');
           }
         }
         closeCreatePost();

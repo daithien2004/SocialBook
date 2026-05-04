@@ -145,20 +145,11 @@ export class PostsController {
       throw new BadRequestException('Maximum 10 images allowed');
     }
     const command = new CreatePostCommand(userId, dto.bookId, dto.content);
-    const data = await this.createPostUseCase.execute(command, files);
-
-    const responseDto = new PostResponseDto(data);
-    if (data.isFlagged) {
-      return {
-        message: 'Create post successfully',
-        data: responseDto,
-        warning: `Bài viết phát hiện nội dung vi phạm cần quản trị viên phê duyệt: ${data.moderationReason}`,
-      };
-    }
-
+    const result = await this.createPostUseCase.execute(command, files);
     return {
-      message: 'Create post successfully',
-      data: responseDto,
+      message: result.warning ? undefined : 'Đăng bài viết thành công',
+      data: new PostResponseDto(result.post),
+      warning: result.warning,
     };
   }
 
@@ -190,10 +181,11 @@ export class PostsController {
       dto.bookId,
       dto.imageUrls,
     );
-    const data = await this.updatePostUseCase.execute(command, files);
+    const result = await this.updatePostUseCase.execute(command, files);
     return {
-      message: 'Update post successfully',
-      data: new PostResponseDto(data),
+      message: result.warning ? undefined : 'Cập nhật bài viết thành công',
+      data: new PostResponseDto(result.post),
+      warning: result.warning,
     };
   }
 
@@ -203,7 +195,7 @@ export class PostsController {
     const command = new DeletePostCommand(userId, id, false, false);
     await this.deletePostUseCase.execute(command);
     return {
-      message: 'Delete post successfully',
+      message: 'Xóa bài viết thành công',
     };
   }
 
@@ -261,9 +253,9 @@ export class PostsController {
   @Roles('admin')
   async approvePost(@Param('id') id: string) {
     const command = new ApprovePostCommand(id);
-    const result = await this.approvePostUseCase.execute(command);
+    await this.approvePostUseCase.execute(command);
     return {
-      message: result.message,
+      message: 'Bài viết đã được phê duyệt thành công',
     };
   }
 
@@ -272,9 +264,9 @@ export class PostsController {
   @Roles('admin')
   async rejectPost(@Param('id') id: string) {
     const command = new RejectPostCommand(id, 'Rejected by admin');
-    const result = await this.rejectPostUseCase.execute(command);
+    await this.rejectPostUseCase.execute(command);
     return {
-      message: result.message,
+      message: 'Bài viết đã bị từ chối và xóa',
     };
   }
 }
