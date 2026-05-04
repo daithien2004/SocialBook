@@ -31,7 +31,8 @@ const LazyNotificationBell = dynamic(
 export const HeaderClient = memo(function HeaderClient() {
     const { user, isAuthenticated, isGuest } = useAppAuth();
     const { handleLogout } = useLogout();
-    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToReadingRooms, navigateToProfile, navigateToSettings, navigateToLogin } = useHeaderNavigation();
+    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToReadingRooms, navigateToProfile, navigateToSettings, navigateToKnowledgeMap, navigateToLogin } = useHeaderNavigation();
+
     const { theme, toggleTheme, mounted } = useHeaderTheme();
 
     const userId = user?.id;
@@ -57,6 +58,7 @@ export const HeaderClient = memo(function HeaderClient() {
                                     onProfile={() => userId && navigateToProfile(userId)}
                                     onLibrary={navigateToLibrary}
                                     onSettings={navigateToSettings}
+                                    onKnowledgeMap={navigateToKnowledgeMap}
                                     onLogout={handleLogout}
                                 />
                                 <MobileMenu
@@ -68,6 +70,7 @@ export const HeaderClient = memo(function HeaderClient() {
                                     onLibrary={navigateToLibrary}
                                     onReadingRooms={navigateToReadingRooms}
                                     onSettings={navigateToSettings}
+                                    onKnowledgeMap={navigateToKnowledgeMap}
                                     onLogout={handleLogout}
                                 />
                             </>
@@ -137,10 +140,13 @@ interface UserDropdownProps {
     onProfile: () => void;
     onLibrary: () => void;
     onSettings: () => void;
+    onKnowledgeMap: () => void;
     onLogout: () => void;
 }
 
-function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onLogout }: UserDropdownProps) {
+
+function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onKnowledgeMap, onLogout }: UserDropdownProps) {
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -171,6 +177,11 @@ function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onLog
                     <span className="mr-2 h-4 w-4">⚙️</span>
                     <span>Cài đặt</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={onKnowledgeMap}>
+                    <span className="mr-2 h-4 w-4">🕸️</span>
+                    <span>Bản đồ tri thức</span>
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onLogout} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10">
                     <span className="mr-2 h-4 w-4">🚪</span>
@@ -190,10 +201,13 @@ interface MobileMenuProps {
     onLibrary: () => void;
     onReadingRooms: () => void;
     onSettings: () => void;
+    onKnowledgeMap: () => void;
     onLogout: () => void;
 }
 
-function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, onReadingRooms, onSettings, onLogout }: MobileMenuProps) {
+
+function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, onReadingRooms, onSettings, onKnowledgeMap, onLogout }: MobileMenuProps) {
+
     return (
         <Sheet>
             <SheetTrigger asChild>
@@ -238,7 +252,11 @@ function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, o
                         <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={onReadingRooms}>
                             👥 Phòng Đọc Chung
                         </Button>
+                        <Button variant="ghost" className="w-full justify-start gap-3 h-12 rounded-xl font-medium" onClick={onKnowledgeMap}>
+                            🕸️ Bản đồ tri thức
+                        </Button>
                     </div>
+
 
                     <Separator className="my-2" />
 

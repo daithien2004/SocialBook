@@ -11,7 +11,9 @@ import {
   AddToCollectionsRequest,
   CreateCollectionRequest,
   UpdateCollectionRequest,
+  KnowledgeGraphData,
 } from '../types/library.interface';
+
 import { recommendationsApi } from '../../recommendations/api/recommendationsApi';
 
 export const libraryApi = createApi({
@@ -177,8 +179,16 @@ export const libraryApi = createApi({
         { type: 'Library', id: 'LIST_ALL' }
       ]
     }),
+    getKnowledgeGraph: builder.query<KnowledgeGraphData, void>({
+      query: () => ({
+        url: NESTJS_LIBRARY_ENDPOINTS.knowledgeGraph,
+        method: 'GET',
+      }),
+      providesTags: ['Library'],
+    }),
   }),
 });
+
 
 export const {
   // Library Hooks
@@ -198,4 +208,6 @@ export const {
   useUpdateCollectionMutation,
   useDeleteCollectionMutation,
   useRecordReadingTimeMutation,
+  useGetKnowledgeGraphQuery,
 } = libraryApi;
+

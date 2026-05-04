@@ -11,13 +11,30 @@ import { UpdateCollectionsUseCase } from './use-cases/update-collections/update-
 import { UpdateProgressUseCase } from './use-cases/update-progress/update-progress.use-case';
 import { UpdateStatusUseCase } from './use-cases/update-status/update-status.use-case';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
+import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
+import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
+import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
+import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+
+
 import { ProcessReadingSessionUseCase } from './use-cases/process-reading-session/process-reading-session.use-case';
 import { UpdateCollectionUseCase } from './use-cases/update-collection/update-collection.use-case';
 import { DeleteCollectionUseCase } from './use-cases/delete-collection/delete-collection.use-case';
+import { GetKnowledgeGraphUseCase } from './use-cases/get-knowledge-graph/get-knowledge-graph.use-case';
+
 
 @Module({
-  imports: [LibraryRepositoryModule, IdGeneratorModule],
+  imports: [
+    LibraryRepositoryModule,
+    BooksRepositoryModule,
+    UsersRepositoryModule,
+    GenresRepositoryModule,
+    AIInfrastructureModule,
+    IdGeneratorModule
+  ],
+
+
   providers: [
     CreateCollectionUseCase,
     GetAllCollectionsUseCase,
@@ -33,6 +50,7 @@ import { DeleteCollectionUseCase } from './use-cases/delete-collection/delete-co
     ProcessReadingSessionUseCase,
     UpdateCollectionUseCase,
     DeleteCollectionUseCase,
+    GetKnowledgeGraphUseCase,
   ],
   exports: [
     CreateCollectionUseCase,
@@ -49,6 +67,7 @@ import { DeleteCollectionUseCase } from './use-cases/delete-collection/delete-co
     ProcessReadingSessionUseCase,
     UpdateCollectionUseCase,
     DeleteCollectionUseCase,
+    GetKnowledgeGraphUseCase,
   ],
 })
 export class LibraryApplicationModule {}
