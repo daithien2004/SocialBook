@@ -54,19 +54,20 @@ export default function CreatePostModal() {
         if (externalOnSubmit) {
           await externalOnSubmit(values as any);
         } else {
-          const result = await createPost({
+          const response = await createPost({
             bookId: values.bookId,
             content: values.content,
             images: values.images,
           }).unwrap();
 
-          if (result.isFlagged) {
+          const postData = response.data;
+          const warningMessage = response.warning;
+
+          if (warningMessage || postData.isFlagged) {
             toast.warning('Bài viết đang được xem xét', {
-              description: result.moderationReason,
-              duration: 5000,
+              description: warningMessage || postData.moderationReason || 'Bài viết của bạn đang được hệ thống kiểm duyệt.',
+              duration: 6000,
             });
-          } else {
-            toast.success('Đăng bài viết thành công!');
           }
         }
         closeCreatePost();

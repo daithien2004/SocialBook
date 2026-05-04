@@ -13,6 +13,24 @@ type RawPaginatedPostsResponse = {
   meta?: PaginatedPostsResponse['meta'];
 };
 
+export interface PostWithModerationResponse {
+  message?: string;
+  data: RawPost;
+  warning?: string;
+}
+
+export interface NormalizedPostWithModerationResponse {
+  message?: string;
+  data: Post;
+  warning?: string;
+}
+
+type MutationRawResponse = PostWithModerationResponse | RawPost;
+
+function isWrappedResponse(response: MutationRawResponse): response is PostWithModerationResponse {
+  return response !== null && typeof response === 'object' && 'data' in response && !('userId' in response);
+}
+
 const normalizePost = (post: RawPost): Post => ({
   ...post,
   totalLikes: post.totalLikes ?? post.likesCount,
@@ -84,7 +102,7 @@ export const postApi = createApi({
           : [{ type: 'Post', id: 'LIST' }],
     }),
 
-    createPost: builder.mutation<Post, CreatePostRequest>({
+    createPost: builder.mutation<NormalizedPostWithModerationResponse, CreatePostRequest>({
       query: (data) => {
         const formData = new FormData();
         formData.append('bookId', data.bookId);
@@ -102,10 +120,23 @@ export const postApi = createApi({
           body: formData,
         };
       },
+      transformResponse: (response: MutationRawResponse) => {
+        if (isWrappedResponse(response)) {
+          return {
+            ...response,
+            data: normalizePost(response.data),
+          };
+        }
+        return {
+          data: normalizePost(response),
+          warning: undefined,
+          message: undefined,
+        };
+      },
       invalidatesTags: [{ type: 'Post', id: 'LIST' }],
     }),
 
-    updatePost: builder.mutation<Post, { id: string; data: UpdatePostRequest }>(
+    updatePost: builder.mutation<NormalizedPostWithModerationResponse, { id: string; data: UpdatePostRequest }>(
       {
         query: ({ id, data }) => {
           const formData = new FormData();
@@ -128,6 +159,19 @@ export const postApi = createApi({
             url: NESTJS_POSTS_ENDPOINTS.update(id),
             method: 'PATCH',
             body: formData,
+          };
+        },
+        transformResponse: (response: MutationRawResponse) => {
+          if (isWrappedResponse(response)) {
+            return {
+              ...response,
+              data: normalizePost(response.data),
+            };
+          }
+          return {
+            data: normalizePost(response),
+            warning: undefined,
+            message: undefined,
           };
         },
         invalidatesTags: (result, error, { id }) => [

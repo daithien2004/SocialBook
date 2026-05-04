@@ -28,7 +28,8 @@ export class TransformInterceptor<T>
         return new ResponseDto({
           success: true,
           statusCode,
-          message: data?.message || 'Request successful',
+          message: data?.message || (data?.warning ? undefined : 'Request successful'),
+          warning: data?.warning,
           data: data?.data !== undefined ? data.data : null,
           meta: data?.meta || data?.metaData,
           path: request.url,

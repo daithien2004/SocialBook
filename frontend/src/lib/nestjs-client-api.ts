@@ -63,8 +63,15 @@ export const axiosBaseQuery =
           toast.success(responseData.message);
         }
 
-        if (responseData.meta !== undefined) {
-          return { data: { data: responseData.data, meta: responseData.meta } };
+        if (responseData.meta !== undefined || responseData.warning !== undefined) {
+          return {
+            data: {
+              data: responseData.data,
+              meta: responseData.meta,
+              warning: responseData.warning,
+              message: responseData.message,
+            },
+          };
         }
         return { data: responseData.data !== undefined ? responseData.data : responseData };
       } catch (axiosError) {

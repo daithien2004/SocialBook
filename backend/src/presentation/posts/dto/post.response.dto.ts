@@ -10,6 +10,7 @@ export class PostResponseDto {
   isFlagged: boolean;
 
   moderationStatus?: string;
+  moderationReason?: string;
 
   user?: { id: string; username: string; image?: string };
 
@@ -37,6 +38,7 @@ export class PostResponseDto {
     this.imageUrls = post.imageUrls || [];
     this.isFlagged = post.isFlagged || false;
     this.moderationStatus = post.moderationStatus;
+    this.moderationReason = post.moderationReason;
     this.createdAt = post.createdAt;
     this.updatedAt = post.updatedAt;
 

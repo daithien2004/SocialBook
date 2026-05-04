@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
-import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
+import { PostModerationService } from '../services/post-moderation.service';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
@@ -14,24 +14,19 @@ export class CreatePostUseCase {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly mediaService: IMediaService,
-    private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
+    private readonly postModerationService: PostModerationService,
   ) {}
 
   async execute(
     command: CreatePostCommand,
     files?: Express.Multer.File[],
-  ): Promise<Post> {
+  ): Promise<{ post: Post; moderationMessage?: string }> {
     // Validate Book
     const bookExists = await this.bookRepository.existsById(command.bookId);
     if (!bookExists)
       throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
-
-    // Content Moderation
-    const moderationResult = await this.checkContentUseCase.execute(
-      command.content,
-    );
 
     // Upload Images
     let imageUrls: string[] = [];
@@ -49,19 +44,16 @@ export class CreatePostUseCase {
     });
 
     // Apply Moderation Flags
-    if (!moderationResult.isSafe) {
-      const reason =
-        moderationResult.reason ||
-        (moderationResult.isSpoiler
-          ? 'Phát hiện nội dung spoiler'
-          : moderationResult.isToxic
-            ? 'Phát hiện nội dung độc hại'
-            : 'Nội dung không phù hợp');
-      post.flag(reason);
-    }
+    const moderationMessage = await this.postModerationService.moderate(
+      post,
+      command.content,
+    );
 
     // Save
     const createdPost = await this.postRepository.create(post);
-    return createdPost;
+    return {
+      post: createdPost,
+      moderationMessage,
+    };
   }
 }

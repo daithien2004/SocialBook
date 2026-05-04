@@ -93,7 +93,6 @@ export class PostsController {
     @CurrentUser('id') currentUserId: string,
     @Query() query: PaginationUserDto & { cursor?: string },
   ) {
-    if (!query.userId) throw new BadRequestException('userId is required');
     const limit = Math.min(query.actualLimit || 10, 100);
     const postsQuery = new GetPostsByUserQuery(
       query.userId,
@@ -141,24 +140,15 @@ export class PostsController {
     )
     files?: Express.Multer.File[],
   ) {
-    if (files && files.length > 10) {
-      throw new BadRequestException('Maximum 10 images allowed');
-    }
     const command = new CreatePostCommand(userId, dto.bookId, dto.content);
-    const data = await this.createPostUseCase.execute(command, files);
+    const { post, moderationMessage } =
+      await this.createPostUseCase.execute(command, files);
 
-    const responseDto = new PostResponseDto(data);
-    if (data.isFlagged) {
-      return {
-        message: 'Create post successfully',
-        data: responseDto,
-        warning: `Bài viết phát hiện nội dung vi phạm cần quản trị viên phê duyệt: ${data.moderationReason}`,
-      };
-    }
-
+    const responseDto = new PostResponseDto(post);
     return {
-      message: 'Create post successfully',
+      message: moderationMessage ? undefined : 'Đăng bài viết thành công',
       data: responseDto,
+      warning: moderationMessage,
     };
   }
 
@@ -179,10 +169,6 @@ export class PostsController {
     files?: Express.Multer.File[],
     @CurrentUser('id') userId?: string,
   ) {
-    if (userId && files && files.length > 10) {
-      throw new BadRequestException('Maximum 10 images allowed');
-    }
-
     const command = new UpdatePostCommand(
       userId || '',
       id,
@@ -190,10 +176,12 @@ export class PostsController {
       dto.bookId,
       dto.imageUrls,
     );
-    const data = await this.updatePostUseCase.execute(command, files);
+    const { post, moderationMessage } =
+      await this.updatePostUseCase.execute(command, files);
     return {
-      message: 'Update post successfully',
-      data: new PostResponseDto(data),
+      message: moderationMessage ? undefined : 'Cập nhật bài viết thành công',
+      data: new PostResponseDto(post),
+      warning: moderationMessage,
     };
   }
 

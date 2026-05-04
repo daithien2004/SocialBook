@@ -63,6 +63,7 @@ export class PostRepository implements IPostRepository {
     id: string,
     viewerUserId?: string,
   ): Promise<PostEntity | null> {
+
     const found = await this.model
       .findOne({ _id: id, isDeleted: false })
       .populate(POPULATE_USER)
@@ -85,11 +86,17 @@ export class PostRepository implements IPostRepository {
     if (options.userId) {
       filter.userId = new Types.ObjectId(options.userId);
     }
-    if (options.isFlagged !== undefined) {
-      filter.isFlagged = options.isFlagged;
-    }
     if (options.cursor) {
       filter._id = { $lt: new Types.ObjectId(options.cursor) };
+    }
+
+    if (options.isFlagged !== undefined) {
+      filter.isFlagged = options.isFlagged;
+    } else {
+      if (options.userId && options.viewerUserId === options.userId) {
+      } else {
+        filter.isFlagged = { $ne: true };
+      }
     }
 
     const docs = await this.model

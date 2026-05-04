@@ -107,7 +107,7 @@ export default function EditPostModal() {
         if (!post) return;
 
         try {
-            await updatePost({
+            const response = await updatePost({
                 id: post.id,
                 data: {
                     content: values.content,
@@ -115,7 +115,14 @@ export default function EditPostModal() {
                     images: values.images && values.images.length > 0 ? values.images : undefined,
                 },
             }).unwrap();
-            toast.success('Cập nhật bài viết thành công! 🎉');
+
+            const warningMessage = response.warning;
+            if (warningMessage) {
+                toast.warning('Bài viết đang được xem xét', {
+                    description: warningMessage,
+                    duration: 6000,
+                });
+            }
             closeEditPost();
         } catch (error: any) {
             console.error('Failed to update post:', error);

@@ -9,6 +9,7 @@ import { GetPostsUseCase } from './use-cases/get-posts.use-case';
 import { RejectPostUseCase } from './use-cases/reject-post.use-case';
 import { RemovePostImageUseCase } from './use-cases/remove-post-image.use-case';
 import { UpdatePostUseCase } from './use-cases/update-post.use-case';
+import { PostModerationService } from './services/post-moderation.service';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { MediaInfrastructureModule } from '@/infrastructure/media/media-infrastructure.module';
@@ -34,6 +35,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     RejectPostUseCase,
     RemovePostImageUseCase,
     UpdatePostUseCase,
+    PostModerationService,
   ],
   exports: [
     ApprovePostUseCase,
@@ -46,6 +48,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     RejectPostUseCase,
     RemovePostImageUseCase,
     UpdatePostUseCase,
+    PostModerationService,
   ],
 })
 export class PostsApplicationModule {}

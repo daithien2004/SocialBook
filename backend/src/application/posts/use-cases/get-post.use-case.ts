@@ -11,7 +11,12 @@ export class GetPostUseCase {
 
   async execute(query: GetPostQuery): Promise<Post> {
     const post = await this.postRepository.findById(query.postId);
-    if (!post || post.isFlagged) {
+    if (!post) {
+      throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    }
+
+    // Visibility logic: Flagged posts are only visible to the author
+    if (post.isFlagged && post.userId !== query.viewerUserId) {
       throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
     }
     return post;

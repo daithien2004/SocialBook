@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
-import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
+import { PostModerationService } from '../services/post-moderation.service';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
@@ -13,33 +13,24 @@ export class UpdatePostUseCase {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly mediaService: IMediaService,
-    private readonly checkContentUseCase: CheckContentUseCase,
     private readonly bookRepository: IBookRepository,
+    private readonly postModerationService: PostModerationService,
   ) {}
 
   async execute(
     command: UpdatePostCommand,
     files?: Express.Multer.File[],
-  ): Promise<Post> {
+  ): Promise<{ post: Post; moderationMessage?: string }> {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
-    // Check ownership if needed or handled by controller/guard.
-    // Assuming command.userId is trustworthy (from JWT).
-    // Logic: if not admin, must be owner.
-    // But currently logic just finds post.
+    let moderationMessage: string | undefined;
 
     if (command.content) {
-      const moderationResult = await this.checkContentUseCase.execute(
+      moderationMessage = await this.postModerationService.moderate(
+        post,
         command.content,
       );
-      if (!moderationResult.isSafe) {
-        const reason = moderationResult.reason || 'Nội dung không phù hợp';
-        post.flag(reason);
-      } else {
-        post.approve();
-        post.clearModeration();
-      }
       post.updateContent(command.content);
     }
 
@@ -55,6 +46,10 @@ export class UpdatePostUseCase {
       post.updateImages([...post.imageUrls, ...newImageUrls]);
     }
 
-    return this.postRepository.update(post);
+    const updatedPost = await this.postRepository.update(post);
+    return {
+      post: updatedPost,
+      moderationMessage,
+    };
   }
 }
