@@ -13,20 +13,18 @@ interface CommentPersistence {
 }
 
 export class CommentMapper {
-  static toDomain(document: CommentDocument): CommentEntity {
+  static toDomain(document: CommentDocument | any): CommentEntity {
     return CommentEntity.reconstitute({
       id: document._id.toString(),
       userId: document.userId?.toString() || '',
-      targetType: document.targetType as 'book' | 'chapter' | 'post' | 'author',
+      targetType: document.targetType,
       targetId: document.targetId?.toString() || '',
       parentId: document.parentId?.toString() || null,
       content: document.content,
       likesCount: document.likesCount || 0,
       isFlagged: document.isFlagged || false,
       moderationReason: document.moderationReason || '',
-      moderationStatus:
-        (document.moderationStatus as 'pending' | 'approved' | 'rejected') ||
-        'pending',
+      moderationStatus: document.moderationStatus || 'pending',
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     });

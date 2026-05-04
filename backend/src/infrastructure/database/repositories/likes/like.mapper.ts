@@ -14,7 +14,7 @@ interface LikePersistence {
 }
 
 export class LikeMapper {
-  static toDomain(doc: LikeDocument): Like {
+  static toDomain(doc: LikeDocument | any): Like {
     return Like.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),

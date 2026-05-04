@@ -154,8 +154,6 @@ export function ReadingSidebar() {
                     src={item.bookId.coverUrl}
                     alt={item.bookId.title}
                     fill
-                    sizes="64px"
-                    priority={index < 4}
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </Link>

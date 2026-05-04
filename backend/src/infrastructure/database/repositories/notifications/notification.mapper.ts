@@ -19,7 +19,7 @@ interface NotificationPersistence {
 }
 
 export class NotificationMapper {
-  static toDomain(doc: NotificationDocument): Notification {
+  static toDomain(doc: NotificationDocument | any): Notification {
     return Notification.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),
@@ -27,15 +27,9 @@ export class NotificationMapper {
       message: doc.message,
       type: doc.type,
       isRead: doc.isRead,
-      sentAt: doc.sentAt as Date,
-      actionUrl: doc.actionUrl ?? undefined,
-      meta: doc.meta
-        ? {
-            ...doc.meta,
-            actorId: doc.meta.actorId?.toString(),
-            targetId: doc.meta.targetId?.toString(),
-          }
-        : undefined,
+      sentAt: doc.sentAt,
+      actionUrl: doc.actionUrl,
+      meta: doc.meta,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     });

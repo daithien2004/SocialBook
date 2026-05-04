@@ -109,7 +109,6 @@ export default function RecommendedBooks() {
                                             src={book.coverUrl}
                                             alt={book.title}
                                             fill
-                                            sizes="80px"
                                             className="object-cover"
                                         />
                                     ) : (

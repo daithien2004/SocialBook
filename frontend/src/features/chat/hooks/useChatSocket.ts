@@ -1,4 +1,3 @@
-'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { Message, TypingState } from '../types/message.types';

@@ -42,12 +42,12 @@ export function BookGrid({
           if (isLastBook) {
             return (
               <div key={book.id} ref={onLastElementVisible}>
-                <BookCard book={book} priority={index < 8} />
+                <BookCard book={book} />
               </div>
             );
           }
 
-          return <BookCard key={book.id} book={book} priority={index < 8} />;
+          return <BookCard key={book.id} book={book} />;
         })}
       </div>
 

@@ -10,15 +10,8 @@ import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-cha
 import { EpubParserService } from '@/infrastructure/files/epub-parser.service';
 import { ImportEpubPreviewUseCase } from './use-cases/import-epub-preview/import-epub-preview.use-case';
 
-import { GetChapterKnowledgeUseCase } from './use-cases/get-chapter-knowledge/get-chapter-knowledge.use-case';
-import { AskChapterAIUseCase } from './use-cases/ask-ai/ask-chapter-ai.use-case';
-import { GeminiApplicationModule } from '../gemini/gemini-application.module';
-import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
-
-
 @Module({
-  imports: [ChaptersRepositoryModule, IdGeneratorModule, GeminiApplicationModule, BooksRepositoryModule],
-
+  imports: [ChaptersRepositoryModule, IdGeneratorModule],
   providers: [
     CreateChapterUseCase,
     DeleteChapterUseCase,
@@ -28,10 +21,7 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
     UpdateChapterUseCase,
     EpubParserService,
     ImportEpubPreviewUseCase,
-    GetChapterKnowledgeUseCase,
-    AskChapterAIUseCase,
   ],
-
   exports: [
     CreateChapterUseCase,
     DeleteChapterUseCase,
@@ -41,10 +31,6 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
     UpdateChapterUseCase,
     EpubParserService,
     ImportEpubPreviewUseCase,
-    GetChapterKnowledgeUseCase,
-    AskChapterAIUseCase,
   ],
-
 })
-
 export class ChaptersApplicationModule {}

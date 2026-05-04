@@ -38,7 +38,6 @@ export function BookItem(props: BookItemProps) {
                         src={props.bookImage}
                         alt={props.bookName}
                         fill
-                        sizes="140px"
                         className="object-cover"
                     />
 

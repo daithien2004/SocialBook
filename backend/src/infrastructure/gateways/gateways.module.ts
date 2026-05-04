@@ -7,14 +7,10 @@ import { NotificationsGateway } from './notifications.gateway';
 import { NotificationEventHandler } from './notification-event.handler';
 import { PostsRepositoryModule } from '../database/repositories/posts/posts-repository.module';
 import { CommentsRepositoryModule } from '../database/repositories/comments/comments-repository.module';
-import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
-import { ReadingRoomGateway } from './reading-room.gateway';
-import { ReadingRoomPresenceService } from './reading-room-presence.service';
 
 @Module({
   imports: [
     NotificationsApplicationModule,
-    ReadingRoomsApplicationModule,
     PostsRepositoryModule,
     CommentsRepositoryModule,
     JwtModule.registerAsync({
@@ -29,10 +25,7 @@ import { ReadingRoomPresenceService } from './reading-room-presence.service';
     NotificationsGateway,
     NotificationsService,
     NotificationEventHandler,
-    ReadingRoomGateway,
-    ReadingRoomPresenceService,
   ],
   exports: [NotificationsService],
 })
-
 export class GatewaysModule {}
