@@ -59,7 +59,7 @@ export function PostActions({
                         onClick={onShare}
                         className="flex-1 gap-2 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors py-5"
                     >
-                        <Send className="w-5 h-5 -rotate-45 mb-1" />
+                        <Send className="w-5 h-5" />
                         <span className="text-sm font-medium">Chia sẻ</span>
                     </Button>
                 </div>

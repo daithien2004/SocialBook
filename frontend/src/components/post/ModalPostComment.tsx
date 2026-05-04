@@ -3,11 +3,9 @@
 import Image from 'next/image';
 import ListComments from '@/components/comment/ListComments';
 import { usePostCreateMutation } from '@/features/comments/api/commentApi';
-import { Post } from '@/features/posts/types/post.interface';
 import { cn } from '@/lib/utils';
 import { Heart, MessageCircle, Send, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import React from 'react';
 import { useModalStore } from '@/store/useModalStore';
 import { usePostComments } from '@/features/posts/hooks/usePostComments';
 import { usePostActions } from '@/features/posts/hooks/usePostActions';
@@ -189,7 +187,7 @@ export default function ModalPostComment() {
                                         className="rounded-full hover:text-slate-900 dark:hover:text-white"
                                         aria-label="Chia sẻ"
                                     >
-                                        <Send className="w-6 h-6 text-slate-700 dark:text-gray-300 -rotate-45 mb-1" />
+                                        <Send className="w-6 h-6 text-slate-700 dark:text-gray-300" />
                                     </Button>
                                 </div>
                                 <p className="text-sm font-bold text-slate-900 dark:text-gray-100">
