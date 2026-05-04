@@ -55,29 +55,44 @@ export class IntelligentSearchUseCase {
       const exactAuthor = authors.find(a => a.name.toString().toLowerCase() === normalizedQuery);
       
       // Nếu khớp chính xác Tác giả HOẶC Tên Sách
-      if ((exactAuthor || exactBook) && page === 1) {
-        this.logger.debug(`Exact match found (Author: ${!!exactAuthor}, Book: ${!!exactBook}). Breaking early.`);
-        
-        let candidateBooks: any[] = [];
+      if (exactAuthor || (exactBook && page === 1)) {
+        this.logger.debug(
+          `Exact match found (Author: ${!!exactAuthor}, Book: ${!!exactBook}). Breaking early.`,
+        );
+
+        let fullBooks: Book[] = [];
         let total = 0;
 
         if (exactAuthor) {
-          candidateBooks = await this.bookRepository.findSearchCandidates({ authorIds: [exactAuthor.id.toString()], status: 'published' }, limit);
-          total = await this.bookRepository.countByAuthor(exactAuthor.id);
+          const paginatedBooks = await this.bookRepository.findByAuthor(
+            exactAuthor.id,
+            { page, limit },
+            { sortBy: 'createdAt', order: 'desc' },
+          );
+          fullBooks = paginatedBooks.data;
+          total = paginatedBooks.meta.total;
         } else if (exactBook && exactBook.status.toString() === 'published') {
-          // Nếu khớp chính xác tên sách, đưa cuốn đó lên đầu
-          candidateBooks = [{ id: exactBook.id.toString(), title: exactBook.title.toString(), authorName: exactBook.authorName }];
+          fullBooks = [exactBook];
           total = 1;
         }
 
-        if (candidateBooks.length > 0) {
-          const mockScoreMap = new Map(candidateBooks.map(b => [b.id, { finalScore: 100, matchType: 'keyword' as const }]));
-          const fullBooks = await this.bookRepository.findByIds(candidateBooks.map(b => BookId.create(b.id)));
+        if (fullBooks.length > 0) {
+          const mockScoreMap = new Map(
+            fullBooks.map((b) => [
+              b.id.toString(),
+              { finalScore: 100, matchType: 'keyword' as const },
+            ]),
+          );
           const data = await this.enrichAndMap(fullBooks, mockScoreMap);
 
           return {
             data,
-            meta: { current: page, pageSize: limit, total, totalPages: Math.ceil(total / limit) }
+            meta: {
+              current: page,
+              pageSize: limit,
+              total,
+              totalPages: Math.ceil(total / limit),
+            },
           };
         }
       }

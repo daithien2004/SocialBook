@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { ForbiddenDomainException, NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { PostModerationService } from '../services/post-moderation.service';
@@ -23,6 +23,10 @@ export class UpdatePostUseCase {
   ): Promise<{ post: Post; moderationMessage?: string }> {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+
+    if (post.userId !== command.userId) {
+      throw new ForbiddenDomainException(ErrorMessages.POST_UPDATE_FORBIDDEN);
+    }
 
     let moderationMessage: string | undefined;
 

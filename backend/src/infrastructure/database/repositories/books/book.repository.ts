@@ -8,6 +8,7 @@ import { BookListReadModel } from '@/domain/books/read-models/book-list.read-mod
 import {
   BookFilter,
   BookFilters,
+  BookSearchCandidate,
   IBookRepository,
 } from '@/domain/books/repositories/book.repository.interface';
 import { AuthorId } from '@/domain/books/value-objects/author-id.vo';
@@ -20,7 +21,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
 import { BookMapper } from './book.mapper';
-import { RawBookDocument } from './book.raw-types';
+import { RawBookDocument, BookPersistence } from './book.raw-types';
 import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
 
 @Injectable()
@@ -36,10 +37,10 @@ export class BookRepository
   }
 
   protected toDomain(doc: BookDocument): BookEntity {
-    return BookMapper.toDomain(doc as any);
+    return BookMapper.toDomain(doc as unknown as RawBookDocument);
   }
 
-  protected toPersistence(entity: BookEntity): any {
+  protected toPersistence(entity: BookEntity): BookPersistence {
     return BookMapper.toPersistence(entity);
   }
 
@@ -52,28 +53,28 @@ export class BookRepository
   }
 
   async findById(id: BookId): Promise<BookEntity | null> {
-    const document = await this.bookModel
+    const document = (await this.bookModel
       .findById(id.toString())
       .populate('genres')
       .lean()
-      .exec();
+      .exec()) as unknown as RawBookDocument;
     return document ? BookMapper.toDomain(document) : null;
   }
 
   async findBySlug(slug: string): Promise<BookEntity | null> {
-    const document = await this.bookModel
+    const document = (await this.bookModel
       .findOne({ slug, isDeleted: false })
       .populate('genres')
       .lean()
-      .exec();
+      .exec()) as unknown as RawBookDocument;
     return document ? BookMapper.toDomain(document) : null;
   }
 
   async findByTitle(title: BookTitle): Promise<BookEntity | null> {
-    const document = await this.bookModel
+    const document = (await this.bookModel
       .findOne({ title: title.toString(), isDeleted: false })
       .lean()
-      .exec();
+      .exec()) as unknown as RawBookDocument;
     return document ? BookMapper.toDomain(document) : null;
   }
 
@@ -426,22 +427,25 @@ export class BookRepository
   async findSearchCandidates(
     filter: BookFilter,
     limit: number,
-  ): Promise<
-    Array<{ id: string; title: string; authorName?: string; description?: string }>
-  > {
+  ): Promise<BookSearchCandidate[]> {
     const queryFilter = this.buildQueryFilter(filter);
-    const documents = await this.bookModel
+    const documents = (await this.bookModel
       .find(queryFilter)
       .select('_id title authorId description')
       .limit(limit)
       .populate('authorId', 'name')
       .lean()
-      .exec();
+      .exec()) as unknown as Array<{
+      _id: Types.ObjectId;
+      title: string;
+      authorId: { name: string } | null;
+      description?: string;
+    }>;
 
     return documents.map((doc) => ({
       id: doc._id.toString(),
       title: doc.title,
-      authorName: (doc.authorId as any)?.name,
+      authorName: doc.authorId?.name,
       description: doc.description,
     }));
   }

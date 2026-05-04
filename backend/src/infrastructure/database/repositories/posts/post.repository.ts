@@ -219,9 +219,9 @@ export class PostRepository implements IPostRepository {
   }
 
   private async enrichPosts(
-    docs: any[],
+    docs: PostDocument[],
     viewerUserId?: string,
-  ): Promise<any[]> {
+  ): Promise<PostDocument[]> {
     if (!docs.length) {
       return docs;
     }
@@ -286,13 +286,16 @@ export class PostRepository implements IPostRepository {
       likedDocs.map((item) => item.targetId.toString()),
     );
 
-    return docs.map((doc) => ({
-      ...doc,
-      likesCount: likeCountMap.get(doc._id.toString()) ?? 0,
-      commentsCount: commentCountMap.get(doc._id.toString()) ?? 0,
-      likedByCurrentUser: viewerUserId
-        ? likedPostIds.has(doc._id.toString())
-        : false,
-    }));
+    return docs.map((doc) => {
+      const docObj = doc instanceof Model ? doc.toObject() : doc;
+      return {
+        ...docObj,
+        likesCount: likeCountMap.get(doc._id.toString()) ?? 0,
+        commentsCount: commentCountMap.get(doc._id.toString()) ?? 0,
+        likedByCurrentUser: viewerUserId
+          ? likedPostIds.has(doc._id.toString())
+          : false,
+      } as unknown as PostDocument;
+    });
   }
 }
