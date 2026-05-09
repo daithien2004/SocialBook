@@ -112,6 +112,8 @@ ${book.description?.slice(0, 100)}...
       title: `Chia sẻ "${chapter?.title}"`,
       contentPlaceholder: "Chia sẻ cảm nghĩ của bạn về chương này...",
       defaultContent: defaultShareContent,
+      defaultBookId: book?.id,
+      defaultBookTitle: book?.title,
       onSubmit: async (data) => {
         if (!book?.id) {
           toast.error('Không tìm thấy thông tin sách');

@@ -81,6 +81,32 @@ export class FollowRepository
           {
             $unwind: { path: '$targetUser', preserveNullAndEmptyArrays: true },
           },
+          {
+            $lookup: {
+              from: 'posts',
+              localField: 'targetId',
+              foreignField: 'userId',
+              pipeline: [{ $match: { isDeleted: false } }],
+              as: 'posts',
+            },
+          },
+          {
+            $lookup: {
+              from: 'reading_lists',
+              localField: 'targetId',
+              foreignField: 'userId',
+              as: 'readingLists',
+            },
+          },
+          {
+            $lookup: {
+              from: 'follows',
+              localField: 'targetId',
+              foreignField: 'targetId',
+              pipeline: [{ $match: { status: true } }],
+              as: 'followers',
+            },
+          },
           { $skip: skip },
           { $limit: limit },
           {
@@ -93,6 +119,9 @@ export class FollowRepository
               updatedAt: 1,
               username: '$targetUser.username',
               image: '$targetUser.image',
+              postCount: { $size: '$posts' },
+              readingListCount: { $size: '$readingLists' },
+              followersCount: { $size: '$followers' },
             },
           },
         ])
@@ -110,6 +139,9 @@ export class FollowRepository
         status: r.status,
         username: r.username,
         image: r.image,
+        postCount: r.postCount || 0,
+        readingListCount: r.readingListCount || 0,
+        followersCount: r.followersCount || 0,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
       })),
@@ -147,6 +179,32 @@ export class FollowRepository
               preserveNullAndEmptyArrays: true,
             },
           },
+          {
+            $lookup: {
+              from: 'posts',
+              localField: 'userId',
+              foreignField: 'userId',
+              pipeline: [{ $match: { isDeleted: false } }],
+              as: 'posts',
+            },
+          },
+          {
+            $lookup: {
+              from: 'reading_lists',
+              localField: 'userId',
+              foreignField: 'userId',
+              as: 'readingLists',
+            },
+          },
+          {
+            $lookup: {
+              from: 'follows',
+              localField: 'userId',
+              foreignField: 'targetId',
+              pipeline: [{ $match: { status: true } }],
+              as: 'followers',
+            },
+          },
           { $skip: skip },
           { $limit: limit },
           {
@@ -159,6 +217,9 @@ export class FollowRepository
               updatedAt: 1,
               username: '$followerUser.username',
               image: '$followerUser.image',
+              postCount: { $size: '$posts' },
+              readingListCount: { $size: '$readingLists' },
+              followersCount: { $size: '$followers' },
             },
           },
         ])
@@ -177,6 +238,9 @@ export class FollowRepository
         status: r.status,
         username: r.username,
         image: r.image,
+        postCount: r.postCount || 0,
+        readingListCount: r.readingListCount || 0,
+        followersCount: r.followersCount || 0,
         createdAt: r.createdAt,
         updatedAt: r.updatedAt,
       })),

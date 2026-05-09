@@ -56,7 +56,7 @@ export const axiosBaseQuery =
         const responseData = result.data;
 
         if (method !== 'GET' && responseData?.message) {
-          toast.success(responseData.message);
+          //toast.success(responseData.message);
         }
 
         if (responseData.meta !== undefined || responseData.warning !== undefined) {

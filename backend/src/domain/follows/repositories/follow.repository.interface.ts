@@ -41,6 +41,9 @@ export interface FollowWithUserInfo {
   status: boolean;
   username?: string;
   image?: string;
+  postCount?: number;
+  readingListCount?: number;
+  followersCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

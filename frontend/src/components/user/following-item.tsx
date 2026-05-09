@@ -10,19 +10,18 @@ import { UserCheck, UserPlus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useAppAuth } from "@/features/auth/hooks/useAppAuth";
 import { useModalStore } from "@/store/useModalStore";
 
 const FollowingItem = (props: FollowingUser) => {
-    const auth = useSelector((state: RootState) => state.auth);
+    const auth = useAppAuth();
     const router = useRouter();
     const { closeFollowers } = useModalStore();
     
     const [isFollowing, setIsFollowing] = useState(props.isFollowedByCurrentUser);
 
-    const { data: statusData } = useGetFollowStatusQuery(props.userId, {
-        skip: !auth.isAuthenticated || auth?.user?.id === props.userId,
+    const { data: statusData } = useGetFollowStatusQuery(props.targetId, {
+        skip: !auth.isAuthenticated || auth?.user?.id === props.targetId,
     });
 
     useEffect(() => {
@@ -38,9 +37,9 @@ const FollowingItem = (props: FollowingUser) => {
     const handleToggleFollow = async () => {
         try {
             if (isFollowing) {
-                await unfollow(props.userId).unwrap();
+                await unfollow(props.targetId).unwrap();
             } else {
-                await toggleFollow(props.userId).unwrap();
+                await toggleFollow(props.targetId).unwrap();
             }
             setIsFollowing((prev) => !prev);
         } catch (e: any) {
@@ -78,7 +77,7 @@ const FollowingItem = (props: FollowingUser) => {
                     <div
                         onClick={() => {
                             closeFollowers();
-                            router.push(`/users/${props.userId}`);
+                            router.push(`/users/${props.targetId}`);
                         }}
                         className="
                             cursor-pointer h-20 w-20 rounded-full overflow-hidden

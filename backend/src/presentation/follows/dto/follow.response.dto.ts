@@ -10,6 +10,9 @@ export class FollowResponseDto {
   updatedAt: Date;
   username?: string;
   image?: string;
+  postCount: number;
+  readingListCount: number;
+  followersCount: number;
 
   constructor(
     follow: Follow | any,
@@ -33,6 +36,9 @@ export class FollowResponseDto {
       this.updatedAt = follow.updatedAt;
       this.username = follow.username;
       this.image = follow.image;
+      this.postCount = follow.postCount || 0;
+      this.readingListCount = follow.readingListCount || 0;
+      this.followersCount = follow.followersCount || 0;
     }
 
     if (userInfo) {

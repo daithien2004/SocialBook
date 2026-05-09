@@ -3,11 +3,10 @@ import {
     useToggleFollowMutation,
     useUnfollowMutation,
 } from '@/features/follows/api/followApi';
-import { RootState } from '@/store/store';
+import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 import { useModalStore } from '@/store/useModalStore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 interface UseFollowerItemOptions {
     userId: string;
@@ -18,7 +17,7 @@ export const useFollowerItem = ({
     userId,
     isFollowedByCurrentUser,
 }: UseFollowerItemOptions) => {
-    const auth = useSelector((state: RootState) => state.auth);
+    const auth = useAppAuth();
     const router = useRouter();
     const { closeFollowers } = useModalStore();
 
