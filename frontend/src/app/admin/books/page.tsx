@@ -38,6 +38,7 @@ export default function AdminBooksPage() {
     pagination,
     isLoading,
     isFetching,
+    error,
     isDeleting,
     handleDelete,
     openDeleteBook
@@ -119,17 +120,27 @@ export default function AdminBooksPage() {
         </div>
       </div>
 
-      {/* Loading */}
-      {(isLoading || isFetching) && (
+      {/* Loading (Initial) */}
+      {isLoading && (
         <div className="flex justify-center items-center py-32">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
         </div>
       )}
 
+      {/* Error State */}
+      {!isLoading && error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center my-8">
+          <p className="text-red-700 font-medium mb-4">Đã có lỗi xảy ra khi tải danh sách sách.</p>
+          <Button onClick={() => window.location.reload()} variant="outline" className="border-red-200 text-red-700 hover:bg-red-100">
+            Thử lại
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
-      {!(isLoading || isFetching) && (
+      {!isLoading && !error && (
         <div className="py-0">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-opacity duration-200 ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader className="bg-gray-50">

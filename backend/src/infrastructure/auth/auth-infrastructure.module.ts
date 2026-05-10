@@ -10,4 +10,4 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
   providers: [JwtStrategy, JwtRefreshStrategy],
   exports: [JwtStrategy, JwtRefreshStrategy],
 })
-export class AuthInfrastructureModule {}
+export class AuthInfrastructureModule { }

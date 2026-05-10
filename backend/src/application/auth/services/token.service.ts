@@ -55,7 +55,4 @@ export class TokenService {
 
     return { accessToken, refreshToken };
   }
-
-  /* Note: validateRefreshToken logic from AuthService was tightly coupled with Refresh logic. 
-     Moving it to RefreshTokenUseCase or keeping helper here. */
 }

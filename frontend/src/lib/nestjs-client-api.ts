@@ -82,7 +82,7 @@ export const axiosBaseQuery =
 
         if (status === 401) {
           const session = await getSession(); // Kích hoạt refresh ở server side
-          
+
           if (session?.accessToken) {
             // Nếu lấy được token mới, thử lại request ngay lập tức
             try {
@@ -96,7 +96,7 @@ export const axiosBaseQuery =
                 },
                 params,
               });
-              
+
               const responseData = retryResult.data;
               return { data: responseData.data !== undefined ? responseData.data : responseData };
             } catch (retryError) {

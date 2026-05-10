@@ -19,7 +19,7 @@ export class RefreshTokenUseCase {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
-  ) {}
+  ) { }
 
   async execute(command: RefreshTokenCommand) {
     const { userId, refreshToken } = command;

@@ -14,7 +14,7 @@ export function useBookManagement() {
   const debouncedSearch = useDebounce(search, 500);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
-  const { data, isLoading, isFetching, refetch } = useGetAdminBooksQuery({
+  const { data, isLoading, isFetching, error, refetch } = useGetAdminBooksQuery({
     page,
     limit: 15,
     search: debouncedSearch || undefined,
@@ -50,6 +50,7 @@ export function useBookManagement() {
     pagination,
     isLoading,
     isFetching,
+    error,
     isDeleting,
     handleDelete,
     openDeleteBook

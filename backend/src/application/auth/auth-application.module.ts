@@ -75,4 +75,4 @@ import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.mo
     TokenService,
   ],
 })
-export class AuthApplicationModule {}
+export class AuthApplicationModule { }

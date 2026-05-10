@@ -3,6 +3,7 @@
 import { useAppAuth } from '@/features/auth/hooks';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut, PenLine, Shapes, AlertTriangle } from 'lucide-react';
 
 const navItems = [
@@ -52,13 +53,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.name}>
-                <a
+                <Link
                   href={item.href}
                   className="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600"
                 >
                   <item.icon size={20} className="mr-3" />
                   {item.name}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

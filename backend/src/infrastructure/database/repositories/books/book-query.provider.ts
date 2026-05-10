@@ -28,7 +28,7 @@ export class BookQueryProvider implements IBookQueryProvider {
   ) {}
 
   private buildQueryFilter(filter: BookFilter): FilterQuery<BookDocument> {
-    const queryFilter: FilterQuery<BookDocument> = { isDeleted: false };
+    const queryFilter: FilterQuery<BookDocument> = { isDeleted: { $ne: true } };
 
     if (filter.title)
       queryFilter.title = { $regex: filter.title, $options: 'i' };
