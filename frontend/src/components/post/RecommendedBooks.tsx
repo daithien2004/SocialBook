@@ -17,7 +17,6 @@ export default function RecommendedBooks() {
         { page: 1, limit },
         { skip: !isAuthenticated }
     );
-
     const { data: dataBook, isLoading: isLoadingBook, isFetching } = useGetBooksQuery({
         page: 1,
         limit: PAGINATION.BOOKS_PER_PAGE,

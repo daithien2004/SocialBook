@@ -15,6 +15,12 @@ clientApi.interceptors.request.use(
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
+
+    const accessToken = getAccessToken();
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

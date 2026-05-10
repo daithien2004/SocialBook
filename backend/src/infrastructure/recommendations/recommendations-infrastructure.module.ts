@@ -20,6 +20,10 @@ import {
   Review,
   ReviewSchema,
 } from '@/infrastructure/database/schemas/review.schema';
+import {
+  UserPreference,
+  UserPreferenceSchema,
+} from '@/infrastructure/database/schemas/user-preference.schema';
 import { AIRecommendationStrategy } from './strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
 import { GeminiRepositoryModule } from '../database/repositories/gemini/gemini-repository.module';
@@ -34,6 +38,7 @@ import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/rec
       { name: ReadingList.name, schema: ReadingListSchema },
       { name: Progress.name, schema: ProgressSchema },
       { name: Review.name, schema: ReviewSchema },
+      { name: UserPreference.name, schema: UserPreferenceSchema },
     ]),
     GeminiRepositoryModule,
   ],

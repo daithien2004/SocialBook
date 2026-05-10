@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRecordReadingTimeMutation } from '@/features/library/api/libraryApi';
 import { useAppAuth } from '@/features/auth/hooks';
+import { useTracking, UserEventType } from '@/hooks/use-tracking';
 
 
 interface ReadingTimeTrackerProps {
@@ -23,6 +24,18 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
     recordReadingTimeRef.current = recordReadingTime;
   }, [recordReadingTime]);
 
+  const { trackEvent } = useTracking();
+
+  useEffect(() => {
+    if (isAuthenticated && bookId) {
+      trackEvent({
+        eventType: UserEventType.START_READING,
+        bookId,
+        chapterId,
+      });
+    }
+  }, [bookId, chapterId, isAuthenticated, trackEvent]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -36,15 +49,21 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
              const secondsToRecord = 60; 
              accumulatedSeconds.current -= 60;
              
+             // Record for library stats
              recordReadingTimeRef.current({
                 bookId,
                 chapterId,
                 durationInSeconds: secondsToRecord
              })
-             .then((result) => {
-                 // Successfully recorded reading time
-             })
              .catch(console.error);
+
+             // Record for analytics/scoring
+             trackEvent({
+                eventType: UserEventType.READING_PROGRESS,
+                bookId,
+                chapterId,
+                durationSeconds: secondsToRecord
+             });
           }
        }
     };

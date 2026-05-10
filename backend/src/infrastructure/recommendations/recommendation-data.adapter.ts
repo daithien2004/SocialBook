@@ -18,6 +18,10 @@ import {
   ReviewDocument,
 } from '@/infrastructure/database/schemas/review.schema';
 import {
+  UserPreference,
+  UserPreferenceDocument,
+} from '@/infrastructure/database/schemas/user-preference.schema';
+import {
   IRecommendationDataPort,
   PopulatedBook,
 } from '@/domain/recommendations/interfaces/recommendation-data.port';
@@ -31,6 +35,8 @@ export class RecommendationDataAdapter implements IRecommendationDataPort {
     private readingListModel: Model<ReadingListDocument>,
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
+    @InjectModel(UserPreference.name)
+    private preferenceModel: Model<UserPreferenceDocument>,
   ) {}
 
   async getInteractionCount(userId: string): Promise<number> {
@@ -49,7 +55,7 @@ export class RecommendationDataAdapter implements IRecommendationDataPort {
   async buildUserProfile(userId: string): Promise<UserProfile> {
     const userObjectId = new Types.ObjectId(userId);
 
-    const [readingLists, progresses, reviews, likedBooks] = await Promise.all([
+    const [readingLists, progresses, reviews, likedBooks, preferences] = await Promise.all([
       this.readingListModel
         .find({ userId: userObjectId })
         .populate({ path: 'bookId', populate: { path: 'genres authorId' } })
@@ -65,6 +71,12 @@ export class RecommendationDataAdapter implements IRecommendationDataPort {
         .populate({ path: 'bookId', populate: { path: 'genres' } })
         .lean<any[]>(),
       this.bookModel.find({ likedBy: userObjectId }).populate('genres'),
+      this.preferenceModel
+        .find({ userId: userObjectId })
+        .populate('genreId')
+        .sort({ score: -1 })
+        .limit(10)
+        .lean<any[]>(),
     ]);
 
     const validReadingLists = readingLists.filter((rl) => rl.bookId != null);
@@ -99,28 +111,44 @@ export class RecommendationDataAdapter implements IRecommendationDataPort {
       lastRead: p.lastReadAt,
     }));
 
-    const genreCounts = new Map<string, number>();
-    const allBooks = [
-      ...completedBooks.map((cb) => cb.book),
-      ...currentlyReading.map((cr) => cr.book),
-      ...highRatedBooks.map((hr) => hr.book),
-      ...likedBooks,
-    ].filter((book) => book != null);
-
-    allBooks.forEach((book) => {
-      if (book?.genres) {
-        book.genres.forEach((genre: any) => {
-          if (genre && genre.name) {
-            genreCounts.set(genre.name, (genreCounts.get(genre.name) || 0) + 1);
-          }
-        });
+    // Use the scores from user_preferences as the primary source for favorite genres
+    const preferenceGenreCounts = new Map<string, number>();
+    preferences.forEach(p => {
+      if (p.genreId && p.genreId.name) {
+        preferenceGenreCounts.set(p.genreId.name, p.score);
       }
     });
 
-    const favoriteGenres = Array.from(genreCounts.entries())
+    const favoriteGenres = Array.from(preferenceGenreCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map((entry) => entry[0]);
+
+    // If no explicit preferences found (new user), fall back to manual counting
+    if (favoriteGenres.length === 0) {
+      const allBooks = [
+        ...completedBooks.map((cb) => cb.book),
+        ...currentlyReading.map((cr) => cr.book),
+        ...highRatedBooks.map((hr) => hr.book),
+        ...likedBooks,
+      ].filter((book) => book != null);
+
+      const genreCounts = new Map<string, number>();
+      allBooks.forEach((book) => {
+        if (book?.genres) {
+          book.genres.forEach((genre: any) => {
+            if (genre && genre.name) {
+              genreCounts.set(genre.name, (genreCounts.get(genre.name) || 0) + 1);
+            }
+          });
+        }
+      });
+
+      favoriteGenres.push(...Array.from(genreCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map((entry) => entry[0]));
+    }
 
     const totalReadingTime = validProgresses.reduce(
       (sum, p) => sum + (p.timeSpent || 0),

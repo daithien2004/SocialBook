@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
@@ -17,6 +18,7 @@ export class CreatePostUseCase {
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly postModerationService: PostModerationService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -51,6 +53,13 @@ export class CreatePostUseCase {
 
     // Save
     const createdPost = await this.postRepository.create(post);
+
+    this.eventEmitter.emit('post.created', {
+      postId: createdPost.id,
+      userId: command.userId,
+      bookId: command.bookId,
+    });
+
     return {
       post: createdPost,
       moderationMessage,

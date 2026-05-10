@@ -12,6 +12,8 @@ import { BookHero } from './BookHero';
 import { BookDescription } from './BookDescription';
 import { BookSidebar } from './BookSidebar';
 import { ReviewSection } from './ReviewSection';
+import { useTracking, UserEventType } from '@/hooks/use-tracking';
+import { useEffect } from 'react';
 
 
 interface BookDetailClientProps {
@@ -32,6 +34,16 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
   } = useBookDetail(bookSlug);
 
   const { openCreatePost, openAddToLibrary } = useModalStore();
+  const { trackEvent } = useTracking();
+
+  useEffect(() => {
+    if (book?.id) {
+      trackEvent({
+        eventType: UserEventType.OPEN_BOOK,
+        bookId: book.id,
+      });
+    }
+  }, [book?.id, trackEvent]);
 
   if (isLoading) {
     return (
