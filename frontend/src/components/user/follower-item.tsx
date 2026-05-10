@@ -25,7 +25,7 @@ const FollowerItem = (props: FollowingUser) => {
             <div className="flex items-center gap-3">
                 <div
                     onClick={handleNavigateToProfile}
-                    className="relative h-10 w-10 overflow-hidden rounded-full cursor-pointer border border-slate-200 dark:border-gray-700"
+                    className="relative h-10 w-10 overflow-hidden rounded-full cursor-pointer border border-border"
                 >
                     <Image
                         src={props.image || '/user.png'}
@@ -37,11 +37,11 @@ const FollowerItem = (props: FollowingUser) => {
                 </div>
 
                 <div className="flex flex-col">
-                    <span className="font-semibold text-slate-800 dark:text-gray-100">
+                    <span className="font-semibold text-foreground">
                         {props.username}
                     </span>
 
-                    <span className="text-xs text-slate-500 dark:text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                         {props.readingListCount > 0 &&
                             `${props.readingListCount} Danh sách đọc`}
                         {props.readingListCount > 0 &&

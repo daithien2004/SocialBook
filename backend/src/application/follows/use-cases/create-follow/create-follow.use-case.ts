@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   BadRequestDomainException,
   ConflictDomainException,
@@ -19,6 +20,7 @@ export class CreateFollowUseCase {
   constructor(
     private readonly followRepository: IFollowRepository,
     private readonly idGenerator: IIdGenerator,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(command: CreateFollowCommand): Promise<Follow> {
@@ -56,6 +58,11 @@ export class CreateFollowUseCase {
       this.logger.log(
         `Follow created successfully: ${follow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
       );
+
+      this.eventEmitter.emit('user.followed', {
+        userId: command.userId,
+        targetId: command.targetId,
+      });
 
       return follow;
     } catch (error) {

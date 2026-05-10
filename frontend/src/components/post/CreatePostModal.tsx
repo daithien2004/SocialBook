@@ -95,7 +95,7 @@ export default function CreatePostModal() {
 
   return (
     <Dialog open={isCreatePostOpen} onOpenChange={(open) => !open && closeCreatePost()}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden bg-white dark:bg-[#1a1a1a]">
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden bg-card">
         <DialogHeader className="px-6 py-4 border-b border-white/5 dark:border-gray-800">
           <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -108,31 +108,33 @@ export default function CreatePostModal() {
             <div className="p-6 pb-2">
               <ScrollArea className="max-h-[60vh]">
                 <div className="space-y-4">
-                                    <FormField
-                    control={form.control}
-                    name="bookId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold text-slate-700 dark:text-gray-300">
-                          Sách liên quan
-                        </FormLabel>
-                        <FormControl>
-                          <BookSelector
-                            value={field.value}
-                            onChange={(bookId, book) => {
-                              field.onChange(bookId);
-                              if (book) {
-                                form.setValue('bookTitle', book.title);
-                              }
-                            }}
-                            placeholder="Chọn sách cho bài viết..."
-                            onlyLibrary
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {!defaultBookId && (
+                    <FormField
+                      control={form.control}
+                      name="bookId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-foreground">
+                            Sách liên quan
+                          </FormLabel>
+                          <FormControl>
+                            <BookSelector
+                              value={field.value}
+                              onChange={(bookId, book) => {
+                                field.onChange(bookId);
+                                if (book) {
+                                  form.setValue('bookTitle', book.title);
+                                }
+                              }}
+                              placeholder="Chọn sách cho bài viết..."
+                              onlyLibrary
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}
@@ -154,7 +156,7 @@ export default function CreatePostModal() {
                   {previewUrls.length > 0 && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-md border border-white/5 dark:border-gray-800 p-2">
                       {previewUrls.map((url, index) => (
-                        <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border border-slate-200 dark:border-gray-700">
+                        <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border border-border">
                           <Image
                             src={url}
                             alt={`Preview ${index}`}

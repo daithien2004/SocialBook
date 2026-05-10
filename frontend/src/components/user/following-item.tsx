@@ -10,19 +10,18 @@ import { UserCheck, UserPlus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useAppAuth } from "@/features/auth/hooks/useAppAuth";
 import { useModalStore } from "@/store/useModalStore";
 
 const FollowingItem = (props: FollowingUser) => {
-    const auth = useSelector((state: RootState) => state.auth);
+    const auth = useAppAuth();
     const router = useRouter();
     const { closeFollowers } = useModalStore();
     
     const [isFollowing, setIsFollowing] = useState(props.isFollowedByCurrentUser);
 
-    const { data: statusData } = useGetFollowStatusQuery(props.userId, {
-        skip: !auth.isAuthenticated || auth?.user?.id === props.userId,
+    const { data: statusData } = useGetFollowStatusQuery(props.targetId, {
+        skip: !auth.isAuthenticated || auth?.user?.id === props.targetId,
     });
 
     useEffect(() => {
@@ -38,9 +37,9 @@ const FollowingItem = (props: FollowingUser) => {
     const handleToggleFollow = async () => {
         try {
             if (isFollowing) {
-                await unfollow(props.userId).unwrap();
+                await unfollow(props.targetId).unwrap();
             } else {
-                await toggleFollow(props.userId).unwrap();
+                await toggleFollow(props.targetId).unwrap();
             }
             setIsFollowing((prev) => !prev);
         } catch (e: any) {
@@ -54,14 +53,14 @@ const FollowingItem = (props: FollowingUser) => {
                         group relative
                         bg-white dark:bg-neutral-900
                         rounded-xl
-                        border border-neutral-200 dark:border-gray-800
+                        border border-border
                         shadow-md dark:shadow-none
                         transition-all duration-300
                         overflow-hidden flex flex-col
                     "
         >
             {/* Cover Image */}
-            <div className="h-24 w-full relative bg-neutral-100 dark:bg-gray-900 overflow-hidden">
+            <div className="h-24 w-full relative bg-secondary overflow-hidden">
                 <Image
                     src="/img_1.png"
                     alt={`${props.username} cover`}
@@ -78,13 +77,13 @@ const FollowingItem = (props: FollowingUser) => {
                     <div
                         onClick={() => {
                             closeFollowers();
-                            router.push(`/users/${props.userId}`);
+                            router.push(`/users/${props.targetId}`);
                         }}
                         className="
                             cursor-pointer h-20 w-20 rounded-full overflow-hidden
                             border-4 border-white dark:border-gray-800
                             shadow-md
-                            bg-neutral-50 dark:bg-gray-900
+                            bg-card
                         ">
                         <Image
                             src={props.image || "/user.png"}
@@ -100,7 +99,7 @@ const FollowingItem = (props: FollowingUser) => {
                 <div className="space-y-1 mb-3">
                     <h3 className="
                         font-serif font-bold text-lg
-                        text-slate-900 dark:text-gray-100
+                        text-foreground
                         group-hover:text-neutral-700 dark:group-hover:text-gray-200
                         transition-colors
                     ">
@@ -116,7 +115,7 @@ const FollowingItem = (props: FollowingUser) => {
                             closeFollowers();
                             router.push(`/users/${props.userId}`);
                         }}
-                        className="w-full rounded-md text-xs font-medium tracking-wide border-neutral-200 dark:border-gray-700 hover:bg-neutral-100 dark:hover:bg-gray-800"
+                        className="w-full rounded-md text-xs font-medium tracking-wide border-border hover:bg-secondary"
                     >
                         Xem hồ sơ
                     </Button>
@@ -134,10 +133,10 @@ const FollowingItem = (props: FollowingUser) => {
                         shadow-sm
                         `
                                 : `
-                        bg-white dark:bg-gray-900
-                        border border-neutral-200 dark:border-gray-700
-                        text-slate-700 dark:text-gray-200
-                        hover:bg-neutral-100 dark:hover:bg-gray-800
+                        bg-card
+                        border border-border
+                        text-foreground
+                        hover:bg-secondary
                         `
                         }`}
                     >
@@ -159,31 +158,31 @@ const FollowingItem = (props: FollowingUser) => {
             {/* Stats */}
             <div
                 className="relative z-10 mt-1 py-2 flex justify-center text-center text-xs 
-                        bg-green-50 dark:bg-neutral-900 border-t border-neutral-200 dark:border-gray-800"
+                        bg-green-50 dark:bg-neutral-900 border-t border-border"
             >
                 <div className="w-1/3 flex flex-col items-center">
-                    <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
+                    <span className="font-bold text-xs text-foreground">
                         {props.postCount}
                     </span>
-                    <span className="text-[9px] text-slate-500 dark:text-gray-400 uppercase">
+                    <span className="text-[9px] text-muted-foreground uppercase">
                         Bài viết
                     </span>
                 </div>
 
                 <div className="w-1/3 flex flex-col items-center">
-                    <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
+                    <span className="font-bold text-xs text-foreground">
                         {props.readingListCount}
                     </span>
-                    <span className="text-[9px] text-slate-500 dark:text-gray-400 uppercase">
+                    <span className="text-[9px] text-muted-foreground uppercase">
                         Danh sách
                     </span>
                 </div>
 
                 <div className="w-1/3 flex flex-col items-center">
-                    <span className="font-bold text-xs text-slate-700 dark:text-gray-200">
+                    <span className="font-bold text-xs text-foreground">
                         {props.followersCount}
                     </span>
-                    <span className="text-[9px] text-slate-500 dark:text-gray-400 uppercase">
+                    <span className="text-[9px] text-muted-foreground uppercase">
                         Người theo dõi
                     </span>
                 </div>

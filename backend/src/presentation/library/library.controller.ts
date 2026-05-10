@@ -16,6 +16,9 @@ import { UpdateProgressCommand } from '@/application/library/use-cases/update-pr
 import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
 import { UpdateStatusCommand } from '@/application/library/use-cases/update-status/update-status.command';
 import { UpdateStatusUseCase } from '@/application/library/use-cases/update-status/update-status.use-case';
+import { GetKnowledgeGraphQuery } from '@/application/library/use-cases/get-knowledge-graph/get-knowledge-graph.query';
+import { GetKnowledgeGraphUseCase } from '@/application/library/use-cases/get-knowledge-graph/get-knowledge-graph.use-case';
+
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import {
   AddToCollectionsDto,
@@ -54,7 +57,9 @@ export class LibraryController {
     private readonly removeFromLibraryUseCase: RemoveFromLibraryUseCase,
     private readonly getBookLibraryInfoUseCase: GetBookLibraryInfoUseCase,
     private readonly getChapterProgressUseCase: GetChapterProgressUseCase,
+    private readonly getKnowledgeGraphUseCase: GetKnowledgeGraphUseCase,
   ) { }
+
 
   @Get()
   async getLibrary(
@@ -79,6 +84,18 @@ export class LibraryController {
       data: readingLists.map((rl) => LibraryItemResponseDto.fromReadModel(rl)),
     };
   }
+
+  @Get('knowledge-graph')
+  async getKnowledgeGraph(@CurrentUser('id') userId: string) {
+    const query = new GetKnowledgeGraphQuery(userId);
+    const result = await this.getKnowledgeGraphUseCase.execute(query);
+
+    return {
+      message: 'Get knowledge graph successfully',
+      data: result,
+    };
+  }
+
 
   @Post('status')
   async updateStatus(

@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import { getSession, signOut } from 'next-auth/react';
+import { getAccessToken } from './token-store';
 import { ErrorResponseDto, ResponseDto } from '../types/response';
 import { toast } from 'sonner';
 
@@ -14,6 +15,12 @@ clientApi.interceptors.request.use(
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
+    
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)

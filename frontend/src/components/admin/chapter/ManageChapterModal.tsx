@@ -192,7 +192,7 @@ export default function ManageChapterModal() {
     return (
         <Dialog open={isManageChapterOpen} onOpenChange={(open) => !open && !isLoading && closeManageChapter()}>
             <DialogContent className="sm:max-w-[1000px] max-h-[90vh] flex flex-col p-0 dark:bg-gray-900 border-none shadow-2xl">
-                <DialogHeader className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+                <DialogHeader className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 bg-card">
                     <DialogTitle className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
@@ -298,7 +298,7 @@ export default function ManageChapterModal() {
                         </div>
                     </ScrollArea>
 
-                    <DialogFooter className="px-6 py-5 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 gap-3">
+                    <DialogFooter className="px-6 py-5 border-t border-gray-100 dark:border-gray-800 bg-card gap-3">
                         <Button
                             type="button"
                             variant="ghost"

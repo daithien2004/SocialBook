@@ -33,10 +33,10 @@ export default function BookSelector({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { 
-    data: normalBooksData, 
-    isLoading: isNormalLoading, 
-    isFetching: isNormalFetching 
+  const {
+    data: normalBooksData,
+    isLoading: isNormalLoading,
+    isFetching: isNormalFetching
   } = useGetBooksQuery({
     page,
     limit: 20,

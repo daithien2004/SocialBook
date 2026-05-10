@@ -112,6 +112,8 @@ ${book.description?.slice(0, 100)}...
       title: `Chia sẻ "${chapter?.title}"`,
       contentPlaceholder: "Chia sẻ cảm nghĩ của bạn về chương này...",
       defaultContent: defaultShareContent,
+      defaultBookId: book?.id,
+      defaultBookTitle: book?.title,
       onSubmit: async (data) => {
         if (!book?.id) {
           toast.error('Không tìm thấy thông tin sách');
@@ -275,9 +277,9 @@ ${book.description?.slice(0, 100)}...
           {/* AI Sidebar */}
           {showAISidebar && (
             <aside className="w-full lg:w-80 sticky top-24 shrink-0 animate-in slide-in-from-right-4 duration-300">
-              <KnowledgeSidebar 
-                bookSlug={bookSlug} 
-                chapterId={chapter.id} 
+              <KnowledgeSidebar
+                bookSlug={bookSlug}
+                chapterId={chapter.id}
               />
             </aside>
           )}
@@ -286,11 +288,10 @@ ${book.description?.slice(0, 100)}...
 
 
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
-          isControlsVisible
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isControlsVisible
             ? 'translate-y-0 opacity-100'
             : 'translate-y-24 opacity-0'
-        }`}
+          }`}
       >
         <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-background/90 backdrop-blur-xl border border-border shadow-2xl">
           <DockButton

@@ -40,12 +40,12 @@ export const ChatWidget = () => {
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[360px] h-[520px] p-0 mr-6 mb-2 rounded-2xl shadow-2xl border-slate-200 dark:border-gray-800 overflow-hidden flex flex-col"
+          className="w-[360px] h-[520px] p-0 mr-6 mb-2 rounded-2xl shadow-2xl border-border overflow-hidden flex flex-col"
           side="top"
           align="end"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-900 border-b border-slate-100 dark:border-gray-800">
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-900 border-b border-border">
             <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8 bg-black dark:bg-white items-center justify-center">
                 <Bot className="h-5 w-5 text-white dark:text-black" />
@@ -67,7 +67,7 @@ export const ChatWidget = () => {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4 bg-white dark:bg-[#0c0c0c]">
+          <ScrollArea className="flex-1 p-4 bg-background">
             <div className="space-y-4 pr-4">
               {messages.map((msg) => (
                 <div
@@ -78,7 +78,7 @@ export const ChatWidget = () => {
                   <div
                     className={`max-w-[85%] p-3 text-sm leading-relaxed rounded-2xl ${msg.role === 'user'
                         ? 'bg-black dark:bg-white text-white dark:text-black rounded-br-sm'
-                        : 'bg-slate-100 dark:bg-gray-800 text-slate-800 dark:text-gray-200 rounded-bl-sm'
+                        : 'bg-slate-100 dark:bg-gray-800 text-foreground rounded-bl-sm'
                       }`}
                   >
                     {msg.role === 'ai' ? (
@@ -107,7 +107,7 @@ export const ChatWidget = () => {
           </ScrollArea>
 
           {/* Footer Input */}
-          <div className="p-3 bg-white dark:bg-[#09090b] border-t border-slate-100 dark:border-gray-800">
+          <div className="p-3 bg-background border-t border-border">
             <form
               className="flex items-center gap-2"
               onSubmit={(e) => {

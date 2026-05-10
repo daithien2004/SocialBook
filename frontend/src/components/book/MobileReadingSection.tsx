@@ -20,7 +20,7 @@ export function MobileReadingSection() {
   if (isGuest) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
+        <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
             <h2 className="font-bold text-lg text-gray-900 dark:text-white">
@@ -35,7 +35,7 @@ export function MobileReadingSection() {
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
               Đăng nhập để tiếp tục đọc
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-xs">
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
               Theo dõi tiến trình đọc sách và tiếp tục từ nơi bạn dừng lại
             </p>
             <Link
@@ -55,7 +55,7 @@ export function MobileReadingSection() {
   if (isLoading) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
+        <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
             <h2 className="font-bold text-lg text-gray-900 dark:text-white">
@@ -80,7 +80,7 @@ export function MobileReadingSection() {
   if (books.length === 0) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
+        <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
           <div className="flex items-center gap-2 mb-4">
             <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
             <h2 className="font-bold text-lg text-gray-900 dark:text-white">
@@ -98,7 +98,7 @@ export function MobileReadingSection() {
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
               Chưa có sách nào
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-xs">
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
               Khám phá và bắt đầu đọc sách yêu thích của bạn
             </p>
             <Link
@@ -119,7 +119,7 @@ export function MobileReadingSection() {
 
   return (
     <section className="xl:hidden px-4 py-6">
-      <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
+      <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
@@ -167,7 +167,7 @@ export function MobileReadingSection() {
               {item.lastReadChapterId ? (
                 <Link
                   href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
-                  className="w-full flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-foreground/90 border border-primary/20 text-xs font-semibold py-2 rounded-lg transition-all"
+                  className="w-full flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-none text-xs font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
                 >
                   <BookOpen size={12} />
                   Chương {item.lastReadChapterId.orderIndex}

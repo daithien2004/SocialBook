@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
 import { Manager, Socket } from 'socket.io-client';
-import { getSession } from 'next-auth/react';
+import { getAccessToken } from '@/lib/token-store';
 import { useAppAuth } from '@/features/auth/hooks';
 
 interface SocketContextType {
@@ -57,8 +57,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [getManager]);
 
   const connectSocket = useCallback(async (namespace: string) => {
-    const session = await getSession();
-    const token = session?.accessToken;
+    const token = getAccessToken();
 
     if (!token) {
       console.warn(`[SocketProvider] No token found for namespace ${namespace}`);

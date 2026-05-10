@@ -118,8 +118,8 @@ export default function AuthorModal() {
 
     return (
         <Dialog open={isAuthorModalOpen} onOpenChange={(open) => !open && !isLoading && closeAuthorModal()}>
-            <DialogContent className="sm:max-w-[650px] bg-white dark:bg-[#1a1a1a] border-slate-100 dark:border-gray-800 p-0 overflow-hidden">
-                <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+            <DialogContent className="sm:max-w-[650px] bg-card border-border p-0 overflow-hidden">
+                <DialogHeader className="px-6 py-4 border-b border-border">
                     <DialogTitle className="flex items-center gap-2 text-xl font-bold">
                         <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                             <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -201,7 +201,7 @@ export default function AuthorModal() {
                         </div>
                     </div>
 
-                    <DialogFooter className="pt-6 mt-6 border-t border-slate-100 dark:border-gray-800 gap-3">
+                    <DialogFooter className="pt-6 mt-6 border-t border-border gap-3">
                         <Button
                             type="button"
                             variant="ghost"

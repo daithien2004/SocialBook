@@ -43,7 +43,7 @@ export default function ChapterSummaryModal() {
     return (
         <Dialog open={isChapterSummaryOpen} onOpenChange={closeChapterSummary}>
             <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl">
-                <DialogHeader className="p-5 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#09090b] shrink-0">
+                <DialogHeader className="p-5 border-b border-gray-100 dark:border-white/5 bg-background shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center">
                             <Sparkles size={16} className="text-white dark:text-black" />
@@ -54,8 +54,8 @@ export default function ChapterSummaryModal() {
                     </div>
                 </DialogHeader>
 
-                <div className="p-6 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-[#0c0c0c] flex-1">
-                    <h4 className="text-gray-500 dark:text-gray-400 font-medium mb-6 text-sm flex items-center gap-2">
+                <div className="p-6 overflow-y-auto custom-scrollbar bg-muted flex-1">
+                    <h4 className="text-muted-foreground font-medium mb-6 text-sm flex items-center gap-2">
                         Đang tóm tắt: <span className="text-gray-900 dark:text-white font-semibold">{chapterTitle}</span>
                     </h4>
 
@@ -67,7 +67,7 @@ export default function ChapterSummaryModal() {
                             </div>
                             <div className="space-y-2">
                                 <p className="text-gray-900 dark:text-white font-medium">Bắt đầu tóm tắt</p>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto leading-relaxed">
+                                <p className="text-muted-foreground text-sm max-w-xs mx-auto leading-relaxed">
                                     Sử dụng trí tuệ nhân tạo để phân tích và tóm tắt nội dung chính của chương này trong vài giây.
                                 </p>
                             </div>
@@ -85,7 +85,7 @@ export default function ChapterSummaryModal() {
                     {isLoading && (
                         <div className="text-center py-16 space-y-4">
                             <Loader2 size={32} className="animate-spin text-gray-900 dark:text-white mx-auto" />
-                            <p className="text-gray-500 dark:text-gray-400 text-sm animate-pulse font-medium">
+                            <p className="text-muted-foreground text-sm animate-pulse font-medium">
                                 Đang xử lý nội dung...
                             </p>
                         </div>
@@ -102,7 +102,7 @@ export default function ChapterSummaryModal() {
                             </p>
                             <button
                                 onClick={handleSummarize}
-                                className="px-4 py-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-zinc-800 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto text-gray-700 dark:text-gray-300"
+                                className="px-4 py-2 border border-gray-200 dark:border-gray-700 hover:bg-muted rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto text-gray-700 dark:text-gray-300"
                             >
                                 <RefreshCw size={14} />
                                 Thử lại
@@ -113,7 +113,7 @@ export default function ChapterSummaryModal() {
                     {/* Success State (Summary) */}
                     {summary && !isLoading && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/5 rounded-2xl p-6 text-gray-800 dark:text-gray-200 leading-7 text-[15px] shadow-sm whitespace-pre-line">
+                            <div className="bg-card border border-gray-200 dark:border-white/5 rounded-2xl p-6 text-gray-800 dark:text-gray-200 leading-7 text-[15px] shadow-sm whitespace-pre-line">
                                 {summary}
                             </div>
                             <div className="mt-6 flex justify-center">

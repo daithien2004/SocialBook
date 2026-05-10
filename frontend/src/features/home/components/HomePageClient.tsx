@@ -48,7 +48,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-red-600 selection:text-white relative transition-colors duration-300">
       <PageBackground />
 
       <div className="relative z-10">

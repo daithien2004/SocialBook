@@ -5,7 +5,6 @@ import {
   Bookmark,
   Check,
   Clock,
-  Globe,
   Lock,
   Plus,
   X
@@ -28,12 +27,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
 export default function AddToLibraryModal() {
   const { isAddToLibraryOpen, closeAddToLibrary, addToLibraryData } = useModalStore();
   const bookId = addToLibraryData?.bookId || '';
-  
+
   const { user, isAuthenticated } = useAppAuth();
   const isLoggedIn = isAuthenticated;
   const currentUserId = user?.id;
@@ -76,43 +74,41 @@ export default function AddToLibraryModal() {
 
   return (
     <Dialog open={isAddToLibraryOpen} onOpenChange={(open) => !open && closeAddToLibrary()}>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-[#1a1a1a] gap-0 p-0 border-slate-100 dark:border-gray-800">
-        <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+      <DialogContent className="sm:max-w-md bg-card gap-0 p-0 border-border">
+        <DialogHeader className="px-6 py-4 border-b border-border">
           <DialogTitle>Lưu vào thư viện</DialogTitle>
         </DialogHeader>
 
         <div className="p-6 space-y-6">
           {/* Status Section */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="flex p-1 bg-muted/50 rounded-lg">
             <StatusButton
               active={selectedStatus === LibraryStatus.READING}
               onClick={() => handleStatusChange(LibraryStatus.READING)}
               icon={Clock}
               label="Đang đọc"
-              activeClass="bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/40 dark:text-blue-400 dark:border-blue-800"
+              activeClass="bg-background text-foreground shadow-sm"
             />
             <StatusButton
               active={selectedStatus === LibraryStatus.COMPLETED}
               onClick={() => handleStatusChange(LibraryStatus.COMPLETED)}
               icon={Bookmark}
               label="Hoàn thành"
-              activeClass="bg-yellow-50 text-yellow-600 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-400 dark:border-yellow-800"
+              activeClass="bg-background text-foreground shadow-sm"
             />
             <StatusButton
               active={selectedStatus === LibraryStatus.ARCHIVED}
               onClick={() => handleStatusChange(LibraryStatus.ARCHIVED)}
               icon={Archive}
               label="Lưu trữ"
-              activeClass="bg-slate-100 text-slate-700 border-slate-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
+              activeClass="bg-background text-foreground shadow-sm"
             />
           </div>
-
-          <Separator />
 
           {/* Collections Section */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
+              <h4 className="text-sm font-semibold text-foreground">
                 Bộ sưu tập của tôi
               </h4>
               {!isCreating && (
@@ -134,7 +130,7 @@ export default function AddToLibraryModal() {
                   className="h-9 text-sm"
                 />
                 <Button size="sm" onClick={handleCreateCollection} className="h-9">
-                  ok
+                  Tạo
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setIsCreating(false)} className="h-9 w-9 p-0">
                   <X className="w-4 h-4" />
@@ -142,8 +138,8 @@ export default function AddToLibraryModal() {
               </div>
             )}
 
-            <ScrollArea className="h-44 pr-4 -mr-4">
-              <div className="space-y-1">
+            <ScrollArea className="h-44 pr-4 -mr-4 mt-2">
+              <div className="space-y-0.5">
                 {collectionsList.length > 0 ? (
                   collectionsList.map((col) => {
                     const isSelected = selectedCollections.includes(col.id);
@@ -151,24 +147,19 @@ export default function AddToLibraryModal() {
                       <button
                         key={col.id}
                         onClick={() => handleToggleCollection(col.id)}
-                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-gray-800/50 transition-colors group text-left"
+                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-md hover:bg-muted/50 transition-colors group text-left"
                       >
-                        <div className={`
-                                        flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors
-                                        ${isSelected
-                            ? 'bg-blue-600 border-blue-600'
-                            : 'border-slate-300 dark:border-gray-600 group-hover:border-blue-400'}
-                                    `}>
-                          {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className="text-sm text-foreground truncate">{col.name}</span>
+                          {!col.isPublic && <Lock size={12} className="text-muted-foreground flex-shrink-0" />}
                         </div>
-                        <span className="text-sm text-slate-700 dark:text-gray-300 flex-1 truncate">{col.name}</span>
-                        {col.isPublic ? <Globe size={13} className="text-slate-400" /> : <Lock size={13} className="text-slate-400" />}
+                        {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" strokeWidth={2.5} />}
                       </button>
                     );
                   })
                 ) : (
                   <div className="py-8 text-center">
-                    <p className="text-sm text-slate-500 dark:text-gray-400">Bạn chưa có bộ sưu tập nào</p>
+                    <p className="text-sm text-muted-foreground">Bạn chưa có bộ sưu tập nào</p>
                   </div>
                 )}
               </div>
@@ -176,11 +167,7 @@ export default function AddToLibraryModal() {
           </div>
         </div>
 
-        <DialogFooter className="px-6 py-4 bg-slate-50 dark:bg-gray-900 border-t border-slate-100 dark:border-gray-800">
-          <Button className="w-full" onClick={closeAddToLibrary}>
-            Xong
-          </Button>
-        </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
@@ -199,11 +186,11 @@ function StatusButton({ active, onClick, icon: Icon, label, activeClass }: Statu
     <button
       onClick={onClick}
       className={`
-                flex flex-col items-center justify-center gap-2 py-3 rounded-xl border transition-all duration-200
-                ${active ? activeClass : 'bg-white dark:bg-gray-800/20 border-slate-200 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800/60'}
+                flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all duration-200
+                ${active ? activeClass : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}
             `}
     >
-      <Icon size={20} className={active ? 'opacity-100' : 'opacity-70'} />
+      <Icon size={14} className={active ? 'opacity-100' : 'opacity-70'} />
       <span className="text-xs font-medium">{label}</span>
     </button>
   );

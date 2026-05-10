@@ -35,19 +35,19 @@ export default function GlobalConfirmModal() {
 
     return (
         <AlertDialog open={isConfirmOpen} onOpenChange={(open) => !open && closeConfirm()}>
-            <AlertDialogContent className="max-w-[400px] rounded-2xl border-none shadow-2xl">
-                <AlertDialogHeader className="space-y-3">
-                    <AlertDialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+            <AlertDialogContent className="max-w-[400px] rounded-xl border border-border shadow-lg p-6">
+                <AlertDialogHeader className="space-y-2">
+                    <AlertDialogTitle className="text-lg font-bold text-foreground">
                         {confirmData.title}
                     </AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-500 dark:text-gray-400 text-base leading-relaxed">
+                    <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
                         {confirmData.description}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="mt-8 gap-3 sm:gap-0">
+                <AlertDialogFooter className="mt-6 gap-2 sm:gap-0">
                     <AlertDialogCancel 
                         disabled={isLoading}
-                        className="rounded-xl border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-zinc-800 font-semibold"
+                        className="rounded-lg border-border hover:bg-muted font-medium text-sm"
                     >
                         {confirmData.cancelText || "Hủy"}
                     </AlertDialogCancel>
@@ -59,10 +59,7 @@ export default function GlobalConfirmModal() {
                         disabled={isLoading}
                         className={buttonVariants({ 
                             variant: confirmData.variant || "default", 
-                            className: `rounded-xl font-bold px-6 shadow-lg min-w-[100px] ${
-                                confirmData.variant === "destructive" ? "shadow-red-500/20" : 
-                                confirmData.variant === "default" ? "shadow-blue-500/20" : ""
-                            }`
+                            className: "rounded-lg font-bold px-6 text-sm shadow-sm"
                         })}
                     >
                         {isLoading ? (

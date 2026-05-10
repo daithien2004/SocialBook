@@ -87,12 +87,12 @@ export function UserAvatarWithInfo({
             <UserAvatar {...avatarProps} />
             <div className={cn('space-y-0.5', infoClassName)}>
                 {displayName && (
-                    <h2 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
+                    <h2 className="text-sm font-semibold text-foreground">
                         {displayName}
                     </h2>
                 )}
                 {subtitle && (
-                    <p className={cn('text-xs text-slate-500 dark:text-gray-400', subtitleClassName)}>
+                    <p className={cn('text-xs text-muted-foreground', subtitleClassName)}>
                         {subtitle}
                     </p>
                 )}

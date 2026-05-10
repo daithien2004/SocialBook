@@ -45,10 +45,10 @@ const PostList: React.FC = memo(function PostList() {
     if (!posts.length) {
         return (
             <div className="flex flex-col items-center justify-center py-10 space-y-2 text-center">
-                <p className="text-sm font-medium text-slate-800 dark:text-gray-200">
+                <p className="text-sm font-medium text-foreground">
                     Chưa có bài viết nào.
                 </p>
-                <p className="text-xs text-slate-500 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                     Hãy là người đầu tiên chia sẻ cảm nhận về sách 📚
                 </p>
             </div>
@@ -57,7 +57,7 @@ const PostList: React.FC = memo(function PostList() {
 
     return (
         <div className="space-y-6 relative">
-            <div className="flex justify-between items-center bg-white dark:bg-[#1a1a1a] p-2 rounded-xl border border-slate-100 dark:border-gray-800 shadow-sm">
+            <div className="flex justify-between items-center bg-card p-2 rounded-xl border border-border shadow-sm">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white px-2">Bảng tin</h2>
                 <div className="flex items-center gap-2">
                     {isFetching ? <Spinner className="size-4 text-sky-500" /> : null}

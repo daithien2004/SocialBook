@@ -408,8 +408,10 @@ export class BookRepository
         isDeleted: false,
       })
       .populate('authorId', 'name avatar')
+      .populate('genres', 'name slug')
       .lean()
       .exec()) as unknown as RawBookDocument[];
+
 
     return documents.map((doc) => BookMapper.toDomain(doc));
   }

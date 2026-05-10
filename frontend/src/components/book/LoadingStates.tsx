@@ -23,7 +23,7 @@ export function LoadingMoreIndicator() {
 
 export function EndOfListMessage() {
   return (
-    <div className="flex justify-center py-8 text-gray-500 dark:text-gray-400">
+    <div className="flex justify-center py-8 text-muted-foreground">
       <p>Đã hiển thị tất cả sách</p>
     </div>
   );
@@ -31,7 +31,7 @@ export function EndOfListMessage() {
 
 export function EmptyBooksState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-gray-400">
+    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
       <p className="text-lg">Không tìm thấy sách nào</p>
     </div>
   );

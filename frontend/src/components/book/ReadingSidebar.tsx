@@ -173,7 +173,7 @@ export function ReadingSidebar() {
                       <p className="text-xs text-muted-foreground mb-2">
                         Chương {item.lastReadChapterId.orderIndex}
                       </p>
-                      <Button asChild size="sm" variant="outline" className="mt-auto w-full h-8 bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-foreground/90 border-primary/20 gap-1.5">
+                      <Button asChild size="sm" className="mt-auto w-full h-8 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-none transition-all active:scale-[0.98] gap-1.5">
                         <Link href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}>
                           <BookOpen size={12} />
                           Đọc tiếp
@@ -181,7 +181,7 @@ export function ReadingSidebar() {
                       </Button>
                     </>
                   ) : (
-                    <Button asChild size="sm" variant="outline" className="mt-auto w-full h-8 bg-accent/5 hover:bg-accent/10 border-border gap-1.5">
+                    <Button asChild size="sm" className="mt-auto w-full h-8 bg-secondary/50 hover:bg-secondary text-secondary-foreground border border-border shadow-none transition-all active:scale-[0.98] gap-1.5">
                       <Link href={`/books/${item.bookId.slug}`}>Bắt đầu đọc</Link>
                     </Button>
                   )}

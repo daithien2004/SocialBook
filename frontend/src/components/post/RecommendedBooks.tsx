@@ -17,7 +17,6 @@ export default function RecommendedBooks() {
         { page: 1, limit },
         { skip: !isAuthenticated }
     );
-
     const { data: dataBook, isLoading: isLoadingBook, isFetching } = useGetBooksQuery({
         page: 1,
         limit: PAGINATION.BOOKS_PER_PAGE,
@@ -29,9 +28,9 @@ export default function RecommendedBooks() {
     if (loading) {
         return (
             <div
-                className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden">
-                <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-gray-800">
-                    <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide">
+                className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="px-4 pt-4 pb-3 border-b border-border">
+                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                         {isAuthenticated ? 'Bạn cũng có thể thích' : 'Sách được xem nhiều'}
                     </h2>
                 </div>
@@ -55,7 +54,7 @@ export default function RecommendedBooks() {
     if (isAuthenticated && error) {
         return (
             <div
-                className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-4">
+                className="bg-card rounded-2xl shadow-sm border border-border p-4">
                 <p className="text-sm text-red-500">
                     Không thể tải danh sách gợi ý
                 </p>
@@ -71,8 +70,8 @@ export default function RecommendedBooks() {
     if (!booksToRender.length) {
         return (
             <div
-                className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 p-4">
-                <p className="text-sm text-slate-500 dark:text-gray-400">
+                className="bg-card rounded-2xl shadow-sm border border-border p-4">
+                <p className="text-sm text-muted-foreground">
                     Chưa có sách để hiển thị
                 </p>
             </div>
@@ -81,10 +80,10 @@ export default function RecommendedBooks() {
 
     return (
         <div
-            className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-slate-100 dark:border-gray-700 overflow-hidden">
+            className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
             {/* Header */}
-            <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-gray-800">
-                <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+            <div className="px-4 pt-4 pb-3 border-b border-border">
+                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                     {isAuthenticated ? 'Bạn cũng có thể thích' : 'Sách được xem nhiều'}
                 </h2>
             </div>
@@ -103,7 +102,7 @@ export default function RecommendedBooks() {
                             <div className="flex gap-3">
                                 {/* Cover */}
                                 <div
-                                    className="relative flex-shrink-0 w-20 h-28 rounded-lg overflow-hidden border border-slate-200 dark:border-gray-700 shadow-sm group-hover:shadow-md transition-shadow">
+                                    className="relative flex-shrink-0 w-20 h-28 rounded-lg overflow-hidden border border-border shadow-sm group-hover:shadow-md transition-shadow">
                                     {book.coverUrl ? (
                                         <Image
                                             src={book.coverUrl}
@@ -119,11 +118,11 @@ export default function RecommendedBooks() {
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="text-sm font-semibold text-slate-900 dark:text-gray-100 line-clamp-2 mb-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                                    <h3 className="text-sm font-semibold text-foreground line-clamp-2 mb-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                                         {book.title}
                                     </h3>
 
-                                    <div className="text-xs text-slate-500 dark:text-gray-400 mb-1.5">
+                                    <div className="text-xs text-muted-foreground mb-1.5">
                                         {book.authorId?.name || 'Unknown Author'}
                                     </div>
 
@@ -136,7 +135,7 @@ export default function RecommendedBooks() {
                                     )}
 
                                     {isAuthenticated && item.reason && (
-                                        <p className="text-xs text-slate-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                                             {item.reason}
                                         </p>
                                     )}

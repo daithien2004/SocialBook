@@ -1,5 +1,4 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '../features/auth/slice/authSlice';
 import { authApi } from '../features/auth/api/authApi';
 import { postApi } from '@/features/posts/api/postApi';
 import { booksApi } from '../features/books/api/bookApi';
@@ -65,7 +64,6 @@ const persistedRecommendationsReducer = persistReducer(
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
     [authApi.reducerPath]: authApi.reducer,
     [postApi.reducerPath]: postApi.reducer,
     [booksApi.reducerPath]: booksApi.reducer,

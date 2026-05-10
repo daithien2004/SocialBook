@@ -40,7 +40,7 @@ export function PostImageGallery({
     if (!images || images.length === 0) return null;
 
     return (
-        <div className="relative w-full bg-slate-50 dark:bg-gray-900/30 group border-y border-slate-100 dark:border-gray-800">
+        <div className="relative w-full bg-slate-50 dark:bg-gray-900/30 group border-y border-border">
             <div className="relative h-96 w-full overflow-hidden">
                 <Image
                     src={images[currentIndex]}

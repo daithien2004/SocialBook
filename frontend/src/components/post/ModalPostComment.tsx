@@ -62,14 +62,14 @@ export default function ModalPostComment() {
 
     return (
         <Dialog open={isPostCommentOpen} onOpenChange={(open) => !open && closePostComment()}>
-            <DialogContent className="max-w-5xl h-[90vh] md:h-[85vh] p-0 gap-0 overflow-hidden border-slate-200 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] flex flex-col md:flex-row">
+            <DialogContent className="max-w-5xl h-[90vh] md:h-[85vh] p-0 gap-0 overflow-hidden border-border bg-card flex flex-col md:flex-row">
                 <DialogHeader className="sr-only">
                     <DialogTitle>Bình luận cho bài viết của {post.user?.username}</DialogTitle>
                     <DialogDescription>Xem và chia sẻ bình luận về bài viết này</DialogDescription>
                 </DialogHeader>
 
                 {/* Left Side - Image (Hidden on Mobile) */}
-                <div className="hidden md:flex md:w-1/2 bg-slate-950 items-center justify-center relative border-r border-slate-100 dark:border-gray-800">
+                <div className="hidden md:flex md:w-1/2 bg-slate-950 items-center justify-center relative border-r border-border">
                     {post?.imageUrls?.[0] ? (
                         <Image
                             src={post.imageUrls[0]}
@@ -96,17 +96,17 @@ export default function ModalPostComment() {
                 </div>
 
                 {/* Right Side - Comments & Info */}
-                <div className="flex flex-col w-full md:w-1/2 h-full bg-white dark:bg-[#1a1a1a]">
+                <div className="flex flex-col w-full md:w-1/2 h-full bg-card">
                     {/* Header */}
-                    <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-gray-800 shrink-0">
-                        <Avatar className="h-10 w-10 border border-slate-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3 p-4 border-b border-border shrink-0">
+                        <Avatar className="h-10 w-10 border border-border">
                             <AvatarImage src={post.user?.image} className="object-cover" />
                             <AvatarFallback className="bg-slate-100 dark:bg-gray-800 text-slate-500">
                                 {post.user?.username?.charAt(0).toUpperCase() || 'U'}
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-slate-900 dark:text-gray-100 truncate">
+                            <h4 className="text-sm font-bold text-foreground truncate">
                                 {post.user?.username}
                             </h4>
                             {post.book && (
@@ -129,10 +129,10 @@ export default function ModalPostComment() {
                                     </Avatar>
                                     <div className="space-y-1">
                                         <p className="text-sm">
-                                            <span className="font-bold text-slate-900 dark:text-gray-100 mr-2">
+                                            <span className="font-bold text-foreground mr-2">
                                                 {post.user?.username}
                                             </span>
-                                            <span className="text-slate-800 dark:text-gray-200 leading-relaxed">
+                                            <span className="text-foreground leading-relaxed">
                                                 {post.content}
                                             </span>
                                         </p>
@@ -158,7 +158,7 @@ export default function ModalPostComment() {
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="border-t border-slate-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] shrink-0">
+                    <div className="border-t border-border bg-card shrink-0">
                         <div className="p-4 pb-3">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex gap-1">
@@ -169,7 +169,7 @@ export default function ModalPostComment() {
                                         onClick={() => toggleLike()}
                                         aria-label={isLiked ? "Bỏ thích" : "Thích"}
                                     >
-                                        <Heart className={cn("w-6 h-6 transition-all", isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-700 dark:text-gray-300')} />
+                                        <Heart className={cn("w-6 h-6 transition-all", isLiked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-foreground')} />
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -178,7 +178,7 @@ export default function ModalPostComment() {
                                         className="rounded-full hover:text-slate-900 dark:hover:text-white"
                                         aria-label="Bình luận"
                                     >
-                                        <MessageCircle className="w-6 h-6 text-slate-700 dark:text-gray-300" />
+                                        <MessageCircle className="w-6 h-6 text-foreground" />
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -187,16 +187,16 @@ export default function ModalPostComment() {
                                         className="rounded-full hover:text-slate-900 dark:hover:text-white"
                                         aria-label="Chia sẻ"
                                     >
-                                        <Send className="w-6 h-6 text-slate-700 dark:text-gray-300" />
+                                        <Send className="w-6 h-6 text-foreground" />
                                     </Button>
                                 </div>
-                                <p className="text-sm font-bold text-slate-900 dark:text-gray-100">
+                                <p className="text-sm font-bold text-foreground">
                                     {likeCount || 0} lượt thích
                                 </p>
                             </div>
 
                             <div className="flex gap-3 items-center">
-                                <Avatar className="h-8 w-8 border border-slate-100 dark:border-gray-800">
+                                <Avatar className="h-8 w-8 border border-border">
                                     <AvatarFallback className="text-[10px] bg-slate-100 dark:bg-gray-800">ME</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 flex gap-2">

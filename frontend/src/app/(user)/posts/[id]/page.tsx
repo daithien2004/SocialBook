@@ -52,7 +52,7 @@ export default function PostModalOverlay() {
     if (!post) {
         return (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl max-w-sm w-full text-center space-y-4">
+                <div className="bg-card p-8 rounded-2xl shadow-xl max-w-sm w-full text-center space-y-4">
                     <div className="text-4xl">😕</div>
                     <h2 className="text-xl font-bold">Không tìm thấy bài viết</h2>
                     <p className="text-muted-foreground">Bài viết này có thể đã bị xóa hoặc không tồn tại.</p>

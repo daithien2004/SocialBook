@@ -41,7 +41,7 @@ export default function Post() {
         <div className="min-h-screen bg-slate-50 dark:bg-neutral-950">
 
             {/* HEADER */}
-            <header className="border-b border-slate-100 dark:border-gray-800 backdrop-blur"></header>
+            <header className="border-b border-border backdrop-blur"></header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 mt-4 flex justify-center gap-4 pb-4">
 
@@ -54,7 +54,7 @@ export default function Post() {
                             onClick={() => {
                                 route.push(`users/${currentUserId}/following`)
                             }}
-                            className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4 cursor-pointer">
+                            className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-border p-4 cursor-pointer">
 
                             <div className="flex items-center gap-3 mb-3">
                                 <Image
@@ -65,8 +65,8 @@ export default function Post() {
                                     className="h-10 w-10 rounded-full border border-slate-200 object-cover dark:border-gray-700"
                                 />
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-900 dark:text-gray-100 truncate">{currentUserName}</p>
-                                    <p className="text-xs text-slate-500 dark:text-gray-400">Hôm nay bạn đang đọc
+                                    <p className="text-sm font-semibold text-foreground truncate">{currentUserName}</p>
+                                    <p className="text-xs text-muted-foreground">Hôm nay bạn đang đọc
                                         gì?</p>
                                 </div>
                             </div>
@@ -76,7 +76,7 @@ export default function Post() {
                                     e.stopPropagation();
                                     openCreatePost();
                                 }}
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-zinc-800 text-xs font-medium text-slate-700 dark:text-gray-300 py-2 hover:bg-slate-100 dark:hover:bg-gray-800 transition"
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-slate-50 dark:bg-zinc-800 text-xs font-medium text-foreground py-2 hover:bg-slate-100 dark:hover:bg-gray-800 transition"
                             >
                                 <PenSquare size={14}/>
                                 <span>Viết bài mới</span>
@@ -86,12 +86,12 @@ export default function Post() {
                         <UserSearchSidebar/>
                         {/* NAVIGATION */}
                         <div
-                            className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4">
-                            <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                            className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-border p-4">
+                            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                                 Điều hướng
                             </h2>
 
-                            <nav className="space-y-2 text-sm text-slate-700 dark:text-gray-300">
+                            <nav className="space-y-2 text-sm text-foreground">
                                 <button
                                     className="flex items-center gap-2 w-full text-left hover:text-sky-600 dark:hover:text-sky-400">
                                     <BookOpen size={16}/>
@@ -126,7 +126,7 @@ export default function Post() {
 
                     {/* CREATE POST BOX */}
                     <div
-                        className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4 mb-4">
+                        className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-border p-4 mb-4">
                         <div className="flex items-center gap-3 mb-3">
                             <Image
                                 src={currentUserImage}
@@ -140,15 +140,15 @@ export default function Post() {
                             />
                             <button
                                 onClick={() => openCreatePost()}
-                                className="flex-1 text-left text-sm text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full px-4 py-2 transition"
+                                className="flex-1 text-left text-sm text-muted-foreground bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full px-4 py-2 transition"
                             >
                                 {currentUserName}, bạn đang nghĩ gì về cuốn sách hôm nay?
                             </button>
                         </div>
 
                         <div
-                            className="flex justify-between items-center border-t border-slate-100 dark:border-gray-800 pt-3">
-                            <div className="flex gap-4 text-xs text-slate-600 dark:text-gray-400">
+                            className="flex justify-between items-center border-t border-border pt-3">
+                            <div className="flex gap-4 text-xs text-muted-foreground">
                                 <button
                                     onClick={() => openCreatePost()}
                                     className="inline-flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400"

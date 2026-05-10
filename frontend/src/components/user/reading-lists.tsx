@@ -15,17 +15,17 @@ export function ReadingLists() {
       rounded-2xl
       bg-white dark:bg-neutral-900
       shadow-sm
-      border border-slate-100 dark:border-gray-800
+      border border-border
     "
       >
         {/* Header */}
         <div className="py-5 px-4">
           <div className="flex items-center justify-between">
-        <span className="text-xl font-semibold font-serif text-slate-800 dark:text-gray-100">
+        <span className="text-xl font-semibold font-serif text-foreground">
           {`Danh sách đọc (${collectionsData.length})`}
         </span>
 
-            <div className="flex gap-2 text-slate-400 dark:text-gray-400">
+            <div className="flex gap-2 text-muted-foreground">
               <button
                   onClick={() => route.push('/library')}
                   className="
@@ -39,7 +39,7 @@ export function ReadingLists() {
             </div>
           </div>
 
-          <hr className="mt-4 mb-6 border-slate-200 dark:border-gray-800" />
+          <hr className="mt-4 mb-6 border-border" />
 
           {collectionsData.map((c) => (
               <ReadingListItem {...c} key={c.id} />

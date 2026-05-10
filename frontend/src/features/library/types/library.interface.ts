@@ -56,3 +56,27 @@ export interface CreateCollectionRequest {
 }
 
 export interface UpdateCollectionRequest extends CreateCollectionRequest { }
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: 'user' | 'book' | 'genre' | 'author' | 'tag';
+  val: number;
+  img?: string;
+  color?: string;
+  isGap?: boolean;
+  reason?: string;
+}
+
+
+export interface GraphLink {
+  source: string;
+  target: string;
+  type: 'read' | 'belongs_to' | 'written_by' | 'has_tag' | 'semantic';
+}
+
+export interface KnowledgeGraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
+}
+

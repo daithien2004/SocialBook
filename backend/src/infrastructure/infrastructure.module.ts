@@ -31,6 +31,7 @@ import { RecommendationsInfrastructureModule } from './recommendations/recommend
 import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
 import { ChaptersImportModule } from './queues/chapters-import/chapters-import.module';
 import { ReadingRoomsRepositoryModule } from './database/repositories/reading-rooms/reading-rooms-repository.module';
+import { AnalyticsRepositoryModule } from './database/repositories/analytics/analytics-repository.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { ReadingRoomsRepositoryModule } from './database/repositories/reading-ro
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
     ReadingRoomsRepositoryModule,
+    AnalyticsRepositoryModule,
     IdGeneratorModule,
     GatewaysModule,
     ChaptersImportModule,
@@ -97,6 +99,7 @@ import { ReadingRoomsRepositoryModule } from './database/repositories/reading-ro
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
     ReadingRoomsRepositoryModule,
+    AnalyticsRepositoryModule,
     IdGeneratorModule,
     GatewaysModule,
     ChaptersImportModule,

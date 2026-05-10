@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginFormValues } from '@/features/auth/types/auth.type';
 
@@ -21,25 +21,17 @@ export function useLoginFlow(): UseLoginFlowResult & {
     const searchParams = useSearchParams();
 
     const [isLoading, setIsLoading] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleAuthRedirect = useCallback(() => {
-        const sessionResponse = new XMLHttpRequest();
-        sessionResponse.open('GET', '/api/auth/session', false);
-        sessionResponse.onload = () => {
-            if (sessionResponse.status === 200) {
-                const sessionData = JSON.parse(sessionResponse.responseText);
-                const userRole = sessionData?.user?.role;
-                if (userRole === 'admin') {
-                    router.push('/admin');
-                } else {
-                    router.push('/');
-                }
-            }
-        };
-        sessionResponse.send();
+    const handleAuthRedirect = useCallback(async () => {
+        const sessionData = await getSession();
+        const userRole = sessionData?.user?.role;
+        if (userRole === 'admin') {
+            router.push('/admin');
+        } else {
+            router.push('/');
+        }
     }, [router]);
 
     const handleSubmit = useCallback(async (data: LoginFormValues) => {
@@ -75,7 +67,6 @@ export function useLoginFlow(): UseLoginFlowResult & {
     }, [searchParams, router]);
 
     const handleGoogleSignin = useCallback(() => {
-        setIsGoogleLoading(true);
         signIn('google', { redirect: true, callbackUrl: '/' });
     }, []);
 

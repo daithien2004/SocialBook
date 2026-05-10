@@ -136,7 +136,7 @@ export default function EditPostModal() {
 
     return (
         <Dialog open={isEditPostOpen} onOpenChange={(open) => !open && closeEditPost()}>
-            <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden bg-white dark:bg-[#1a1a1a]">
+            <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden bg-card">
                 <DialogHeader className="px-6 py-4 border-b border-white/5 dark:border-gray-800">
                     <DialogTitle className="text-xl font-bold">Chỉnh sửa bài viết</DialogTitle>
                     <DialogDescription className="sr-only">
@@ -156,13 +156,13 @@ export default function EditPostModal() {
                                             alt={post.user?.username || 'User'}
                                             width={40}
                                             height={40}
-                                            className="h-10 w-10 rounded-full border border-slate-200 dark:border-gray-700 object-cover"
+                                            className="h-10 w-10 rounded-full border border-border object-cover"
                                         />
                                         <div className="space-y-0.5">
-                                            <p className="font-semibold text-sm text-slate-900 dark:text-gray-100">
+                                            <p className="font-semibold text-sm text-foreground">
                                                 {post.user?.username}
                                             </p>
-                                            <p className="text-xs text-slate-500 dark:text-gray-400">
+                                            <p className="text-xs text-muted-foreground">
                                                 Chia sẻ công khai
                                             </p>
                                         </div>
@@ -195,7 +195,7 @@ export default function EditPostModal() {
                                         name="bookId"
                                         render={({ field }) => (
                                             <FormItem className="space-y-2 pb-2">
-                                                <FormLabel className="text-sm font-medium text-slate-700 dark:text-gray-200">
+                                                <FormLabel className="text-sm font-medium text-foreground">
                                                     Chọn sách
                                                 </FormLabel>
                                                 <FormControl>
@@ -214,14 +214,14 @@ export default function EditPostModal() {
                                     {/* Existing images */}
                                     {post.imageUrls && post.imageUrls.length > 0 && (
                                         <div className="space-y-3">
-                                            <p className="text-sm font-medium text-slate-700 dark:text-gray-200">
+                                            <p className="text-sm font-medium text-foreground">
                                                 Ảnh hiện tại ({post.imageUrls.length})
                                             </p>
                                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                                 {post.imageUrls.map((url, index) => (
                                                     <div
                                                         key={index}
-                                                        className="relative aspect-square rounded-xl overflow-hidden border border-slate-100 dark:border-gray-800"
+                                                        className="relative aspect-square rounded-xl overflow-hidden border border-border"
                                                     >
                                                         <Image
                                                             src={url}
@@ -237,7 +237,7 @@ export default function EditPostModal() {
                                                     </div>
                                                 ))}
                                             </div>
-                                            <p className="text-[10px] text-slate-500 dark:text-gray-400 italic">
+                                            <p className="text-[10px] text-muted-foreground italic">
                                                 * Để xóa ảnh cũ, vui lòng thao tác trực tiếp tại bài viết
                                             </p>
                                         </div>
@@ -246,14 +246,14 @@ export default function EditPostModal() {
                                     {/* New image previews */}
                                     {newImagePreviews.length > 0 && (
                                         <div className="space-y-3">
-                                            <p className="text-sm font-medium text-slate-700 dark:text-gray-200">
+                                            <p className="text-sm font-medium text-foreground">
                                                 Ảnh mới thêm ({newImagePreviews.length})
                                             </p>
                                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                                 {newImagePreviews.map((preview, index) => (
                                                     <div
                                                         key={index}
-                                                        className="relative aspect-square group rounded-xl overflow-hidden border border-slate-100 dark:border-gray-800"
+                                                        className="relative aspect-square group rounded-xl overflow-hidden border border-border"
                                                     >
                                                         <Image
                                                             src={preview}

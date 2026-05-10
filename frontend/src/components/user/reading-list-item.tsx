@@ -22,19 +22,19 @@ export function ReadingListItem(props: ReadingListItemProps) {
         <div className="space-y-2 pb-6">
             {/* Title */}
             <div className="flex items-center">
-        <span className="text-xl font-semibold font-serif text-slate-800 dark:text-gray-100">
+        <span className="text-xl font-semibold font-serif text-foreground">
           {name}
         </span>
 
                 <ChevronRight
                     strokeWidth={1.5}
-                    className="w-5 h-5 text-slate-500 dark:text-gray-400 relative top-[1px] -ml-[1px]"
+                    className="w-5 h-5 text-muted-foreground relative top-[1px] -ml-[1px]"
                 />
             </div>
 
             {/* Subtitle */}
             <div>
-        <span className="text-sm font-notosans font-medium text-slate-500 dark:text-gray-400">
+        <span className="text-sm font-notosans font-medium text-muted-foreground">
           {`Danh sách đọc • ${books.length} sách`}
         </span>
             </div>

@@ -75,7 +75,7 @@ const UserProfilePage = () => {
       rounded-2xl
       bg-white dark:bg-neutral-900
       shadow-sm
-      border border-slate-100 dark:border-gray-800
+      border border-border
     "
         >
             {/* Header */}
@@ -140,9 +140,9 @@ const UserProfilePage = () => {
                                     disabled={isSavingAvatar}
                                     className="
                   px-2 py-1 rounded-full text-[10px]
-                  border border-slate-200 dark:border-gray-700
+                  border border-border
                   bg-white dark:bg-neutral-900
-                  text-slate-700 dark:text-gray-200
+                  text-foreground
                   hover:bg-slate-50 dark:hover:bg-gray-800
                 "
                                 >
@@ -174,7 +174,7 @@ const UserProfilePage = () => {
             mb-2 rounded-lg border-0
             bg-white/90 dark:bg-neutral-800
             px-6 py-3 text-center text-base font-semibold
-            text-slate-800 dark:text-gray-100
+            text-foreground
             placeholder-slate-400 dark:placeholder-gray-500
             focus:outline-none focus:ring-2
             focus:ring-white/50 dark:focus:ring-gray-700
@@ -184,10 +184,10 @@ const UserProfilePage = () => {
             </div>
 
             {/* Form */}
-            <div className="bg-white dark:bg-[#1a1a1a] rounded-b-2xl px-6 py-6">
+            <div className="bg-card rounded-b-2xl px-6 py-6">
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="md:col-span-2">
-                        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-foreground">
                             Giới thiệu về bạn / hồ sơ
                         </label>
                         <textarea
@@ -198,10 +198,10 @@ const UserProfilePage = () => {
                             placeholder="Viết đôi lời giới thiệu…"
                             className="
               mt-1 w-full rounded-lg
-              border border-slate-200 dark:border-gray-700
+              border border-border
               bg-slate-50 dark:bg-neutral-900
               px-3 py-2 text-sm
-              text-slate-800 dark:text-gray-100
+              text-foreground
               outline-none
               focus:border-teal-500
               focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
@@ -210,7 +210,7 @@ const UserProfilePage = () => {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-foreground">
                             Website / Trang cá nhân
                         </label>
                         <input
@@ -221,10 +221,10 @@ const UserProfilePage = () => {
                             placeholder="https://trangcuaban.com"
                             className="
               mt-1 w-full rounded-lg
-              border border-slate-200 dark:border-gray-700
+              border border-border
               bg-slate-50 dark:bg-neutral-900
               px-3 py-2 text-sm
-              text-slate-800 dark:text-gray-100
+              text-foreground
               outline-none
               focus:border-teal-500
               focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
@@ -233,7 +233,7 @@ const UserProfilePage = () => {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-gray-300">
+                        <label className="mb-1 block text-sm font-medium text-foreground">
                             Quốc gia / Lãnh thổ
                         </label>
                         <select
@@ -242,10 +242,10 @@ const UserProfilePage = () => {
                             onChange={handleChange}
                             className="
               mt-1 w-full rounded-lg
-              border border-slate-200 dark:border-gray-700
+              border border-border
               bg-slate-50 dark:bg-neutral-900
               px-3 py-2 text-sm
-              text-slate-800 dark:text-gray-100
+              text-foreground
               outline-none appearance-none
               focus:border-teal-500
               focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
@@ -268,7 +268,7 @@ const UserProfilePage = () => {
                                 onClick={handleResetForm}
                                 className="
                 bg-slate-100 dark:bg-gray-800
-                text-slate-700 dark:text-gray-200
+                text-foreground
                 hover:bg-slate-200 dark:hover:bg-gray-700
               "
                             >

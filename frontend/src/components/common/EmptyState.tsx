@@ -31,11 +31,11 @@ export function EmptyState({
                     iconClassName
                 )} />
             )}
-            <p className="text-sm font-medium text-slate-800 dark:text-gray-200">
+            <p className="text-sm font-medium text-foreground">
                 {title}
             </p>
             {description && (
-                <p className="text-xs text-slate-500 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                     {description}
                 </p>
             )}

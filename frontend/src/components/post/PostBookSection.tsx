@@ -18,10 +18,10 @@ export function PostBookSection({ book }: PostBookSectionProps) {
 
     return (
         <div
-            className="p-3 bg-slate-50 dark:bg-gray-900/40 rounded-xl border border-slate-100 dark:border-gray-800 flex items-start gap-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-gray-800/60 transition-colors"
+            className="p-3 bg-slate-50 dark:bg-gray-900/40 rounded-xl border border-border flex items-start gap-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-gray-800/60 transition-colors"
             onClick={navigateToBook}
         >
-            <div className="shrink-0 w-14 h-20 rounded-md overflow-hidden border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800">
+            <div className="shrink-0 w-14 h-20 rounded-md overflow-hidden border border-border bg-slate-100 dark:bg-gray-800">
                 <Image
                     src={book.coverUrl || '/abstract-book-pattern.png'}
                     alt={book.title}
@@ -36,10 +36,10 @@ export function PostBookSection({ book }: PostBookSectionProps) {
                     <BookOpen size={10} />
                     Đang đọc
                 </Badge>
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-gray-100 truncate mt-1" title={book.title}>
+                <h3 className="font-semibold text-sm text-foreground truncate mt-1" title={book.title}>
                     {book.title}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                     {book.authorId?.name || 'Tác giả ẩn danh'}
                 </p>
             </div>

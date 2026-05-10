@@ -52,7 +52,7 @@ export function BookItem(props: BookItemProps) {
                         onClick={() => router.push(`/books/${props.slug}`)}
                         className="
               font-semibold text-base font-serif leading-tight line-clamp-2
-              text-slate-900 dark:text-gray-100
+              text-foreground
               group-hover:text-[#ff9800]
               transition-colors cursor-pointer
             "
@@ -60,7 +60,7 @@ export function BookItem(props: BookItemProps) {
                         {props.bookName}
                     </h4>
 
-                    <p className="text-xs font-serif font-semibold text-slate-500 dark:text-gray-400">
+                    <p className="text-xs font-serif font-semibold text-muted-foreground">
                         {props.authorName}
                     </p>
 

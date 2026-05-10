@@ -16,7 +16,7 @@ export function SectionCard({ children, className, title, action }: SectionCardP
             {(title || action) && (
                 <div className="flex items-center justify-between mb-4">
                     {title && (
-                        <h3 className="text-sm text-slate-600 dark:text-gray-400">
+                        <h3 className="text-sm text-muted-foreground">
                             {title}
                         </h3>
                     )}

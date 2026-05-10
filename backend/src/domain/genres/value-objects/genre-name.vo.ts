@@ -34,4 +34,9 @@ export class GenreName {
   equals(other: GenreName): boolean {
     return this.value.toLowerCase() === other.value.toLowerCase();
   }
+
+  getValue(): string {
+    return this.value;
+  }
 }
+

@@ -60,11 +60,11 @@ export default function SharePostModal() {
   return (
     <Dialog open={isSharePostOpen} onOpenChange={(open) => !open && closeSharePost()}>
       <DialogContent className="flex flex-col">
-        <DialogHeader className="px-6 py-5 border-b border-slate-100 dark:border-gray-800">
-          <DialogTitle className="text-xl font-bold text-slate-900 dark:text-gray-100">
+        <DialogHeader className="px-6 py-5 border-b border-border">
+          <DialogTitle className="text-xl font-bold text-foreground">
             Chia sẻ bài viết
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
             Chọn nền tảng bạn muốn chia sẻ
           </DialogDescription>
         </DialogHeader>
@@ -120,19 +120,19 @@ export default function SharePostModal() {
               <Separator className="w-full bg-slate-100 dark:bg-gray-800" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-white dark:bg-[#1a1a1a] px-4 text-slate-500 dark:text-gray-400 font-medium uppercase tracking-wider">
+              <span className="bg-card px-4 text-muted-foreground font-medium uppercase tracking-wider">
                 Hoặc sao chép liên kết
               </span>
             </div>
           </div>
 
           {/* Copy Link Section */}
-          <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 rounded-2xl p-2.5">
-            <div className="flex-shrink-0 bg-white dark:bg-gray-800 p-2 rounded-xl border border-slate-100 dark:border-gray-700">
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-gray-900/50 border border-border rounded-2xl p-2.5">
+            <div className="flex-shrink-0 bg-white dark:bg-gray-800 p-2 rounded-xl border border-border">
               <Link2 className="h-4 w-4 text-slate-400 dark:text-gray-500" />
             </div>
             <div className="flex-1 min-w-0 overflow-hidden">
-              <span className="text-sm text-slate-600 dark:text-gray-400 truncate block px-1">
+              <span className="text-sm text-muted-foreground truncate block px-1">
                 {postUrl}
               </span>
             </div>
@@ -156,8 +156,8 @@ export default function SharePostModal() {
           </div>
         </div>
 
-        <div className="px-6 py-4 bg-slate-50 dark:bg-gray-900/40 border-t border-slate-100 dark:border-gray-800">
-          <p className="text-xs text-center text-slate-500 dark:text-gray-400 font-medium">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-gray-900/40 border-t border-border">
+          <p className="text-xs text-center text-muted-foreground font-medium">
             Chia sẻ để nhiều người khám phá nội dung tuyệt vời này 🚀
           </p>
         </div>

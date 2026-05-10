@@ -42,6 +42,7 @@ import { GeminiApplicationModule } from '@/application/gemini/gemini-application
 import { RecommendationsApplicationModule } from '@/application/recommendations/recommendations-application.module';
 import { NotificationsApplicationModule } from '@/application/notifications/notifications-application.module';
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
+import { AnalyticsPresentationModule } from './analytics/analytics-presentation.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     RecommendationsApplicationModule,
     NotificationsApplicationModule,
     ReadingRoomsPresentationModule,
+    AnalyticsPresentationModule,
     InfrastructureModule,
   ],
   controllers: [

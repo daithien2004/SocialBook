@@ -25,14 +25,14 @@ export default function ChapterHeader({
       {showBookLink && (
         <Link
           href={`/books/${bookSlug}`}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest"
         >
           <BookOpen size={14} />
           <span>{bookTitle}</span>
         </Link>
       )}
 
-      <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+      <h1 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight">
         <span className="block text-lg font-medium text-gray-400 dark:text-gray-500 mb-2">
           Chương {chapterOrder}
         </span>

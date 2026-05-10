@@ -1,14 +1,14 @@
-export interface IGeminiService {
-  generateText(prompt: string): Promise<string>;
-  generateJSON<T>(prompt: string): Promise<T>;
-  embedText(text: string): Promise<number[]>;
-  summarizeChapter(chapterId: string): Promise<string>;
-  generateBookRecommendations(preferences: string): Promise<string[]>;
-  analyzeReadingProgress(
+export abstract class IGeminiService {
+  abstract generateText(prompt: string): Promise<string>;
+  abstract generateJSON<T>(prompt: string): Promise<T>;
+  abstract embedText(text: string): Promise<number[]>;
+  abstract summarizeChapter(chapterId: string): Promise<string>;
+  abstract generateBookRecommendations(preferences: string): Promise<string[]>;
+  abstract analyzeReadingProgress(
     chaptersRead: number,
     totalChapters: number,
     readingSpeed: number,
   ): Promise<string>;
-  generateChapterTitle(content: string): Promise<string>;
-  extractKeywords(text: string): Promise<string[]>;
+  abstract generateChapterTitle(content: string): Promise<string>;
+  abstract extractKeywords(text: string): Promise<string[]>;
 }

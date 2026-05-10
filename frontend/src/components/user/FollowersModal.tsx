@@ -27,8 +27,8 @@ export function FollowersModal() {
     
     return (
         <Dialog open={isFollowersOpen} onOpenChange={(open) => !open && closeFollowers()}>
-            <DialogContent className="sm:max-w-md bg-white dark:bg-[#1a1a1a] p-0 gap-0 overflow-hidden border-slate-100 dark:border-gray-800">
-                <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+            <DialogContent className="sm:max-w-md bg-card p-0 gap-0 overflow-hidden border-border">
+                <DialogHeader className="px-6 py-4 border-b border-border">
                     <DialogTitle className="text-center text-lg font-semibold">
                         {followersData?.count ?? followersList.length} Người theo dõi
                     </DialogTitle>

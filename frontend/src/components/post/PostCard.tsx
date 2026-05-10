@@ -41,7 +41,7 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
 
     return (
         <>
-            <Card className="w-full mb-5 overflow-hidden transition-shadow duration-200 hover:shadow-md border-slate-100 dark:border-gray-700 bg-white/95 dark:bg-[#1a1a1a]">
+            <Card className="w-full mb-5 overflow-hidden transition-shadow duration-200 hover:shadow-md border-border bg-card/95">
                 <CardHeader className="p-4">
                     <PostAuthorHeader
                         post={post}
@@ -78,7 +78,7 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
                 )}
 
                 <CardContent className="p-4 pt-0">
-                    <p className="text-[15px] leading-relaxed text-slate-800 dark:text-gray-200 whitespace-pre-wrap">
+                    <p className="text-[15px] leading-relaxed text-foreground whitespace-pre-wrap">
                         {post.content}
                     </p>
                 </CardContent>
@@ -107,17 +107,17 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
                 />
 
                 <AlertDialog open={showDeleteConfirm} onOpenChange={actions.setShowDeleteConfirm}>
-                    <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-gray-800">
+                    <AlertDialogContent className="bg-card border-border">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-bold text-slate-900 dark:text-gray-100">
+                            <AlertDialogTitle className="text-xl font-bold text-foreground">
                                 Xóa bài viết?
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="text-slate-600 dark:text-gray-400">
+                            <AlertDialogDescription className="text-muted-foreground">
                                 Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa bài viết này chứ?
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="mt-6 gap-3">
-                            <AlertDialogCancel className="rounded-xl border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800">
+                            <AlertDialogCancel className="rounded-xl border-border hover:bg-slate-50 dark:hover:bg-gray-800">
                                 Hủy
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -142,17 +142,17 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
                 </AlertDialog>
 
                 <AlertDialog open={showDeleteImageConfirm} onOpenChange={actions.setShowDeleteImageConfirm}>
-                    <AlertDialogContent className="bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-gray-800">
+                    <AlertDialogContent className="bg-card border-border">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-bold text-slate-900 dark:text-gray-100">
+                            <AlertDialogTitle className="text-xl font-bold text-foreground">
                                 Xóa ảnh này?
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="text-slate-600 dark:text-gray-400">
+                            <AlertDialogDescription className="text-muted-foreground">
                                 Bạn có chắc chắn muốn xóa ảnh này khỏi bài viết không?
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="mt-6 gap-3">
-                            <AlertDialogCancel className="rounded-xl border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800">
+                            <AlertDialogCancel className="rounded-xl border-border hover:bg-slate-50 dark:hover:bg-gray-800">
                                 Hủy
                             </AlertDialogCancel>
                             <AlertDialogAction

@@ -26,7 +26,7 @@ export function PostActions({
 
     return (
         <CardFooter className="p-0 flex flex-col">
-            <div className="px-4 py-2 w-full flex items-center justify-between border-t border-slate-100 dark:border-gray-800">
+            <div className="px-4 py-2 w-full flex items-center justify-between border-t border-border">
                 <div className="flex gap-2 w-full">
                     <Button
                         variant="ghost"
@@ -47,7 +47,7 @@ export function PostActions({
                         variant="ghost"
                         size="sm"
                         onClick={onComment}
-                        className="flex-1 gap-2 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors py-5"
+                        className="flex-1 gap-2 text-muted-foreground hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors py-5"
                     >
                         <MessageCircle className="w-5 h-5" />
                         <span className="text-sm font-medium">Bình luận</span>
@@ -57,7 +57,7 @@ export function PostActions({
                         variant="ghost"
                         size="sm"
                         onClick={onShare}
-                        className="flex-1 gap-2 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors py-5"
+                        className="flex-1 gap-2 text-muted-foreground hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors py-5"
                     >
                         <Send className="w-5 h-5" />
                         <span className="text-sm font-medium">Chia sẻ</span>
@@ -66,7 +66,7 @@ export function PostActions({
             </div>
 
             {hasStats && (
-                <div className="px-4 py-2 w-full bg-slate-50/50 dark:bg-gray-900/30 text-xs text-slate-500 dark:text-gray-400 flex gap-4 border-t border-slate-100 dark:border-gray-800/50">
+                <div className="px-4 py-2 w-full bg-slate-50/50 dark:bg-gray-900/30 text-xs text-muted-foreground flex gap-4 border-t border-border/50">
                     {likeCount > 0 && (
                         <span className="flex items-center gap-1">
                             <Heart size={12} className="fill-rose-400 text-rose-400" />

@@ -49,8 +49,8 @@ export default function LibraryPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#161515] flex flex-col items-center justify-center p-4 transition-colors duration-300">
-        <div className="max-w-md w-full bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl p-8 text-center border border-gray-100 dark:border-white/5">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 transition-colors duration-300">
+        <div className="max-w-md w-full bg-card rounded-2xl shadow-xl p-8 text-center border border-gray-100 dark:border-white/5">
           <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <BookOpen size={40} className="text-blue-600 dark:text-blue-400" />
           </div>
@@ -86,7 +86,7 @@ export default function LibraryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#161515] pb-20 transition-colors duration-300 font-sans selection:bg-blue-500 selection:text-white relative">
+    <div className="min-h-screen bg-background pb-20 transition-colors duration-300 font-sans selection:bg-blue-500 selection:text-white relative">
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Image
           src="/main-background.jpg"
@@ -134,7 +134,7 @@ export default function LibraryPage() {
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                 <button
                   onClick={() => openCreateCollection({ onSuccess: refetchCollections })}
-                  className="flex-none w-40 h-20 border-2 border-dashed border-gray-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:border-blue-500 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors bg-white dark:bg-white/5"
+                  className="flex-none w-40 h-20 border-2 border-dashed border-gray-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-muted-foreground hover:border-blue-500 dark:hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors bg-white dark:bg-white/5"
                 >
                   <Plus size={24} />
                   <span className="text-xs font-medium mt-1">
@@ -146,7 +146,7 @@ export default function LibraryPage() {
                   <Link
                     key={col.id}
                     href={`/collections/${col.id}`}
-                    className="flex-none w-48 h-20 bg-white dark:bg-[#1a1a1a] rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-4 hover:shadow-md dark:hover:border-white/30 transition-all group relative"
+                    className="flex-none w-48 h-20 bg-card rounded-xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-4 hover:shadow-md dark:hover:border-white/30 transition-all group relative"
                   >
                     <div className="flex justify-between items-start">
                       <div>
@@ -179,7 +179,7 @@ export default function LibraryPage() {
                       ${
                         isActive
                           ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                          : 'text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200'
                       }
                     `}
                   >
@@ -224,7 +224,7 @@ export default function LibraryPage() {
                       {activeTab === LibraryStatus.READING &&
                       item.lastReadChapterId ? (
                         <div className="mt-auto pt-2">
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          <p className="text-xs text-muted-foreground mb-2">
                             Đang đọc:{' '}
                             <span className="font-medium text-gray-700 dark:text-gray-300">
                               Chương {item.lastReadChapterId.orderIndex}
@@ -253,7 +253,7 @@ export default function LibraryPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-[#1a1a1a]/50 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+              <div className="flex flex-col items-center justify-center py-20 text-center bg-card/50 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
                 <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
                   <BookOpen
                     size={32}
@@ -263,7 +263,7 @@ export default function LibraryPage() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   Chưa có sách nào ở đây
                 </h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-sm mb-6">
+                <p className="text-muted-foreground max-w-sm mb-6">
                   {activeTab === LibraryStatus.READING
                     ? 'Bạn chưa đọc cuốn sách nào gần đây.'
                     : activeTab === LibraryStatus.COMPLETED
