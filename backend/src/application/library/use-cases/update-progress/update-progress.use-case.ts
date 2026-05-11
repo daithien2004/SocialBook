@@ -14,6 +14,11 @@ import { Injectable } from '@nestjs/common';
 import { UpdateProgressCommand } from './update-progress.command';
 import { ReadingProgressResult } from '../../mappers/library.results';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
+import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { BookId as DomainBookId } from '@/domain/books/value-objects/book-id.vo';
+import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
+import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
 
 export interface UpdateProgressResult {
   readingList: LibraryItemReadModel;
@@ -26,6 +31,8 @@ export class UpdateProgressUseCase {
     private readonly readingListRepository: IReadingListRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,
     private readonly idGenerator: IIdGenerator,
+    private readonly bookRepository: IBookRepository,
+    private readonly chapterRepository: IChapterRepository,
   ) {}
 
   async execute(command: UpdateProgressCommand): Promise<UpdateProgressResult> {
@@ -65,14 +72,38 @@ export class UpdateProgressUseCase {
 
     readingList.updateLastReadChapter(command.chapterId);
 
-    const isChapterCompleted = command.progress >= 80;
-    let bookStatus = readingList.status;
+    if (!readingList.isCompleted()) {
+      const book = await this.bookRepository.findById(
+        DomainBookId.create(command.bookId),
+      );
 
-    if (!readingList.isCompleted() && isChapterCompleted) {
-      bookStatus = ReadingStatus.READING;
+      if (book && book.status.toString() === 'completed') {
+        const [totalChapters, allProgresses] = await Promise.all([
+          this.chapterRepository.countByBook(
+            ChapterBookId.create(command.bookId),
+          ),
+          this.readingProgressRepository.findByUserIdAndBookId(userId, bookId),
+        ]);
+
+        const completedChapterIds = new Set(
+          allProgresses
+            .filter((p) => p.status === ChapterStatus.COMPLETED)
+            .map((p) => p.chapterId.toString()),
+        );
+
+        if (readingProgress.isCompleted()) {
+          completedChapterIds.add(command.chapterId);
+        }
+
+        if (totalChapters > 0 && completedChapterIds.size >= totalChapters) {
+          readingList.updateStatus(ReadingStatus.COMPLETED);
+        } else {
+          readingList.updateStatus(ReadingStatus.READING);
+        }
+      } else {
+        readingList.updateStatus(ReadingStatus.READING);
+      }
     }
-
-    readingList.updateStatus(bookStatus);
 
     await Promise.all([
       this.readingListRepository.save(readingList),

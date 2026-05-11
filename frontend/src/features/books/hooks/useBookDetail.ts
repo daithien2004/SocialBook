@@ -1,9 +1,7 @@
-'use client';
-
 import { useGetBookBySlugQuery, useLikeBookMutation } from '@/features/books/api/bookApi';
 import { useCreatePostMutation } from '@/features/posts/api/postApi';
 import { getErrorMessage } from '@/lib/utils';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useAppAuth } from '@/features/auth/hooks';
 
@@ -14,16 +12,34 @@ export const useBookDetail = (bookSlug: string) => {
   const [likeBook, { isLoading: isLiking }] = useLikeBookMutation();
   const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
 
-  // Compute isLiked from the likedBy array + current user id
-  const isLiked = useMemo(() => {
+  // Derive initial isLiked and likesCount from the book data
+  const derivedIsLiked = useMemo(() => {
     if (!user?.id || !book?.likedBy) return false;
     return book.likedBy.includes(user.id);
   }, [book?.likedBy, user?.id]);
 
+  const derivedLikesCount = book?.stats?.likes ?? 0;
+
+  // Use local state so the UI updates immediately from the API response
+  const [isLiked, setIsLiked] = useState(derivedIsLiked);
+  const [likesCount, setLikesCount] = useState(derivedLikesCount);
+
+  // Sync local state when book data changes (e.g. on initial load)
+  useEffect(() => {
+    setIsLiked(derivedIsLiked);
+  }, [derivedIsLiked]);
+
+  useEffect(() => {
+    setLikesCount(derivedLikesCount);
+  }, [derivedLikesCount]);
+
   const handleToggleLike = async () => {
     if (!book?.id) return;
     try {
-      await likeBook(book.slug).unwrap();
+      const result = await likeBook(book.slug).unwrap();
+      // Immediately update UI from the API response
+      setIsLiked(result.isLiked);
+      setLikesCount(result.likes);
     } catch (error: any) {
       if (error?.status !== 401) {
         toast.error('Không thể thích sách này');
@@ -61,15 +77,12 @@ export const useBookDetail = (bookSlug: string) => {
     if (!book || !book.title) return '';
     const authorName = book.authorId?.name || 'Không rõ';
     const title = book.title || '';
-    const description = book.description || '';
-    return `📚 ${title}
-✍️ Tác giả: ${authorName}
-⭐ Đánh giá: ${book.stats?.averageRating || 0}/5 (${book.stats?.totalRatings || 0} đánh giá)
-👁️ ${book.stats?.views?.toLocaleString() || 0} lượt xem
+    
+    return `Mọi người ơi, mình vừa tìm thấy cuốn sách này hay cực: "${title}" của tác giả ${authorName}. 📖✨
 
-${description}
+Bạn nào mê đọc sách thì ghé qua SocialBook xem thử cùng mình nhé!
 
-#${title.replace(/\s+/g, '')} #${authorName.replace(/\s+/g, '')}`;
+#SocialBook #${authorName.replace(/\s+/g, '')} #${title.replace(/\s+/g, '')}`;
   }, [book]);
 
   return {
@@ -77,6 +90,7 @@ ${description}
     isLoading,
     error,
     isLiked,
+    likesCount,
     isLiking,
     isCreatingPost,
     handleToggleLike,

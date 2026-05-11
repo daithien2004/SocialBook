@@ -5,32 +5,37 @@ import {
   Bookmark,
   Check,
   Clock,
-  Lock,
   Plus,
-  X
+  X,
+  Library,
+  PlusCircle
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 import { useAddToLibrary } from '@/features/library/hooks/useAddToLibrary';
 import { LibraryStatus } from '@/features/library/types/library.interface';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useModalStore } from '@/store/useModalStore';
+import { useGetBookByIdQuery } from '@/features/books/api/bookApi';
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from '@/lib/utils';
 
 export default function AddToLibraryModal() {
   const { isAddToLibraryOpen, closeAddToLibrary, addToLibraryData } = useModalStore();
   const bookId = addToLibraryData?.bookId || '';
+
+  const { data: book } = useGetBookByIdQuery(bookId, { skip: !bookId || !isAddToLibraryOpen });
 
   const { user, isAuthenticated } = useAppAuth();
   const isLoggedIn = isAuthenticated;
@@ -74,72 +79,83 @@ export default function AddToLibraryModal() {
 
   return (
     <Dialog open={isAddToLibraryOpen} onOpenChange={(open) => !open && closeAddToLibrary()}>
-      <DialogContent className="sm:max-w-md bg-card gap-0 p-0 border-border">
-        <DialogHeader className="px-6 py-4 border-b border-border">
+      <DialogContent className="sm:max-w-[400px] bg-card p-0 gap-0 border-border overflow-hidden">
+        <DialogHeader className="sr-only">
           <DialogTitle>Lưu vào thư viện</DialogTitle>
         </DialogHeader>
+        {/* Book Preview Header */}
+        <div className="bg-muted/30 p-6 flex items-center gap-4 border-b border-border">
+          <div className="relative w-14 h-20 flex-shrink-0 shadow-md rounded overflow-hidden">
+            {book?.coverUrl ? (
+              <Image src={book.coverUrl} alt={book.title} fill className="object-cover" />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <Library className="w-5 h-5 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-foreground line-clamp-1">{book?.title || 'Đang tải...'}</h3>
+            <p className="text-xs text-muted-foreground">Thêm vào thư viện cá nhân của bạn</p>
+          </div>
+        </div>
 
         <div className="p-6 space-y-6">
-          {/* Status Section */}
-          <div className="flex p-1 bg-muted/50 rounded-lg">
-            <StatusButton
-              active={selectedStatus === LibraryStatus.READING}
-              onClick={() => handleStatusChange(LibraryStatus.READING)}
-              icon={Clock}
-              label="Đang đọc"
-              activeClass="bg-background text-foreground shadow-sm"
-            />
-            <StatusButton
-              active={selectedStatus === LibraryStatus.COMPLETED}
-              onClick={() => handleStatusChange(LibraryStatus.COMPLETED)}
-              icon={Bookmark}
-              label="Hoàn thành"
-              activeClass="bg-background text-foreground shadow-sm"
-            />
-            <StatusButton
-              active={selectedStatus === LibraryStatus.ARCHIVED}
-              onClick={() => handleStatusChange(LibraryStatus.ARCHIVED)}
-              icon={Archive}
-              label="Lưu trữ"
-              activeClass="bg-background text-foreground shadow-sm"
-            />
+          {/* Status Selection */}
+          <div className="space-y-3">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Trạng thái đọc</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <StatusButton
+                active={selectedStatus === LibraryStatus.READING}
+                onClick={() => handleStatusChange(LibraryStatus.READING)}
+                icon={Clock}
+                label="Đang đọc"
+                activeClass="bg-blue-500/10 text-blue-600 border-blue-500/20"
+              />
+              <StatusButton
+                active={selectedStatus === LibraryStatus.ARCHIVED}
+                onClick={() => handleStatusChange(LibraryStatus.ARCHIVED)}
+                icon={Archive}
+                label="Lưu trữ"
+                activeClass="bg-amber-500/10 text-amber-600 border-amber-500/20"
+              />
+            </div>
           </div>
 
           {/* Collections Section */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-foreground">
-                Bộ sưu tập của tôi
-              </h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Bộ sưu tập</h4>
               {!isCreating && (
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-primary hover:text-primary/90 hover:bg-transparent" onClick={() => setIsCreating(true)}>
-                  <Plus className="w-3 h-3 mr-1" />
-                  Tạo mới
-                </Button>
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                >
+                  <Plus size={14} />
+                  TẠO MỚI
+                </button>
               )}
             </div>
 
             {isCreating && (
-              <div className="flex gap-2 mb-3 animate-in fade-in slide-in-from-top-1">
+              <div className="flex gap-2 p-2 bg-muted/50 rounded-lg animate-in fade-in duration-300">
                 <Input
                   autoFocus
-                  placeholder="Tên danh sách..."
+                  placeholder="Tên bộ sưu tập..."
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateCollection()}
-                  className="h-9 text-sm"
+                  className="h-8 border-none bg-transparent focus-visible:ring-0 text-sm"
                 />
-                <Button size="sm" onClick={handleCreateCollection} className="h-9">
-                  Tạo
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setIsCreating(false)} className="h-9 w-9 p-0">
+                <Button size="sm" onClick={handleCreateCollection} className="h-8 px-3">Tạo</Button>
+                <Button variant="ghost" size="sm" onClick={() => setIsCreating(false)} className="h-8 w-8 p-0">
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             )}
 
-            <ScrollArea className="h-44 pr-4 -mr-4 mt-2">
-              <div className="space-y-0.5">
+            <ScrollArea className="max-h-[280px] min-h-[100px] -mx-1 px-1">
+              <div className="space-y-1">
                 {collectionsList.length > 0 ? (
                   collectionsList.map((col) => {
                     const isSelected = selectedCollections.includes(col.id);
@@ -147,19 +163,34 @@ export default function AddToLibraryModal() {
                       <button
                         key={col.id}
                         onClick={() => handleToggleCollection(col.id)}
-                        className="w-full flex items-center justify-between py-2.5 px-3 rounded-md hover:bg-muted/50 transition-colors group text-left"
+                        className={cn(
+                          "w-full flex items-center justify-between p-2 rounded-lg transition-all text-left border",
+                          isSelected 
+                            ? "bg-primary/10 border-primary/20 text-primary shadow-sm" 
+                            : "hover:bg-muted/50 border-transparent text-foreground/80"
+                        )}
                       >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <span className="text-sm text-foreground truncate">{col.name}</span>
-                          {!col.isPublic && <Lock size={12} className="text-muted-foreground flex-shrink-0" />}
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className={cn(
+                            "w-8 h-8 rounded-md flex items-center justify-center transition-colors flex-shrink-0",
+                            isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                          )}>
+                            <Library size={14} />
+                          </div>
+                          <span className="text-sm font-medium truncate">{col.name}</span>
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" strokeWidth={2.5} />}
+                        {isSelected && (
+                          <div className="bg-primary rounded-full p-0.5 ml-2">
+                            <Check className="w-3 h-3 text-white" strokeWidth={4} />
+                          </div>
+                        )}
                       </button>
                     );
                   })
                 ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-sm text-muted-foreground">Bạn chưa có bộ sưu tập nào</p>
+                  <div className="py-12 text-center opacity-40">
+                    <PlusCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" strokeWidth={1} />
+                    <p className="text-xs font-medium">Chưa có bộ sưu tập nào</p>
                   </div>
                 )}
               </div>
@@ -167,7 +198,11 @@ export default function AddToLibraryModal() {
           </div>
         </div>
 
-
+        <div className="p-4 border-t border-border flex justify-end bg-muted/20">
+          <Button onClick={closeAddToLibrary} className="rounded-lg font-bold px-8">
+            Xong
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -185,13 +220,15 @@ function StatusButton({ active, onClick, icon: Icon, label, activeClass }: Statu
   return (
     <button
       onClick={onClick}
-      className={`
-                flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md transition-all duration-200
-                ${active ? activeClass : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}
-            `}
+      className={cn(
+        "flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border transition-all duration-200",
+        active 
+          ? activeClass 
+          : "bg-background border-border text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground"
+      )}
     >
-      <Icon size={14} className={active ? 'opacity-100' : 'opacity-70'} />
-      <span className="text-xs font-medium">{label}</span>
+      <Icon size={16} />
+      <span className="text-[10px] font-bold uppercase tracking-tight">{label}</span>
     </button>
   );
 }

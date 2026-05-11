@@ -5,6 +5,8 @@ import { GetBookReviewsUseCase } from './use-cases/get-book-reviews.use-case';
 import { GetReviewUseCase } from './use-cases/get-review.use-case';
 import { ToggleReviewLikeUseCase } from './use-cases/toggle-review-like.use-case';
 import { UpdateReviewUseCase } from './use-cases/update-review.use-case';
+import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
+import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/reviews/reviews-repository.module';
 import { ContentModerationModule } from '../content-moderation/content-moderation.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
@@ -14,6 +16,8 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     ReviewsRepositoryModule,
     ContentModerationModule,
     IdGeneratorModule,
+    LibraryRepositoryModule,
+    ChaptersRepositoryModule,
   ],
   providers: [
     CreateReviewUseCase,

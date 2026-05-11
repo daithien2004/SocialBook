@@ -13,6 +13,7 @@ import { ElementType } from 'react';
 interface BookHeroProps {
   book: Book;
   isLiked: boolean;
+  likesCount: number;
   isLiking: boolean;
   onToggleLike: () => void;
   onOpenLibrary: () => void;
@@ -22,6 +23,7 @@ interface BookHeroProps {
 export const BookHero = ({
   book,
   isLiked,
+  likesCount,
   isLiking,
   onToggleLike,
   onOpenLibrary,
@@ -75,7 +77,7 @@ export const BookHero = ({
               </span>
             </p>
 
-            <StatsGrid book={book} />
+            <StatsGrid book={book} likesCount={likesCount} />
 
             <div className="flex flex-wrap gap-4 mt-8">
               {book.stats?.chapterCount > 0 && (
@@ -119,9 +121,10 @@ export const BookHero = ({
 
 interface StatsGridProps {
   book: Book;
+  likesCount: number;
 }
 
-const StatsGrid = ({ book }: StatsGridProps) => (
+const StatsGrid = ({ book, likesCount }: StatsGridProps) => (
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-50 dark:bg-white/5 p-4 rounded-lg border border-gray-200 dark:border-white/5">
     <StatItem
       value={book.stats?.averageRating || 0}
@@ -130,7 +133,7 @@ const StatsGrid = ({ book }: StatsGridProps) => (
       isRating
     />
     <StatItem value={book.stats?.views?.toLocaleString()} label="Lượt xem" />
-    <StatItem value={book.stats?.likes?.toLocaleString()} label="Yêu thích" />
+    <StatItem value={likesCount.toLocaleString()} label="Yêu thích" />
     <StatItem value={book.stats?.chapterCount || 0} label="Chương" />
   </div>
 );

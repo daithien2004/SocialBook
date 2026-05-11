@@ -44,6 +44,13 @@ export interface UpdateStatusRequest {
   status: LibraryStatus;
 }
 
+export interface GetBookLibraryInfoResult {
+  status: LibraryStatus | null;
+  collections: Collection[];
+  completedChaptersCount: number;
+  totalChapters: number;
+}
+
 export interface AddToCollectionsRequest {
   bookId: string;
   collectionIds: string[];

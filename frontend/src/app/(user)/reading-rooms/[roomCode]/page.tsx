@@ -9,7 +9,7 @@ import { useGetBookByIdQuery } from '@/features/books/api/bookApi';
 import { useGetChapterQuery } from '@/features/chapters/api/chaptersApi';
 import { ChapterContent } from '@/components/chapter/ChapterContent';
 import ChapterNavigation from '@/components/chapter/ChapterNavigation';
-import { Loader2, Users, LogOut, Info, Copy, Check, BrainCircuit } from 'lucide-react';
+import { Loader2, Users, LogOut, Info, Copy, Check, BrainCircuit, Lock, LockOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -19,6 +19,17 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useState } from 'react';
 import { KnowledgeSidebar } from '@/features/reading-rooms/components/KnowledgeSidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode: string }> }) {
@@ -34,13 +45,10 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
     setTimeout(() => setCopied(false), 2000);
   };
   
-  // Fetch initial room info
   const { data: initialRoom, isLoading: isLoadingRoom, error } = useGetRoomQuery(roomCode);
   
-  // Connect socket
   const { endRoom, leaveRoom, changeChapter, changeMode, sendHeartbeat, askAI, sendChatMessage } = useReadingRoomSocket(roomCode);
 
-  
   const { user } = useAppAuth();
   const storeRoom = useReadingRoomStore(state => state.room);
   const room = storeRoom || initialRoom;
@@ -48,15 +56,12 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
   const presences = useReadingRoomStore(state => state.presences);
   const members = useReadingRoomStore(state => state.members);
 
-  // Independent navigation: Use URL search param if available, but respect SYNC mode
   const currentChapterSlug = room?.mode === 'sync' 
     ? room?.currentChapterSlug || ''
     : (searchParams.get('chapter') || room?.currentChapterSlug || '');
 
-  // Fetch book to get bookSlug
   const { data: bookData } = useGetBookByIdQuery(room?.bookId || '', { skip: !room?.bookId });
   
-  // Fetch chapter content
   const { data: chapterData, isLoading: isLoadingChapter } = useGetChapterQuery(
     { bookSlug: bookData?.slug || '', chapterSlug: currentChapterSlug },
     { skip: !bookData?.slug || !currentChapterSlug }
@@ -65,7 +70,6 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
   const chapter = chapterData?.chapter;
   const navigation = chapterData?.navigation;
 
-  // Send heartbeats
   useRoomPresence(currentChapterSlug || 'unknown', null, sendHeartbeat);
 
   if (isLoadingRoom) {
@@ -89,7 +93,6 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground relative transition-colors duration-300">
-      {/* Fixed Background (Shared with ChapterPage) */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Image
           src="/main-background.jpg"
@@ -103,8 +106,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Header - Glassmorphism */}
-        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/60 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 w-full border-b border-border bg-background/60 backdrop-blur-xl transition-all">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex flex-col">
@@ -117,11 +119,11 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                   >
                     {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
                   </button>
-                  <Badge variant="outline" className="text-[10px] uppercase font-bold px-1.5 py-0">
-                    {room?.mode || 'SYNC'}
+                  <Badge variant="outline" className="text-[10px] uppercase font-black px-2 py-0.5 bg-primary/5 text-primary border-primary/20">
+                    {room?.mode === 'sync' ? 'Đồng bộ' : 'Tự do'}
                   </Badge>
                 </div>
-                <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                <p className="text-[10px] text-muted-foreground truncate max-w-[200px] font-medium">
                   {bookData?.title || 'Đang tải sách...'}
                 </p>
               </div>
@@ -131,12 +133,12 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2 bg-muted/50 border border-border px-3 py-1.5 rounded-full text-xs font-medium">
-                      <Users className="w-3.5 h-3.5" />
-                      <span>{Object.keys(presences).length} đang online</span>
+                    <div className="flex items-center gap-2 bg-background/50 border border-border px-3 py-1.5 rounded-full text-[11px] font-bold shadow-sm">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span>{Object.keys(presences).length} online</span>
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent>Người dùng đang online</TooltipContent>
+                  <TooltipContent className="rounded-xl font-bold text-[10px]">Thành viên đang hiện diện</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -146,42 +148,70 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                     <Button 
                       variant="outline"
                       size="sm" 
-                      className="font-bold px-4 h-9"
+                      className="font-bold px-4 h-9 rounded-full border-primary/20 hover:bg-primary/5 transition-all gap-2"
                       onClick={() => {
                         const newMode = room?.mode === 'sync' ? 'free' : 'sync';
                         changeMode(newMode);
                       }}
                     >
-                      {room?.mode === 'sync' ? '🔒 Đồng bộ' : '🔓 Tự do'}
+                      {room?.mode === 'sync' ? (
+                        <>
+                          <Lock className="w-3.5 h-3.5 text-primary" />
+                          <span className="text-xs">Đồng bộ</span>
+                        </>
+                      ) : (
+                        <>
+                          <LockOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Tự do</span>
+                        </>
+                      )}
                     </Button>
                     
-                    <Button 
-                      size="sm" 
-                      className="font-bold px-4 h-9 bg-orange-500/90 hover:bg-orange-600 text-white border-0"
-                      onClick={() => {
-                        if (confirm('Bạn có chắc chắn muốn kết thúc phòng đọc này cho tất cả mọi người?')) {
-                          endRoom();
-                          router.push('/reading-rooms');
-                        }
-                      }}
-                    >
-                      <LogOut size={16} className="mr-2" />
-                      Kết thúc phòng
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          size="sm" 
+                          className="font-bold px-4 h-9 rounded-full bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-lg shadow-orange-500/20 gap-2"
+                        >
+                          <LogOut size={15} />
+                          <span className="text-xs">Kết thúc</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="rounded-3xl border-border bg-background/95 backdrop-blur-xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-xl font-bold">Kết thúc phòng đọc?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-sm">
+                            Hành động này sẽ đóng phòng đọc đối với tất cả mọi người. Bạn không thể hoàn tác thao tác này.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="rounded-2xl font-bold">Hủy bỏ</AlertDialogCancel>
+                          <AlertDialogAction 
+                            className="rounded-2xl bg-orange-500 hover:bg-orange-600 font-bold"
+                            onClick={() => {
+                              endRoom();
+                              router.push('/reading-rooms');
+                            }}
+                          >
+                            Xác nhận kết thúc
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </>
                 )}
 
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm" 
-                  className="font-bold px-4 h-9 border-2"
+                  className="font-bold px-4 h-9 rounded-full hover:bg-accent/50 transition-all gap-2"
                   onClick={() => {
                     leaveRoom();
                     router.push('/reading-rooms');
                   }}
                 >
-                  <Info size={16} className="mr-2" />
-                  Rời phòng
+                  <Info size={15} className="text-muted-foreground" />
+                  <span className="text-xs">Rời phòng</span>
                 </Button>
               </div>
             </div>
@@ -191,7 +221,6 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
         <main className="container mx-auto px-4 py-8 flex-1">
           <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
             
-            {/* Left/Main Column: Reading Content */}
             <div className="flex-1 w-full max-w-3xl mx-auto lg:mx-0">
               {isLoadingChapter ? (
                 <div className="min-h-[400px] flex items-center justify-center">
@@ -249,7 +278,6 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
               )}
             </div>
 
-            {/* Right Column: Sticky Sidebar */}
             <aside className="w-full lg:w-80 sticky top-24 shrink-0 space-y-6 hidden sm:block">
               <Tabs defaultValue="members" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4 rounded-2xl h-12 p-1 bg-background/40 backdrop-blur-xl border border-border shadow-sm">

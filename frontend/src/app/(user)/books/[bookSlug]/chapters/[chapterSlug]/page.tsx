@@ -83,7 +83,7 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   );
 
   useEffect(() => {
-    if (savedProgress > 5) {
+    if (savedProgress > 5 && savedProgress < 100) {
       setTimeout(() => {
         toast('Bạn đang đọc dở chương này', {
           description: `Tiếp tục tại vị trí ${Math.floor(savedProgress)}%?`,

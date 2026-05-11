@@ -6,6 +6,10 @@ import { Injectable } from '@nestjs/common';
 import { GetBookLibraryInfoQuery } from './get-book-library-info.query';
 import { ReadingListResult } from '../../mappers/library.results';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
+import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
+import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
+import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 
 export interface CollectionResult {
   id: string;
@@ -20,6 +24,8 @@ export interface CollectionResult {
 export interface GetBookLibraryInfoResult {
   readingList: ReadingListResult | null;
   collections: CollectionResult[];
+  completedChaptersCount: number;
+  totalChapters: number;
 }
 
 @Injectable()
@@ -27,6 +33,8 @@ export class GetBookLibraryInfoUseCase {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly collectionRepository: ICollectionRepository,
+    private readonly readingProgressRepository: IReadingProgressRepository,
+    private readonly chapterRepository: IChapterRepository,
   ) {}
 
   async execute(
@@ -50,11 +58,26 @@ export class GetBookLibraryInfoUseCase {
       );
     }
 
+    const readProgresses = await this.readingProgressRepository.findByUserIdAndBookId(
+      userId,
+      bookId,
+    );
+    
+    const completedChaptersCount = readProgresses.filter(
+      (p) => p.status === ChapterStatus.COMPLETED,
+    ).length;
+    
+    const totalChapters = await this.chapterRepository.countByBook(
+      ChapterBookId.create(query.bookId),
+    );
+
     return {
       readingList: readingList
         ? LibraryApplicationMapper.toListResult(readingList)
         : null,
       collections,
+      completedChaptersCount,
+      totalChapters,
     };
   }
 }

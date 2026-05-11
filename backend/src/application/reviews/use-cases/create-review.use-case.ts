@@ -9,6 +9,12 @@ import { CheckContentUseCase } from '@/application/content-moderation/use-cases/
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Review } from '@/domain/reviews/entities/review.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
+import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
+import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { UserId } from '@/domain/library/value-objects/user-id.vo';
+import { BookId } from '@/domain/library/value-objects/book-id.vo';
+import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
+import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 
 @Injectable()
 export class CreateReviewUseCase {
@@ -16,10 +22,35 @@ export class CreateReviewUseCase {
     private readonly reviewRepository: IReviewRepository,
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly idGenerator: IIdGenerator,
+    private readonly readingProgressRepository: IReadingProgressRepository,
+    private readonly chapterRepository: IChapterRepository,
   ) {}
 
   async execute(userId: string, dto: CreateReviewDto): Promise<Review> {
-    // Check intersection
+    const userIdVo = UserId.create(userId);
+    const bookIdVo = BookId.create(dto.bookId);
+    
+    const readProgresses = await this.readingProgressRepository.findByUserIdAndBookId(
+      userIdVo,
+      bookIdVo,
+    );
+    
+    const completedChaptersCount = readProgresses.filter(
+      (p) => p.status === ChapterStatus.COMPLETED,
+    ).length;
+    
+    const totalChapters = await this.chapterRepository.countByBook(
+      ChapterBookId.create(dto.bookId),
+    );
+
+    const requiredChapters = Math.min(10, totalChapters);
+
+    if (completedChaptersCount < requiredChapters) {
+      throw new BadRequestDomainException(
+        `Bạn cần đọc ít nhất ${requiredChapters} chương để có thể đánh giá cuốn sách này (Hiện tại: ${completedChaptersCount}/${requiredChapters}).`,
+      );
+    }
+
     const exists = await this.reviewRepository.existsByUserAndBook(
       userId,
       dto.bookId,
@@ -28,7 +59,6 @@ export class CreateReviewUseCase {
       throw new ConflictDomainException(ErrorMessages.REVIEW_ALREADY_EXISTS);
     }
 
-    // Content Moderation
     const moderationResult = await this.checkContentUseCase.execute(
       dto.content,
     );

@@ -12,6 +12,7 @@ import {
   CreateCollectionRequest,
   UpdateCollectionRequest,
   KnowledgeGraphData,
+  GetBookLibraryInfoResult,
 } from '../types/library.interface';
 
 import { recommendationsApi } from '../../recommendations/api/recommendationsApi';
@@ -96,7 +97,7 @@ export const libraryApi = createApi({
     }),
 
     getBookLibraryInfo: builder.query<
-      { status: LibraryStatus | null; collections: Collection[] },
+      GetBookLibraryInfoResult,
       string
     >({
       query: (bookId) => ({

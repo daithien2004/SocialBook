@@ -22,6 +22,7 @@ import { ProcessReadingSessionUseCase } from './use-cases/process-reading-sessio
 import { UpdateCollectionUseCase } from './use-cases/update-collection/update-collection.use-case';
 import { DeleteCollectionUseCase } from './use-cases/delete-collection/delete-collection.use-case';
 import { GetKnowledgeGraphUseCase } from './use-cases/get-knowledge-graph/get-knowledge-graph.use-case';
+import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 
 
 @Module({
@@ -31,7 +32,8 @@ import { GetKnowledgeGraphUseCase } from './use-cases/get-knowledge-graph/get-kn
     UsersRepositoryModule,
     GenresRepositoryModule,
     AIInfrastructureModule,
-    IdGeneratorModule
+    IdGeneratorModule,
+    ChaptersRepositoryModule,
   ],
 
 
