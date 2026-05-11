@@ -29,9 +29,7 @@ export default registerAs('env', () => ({
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
 
   // External APIs
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-  GOOGLE_API_KEY:
-    process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '', // Fallback or alias
+  GOOGLE_API_KEY: process.env.GOOGLE_API_KEY || '',
   VOICERSS_API_KEY: process.env.VOICERSS_API_KEY || '',
   HUGGINGFACE_API_KEY: process.env.HUGGINGFACE_API_KEY || '',
 
