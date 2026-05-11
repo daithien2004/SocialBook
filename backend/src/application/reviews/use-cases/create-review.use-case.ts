@@ -32,10 +32,14 @@ export class CreateReviewUseCase {
     const moderationResult = await this.checkContentUseCase.execute(
       dto.content,
     );
-    if (!moderationResult.isSafe) {
-      const reason = moderationResult.reason || 'Nội dung không phù hợp';
-      throw new BadRequestDomainException(`${reason}`);
+
+    if (moderationResult.action === 'BLOCK') {
+      throw new BadRequestDomainException(
+        moderationResult.reason || 'Nội dung vi phạm tiêu chuẩn cộng đồng.',
+      );
     }
+
+    const isReviewRequired = moderationResult.action === 'REVIEW';
 
     const review = Review.create({
       id: this.idGenerator.generate(),
@@ -43,6 +47,8 @@ export class CreateReviewUseCase {
       bookId: dto.bookId,
       content: dto.content,
       rating: dto.rating,
+      moderationStatus: isReviewRequired ? 'pending' : 'approved',
+      isFlagged: isReviewRequired,
     });
 
     return this.reviewRepository.create(review);

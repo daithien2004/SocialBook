@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 
 @Injectable()
 export class PostModerationService {
@@ -13,7 +14,11 @@ export class PostModerationService {
   async moderate(post: Post, content: string): Promise<string | undefined> {
     const moderationResult = await this.checkContentUseCase.execute(content);
 
-    if (!moderationResult.isSafe) {
+    if (moderationResult.action === 'BLOCK') {
+      throw new BadRequestDomainException(moderationResult.reason || 'Nội dung vi phạm tiêu chuẩn cộng đồng và đã bị chặn.');
+    }
+
+    if (moderationResult.action === 'REVIEW') {
       let moderationMessage: string;
       if (moderationResult.isSpoiler) {
         moderationMessage =
@@ -24,14 +29,15 @@ export class PostModerationService {
       } else {
         moderationMessage =
           moderationResult.reason ||
-          'Nội dung không phù hợp. Bài viết của bạn đã được tạm ẩn để Admin kiểm duyệt.';
+          'Nội dung cần được kiểm duyệt. Bài viết của bạn đã được tạm ẩn để Admin kiểm duyệt.';
       }
       post.flag(moderationMessage);
       return moderationMessage;
-    } else {
-      post.approve();
-      post.clearModeration();
-      return undefined;
-    }
+    } 
+
+    // ALLOW case
+    post.approve();
+    post.clearModeration();
+    return undefined;
   }
 }

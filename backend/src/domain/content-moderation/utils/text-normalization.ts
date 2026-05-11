@@ -3,7 +3,7 @@ export function normalizeForModeration(text: string): string {
 
   return text
     .toLowerCase()
-    // Bỏ dấu tiếng Việt (NFD decompose rồi strip combining marks)
+    // Bỏ dấu tiếng Việt 
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     // Leet-speak normalization

@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
 
 @Injectable()
 export class GeminiService implements IGeminiService {
+  private readonly logger = new Logger(GeminiService.name);
   private readonly genAI: GoogleGenerativeAI;
   private readonly model: any;
 
@@ -30,23 +31,31 @@ export class GeminiService implements IGeminiService {
 
   async generateJSON<T>(prompt: string): Promise<T> {
     try {
-      const jsonPrompt = `${prompt}\n\nPlease respond with valid JSON only.`;
+      // Quay lại cách truyền thống để tương thích với bản v1 (Stable)
+      const jsonPrompt = `${prompt}\n\nIMPORTANT: Return ONLY a valid JSON object. No markdown, no code blocks.`;
       const result = await this.model.generateContent(jsonPrompt);
       const response = await result.response;
       const text = response.text();
 
-      // Try to parse JSON, fallback to text parsing if needed
       try {
         return JSON.parse(text) as T;
-      } catch {
-        // Extract JSON from text if it's wrapped in markdown or other formatting
+      } catch (parseError) {
+        // Tìm JSON trong text nếu AI trả về kèm theo text khác hoặc markdown
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]) as T;
+          try {
+            return JSON.parse(jsonMatch[0]) as T;
+          } catch (e) {
+            throw new Error(`Parse matched JSON failed: ${e.message}`);
+          }
         }
+        this.logger.error(`JSON Parse Error: ${parseError.message}. Content: ${text}`);
         throw new Error('Could not parse JSON response');
       }
     } catch (error) {
+      if (error.message.includes('404')) {
+        this.logger.error('LỖI 404: Model không tồn tại hoặc API Key không có quyền. Hãy thử dùng model "gemini-pro" hoặc kiểm tra lại Key trên Google AI Studio.');
+      }
       throw new Error(`Failed to generate JSON: ${error.message}`);
     }
   }

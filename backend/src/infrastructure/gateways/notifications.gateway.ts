@@ -19,14 +19,13 @@ import { JwtService } from '@nestjs/jwt';
   maxHttpBufferSize: 1e6,
 })
 export class NotificationsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
   constructor(
     private readonly notificationsService: NotificationsService,
     private readonly jwt: JwtService,
-  ) {}
+  ) { }
 
   afterInit() {
     this.notificationsService.setServer(this.server);

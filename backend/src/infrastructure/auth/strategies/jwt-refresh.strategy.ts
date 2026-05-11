@@ -17,7 +17,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
           req?.body?.refreshToken ||
           (req?.headers['x-refresh-token'] as string), // tuỳ chọn
       ]),
-      secretOrKey: configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      secretOrKey: configService.getOrThrow<string>('env.JWT_REFRESH_SECRET'),
       passReqToCallback: true,
     });
   }

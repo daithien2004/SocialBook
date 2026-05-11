@@ -1,136 +1,106 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { IContentModerationService } from '@/domain/content-moderation/interfaces/content-moderation.service.interface';
 import { ModerationResult } from '@/domain/content-moderation/interfaces/moderation-result.interface';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
-import { containsSpoilers } from '@/domain/content-moderation/utils/spoiler-detection';
+import { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 @Injectable()
 export class ContentModerationService implements IContentModerationService {
   private readonly logger = new Logger(ContentModerationService.name);
-  private readonly rapidApiKey: string;
-  private readonly rapidApiHost: string;
-  private readonly apiUrl: string;
 
-  constructor(private configService: ConfigService) {
-    this.rapidApiKey =
-      this.configService.get<string>('RAPID_MODER_API_KEY') || '';
-    this.rapidApiHost =
-      this.configService.get<string>('RAPID_API_HOST') ||
-      'nsfw-text-moderation-api.p.rapidapi.com';
-    this.apiUrl =
-      this.configService.get<string>('RAPID_API_URL') ||
-      'https://nsfw-text-moderation-api.p.rapidapi.com/moderation_check.php';
-
-    if (!this.rapidApiKey) {
-      this.logger.error(
-        '⚠️  RAPID_MODER_API_KEY is missing! Content moderation will be SKIPPED.',
-      );
-    } else {
-      this.logger.log(
-        '✅ Content Moderation Service initialized with RapidAPI.',
-      );
-    }
-  }
+  constructor(
+    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
+    private readonly geminiService: IGeminiService,
+  ) {}
 
   async checkContent(text: string): Promise<ModerationResult> {
-    if (!this.rapidApiKey) {
-      this.logger.warn('RAPID_API_KEY not found. Skipping moderation.');
-      return { isSafe: true, isSpoiler: false, isToxic: false };
+    if (!text?.trim()) {
+      return {
+        isSafe: true,
+        isSpoiler: false,
+        isToxic: false,
+        action: 'ALLOW',
+        category: 'none',
+        score: 0,
+      };
     }
 
-    // Check Vietnamese toxic words first (faster, local)
-    const vietnameseMatch = containsVietnameseToxicWords(text);
-    if (vietnameseMatch) {
-      this.logger.debug(`Phát hiện ngôn ngữ độc hại: ${vietnameseMatch.group} (via ${vietnameseMatch.input})`);
+    // 1. Kiểm tra nhanh bằng Regex (Các từ cực kỳ thô tục)
+    const quickCheck = containsVietnameseToxicWords(text);
+    if (quickCheck) {
+      this.logger.debug(`[Regex] Phát hiện nội dung thô tục: ${quickCheck.group}`);
       return {
         isSafe: false,
         isSpoiler: false,
         isToxic: true,
-        reason: `Phát hiện nội dung xúc phạm, không phù hợp`,
+        action: 'BLOCK',
+        category: 'toxic',
+        score: 100,
+        reason: 'Nội dung chứa từ ngữ thô tục không phù hợp.',
       };
     }
 
-    // Check for spoilers
-    const hasSpoilers = containsSpoilers(text);
-    if (hasSpoilers) {
-      this.logger.debug(`Phát hiện nội dụng spoiler`);
-      return {
-        isSafe: false,
-        isSpoiler: true,
-        isToxic: false,
-        reason: `Phát hiện nội dung spoiler`,
-      };
-    }
-
+    // 2. Sử dụng AI để đánh giá ngữ cảnh (Tiếng Việt)
     try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'x-rapidapi-key': this.rapidApiKey,
-          'x-rapidapi-host': this.rapidApiHost,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
+      this.logger.debug(`[AI] Đang đánh giá nội dung: "${text.substring(0, 50)}..."`);
+      
+      const prompt = `
+        Bạn là một chuyên gia kiểm duyệt nội dung cho mạng xã hội về sách SocialBook.
+        Hãy đánh giá nội dung sau đây (tiếng Việt) dựa trên các tiêu chí:
+        1. toxic: Chứa từ ngữ thô tục, xúc phạm, công kích cá nhân, ngôn ngữ thù ghét, hoặc bạo lực.
+        2. spoiler: Tiết lộ các tình tiết quan trọng của sách (kết thúc, cái chết của nhân vật, v.v.) mà không có cảnh báo rõ ràng.
+        3. spam: Nội dung lặp đi lặp lại, quảng cáo rác, hoặc không có ý nghĩa.
+        4. hate_speech: Ngôn ngữ thù ghét, phân biệt đối xử.
 
-      if (!response.ok) {
-        this.logger.error(
-          `RapidAPI Error: ${response.status} ${response.statusText}`,
-        );
-        return { isSafe: true, isSpoiler: false, isToxic: false };
-      }
+        Dưới đây là nội dung cần đánh giá:
+        "${text}"
 
-      const result = (await response.json()) as {
-        moderation_classes?: {
-          toxic?: number;
-          sexual?: number;
-          violent?: number;
-          insulting?: number;
-          discriminatory?: number;
-          'self-harm'?: number;
-        };
-      };
-
-      this.logger.debug(`RapidAPI Response: ${JSON.stringify(result)}`);
-
-      if (result?.moderation_classes) {
-        const classes = result.moderation_classes;
-        const threshold = 0.5;
-        const isToxic =
-          (classes.toxic || 0) > threshold ||
-          (classes.sexual || 0) > threshold ||
-          (classes.violent || 0) > threshold ||
-          (classes.insulting || 0) > threshold ||
-          (classes.discriminatory || 0) > threshold ||
-          (classes['self-harm'] || 0) > threshold;
-
-        let reason = '';
-        if (isToxic) {
-          const reasons: string[] = [];
-          if ((classes.toxic || 0) > threshold) reasons.push('độc hại');
-          if ((classes.sexual || 0) > threshold) reasons.push('tình dục');
-          if ((classes.violent || 0) > threshold) reasons.push('bạo lực');
-          if ((classes.insulting || 0) > threshold) reasons.push('xúc phạm');
-          if ((classes.discriminatory || 0) > threshold)
-            reasons.push('phân biệt đối xử');
-          if ((classes['self-harm'] || 0) > threshold)
-            reasons.push('tự gây hại');
-          reason = `Phát hiện nội dung ${reasons.join(', ')}`;
+        Hãy trả về kết quả dưới định dạng JSON sau:
+        {
+          "action": "ALLOW" | "REVIEW" | "BLOCK",
+          "category": "toxic" | "spoiler" | "spam" | "hate_speech" | "none",
+          "score": number (0-100),
+          "reason": "Giải thích ngắn gọn bằng tiếng Việt lý do vi phạm (nếu có), nếu an toàn hãy trả về chuỗi rỗng"
         }
 
-        return {
-          isSafe: !isToxic,
-          isSpoiler: false,
-          isToxic: isToxic,
-          reason,
-        };
+        Quy tắc quyết định (action):
+        - ALLOW: Nội dung an toàn, tích cực.
+        - REVIEW: Có nghi vấn spoiler, toxic nhẹ, hoặc cần admin kiểm tra thêm.
+        - BLOCK: Vi phạm nghiêm trọng (toxic nặng, hate speech, spam).
+      `;
+
+      const result = await this.geminiService.generateJSON<any>(prompt);
+      
+      const isSafe = result.action === 'ALLOW';
+      const isToxic = result.category === 'toxic' || result.category === 'hate_speech';
+      const isSpoiler = result.category === 'spoiler';
+
+      if (!isSafe) {
+        this.logger.log(`[AI] Flagged content [${result.action}]: ${result.reason}`);
       }
 
-      return { isSafe: true, isSpoiler: false, isToxic: false };
+      return {
+        isSafe,
+        isSpoiler,
+        isToxic,
+        action: result.action,
+        category: result.category,
+        score: result.score || 0,
+        reason: result.reason,
+      };
     } catch (error) {
-      this.logger.error('Content Moderation Failed', error);
-      return { isSafe: true, isSpoiler: false, isToxic: false };
+      this.logger.error(`Lỗi khi gọi AI kiểm duyệt nội dung: ${error.message}`, error.stack);
+      // Fallback: Nếu AI lỗi, chuyển sang REVIEW để Admin kiểm duyệt cho an toàn
+      return {
+        isSafe: false,
+        isSpoiler: false,
+        isToxic: false,
+        action: 'REVIEW',
+        category: 'none',
+        score: 0,
+        reason: 'Hệ thống kiểm duyệt AI tạm thời gián đoạn, nội dung được chuyển qua Admin kiểm tra.',
+      };
     }
   }
 }

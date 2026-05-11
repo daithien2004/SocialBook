@@ -22,8 +22,8 @@ export class TokenService {
   async signTokens(userId: string, email: string, role: string) {
     const payload = { sub: userId, email, role };
 
-    const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
-    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
+    const accessSecret = this.configService.get<string>('env.JWT_ACCESS_SECRET');
+    const refreshSecret = this.configService.get<string>('env.JWT_REFRESH_SECRET');
 
     if (!accessSecret || !refreshSecret) {
       this.logger.error(

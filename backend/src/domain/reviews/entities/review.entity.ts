@@ -33,6 +33,7 @@ export class Review extends Entity<string> {
     content: string;
     rating: number;
     moderationStatus?: string;
+    isFlagged?: boolean;
   }): Review {
     return new Review(props.id, {
       userId: props.userId,
@@ -41,7 +42,7 @@ export class Review extends Entity<string> {
       rating: props.rating,
       likesCount: 0,
       likedBy: [],
-      isFlagged: false,
+      isFlagged: props.isFlagged || false,
       moderationStatus: props.moderationStatus || 'pending',
     });
   }

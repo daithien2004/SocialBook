@@ -8,6 +8,7 @@ import { ReadingStatus } from '@/domain/library/reading-status.enum';
 import { GetKnowledgeGraphQuery } from './get-knowledge-graph.query';
 import { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 export interface GraphNode {
   id: string;
@@ -38,7 +39,7 @@ export class GetKnowledgeGraphUseCase {
     private readonly bookRepository: IBookRepository,
     private readonly userRepository: IUserRepository,
     private readonly genreRepository: IGenreRepository,
-    @Inject(IGeminiService)
+    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
   ) {}
 
