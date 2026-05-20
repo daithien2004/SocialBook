@@ -93,13 +93,11 @@ export const usersApi = createApi({
         }),
 
         searchUsers: builder.query<SearchUsersResponse, SearchUsersParams>({
-            query: ({ keyword, current = 1, pageSize = 10 }) => ({
+            query: ({ keyword}) => ({
                 url: `/users/search`,
                 method: 'GET',
                 params: {
-                    keyword,
-                    current,
-                    pageSize,
+                    username: keyword
                 },
             }),
             transformResponse: (response: SearchUsersRawResponse): SearchUsersResponse =>
