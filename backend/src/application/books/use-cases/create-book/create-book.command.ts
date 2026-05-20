@@ -1,6 +1,7 @@
 export class CreateBookCommand {
   public readonly title: string;
   public readonly authorId: string;
+  public readonly authorName?: string;
   public readonly genres: string[];
   public readonly description?: string;
   public readonly publishedYear?: string;
@@ -11,6 +12,7 @@ export class CreateBookCommand {
   constructor(props: {
     title: string;
     authorId: string;
+    authorName?: string;
     genres: string[];
     description?: string;
     publishedYear?: string;
@@ -20,6 +22,7 @@ export class CreateBookCommand {
   }) {
     this.title = props.title;
     this.authorId = props.authorId;
+    this.authorName = props.authorName;
     this.genres = props.genres;
     this.description = props.description;
     this.publishedYear = props.publishedYear;

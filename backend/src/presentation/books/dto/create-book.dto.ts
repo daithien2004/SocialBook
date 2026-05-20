@@ -21,8 +21,12 @@ export class CreateBookDto {
   slug?: string;
 
   @IsNotEmpty({ message: 'Tác giả là bắt buộc' })
-  @IsMongoId({ message: 'Author ID không hợp lệ' })
+  @IsString({ message: 'Author ID phải là chuỗi ký tự' })
   authorId: string;
+
+  @IsOptional()
+  @IsString()
+  authorName?: string;
 
   @Transform(({ value }) => {
     if (Array.isArray(value)) return value;
@@ -32,7 +36,7 @@ export class CreateBookDto {
   @IsArray()
   @ArrayMinSize(1, { message: 'Phải chọn ít nhất 1 thể loại' })
   @ArrayMaxSize(5, { message: 'Tối đa 5 thể loại' })
-  @IsMongoId({ each: true, message: 'Mỗi genres ID phải là MongoId hợp lệ' })
+  @IsString({ each: true, message: 'Mỗi genres ID phải là chuỗi ký tự hợp lệ' })
   genres: string[];
 
   @IsOptional()

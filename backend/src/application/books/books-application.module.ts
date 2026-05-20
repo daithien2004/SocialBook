@@ -1,5 +1,7 @@
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
+import { AuthorsRepositoryModule } from '@/infrastructure/database/repositories/authors/authors-repository.module';
+import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
 import { Module } from '@nestjs/common';
 import { BookViewedHandler } from './event-handlers/book-viewed.handler';
 import { CreateBookUseCase } from './use-cases/create-book/create-book.use-case';
@@ -14,7 +16,13 @@ import { ToggleBookLikeUseCase } from './use-cases/toggle-book-like/toggle-book-
 import { LikesApplicationModule } from '@/application/likes/likes-application.module';
 
 @Module({
-  imports: [BooksRepositoryModule, IdGeneratorModule, LikesApplicationModule],
+  imports: [
+    BooksRepositoryModule,
+    AuthorsRepositoryModule,
+    GenresRepositoryModule,
+    IdGeneratorModule,
+    LikesApplicationModule,
+  ],
   providers: [
     CreateBookUseCase,
     DeleteBookUseCase,

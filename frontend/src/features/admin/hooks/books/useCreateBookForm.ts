@@ -9,6 +9,7 @@ export type BookStatus = 'draft' | 'published' | 'completed';
 export interface CreateBookFormData {
     title: string;
     authorId: string;
+    authorName?: string;
     genres: string[];
     description: string;
     publishedYear: string;
@@ -40,6 +41,7 @@ export function useCreateBookForm(
     const [formData, setFormData] = useState<CreateBookFormData>({
         title: '',
         authorId: '',
+        authorName: '',
         genres: [],
         description: '',
         publishedYear: new Date().getFullYear().toString(),
@@ -87,6 +89,7 @@ export function useCreateBookForm(
         setFormData({
             title: '',
             authorId: '',
+            authorName: '',
             genres: [],
             description: '',
             publishedYear: new Date().getFullYear().toString(),
@@ -130,6 +133,9 @@ export function useCreateBookForm(
 
             formPayload.append('title', formData.title.trim());
             formPayload.append('authorId', formData.authorId.trim());
+            if (formData.authorName) {
+                formPayload.append('authorName', formData.authorName.trim());
+            }
             formPayload.append('description', formData.description.trim());
             formPayload.append('status', formData.status);
             formPayload.append('publishedYear', formData.publishedYear);
