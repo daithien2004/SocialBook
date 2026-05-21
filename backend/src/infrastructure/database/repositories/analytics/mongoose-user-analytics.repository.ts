@@ -74,4 +74,81 @@ export class MongooseUserAnalyticsRepository implements IUserAnalyticsRepository
 
     return document ? UserPreferenceMapper.toDomain(document) : null;
   }
+
+  async getTrendingBooks(days = 1, limit = 5): Promise<{ bookId: string; title: string; coverImage?: string; score: number }[]> {
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - days);
+
+    const result = await this.eventModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: dateThreshold },
+          eventType: { $in: ['start_reading', 'finish_book', 'rate_book'] },
+          bookId: { $exists: true, $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: '$bookId',
+          score: { $sum: 1 },
+        },
+      },
+      { $sort: { score: -1 } },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'books',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'bookInfo',
+        },
+      },
+      { $unwind: '$bookInfo' },
+    ]);
+
+    return result.map((item) => ({
+      bookId: item._id.toString(),
+      title: item.bookInfo?.title || 'Không rõ',
+      coverImage: item.bookInfo?.coverUrl || null,
+      score: item.score,
+    }));
+  }
+
+  async getTopActiveReaders(days = 7, limit = 5): Promise<{ userId: string; username: string; avatar?: string; score: number }[]> {
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - days);
+
+    const result = await this.eventModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: dateThreshold },
+          eventType: { $in: ['finish_book', 'reading_progress'] },
+        },
+      },
+      {
+        $group: {
+          _id: '$userId',
+          score: { $sum: 1 },
+        },
+      },
+      { $sort: { score: -1 } },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'userInfo',
+        },
+      },
+      { $unwind: '$userInfo' },
+    ]);
+
+    return result.map((item) => ({
+      userId: item._id.toString(),
+      username: item.userInfo?.username || 'Người dùng ẩn',
+      avatar: item.userInfo?.image || null,
+      score: item.score,
+    }));
+  }
 }

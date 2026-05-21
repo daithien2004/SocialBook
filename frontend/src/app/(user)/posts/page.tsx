@@ -8,6 +8,8 @@ import { useAppAuth } from '@/features/auth/hooks';
 import {BookOpen, Users, Library, Quote, ImageIcon, PenSquare} from 'lucide-react';
 import {useRouter} from "next/navigation";
 import { useModalStore } from '@/store/useModalStore';
+import TrendingBooksWidget from '@/components/post/TrendingBooksWidget';
+import TopActiveReadersWidget from '@/components/post/TopActiveReadersWidget';
 
 const UserSearchSidebar = dynamic(
     () => import('@/components/post/UserSearchSidebar'),
@@ -118,6 +120,9 @@ export default function Post() {
                                 </button>
                             </nav>
                         </div>
+                        {/* WIDGETS */}
+                        <TrendingBooksWidget />
+                        <TopActiveReadersWidget />
                     </div>
                 </aside>
 

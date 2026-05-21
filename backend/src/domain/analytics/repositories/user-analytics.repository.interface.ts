@@ -19,4 +19,14 @@ export abstract class IUserAnalyticsRepository {
     userId: string,
     genreId: string
   ): Promise<UserPreference | null>;
+
+  abstract getTrendingBooks(
+    days?: number,
+    limit?: number
+  ): Promise<{ bookId: string; title: string; coverImage?: string; score: number }[]>;
+
+  abstract getTopActiveReaders(
+    days?: number,
+    limit?: number
+  ): Promise<{ userId: string; username: string; avatar?: string; score: number }[]>;
 }

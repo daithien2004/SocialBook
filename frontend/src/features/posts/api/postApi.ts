@@ -25,6 +25,20 @@ export interface NormalizedPostWithModerationResponse {
   warning?: string;
 }
 
+export interface TrendingBook {
+  bookId: string;
+  title: string;
+  coverImage?: string;
+  score: number;
+}
+
+export interface TopReader {
+  userId: string;
+  username: string;
+  avatar?: string;
+  score: number;
+}
+
 type MutationRawResponse = PostWithModerationResponse | RawPost;
 
 function isWrappedResponse(response: MutationRawResponse): response is PostWithModerationResponse {
@@ -217,6 +231,22 @@ export const postApi = createApi({
         { type: 'PostDetail', id },
       ],
     }),
+
+    getTrendingBooks: builder.query<TrendingBook[], { days?: number; limit?: number } | void>({
+      query: (params) => ({
+        url: '/analytics/trending-books',
+        method: 'GET',
+        params: params || {},
+      }),
+    }),
+
+    getTopActiveReaders: builder.query<TopReader[], { days?: number; limit?: number } | void>({
+      query: (params) => ({
+        url: '/analytics/top-readers',
+        method: 'GET',
+        params: params || {},
+      }),
+    }),
   }),
 });
 
@@ -229,4 +259,6 @@ export const {
   useGetPostsByUserQuery,
   useDeletePostPermanentMutation,
   useDeletePostImageMutation,
+  useGetTrendingBooksQuery,
+  useGetTopActiveReadersQuery,
 } = postApi;
