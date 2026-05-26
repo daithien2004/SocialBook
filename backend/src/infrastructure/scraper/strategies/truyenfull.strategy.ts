@@ -6,7 +6,7 @@ import { IScraperStrategy } from '@/domain/scraper/interfaces/scraper-strategy.i
 import {
   ScrapedBookData,
   ScrapedChapterData,
-} from '@/domain/scraper/models/scraped-data.model';
+} from '@/domain/scraper/interfaces/scraped-data.model';
 
 @Injectable()
 export class TruyenFullStrategy implements IScraperStrategy {

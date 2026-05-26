@@ -1,8 +1,8 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
+import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
 
 export interface QueryAnalysis {
   expandedQuery: string;

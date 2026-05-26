@@ -1,16 +1,37 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useGetChapterByIdQuery } from '@/features/chapters/api/chaptersApi';
-import { 
-  Plus, ChevronDown, ChevronRight, Edit2, Trash2, 
-  Save, X, Loader2, Volume2, CheckCircle, XCircle, Clock, Upload 
-} from 'lucide-react';
-import { FileImportModal } from '@/components/chapter/FileImportModal';
-import { useChapterManagement } from '@/features/admin/hooks/chapters/useChapterManagement';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { useGetChapterByIdQuery } from "@/features/chapters/api/chaptersApi";
+import {
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  Edit2,
+  Trash2,
+  Save,
+  X,
+  Loader2,
+  Volume2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Upload,
+} from "lucide-react";
+import { FileImportModal } from "@/components/chapter/FileImportModal";
+import { useChapterManagement } from "@/features/admin/hooks/chapters/useChapterManagement";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ChapterManagementPage() {
   const {
@@ -56,6 +77,12 @@ export default function ChapterManagementPage() {
     handleGenerateAudio,
     handleGenerateAllAudio,
     handleImportChapters,
+    chapterToDelete,
+    showGenerateAllConfirm,
+    setChapterToDelete,
+    setShowGenerateAllConfirm,
+    confirmDeleteChapter,
+    confirmGenerateAllAudio,
   } = useChapterManagement();
 
   if (isLoadingBook || isLoadingChapters) {
@@ -74,7 +101,9 @@ export default function ChapterManagementPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quản lý chương</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Sách: <span className="font-semibold text-gray-800">{book?.title}</span> • {chapters.length} chương
+              Sách:{" "}
+              <span className="font-semibold text-gray-800">{book?.title}</span>{" "}
+              • {chapters.length} chương
             </p>
           </div>
           <div className="flex gap-3">
@@ -128,14 +157,26 @@ export default function ChapterManagementPage() {
                   <div key={`${para.id}-${index}`} className="flex gap-2">
                     <Textarea
                       value={para.content}
-                      onChange={(e) => handleParagraphChange(
-                        index,
-                        e.target.value,
-                        newChapterParagraphs,
-                        setNewChapterParagraphs,
-                        () => newChapterBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-                      )}
-                      onKeyDown={(e) => handleParagraphKeyDown(e, index, newChapterParagraphs, setNewChapterParagraphs)}
+                      onChange={(e) =>
+                        handleParagraphChange(
+                          index,
+                          e.target.value,
+                          newChapterParagraphs,
+                          setNewChapterParagraphs,
+                          () =>
+                            newChapterBottomRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                            }),
+                        )
+                      }
+                      onKeyDown={(e) =>
+                        handleParagraphKeyDown(
+                          e,
+                          index,
+                          newChapterParagraphs,
+                          setNewChapterParagraphs,
+                        )
+                      }
                       placeholder={`Đoạn ${index + 1} (Nhấn Enter để tạo đoạn mới)...`}
                       className="resize-none bg-white min-h-[80px]"
                     />
@@ -143,7 +184,13 @@ export default function ChapterManagementPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteParagraph(index, newChapterParagraphs, setNewChapterParagraphs)}
+                        onClick={() =>
+                          handleDeleteParagraph(
+                            index,
+                            newChapterParagraphs,
+                            setNewChapterParagraphs,
+                          )
+                        }
                         className="text-red-600 hover:text-red-700 hover:bg-red-100 flex-shrink-0"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -159,15 +206,21 @@ export default function ChapterManagementPage() {
                   disabled={isCreating || !newChapterTitle.trim()}
                   className="flex items-center gap-2"
                 >
-                  {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isCreating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
                   Tạo chương
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowNewChapterForm(false);
-                    setNewChapterTitle('');
-                    setNewChapterParagraphs([{ id: crypto.randomUUID(), content: '' }]);
+                    setNewChapterTitle("");
+                    setNewChapterParagraphs([
+                      { id: crypto.randomUUID(), content: "" },
+                    ]);
                   }}
                   className="flex items-center gap-2"
                 >
@@ -186,7 +239,10 @@ export default function ChapterManagementPage() {
               </div>
             ) : (
               chapters.map((chapter, index) => (
-                <div key={`${chapter.id}-${index}`} className="hover:bg-gray-50 transition-colors">
+                <div
+                  key={`${chapter.id}-${index}`}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   {/* Chapter Header */}
                   <div
                     className="flex items-center justify-between px-4 py-3 cursor-pointer sticky top-0 z-10 bg-white border-b border-gray-50"
@@ -211,7 +267,10 @@ export default function ChapterManagementPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <TTSButton
                         chapterId={chapter.id}
                         status={chapter.ttsStatus}
@@ -254,22 +313,39 @@ export default function ChapterManagementPage() {
                               <Input
                                 type="text"
                                 value={editingTitle}
-                                onChange={(e) => setEditingTitle(e.target.value)}
+                                onChange={(e) =>
+                                  setEditingTitle(e.target.value)
+                                }
                                 className="font-semibold bg-white"
                               />
                               <div className="space-y-2">
                                 {editingParagraphs.map((para, index) => (
-                                  <div key={`${para.id}-${index}`} className="flex gap-2">
+                                  <div
+                                    key={`${para.id}-${index}`}
+                                    className="flex gap-2"
+                                  >
                                     <Textarea
                                       value={para.content}
-                                      onChange={(e) => handleParagraphChange(
-                                        index,
-                                        e.target.value,
-                                        editingParagraphs,
-                                        setEditingParagraphs,
-                                        () => editChapterBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-                                      )}
-                                      onKeyDown={(e) => handleParagraphKeyDown(e, index, editingParagraphs, setEditingParagraphs)}
+                                      onChange={(e) =>
+                                        handleParagraphChange(
+                                          index,
+                                          e.target.value,
+                                          editingParagraphs,
+                                          setEditingParagraphs,
+                                          () =>
+                                            editChapterBottomRef.current?.scrollIntoView(
+                                              { behavior: "smooth" },
+                                            ),
+                                        )
+                                      }
+                                      onKeyDown={(e) =>
+                                        handleParagraphKeyDown(
+                                          e,
+                                          index,
+                                          editingParagraphs,
+                                          setEditingParagraphs,
+                                        )
+                                      }
                                       placeholder={`Đoạn ${index + 1} (Nhấn Enter để tạo đoạn mới)...`}
                                       className="resize-none bg-white min-h-[80px]"
                                     />
@@ -277,7 +353,13 @@ export default function ChapterManagementPage() {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleDeleteParagraph(index, editingParagraphs, setEditingParagraphs)}
+                                        onClick={() =>
+                                          handleDeleteParagraph(
+                                            index,
+                                            editingParagraphs,
+                                            setEditingParagraphs,
+                                          )
+                                        }
                                         className="text-red-600 hover:text-red-700 hover:bg-red-100 flex-shrink-0"
                                       >
                                         <Trash2 className="w-5 h-5" />
@@ -293,7 +375,11 @@ export default function ChapterManagementPage() {
                                   disabled={isUpdating}
                                   className="flex items-center gap-2"
                                 >
-                                  {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                  {isUpdating ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Save className="w-4 h-4" />
+                                  )}
                                   Lưu thay đổi
                                 </Button>
                                 <Button
@@ -311,7 +397,10 @@ export default function ChapterManagementPage() {
                       ) : (
                         // View Mode
                         <div className="pt-4">
-                          <ChapterDetailView bookSlug={book!.slug} chapterId={chapter.id} />
+                          <ChapterDetailView
+                            bookSlug={book!.slug}
+                            chapterId={chapter.id}
+                          />
                         </div>
                       )}
                     </div>
@@ -321,8 +410,13 @@ export default function ChapterManagementPage() {
             )}
           </div>
           {/* Loading Sentinel for infinite scroll — must be OUTSIDE the map */}
-          <div ref={observerTarget} className="flex justify-center items-center py-4">
-            {isFetchingChapters && page > 1 && <Loader2 className="w-6 h-6 animate-spin text-blue-500" />}
+          <div
+            ref={observerTarget}
+            className="flex justify-center items-center py-4"
+          >
+            {isFetchingChapters && page > 1 && (
+              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            )}
           </div>
         </div>
       </div>
@@ -332,16 +426,83 @@ export default function ChapterManagementPage() {
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImportChapters}
         isLoading={isCreating || isStartingImport}
-        bookSlug={book?.slug || ''}
+        bookSlug={book?.slug || ""}
         currentChapterCount={chapters.length}
         bookId={bookId}
       />
+
+      {/* Custom Premium AlertDialog for Deleting Chapter */}
+      <AlertDialog
+        open={!!chapterToDelete}
+        onOpenChange={(open) => !open && setChapterToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xóa chương sách</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa chương{" "}
+              <span className="font-semibold text-foreground">
+                "{chapterToDelete?.title}"
+              </span>
+              ? Hành động này không thể hoàn tác và sẽ xóa tất cả các đoạn văn
+              của chương này.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteChapter}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Custom Premium AlertDialog for Generating All Audio */}
+      <AlertDialog
+        open={showGenerateAllConfirm}
+        onOpenChange={setShowGenerateAllConfirm}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tạo audio cho toàn bộ sách</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn bắt đầu tạo audio (Text-to-Speech) cho tất
+              cả{" "}
+              <span className="font-semibold text-foreground">
+                {chapters.length} chương
+              </span>{" "}
+              của cuốn sách này? Quá trình này có thể mất một vài phút.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmGenerateAllAudio}
+              className="bg-violet-600 hover:bg-violet-700 text-white"
+            >
+              Tạo Audio
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterId: string }) {
-  const { data: chapter, isLoading } = useGetChapterByIdQuery({ bookSlug, chapterId });
+function ChapterDetailView({
+  bookSlug,
+  chapterId,
+}: {
+  bookSlug: string;
+  chapterId: string;
+}) {
+  const { data: chapter, isLoading } = useGetChapterByIdQuery({
+    bookSlug,
+    chapterId,
+  });
 
   if (isLoading) {
     return (
@@ -352,13 +513,18 @@ function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterI
   }
 
   if (!chapter) {
-    return <div className="text-red-500 py-4">Không thể tải nội dung chương.</div>;
+    return (
+      <div className="text-red-500 py-4">Không thể tải nội dung chương.</div>
+    );
   }
 
   return (
     <div className="space-y-3">
       {chapter.paragraphs.map((para, index) => (
-        <p key={`${para.id}-${index}`} className="text-gray-800 leading-relaxed">
+        <p
+          key={`${para.id}-${index}`}
+          className="text-gray-800 leading-relaxed"
+        >
           {para.content}
         </p>
       ))}
@@ -366,16 +532,26 @@ function ChapterDetailView({ bookSlug, chapterId }: { bookSlug: string; chapterI
   );
 }
 
-function TTSStatusBadge({ status }: { status?: 'pending' | 'processing' | 'completed' | 'failed' }) {
+function TTSStatusBadge({
+  status,
+}: {
+  status?: "pending" | "processing" | "completed" | "failed";
+}) {
   if (!status) {
     return <span className="text-xs text-gray-400">🔇 Chưa có audio</span>;
   }
 
-  if (status === 'completed') {
-    return <span className="text-xs text-green-600 font-medium">✓ Có audio</span>;
-  } else if (status === 'processing' || status === 'pending') {
-    return <span className="text-xs text-yellow-600 font-medium">⏳ Đang tạo...</span>;
-  } else if (status === 'failed') {
+  if (status === "completed") {
+    return (
+      <span className="text-xs text-green-600 font-medium">✓ Có audio</span>
+    );
+  } else if (status === "processing" || status === "pending") {
+    return (
+      <span className="text-xs text-yellow-600 font-medium">
+        ⏳ Đang tạo...
+      </span>
+    );
+  } else if (status === "failed") {
     return <span className="text-xs text-red-600 font-medium">✗ Lỗi</span>;
   }
 
@@ -386,12 +562,12 @@ function TTSButton({
   chapterId,
   status,
   audioUrl,
-  onGenerate
+  onGenerate,
 }: {
   chapterId: string;
-  status?: 'pending' | 'processing' | 'completed' | 'failed';
+  status?: "pending" | "processing" | "completed" | "failed";
   audioUrl?: string;
-  onGenerate: (id: string) => void
+  onGenerate: (id: string) => void;
 }) {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -405,7 +581,7 @@ function TTSButton({
   };
 
   if (status) {
-    if (status === 'completed') {
+    if (status === "completed") {
       return (
         <Button
           variant="outline"
@@ -413,7 +589,7 @@ function TTSButton({
           onClick={(e) => {
             e.stopPropagation();
             if (audioUrl) {
-              window.open(audioUrl, '_blank');
+              window.open(audioUrl, "_blank");
             }
           }}
           className="text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 border-transparent"
@@ -422,13 +598,18 @@ function TTSButton({
           <CheckCircle className="w-5 h-5" />
         </Button>
       );
-    } else if (status === 'processing' || status === 'pending') {
+    } else if (status === "processing" || status === "pending") {
       return (
-        <Button variant="outline" size="icon" disabled className="bg-yellow-50 border-transparent">
+        <Button
+          variant="outline"
+          size="icon"
+          disabled
+          className="bg-yellow-50 border-transparent"
+        >
           <Clock className="w-5 h-5 text-yellow-600" />
         </Button>
       );
-    } else if (status === 'failed') {
+    } else if (status === "failed") {
       return (
         <Button
           variant="outline"

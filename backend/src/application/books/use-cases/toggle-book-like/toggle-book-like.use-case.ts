@@ -7,8 +7,8 @@ import {
 } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
 import { GetLikeCountUseCase } from '@/application/likes/use-cases/get-like-count/get-like-count.use-case';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
-import { BOOK_CACHE_SERVICE } from '@/domain/books/cache/book-cache.service.interface';
-import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.interface';
+import { BOOK_CACHE_SERVICE } from '@/domain/books/interfaces/book-cache.service.interface';
+import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
 import { ToggleBookLikeCommand } from './toggle-book-like.command';
 
 export interface ToggleBookLikeResponse {

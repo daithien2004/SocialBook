@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
-import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
+import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
+import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { Book } from '@/domain/books/entities/book.entity';
 

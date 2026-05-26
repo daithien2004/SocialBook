@@ -23,5 +23,6 @@ export abstract class IReadingListRepository {
   abstract findAllDetailByUserId(
     userId: UserId,
     status?: ReadingStatus | ReadingStatus[],
+    limit?: number,
   ): Promise<LibraryItemReadModel[]>;
 }

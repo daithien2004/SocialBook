@@ -15,7 +15,7 @@ import type {
   ImportChaptersJobData,
   ImportChaptersJobProgress,
   ImportChaptersJobResult,
-} from './chapters-import.types';
+} from '@/application/chapters/dto/chapters-import.types';
 
 export interface StartChaptersImportParams {
   bookId: string;

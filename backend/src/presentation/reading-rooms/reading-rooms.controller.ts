@@ -70,9 +70,7 @@ export class ReadingRoomsController {
   }
 
   @Get('my-history')
-  async getMyHistory(
-    @CurrentUser('id') userId: string,
-  ) {
+  async getMyHistory(@CurrentUser('id') userId: string) {
     const result = await this.getMyHistoryUseCase.execute(
       new GetMyHistoryQuery(userId),
     );

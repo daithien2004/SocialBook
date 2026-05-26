@@ -2,31 +2,29 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
-import { LibraryStatus, LibraryItem } from '@/features/library/types/library.interface';
-import { useAppAuth } from '@/features/auth/hooks';
-import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
+import { LibraryItem } from '@/features/library/types/library.interface';
+import { ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+interface ReadingSidebarProps {
+  books: LibraryItem[];
+  isLoading: boolean;
+  isGuest: boolean;
+}
+
 const EMPTY_BOOKS: LibraryItem[] = [];
 
-export function ReadingSidebar() {
-  const { isAuthenticated, isGuest } = useAppAuth();
-  const { data: books = EMPTY_BOOKS, isLoading } = useGetLibraryBooksQuery(
-    { status: LibraryStatus.READING },
-    { skip: !isAuthenticated }
-  );
+export function ReadingSidebar({ books = EMPTY_BOOKS, isLoading, isGuest }: ReadingSidebarProps) {
 
   // Chưa đăng nhập
   if (isGuest) {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
-          <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+          <Card className="bg-transparent border border-border/50 shadow-none">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
+              <CardTitle className="text-lg font-bold">
                 Sách đang đọc
               </CardTitle>
             </CardHeader>
@@ -60,10 +58,9 @@ export function ReadingSidebar() {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
-          <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+          <Card className="bg-transparent border border-border/50 shadow-none">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
+              <CardTitle className="text-lg font-bold">
                 Sách đang đọc
               </CardTitle>
             </CardHeader>
@@ -92,18 +89,15 @@ export function ReadingSidebar() {
     return (
       <aside className="hidden xl:block xl:w-64 flex-shrink-0">
         <div className="sticky top-8">
-          <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+          <Card className="bg-transparent border border-border/50 shadow-none">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
+              <CardTitle className="text-lg font-bold">
                 Sách đang đọc
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-16 h-16 bg-gray-50 dark:bg-accent/10 rounded-full flex items-center justify-center mb-4">
-                  <BookOpen size={28} className="text-muted-foreground" />
-                </div>
+
                 <h3 className="font-semibold text-foreground mb-2">
                   Chưa có sách nào
                 </h3>
@@ -130,10 +124,9 @@ export function ReadingSidebar() {
   return (
     <aside className="hidden xl:block xl:w-64 flex-shrink-0">
       <div className="sticky top-8">
-        <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+        <Card className="bg-transparent border border-border/50 shadow-none">
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
+            <CardTitle className="text-lg font-bold">
               Sách đang đọc
             </CardTitle>
             {hasMore && (
@@ -175,7 +168,6 @@ export function ReadingSidebar() {
                       </p>
                       <Button asChild size="sm" className="mt-auto w-full h-8 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-none transition-all active:scale-[0.98] gap-1.5">
                         <Link href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}>
-                          <BookOpen size={12} />
                           Đọc tiếp
                         </Link>
                       </Button>

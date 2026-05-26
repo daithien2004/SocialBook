@@ -12,7 +12,7 @@ import {
 } from '@/domain/reading-rooms/entities/reading-room.entity';
 
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { AskAICommand } from './ask-ai.command';

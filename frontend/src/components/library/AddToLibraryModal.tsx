@@ -4,7 +4,6 @@ import {
   Archive,
   Bookmark,
   Check,
-  Clock,
   Plus,
   X,
   Library,
@@ -104,14 +103,7 @@ export default function AddToLibraryModal() {
           {/* Status Selection */}
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Trạng thái đọc</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <StatusButton
-                active={selectedStatus === LibraryStatus.READING}
-                onClick={() => handleStatusChange(LibraryStatus.READING)}
-                icon={Clock}
-                label="Đang đọc"
-                activeClass="bg-blue-500/10 text-blue-600 border-blue-500/20"
-              />
+            <div className="grid grid-cols-1 gap-2">
               <StatusButton
                 active={selectedStatus === LibraryStatus.ARCHIVED}
                 onClick={() => handleStatusChange(LibraryStatus.ARCHIVED)}

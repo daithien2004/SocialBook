@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { use, useMemo, useCallback, useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { getErrorMessage } from '@/lib/utils';
+import Image from "next/image";
+import { use, useMemo, useCallback, useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 import {
   Bookmark,
   ChevronLeft,
@@ -14,25 +14,25 @@ import {
   Settings,
   Share2,
   Sparkles,
-} from 'lucide-react';
+} from "lucide-react";
 
 import {
   useGetChapterQuery,
   useGetChaptersQuery,
-} from '@/features/chapters/api/chaptersApi';
-import { useCreatePostMutation } from '@/features/posts/api/postApi';
-import { useModalStore } from '@/store/useModalStore';
-import ChapterNavigation from '@/components/chapter/ChapterNavigation';
-import CommentSection from '@/components/chapter/CommentSection';
-import ChapterHeader from '@/components/chapter/ChapterHeader';
-import { ChapterContent } from '@/components/chapter/ChapterContent';
-import { useReadingProgress, useReadingView } from '@/features/books/hooks';
-import { useAppAuth } from '@/features/auth/hooks';
-import { ReadingTimeTracker } from '@/features/books/components/ReadingTimeTracker';
-import AudiobookView from '@/components/chapter/AudiobookView';
-import ChapterListDrawer from '@/components/book/ChapterListDrawer';
-import ReadingSettingsPanel from '@/components/chapter/ReadingSettingsPanel';
-import { KnowledgeSidebar } from '@/features/reading-rooms/components/KnowledgeSidebar';
+} from "@/features/chapters/api/chaptersApi";
+import { useCreatePostMutation } from "@/features/posts/api/postApi";
+import { useModalStore } from "@/store/useModalStore";
+import ChapterNavigation from "@/components/chapter/ChapterNavigation";
+import CommentSection from "@/components/chapter/CommentSection";
+import ChapterHeader from "@/components/chapter/ChapterHeader";
+import { ChapterContent } from "@/components/chapter/ChapterContent";
+import { useReadingProgress, useReadingView } from "@/features/books/hooks";
+import { useAppAuth } from "@/features/auth/hooks";
+import { ReadingTimeTracker } from "@/features/books/components/ReadingTimeTracker";
+import AudiobookView from "@/components/chapter/AudiobookView";
+import ChapterListDrawer from "@/components/book/ChapterListDrawer";
+import ReadingSettingsPanel from "@/components/chapter/ReadingSettingsPanel";
+import { KnowledgeSidebar } from "@/features/reading-rooms/components/KnowledgeSidebar";
 
 interface ChapterPageProps {
   params: Promise<{
@@ -47,7 +47,8 @@ export default function ChapterPage({ params }: ChapterPageProps) {
 
   const { isAuthenticated: isLoggedIn } = useAppAuth();
 
-  const { openCreatePost, openAddToLibrary, openChapterSummary } = useModalStore();
+  const { openCreatePost, openAddToLibrary, openChapterSummary } =
+    useModalStore();
   const {
     data: chapterData,
     isLoading,
@@ -76,20 +77,19 @@ export default function ChapterPage({ params }: ChapterPageProps) {
 
   const [showAISidebar, setShowAISidebar] = useState(false);
 
-
   const { savedProgress, restoreScroll } = useReadingProgress(
-    book?.id || '',
-    chapter?.id || '',
-    !isLoading && !!chapter && viewMode === 'read' && isLoggedIn
+    book?.id || "",
+    chapter?.id || "",
+    !isLoading && !!chapter && viewMode === "read" && isLoggedIn,
   );
 
   useEffect(() => {
     if (savedProgress > 5 && savedProgress < 100) {
       setTimeout(() => {
-        toast('Bạn đang đọc dở chương này', {
+        toast("Bạn đang đọc dở chương này", {
           description: `Tiếp tục tại vị trí ${Math.floor(savedProgress)}%?`,
           action: {
-            label: 'Đọc tiếp',
+            label: "Đọc tiếp",
             onClick: restoreScroll,
           },
           duration: 8000,
@@ -99,13 +99,13 @@ export default function ChapterPage({ params }: ChapterPageProps) {
   }, [savedProgress, restoreScroll]);
 
   const defaultShareContent = useMemo(() => {
-    if (!book || !chapter) return '';
+    if (!book || !chapter) return "";
     return `📖 Đang đọc: ${book.title} - ${chapter.title}
 ✍️ Tác giả: ${book.authorId.name}
 
 ${book.description?.slice(0, 100)}...
 
-#${book.title.replace(/\s+/g, '')} #${chapter.title.replace(/\s+/g, '')}`;
+#${book.title.replace(/\s+/g, "")} #${chapter.title.replace(/\s+/g, "")}`;
   }, [book, chapter]);
 
   const handleOpenShareModal = () => {
@@ -117,7 +117,7 @@ ${book.description?.slice(0, 100)}...
       defaultBookTitle: book?.title,
       onSubmit: async (data) => {
         if (!book?.id) {
-          toast.error('Không tìm thấy thông tin sách');
+          toast.error("Không tìm thấy thông tin sách");
           return;
         }
 
@@ -129,12 +129,12 @@ ${book.description?.slice(0, 100)}...
           }).unwrap();
 
           if (result.warning) {
-            toast.warning('Bài viết đang được xem xét', {
+            toast.warning("Bài viết đang được xem xét", {
               description: result.warning,
-              duration: 5000
+              duration: 5000,
             });
           } else {
-            toast.success('Chia sẻ thành công!');
+            toast.success("Chia sẻ thành công!");
           }
         } catch (error) {
           const apiError = error as { status?: number };
@@ -142,7 +142,7 @@ ${book.description?.slice(0, 100)}...
             toast.error(getErrorMessage(error));
           }
         }
-      }
+      },
     });
   };
 
@@ -170,12 +170,12 @@ ${book.description?.slice(0, 100)}...
     );
   }
 
-  if (viewMode === 'listen') {
+  if (viewMode === "listen") {
     return (
       <div className="h-screen bg-background flex flex-col overflow-hidden animate-in fade-in duration-300">
         <div className="h-16 px-4 flex items-center justify-between border-b border-border bg-background shrink-0 z-50 transition-colors duration-300">
           <button
-            onClick={() => router.push(`/books/${bookSlug}`)}
+            onClick={() => setViewMode("read")}
             className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
           >
             <ChevronLeft size={20} />
@@ -184,7 +184,7 @@ ${book.description?.slice(0, 100)}...
 
           <div className="flex bg-muted p-1 rounded-lg border border-border">
             <button
-              onClick={() => setViewMode('read')}
+              onClick={() => setViewMode("read")}
               className="px-4 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
             >
               Đọc
@@ -236,7 +236,9 @@ ${book.description?.slice(0, 100)}...
       <main className="relative z-10 pt-20 px-4 sm:px-6 lg:px-8 mx-auto transition-all duration-500 max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
           {/* Main Content */}
-          <div className={`flex-1 w-full max-w-3xl transition-all duration-500 ${showAISidebar ? 'lg:mr-0' : 'mx-auto'}`}>
+          <div
+            className={`flex-1 w-full max-w-3xl transition-all duration-500 ${showAISidebar ? "lg:mr-0" : "mx-auto"}`}
+          >
             <ChapterHeader
               bookTitle={book.title}
               bookSlug={book.slug}
@@ -261,12 +263,14 @@ ${book.description?.slice(0, 100)}...
                 onPrevious={() =>
                   navigation?.previous &&
                   router.push(
-                    `/books/${bookSlug}/chapters/${navigation.previous.slug}`
+                    `/books/${bookSlug}/chapters/${navigation.previous.slug}`,
                   )
                 }
                 onNext={() =>
                   navigation?.next &&
-                  router.push(`/books/${bookSlug}/chapters/${navigation.next.slug}`)
+                  router.push(
+                    `/books/${bookSlug}/chapters/${navigation.next.slug}`,
+                  )
                 }
               />
             </div>
@@ -279,21 +283,18 @@ ${book.description?.slice(0, 100)}...
           {/* AI Sidebar */}
           {showAISidebar && (
             <aside className="w-full lg:w-80 sticky top-24 shrink-0 animate-in slide-in-from-right-4 duration-300">
-              <KnowledgeSidebar
-                bookSlug={bookSlug}
-                chapterId={chapter.id}
-              />
+              <KnowledgeSidebar bookSlug={bookSlug} chapterId={chapter.id} />
             </aside>
           )}
         </div>
       </main>
 
-
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isControlsVisible
-            ? 'translate-y-0 opacity-100'
-            : 'translate-y-24 opacity-0'
-          }`}
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
+          isControlsVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-24 opacity-0"
+        }`}
       >
         <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-background/90 backdrop-blur-xl border border-border shadow-2xl">
           <DockButton
@@ -306,13 +307,13 @@ ${book.description?.slice(0, 100)}...
 
           <div className="flex bg-muted rounded-xl p-1">
             <button
-              onClick={() => setViewMode('read')}
+              onClick={() => setViewMode("read")}
               className="p-2 rounded-lg bg-background text-foreground shadow-sm transition-all"
             >
               <BookOpen size={18} />
             </button>
             <button
-              onClick={() => setViewMode('listen')}
+              onClick={() => setViewMode("listen")}
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all"
             >
               <Headphones size={18} />
@@ -334,11 +335,15 @@ ${book.description?.slice(0, 100)}...
           />
 
           <DockButton
-            icon={<Sparkles size={20} className={showAISidebar ? 'text-primary' : ''} />}
+            icon={
+              <Sparkles
+                size={20}
+                className={showAISidebar ? "text-primary" : ""}
+              />
+            }
             label="Trợ lý AI"
             onClick={() => setShowAISidebar(!showAISidebar)}
           />
-
 
           <DockButton
             icon={<Settings size={20} />}
@@ -356,7 +361,6 @@ ${book.description?.slice(0, 100)}...
         currentChapterSlug={chapterSlug}
         totalChapters={totalChapters}
       />
-
 
       <ReadingSettingsPanel
         isOpen={showSettings}

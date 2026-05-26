@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
-import { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 
 @Injectable()
 export class GeminiService implements IGeminiService {

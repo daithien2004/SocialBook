@@ -1,4 +1,9 @@
-import { PaginationMeta } from '@/utils/helpers';
+export interface PaginationMeta {
+  current: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
 
 export interface BookStats {
   chapters: number;

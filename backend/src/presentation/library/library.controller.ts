@@ -1,4 +1,4 @@
-import { ReadingStatusResult } from '@/application/library/mappers/library.result.dto';
+import { ReadingStatusResult } from '@/application/library/dto/library.dto';
 import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
 import { GetBookLibraryInfoUseCase } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case';
 import { GetChapterProgressQuery } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.query';
@@ -64,6 +64,7 @@ export class LibraryController {
   async getLibrary(
     @CurrentUser('id') userId: string,
     @Query('status') status?: string,
+    @Query('limit') limit?: string,
   ) {
     let readingStatuses: ReadingStatusResult | ReadingStatusResult[];
     if (status) {
@@ -74,7 +75,12 @@ export class LibraryController {
       readingStatuses = ReadingStatusResult.READING;
     }
 
-    const query = new GetLibraryQuery(userId, readingStatuses as any);
+    const limitNumber = limit ? parseInt(limit, 10) : undefined;
+    const query = new GetLibraryQuery(
+      userId,
+      readingStatuses as any,
+      limitNumber,
+    );
     const readingLists = await this.getLibraryUseCase.execute(query);
 
     return {

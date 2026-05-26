@@ -9,8 +9,8 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import { BOOK_CACHE_SERVICE } from '@/domain/books/cache/book-cache.service.interface';
-import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.interface';
+import { BOOK_CACHE_SERVICE } from '@/domain/books/interfaces/book-cache.service.interface';
+import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
 
 @Injectable()
 export class UpdateBookUseCase {

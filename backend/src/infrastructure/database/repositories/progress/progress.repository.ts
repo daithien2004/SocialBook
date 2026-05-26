@@ -10,7 +10,7 @@ import {
   ReadingHeatmapData,
   ChapterEngagementData,
   ReadingSpeedData,
-} from '@/domain/statistics/models/statistics.model';
+} from '@/domain/statistics/interfaces/statistics.model';
 
 @Injectable()
 export class ProgressRepository implements IProgressRepository {

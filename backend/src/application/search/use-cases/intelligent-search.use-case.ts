@@ -3,7 +3,7 @@ import { IntelligentSearchQuery } from './intelligent-search.query';
 import {
   PaginatedSearchResult,
   SearchResultBook,
-} from '@/domain/search/models/search-result.model';
+} from '@/domain/search/interfaces/search-result.model';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';

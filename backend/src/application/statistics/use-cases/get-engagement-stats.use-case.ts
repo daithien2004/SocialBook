@@ -7,7 +7,7 @@ import {
   ReadingSpeedData,
   ActiveUsersData,
   GeographicData,
-} from '@/domain/statistics/models/statistics.model';
+} from '@/domain/statistics/interfaces/statistics.model';
 
 @Injectable()
 export class GetEngagementStatsUseCase {

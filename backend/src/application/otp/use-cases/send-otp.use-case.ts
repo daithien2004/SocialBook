@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
-import { MailerService } from '@nestjs-modules/mailer';
+import { IMailerPort } from '@/domain/otp/interfaces/mailer.port';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/otp/entities/otp.entity';
 import { SendOtpCommand } from './send-otp.command';
@@ -12,7 +12,7 @@ export class SendOtpUseCase {
 
   constructor(
     private readonly otpRepository: IOtpRepository,
-    private readonly mailerService: MailerService,
+    private readonly mailer: IMailerPort,
   ) {}
 
   async execute(command: SendOtpCommand): Promise<string> {
@@ -39,13 +39,9 @@ export class SendOtpUseCase {
 
     // 4. Send Email
     try {
-      await this.mailerService.sendMail({
+      await this.mailer.sendMail({
         to: email,
         subject: 'Your OTP Code',
-        context: {
-          otp: otpCode,
-          expiryMinutes: this.OTP_EXPIRY_MINUTES,
-        },
         html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px;">
                   <h2>Your OTP Code</h2>

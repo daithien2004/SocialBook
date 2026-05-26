@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/otp/entities/otp.entity';
-import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
+import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
 
 @Injectable()
 export class OtpRepository implements IOtpRepository {

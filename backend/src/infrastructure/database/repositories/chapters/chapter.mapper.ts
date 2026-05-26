@@ -2,7 +2,6 @@ import { Chapter as ChapterEntity } from '@/domain/chapters/entities/chapter.ent
 import { Types } from 'mongoose';
 import { RawParagraph } from '../books/book.mapper';
 
-
 export interface RawChapterDocument {
   _id: Types.ObjectId;
   bookId: Types.ObjectId;

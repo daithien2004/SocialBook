@@ -9,9 +9,7 @@ import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity
 export class RemoveHighlightUseCase {
   private readonly logger = new Logger(RemoveHighlightUseCase.name);
 
-  constructor(
-    private readonly readingRoomRepository: IReadingRoomRepository,
-  ) {}
+  constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(command: RemoveHighlightCommand): Promise<ReadingRoom> {
     const room = await this.readingRoomRepository.findById(

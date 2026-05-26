@@ -2,7 +2,7 @@ import {
   ReadingListResult,
   ReadingProgressResult,
   ReadingStatusResult,
-} from '@/application/library/mappers/library.result.dto';
+} from '@/application/library/dto/library.dto';
 import { CollectionResult } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case';
 import { LibraryItemReadModel } from '@/domain/library/read-models/library-item.read-model';
 

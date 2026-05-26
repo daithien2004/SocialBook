@@ -3,7 +3,7 @@ import {
   ChapterEngagementData,
   ReadingSpeedData,
   ActiveUsersData,
-} from '@/domain/statistics/models/statistics.model';
+} from '@/domain/statistics/interfaces/statistics.model';
 
 export abstract class IProgressRepository {
   abstract getReadingHeatmap(): Promise<ReadingHeatmapData[]>;

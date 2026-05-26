@@ -4,7 +4,7 @@ import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { Injectable } from '@nestjs/common';
 import { GetBookLibraryInfoQuery } from './get-book-library-info.query';
-import { ReadingListResult } from '../../mappers/library.result.dto';
+import { ReadingListResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';

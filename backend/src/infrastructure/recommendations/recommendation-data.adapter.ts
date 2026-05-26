@@ -27,31 +27,11 @@ import {
 } from '@/domain/recommendations/interfaces/recommendation-data.port';
 import { UserProfile } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
 
-// Lean document types with populated references
 type LeanedReadingList = {
   _id: Types.ObjectId;
   bookId: PopulatedBook | null;
   status: string;
 };
-type LeanedProgress = {
-  _id: Types.ObjectId;
-  bookId: PopulatedBook | null;
-  timeSpent: number;
-  lastReadAt: Date;
-  status: string;
-};
-type LeanedReview = {
-  _id: Types.ObjectId;
-  bookId: PopulatedBook | null;
-  rating: number;
-  content: string;
-};
-type LeanedPreference = {
-  _id: Types.ObjectId;
-  genreId: { _id: Types.ObjectId; name: string } | null;
-  score: number;
-};
-type LeanedReadingListId = { _id: Types.ObjectId; bookId: Types.ObjectId };
 
 @Injectable()
 export class RecommendationDataAdapter implements IRecommendationDataPort {
@@ -63,7 +43,7 @@ export class RecommendationDataAdapter implements IRecommendationDataPort {
     @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
     @InjectModel(UserPreference.name)
     private preferenceModel: Model<UserPreferenceDocument>,
-  ) {}
+  ) { }
 
   async getInteractionCount(userId: string): Promise<number> {
     const userObjectId = new Types.ObjectId(userId);
@@ -151,7 +131,6 @@ export class RecommendationDataAdapter implements IRecommendationDataPort {
       .slice(0, 5)
       .map((entry) => entry[0]);
 
-    // If no explicit preferences found (new user), fall back to manual counting
     if (favoriteGenres.length === 0) {
       const allBooks = [
         ...completedBooks.map((cb) => cb.book),

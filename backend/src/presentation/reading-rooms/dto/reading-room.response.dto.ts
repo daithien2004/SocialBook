@@ -1,4 +1,4 @@
-import { ReadingRoomResult } from '@/application/reading-rooms/use-cases/reading-room.result.interface';
+import { ReadingRoomResult } from '@/application/reading-rooms/use-cases/reading-room.interface';
 
 export class ReadingRoomResponseDto {
   roomId: string;

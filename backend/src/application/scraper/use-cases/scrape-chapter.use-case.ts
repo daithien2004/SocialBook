@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { ScraperFactory } from '@/infrastructure/scraper/factories/scraper.factory';
-import { ScrapedChapterData } from '@/domain/scraper/models/scraped-data.model';
+import { ScrapedChapterData } from '@/domain/scraper/interfaces/scraped-data.model';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { Chapter } from '@/domain/chapters/entities/chapter.entity';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';

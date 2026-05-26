@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import type { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
 import {
   AIRequest,

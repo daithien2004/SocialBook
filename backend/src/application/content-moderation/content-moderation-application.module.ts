@@ -7,4 +7,4 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
   providers: [CheckContentUseCase],
   exports: [CheckContentUseCase],
 })
-export class ContentModerationModule {}
+export class ContentModerationApplicationModule {}

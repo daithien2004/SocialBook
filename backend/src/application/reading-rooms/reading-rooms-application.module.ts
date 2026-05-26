@@ -18,7 +18,7 @@ import { RemoveHighlightUseCase } from './use-cases/remove-highlight/remove-high
 import { AskAIUseCase } from './use-cases/ask-ai/ask-ai.use-case';
 import { GeminiApplicationModule } from '../gemini/gemini-application.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
-import { ReadingRoomInteractionsSchemasModule } from '@/infrastructure/database/schemas/reading-room-interactions/reading-room-interactions-schemas.module';
+import { ReadingRoomInteractionsRepositoryModule } from '@/infrastructure/database/repositories/reading-room-interactions/reading-room-interactions-repository.module';
 import { ReadingRoomPresenceModule } from '@/infrastructure/gateways/reading-room-presence.module';
 
 @Module({
@@ -27,7 +27,7 @@ import { ReadingRoomPresenceModule } from '@/infrastructure/gateways/reading-roo
     BooksRepositoryModule,
     ChaptersRepositoryModule,
     GeminiApplicationModule,
-    ReadingRoomInteractionsSchemasModule,
+    ReadingRoomInteractionsRepositoryModule,
     ReadingRoomPresenceModule,
   ],
   providers: [

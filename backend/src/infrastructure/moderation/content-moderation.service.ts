@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { IContentModerationService } from '@/domain/content-moderation/interfaces/content-moderation.service.interface';
 import { ModerationResult } from '@/domain/content-moderation/interfaces/moderation-result.interface';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
-import { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 @Injectable()

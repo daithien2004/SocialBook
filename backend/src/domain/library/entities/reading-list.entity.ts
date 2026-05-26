@@ -2,7 +2,7 @@ import { Entity } from '@/shared/domain/entity.base';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
-import { ReadingStatus } from '../reading-status.enum';
+import { ReadingStatus } from '../enums/reading-status.enum';
 
 export { ReadingStatus };
 

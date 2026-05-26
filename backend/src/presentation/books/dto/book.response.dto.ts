@@ -3,7 +3,7 @@ import {
   BookListReadModel,
   GenreSummary,
 } from '@/domain/books/read-models/book-list.read-model';
-import { SearchResultBook } from '@/domain/search/models/search-result.model';
+import { SearchResultBook } from '@/domain/search/interfaces/search-result.model';
 
 export class BookResponseDto {
   id: string;

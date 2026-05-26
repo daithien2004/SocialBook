@@ -8,16 +8,18 @@ import { UpdateReviewUseCase } from './use-cases/update-review.use-case';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/reviews/reviews-repository.module';
-import { ContentModerationModule } from '../content-moderation/content-moderation.module';
+import { ContentModerationApplicationModule } from '../content-moderation/content-moderation-application.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { RecommendationsInfrastructureModule } from '@/infrastructure/recommendations/recommendations-infrastructure.module';
 
 @Module({
   imports: [
     ReviewsRepositoryModule,
-    ContentModerationModule,
+    ContentModerationApplicationModule,
     IdGeneratorModule,
     LibraryRepositoryModule,
     ChaptersRepositoryModule,
+    RecommendationsInfrastructureModule,
   ],
   providers: [
     CreateReviewUseCase,

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetPersonalizedRecommendationsQuery } from '@/features/recommendations/api/recommendationsApi';
 import { useAppAuth } from '@/features/auth/hooks';
-import { ChevronRight, LogIn, Sparkles } from 'lucide-react';
+import { ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -26,10 +26,9 @@ export const RecommendedForYouSection = () => {
   if (isGuest) {
     return (
       <section className="mb-12">
-        <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+        <Card className="bg-transparent border border-border/50 shadow-none">
           <CardHeader className="pb-6">
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
+            <CardTitle className="text-2xl font-bold">
               Gợi ý cho bạn
             </CardTitle>
           </CardHeader>
@@ -61,13 +60,10 @@ export const RecommendedForYouSection = () => {
   if (isLoading) {
     return (
       <section className="mb-12">
-        <div className="flex items-center gap-2 mb-6">
-          <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             Gợi ý cho bạn
           </h2>
-        </div>
-        <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none p-4">
+        <Card className="bg-transparent border border-border/50 shadow-none">
           <div className="flex flex-col gap-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="animate-pulse flex gap-3 p-2">
@@ -106,12 +102,9 @@ export const RecommendedForYouSection = () => {
   return (
     <section className="mb-12">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <Sparkles className="text-blue-600 dark:text-blue-400" size={24} />
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Sách hay cho bạn
-        </h2>
-      </div>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        Sách hay cho bạn
+      </h2>
 
       {/* Books List - Single Column */}
       <div className="flex flex-col gap-3">

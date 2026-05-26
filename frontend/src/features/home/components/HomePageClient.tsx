@@ -8,6 +8,9 @@ import { shouldLoadMore } from '@/features/books/books.utils';
 import { useInfiniteScroll } from '@/features/books/hooks/useInfiniteScroll';
 import { useTabsManager } from '@/features/books/hooks/useTabsManager';
 import { BookOrderField } from '@/features/books/types/book.interface';
+import { useAppAuth } from '@/features/auth/hooks';
+import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
+import { LibraryItem, LibraryStatus } from '@/features/library/types/library.interface';
 import { BannerSlider } from '@/components/book/BannerSlider';
 import { BookGrid } from '@/components/book/BookGrid';
 import { GenresSection } from '@/components/book/GenresSection';
@@ -16,8 +19,16 @@ import { ReadingSidebar } from '@/components/book/ReadingSidebar';
 import { RecommendedForYouSection } from '@/components/book/RecommendedForYouSection';
 import { TabNavigation } from '@/components/book/TabNavigation';
 
+const EMPTY_BOOKS: LibraryItem[] = [];
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabType>('trending');
+
+  const { isAuthenticated, isGuest } = useAppAuth();
+  const { data: readingBooks = EMPTY_BOOKS, isLoading: isReadingLoading } = useGetLibraryBooksQuery(
+    { status: LibraryStatus.READING, limit: 10 },
+    { skip: !isAuthenticated }
+  );
 
   const currentTabConfig = TABS.find((t) => t.id === activeTab)!;
 
@@ -57,12 +68,12 @@ export default function HomePage() {
             <BannerSlider books={featuredBooks} />
           </div>
 
-          <MobileReadingSection />
+          <MobileReadingSection books={readingBooks} isLoading={isReadingLoading} isGuest={isGuest} />
 
           <div className="max-w-[1920px] mx-auto px-4 xl:px-8 flex gap-8">
             <aside className="hidden xl:block xl:w-64 flex-shrink-0">
               <div className="top-20 space-y-6">
-                <ReadingSidebar />
+                <ReadingSidebar books={readingBooks} isLoading={isReadingLoading} isGuest={isGuest} />
                 <GenresSection books={currentState.books} />
               </div>
             </aside>

@@ -13,6 +13,10 @@ export class GetLibraryUseCase {
     const userId = UserId.create(query.userId);
     const status = query.status || ReadingStatus.READING;
 
-    return this.readingListRepository.findAllDetailByUserId(userId, status);
+    return this.readingListRepository.findAllDetailByUserId(
+      userId,
+      status,
+      query.limit,
+    );
   }
 }

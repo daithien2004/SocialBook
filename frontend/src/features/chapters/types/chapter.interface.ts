@@ -14,7 +14,7 @@ export interface Chapter {
   updatedAt: string;
   paragraphs: Paragraph[];
   paragraphsCount?: number;
-  ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  ttsStatus?: "pending" | "processing" | "completed" | "failed";
   audioUrl?: string;
 }
 
@@ -44,7 +44,6 @@ export interface CreateChapterParams {
     orderIndex?: number;
   };
 }
-
 
 export interface UpdateChapterParams {
   bookSlug: string;
@@ -137,7 +136,14 @@ export interface ChaptersImportProgress {
 }
 
 export interface ChaptersImportStatus {
-  state: 'completed' | 'failed' | 'active' | 'waiting' | 'delayed' | 'paused' | 'unknown';
+  state:
+    | "completed"
+    | "failed"
+    | "active"
+    | "waiting"
+    | "delayed"
+    | "paused"
+    | "unknown";
   progress: number | ChaptersImportProgress | null;
   result?: ChaptersImportResult;
   failedReason?: string;
@@ -146,11 +152,18 @@ export interface ChaptersImportStatus {
 export interface GetChaptersImportStatusParams {
   bookSlug: string;
   jobId: string;
+  timestamp?: number;
 }
 
 export interface KnowledgeEntity {
   name: string;
-  type: 'character' | 'location' | 'concept' | 'event' | 'vocabulary' | 'reference';
+  type:
+    | "character"
+    | "location"
+    | "concept"
+    | "event"
+    | "vocabulary"
+    | "reference";
   description: string;
   importance: number;
 }
@@ -169,10 +182,8 @@ export interface ChapterKnowledge {
   summary?: string;
 }
 
-
 export interface GetChapterKnowledgeParams {
   bookSlug: string;
   chapterId: string;
   force?: boolean;
 }
-

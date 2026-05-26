@@ -12,13 +12,14 @@ import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Injectable } from '@nestjs/common';
 import { UpdateProgressCommand } from './update-progress.command';
-import { ReadingProgressResult } from '../../mappers/library.result.dto';
+import { ReadingProgressResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId as DomainBookId } from '@/domain/books/value-objects/book-id.vo';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
+import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 
 export interface UpdateProgressResult {
   readingList: LibraryItemReadModel;
@@ -33,6 +34,7 @@ export class UpdateProgressUseCase {
     private readonly idGenerator: IIdGenerator,
     private readonly bookRepository: IBookRepository,
     private readonly chapterRepository: IChapterRepository,
+    private readonly recommendationCache: RecommendationCachePort,
   ) {}
 
   async execute(command: UpdateProgressCommand): Promise<UpdateProgressResult> {
@@ -109,6 +111,8 @@ export class UpdateProgressUseCase {
       this.readingListRepository.save(readingList),
       this.readingProgressRepository.save(readingProgress),
     ]);
+
+    this.recommendationCache.clear(command.userId);
 
     const detail = await this.readingListRepository.findDetailByUserIdAndBookId(
       userId,

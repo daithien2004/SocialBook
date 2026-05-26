@@ -22,6 +22,7 @@ import { UpdateCollectionUseCase } from './use-cases/update-collection/update-co
 import { DeleteCollectionUseCase } from './use-cases/delete-collection/delete-collection.use-case';
 import { GetKnowledgeGraphUseCase } from './use-cases/get-knowledge-graph/get-knowledge-graph.use-case';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
+import { RecommendationsInfrastructureModule } from '@/infrastructure/recommendations/recommendations-infrastructure.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories
     AIInfrastructureModule,
     IdGeneratorModule,
     ChaptersRepositoryModule,
+    RecommendationsInfrastructureModule,
   ],
 
   providers: [

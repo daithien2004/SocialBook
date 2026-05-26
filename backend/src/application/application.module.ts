@@ -8,7 +8,7 @@ import { GenresApplicationModule } from './genres/genres-application.module';
 import { PostsApplicationModule } from './posts/posts-application.module';
 import { ReviewsApplicationModule } from './reviews/reviews-application.module';
 import { NotificationsApplicationModule } from './notifications/notifications-application.module';
-import { ContentModerationModule } from './content-moderation/content-moderation.module';
+import { ContentModerationApplicationModule } from './content-moderation/content-moderation-application.module';
 import { AuthApplicationModule } from './auth/auth-application.module';
 import { RolesApplicationModule } from './roles/roles-application.module';
 import { OtpApplicationModule } from './otp/otp-application.module';
@@ -36,7 +36,7 @@ import { ReadingRoomInteractionsApplicationModule } from './reading-room-interac
     PostsApplicationModule,
     ReviewsApplicationModule,
     NotificationsApplicationModule,
-    ContentModerationModule,
+    ContentModerationApplicationModule,
     AuthApplicationModule,
     RolesApplicationModule,
     OtpApplicationModule,
@@ -63,7 +63,7 @@ import { ReadingRoomInteractionsApplicationModule } from './reading-room-interac
     PostsApplicationModule,
     ReviewsApplicationModule,
     NotificationsApplicationModule,
-    ContentModerationModule,
+    ContentModerationApplicationModule,
     AuthApplicationModule,
     RolesApplicationModule,
     OtpApplicationModule,

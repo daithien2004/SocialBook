@@ -124,6 +124,7 @@ export class ReadingListRepository implements IReadingListRepository {
   async findAllDetailByUserId(
     userId: UserId,
     status?: ReadingStatus | ReadingStatus[],
+    limit?: number,
   ): Promise<LibraryItemReadModel[]> {
     const query: FilterQuery<ReadingListDocument> = {
       userId: new Types.ObjectId(userId.toString()),
@@ -137,13 +138,17 @@ export class ReadingListRepository implements IReadingListRepository {
       }
     }
 
-    const docs = await this.readingListModel
+    let queryBuilder = this.readingListModel
       .find(query)
       .populate('bookId')
       .populate('lastReadChapterId')
-      .sort({ updatedAt: -1 })
-      .lean()
-      .exec();
+      .sort({ updatedAt: -1 });
+
+    if (limit) {
+      queryBuilder = queryBuilder.limit(limit);
+    }
+
+    const docs = await queryBuilder.lean().exec();
 
     return docs.map((doc) =>
       LibraryMapper.toReadModel(doc as unknown as PopulatedReadingListDocument),

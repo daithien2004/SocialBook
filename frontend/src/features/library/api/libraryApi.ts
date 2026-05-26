@@ -22,11 +22,11 @@ export const libraryApi = createApi({
   baseQuery: axiosBaseQuery(),
   tagTypes: ['Library', 'Collection'],
   endpoints: (builder) => ({
-    getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus | string }>({
-      query: ({ status }) => ({
+    getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus | string; limit?: number }>({
+      query: ({ status, limit }) => ({
         url: NESTJS_LIBRARY_ENDPOINTS.getLibrary,
         method: 'GET',
-        params: { status },
+        params: { status, ...(limit ? { limit } : {}) },
       }),
       providesTags: (result, error, { status }) => [
         { type: 'Library', id: `LIST_${status}` },

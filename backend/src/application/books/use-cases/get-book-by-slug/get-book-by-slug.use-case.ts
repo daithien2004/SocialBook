@@ -7,8 +7,8 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
+import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { GetBookBySlugQuery } from './get-book-by-slug.query';
 

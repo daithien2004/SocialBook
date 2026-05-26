@@ -1,10 +1,8 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
-import { ArrowRight, Tag } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -46,44 +44,33 @@ export const GenresSection = ({ books }: GenresSectionProps) => {
   if (genresWithCount.length === 0) return null;
 
   return (
-    <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+    <Card className="bg-transparent border border-border/50 shadow-none">
       {/* Header */}
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-bold flex items-center gap-2">
-          <Tag className="text-red-600 dark:text-red-400" size={18} />
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm font-bold">
           Thể loại
         </CardTitle>
+        <Link href="/books" className="text-muted-foreground hover:text-primary transition-colors">
+          <ArrowRight size={16} />
+        </Link>
       </CardHeader>
 
       <CardContent>
         {/* Genres Grid */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2">
           {genresWithCount.map((genre) => (
-            <Button
+            <button
               key={genre.slug}
-              variant="outline"
-              size="sm"
               onClick={() => handleGenreClick(genre.slug)}
-              className="h-auto py-1.5 px-3 hover:border-red-500 hover:text-red-600 dark:hover:text-red-400 transition-all text-left"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-muted/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 border border-border/50 text-xs font-medium text-foreground/80 transition-all cursor-pointer"
             >
-              <span className="mr-1.5">{genre.name}</span>
-              <Badge variant="secondary" className="bg-muted text-[10px] px-1 h-4 flex items-center justify-center min-w-[1.25rem]">
+              {genre.name}
+              <span className="text-[10px] text-muted-foreground font-semibold">
                 {genre.count}
-              </Badge>
-            </Button>
+              </span>
+            </button>
           ))}
         </div>
-
-        {/* View All Link */}
-        <Button asChild variant="ghost" className="w-full text-muted-foreground hover:text-red-600 dark:hover:text-red-400 group">
-          <Link href="/books" className="flex items-center justify-center gap-1">
-            Xem tất cả
-            <ArrowRight
-              size={14}
-              className="group-hover:translate-x-1 transition-transform"
-            />
-          </Link>
-        </Button>
       </CardContent>
     </Card>
   );

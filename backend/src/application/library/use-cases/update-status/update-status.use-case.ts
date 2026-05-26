@@ -6,12 +6,14 @@ import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Injectable } from '@nestjs/common';
 import { UpdateStatusCommand } from './update-status.command';
+import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 
 @Injectable()
 export class UpdateStatusUseCase {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly idGenerator: IIdGenerator,
+    private readonly recommendationCache: RecommendationCachePort,
   ) {}
 
   async execute(command: UpdateStatusCommand): Promise<LibraryItemReadModel> {
@@ -35,6 +37,8 @@ export class UpdateStatusUseCase {
     }
 
     await this.readingListRepository.save(readingList);
+
+    this.recommendationCache.clear(command.userId);
 
     const result = await this.readingListRepository.findDetailByUserIdAndBookId(
       userId,

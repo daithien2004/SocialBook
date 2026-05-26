@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { toast } from 'sonner';
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
 
 export const createPostSchema = z.object({
-  content: z.string().min(1, 'Vui lòng nhập nội dung bài viết'),
-  images: z.array(z.instanceof(File)).max(10, 'Chỉ có thể thêm tối đa 10 ảnh'),
-  bookId: z.string().min(1, 'Vui lòng chọn một cuốn sách'),
+  content: z.string().min(1, "Vui lòng nhập nội dung bài viết"),
+  images: z.array(z.instanceof(File)).max(10, "Chỉ có thể thêm tối đa 10 ảnh"),
+  bookId: z.string().min(1, "Vui lòng chọn một cuốn sách"),
   bookTitle: z.string().optional(),
 });
 
@@ -32,11 +32,13 @@ interface UseCreatePostReturn {
   onSubmit: (values: CreatePostFormValues) => Promise<void>;
 }
 
-export function useCreatePost(options: UseCreatePostOptions): UseCreatePostReturn {
+export function useCreatePost(
+  options: UseCreatePostOptions,
+): UseCreatePostReturn {
   const {
-    defaultContent = '',
-    defaultBookId = '',
-    defaultBookTitle = '',
+    defaultContent = "",
+    defaultBookId = "",
+    defaultBookTitle = "",
     maxImages = 10,
     onSubmit: externalOnSubmit,
   } = options;
@@ -55,8 +57,8 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
   });
 
   const { watch, setValue, reset } = form;
-  const currentImages = watch('images') || [];
-  const currentContent = watch('content') || '';
+  const currentImages = watch("images") || [];
+  const currentContent = watch("content") || "";
 
   useEffect(() => {
     reset({
@@ -81,7 +83,7 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
       }
 
       const validFiles = filesArray.filter((file) => {
-        const isValid = file.type.startsWith('image/');
+        const isValid = file.type.startsWith("image/");
         if (!isValid) {
           toast.error(`File ${file.name} không phải là hình ảnh`);
         }
@@ -90,12 +92,14 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
 
       if (validFiles.length > 0) {
         const updatedImages = [...currentImages, ...validFiles];
-        setValue('images', updatedImages);
-        const newPreviewUrls = validFiles.map((file) => URL.createObjectURL(file));
+        setValue("images", updatedImages);
+        const newPreviewUrls = validFiles.map((file) =>
+          URL.createObjectURL(file),
+        );
         setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
       }
     },
-    [currentImages, maxImages, setValue]
+    [currentImages, maxImages, setValue],
   );
 
   const handleRemoveImage = useCallback(
@@ -103,10 +107,10 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
       URL.revokeObjectURL(previewUrls[index]);
       const updatedImages = currentImages.filter((_, i) => i !== index);
       const updatedPreviews = previewUrls.filter((_, i) => i !== index);
-      setValue('images', updatedImages);
+      setValue("images", updatedImages);
       setPreviewUrls(updatedPreviews);
     },
-    [currentImages, previewUrls, setValue]
+    [currentImages, previewUrls, setValue],
   );
 
   const onSubmit = useCallback(
@@ -115,13 +119,12 @@ export function useCreatePost(options: UseCreatePostOptions): UseCreatePostRetur
       try {
         await externalOnSubmit(values);
       } catch (error) {
-        console.error('Submit failed:', error);
-        toast.error('Có lỗi xảy ra khi đăng bài');
+        console.error("Submit failed:", error);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [externalOnSubmit]
+    [externalOnSubmit],
   );
 
   const totalImages = currentImages.length;

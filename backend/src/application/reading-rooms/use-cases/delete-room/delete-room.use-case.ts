@@ -1,16 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import {
   NotFoundDomainException,
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
+import { ICommentRepository } from '@/domain/reading-room-interactions/repositories/comment.repository.interface';
+import { IReactionRepository } from '@/domain/reading-room-interactions/repositories/reaction.repository.interface';
+import { IQuoteRepository } from '@/domain/reading-room-interactions/repositories/quote.repository.interface';
 import { ReadingRoomPresenceService } from '@/infrastructure/gateways/reading-room-presence.service';
-import { RoomCommentSchema } from '@/infrastructure/database/schemas/reading-room-interactions/room-comment.schema';
-import { RoomReactionSchema } from '@/infrastructure/database/schemas/reading-room-interactions/room-reaction.schema';
-import { RoomQuoteSchema } from '@/infrastructure/database/schemas/reading-room-interactions/room-quote.schema';
 import { DeleteRoomCommand } from './delete-room.command';
 
 @Injectable()
@@ -20,12 +18,9 @@ export class DeleteRoomUseCase {
   constructor(
     private readonly roomRepository: IReadingRoomRepository,
     private readonly presenceService: ReadingRoomPresenceService,
-    @InjectModel(RoomCommentSchema.name)
-    private readonly commentModel: Model<RoomCommentSchema>,
-    @InjectModel(RoomReactionSchema.name)
-    private readonly reactionModel: Model<RoomReactionSchema>,
-    @InjectModel(RoomQuoteSchema.name)
-    private readonly quoteModel: Model<RoomQuoteSchema>,
+    private readonly commentRepository: ICommentRepository,
+    private readonly reactionRepository: IReactionRepository,
+    private readonly quoteRepository: IQuoteRepository,
   ) {}
 
   async execute(command: DeleteRoomCommand): Promise<void> {
@@ -44,9 +39,9 @@ export class DeleteRoomUseCase {
 
     await Promise.all([
       this.roomRepository.delete(RoomId.create(roomId)),
-      this.commentModel.deleteMany({ roomId }).exec(),
-      this.reactionModel.deleteMany({ roomId }).exec(),
-      this.quoteModel.deleteMany({ roomId }).exec(),
+      this.commentRepository.deleteByRoom(roomId),
+      this.reactionRepository.deleteByRoom(roomId),
+      this.quoteRepository.deleteByRoom(roomId),
       this.presenceService.removeRoomPresences(roomId),
     ]);
 

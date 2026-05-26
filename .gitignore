@@ -2,3 +2,5 @@
 UML
 CODING_RULESET.md
 .gitignore
+docs
+mongo.env

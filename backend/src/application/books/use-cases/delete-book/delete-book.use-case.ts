@@ -8,8 +8,8 @@ import { IBookRepository } from '@/domain/books/repositories/book.repository.int
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { DeleteBookCommand } from './delete-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import type { ICacheService } from '@/domain/shared/cache/cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/cache/cache.service.interface';
+import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
 
 @Injectable()
 export class DeleteBookUseCase {

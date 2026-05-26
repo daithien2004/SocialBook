@@ -5,7 +5,7 @@ import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { RoomId } from '../value-objects/room-id.vo';
 import { RoomMode } from '../value-objects/room-mode.vo';
 import { RoomMember } from './room-member.entity';
-import { DEFAULT_MAX_MEMBERS } from '../constants';
+import { DEFAULT_MAX_MEMBERS } from '../enums/constants';
 
 export interface RoomHighlightProps {
   id?: string;
@@ -188,12 +188,13 @@ export class ReadingRoom extends Entity<RoomId> {
       throw new BadRequestDomainException('Highlight not found');
     }
     if (this._props.highlights[index].userId !== userId) {
-      throw new BadRequestDomainException('Only the highlight owner can remove it');
+      throw new BadRequestDomainException(
+        'Only the highlight owner can remove it',
+      );
     }
     this._props.highlights.splice(index, 1);
     this.markAsUpdated();
   }
-
 
   addChatMessage(props: {
     userId: string;

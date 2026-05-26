@@ -4,8 +4,8 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { BOOK_CACHE_SERVICE } from '@/domain/books/cache/book-cache.service.interface';
-import type { IBookCacheService } from '@/domain/books/cache/book-cache.service.interface';
+import { BOOK_CACHE_SERVICE } from '@/domain/books/interfaces/book-cache.service.interface';
+import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
 import { GetBookByIdQuery } from './get-book-by-id.query';
 import {
   BadRequestDomainException,

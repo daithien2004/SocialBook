@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { GeminiService } from './gemini.service';
-import { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 @Module({

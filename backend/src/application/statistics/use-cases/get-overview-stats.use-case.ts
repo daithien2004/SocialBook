@@ -5,7 +5,7 @@ import { IPostRepository } from '@/domain/posts/repositories/post.repository.int
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { OverviewStats } from '@/domain/statistics/models/statistics.model';
+import { OverviewStats } from '@/domain/statistics/interfaces/statistics.model';
 
 @Injectable()
 export class GetOverviewStatsUseCase {

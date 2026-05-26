@@ -1,6 +1,6 @@
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { BookStats } from '@/domain/statistics/models/statistics.model';
+import { BookStats } from '@/domain/statistics/interfaces/statistics.model';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

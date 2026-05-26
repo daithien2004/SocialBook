@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { ReadingStatus } from '@/domain/library/reading-status.enum';
+import { ReadingStatus } from '@/domain/library/enums/reading-status.enum';
 
 import { BaseSchema } from '@/shared/schemas/base.schema';
 

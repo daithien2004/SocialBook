@@ -1,6 +1,6 @@
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { GrowthMetric } from '@/domain/statistics/models/statistics.model';
+import { GrowthMetric } from '@/domain/statistics/interfaces/statistics.model';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { Injectable } from '@nestjs/common';
 

@@ -28,6 +28,8 @@ import { AIRecommendationStrategy } from './strategies/ai-recommendation.strateg
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
 import { GeminiRepositoryModule } from '../database/repositories/gemini/gemini-repository.module';
 import { RecommendationDataAdapter } from './recommendation-data.adapter';
+import { RecommendationCacheService } from './cache/recommendation-cache.service';
+import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.port';
 
 @Module({
@@ -50,11 +52,16 @@ import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/rec
       provide: IRecommendationDataPort,
       useClass: RecommendationDataAdapter,
     },
+    {
+      provide: RecommendationCachePort,
+      useClass: RecommendationCacheService,
+    },
   ],
   exports: [
     AIRecommendationStrategy,
     FallbackRecommendationStrategy,
     IRecommendationDataPort,
+    RecommendationCachePort,
   ],
 })
 export class RecommendationsInfrastructureModule {}

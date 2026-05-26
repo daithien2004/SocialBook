@@ -17,51 +17,12 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { likeApi } from '@/features/likes/api/likeApi';
 import { geminiApi } from '../features/gemini/api/geminiApi';
 import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
-import {
-  persistStore,
-  persistReducer,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
-} from 'redux-persist';
 import { chatBotApi } from '../features/chatbot/api/chatBotApi';
 import { moderationApi } from '../features/admin/api/moderationApi';
 import { readingRoomsApi } from '../features/reading-rooms/api/readingRoomsApi';
 import { roomInteractionsApi } from '../features/reading-room-interactions/api/roomInteractionsApi';
-import { WebStorage } from 'redux-persist';
 
-const createNoopStorage = (): WebStorage => {
-  return {
-    getItem(_key: string) {
-      return Promise.resolve(null);
-    },
-    setItem(_key: string, value: any) {
-      return Promise.resolve(value);
-    },
-    removeItem(_key: string) {
-      return Promise.resolve();
-    },
-  };
-};
 
-const storage =
-  typeof window !== 'undefined'
-    ? require('redux-persist/lib/storage').default
-    : createNoopStorage();
-
-const recommendationsPersistConfig = {
-  key: 'recommendations',
-  storage,
-  whitelist: ['queries'], // chỉ persist queries, không persist mutations
-};
-
-const persistedRecommendationsReducer = persistReducer(
-  recommendationsPersistConfig,
-  recommendationsApi.reducer
-);
 
 export const store = configureStore({
   reducer: {
@@ -81,19 +42,14 @@ export const store = configureStore({
     [genreApi.reducerPath]: genreApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [geminiApi.reducerPath]: geminiApi.reducer,
-    [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
+    [recommendationsApi.reducerPath]: recommendationsApi.reducer,
     [chatBotApi.reducerPath]: chatBotApi.reducer,
     [moderationApi.reducerPath]: moderationApi.reducer,
     [readingRoomsApi.reducerPath]: readingRoomsApi.reducer,
     [roomInteractionsApi.reducerPath]: roomInteractionsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        // Bỏ qua các action của redux-persist
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      },
-    })
+    getDefaultMiddleware()
       .concat(authApi.middleware)
       .concat(postApi.middleware)
       .concat(booksApi.middleware)
@@ -118,8 +74,6 @@ export const store = configureStore({
 });
 
 setupListeners(store.dispatch);
-
-export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

@@ -4,7 +4,7 @@ import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 
 import { AddHighlightCommand } from './add-highlight.command';
 

@@ -10,6 +10,7 @@ import {
   RecommendationResult,
 } from '@/domain/recommendations/interfaces/recommendation.interface';
 import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.port';
+import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { FallbackRecommendationStrategy } from './fallback-recommendation.strategy';
 
 interface AIAnalysis {
@@ -39,6 +40,7 @@ export class AIRecommendationStrategy implements IRecommendationStrategy {
     @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private geminiService: GeminiService,
     private fallbackStrategy: FallbackRecommendationStrategy,
+    private cacheService: RecommendationCachePort,
   ) {}
 
   async generate(
@@ -47,6 +49,12 @@ export class AIRecommendationStrategy implements IRecommendationStrategy {
     availableBooks: PopulatedBook[],
     limit: number,
   ): Promise<RecommendationResponse> {
+    const cached = await this.cacheService.get(userId);
+    if (cached) {
+      this.logger.log(`Cache hit for user ${userId}`);
+      return cached;
+    }
+
     try {
       const completedBooksText = userProfile.completedBooks
         .slice(0, 10)
@@ -174,10 +182,14 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
           };
         });
 
-      return {
+      const response: RecommendationResponse = {
         analysis: result.analysis,
         recommendations,
       };
+
+      this.cacheService.set(userId, response);
+
+      return response;
     } catch (error) {
       this.logger.error('AI recommendation generation failed:', error);
       return this.fallbackStrategy.generate(

@@ -13,7 +13,7 @@ import { PostModerationService } from './services/post-moderation.service';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { MediaInfrastructureModule } from '@/infrastructure/media/media-infrastructure.module';
-import { ContentModerationModule } from '../content-moderation/content-moderation.module';
+import { ContentModerationApplicationModule } from '../content-moderation/content-moderation-application.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
@@ -21,7 +21,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     PostsRepositoryModule,
     BooksRepositoryModule,
     MediaInfrastructureModule,
-    ContentModerationModule,
+    ContentModerationApplicationModule,
     IdGeneratorModule,
   ],
   providers: [

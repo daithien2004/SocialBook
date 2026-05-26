@@ -3,7 +3,7 @@ import { IBookRepository } from '@/domain/books/repositories/book.repository.int
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { ScraperFactory } from '@/infrastructure/scraper/factories/scraper.factory';
-import { ScrapedBookData } from '@/domain/scraper/models/scraped-data.model';
+import { ScrapedBookData } from '@/domain/scraper/interfaces/scraped-data.model';
 import { AuthorName } from '@/domain/authors/value-objects/author-name.vo';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 import { Author } from '@/domain/authors/entities/author.entity';

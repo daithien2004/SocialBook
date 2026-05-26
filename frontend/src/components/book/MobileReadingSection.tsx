@@ -1,32 +1,28 @@
 'use client';
 
-import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
+import { ChevronRight, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
-import { LibraryStatus, LibraryItem } from '@/features/library/types/library.interface';
-import { useAppAuth } from '@/features/auth/hooks';
+import { LibraryItem } from '@/features/library/types/library.interface';
+
+interface MobileReadingSectionProps {
+  books: LibraryItem[];
+  isLoading: boolean;
+  isGuest: boolean;
+}
 
 const EMPTY_BOOKS: LibraryItem[] = [];
 
-export function MobileReadingSection() {
-  const { isAuthenticated, isGuest } = useAppAuth();
-  const { data: books = EMPTY_BOOKS, isLoading } = useGetLibraryBooksQuery(
-    { status: LibraryStatus.READING },
-    { skip: !isAuthenticated }
-  );
+export function MobileReadingSection({ books = EMPTY_BOOKS, isLoading, isGuest }: MobileReadingSectionProps) {
 
   // Chưa đăng nhập
   if (isGuest) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+        <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+            Sách đang đọc
+          </h2>
 
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
@@ -55,13 +51,10 @@ export function MobileReadingSection() {
   if (isLoading) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+        <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+            Sách đang đọc
+          </h2>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex-none w-32 animate-pulse">
@@ -80,21 +73,12 @@ export function MobileReadingSection() {
   if (books.length === 0) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+        <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+            Sách đang đọc
+          </h2>
 
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <BookOpen
-                size={28}
-                className="text-gray-400 dark:text-gray-500"
-              />
-            </div>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
               Chưa có sách nào
             </h3>
@@ -119,14 +103,11 @@ export function MobileReadingSection() {
 
   return (
     <section className="xl:hidden px-4 py-6">
-      <div className="bg-card rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
+      <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white">
+            Sách đang đọc
+          </h2>
           {hasMore && (
             <Link
               href="/library"
@@ -169,7 +150,6 @@ export function MobileReadingSection() {
                   href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
                   className="w-full flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-none text-xs font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
                 >
-                  <BookOpen size={12} />
                   Chương {item.lastReadChapterId.orderIndex}
                 </Link>
               ) : (

@@ -4,9 +4,9 @@ import { IBookRepository } from '@/domain/books/repositories/book.repository.int
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { ReadingStatus } from '@/domain/library/reading-status.enum';
+import { ReadingStatus } from '@/domain/library/enums/reading-status.enum';
 import { GetKnowledgeGraphQuery } from './get-knowledge-graph.query';
-import { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 

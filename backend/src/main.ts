@@ -1,3 +1,4 @@
+import { json, urlencoded } from 'express';
 import { Logger } from '@/shared/logger/logger.service';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -16,6 +17,10 @@ async function bootstrap() {
   });
   app.useLogger(app.get(Logger));
   app.use(helmet());
+
+  // Increase payload size limits for JSON and URL-encoded bodies (e.g., for large book imports)
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ limit: '50mb', extended: true }));
 
   // Lấy ConfigService từ application context
   const configService = app.get(ConfigService);

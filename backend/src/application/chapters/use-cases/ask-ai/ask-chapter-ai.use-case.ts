@@ -3,7 +3,7 @@ import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/services/gemini.service.interface';
+import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 

@@ -11,7 +11,7 @@ import type {
   ImportChaptersJobData,
   ImportChaptersJobProgress,
   ImportChaptersJobResult,
-} from './chapters-import.types';
+} from '@/application/chapters/dto/chapters-import.types';
 
 const JOB_NAME = 'import-chapters';
 const QUEUE_NAME = 'chapters-import';
