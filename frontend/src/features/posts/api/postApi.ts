@@ -89,13 +89,14 @@ export const postApi = createApi({
           : [{ type: 'Post', id: 'LIST' }],
     }),
 
-    getPostById: builder.query<Post, string>({
-      query: (id) => ({
+    getPostById: builder.query<Post, { id: string; userId?: string }>({
+      query: ({ id, userId }) => ({
         url: NESTJS_POSTS_ENDPOINTS.getOne(id),
         method: 'GET',
+        params: userId ? { userId } : undefined,
       }),
       transformResponse: (response: RawPost) => normalizePost(response),
-      providesTags: (result, error, id) => [{ type: 'PostDetail', id }],
+      providesTags: (result, error, arg) => [{ type: 'PostDetail', id: arg.id }],
     }),
 
     getPostsByUser: builder.query<PaginatedPostsResponse, PaginationParamsByUser>({

@@ -115,7 +115,7 @@ export class PostsController {
   @Public()
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@CurrentUser('id') userId: string, @Param('id') id: string) {
+  async findOne(@Query('userId') userId: string | undefined, @Param('id') id: string) {
     const query = new GetPostQuery(id, userId);
     const data = await this.getPostUseCase.execute(query);
     return {

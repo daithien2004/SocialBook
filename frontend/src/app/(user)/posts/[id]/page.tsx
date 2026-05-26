@@ -6,13 +6,17 @@ import { useGetPostByIdQuery } from '@/features/posts/api/postApi';
 import { usePostToggleLikeMutation } from '@/features/likes/api/likeApi';
 import { useParams, useRouter } from 'next/navigation';
 import { useModalStore } from '@/store/useModalStore';
+import { useAppAuth } from '@/features/auth/hooks';
 
 export default function PostModalOverlay() {
     const router = useRouter();
     const { id } = useParams<{ id: string }>();
     const { openPostComment, isPostCommentOpen } = useModalStore();
 
-    const { data: post, isLoading } = useGetPostByIdQuery(id);
+    const { user, isLoading: isAuthLoading } = useAppAuth();
+    const { data: post, isLoading } = useGetPostByIdQuery({ id, userId: user?.id }, {
+        skip: isAuthLoading,
+    });
     const [toggleLike] = usePostToggleLikeMutation();
 
     useEffect(() => {
@@ -31,13 +35,15 @@ export default function PostModalOverlay() {
         }
     }, [post, openPostComment, isPostCommentOpen, toggleLike]);
 
+    const showLoading = isAuthLoading || isLoading;
+
     useEffect(() => {
-        if (!isLoading && post && !isPostCommentOpen) {
+        if (!showLoading && post && !isPostCommentOpen) {
             router.push('/posts');
         }
-    }, [isPostCommentOpen, isLoading, post, router]);
+    }, [isPostCommentOpen, showLoading, post, router]);
 
-    if (isLoading) {
+    if (showLoading) {
         return (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
                 <div className="flex flex-col items-center gap-4">
