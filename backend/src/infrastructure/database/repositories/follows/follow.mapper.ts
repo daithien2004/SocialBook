@@ -20,6 +20,7 @@ interface FollowPersistence {
   userId: Types.ObjectId;
   targetId: Types.ObjectId;
   status: boolean;
+  isDeleted: boolean;
   updatedAt: Date;
 }
 
@@ -30,6 +31,7 @@ export class FollowMapper {
       userId: document.userId?.toString() || '',
       targetId: document.targetId?.toString() || '',
       status: document.status,
+      isDeleted: document.isDeleted || false,
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     });
@@ -40,6 +42,7 @@ export class FollowMapper {
       userId: new Types.ObjectId(follow.userId.toString()),
       targetId: new Types.ObjectId(follow.targetId.toString()),
       status: follow.status.getValue(),
+      isDeleted: follow.isDeleted,
       updatedAt: follow.updatedAt,
     };
   }

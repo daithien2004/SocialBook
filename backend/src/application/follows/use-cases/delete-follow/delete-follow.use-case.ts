@@ -22,7 +22,7 @@ export class DeleteFollowUseCase {
         TargetId.create(command.targetId),
       );
 
-      if (!existingFollow) {
+      if (!existingFollow || !existingFollow.isActive()) {
         throw new NotFoundDomainException('Follow relationship not found');
       }
 
@@ -33,11 +33,12 @@ export class DeleteFollowUseCase {
         );
       }
 
-      // Delete the follow
-      await this.followRepository.delete(existingFollow.id);
+      // Deactivate the follow (soft delete)
+      existingFollow.deactivate();
+      await this.followRepository.save(existingFollow);
 
       this.logger.log(
-        `Follow deleted successfully: ${existingFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
+        `Follow deactivated successfully: ${existingFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
       );
 
       return { success: true };

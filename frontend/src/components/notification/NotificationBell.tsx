@@ -23,7 +23,6 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { notifications, unreadCount, markAsRead } = useNotifications(token);
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -81,9 +80,23 @@ export function NotificationBell() {
                         setOpen(false);
                       }
                     }}
-                    className="w-full text-left flex items-start gap-3 p-4 transition-colors border-b border-slate-50 dark:border-gray-800/50 last:border-0"
+                    className="w-full text-left flex items-start gap-3 p-4 transition-colors border-b border-slate-50 dark:border-gray-800/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-gray-800/20 cursor-pointer"
                   >
-                    <div className="relative shrink-0">
+                    <div
+                      className="relative shrink-0 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (notif.meta?.actorId) {
+                          router.push(`/users/${notif.meta.actorId}`);
+                          setOpen(false);
+                        }
+                      }}
+                    >
+                      <UserAvatar
+                        src={notif.meta?.image}
+                        name={notif.meta?.username}
+                        size="md"
+                      />
                       {isUnread && (
                         <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-white dark:border-[#1a1a1a]" />
                       )}

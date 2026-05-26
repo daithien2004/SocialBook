@@ -8,6 +8,7 @@ export interface FollowProps {
   userId: UserId;
   targetId: TargetId;
   status: FollowStatus;
+  isDeleted: boolean;
 }
 
 export class Follow extends Entity<FollowId> {
@@ -28,6 +29,7 @@ export class Follow extends Entity<FollowId> {
     userId: string;
     targetId: string;
     status?: boolean;
+    isDeleted?: boolean;
   }): Follow {
     const userId = UserId.create(props.userId);
     const targetId = TargetId.create(props.targetId);
@@ -44,6 +46,7 @@ export class Follow extends Entity<FollowId> {
       userId,
       targetId,
       status,
+      isDeleted: props.isDeleted ?? !status.isActive(),
     });
   }
 
@@ -52,6 +55,7 @@ export class Follow extends Entity<FollowId> {
     userId: string;
     targetId: string;
     status: boolean;
+    isDeleted: boolean;
     createdAt: Date;
     updatedAt: Date;
   }): Follow {
@@ -61,6 +65,7 @@ export class Follow extends Entity<FollowId> {
         userId: UserId.create(props.userId),
         targetId: TargetId.create(props.targetId),
         status: FollowStatus.create(props.status),
+        isDeleted: props.isDeleted,
       },
       props.createdAt,
       props.updatedAt,
@@ -77,20 +82,26 @@ export class Follow extends Entity<FollowId> {
   get status(): FollowStatus {
     return this._props.status;
   }
+  get isDeleted(): boolean {
+    return this._props.isDeleted;
+  }
 
   // Business methods
   activate(): void {
     this._props.status = FollowStatus.active();
+    this._props.isDeleted = false;
     this.markAsUpdated();
   }
 
   deactivate(): void {
     this._props.status = FollowStatus.inactive();
+    this._props.isDeleted = true;
     this.markAsUpdated();
   }
 
   toggleStatus(): void {
     this._props.status = this._props.status.toggle();
+    this._props.isDeleted = !this._props.status.isActive();
     this.markAsUpdated();
   }
 

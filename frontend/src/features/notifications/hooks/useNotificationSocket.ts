@@ -22,10 +22,11 @@ export interface NotificationItem {
     isRead: boolean;
     createdAt: string;
     actionUrl: string | null;
-    meta: {
-        actorId: string;
-        name: string;
-        image: string;
+    meta?: {
+        actorId?: string;
+        name?: string;
+        username?: string;
+        image?: string;
         targetId?: string;
     };
 }

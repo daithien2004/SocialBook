@@ -38,7 +38,7 @@ export class NotificationResponseDto {
       this.meta = {
         actorId: notification.meta.actorId || '',
         username: notification.meta.username,
-        image: notification.meta.avatar,
+        image: notification.meta.image,
         targetId: notification.meta.targetId,
       };
     }

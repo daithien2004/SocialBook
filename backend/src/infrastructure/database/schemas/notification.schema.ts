@@ -50,8 +50,8 @@ export class Notification extends BaseSchema {
   })
   meta: {
     actorId: Types.ObjectId;
-    name: string;
-    avatar: string;
+    username: string;
+    image: string;
     targetId: Types.ObjectId;
   };
 

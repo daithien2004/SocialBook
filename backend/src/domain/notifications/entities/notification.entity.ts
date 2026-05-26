@@ -16,7 +16,7 @@ export enum NotificationType {
 export interface NotificationMeta {
   actorId?: string;
   username?: string;
-  avatar?: string;
+  image?: string;
   targetId?: string;
   [key: string]: any;
 }

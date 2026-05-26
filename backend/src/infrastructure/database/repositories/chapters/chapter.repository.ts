@@ -62,6 +62,14 @@ export class ChapterRepository
     return document ? this.mapToEntity(document) : null;
   }
 
+  async findByParagraphId(paragraphId: string): Promise<ChapterEntity | null> {
+    const document = (await this.chapterModel
+      .findOne({ 'paragraphs._id': new Types.ObjectId(paragraphId) })
+      .lean()
+      .exec()) as unknown as RawChapterDocument | null;
+    return document ? this.mapToEntity(document) : null;
+  }
+
   async findBySlug(
     slug: string,
     bookId: BookId,

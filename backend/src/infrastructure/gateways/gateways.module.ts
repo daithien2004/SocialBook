@@ -11,6 +11,9 @@ import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/readi
 import { ReadingRoomInteractionsApplicationModule } from '@/application/reading-room-interactions/reading-room-interactions-application.module';
 import { ReadingRoomGateway } from './reading-room.gateway';
 import { ReadingRoomPresenceModule } from './reading-room-presence.module';
+import { UsersRepositoryModule } from '../database/repositories/users/users-repository.module';
+import { ChaptersRepositoryModule } from '../database/repositories/chapters/chapters-repository.module';
+import { BooksRepositoryModule } from '../database/repositories/books/books-repository.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { ReadingRoomPresenceModule } from './reading-room-presence.module';
     ReadingRoomInteractionsApplicationModule,
     PostsRepositoryModule,
     CommentsRepositoryModule,
+    UsersRepositoryModule,
+    ChaptersRepositoryModule,
+    BooksRepositoryModule,
     ReadingRoomPresenceModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
