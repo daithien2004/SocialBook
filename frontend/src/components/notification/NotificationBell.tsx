@@ -81,17 +81,9 @@ export function NotificationBell() {
                         setOpen(false);
                       }
                     }}
-                    className={`
-                        w-full text-left flex items-start gap-3 p-4 transition-colors border-b border-slate-50 dark:border-gray-800/50 last:border-0
-                        ${isUnread ? 'bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20' : 'hover:bg-slate-50 dark:hover:bg-gray-800/50'}
-                    `}
+                    className="w-full text-left flex items-start gap-3 p-4 transition-colors border-b border-slate-50 dark:border-gray-800/50 last:border-0"
                   >
                     <div className="relative shrink-0">
-                      <UserAvatar
-                        src={notif.meta?.image}
-                        name="U"
-                        className="w-9 h-9 border border-border"
-                      />
                       {isUnread && (
                         <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-white dark:border-[#1a1a1a]" />
                       )}
@@ -127,14 +119,6 @@ export function NotificationBell() {
             </div>
           )}
         </ScrollArea>
-
-        {notifications.length > 0 && (
-          <div className="p-2 border-t border-border bg-slate-50 dark:bg-gray-900">
-            <Button variant="ghost" className="w-full h-8 text-xs text-muted-foreground">
-              Xem tất cả
-            </Button>
-          </div>
-        )}
       </PopoverContent>
     </Popover>
   );

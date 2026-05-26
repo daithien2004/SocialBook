@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { MESSAGES } from '@/constants/messages';
-import { useToggleFollowMutation, useUnfollowMutation } from '@/features/follows/api/followApi';
+import { useToggleFollowMutation, useUnfollowMutation, useGetFollowStatusQuery } from '@/features/follows/api/followApi';
+import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 
 interface UseFollowUserOptions {
     userId: string;
@@ -13,6 +14,18 @@ interface UseFollowUserOptions {
 
 export function useFollowUser({ userId, initialIsFollowing = false, onFollowChange }: UseFollowUserOptions) {
     const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+    const auth = useAppAuth();
+    
+    const { data: statusData } = useGetFollowStatusQuery(userId, {
+        skip: !auth?.isAuthenticated || auth?.user?.id === userId || !userId,
+    });
+
+    useEffect(() => {
+        if (statusData) {
+            setIsFollowing(statusData.isFollowing);
+        }
+    }, [statusData]);
+
     const [toggleFollow, { isLoading: isFollowLoading }] = useToggleFollowMutation();
     const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
     const isLoading = isFollowLoading || isUnfollowLoading;

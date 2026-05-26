@@ -30,6 +30,7 @@ export interface UpdatePostRequest {
   content?: string;
   bookId?: string;
   images?: File[];
+  imageUrls?: string[];
 }
 
 export interface PaginationParams {

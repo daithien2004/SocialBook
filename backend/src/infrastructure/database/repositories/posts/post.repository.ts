@@ -174,7 +174,13 @@ export class PostRepository implements IPostRepository {
   }
 
   async countByUser(userId: string): Promise<number> {
-    return this.model.countDocuments({ userId, isDeleted: false }).exec();
+    return this.model
+      .countDocuments({
+        userId: new Types.ObjectId(userId),
+        isDeleted: false,
+        isFlagged: false,
+      })
+      .exec();
   }
 
   async exists(id: string): Promise<boolean> {

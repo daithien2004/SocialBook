@@ -5,7 +5,7 @@ import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
-import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
+import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
 import { GetUserProfileQuery } from './get-user-profile.query';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class GetUserProfileUseCase {
     private readonly userRepository: IUserRepository,
     private readonly postsRepository: IPostRepository,
     private readonly followsRepository: IFollowRepository,
-    private readonly readingListRepository: IReadingListRepository,
+    private readonly collectionRepository: ICollectionRepository,
   ) {}
 
   async execute(query: GetUserProfileQuery) {
@@ -26,9 +26,9 @@ export class GetUserProfileUseCase {
     }
 
     const targetId = TargetId.create(query.id);
-    const [postCount, readingListCount, followersCount] = await Promise.all([
+    const [postCount, collections, followersCount] = await Promise.all([
       this.postsRepository.countByUser(query.id),
-      this.readingListRepository.countByUser(query.id),
+      this.collectionRepository.findByUserId(query.id),
       this.followsRepository.countFollowers(targetId),
     ]);
 
@@ -41,7 +41,7 @@ export class GetUserProfileUseCase {
       website: user.website,
       createdAt: user.createdAt,
       postCount,
-      readingListCount,
+      readingListCount: collections.length,
       followersCount,
     };
   }

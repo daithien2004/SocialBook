@@ -32,7 +32,7 @@ export default function TrendingBooksWidget() {
                     {trendingBooks.map((book, index) => (
                         <div
                             key={book.bookId}
-                            onClick={() => router.push(`/books/${book.bookId}`)}
+                            onClick={() => router.push(`/books/${book.slug}`)}
                             className="flex items-start gap-3 cursor-pointer group"
                         >
                             <span className="text-xs font-bold text-muted-foreground w-4 mt-1">{index + 1}</span>

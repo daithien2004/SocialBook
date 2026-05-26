@@ -16,6 +16,9 @@ export interface UseCommentActionsOptions {
     targetId: string;
     targetType: string;
     userId?: string;
+    depth?: number;
+    onReplyAdded?: () => void;
+    onReplyRemoved?: () => void;
 }
 
 export interface UseCommentActionsResult {
@@ -42,13 +45,18 @@ export interface UseCommentActionsResult {
     handleSubmitReply: () => Promise<void>;
     handleLikeComment: () => Promise<void>;
     handleReplyClick: () => void;
+    setOptimisticReplyCount: (value: number | ((prev: number) => number)) => void;
 }
+
 
 export function useCommentActions({
     comment,
     targetId,
     targetType,
     userId,
+    depth = 1,
+    onReplyAdded,
+    onReplyRemoved,
 }: UseCommentActionsOptions): UseCommentActionsResult {
     const [showReplies, setShowReplies] = useState(false);
     const [isReplying, setIsReplying] = useState(false);
@@ -108,7 +116,6 @@ export function useCommentActions({
                 targetId,
                 parentId: comment.parentId ?? null,
             }).unwrap();
-            toast.success(MESSAGES.COMMENT_UPDATE_SUCCESS);
             setIsEditing(false);
         } catch (error: unknown) {
             const apiError = error as {
@@ -131,41 +138,53 @@ export function useCommentActions({
                 targetId,
                 parentId: comment.parentId ?? null,
             }).unwrap();
-            toast.success(MESSAGES.COMMENT_DELETE_SUCCESS);
+
+            if (onReplyRemoved) {
+                onReplyRemoved();
+            }
         } catch (error: unknown) {
             if ((error as { status?: number })?.status !== 401) {
                 toast.error(getErrorMessage(error));
             }
         }
-    }, [comment.id, comment.parentId, targetId, deleteComment]);
+    }, [comment.id, comment.parentId, targetId, deleteComment, onReplyRemoved]);
 
     const handleSubmitReply = useCallback(async () => {
         const content = replyText.trim();
         if (!content) return;
+
+        const isMaxDepth = depth === 3;
+        const parentId = isMaxDepth ? comment.parentId : comment.id;
 
         try {
             await createComment({
                 targetType,
                 targetId,
                 content,
-                parentId: comment.parentId ?? comment.id,
+                parentId,
             }).unwrap();
 
             setReplyText('');
             setShowReplies(true);
             setIsReplying(false);
 
-            if (hasReplyCount) {
-                setOptimisticReplyCount((prev) => prev + 1);
+            if (isMaxDepth) {
+                if (onReplyAdded) {
+                    onReplyAdded();
+                }
+            } else {
+                if (hasReplyCount) {
+                    setOptimisticReplyCount((prev) => prev + 1);
+                }
             }
         } catch (error: unknown) {
             toast.error(getErrorMessage(error));
         }
-    }, [replyText, targetType, targetId, comment.id, hasReplyCount, createComment]);
+    }, [replyText, targetType, targetId, comment.id, comment.parentId, depth, hasReplyCount, onReplyAdded, createComment]);
 
 
 
-    const effectiveParentId = comment.parentId ?? comment.id;
+    const effectiveParentId = depth === 3 ? (comment.parentId ?? comment.id) : comment.id;
 
     return {
         isOwner,
@@ -191,5 +210,6 @@ export function useCommentActions({
         handleSubmitReply,
         handleLikeComment,
         handleReplyClick,
+        setOptimisticReplyCount,
     };
 }

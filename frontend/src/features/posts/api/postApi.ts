@@ -31,6 +31,7 @@ export interface TrendingBook {
   title: string;
   coverImage?: string;
   score: number;
+  slug: string;
 }
 
 export interface TopReader {
@@ -160,7 +161,6 @@ export const postApi = createApi({
           };
         },
         invalidatesTags: (result, error, { id }) => [
-          { type: 'Post', id: 'LIST' },
           { type: 'PostDetail', id },
         ],
       }

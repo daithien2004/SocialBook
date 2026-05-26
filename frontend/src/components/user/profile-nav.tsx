@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { type FollowStateResponse } from "@/features/follows/api/followApi";
 import { usersApi } from "@/features/users/api/usersApi";
 import { cn } from "@/lib/utils";
-import { MessageSquare, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -90,16 +90,6 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
                                         );
                                     }}
                                 />
-                                {/* Added Message Button for non-owners */}
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-9 w-9"
-                                    title="Nhắn tin"
-                                >
-                                    <MessageSquare className="h-4 w-4" />
-                                </Button>
-
                             </div>
                         )}
                     </div>

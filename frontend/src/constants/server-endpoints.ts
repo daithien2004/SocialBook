@@ -19,7 +19,7 @@ export const NESTJS_COMMENTS_ENDPOINTS = {
     postCreate: '/comments',
     getResolveParent: '/comments/resolve-parent',
     getCount: '/comments/count',
-    editComment: (id: string) => `/comments/${id}/edit`,
+    editComment: (id: string) => `/comments/${id}`,
     deleteComment: (id: string) => `/comments/${id}`,
 };
 

@@ -61,7 +61,7 @@ export function useNotificationSocket(
             onReadNotification(data);
         },
         'connect_error': () => {
-            toast.error('Kết nối thông báo thất bại');
+            console.log('Kết nối thông báo thất bại');
         }
     }, [onNotificationList, onNewNotification, onReadNotification]);
 

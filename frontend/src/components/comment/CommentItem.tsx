@@ -29,12 +29,18 @@ interface CommentItemProps {
     comment: CommentItem;
     targetId: string;
     targetType: string;
+    depth?: number;
+    onReplyAdded?: () => void;
+    onReplyRemoved?: () => void;
 }
 
 const CommentItemCard: React.FC<CommentItemProps> = ({
     comment,
     targetId,
     targetType,
+    depth = 1,
+    onReplyAdded,
+    onReplyRemoved,
 }) => {
     const { user } = useAppAuth();
     const userId = user?.id;
@@ -61,11 +67,15 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
         handleSubmitReply,
         handleLikeComment,
         handleReplyClick,
+        setOptimisticReplyCount,
     } = useCommentActions({
         comment,
         targetId,
         targetType,
         userId,
+        depth,
+        onReplyAdded,
+        onReplyRemoved,
     });
 
     const hasReplyCount = comment.repliesCount !== undefined;
@@ -161,14 +171,16 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                     >
                                         Chỉnh sửa
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={handleDeleteComment}
-                                        className="text-red-600 focus:bg-red-50 focus:text-red-700"
-                                    >
-                                        {isDeletingComment
-                                            ? 'Đang xóa...'
-                                            : 'Xóa'}
-                                    </DropdownMenuItem>
+                                    {optimisticReplyCount === 0 && (
+                                        <DropdownMenuItem
+                                            onClick={handleDeleteComment}
+                                            className="text-red-600 focus:bg-red-50 focus:text-red-700"
+                                        >
+                                            {isDeletingComment
+                                                ? 'Đang xóa...'
+                                                : 'Xóa'}
+                                        </DropdownMenuItem>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -189,9 +201,6 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                             size={12}
                             className={optimisticIsLiked ? 'fill-current' : ''}
                         />
-                        {optimisticLikeCount > 0 && (
-                            <span>{optimisticLikeCount}</span>
-                        )}
                         <span className="hidden sm:inline">Thích</span>
                     </button>
 
@@ -209,12 +218,25 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                 <div className="mt-2">
                     {showReplies && (
                         <div className="ml-2 mb-2 mt-2 space-y-3 border-l-2 border-border pl-3">
-                            <ListComments
-                                targetId={targetId}
-                                isCommentOpen
-                                parentId={effectiveParentId}
-                                targetType={targetType}
-                            />
+                            {depth < 3 && (
+                                <ListComments
+                                    targetId={targetId}
+                                    isCommentOpen
+                                    parentId={effectiveParentId}
+                                    targetType={targetType}
+                                    depth={depth + 1}
+                                    onReplyAdded={() => {
+                                        if (hasReplyCount) {
+                                            setOptimisticReplyCount((prev) => prev + 1);
+                                        }
+                                    }}
+                                    onReplyRemoved={() => {
+                                        if (hasReplyCount) {
+                                            setOptimisticReplyCount((prev) => Math.max(0, prev - 1));
+                                        }
+                                    }}
+                                />
+                            )}
 
                             {isReplying && (
                                 <div className="flex animate-in items-start gap-2 fade-in slide-in-from-top-2">

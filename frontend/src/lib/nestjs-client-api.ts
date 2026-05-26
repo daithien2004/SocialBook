@@ -1,7 +1,7 @@
 import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
-import { getAccessToken } from './token-store';
+import { getAccessToken, setAccessToken } from './token-store';
 import { toast } from 'sonner';
 import { ErrorResponseDto } from '../types/response';
 
@@ -11,12 +11,20 @@ const clientApi = axios.create({
 });
 
 clientApi.interceptors.request.use(
-  (config) => {
+  async (config) => {
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
 
-    const accessToken = getAccessToken();
+    let accessToken = getAccessToken();
+    if (!accessToken) {
+      const session = await getSession();
+      if (session?.accessToken) {
+        accessToken = session.accessToken;
+        setAccessToken(accessToken);
+      }
+    }
+
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }

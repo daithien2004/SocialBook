@@ -15,7 +15,7 @@ export function usePostCard({ post }: UsePostCardOptions) {
     const { openEditPost, openSharePost, openPostComment, openConfirm } = useModalStore();
     const { user } = useAppAuth();
 
-    const { likeCount, isLiked, isDeleting, toggleLike, deletePost, deleteImage } = usePostActions({
+    const { likeCount, isLiked, isDeleting, toggleLike, deletePost } = usePostActions({
         postId: post.id,
         initialLikeCount: post.totalLikes ?? 0,
         initialLikeStatus: post.likedByCurrentUser ?? false,
@@ -26,18 +26,6 @@ export function usePostCard({ post }: UsePostCardOptions) {
     const shareMedia = post.imageUrls?.[0] || '/abstract-book-pattern.png';
     const isOwner = post.user?.id === user?.id;
     const displayedCommentCount = post.totalComments ?? 0;
-
-    const openDeleteImageConfirm = useCallback((imageUrl: string) => {
-        openConfirm({
-            title: "Xóa ảnh này?",
-            description: "Bạn có chắc chắn muốn xóa ảnh này khỏi bài viết không?",
-            confirmText: "Xóa",
-            variant: "destructive",
-            onConfirm: async () => {
-                await deleteImage(imageUrl);
-            }
-        });
-    }, [openConfirm, deleteImage]);
 
     const handleOpenShare = useCallback(() => {
         openSharePost({ postUrl, shareTitle, shareMedia });
@@ -75,7 +63,6 @@ export function usePostCard({ post }: UsePostCardOptions) {
         isDeleting,
         actions: {
             toggleLike,
-            openDeleteImageConfirm,
             handleOpenShare,
             handleOpenComment,
             handleOpenEdit,

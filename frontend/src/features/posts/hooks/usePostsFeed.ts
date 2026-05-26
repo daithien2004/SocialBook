@@ -51,6 +51,32 @@ export function usePostsFeed(options: UsePostsFeedOptions = {}): UsePostsFeedRet
     });
   }, [items, cursor, hasMore]);
 
+  useEffect(() => {
+    const handlePostUpdated = (e: Event) => {
+      const updatedPost = (e as CustomEvent<Post>).detail;
+      setAllPosts((prev) =>
+        prev.map((post) =>
+          post.id === updatedPost.id
+            ? {
+                ...post,
+                content: updatedPost.content,
+                imageUrls: updatedPost.imageUrls,
+                book: updatedPost.book,
+                isFlagged: updatedPost.isFlagged,
+                moderationReason: updatedPost.moderationReason,
+                moderationStatus: updatedPost.moderationStatus,
+              }
+            : post
+        )
+      );
+    };
+
+    window.addEventListener('post-updated', handlePostUpdated);
+    return () => {
+      window.removeEventListener('post-updated', handlePostUpdated);
+    };
+  }, []);
+
   // Intersection Observer for infinite scroll using general hook
   const lastPostRef = useIntersectionPagination({
     onLoadMore: () => {

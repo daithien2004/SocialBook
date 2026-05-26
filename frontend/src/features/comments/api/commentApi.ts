@@ -140,7 +140,7 @@ export const commentApi = createApi({
         >({
             query: ({ id, content }) => ({
                 url: NESTJS_COMMENTS_ENDPOINTS.editComment(id),
-                method: 'POST',
+                method: 'PUT',
                 body: { content },
             }),
             invalidatesTags: (_, __, arg) => [

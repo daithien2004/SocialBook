@@ -44,6 +44,32 @@ const PostListUser: React.FC<PostListProps> = ({ userId }) => {
   }, [items, cursor, hasMore]);
 
   useEffect(() => {
+    const handlePostUpdated = (e: Event) => {
+      const updatedPost = (e as CustomEvent<Post>).detail;
+      setAllPosts((prev) =>
+        prev.map((post) =>
+          post.id === updatedPost.id
+            ? {
+                ...post,
+                content: updatedPost.content,
+                imageUrls: updatedPost.imageUrls,
+                book: updatedPost.book,
+                isFlagged: updatedPost.isFlagged,
+                moderationReason: updatedPost.moderationReason,
+                moderationStatus: updatedPost.moderationStatus,
+              }
+            : post
+        )
+      );
+    };
+
+    window.addEventListener('post-updated', handlePostUpdated);
+    return () => {
+      window.removeEventListener('post-updated', handlePostUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
     const target = observerTarget.current;
     if (!target) return;
 

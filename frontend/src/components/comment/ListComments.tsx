@@ -11,6 +11,9 @@ interface ListCommentsProps {
     targetType: string;
     theme?: 'light' | 'dark';
     className?: string;
+    depth?: number;
+    onReplyAdded?: () => void;
+    onReplyRemoved?: () => void;
 }
 
 const ListComments: React.FC<ListCommentsProps> = (props) => {
@@ -21,6 +24,9 @@ const ListComments: React.FC<ListCommentsProps> = (props) => {
         targetType,
         theme = 'light',
         className = '',
+        depth = 1,
+        onReplyAdded,
+        onReplyRemoved,
     } = props;
 
     const {
@@ -60,6 +66,9 @@ const ListComments: React.FC<ListCommentsProps> = (props) => {
                                 targetType={targetType}
                                 comment={c}
                                 targetId={targetId}
+                                depth={depth}
+                                onReplyAdded={onReplyAdded}
+                                onReplyRemoved={onReplyRemoved}
                             />
                         ))
                     ) : (

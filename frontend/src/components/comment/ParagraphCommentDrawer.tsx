@@ -65,7 +65,6 @@ export default function ParagraphCommentDrawer({
             notifyCommented(paragraphId, chapterId, 'new_comment_id');
 
             setCommentText('');
-            toast.success('Bình luận đã được gửi!');
         } catch (error: unknown) {
             if ((error as { status?: number })?.status !== 401) {
                 toast.error(getErrorMessage(error));

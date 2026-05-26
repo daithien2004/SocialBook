@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUpdatePostMutation } from '@/features/posts/api/postApi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import BookSelector from './BookSelector';
@@ -19,7 +19,6 @@ import {
     FormControl,
     FormField,
     FormItem,
-    FormLabel,
     FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,13 +30,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 const editPostSchema = z.object({
     content: z.string().min(1, 'Vui lòng nhập nội dung bài viết'),
     bookId: z.string().optional(),
-    images: z.array(z.instanceof(File)),
 });
 
 type EditPostFormValues = z.infer<typeof editPostSchema>;
@@ -49,50 +46,66 @@ export default function EditPostModal() {
 
     const post = editPostData?.post;
 
+    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
     const form = useForm<EditPostFormValues>({
         resolver: zodResolver(editPostSchema),
         defaultValues: {
             content: '',
             bookId: '',
-            images: [],
         },
     });
 
-    const newImages = form.watch('images') || [];
     const content = form.watch('content');
 
-    // Reset form when modal opens with new post data
+    const initializedPostIdRef = useRef<string | null>(null);
+
     useEffect(() => {
         if (isEditPostOpen && post) {
-            form.reset({
-                content: post.content,
-                bookId: post.book?.id || '',
-                images: [],
-            });
+            if (initializedPostIdRef.current !== post.id) {
+                form.reset({
+                    content: post.content,
+                    bookId: post.book?.id || '',
+                });
+                setExistingImages(post.imageUrls || []);
+                setSelectedFiles([]);
+                setPreviewUrls([]);
+                initializedPostIdRef.current = post.id;
+            }
+        } else if (!isEditPostOpen) {
+            initializedPostIdRef.current = null;
         }
     }, [isEditPostOpen, post, form]);
 
-    const newImagePreviews = useMemo(() => {
-        return newImages.map(file => URL.createObjectURL(file));
-    }, [newImages]);
+    const previewUrlsRef = useRef<string[]>([]);
+    useEffect(() => {
+        previewUrlsRef.current = previewUrls;
+    }, [previewUrls]);
 
     useEffect(() => {
         return () => {
-            newImagePreviews.forEach(URL.revokeObjectURL);
+            previewUrlsRef.current.forEach(URL.revokeObjectURL);
         };
-    }, [newImagePreviews]);
+    }, []);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        const currentPostImages = post?.imageUrls?.length || 0;
-        const totalImages = currentPostImages + newImages.length + files.length;
+        const currentPostImages = existingImages.length;
+        const totalImages = currentPostImages + selectedFiles.length + files.length;
 
         if (totalImages > 10) {
             toast.error('Tổng số ảnh không được vượt quá 10');
             return;
         }
 
-        form.setValue('images', [...newImages, ...files]);
+        const validFiles = files.filter(file => file.type.startsWith('image/'));
+        if (validFiles.length > 0) {
+            setSelectedFiles(prev => [...prev, ...validFiles]);
+            const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+            setPreviewUrls(prev => [...prev, ...newPreviews]);
+        }
         
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -100,19 +113,28 @@ export default function EditPostModal() {
     };
 
     const removeNewImage = (index: number) => {
-        form.setValue('images', newImages.filter((_, i) => i !== index));
+        URL.revokeObjectURL(previewUrls[index]);
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const removeExistingImage = (index: number) => {
+        setExistingImages(prev => prev.filter((_, i) => i !== index));
     };
 
     const onSubmit = async (values: EditPostFormValues) => {
         if (!post) return;
 
         try {
+            const imageUrlsToSend = existingImages.length === 0 ? '' : existingImages;
+
             const response = await updatePost({
                 id: post.id,
                 data: {
                     content: values.content,
                     bookId: values.bookId || undefined,
-                    images: values.images && values.images.length > 0 ? values.images : undefined,
+                    images: selectedFiles.length > 0 ? selectedFiles : undefined,
+                    imageUrls: imageUrlsToSend as any,
                 },
             }).unwrap();
 
@@ -122,6 +144,9 @@ export default function EditPostModal() {
                     description: warningMessage,
                     duration: 6000,
                 });
+            }
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('post-updated', { detail: response.data }));
             }
             closeEditPost();
         } catch (error) {
@@ -147,7 +172,7 @@ export default function EditPostModal() {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div className="p-6 pb-2">
-                            <ScrollArea className="max-h-[60vh] pr-4">
+                            <div className="max-h-[60vh] overflow-y-auto pr-4">
                                 <div className="space-y-6">
                                     {/* User info */}
                                     <div className="flex items-center gap-3">
@@ -189,39 +214,17 @@ export default function EditPostModal() {
                                         )}
                                     />
 
-                                    {/* Book selector */}
-                                    <FormField
-                                        control={form.control}
-                                        name="bookId"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-2 pb-2">
-                                                <FormLabel className="text-sm font-medium text-foreground">
-                                                    Chọn sách
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <BookSelector
-                                                        value={field.value}
-                                                        onChange={(id) => field.onChange(id)}
-                                                        disabled={isLoading}
-                                                        onlyLibrary
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
                                     {/* Existing images */}
-                                    {post.imageUrls && post.imageUrls.length > 0 && (
+                                    {existingImages && existingImages.length > 0 && (
                                         <div className="space-y-3">
                                             <p className="text-sm font-medium text-foreground">
-                                                Ảnh hiện tại ({post.imageUrls.length})
+                                                Ảnh hiện tại ({existingImages.length})
                                             </p>
                                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                                {post.imageUrls.map((url, index) => (
+                                                {existingImages.map((url, index) => (
                                                     <div
                                                         key={index}
-                                                        className="relative aspect-square rounded-xl overflow-hidden border border-border"
+                                                        className="relative aspect-square group rounded-xl overflow-hidden border border-border"
                                                     >
                                                         <Image
                                                             src={url}
@@ -229,49 +232,48 @@ export default function EditPostModal() {
                                                             fill
                                                             className="object-cover"
                                                         />
-                                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                                            <span className="text-[10px] font-medium text-white bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
-                                                                Đã lưu
-                                                            </span>
-                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            onClick={() => removeExistingImage(index)}
+                                                            className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 hover:bg-black/75 text-white border-none p-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                                            disabled={isLoading}
+                                                            aria-label="Xóa ảnh hiện tại"
+                                                        >
+                                                            <X className="w-3.5 h-3.5" />
+                                                        </Button>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <p className="text-[10px] text-muted-foreground italic">
-                                                * Để xóa ảnh cũ, vui lòng thao tác trực tiếp tại bài viết
-                                            </p>
                                         </div>
                                     )}
 
                                     {/* New image previews */}
-                                    {newImagePreviews.length > 0 && (
+                                    {previewUrls.length > 0 && (
                                         <div className="space-y-3">
                                             <p className="text-sm font-medium text-foreground">
-                                                Ảnh mới thêm ({newImagePreviews.length})
+                                                Ảnh mới thêm ({previewUrls.length})
                                             </p>
                                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                                {newImagePreviews.map((preview, index) => (
+                                                {previewUrls.map((preview, index) => (
                                                     <div
                                                         key={index}
                                                         className="relative aspect-square group rounded-xl overflow-hidden border border-border"
                                                     >
-                                                        <Image
+                                                        <img
                                                             src={preview}
                                                             alt={`New ${index + 1}`}
-                                                            fill
-                                                            unoptimized
-                                                            className="object-cover"
+                                                            className="object-cover w-full h-full"
                                                         />
                                                         <Button
                                                             type="button"
-                                                            variant="destructive"
                                                             size="icon"
                                                             onClick={() => removeNewImage(index)}
-                                                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 hover:bg-black/75 text-white border-none p-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
                                                             disabled={isLoading}
                                                             aria-label="Xóa ảnh mới"
                                                         >
-                                                            <X className="w-3 h-3" />
+                                                            <X className="w-3.5 h-3.5" />
                                                         </Button>
                                                     </div>
                                                 ))}
@@ -279,7 +281,7 @@ export default function EditPostModal() {
                                         </div>
                                     )}
                                 </div>
-                            </ScrollArea>
+                            </div>
                         </div>
 
                         <div className="px-6 py-2">
@@ -298,13 +300,13 @@ export default function EditPostModal() {
                                     size="sm"
                                     className="gap-2 text-slate-600 dark:text-gray-300 border-white/10 dark:border-gray-800"
                                     onClick={() => fileInputRef.current?.click()}
-                                    disabled={isLoading || (post.imageUrls?.length || 0) + newImages.length >= 10}
+                                    disabled={isLoading || existingImages.length + selectedFiles.length >= 10}
                                 >
                                     <ImageIcon className="w-4 h-4" />
                                     Thêm ảnh mới
                                 </Button>
                                 <span className="text-xs text-muted-foreground italic">
-                                    {(post.imageUrls?.length || 0) + newImages.length}/10 ảnh
+                                    {existingImages.length + selectedFiles.length}/10 ảnh
                                 </span>
                             </div>
                         </div>

@@ -25,7 +25,7 @@ export function PostAuthorHeader({
 
     const navigateToUser = useCallback(() => {
         if (post?.user?.id) {
-            route.push(`users/${post.user.id}`);
+            route.push(`/users/${post.user.id}`);
         }
     }, [route, post?.user?.id]);
 

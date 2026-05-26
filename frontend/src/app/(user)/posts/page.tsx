@@ -42,7 +42,7 @@ export default function Post() {
 
     const goToFollowing = useCallback(() => {
         if (currentUserId) {
-            router.push(`users/${currentUserId}/following`);
+            router.push(`/users/${currentUserId}/following`);
         }
     }, [router, currentUserId]);
 
@@ -67,7 +67,7 @@ export default function Post() {
 
                 {/* LEFT SIDEBAR */}
                 <aside className="hidden lg:block w-[22%]">
-                    <div className="sticky top-20 space-y-4">
+                    <div className="sticky top-20 space-y-4 max-h-[calc(100vh-6rem)] overflow-y-auto thin-scrollbar pr-1">
 
                         {/* USER BOX */}
                         <div
@@ -135,24 +135,6 @@ export default function Post() {
 
                         <div
                             className="flex justify-between items-center border-t border-border pt-3">
-                            <div className="flex gap-4 text-xs text-muted-foreground">
-                                <button
-                                    onClick={() => openCreatePost()}
-                                    className="inline-flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400"
-                                >
-                                    <ImageIcon size={16} />
-                                    <span>Ảnh</span>
-                                </button>
-
-                                <button
-                                    onClick={() => openCreatePost()}
-                                    className="inline-flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400"
-                                >
-                                    <Quote size={16} />
-                                    <span>Trích dẫn</span>
-                                </button>
-                            </div>
-
                             <button
                                 onClick={() => openCreatePost()}
                                 className="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-sky-700"

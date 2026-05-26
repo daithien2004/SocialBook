@@ -65,7 +65,6 @@ export default function CommentSection({
                 parentId: null,
             }).unwrap();
 
-            toast.success(MESSAGES.COMMENT_CREATE_SUCCESS);
         } catch (error) {
             const apiError = error as { status?: number } | null;
             if (apiError?.status !== 401) {

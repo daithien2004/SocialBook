@@ -16,7 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
@@ -106,7 +105,7 @@ export default function CreatePostModal() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="p-6 pb-2">
-              <ScrollArea className="max-h-[60vh]">
+              <div className="max-h-[60vh] overflow-y-auto pr-4">
                 <div className="space-y-4">
                   {!defaultBookId && (
                     <FormField
@@ -166,20 +165,19 @@ export default function CreatePostModal() {
                             className="object-cover"
                           />
                           <Button
-                            variant="destructive"
                             size="icon"
-                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 hover:bg-black/75 text-white border-none p-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
                             onClick={() => handleRemoveImage(index)}
                             type="button"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
 
             <div className="px-6 py-2">

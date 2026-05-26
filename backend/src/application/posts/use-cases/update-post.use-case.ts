@@ -48,6 +48,19 @@ export class UpdatePostUseCase {
       post.updateBookId(command.bookId);
     }
 
+    if (command.imageUrls !== undefined) {
+      let urls: string[] = [];
+      if (Array.isArray(command.imageUrls)) {
+        urls = command.imageUrls.filter((url) => url && url.trim() !== '');
+      } else if (typeof command.imageUrls === 'string') {
+        const strVal = (command.imageUrls as string).trim();
+        if (strVal && strVal !== '""' && strVal !== "''") {
+          urls = [strVal];
+        }
+      }
+      post.updateImages(urls);
+    }
+
     if (files && files.length > 0) {
       const newImageUrls = await this.mediaService.uploadMultipleImages(files);
       post.updateImages([...post.imageUrls, ...newImageUrls]);

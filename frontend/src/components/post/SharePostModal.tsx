@@ -144,12 +144,6 @@ export default function SharePostModal() {
             </Button>
           </div>
         </div>
-
-        <div className="px-6 py-4 bg-slate-50 dark:bg-gray-900/40 border-t border-border">
-          <p className="text-xs text-center text-muted-foreground font-medium">
-            Chia sẻ để nhiều người khám phá nội dung tuyệt vời này 🚀
-          </p>
-        </div>
       </DialogContent>
     </Dialog>
   );

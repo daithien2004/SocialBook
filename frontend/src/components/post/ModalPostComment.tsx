@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import ListComments from '@/components/comment/ListComments';
 import { usePostCreateMutation } from '@/features/comments/api/commentApi';
@@ -22,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useAppAuth } from '@/features/auth/hooks';
 
 export default function ModalPostComment() {
     const { isPostCommentOpen, closePostComment, postCommentData, openSharePost } = useModalStore();
@@ -29,6 +31,13 @@ export default function ModalPostComment() {
     const [createComment, { isLoading: isPosting }] = usePostCreateMutation();
 
     const post = postCommentData?.post;
+    const { user, isAuthenticated, isGuest } = useAppAuth();
+
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        setCurrentImageIndex(0);
+    }, [post?.id]);
 
     const { isLiked, likeCount, toggleLike } = usePostActions({
         postId: post?.id ?? '',
@@ -69,16 +78,64 @@ export default function ModalPostComment() {
                 </DialogHeader>
 
                 {/* Left Side - Image (Hidden on Mobile) */}
-                <div className="hidden md:flex md:w-1/2 bg-slate-950 items-center justify-center relative border-r border-border">
-                    {post?.imageUrls?.[0] ? (
-                        <Image
-                            src={post.imageUrls[0]}
-                            alt="Post content"
-                            fill
-                            sizes="50vw"
-                            className="object-contain"
-                            priority
-                        />
+                <div className="hidden md:flex md:w-1/2 items-center justify-center relative border-r border-border group/gallery">
+                    {post?.imageUrls && post.imageUrls.length > 0 ? (
+                        <>
+                            <Image
+                                src={post.imageUrls[currentImageIndex]}
+                                alt="Post content"
+                                fill
+                                sizes="50vw"
+                                className="object-contain"
+                                priority
+                            />
+                            
+                            {post.imageUrls.length > 1 && (
+                                <>
+                                    <Button
+                                        variant="secondary"
+                                        size="icon"
+                                        onClick={() => {
+                                            if (currentImageIndex > 0) {
+                                                setCurrentImageIndex((prev) => prev - 1);
+                                            }
+                                        }}
+                                        disabled={currentImageIndex === 0}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full shadow-md opacity-0 group-hover/gallery:opacity-100 transition-opacity disabled:hidden bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 border-none"
+                                        aria-label="Ảnh trước"
+                                    >
+                                        <span className="text-lg leading-none pb-1">‹</span>
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        size="icon"
+                                        onClick={() => {
+                                            if (currentImageIndex < post.imageUrls.length - 1) {
+                                                setCurrentImageIndex((prev) => prev + 1);
+                                            }
+                                        }}
+                                        disabled={currentImageIndex === post.imageUrls.length - 1}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full shadow-md opacity-0 group-hover/gallery:opacity-100 transition-opacity disabled:hidden bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black/80 border-none"
+                                        aria-label="Ảnh sau"
+                                    >
+                                        <span className="text-lg leading-none pb-1">›</span>
+                                    </Button>
+
+                                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 p-1 rounded-full bg-black/20 backdrop-blur-[2px]">
+                                        {post.imageUrls.map((_, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setCurrentImageIndex(index)}
+                                                className={cn(
+                                                    'h-1.5 rounded-full transition-all shadow-sm',
+                                                    index === currentImageIndex ? 'bg-white w-6' : 'bg-white/60 w-1.5 hover:bg-white/80'
+                                                )}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </>
                     ) : (
                         <div className="flex flex-col items-center gap-3 text-slate-500">
                             <div className="p-4 rounded-full bg-slate-900 border border-slate-800">
@@ -198,12 +255,6 @@ export default function ModalPostComment() {
                             </div>
 
                             <div className="flex gap-3 items-center">
-                                <UserAvatar
-                                    name="ME"
-                                    size="sm"
-                                    className="border border-border"
-                                    fallbackClassName="text-[10px]"
-                                />
                                 <div className="flex-1 flex gap-2">
                                     <Input
                                         ref={commentInputRef}

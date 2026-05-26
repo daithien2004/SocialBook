@@ -43,7 +43,6 @@ export function usePostComments({ postId, createComment }: UsePostCommentsOption
                 parentId: null,
             });
             setCommentText('');
-            toast.success('Bình luận đã được gửi!');
             setTimeout(() => commentInputRef.current?.focus(), 0);
         } catch (e) {
             toast.error(getErrorMessage(e));

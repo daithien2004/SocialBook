@@ -53,6 +53,7 @@ export function FollowButton({
                 sizeClasses[size],
                 isPrimary && 'bg-primary text-primary-foreground hover:bg-primary/90',
                 !isPrimary && variant === 'ghost' && 'hover:bg-accent',
+                !isPrimary && variant === 'outline' && 'bg-indigo-600 hover:bg-indigo-700 text-white border-none',
                 className
             )}
         >

@@ -79,17 +79,17 @@ const FollowingItem = (props: FollowingUser) => {
                         userId={props.targetId}
                         initialIsFollowing={props.isFollowedByCurrentUser}
                         size="sm"
-                        className="w-full rounded-md text-xs font-medium tracking-wide"
+                        className="w-full rounded-md text-xs font-medium tracking-wide shadow-sm"
                     />
                 )}
             </div>
 
             {/* Stats */}
             <div
-                className="relative z-10 mt-1 py-2 flex justify-center text-center text-xs 
+                className="relative z-10 mt-1 p-1 grid grid-cols-3 w-full text-center text-xs 
                         bg-green-50 dark:bg-neutral-900 border-t border-border"
             >
-                <div className="w-1/3 flex flex-col items-center">
+                <div className="flex flex-col items-center">
                     <span className="font-bold text-xs text-foreground">
                         {props.postCount}
                     </span>
@@ -98,7 +98,7 @@ const FollowingItem = (props: FollowingUser) => {
                     </span>
                 </div>
 
-                <div className="w-1/3 flex flex-col items-center">
+                <div className="flex flex-col items-center">
                     <span className="font-bold text-xs text-foreground">
                         {props.readingListCount}
                     </span>
@@ -107,7 +107,7 @@ const FollowingItem = (props: FollowingUser) => {
                     </span>
                 </div>
 
-                <div className="w-1/3 flex flex-col items-center">
+                <div className="flex flex-col items-center">
                     <span className="font-bold text-xs text-foreground">
                         {props.followersCount}
                     </span>

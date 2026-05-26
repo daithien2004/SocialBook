@@ -78,8 +78,6 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
                 {post.imageUrls && post.imageUrls.length > 0 && (
                     <PostImageGallery
                         images={post.imageUrls}
-                        isOwner={isOwner}
-                        onDeleteImage={actions.openDeleteImageConfirm}
                     />
                 )}
 
