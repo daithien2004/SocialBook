@@ -5,12 +5,14 @@ import Image from 'next/image';
 import { useCallback } from 'react';
 import PostList from '@/components/post/PostList';
 import { useAppAuth } from '@/features/auth/hooks';
-import { Quote, ImageIcon, PenSquare } from 'lucide-react';
+import { PenSquare } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useModalStore } from '@/store/useModalStore';
 import TrendingBooksWidget from '@/components/post/TrendingBooksWidget';
 import TopActiveReadersWidget from '@/components/post/TopActiveReadersWidget';
 import LoginWall from '@/components/auth/LoginWall';
+
+import { AppLoading } from '@/components/common/AppLoading';
 
 const UserSearchSidebar = dynamic(
     () => import('@/components/post/UserSearchSidebar'),
@@ -34,7 +36,7 @@ const RecommendedBooks = dynamic(
 
 export default function Post() {
     const { openCreatePost } = useModalStore();
-    const { user, isAuthenticated } = useAppAuth();
+    const { user, isAuthenticated, isLoading } = useAppAuth();
     const currentUserId = user?.id;
     const router = useRouter();
     const currentUserName = user?.name || 'Người đọc';
@@ -45,6 +47,14 @@ export default function Post() {
             router.push(`/users/${currentUserId}/following`);
         }
     }, [router, currentUserId]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-neutral-950">
+                <AppLoading size={32} text="Đang tải..." />
+            </div>
+        );
+    }
 
     if (!isAuthenticated) {
         return (

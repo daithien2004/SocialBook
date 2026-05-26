@@ -41,6 +41,8 @@ export default function ClientLayout(props: ClientLayoutProps) {
                             bio={overview?.bio}
                             profileUserId={profileUserId}
                             joinedAt={overview?.createdAt}
+                            location={overview?.location}
+                            website={overview?.website}
                         />
                     </div>
                     <div className="w-full lg:w-4/6">

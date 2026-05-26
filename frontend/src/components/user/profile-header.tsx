@@ -59,7 +59,7 @@ export function ProfileHeader(props: PropsProfileHeader) {
                         </span>
                     </div>
 
-                    <div className="flex flex-col items-center group cursor-pointer hover:bg-white/5 rounded-lg p-1 -m-1 transition-colors">
+                    <div className="flex flex-col items-center group cursor-default">
                         <span className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">
                             {props.readingListCount ?? 0}
                         </span>

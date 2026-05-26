@@ -5,18 +5,21 @@ import Image from "next/image";
 import {useGetFollowingListQuery, FollowingUser} from "@/features/follows/api/followApi";
 import {useRouter} from "next/navigation";
 import {formatDate} from "@/lib/utils";
+import { MapPin, Paperclip } from 'lucide-react';
 import { useProfileShare } from './hooks';
 
 interface ProfileNavProps {
   profileUserId: string;
-  bio: string | undefined
+  bio: string | undefined;
   joinedAt: Date | undefined;
+  location?: string;
+  website?: string;
 }
 
 const EMPTY_FOLLOWING: FollowingUser[] = [];
 
 export function ProfileSidebar(props : ProfileNavProps) {
-  const {profileUserId, joinedAt} = props
+  const {profileUserId, joinedAt, location, website} = props
   const {
     data: following = EMPTY_FOLLOWING,
     isLoading,
@@ -43,12 +46,35 @@ export function ProfileSidebar(props : ProfileNavProps) {
           </h3>
 
           <div className="space-y-4">
+          
+
             <div className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">
-            Đã tham gia
-          </span>{" "}
-              ngày {joinedAt ? formatDate(joinedAt) : "—"}
+            <span className="font-semibold text-foreground">
+              Đã tham gia
+            </span>{" "}
+                ngày {joinedAt ? formatDate(joinedAt) : "—"}
             </div>
+
+            {location && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <MapPin className="w-4 h-4 text-slate-500" />
+                <span>{location}</span>
+              </div>
+            )}
+
+            {website && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Paperclip className="w-4 h-4 text-slate-500" />
+                <a
+                  href={website.startsWith('http') ? website : `https://${website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline break-all"
+                >
+                  {website}
+                </a>
+              </div>
+            )}
 
             {!isLoading && !isError && topFollowing.length > 0 && (
                 <div className="pt-4 border-t border-border">
