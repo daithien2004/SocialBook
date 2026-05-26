@@ -64,6 +64,7 @@ export interface RawBookDetailAggregation
   genres: Types.ObjectId[];
   genreDetails: RawGenre[];
   chapters: RawChapter[];
+  authorName?: string;
 }
 
 type PopulatedAuthor = { _id: Types.ObjectId; name: string };
@@ -178,6 +179,7 @@ export class BookMapper {
       title: doc.title,
       slug: doc.slug,
       authorId: doc.authorId?.toString() || '',
+      authorName: doc.authorName,
       genres: (doc.genreDetails || []).map((g) => ({
         id: g._id.toString(),
         name: g.name,

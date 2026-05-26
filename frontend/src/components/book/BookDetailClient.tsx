@@ -114,8 +114,6 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
               <BookDescription
                 description={book.description}
                 tags={book.tags}
-                title={book.title}
-                author={book.authorId.name}
               />
               <ReviewSection bookId={book.id} bookSlug={book.slug} />
             </div>

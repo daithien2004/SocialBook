@@ -65,7 +65,12 @@ export function useReviewForm({
         } catch (err) {
             const apiError = err as { status?: number };
             if (apiError.status !== 401) {
-                toast.error(getErrorMessage(err));
+                const message = getErrorMessage(err);
+                if (message.includes('cần đọc ít nhất')) {
+                    toast.info(message);
+                } else {
+                    toast.error(message);
+                }
             }
         }
     }, [bookId, bookSlug, content, rating, createReview, dispatch, resetForm]);

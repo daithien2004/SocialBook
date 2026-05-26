@@ -14,6 +14,7 @@ export interface BookDetailReadModel {
   title: string;
   slug: string;
   authorId: string;
+  authorName?: string;
   genres: { id: string; name: string; slug: string }[];
   description: string;
   publishedYear: string;

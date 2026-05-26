@@ -51,7 +51,7 @@ export const BookHero = ({
           <div className="flex-1">
             <div className="mb-2 flex items-center gap-2">
               <Badge
-                variant={book.status === 'completed' ? 'secondary' : 'default'} // mapped simple logic
+                variant={book.status === 'completed' ? 'secondary' : 'default'}
                 className={cn(
                   "px-2 py-0.5 text-xs font-bold uppercase tracking-wider border",
                   book.status === 'completed'
@@ -72,7 +72,7 @@ export const BookHero = ({
 
             <p className="text-lg text-muted-foreground mb-6 flex items-center gap-2">
               Tác giả:{' '}
-              <span className="font-bold text-red-600 dark:text-red-500 hover:underline cursor-pointer">
+              <span className="font-bold text-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
                 {book.authorId.name}
               </span>
             </p>

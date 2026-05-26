@@ -33,7 +33,7 @@ export class BookDetailResponseDto {
   id: string;
   title: string;
   slug: string;
-  authorId: string;
+  authorId: { id: string; name: string };
   genres: { id: string; name: string; slug: string }[];
   description: string;
   publishedYear: string;
@@ -56,7 +56,10 @@ export class BookDetailResponseDto {
     this.id = readModel.id;
     this.title = readModel.title;
     this.slug = readModel.slug;
-    this.authorId = readModel.authorId;
+    this.authorId = {
+      id: readModel.authorId,
+      name: readModel.authorName || '—',
+    };
     this.genres = readModel.genres;
     this.description = readModel.description;
     this.publishedYear = readModel.publishedYear;

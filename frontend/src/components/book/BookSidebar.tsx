@@ -41,6 +41,7 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
               }
               highlight
             />
+            <DetailRow label="Tác giả" value={book.authorId?.name || 'Đang cập nhật'} />
             <DetailRow label="Số chương" value={book.chapters?.length || 0} />
             <DetailRow label="Năm xuất bản" value={book.publishedYear} />
             <DetailRow

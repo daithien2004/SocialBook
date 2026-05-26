@@ -236,7 +236,16 @@ export class BookQueryProvider implements IBookQueryProvider {
           },
         },
         {
+          $lookup: {
+            from: 'authors',
+            localField: 'authorId',
+            foreignField: '_id',
+            as: '_authorArr',
+          },
+        },
+        {
           $addFields: {
+            authorName: { $arrayElemAt: ['$_authorArr.name', 0] },
             chapters: {
               $sortArray: { input: '$chapters', sortBy: { orderIndex: 1 } },
             },
@@ -258,6 +267,7 @@ export class BookQueryProvider implements IBookQueryProvider {
             createdAt: 1,
             updatedAt: 1,
             authorId: 1,
+            authorName: 1,
             'genreDetails._id': 1,
             'genreDetails.name': 1,
             'genreDetails.slug': 1,

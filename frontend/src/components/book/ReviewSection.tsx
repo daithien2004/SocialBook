@@ -6,32 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useReviewForm } from '@/features/reviews/hooks/useReviewForm';
 import { UserAvatar } from '@/components/common/UserAvatar';
-import { Heart, Loader2, MessageCircle, Star, Info, Lock } from 'lucide-react';
-import { useGetBookLibraryInfoQuery } from '@/features/library/api/libraryApi';
+import { Heart, Loader2, MessageCircle, Star } from 'lucide-react';
 import { useAppAuth } from '@/features/auth/hooks';
 
 export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: string }) => {
     const { isAuthenticated } = useAppAuth();
-    const { data: libraryInfo } = useGetBookLibraryInfoQuery(bookId, { skip: !isAuthenticated });
 
     const {
         reviews,
         isLoadingReviews,
         isCreating,
-        isOpen,
         rating,
         content,
-        setIsOpen,
         setRating,
         setContent,
         handleSubmit,
         handleLike,
     } = useReviewForm({ bookId, bookSlug });
-
-    const completedCount = libraryInfo?.completedChaptersCount || 0;
-    const totalChapters = libraryInfo?.totalChapters || 0;
-    const requiredChapters = Math.min(10, totalChapters);
-    const canReview = isAuthenticated && completedCount >= requiredChapters;
 
     return (
         <Card className="border-border shadow-none bg-transparent">
@@ -46,42 +37,11 @@ export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: 
                             </span>
                         </CardTitle>
                     </div>
-                    {!isOpen && canReview && (
-                        <Button
-                            onClick={() => setIsOpen(true)}
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs font-bold uppercase tracking-wider"
-                        >
-                            Viết đánh giá
-                        </Button>
-                    )}
                 </div>
             </CardHeader>
 
             <CardContent className="px-0 pt-6">
-                {!canReview && isAuthenticated && (
-                    <div className="mb-6 py-2.5 px-4 bg-muted/20 border border-border/50 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
-                        <div className="flex items-center gap-2.5">
-                            <Lock className="w-3.5 h-3.5 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                                Cần đọc ít nhất <span className="text-foreground font-medium">{requiredChapters} chương</span> để được đánh giá.
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-2 w-full sm:w-32">
-                            <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary/60 transition-all duration-500"
-                                    style={{ width: `${Math.min(100, (completedCount / requiredChapters) * 100)}%` }}
-                                />
-                            </div>
-                            <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
-                                {completedCount}/{requiredChapters}
-                            </span>
-                        </div>
-                    </div>
-                )}
-                {isOpen && (
+                {isAuthenticated && (
                     <form
                         onSubmit={handleSubmit}
                         className="mb-8 bg-muted/20 p-4 rounded-xl border border-border/50 animate-in fade-in slide-in-from-top-2 duration-300"
@@ -116,16 +76,7 @@ export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: 
                             placeholder="Chia sẻ cảm nhận của bạn về cuốn sách..."
                         />
 
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsOpen(false)}
-                                className="h-8 text-xs font-bold"
-                            >
-                                HỦY
-                            </Button>
+                        <div className="flex justify-end">
                             <Button
                                 type="submit"
                                 disabled={isCreating}
