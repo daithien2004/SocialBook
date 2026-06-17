@@ -19,15 +19,15 @@ export class ReactivateRoomUseCase {
       RoomId.create(command.roomId),
     );
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
     if (room.status !== 'ended') {
-      throw new BadRequestDomainException('Room is not ended');
+      throw new BadRequestDomainException('Phòng chưa kết thúc');
     }
 
     if (!room.isHost(command.userId)) {
-      throw new ForbiddenDomainException('Only host can reactivate the room');
+      throw new ForbiddenDomainException('Chỉ chủ phòng mới có thể mở lại phòng');
     }
 
     await this.roomRepository.updateStatus(

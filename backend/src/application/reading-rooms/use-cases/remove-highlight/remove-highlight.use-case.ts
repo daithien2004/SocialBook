@@ -17,7 +17,7 @@ export class RemoveHighlightUseCase {
     );
 
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
     room.removeHighlight(command.highlightId, command.userId);

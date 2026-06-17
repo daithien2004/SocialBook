@@ -27,8 +27,6 @@ import { AddHighlightUseCase } from '@/application/reading-rooms/use-cases/add-h
 import { AddHighlightCommand } from '@/application/reading-rooms/use-cases/add-highlight/add-highlight.command';
 import { RemoveHighlightUseCase } from '@/application/reading-rooms/use-cases/remove-highlight/remove-highlight.use-case';
 import { RemoveHighlightCommand } from '@/application/reading-rooms/use-cases/remove-highlight/remove-highlight.command';
-import { AskAIUseCase } from '@/application/reading-rooms/use-cases/ask-ai/ask-ai.use-case';
-import { AskAICommand } from '@/application/reading-rooms/use-cases/ask-ai/ask-ai.command';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   ReadingRoomServerEvent,
@@ -76,7 +74,6 @@ export class ReadingRoomGateway
     private readonly deleteRoomUseCase: DeleteRoomUseCase,
     private readonly addHighlightUseCase: AddHighlightUseCase,
     private readonly removeHighlightUseCase: RemoveHighlightUseCase,
-    private readonly askAIUseCase: AskAIUseCase,
     private readonly addCommentUseCase: AddCommentUseCase,
     private readonly deleteCommentUseCase: DeleteCommentUseCase,
     private readonly addReactionUseCase: AddReactionUseCase,
@@ -510,48 +507,18 @@ export class ReadingRoomGateway
     });
   }
 
-  @SubscribeMessage('ask_ai')
-  async handleAskAI(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() data: { roomId: string; question: string },
-  ) {
-    if (this.isRateLimited(socket, 'ask_ai', 5)) return;
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
-
-    try {
-      // Broadcast user message first for immediate feedback
-      const displayName = sd.displayName || 'User';
-      const avatarUrl = sd.avatarUrl || '';
-      this.server
-        .to(`room:${data.roomId}`)
-        .emit(ReadingRoomServerEvent.NEW_CHAT_MESSAGE, {
-          userId,
-          displayName,
-          avatarUrl,
-          role: 'user',
-          content: data.question,
-          createdAt: new Date(),
-        });
-
-      const command = new AskAICommand(data.roomId, userId, data.question);
-      await this.askAIUseCase.execute(command);
-    } catch (error: unknown) {
-      this.emitError(
-        socket,
-        'ASK_AI_FAILED',
-        'Failed to process AI question',
-        error,
-      );
-    }
-  }
-
   @SubscribeMessage('send_chat_message')
   handleSendChatMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { roomId: string; content: string },
   ) {
-    if (this.isRateLimited(socket, 'send_chat_message', 10)) return;
+    if (this.isRateLimited(socket, 'send_chat_message', 30)) {
+      socket.emit(ReadingRoomServerEvent.ERROR, {
+        code: 'RATE_LIMITED',
+        message: 'Bạn đang gửi tin nhắn quá nhanh, vui lòng chậm lại.',
+      });
+      return;
+    }
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
     const displayName = sd.displayName || 'User';

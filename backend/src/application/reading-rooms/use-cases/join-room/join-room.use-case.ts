@@ -12,7 +12,7 @@ export class JoinRoomUseCase {
   async execute(command: JoinRoomCommand): Promise<ReadingRoomResult> {
     const room = await this.roomRepository.findActiveByCode(command.roomCode);
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found or has ended');
+      throw new NotFoundDomainException('Phòng không tồn tại hoặc đã kết thúc');
     }
 
     room.addMember(command.userId);

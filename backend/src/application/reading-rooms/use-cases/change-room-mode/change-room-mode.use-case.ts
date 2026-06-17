@@ -19,15 +19,15 @@ export class ChangeRoomModeUseCase {
       RoomId.create(command.roomId),
     );
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
     if (room.status === 'ended') {
-      throw new BadRequestDomainException('Cannot change mode in ended room');
+      throw new BadRequestDomainException('Không thể đổi chế độ trong phòng đã kết thúc');
     }
 
     if (command.userId !== room.hostId) {
-      throw new ForbiddenDomainException('Only host can change room mode');
+      throw new ForbiddenDomainException('Chỉ chủ phòng mới được đổi chế độ');
     }
 
     room.changeMode(command.userId, command.mode);

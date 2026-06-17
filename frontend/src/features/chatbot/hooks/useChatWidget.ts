@@ -9,6 +9,7 @@ export interface ChatMessage {
 
 interface UseChatWidgetOptions {
     askChatbot: (params: { question: string }) => Promise<{ answer: string }>;
+    isAuthenticated: boolean;
 }
 
 export interface UseChatWidgetResult {
@@ -22,7 +23,7 @@ export interface UseChatWidgetResult {
     handleSendMessage: () => Promise<void>;
 }
 
-export function useChatWidget({ askChatbot }: UseChatWidgetOptions): UseChatWidgetResult {
+export function useChatWidget({ askChatbot, isAuthenticated }: UseChatWidgetOptions): UseChatWidgetResult {
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<ChatMessage[]>([
@@ -83,18 +84,36 @@ export function useChatWidget({ askChatbot }: UseChatWidgetOptions): UseChatWidg
                 content: formatAIResponse(data.answer),
             };
             setMessages((prev) => [...prev, aiMsg]);
-        } catch {
-            toast.error('Không thể kết nối đến trợ lý. Vui lòng thử lại.');
-            const errorMsg: ChatMessage = {
-                id: (Date.now() + 1).toString(),
-                role: 'ai',
-                content: 'Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.',
-            };
-            setMessages((prev) => [...prev, errorMsg]);
+        } catch (error: unknown) {
+            const isRateLimited = (error as { status?: number })?.status === 429;
+
+            if (isRateLimited && !isAuthenticated) {
+                toast('Bạn đã hết lượt chat. Đăng nhập để chat không giới hạn!', {
+                    action: {
+                        label: 'Đăng nhập',
+                        onClick: () => window.location.href = '/login',
+                    },
+                    duration: 5000,
+                });
+                const rateLimitMsg: ChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'ai',
+                    content: 'Bạn đã hết lượt chat. Vui lòng đăng nhập để tiếp tục trò chuyện!',
+                };
+                setMessages((prev) => [...prev, rateLimitMsg]);
+            } else {
+                toast.error('Không thể kết nối đến trợ lý. Vui lòng thử lại.');
+                const errorMsg: ChatMessage = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'ai',
+                    content: 'Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.',
+                };
+                setMessages((prev) => [...prev, errorMsg]);
+            }
         } finally {
             setIsLoading(false);
         }
-    }, [input, askChatbot, formatAIResponse]);
+    }, [input, askChatbot, formatAIResponse, isAuthenticated]);
 
     return {
         messages,

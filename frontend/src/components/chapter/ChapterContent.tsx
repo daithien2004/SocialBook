@@ -323,14 +323,14 @@ export const ChapterContent = memo(function ChapterContent({
                                 initial={{ opacity: 0, scale: 0.9, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                className="pointer-events-auto flex items-center gap-0.5 p-1 bg-white dark:bg-black/80 backdrop-blur-xl border border-border/60 dark:border-border rounded-full shadow-2xl shadow-primary/20 -translate-x-1/2 -translate-y-[120%]"
+                                className="pointer-events-auto flex items-center gap-0.5 p-1 bg-neutral-900 dark:bg-black/90 backdrop-blur-xl border border-neutral-700 dark:border-gray-700 rounded-full shadow-2xl shadow-black/30 dark:shadow-black/60 -translate-x-1/2 -translate-y-[120%]"
                             >
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-9 w-9 rounded-full p-0 hover:bg-primary/10 hover:text-primary"
+                                            className="h-9 w-9 rounded-full p-0 text-neutral-200 hover:bg-white/10 hover:text-white"
                                             onClick={() => handleAIAction('explain')}
                                         >
                                             <Sparkles className="w-4 h-4" />
@@ -341,12 +341,12 @@ export const ChapterContent = memo(function ChapterContent({
 
                                 {room && (
                                     <>
-                                        <div className="w-[1px] h-4 bg-border mx-1" />
+                                        <div className="w-[1px] h-4 bg-neutral-600 mx-1" />
 
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-9 rounded-full gap-2 px-3 hover:bg-primary/10 hover:text-primary"
+                                            className="h-9 rounded-full gap-2 px-3 text-neutral-200 hover:bg-white/10 hover:text-white"
                                             onClick={handleAddHighlight}
                                         >
                                             <Highlighter className="w-3.5 h-3.5" />
@@ -356,7 +356,7 @@ export const ChapterContent = memo(function ChapterContent({
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-9 rounded-full gap-2 px-3 hover:bg-primary/10 hover:text-primary"
+                                            className="h-9 rounded-full gap-2 px-3 text-neutral-200 hover:bg-white/10 hover:text-white"
                                             onClick={handleAddQuote}
                                         >
                                             <QuoteIcon className="w-3.5 h-3.5" />
@@ -373,7 +373,7 @@ export const ChapterContent = memo(function ChapterContent({
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="pointer-events-auto absolute top-2 left-0 -translate-x-1/2 w-80 max-h-60 overflow-hidden rounded-2xl bg-white dark:bg-black/80 backdrop-blur-xl border border-border/60 dark:border-border shadow-2xl p-4 flex flex-col gap-3"
+                                        className="pointer-events-auto absolute top-2 left-0 -translate-x-1/2 w-80 max-h-60 overflow-hidden rounded-2xl bg-background dark:bg-black/90 backdrop-blur-xl border border-border dark:border-gray-700 shadow-2xl shadow-black/15 dark:shadow-black/60 p-4 flex flex-col gap-3"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">

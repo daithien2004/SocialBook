@@ -36,7 +36,6 @@ export enum ReadingRoomClientEvent {
   HEARTBEAT = 'heartbeat',
   ADD_HIGHLIGHT = 'add_highlight',
   REMOVE_HIGHLIGHT = 'remove_highlight',
-  ASK_AI = 'ask_ai',
   SEND_CHAT_MESSAGE = 'send_chat_message',
   PARAGRAPH_COMMENTED = 'paragraph_commented',
   PARAGRAPH_COMMENT_DELETED = 'paragraph_comment_deleted',

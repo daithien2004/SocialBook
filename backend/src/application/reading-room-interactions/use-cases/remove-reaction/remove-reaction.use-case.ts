@@ -16,7 +16,7 @@ export class RemoveReactionUseCase {
     );
 
     if (!existing) {
-      throw new NotFoundDomainException('Reaction not found');
+      throw new NotFoundDomainException('Không tìm thấy cảm xúc');
     }
 
     await this.reactionRepository.delete(existing.id);

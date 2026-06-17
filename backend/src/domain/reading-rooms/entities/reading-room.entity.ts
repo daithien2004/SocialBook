@@ -164,7 +164,7 @@ export class ReadingRoom extends Entity<RoomId> {
     content: string;
   }): void {
     if (this._props.status === 'ended') {
-      throw new BadRequestDomainException('Cannot highlight in ended room');
+      throw new BadRequestDomainException('Không thể highlight trong phòng đã kết thúc');
     }
 
     this._props.highlights.push({
@@ -185,11 +185,11 @@ export class ReadingRoom extends Entity<RoomId> {
   removeHighlight(highlightId: string, userId: string): void {
     const index = this._props.highlights.findIndex((h) => h.id === highlightId);
     if (index === -1) {
-      throw new BadRequestDomainException('Highlight not found');
+      throw new BadRequestDomainException('Không tìm thấy highlight');
     }
     if (this._props.highlights[index].userId !== userId) {
       throw new BadRequestDomainException(
-        'Only the highlight owner can remove it',
+        'Chỉ chủ sở hữu mới có thể gỡ highlight',
       );
     }
     this._props.highlights.splice(index, 1);
@@ -210,14 +210,14 @@ export class ReadingRoom extends Entity<RoomId> {
 
   addMember(userId: string): void {
     if (this._props.status === 'ended') {
-      throw new BadRequestDomainException('Cannot join ended room');
+      throw new BadRequestDomainException('Phòng đã kết thúc');
     }
 
     if (
       this.activeMembers.length >= this._props.maxMembers &&
       !this.isMember(userId)
     ) {
-      throw new BadRequestDomainException('Room is full');
+      throw new BadRequestDomainException('Phòng đã đầy');
     }
 
     const existingMember = this._props.members.find((m) => m.userId === userId);
@@ -250,18 +250,18 @@ export class ReadingRoom extends Entity<RoomId> {
   changeChapter(userId: string, newChapterSlug: string): void {
     if (this._props.status === 'ended') {
       throw new BadRequestDomainException(
-        'Cannot change chapter in ended room',
+        'Không thể đổi chương trong phòng đã kết thúc',
       );
     }
 
     if (!this.isMember(userId)) {
-      throw new BadRequestDomainException('Only members can change chapter');
+      throw new BadRequestDomainException('Chỉ thành viên mới được đổi chương');
     }
 
     // Only host can change chapter in sync mode
     if (this._props.mode.toString() === 'sync' && userId !== this.hostId) {
       throw new BadRequestDomainException(
-        'Only host can change chapter in sync mode',
+        'Chỉ chủ phòng mới được đổi chương ở chế độ đồng bộ',
       );
     }
 
@@ -271,11 +271,11 @@ export class ReadingRoom extends Entity<RoomId> {
 
   changeMode(userId: string, newMode: string): void {
     if (this._props.status === 'ended') {
-      throw new BadRequestDomainException('Cannot change mode in ended room');
+      throw new BadRequestDomainException('Không thể đổi chế độ trong phòng đã kết thúc');
     }
 
     if (userId !== this.hostId) {
-      throw new BadRequestDomainException('Only host can change room mode');
+      throw new BadRequestDomainException('Chỉ chủ phòng mới được đổi chế độ');
     }
 
     this._props.mode = RoomMode.create(newMode);

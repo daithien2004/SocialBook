@@ -3,11 +3,11 @@
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useCallback, useRef, useEffect } from 'react';
-import PostList from '@/components/post/PostList';
 import { useAppAuth } from '@/features/auth/hooks';
 import { PenSquare } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useModalStore } from '@/store/useModalStore';
+import PostList from '@/components/post/PostList';
 import TrendingBooksWidget from '@/components/post/TrendingBooksWidget';
 import TopActiveReadersWidget from '@/components/post/TopActiveReadersWidget';
 import LoginWall from '@/components/auth/LoginWall';
@@ -19,7 +19,7 @@ const UserSearchSidebar = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-40 rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-gray-800 dark:bg-neutral-900" />
+            <div className="h-40 rounded-2xl border border-border bg-card shadow-sm" />
         ),
     }
 );
@@ -29,7 +29,7 @@ const RecommendedBooks = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-56 rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-gray-800 dark:bg-neutral-900" />
+            <div className="h-56 rounded-2xl border border-border bg-card shadow-sm" />
         ),
     }
 );
@@ -56,7 +56,7 @@ export default function Post() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-neutral-950">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <AppLoading size={32} text="Đang tải..." />
             </div>
         );
@@ -74,9 +74,20 @@ export default function Post() {
     }
 
     return (
-        <div className="w-full min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-neutral-950">
+        <div className="w-full min-h-[calc(100vh-4rem)] bg-background relative">
+          <div className="fixed inset-0 z-0 pointer-events-none">
+            <Image
+              src="/main-background.jpg"
+              alt="Background Texture"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover opacity-10 dark:opacity-40"
+            />
+            <div className="absolute inset-0 bg-white/80 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
+          </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-center gap-4">
+            <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-center gap-4">
 
                 {/* LEFT SIDEBAR */}
                 <aside className="hidden lg:block w-[22%] sticky top-20 h-[calc(100vh-6rem)] self-start">
@@ -85,7 +96,7 @@ export default function Post() {
                         {/* USER BOX */}
                         <div
                             onClick={goToFollowing}
-                            className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-border p-4 cursor-pointer">
+                            className="bg-card rounded-2xl shadow-md border border-border p-4 cursor-pointer">
 
                             <div className="flex items-center gap-3 mb-3">
                                 <Image
@@ -107,7 +118,7 @@ export default function Post() {
                                     e.stopPropagation();
                                     openCreatePost();
                                 }}
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-slate-50 dark:bg-zinc-800 text-xs font-medium text-foreground py-2 hover:bg-slate-100 dark:hover:bg-gray-800 transition"
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-muted text-xs font-medium text-foreground py-2 hover:bg-accent transition"
                             >
                                 <PenSquare size={14} />
                                 <span>Viết bài mới</span>
@@ -127,7 +138,7 @@ export default function Post() {
 
                         {/* CREATE POST BOX */}
                         <div
-                            className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-border p-4">
+                            className="bg-card rounded-2xl shadow-md border border-border p-4">
                             <div className="flex items-center gap-3 mb-3">
                                 <Image
                                     src={currentUserImage}
@@ -141,7 +152,7 @@ export default function Post() {
                                 />
                                 <button
                                     onClick={() => openCreatePost()}
-                                    className="flex-1 text-left text-sm text-muted-foreground bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full px-4 py-2 transition"
+                                    className="flex-1 text-left text-sm text-muted-foreground bg-muted hover:bg-accent rounded-full px-4 py-2 transition"
                                 >
                                     {currentUserName}, bạn đang nghĩ gì về cuốn sách hôm nay?
                                 </button>

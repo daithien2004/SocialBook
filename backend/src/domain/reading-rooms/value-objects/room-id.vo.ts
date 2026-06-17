@@ -12,7 +12,7 @@ export class RoomId extends Identifier {
       const sanitized = value.trim().toUpperCase();
       if (!this.isValid(sanitized)) {
         throw new BadRequestDomainException(
-          'Invalid room ID format. Must be 6 alphanumeric characters.',
+          'Mã phòng không hợp lệ. Phải gồm 6 ký tự chữ hoặc số.',
         );
       }
       return new RoomId(sanitized);

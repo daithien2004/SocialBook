@@ -16,7 +16,7 @@ export class AddReactionUseCase {
   async execute(command: AddReactionCommand): Promise<RoomReaction> {
     const room = await this.roomRepository.findActiveByCode(command.roomId);
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found or has ended');
+      throw new NotFoundDomainException('Phòng không tồn tại hoặc đã kết thúc');
     }
 
     const existing = await this.reactionRepository.findUserReaction(

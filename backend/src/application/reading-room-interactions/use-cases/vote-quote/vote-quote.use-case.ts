@@ -12,7 +12,7 @@ export class VoteQuoteUseCase {
   ): Promise<{ voteCount: number; userVoteType: 'up' | 'down' | null }> {
     const quote = await this.quoteRepository.findById(command.quoteId);
     if (!quote) {
-      throw new NotFoundDomainException('Quote not found');
+      throw new NotFoundDomainException('Không tìm thấy trích dẫn');
     }
 
     const existingVote = quote.votes.find((v) => v.userId === command.userId);

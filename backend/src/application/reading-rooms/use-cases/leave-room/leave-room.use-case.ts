@@ -18,11 +18,11 @@ export class LeaveRoomUseCase {
       RoomId.create(command.roomId),
     );
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
     if (!room.isMember(command.userId)) {
-      throw new BadRequestDomainException('You are not a member of this room');
+      throw new BadRequestDomainException('Bạn không phải thành viên của phòng này');
     }
 
     room.removeMember(command.userId);

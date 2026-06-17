@@ -20,7 +20,7 @@ export default function TopActiveReadersWidget() {
     if (topReaders.length === 0) return null;
 
     return (
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-border p-4">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
                     Độc Giả Tích Cực

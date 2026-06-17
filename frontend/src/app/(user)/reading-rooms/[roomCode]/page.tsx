@@ -27,7 +27,6 @@ import { KnowledgeSidebar } from '@/features/reading-rooms/components/KnowledgeS
 import { RoomChat } from '@/features/reading-room-interactions/components/RoomChat';
 import { ReadingProgress } from '@/features/reading-room-interactions/components/ReadingProgress';
 import { QuoteBoard } from '@/features/reading-room-interactions/components/QuoteBoard';
-import { useReadingRoomProgress } from '@/features/reading-room-interactions/hooks/useReadingRoomProgress';
 import { useGetRoomQuotesQuery } from '@/features/reading-room-interactions/api/roomInteractionsApi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useModalStore } from '@/store/useModalStore';
@@ -50,11 +49,11 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
   
   const { data: initialRoom, isLoading: isLoadingRoom, error } = useGetRoomQuery(roomCode, { skip: !isAuthenticated });
   
-  const isEnded = initialRoom?.status === 'ended';
-  const shouldConnectSocket = isAuthenticated && !!initialRoom && !isEnded;
-  const { endRoom, deleteRoom, leaveRoom, changeChapter, changeMode, sendHeartbeat, askAI, sendChatMessage } = useReadingRoomSocket(shouldConnectSocket ? roomCode : undefined);
-  const [reactivateRoom, { isLoading: isReactivating }] = useReactivateRoomMutation();
   const storeRoom = useReadingRoomStore(state => state.room);
+  const isEnded = initialRoom?.status === 'ended' || storeRoom?.status === 'ended';
+  const shouldConnectSocket = isAuthenticated && !!initialRoom && !isEnded;
+  const { endRoom, deleteRoom, leaveRoom, changeChapter, changeMode, sendHeartbeat, sendChatMessage } = useReadingRoomSocket(shouldConnectSocket ? roomCode : undefined);
+  const [reactivateRoom, { isLoading: isReactivating }] = useReactivateRoomMutation();
   const room = storeRoom || initialRoom;
   const isHost = room?.hostId === user?.id;
   const presences = useReadingRoomStore(state => state.presences);
@@ -72,7 +71,6 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
 
   const chapter = chapterData?.chapter;
   const navigation = chapterData?.navigation;
-  const readingProgress = useReadingRoomProgress(!!room && !isEnded);
   const { data: quotesData } = useGetRoomQuotesQuery({ code: roomCode }, { skip: !room || isEnded });
 
   useEffect(() => {
@@ -91,7 +89,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
     }
   }, [isEnded, initialRoom]);
 
-  useRoomPresence(currentChapterSlug || 'unknown', sendHeartbeat, null, readingProgress);
+  useRoomPresence(currentChapterSlug || 'unknown', sendHeartbeat, null);
 
   if (!isAuthenticated) {
     return (
@@ -239,6 +237,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                     </Button>
                     
                     <Button 
+                      variant="outline"
                       size="sm" 
                       onClick={() => openConfirm({
                         title: "Kết thúc phòng đọc?",
@@ -253,13 +252,14 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                           }, 300);
                         }
                       })}
-                      className={`${ROOM_BTN_BASE} bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-orange-500/20`}
+                      className={`${ROOM_BTN_BASE} border-border/60 text-foreground hover:bg-accent/60`}
                     >
                       <LogOut size={15} />
                       <span className="text-xs">Kết thúc</span>
                     </Button>
 
                     <Button 
+                      variant="outline"
                       size="sm" 
                       onClick={() => openConfirm({
                         title: "Xoá phòng đọc?",
@@ -272,7 +272,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                           router.push('/reading-rooms');
                         }
                       })}
-                      className={`${ROOM_BTN_BASE} bg-red-500 hover:bg-red-600 text-white border-0 shadow-red-500/20`}
+                      className={`${ROOM_BTN_BASE} border-border/60 text-foreground hover:bg-accent/60`}
                     >
                       <Trash2 size={15} />
                       <span className="text-xs">Xoá</span>
@@ -295,12 +295,14 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                   </Button>
                 ) : isHost ? (
                   <Button
+                    variant="outline"
                     size="sm"
-                    className={`${ROOM_BTN_BASE} bg-primary hover:bg-primary/90 text-white border-0 shadow-primary/20`}
+                    className={`${ROOM_BTN_BASE} border-border/60 text-foreground hover:bg-accent/60`}
                     disabled={isReactivating}
                     onClick={async () => {
                       try {
                         await reactivateRoom(roomCode).unwrap();
+                        useReadingRoomStore.getState().setRoom({ ...(storeRoom || initialRoom)!, status: 'active' });
                         toast.success('Phòng đã được mở lại!');
                         router.refresh();
                       } catch {
@@ -482,7 +484,6 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                       bookSlug={bookData?.slug || ''} 
                       chapterId={chapter.id} 
                       roomId={roomCode}
-                      askAI={askAI}
                     />
 
                   ) : (

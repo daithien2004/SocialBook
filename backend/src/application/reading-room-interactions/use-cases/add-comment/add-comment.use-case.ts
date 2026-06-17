@@ -15,7 +15,7 @@ export class AddCommentUseCase {
   async execute(command: AddCommentCommand): Promise<RoomComment> {
     const room = await this.roomRepository.findActiveByCode(command.roomId);
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found or has ended');
+      throw new NotFoundDomainException('Phòng không tồn tại hoặc đã kết thúc');
     }
 
     const comment = RoomComment.create({

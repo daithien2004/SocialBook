@@ -36,28 +36,28 @@ export default function GlobalConfirmModal() {
 
     return (
         <AlertDialog open={isConfirmOpen} onOpenChange={(open) => !open && closeConfirm()}>
-            <AlertDialogContent className="sm:max-w-[400px] bg-card p-0 gap-0 border-border overflow-hidden">
+            <AlertDialogContent className="sm:max-w-[420px] bg-background/95 dark:bg-black/80 backdrop-blur-xl p-0 gap-0 border border-border/60 shadow-2xl rounded-3xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
                 <AlertDialogHeader className="sr-only">
                     <AlertDialogTitle>{confirmData.title}</AlertDialogTitle>
                     <AlertDialogDescription>{confirmData.description}</AlertDialogDescription>
                 </AlertDialogHeader>
 
-                <div className="px-6 py-4 border-b border-border">
-                    <h2 className="text-base font-semibold text-foreground">
+                <div className="px-6 py-5 border-b border-border/40 bg-black/[0.02] dark:bg-white/5">
+                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                         {confirmData.title}
                     </h2>
                 </div>
 
-                <div className="px-6 py-4">
+                <div className="px-6 py-6 bg-transparent">
                     <p className="text-sm text-muted-foreground leading-relaxed">
                         {confirmData.description}
                     </p>
                 </div>
 
-                <AlertDialogFooter className="px-6 py-4 border-t border-border sm:justify-end gap-2">
+                <AlertDialogFooter className="px-6 py-4 border-t border-border/40 bg-black/[0.02] dark:bg-white/5 sm:justify-end gap-3">
                     <AlertDialogCancel
                         disabled={isLoading}
-                        className="rounded-lg border-border hover:bg-muted font-medium text-sm"
+                        className="rounded-xl border-border/50 hover:bg-black/[0.05] dark:hover:bg-white/10 font-bold text-sm h-10 px-5 transition-colors mt-0 sm:mt-0"
                     >
                         {confirmData.cancelText || "Hủy"}
                     </AlertDialogCancel>
@@ -68,8 +68,12 @@ export default function GlobalConfirmModal() {
                         }}
                         disabled={isLoading}
                         className={buttonVariants({
-                            variant: confirmData.variant || "default",
-                            className: "rounded-lg font-bold px-6 text-sm shadow-sm"
+                            variant: confirmData.variant === 'destructive' ? 'outline' : confirmData.variant || "default",
+                            className: `rounded-xl font-bold px-6 text-sm shadow-sm h-10 transition-colors ${
+                                confirmData.variant === 'destructive' 
+                                    ? 'border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10 hover:text-red-700 dark:hover:text-red-300' 
+                                    : ''
+                            }`
                         })}
                     >
                         {isLoading ? (

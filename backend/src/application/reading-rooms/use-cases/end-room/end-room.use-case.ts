@@ -18,11 +18,11 @@ export class EndRoomUseCase {
       RoomId.create(command.roomId),
     );
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
     if (!room.isHost(command.userId)) {
-      throw new ForbiddenDomainException('Only host can end the room');
+      throw new ForbiddenDomainException('Chỉ chủ phòng mới có thể kết thúc phòng');
     }
 
     room.end();

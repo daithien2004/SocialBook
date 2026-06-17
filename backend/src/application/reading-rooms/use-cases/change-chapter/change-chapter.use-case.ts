@@ -18,18 +18,18 @@ export class ChangeChapterUseCase {
       RoomId.create(command.roomId),
     );
     if (!room) {
-      throw new NotFoundDomainException('Reading room not found');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
     if (room.status === 'ended') {
       throw new BadRequestDomainException(
-        'Cannot change chapter in ended room',
+        'Không thể đổi chương trong phòng đã kết thúc',
       );
     }
 
     if (room.mode === 'sync' && command.userId !== room.hostId) {
       throw new BadRequestDomainException(
-        'Only host can change chapter in sync mode',
+        'Chỉ chủ phòng mới được đổi chương ở chế độ đồng bộ',
       );
     }
 

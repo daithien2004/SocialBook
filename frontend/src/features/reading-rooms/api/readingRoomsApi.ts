@@ -44,6 +44,7 @@ export const readingRoomsApi = createApi({
         url: `/reading-rooms/${code}`,
         method: 'GET',
       }),
+      providesTags: (_result, _error, code) => [{ type: 'Room', id: code }],
     }),
     getMyActiveRooms: builder.query<RoomResponse[], void>({
       query: () => ({
@@ -64,10 +65,10 @@ export const readingRoomsApi = createApi({
         url: `/reading-rooms/${code}/reactivate`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['MyRooms', 'MyHistory'],
+      invalidatesTags: (_result, _error, code) => ['MyRooms', 'MyHistory', { type: 'Room', id: code }],
     }),
   }),
-  tagTypes: ['MyRooms', 'MyHistory'],
+  tagTypes: ['MyRooms', 'MyHistory', 'Room'],
 });
 
 export const { useCreateRoomMutation, useGetRoomQuery, useGetMyActiveRoomsQuery, useGetMyHistoryQuery, useReactivateRoomMutation } = readingRoomsApi;

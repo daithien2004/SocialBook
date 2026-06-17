@@ -6,6 +6,7 @@ import {
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { CreateRoomCommand } from './create-room.command';
 import { ReadingRoomResult } from '../reading-room.interface';
@@ -16,6 +17,7 @@ export class CreateRoomUseCase {
   constructor(
     private readonly roomRepository: IReadingRoomRepository,
     private readonly bookRepository: IBookRepository,
+    private readonly chapterRepository: IChapterRepository,
   ) {}
 
   async execute(command: CreateRoomCommand): Promise<ReadingRoomResult> {
@@ -23,10 +25,13 @@ export class CreateRoomUseCase {
       BookId.create(command.bookId),
     );
     if (!book) {
-      throw new NotFoundDomainException('Book not found');
+      throw new NotFoundDomainException('Sách không tồn tại');
     }
 
-    if (!book.chapterCount || book.chapterCount === 0) {
+    const firstChapter = await this.chapterRepository.findFirstChapter(
+      BookId.create(command.bookId),
+    );
+    if (!firstChapter) {
       throw new BadRequestDomainException(
         'Sách chưa có chương nào, không thể tạo phòng đọc',
       );
@@ -37,7 +42,7 @@ export class CreateRoomUseCase {
       hostId: command.hostId,
       mode: command.mode,
       maxMembers: command.maxMembers || 10,
-      currentChapterSlug: command.currentChapterSlug,
+      currentChapterSlug: firstChapter.slug,
     });
 
     await this.roomRepository.save(room);

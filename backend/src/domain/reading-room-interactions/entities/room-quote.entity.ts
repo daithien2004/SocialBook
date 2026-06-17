@@ -31,7 +31,7 @@ export class RoomQuote extends Entity<string> {
     paragraphId: string;
   }): RoomQuote {
     if (!props.content.trim()) {
-      throw new BadRequestDomainException('Quote content cannot be empty');
+      throw new BadRequestDomainException('Nội dung trích dẫn không được để trống');
     }
     return new RoomQuote(crypto.randomUUID(), {
       ...props,

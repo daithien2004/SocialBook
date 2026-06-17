@@ -84,33 +84,38 @@ export const axiosBaseQuery =
         const status = err.response?.status || 500;
 
         if (status === 401) {
-          const session = await getSession(); // Kích hoạt refresh ở server side
+          const hadToken = !!requestHeaders.Authorization;
 
-          if (session?.accessToken) {
-            // Nếu lấy được token mới, thử lại request ngay lập tức
-            try {
-              const retryResult = await clientApi({
-                url,
-                method,
-                data: body,
-                headers: {
-                  ...requestHeaders,
-                  Authorization: `Bearer ${session.accessToken}`,
-                },
-                params,
-              });
+          if (hadToken) {
+            const session = await getSession();
 
-              const responseData = retryResult.data;
-              return { data: responseData.data !== undefined ? responseData.data : responseData };
-            } catch {
-              // Retry thất bại — fall through để trả error bên dưới
+            if (session?.accessToken) {
+              try {
+                const retryResult = await clientApi({
+                  url,
+                  method,
+                  data: body,
+                  headers: {
+                    ...requestHeaders,
+                    Authorization: `Bearer ${session.accessToken}`,
+                  },
+                  params,
+                });
+
+                const responseData = retryResult.data;
+                return { data: responseData.data !== undefined ? responseData.data : responseData };
+              } catch {
+                // Retry thất bại
+              }
             }
-          } else {
-            await signOut({ redirect: false });
+
+            // Chỉ redirect login nếu request có gửi token (authenticated request)
             if (typeof window !== 'undefined') {
+              await signOut({ redirect: false });
               window.location.href = '/login?error=SessionExpired';
             }
           }
+          // Guest không có token → không redirect, chỉ trả error
         }
 
         if (status === 403 && err.response?.data?.error === 'USER_BANNED') {

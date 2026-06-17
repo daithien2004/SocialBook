@@ -140,7 +140,11 @@ export const useReadingRoomStore = create<ReadingRoomState>((set) => ({
   })),
   setChatMessages: (messages) => set({ chatMessages: messages }),
   addChatMessage: (message) => set((state) => ({
-    chatMessages: [...state.chatMessages, message],
+    chatMessages: state.chatMessages.some(
+      (m) => m.userId === message.userId && m.content === message.content && m.createdAt === message.createdAt,
+    )
+      ? state.chatMessages
+      : [...state.chatMessages, message],
   })),
   clearRoom: () => set({
     room: null,

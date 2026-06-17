@@ -70,32 +70,34 @@ export const axiosNextJsBaseQuery =
         const err = axiosError as AxiosError<ErrorResponseDto>;
         const status = err.response?.status || 500;
 
-        // Xử lý lỗi 401 (Unauthorized) - Lớp 3 bảo vệ
         if (status === 401) {
-          const session = await getSession();
-          
-          if (session?.accessToken) {
-            // Nếu có token mới, thử lại request ngay lập tức
-            try {
-              const retryResult = await clientApi({
-                url,
-                method,
-                data: body,
-                headers: {
-                  ...headers,
-                  Authorization: `Bearer ${session.accessToken}`,
-                },
-                params,
-              });
-              
-              const responseData = retryResult.data as ResponseDto<unknown>;
-              return { data: responseData.data };
-            } catch {
-              // Thử lại thất bại, báo lỗi
+          const hadToken = !!getAccessToken();
+
+          if (hadToken) {
+            const session = await getSession();
+
+            if (session?.accessToken) {
+              try {
+                const retryResult = await clientApi({
+                  url,
+                  method,
+                  data: body,
+                  headers: {
+                    ...headers,
+                    Authorization: `Bearer ${session.accessToken}`,
+                  },
+                  params,
+                });
+
+                const responseData = retryResult.data as ResponseDto<unknown>;
+                return { data: responseData.data };
+              } catch {
+                // Retry thất bại
+              }
             }
-          } else {
-            await signOut({ redirect: false });
+
             if (typeof window !== 'undefined') {
+              await signOut({ redirect: false });
               window.location.href = '/login?error=SessionExpired';
             }
           }

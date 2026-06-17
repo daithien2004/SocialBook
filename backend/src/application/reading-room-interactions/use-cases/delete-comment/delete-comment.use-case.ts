@@ -13,7 +13,7 @@ export class DeleteCommentUseCase {
   async execute(command: DeleteCommentCommand): Promise<void> {
     const comment = await this.commentRepository.findById(command.commentId);
     if (!comment) {
-      throw new NotFoundDomainException('Comment not found');
+      throw new NotFoundDomainException('Không tìm thấy bình luận');
     }
 
     if (comment.userId !== command.userId) {

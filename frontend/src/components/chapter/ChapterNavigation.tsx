@@ -31,7 +31,7 @@ const ChapterNavigation = memo(function ChapterNavigation({
         onClick={onPrevious}
         disabled={!hasPrevious}
         className={cn(
-          "rounded-full gap-2 border-white/10 text-neutral-400 hover:text-white hover:border-white/30 hover:bg-white/5",
+          "rounded-full gap-2 border border-border/80 bg-background text-foreground hover:bg-accent hover:border-border",
           !hasPrevious && "opacity-50 cursor-not-allowed"
         )}
         aria-label="Chương trước"
@@ -46,7 +46,7 @@ const ChapterNavigation = memo(function ChapterNavigation({
             variant="ghost"
             size="icon"
             onClick={onTableOfContentsClick}
-            className="text-neutral-500 hover:text-white hover:bg-white/5 rounded-full"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-full"
           >
             <List size={20} />
           </Button>
@@ -55,7 +55,7 @@ const ChapterNavigation = memo(function ChapterNavigation({
             asChild
             variant="ghost"
             size="icon"
-            className="text-neutral-500 hover:text-white hover:bg-white/5 rounded-full"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-full"
           >
             <Link href={tableOfContentsHref || '#'}>
               <List size={20} />
@@ -68,7 +68,7 @@ const ChapterNavigation = memo(function ChapterNavigation({
         disabled={!hasNext}
         className={cn(
           "rounded-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground",
-          !hasNext && "bg-neutral-800 text-neutral-600 shadow-none hover:bg-neutral-800 cursor-not-allowed"
+          !hasNext && "bg-muted text-muted-foreground shadow-none hover:bg-muted cursor-not-allowed"
         )}
         aria-label="Chương sau"
       >

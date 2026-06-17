@@ -4,10 +4,12 @@ import {
   Body,
   Param,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { GenerateTextUseCase } from '@/application/gemini/use-cases/generate-text/generate-text.use-case';
 import { SummarizeChapterUseCase } from '@/application/gemini/use-cases/summarize-chapter/summarize-chapter.use-case';
 import { Public } from '@/common/decorators/custom.decorator';
+import { GeminiThrottleGuard } from '@/common/guards/gemini-throttle.guard';
 
 @Controller('gemini')
 export class GeminiController {
@@ -17,6 +19,7 @@ export class GeminiController {
   ) {}
 
   @Public()
+  @UseGuards(GeminiThrottleGuard)
   @Post('generate-text')
   async generateText(@Body() body: { prompt: string; userId?: string }) {
     if (!body.prompt) {

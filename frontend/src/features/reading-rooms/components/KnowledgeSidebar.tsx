@@ -1,27 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquare, Send, Bot, BookOpen, Users, MapPin, Lightbulb, ChevronDown, ChevronRight, Info, Loader2, Network, Maximize2, RefreshCw } from 'lucide-react';
-
-import dynamic from 'next/dynamic';
-
-const KnowledgeGraph = dynamic(
-  () => import('./KnowledgeGraph').then((mod) => mod.KnowledgeGraph),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full min-h-[300px]">
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs text-muted-foreground">Đang tải sơ đồ...</p>
-        </div>
-      </div>
-  ),
-});
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { MessageSquare, Send, Bot, BookOpen, Users, MapPin, Lightbulb, ChevronDown, ChevronRight, Info, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
-
-import { useReadingRoomStore, ChatMessage } from '@/store/useReadingRoomStore';
+import { ChatMessage } from '@/store/useReadingRoomStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,10 +20,9 @@ interface KnowledgeSidebarProps {
   bookSlug: string;
   chapterId: string;
   roomId?: string;
-  askAI?: (question: string) => void;
 }
 
-export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId, askAI }: KnowledgeSidebarProps) => {
+export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSidebarProps) => {
   const [shouldForce, setShouldForce] = useState(false);
   const { data, isLoading, error } = useGetChapterKnowledgeQuery(
     { bookSlug, chapterId, force: shouldForce },
@@ -63,37 +43,32 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId, askAI }: Knowled
 
   const [activeTab, setActiveTab] = useState('knowledge');
   const [question, setQuestion] = useState('');
-  const [graphOpen, setGraphOpen] = useState(false);
   const [localChatMessages, setLocalChatMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!roomId) {
-      const savedMessages = localStorage.getItem(`chat_solo_${chapterId}`);
-      if (savedMessages) {
-        try {
-          const timer = setTimeout(() => {
-            setLocalChatMessages(JSON.parse(savedMessages));
-          }, 0);
-          return () => clearTimeout(timer);
-        } catch {
-          toast.error('Không thể đọc tin nhắn đã lưu');
-        }
-      }
-    }
-  }, [roomId, chapterId]);
-
-  useEffect(() => {
-    if (!roomId && localChatMessages.length > 0) {
-      localStorage.setItem(`chat_solo_${chapterId}`, JSON.stringify(localChatMessages));
-    }
-  }, [localChatMessages, roomId, chapterId]);
-
   const [askChapterAI, { isLoading: isSoloPending }] = useAskChapterAIMutation();
 
-  const { chatMessages: roomChatMessages } = useReadingRoomStore();
-  const chatMessages = roomId ? roomChatMessages.filter(m => m.role === 'ai') : localChatMessages;
+  const chatMessages = localChatMessages;
+  const storageKey = roomId ? `chat_room_${roomId}_${chapterId}` : `chat_solo_${chapterId}`;
+
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(storageKey);
+    if (savedMessages) {
+      try {
+        const timer = setTimeout(() => setLocalChatMessages(JSON.parse(savedMessages)), 0);
+        return () => clearTimeout(timer);
+      } catch {
+        toast.error('Không thể đọc tin nhắn đã lưu');
+      }
+    }
+  }, [roomId, chapterId, storageKey]);
+
+  useEffect(() => {
+    if (chatMessages.length > 0) {
+      localStorage.setItem(storageKey, JSON.stringify(chatMessages));
+    }
+  }, [chatMessages, roomId, chapterId, storageKey]);
 
   useEffect(() => {
     if (scrollContainerRef.current && scrollRef.current) {
@@ -116,37 +91,30 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId, askAI }: Knowled
   const handleAskAI = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question.trim()) return;
+    const q = question;
+    setQuestion('');
 
-    if (roomId && askAI) {
-      askAI(question);
-      setQuestion('');
-    } else {
-      const userMsg: ChatMessage = {
-        userId: 'me',
-        role: 'user',
-        content: question,
-        createdAt: new Date().toISOString()
+    const userMsg: ChatMessage = {
+      userId: roomId ? 'ai-question' : 'me',
+      role: 'user',
+      content: q,
+      createdAt: new Date().toISOString(),
+    };
+
+    setLocalChatMessages(prev => [...prev, userMsg]);
+
+    try {
+      const response = await askChapterAI({ bookSlug, chapterId, question: q }).unwrap();
+      const aiMsg: ChatMessage = {
+        userId: roomId ? 'gemini-ai' : 'ai',
+        role: 'ai',
+        content: response.answer,
+        createdAt: response.createdAt,
       };
-      setLocalChatMessages(prev => [...prev, userMsg]);
-      setQuestion('');
 
-      try {
-        const response = await askChapterAI({
-          bookSlug,
-          chapterId,
-          question
-        }).unwrap();
-
-        const aiMsg: ChatMessage = {
-          userId: 'ai',
-          role: 'ai',
-          content: response.answer,
-          createdAt: response.createdAt
-        };
-        setLocalChatMessages(prev => [...prev, aiMsg]);
-      } catch {
-        toast.error('AI không thể trả lời lúc này. Vui lòng thử lại!');
-      }
+      setLocalChatMessages(prev => [...prev, aiMsg]);
+    } catch {
+      toast.error('AI không thể trả lời lúc này. Vui lòng thử lại!');
     }
   };
 
@@ -162,14 +130,10 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId, askAI }: Knowled
     <GlassCard className="flex flex-col h-[75vh]">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
         <div className="px-3 pt-3 flex items-center justify-between">
-          <TabsList variant="pill" className="grid w-full grid-cols-3 rounded-2xl h-10">
+          <TabsList variant="pill" className="flex-1 grid grid-cols-2 gap-2 rounded-2xl h-10">
             <TabsTrigger value="knowledge" variant="glass" className="text-[10px] font-black uppercase tracking-wider">
               <BookOpen className="w-3 h-3 mr-1.5" />
               Kiến thức
-            </TabsTrigger>
-            <TabsTrigger value="graph" variant="glass" className="text-[10px] font-black uppercase tracking-wider">
-              <Network className="w-3 h-3 mr-1.5" />
-              Sơ đồ
             </TabsTrigger>
             <TabsTrigger value="chat" variant="glass" className="text-[10px] font-black uppercase tracking-wider">
               <MessageSquare className="w-3 h-3 mr-1.5" />
@@ -274,87 +238,53 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId, askAI }: Knowled
             </div>
           </ScrollArea>
         </TabsContent>
-        <TabsContent value="graph" className="flex-1 overflow-hidden mt-0 p-4 flex flex-col items-center justify-center text-center space-y-4">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-            <Network className="w-10 h-10 text-primary opacity-60" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-bold">Sơ đồ tri thức AI</h4>
-            <p className="text-[10px] text-muted-foreground px-6">
-              Khám phá mối liên hệ giữa các nhân vật và sự kiện thông qua sơ đồ mạng lưới.
-            </p>
-          </div>
-
-          <Dialog open={graphOpen} onOpenChange={setGraphOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="rounded-xl gap-2 px-6">
-                <Maximize2 className="w-3.5 h-3.5" />
-                Mở sơ đồ toàn màn hình
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[90vw] w-[1000px] h-[80vh] p-0 overflow-hidden border-none bg-background/95 backdrop-blur-xl flex flex-col">
-              <DialogHeader className="p-6 shrink-0">
-                <DialogTitle className="flex items-center gap-2">
-                  <Network className="w-5 h-5 text-primary" />
-                  Sơ đồ tri thức AI - Chương {chapterId.slice(-4).toUpperCase()}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="flex-1 min-h-0 relative">
-                {data && (
-                  <KnowledgeGraph 
-                    entities={data.entities} 
-                    relationships={data.relationships || []} 
-                    isOpen={graphOpen}
-                  />
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <p className="text-[9px] text-muted-foreground italic mt-4">
-            * Nếu sơ đồ trống, hãy thử nhấn làm mới để AI cập nhật lại dữ liệu.
-          </p>
-        </TabsContent>
-
-
         <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden mt-0">
-          <ScrollArea ref={scrollContainerRef} className="flex-1 px-4 py-4">
-            <div className="space-y-4">
+          <ScrollArea ref={scrollContainerRef} className="flex-1 px-3 py-3">
+            <div className="space-y-2">
               {chatMessages.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-10 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Bot className="w-6 h-6 text-primary" />
+                <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 px-4">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
+                    <Bot className="w-7 h-7 text-primary" />
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs font-bold">Trợ lý AI đang chờ bạn</p>
-                    <p className="text-[10px] text-muted-foreground">Hãy hỏi AI về nội dung chương này hoặc ý nghĩa của các đoạn trích nhé!</p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      Hỏi AI về nội dung chương này<br />hoặc ý nghĩa các đoạn trích nhé!
+                    </p>
                   </div>
                 </div>
               )}
               {chatMessages.map((msg, i) => (
                 <div
                   key={`${msg.userId || msg.role || 'msg'}-${msg.createdAt || i}-${i}`}
-                  className={`flex flex-col ${msg.role === 'ai' ? 'items-start' : 'items-end'
-                    }`}
+                  className={`flex items-end gap-2 ${msg.role === 'ai' ? 'justify-start' : 'justify-end'}`}
                 >
+                  {msg.role === 'ai' && (
+                    <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mb-0.5">
+                      <Bot className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                  )}
                   <div
-                    className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed ${msg.role === 'ai'
-                        ? 'bg-muted/50 border border-border text-foreground'
-                        : 'bg-primary text-primary-foreground'
-                      }`}
+                    className={`max-w-[80%] px-3 py-2.5 rounded-2xl text-xs leading-relaxed ${
+                      msg.role === 'ai'
+                        ? 'bg-black/[0.04] dark:bg-white/5 border border-border/50 text-foreground rounded-tl-sm'
+                        : 'bg-primary/10 text-foreground rounded-tr-sm'
+                    }`}
                   >
                     {msg.content}
                   </div>
                 </div>
               ))}
 
-
               {isSoloPending && (
-                <div className="flex flex-col items-start">
-                  <div className="bg-muted/50 text-foreground p-3 rounded-2xl flex gap-1">
-                    <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, times: [0, 0.5, 1] }} className="w-1.5 h-1.5 bg-foreground/40 rounded-full" />
-                    <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2, times: [0, 0.5, 1] }} className="w-1.5 h-1.5 bg-foreground/40 rounded-full" />
-                    <motion.span animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4, times: [0, 0.5, 1] }} className="w-1.5 h-1.5 bg-foreground/40 rounded-full" />
+                <div className="flex items-end gap-2 justify-start">
+                  <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Bot className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <div className="bg-black/[0.04] dark:bg-white/5 border border-border/50 px-3 py-2.5 rounded-2xl rounded-tl-sm flex items-center gap-1">
+                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, times: [0, 0.5, 1] }} className="w-1.5 h-1.5 bg-primary/60 rounded-full" />
+                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.2, times: [0, 0.5, 1] }} className="w-1.5 h-1.5 bg-primary/60 rounded-full" />
+                    <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2, delay: 0.4, times: [0, 0.5, 1] }} className="w-1.5 h-1.5 bg-primary/60 rounded-full" />
                   </div>
                 </div>
               )}
@@ -362,24 +292,24 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId, askAI }: Knowled
             </div>
           </ScrollArea>
 
-          <div className="p-4 border-t border-border bg-muted/20">
-            <form onSubmit={handleAskAI} className="relative">
+          <form onSubmit={handleAskAI} className="p-3 border-t border-border/60 dark:border-border bg-black/[0.02] dark:bg-white/5">
+            <div className="flex items-center gap-2">
               <Input
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Hỏi AI về nội dung..."
-                className="pr-10 rounded-xl bg-background text-xs h-10 border-border/50 focus-visible:ring-primary/20"
+                className="h-9 text-xs rounded-xl bg-background dark:bg-black/40 border-border/50 focus-visible:ring-primary/20"
               />
               <Button
                 type="submit"
                 size="icon"
                 disabled={!question.trim()}
-                className="absolute right-1 top-1 w-8 h-8 rounded-lg"
+                className="h-9 w-9 shrink-0 rounded-xl"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5" />
               </Button>
-            </form>
-          </div>
+            </div>
+          </form>
         </TabsContent>
       </Tabs>
     </GlassCard>

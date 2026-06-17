@@ -38,7 +38,7 @@ export function RoomChat({ sendChatMessage, disabled }: RoomChatProps) {
     inputRef.current?.focus({ preventScroll: true });
   };
 
-  const userMessages = chatMessages.filter((m) => m.role === 'user');
+  const userMessages = chatMessages.filter((m) => m.role === 'user' && m.userId !== 'ai-question');
 
   return (
     <GlassCard 
@@ -52,40 +52,68 @@ export function RoomChat({ sendChatMessage, disabled }: RoomChatProps) {
             Chưa có tin nhắn nào
           </div>
         ) : (
-          <div className="space-y-2">
-            {userMessages.map((msg, i) => (
-              <div
-                key={`${msg.userId}-${msg.createdAt}-${i}`}
-                className="flex items-start gap-2.5 p-2.5 rounded-2xl bg-black/[0.03] dark:bg-white/5 hover:bg-black/[0.05] dark:hover:bg-white/10 transition-colors"
-              >
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                  {msg.avatarUrl ? (
-                    <Image
-                      src={msg.avatarUrl || ''}
-                      alt=""
-                      width={28}
-                      height={28}
-                      className="w-full h-full object-cover"
-                    />
+          <div className="space-y-1">
+            {userMessages.map((msg, i) => {
+              const isMe = msg.userId === user?.id;
+              const prevMsg = userMessages[i - 1];
+              const nextMsg = userMessages[i + 1];
+              const isSameUserAsPrev = prevMsg?.userId === msg.userId;
+              const isSameUserAsNext = nextMsg?.userId === msg.userId;
+              return (
+                <div
+                  key={`${msg.userId}-${msg.createdAt}-${i}`}
+                  className={`flex items-end max-w-full ${isMe ? 'justify-end' : 'justify-start'} ${isMe ? '' : 'gap-2.5'}`}
+                >
+                  {isMe ? (
+                    <div
+                      className="max-w-[65%] min-w-0 bg-primary/10 rounded-2xl p-2.5 overflow-hidden"
+                      title={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    >
+                      <p className="text-xs text-foreground leading-relaxed break-words break-all">
+                        {msg.content}
+                      </p>
+                    </div>
                   ) : (
-                    <span className="text-xs font-bold text-primary">
-                      {(msg.displayName || msg.userId).charAt(0).toUpperCase()}
-                    </span>
+                    <div className="flex items-end gap-2.5 max-w-[65%]">
+                      {isSameUserAsNext ? (
+                        <div className="w-7 h-7 shrink-0" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                          {msg.avatarUrl ? (
+                            <Image
+                              src={msg.avatarUrl || ''}
+                              alt=""
+                              width={28}
+                              height={28}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-xs font-bold text-primary">
+                              {(msg.displayName || msg.userId).charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="flex flex-col min-w-0">
+                        {!isSameUserAsPrev && (
+                          <span className="text-[11px] text-muted-foreground ml-1 mb-0.5">
+                            {msg.displayName || msg.userId.slice(0, 6)}
+                          </span>
+                        )}
+                        <div
+                          className="bg-black/[0.03] dark:bg-white/5 rounded-2xl p-2.5 overflow-hidden"
+                          title={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        >
+                          <p className="text-xs text-foreground leading-relaxed break-words break-all">
+                            {msg.content}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[11px] font-bold text-foreground">
-                      {msg.userId === user?.id ? 'Bạn' : (msg.displayName || msg.userId.slice(0, 6))}
-                    </span>
-                    <span className="text-[9px] text-muted-foreground/60">
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <p className="text-xs text-foreground/90 mt-0.5 leading-relaxed break-words">{msg.content}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </ScrollArea>
