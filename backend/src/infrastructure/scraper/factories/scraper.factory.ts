@@ -4,7 +4,9 @@ import { TruyenFullStrategy } from '../strategies/truyenfull.strategy';
 
 @Injectable()
 export class ScraperFactory {
-  constructor(private readonly truyenFullStrategy: TruyenFullStrategy) {}
+  constructor(
+    private readonly truyenFullStrategy: TruyenFullStrategy,
+  ) {}
 
   getStrategy(url: string): IScraperStrategy {
     if (this.truyenFullStrategy.canHandle(url)) {

@@ -49,10 +49,6 @@ let nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'edit.org',
       },
-      {
-        protocol: 'https',
-        hostname: 'cdn-icons-png.flaticon.com',
-      },
     ],
   },
 };

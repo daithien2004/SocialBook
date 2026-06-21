@@ -5,7 +5,7 @@ import { useAppAuth, useLogout } from '@/features/auth/hooks';
 import { useHeaderNavigation } from './hooks/useHeaderNavigation';
 import { useHeaderTheme } from './hooks/useHeaderTheme';
 import { useColorTheme } from './hooks/useColorTheme';
-import { BookOpen, Globe, Library, LogOut, Menu, Moon, Network, Search, Sun, User, Users, Palette } from 'lucide-react';
+import { BookOpen, Globe, Library, LogOut, Menu, Moon, Network, Search, Settings, Sun, User, Users, Palette } from 'lucide-react';
 import { memo } from 'react';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ const LazyNotificationBell = dynamic(
 export const HeaderClient = memo(function HeaderClient() {
     const { user, isAuthenticated } = useAppAuth();
     const { handleLogout } = useLogout();
-    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToReadingRooms, navigateToProfile, navigateToKnowledgeMap, navigateToLogin } = useHeaderNavigation();
+    const { navigateToHome, navigateToBooks, navigateToPosts, navigateToLibrary, navigateToReadingRooms, navigateToProfile, navigateToSettings, navigateToKnowledgeMap, navigateToLogin } = useHeaderNavigation();
 
     const { theme, toggleTheme, mounted } = useHeaderTheme();
     const { colorTheme, toggleColorTheme, mounted: colorMounted } = useColorTheme();
@@ -60,6 +60,7 @@ export const HeaderClient = memo(function HeaderClient() {
                                     avatarUrl={avatarUrl}
                                     onProfile={() => userId && navigateToProfile(userId)}
                                     onLibrary={navigateToLibrary}
+                                    onSettings={navigateToSettings}
                                     onKnowledgeMap={navigateToKnowledgeMap}
                                     onLogout={handleLogout}
                                 />
@@ -71,6 +72,7 @@ export const HeaderClient = memo(function HeaderClient() {
                                     onPosts={navigateToPosts}
                                     onLibrary={navigateToLibrary}
                                     onReadingRooms={navigateToReadingRooms}
+                                    onSettings={navigateToSettings}
                                     onKnowledgeMap={navigateToKnowledgeMap}
                                     onLogout={handleLogout}
                                 />
@@ -161,12 +163,13 @@ interface UserDropdownProps {
     avatarUrl?: string;
     onProfile: () => void;
     onLibrary: () => void;
+    onSettings: () => void;
     onKnowledgeMap: () => void;
     onLogout: () => void;
 }
 
 
-function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onKnowledgeMap, onLogout }: UserDropdownProps) {
+function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onSettings, onKnowledgeMap, onLogout }: UserDropdownProps) {
     const userName = user.email?.split('@')[0] || 'User';
 
     return (
@@ -181,7 +184,7 @@ function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onKnowledgeMap, o
                     />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64" align="end" forceMount>
+            <DropdownMenuContent className="w-64 p-2 rounded-2xl shadow-xl border-border bg-background/95 backdrop-blur-xl" align="end" forceMount>
                 <DropdownMenuLabel className="p-3 font-normal">
                     <div className="flex flex-col space-y-1.5">
                         <p className="text-sm font-bold leading-none text-foreground">{userName}</p>
@@ -190,22 +193,26 @@ function UserDropdown({ user, avatarUrl, onProfile, onLibrary, onKnowledgeMap, o
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="mx-1" />
                 <div className="space-y-1 py-1">
-                    <DropdownMenuItem onClick={onProfile} className="cursor-pointer gap-2">
+                    <DropdownMenuItem onClick={onProfile} className="rounded-xl gap-2.5 py-2.5 cursor-pointer">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Hồ sơ của tôi</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onLibrary} className="cursor-pointer gap-2">
+                    <DropdownMenuItem onClick={onLibrary} className="rounded-xl gap-2.5 py-2.5 cursor-pointer">
                         <Library className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Thư viện</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onKnowledgeMap} className="cursor-pointer gap-2">
+                    <DropdownMenuItem onClick={onSettings} className="rounded-xl gap-2.5 py-2.5 cursor-pointer">
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium text-sm">Cài đặt</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onKnowledgeMap} className="rounded-xl gap-2.5 py-2.5 cursor-pointer">
                         <Network className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Bản đồ tri thức</span>
                     </DropdownMenuItem>
                 </div>
 
                 <DropdownMenuSeparator className="mx-1" />
-                <DropdownMenuItem onClick={onLogout} className="cursor-pointer gap-2 text-destructive focus:text-destructive focus:bg-destructive/5">
+                <DropdownMenuItem onClick={onLogout} className="rounded-xl gap-2.5 py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/5">
                     <LogOut className="h-4 w-4" />
                     <span className="font-bold text-sm">Đăng xuất</span>
                 </DropdownMenuItem>
@@ -222,12 +229,13 @@ interface MobileMenuProps {
     onPosts: () => void;
     onLibrary: () => void;
     onReadingRooms: () => void;
+    onSettings: () => void;
     onKnowledgeMap: () => void;
     onLogout: () => void;
 }
 
 
-function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, onReadingRooms, onKnowledgeMap, onLogout }: MobileMenuProps) {
+function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, onReadingRooms, onSettings, onKnowledgeMap, onLogout }: MobileMenuProps) {
     const userName = user.email?.split('@')[0] || 'User';
 
     return (
@@ -255,6 +263,7 @@ function MobileMenu({ user, avatarUrl, onProfile, onBooks, onPosts, onLibrary, o
                     <div className="flex-1 space-y-1.5">
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 px-4 mb-2">Cá nhân</p>
                         <MobileNavItem onClick={onProfile} icon={<User className="w-5 h-5" />}>Hồ sơ cá nhân</MobileNavItem>
+                        <MobileNavItem onClick={onSettings} icon={<Settings className="w-5 h-5" />}>Cài đặt tài khoản</MobileNavItem>
                         <MobileNavItem onClick={onLibrary} icon={<Library className="w-5 h-5" />}>Thư viện của tôi</MobileNavItem>
 
                         <div className="h-4" />

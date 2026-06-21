@@ -23,12 +23,8 @@ export class GetAllCollectionsUseCase {
       query.userId,
     );
 
-    const isOwner = query.viewerId === query.userId;
-
-    const visible = collections.filter((c) => isOwner || c.isPublic);
-
     const results = await Promise.all(
-      visible.map(async (collection) => {
+      collections.map(async (collection) => {
         const bookCount = await this.readingListRepository.countByCollectionId(
           collection.id,
         );

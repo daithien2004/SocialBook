@@ -44,5 +44,5 @@ next-env.d.ts
 .idea/
 *.iml
 
-/playwright-report
-/test-results
+frontend/playwright-report/
+frontend/test-results/

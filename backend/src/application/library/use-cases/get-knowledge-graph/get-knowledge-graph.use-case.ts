@@ -21,7 +21,6 @@ export interface GraphNode {
   isGap?: boolean;
   reason?: string;
   slug?: string;
-  url?: string;
 }
 
 export interface GraphLink {
@@ -69,7 +68,6 @@ export class GetKnowledgeGraphUseCase {
           {
             id: user.id.getValue(),
             label: user.username,
-            img: user.image,
             type: 'user',
             val: 20,
           },
@@ -210,8 +208,7 @@ export class GetKnowledgeGraphUseCase {
                 {
                   "genre": "Genre Name",
                   "reason": "Giải thích chi tiết bằng tiếng Việt lý do tại sao thể loại này giúp cân bằng tư duy cho người đọc",
-                  "suggestedBook": "Tên một cuốn sách nổi tiếng tương ứng",
-                  "url": "Một đường link thực tế (Goodreads, Wikipedia, Amazon...) để tìm hiểu hoặc đọc quyển sách này"
+                  "suggestedBook": "Tên một cuốn sách nổi tiếng tương ứng"
                 }
               ]
             }`;
@@ -222,20 +219,12 @@ export class GetKnowledgeGraphUseCase {
               genre: string;
               reason: string;
               suggestedBook: string;
-              url?: string;
-              slug?: string;
-              img?: string;
             }>;
           }
         | undefined;
       try {
         aiResult = await this.geminiService.generateJSON<{
-          gaps: Array<{
-            genre: string;
-            reason: string;
-            suggestedBook: string;
-            url?: string;
-          }>;
+          gaps: Array<{ genre: string; reason: string; suggestedBook: string }>;
         }>(prompt);
         this.logger.log(
           `[KnowledgeGraph] AI generated ${aiResult?.gaps?.length || 0} gaps`,
@@ -247,49 +236,21 @@ export class GetKnowledgeGraphUseCase {
           aiError.message,
         );
         // Fallback: Pick 2 genres the user hasn't read
-        const missingGenreObjs = allGenres
-          .filter((g) => !uniqueUserGenres.includes(g.name.getValue()))
+        const missingGenres = availableGenres
+          .filter((g) => !uniqueUserGenres.includes(g))
           .slice(0, 2);
-
-        const fallbackGaps = await Promise.all(
-          missingGenreObjs.map(async (g) => {
-            let suggestedBookTitle = 'Tác phẩm tiêu biểu';
-            let slug: string | undefined = undefined;
-            let img: string | undefined = undefined;
-
-            try {
-              const booksInGenre = await this.bookRepository.findByGenre(
-                g.id,
-                { page: 1, limit: 1 },
-                { sortBy: 'views', order: 'desc' },
-              );
-              if (booksInGenre.data.length > 0) {
-                const book = booksInGenre.data[0];
-                suggestedBookTitle = book.title.getValue();
-                slug = book.slug;
-                img = book.coverUrl;
-              }
-            } catch {
-              // ignore
-            }
-
-            return {
-              genre: g.name.getValue(),
-              reason:
-                'Chúng tôi nhận thấy bạn chưa khám phá mảng này. Hãy thử để mở rộng góc nhìn nhé!',
-              suggestedBook: suggestedBookTitle,
-              slug,
-              img,
-            };
-          }),
-        );
-
-        aiResult = { gaps: fallbackGaps };
+        aiResult = {
+          gaps: missingGenres.map((g) => ({
+            genre: g,
+            reason:
+              'Chúng tôi nhận thấy bạn chưa khám phá mảng này. Hãy thử để mở rộng góc nhìn nhé!',
+            suggestedBook: 'Tác phẩm tiêu biểu',
+          })),
+        };
       }
 
       if (aiResult && aiResult.gaps) {
-        for (let index = 0; index < aiResult.gaps.length; index++) {
-          const gap = aiResult.gaps[index];
+        aiResult.gaps.forEach((gap, index) => {
           const gapId = `gap_genre_${index}`;
           const bookGapId = `gap_book_${index}`;
 
@@ -304,14 +265,6 @@ export class GetKnowledgeGraphUseCase {
             reason: gap.reason,
           });
 
-          const bookSlug =
-            gap.slug ||
-            slugify(gap.suggestedBook, {
-              lower: true,
-              strict: true,
-              locale: 'vi',
-            });
-
           // Add Gap Book Node
           nodes.push({
             id: bookGapId,
@@ -320,12 +273,12 @@ export class GetKnowledgeGraphUseCase {
             val: 10,
             color: '#f472b6', // pink-400
             isGap: true,
-            reason: gap.url
-              ? `Gợi ý để lấp đầy khoảng trống ${gap.genre} của bạn. Xem thêm tại link đính kèm.`
-              : `Gợi ý để lấp đầy khoảng trống ${gap.genre} của bạn.`,
-            slug: bookSlug,
-            img: gap.img,
-            url: gap.url,
+            reason: `Gợi ý để lấp đầy khoảng trống ${gap.genre} của bạn.`,
+            slug: slugify(gap.suggestedBook, {
+              lower: true,
+              strict: true,
+              locale: 'vi',
+            }),
           });
 
           // Links
@@ -339,7 +292,7 @@ export class GetKnowledgeGraphUseCase {
             target: bookGapId,
             type: 'belongs_to',
           });
-        }
+        });
       }
     } catch (error: unknown) {
       this.logger.error('[KnowledgeGraph] Global analysis error:', error);

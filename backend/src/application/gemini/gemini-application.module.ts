@@ -6,11 +6,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 
 @Module({
-  imports: [
-    GeminiRepositoryModule,
-    IdGeneratorModule,
-    ChaptersRepositoryModule,
-  ],
+  imports: [GeminiRepositoryModule, IdGeneratorModule, ChaptersRepositoryModule],
   providers: [GenerateTextUseCase, SummarizeChapterUseCase],
   exports: [
     GeminiRepositoryModule,

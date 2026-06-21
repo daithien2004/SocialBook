@@ -72,7 +72,6 @@ export interface CreateCollectionModalData {
 export interface EditCollectionModalData {
   collectionId: string;
   currentName: string;
-  currentIsPublic: boolean;
   onSuccess?: () => void;
 }
 

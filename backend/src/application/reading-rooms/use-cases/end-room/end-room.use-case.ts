@@ -22,9 +22,7 @@ export class EndRoomUseCase {
     }
 
     if (!room.isHost(command.userId)) {
-      throw new ForbiddenDomainException(
-        'Chỉ chủ phòng mới có thể kết thúc phòng',
-      );
+      throw new ForbiddenDomainException('Chỉ chủ phòng mới có thể kết thúc phòng');
     }
 
     room.end();

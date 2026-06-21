@@ -1,5 +1,5 @@
 'use client';
-import { Filter, Check, Library, Hash } from 'lucide-react';
+import { X, Filter, Check, Library, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FiltersData } from '@/features/books/types/book.interface';
 

@@ -33,7 +33,6 @@ export interface Collection {
   name: string;
   description?: string;
   isPublic: boolean;
-  userId: string;
   createdAt: string;
 }
 
@@ -82,7 +81,6 @@ export interface GraphNode {
   isGap?: boolean;
   reason?: string;
   slug?: string;
-  url?: string;
 }
 
 

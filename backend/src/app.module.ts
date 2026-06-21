@@ -68,9 +68,7 @@ import { PresentationModule } from './presentation/presentation.module';
             port,
             password,
             tls:
-              host.includes('upstash') || host.includes('rediss')
-                ? { rejectUnauthorized: false }
-                : undefined,
+              host !== 'localhost' ? { rejectUnauthorized: false } : undefined,
             connectTimeout: 10000,
             maxRetriesPerRequest: 5,
             retryStrategy: (times: number) => {
