@@ -183,7 +183,7 @@ const ModerationQueuePage = () => {
                                                 Phê duyệt
                                             </Button>
 
-                                            <Button
+                                            <Buttons
                                                 variant="outline"
                                                 onClick={() => openConfirm({
                                                     title: "Từ chối bài viết",
