@@ -74,8 +74,8 @@ const ModerationQueuePage = () => {
                 <>
                     <div className="mb-4 flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                         <div className="flex items-center gap-3">
-                            <Checkbox 
-                                id="select-all" 
+                            <Checkbox
+                                id="select-all"
                                 checked={selectedPostIds.length > 0 && selectedPostIds.length === posts.length}
                                 onCheckedChange={toggleSelectAll}
                             />
@@ -128,12 +128,12 @@ const ModerationQueuePage = () => {
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="space-y-3 flex-1">
                                             <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                <Checkbox 
+                                                <Checkbox
                                                     checked={selectedPostIds.includes(post.id)}
                                                     onCheckedChange={() => toggleSelectPost(post.id)}
                                                     className="mt-0.5"
                                                 />
-                                                <div 
+                                                <div
                                                     className={`flex items-center gap-1.5 text-slate-900 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm ${post.user ? 'cursor-pointer hover:bg-slate-50 transition-colors' : ''}`}
                                                     onClick={() => {
                                                         if (post.user) {
@@ -183,7 +183,7 @@ const ModerationQueuePage = () => {
                                                 Phê duyệt
                                             </Button>
 
-                                            <Buttons
+                                            <Button
                                                 variant="outline"
                                                 onClick={() => openConfirm({
                                                     title: "Từ chối bài viết",
