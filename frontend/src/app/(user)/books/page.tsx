@@ -9,7 +9,6 @@ import { useBookParams } from '@/features/books/hooks/useBookParams';
 import { useBookPagination } from '@/features/books/hooks/useBookPagination';
 
 import { SearchBar } from '@/components/book/SearchBar';
-import { FilterSection } from '@/components/book/FilterSection';
 import { SortDropdown } from '@/components/book/SortDropdown';
 import { useTracking, UserEventType } from '@/hooks/use-tracking';
 import { useEffect } from 'react';

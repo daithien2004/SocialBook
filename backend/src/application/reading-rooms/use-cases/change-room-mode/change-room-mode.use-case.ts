@@ -23,7 +23,9 @@ export class ChangeRoomModeUseCase {
     }
 
     if (room.status === 'ended') {
-      throw new BadRequestDomainException('Không thể đổi chế độ trong phòng đã kết thúc');
+      throw new BadRequestDomainException(
+        'Không thể đổi chế độ trong phòng đã kết thúc',
+      );
     }
 
     if (command.userId !== room.hostId) {

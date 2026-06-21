@@ -37,7 +37,7 @@ export function FollowersModal() {
                 <ScrollArea className="h-[60vh] px-4 py-2">
                     <div className="space-y-4 py-2">
                         {followersList.length === 0 && !isLoading && (
-                            <div className="text-center text-slate-500 py-10">
+                            <div className="text-center text-muted-foreground py-10">
                                 Chưa có người theo dõi nào
                             </div>
                         )}

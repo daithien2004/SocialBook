@@ -73,5 +73,4 @@ export class RoomMember {
     this._props.leftAt = undefined;
     this._props.joinedAt = new Date();
   }
-
 }

@@ -41,7 +41,7 @@ export function BookGrid({
 
           if (isLastBook) {
             return (
-              <div key={book.id} ref={onLastElementVisible}>
+              <div key={book.id} ref={onLastElementVisible} className="h-full">
                 <BookCard book={book} priority={index < 8} />
               </div>
             );

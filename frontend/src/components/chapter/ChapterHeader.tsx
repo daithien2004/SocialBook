@@ -34,13 +34,13 @@ const ChapterHeader = memo(function ChapterHeader({
       )}
 
       <h1 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight">
-        <span className="block text-lg font-medium text-gray-400 dark:text-gray-500 mb-2">
+        <span className="block text-lg font-medium text-muted-foreground mb-2">
           Chương {chapterOrder}
         </span>
         {chapterTitle}
       </h1>
 
-      <div className="flex items-center justify-center gap-6 text-sm text-gray-400 dark:text-gray-500 font-medium">
+      <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground font-medium">
         <div className="flex items-center gap-2">
           <Eye size={16} />
           <span>{viewsCount.toLocaleString('vi-VN')} lượt đọc</span>
@@ -48,7 +48,7 @@ const ChapterHeader = memo(function ChapterHeader({
       </div>
       
       {/* Minimal Divider */}
-      <div className="w-16 h-px bg-gray-200 dark:bg-white/10 mx-auto" />
+      <div className="w-16 h-px bg-border mx-auto" />
     </header>
   );
 });

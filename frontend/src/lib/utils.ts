@@ -50,11 +50,14 @@ export function formatNumber(num?: number): string {
 
 export const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'string') return error;
-  const err = error as { data?: { message?: string | string[] }; message?: string } | undefined;
-  if (Array.isArray(err?.data?.message)) {
-    return err.data.message.join(', ');
-  }
-  return err?.data?.message || err?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+  const err = error as {
+    response?: { data?: { message?: string | string[] } };
+    data?: { message?: string | string[] };
+    message?: string;
+  } | undefined;
+  const data = err?.response?.data ?? err?.data;
+  if (Array.isArray(data?.message)) return data.message.join(', ');
+  return data?.message ?? err?.message ?? 'Đã có lỗi xảy ra. Vui lòng thử lại.';
 };
 
 export const NEW_BOOK_DAYS_THRESHOLD = 14;

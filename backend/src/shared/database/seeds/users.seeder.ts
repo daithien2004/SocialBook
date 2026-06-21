@@ -35,7 +35,7 @@ export class UsersSeed {
         password: hashedPassword,
         isVerified: true,
         provider: 'local',
-        image: 'https://cdn-icons-png.flaticon.com/512/9131/9131529.png',
+        image: '/user1.png',
         location: 'Vietnam',
         roleId: adminRole._id,
       },
@@ -45,8 +45,7 @@ export class UsersSeed {
         password: hashedPassword,
         isVerified: true,
         provider: 'local',
-        image:
-          'https://t4.ftcdn.net/jpg/09/74/99/11/360_F_974991185_UffDpZ0MV6MvJ75h8yik3AMSlVDKrHBy.jpg',
+        image: '/user2.jpg',
         location: 'Vietnam',
         roleId: adminRole._id,
       },
@@ -56,8 +55,7 @@ export class UsersSeed {
         password: hashedPassword,
         isVerified: true,
         provider: 'local',
-        image:
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRO-FoLl1ZZbJGepB2y_8WnJpBqzqze-9wtDQ&s',
+        image: '/user3.jpg',
         location: 'USA',
         roleId: userRole._id,
       },
@@ -67,8 +65,7 @@ export class UsersSeed {
         password: hashedPassword,
         isVerified: true,
         provider: 'local',
-        image:
-          'https://cellphones.com.vn/sforum/wp-content/uploads/2024/02/anh-avatar-ngau-40.jpg',
+        image: '/user4.jpg',
         location: 'UK',
         roleId: userRole._id,
       },
@@ -78,8 +75,7 @@ export class UsersSeed {
         password: hashedPassword,
         isVerified: true,
         provider: 'local',
-        image:
-          'https://www.shutterstock.com/image-vector/vector-funny-cat-glasses-cute-600nw-2313634279.jpg',
+        image: '/user5.jpg',
         location: 'Japan',
         roleId: userRole._id,
       },

@@ -1,5 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+} from '@nestjs/common';
 import request from 'supertest';
 import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
@@ -40,7 +46,8 @@ describe('Auth API (E2E)', () => {
           ignoreEnvFile: true,
           load: [
             () => ({
-              JWT_ACCESS_SECRET: 'test-jwt-secret-for-e2e-test-at-least-32-chars',
+              JWT_ACCESS_SECRET:
+                'test-jwt-secret-for-e2e-test-at-least-32-chars',
               JWT_REFRESH_SECRET: 'test-refresh-secret',
               ACCESS_TOKEN_EXPIRES_IN: '15m',
               REFRESH_TOKEN_EXPIRES_IN: '7d',
@@ -53,7 +60,15 @@ describe('Auth API (E2E)', () => {
       controllers: [AuthController],
       providers: [
         Reflector,
-        { provide: 'CACHE_SERVICE', useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), reset: jest.fn() } },
+        {
+          provide: 'CACHE_SERVICE',
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+            reset: jest.fn(),
+          },
+        },
         { provide: LoginUseCase, useValue: { execute: mockExecute } },
         { provide: RegisterUseCase, useValue: { execute: mockExecute } },
         { provide: GoogleAuthUseCase, useValue: { execute: mockExecute } },
@@ -94,7 +109,12 @@ describe('Auth API (E2E)', () => {
       it('should reject weak password', async () => {
         const res = await request(app.getHttpServer())
           .post('/api/auth/signup')
-          .send({ username: 'test', email: 'test@test.com', password: '123', confirmPassword: '123' })
+          .send({
+            username: 'test',
+            email: 'test@test.com',
+            password: '123',
+            confirmPassword: '123',
+          })
           .expect(400);
         expect(res.body).toHaveProperty('message');
       });
@@ -102,7 +122,12 @@ describe('Auth API (E2E)', () => {
       it('should reject invalid email', async () => {
         await request(app.getHttpServer())
           .post('/api/auth/signup')
-          .send({ username: 'test', email: 'bad', password: 'Password123!', confirmPassword: 'Password123!' })
+          .send({
+            username: 'test',
+            email: 'bad',
+            password: 'Password123!',
+            confirmPassword: 'Password123!',
+          })
           .expect(400);
       });
 
@@ -117,7 +142,12 @@ describe('Auth API (E2E)', () => {
         mockExecute.mockResolvedValue('Mã OTP đã được gửi đến email của bạn');
         const res = await request(app.getHttpServer())
           .post('/api/auth/signup')
-          .send({ username: 'validuser', email: 'valid@test.com', password: 'Password123!', confirmPassword: 'Password123!' })
+          .send({
+            username: 'validuser',
+            email: 'valid@test.com',
+            password: 'Password123!',
+            confirmPassword: 'Password123!',
+          })
           .expect(201);
         expect(res.body.message).toContain('OTP');
       });
@@ -167,7 +197,11 @@ describe('Auth API (E2E)', () => {
         mockExecute.mockResolvedValue('Đặt lại mật khẩu thành công');
         const res = await request(app.getHttpServer())
           .post('/api/auth/reset-password')
-          .send({ email: 'test@test.com', otp: '123456', newPassword: 'NewPass123!' })
+          .send({
+            email: 'test@test.com',
+            otp: '123456',
+            newPassword: 'NewPass123!',
+          })
           .expect(201);
         expect(res.body).toHaveProperty('message');
       });
@@ -214,7 +248,12 @@ describe('Auth API (E2E)', () => {
       mockExecute.mockResolvedValue('Mã OTP đã được gửi đến email của bạn');
       const res = await request(app.getHttpServer())
         .post('/api/auth/signup')
-        .send({ username: 'format', email: 'format@test.com', password: 'Password123!', confirmPassword: 'Password123!' })
+        .send({
+          username: 'format',
+          email: 'format@test.com',
+          password: 'Password123!',
+          confirmPassword: 'Password123!',
+        })
         .expect(201);
       expect(res.body).toHaveProperty('success');
       expect(res.body).toHaveProperty('statusCode');

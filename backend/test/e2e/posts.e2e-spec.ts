@@ -25,6 +25,7 @@ import {
   Role,
   RoleSchema,
 } from '@/infrastructure/database/schemas/role.schema';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { PostsController } from '@/presentation/posts/posts.controller';
 
 import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
@@ -74,7 +75,7 @@ describe('GET /posts (E2E)', () => {
         { provide: RejectPostUseCase, useValue: mockUseCase },
       ],
     })
-      .overrideGuard(require('@/common/guards/jwt-auth.guard').JwtAuthGuard)
+      .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

@@ -53,5 +53,5 @@ export const useRoomPresence = (
       clearInterval(interval);
       if (pendingTimeout.current) clearTimeout(pendingTimeout.current);
     };
-  }, [room, chapterSlug, activeParagraphId, readingProgress, sendHeartbeat]);
+  }, [room, chapterSlug, activeParagraphId, readingProgress, sendHeartbeat, bookId, chapterId]);
 };

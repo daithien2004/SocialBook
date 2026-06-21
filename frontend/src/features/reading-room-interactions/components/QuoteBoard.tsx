@@ -3,7 +3,7 @@ import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
 import { useAppAuth } from '@/features/auth/hooks';
 import { cn } from '@/lib/utils';
-import { ChevronUp, ChevronDown, QuoteIcon, ArrowRightCircle, Trash2, Loader2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, QuoteIcon, ArrowRightCircle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useDeleteRoomQuoteMutation } from '@/features/reading-room-interactions/api/roomInteractionsApi';
@@ -175,7 +175,7 @@ export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
                     onClick={() => voteQuote(quote.id, 'up')}
                     className={cn(
                       'p-1.5 rounded-md hover:bg-primary/15 transition-colors',
-                      userVote?.type === 'up' && 'text-green-500 bg-green-500/10',
+                      userVote?.type === 'up' && 'text-success bg-success/10',
                     )}
                     title="Ủng hộ"
                   >
@@ -183,8 +183,8 @@ export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
                   </button>
                   <span className={cn(
                     'text-[11px] font-black tabular-nums min-w-[2ch] text-center',
-                    quote.voteCount > 0 && 'text-green-500',
-                    quote.voteCount < 0 && 'text-red-500',
+                    quote.voteCount > 0 && 'text-success',
+                    quote.voteCount < 0 && 'text-destructive',
                     quote.voteCount === 0 && 'text-foreground'
                   )}>
                     {quote.voteCount > 0 ? `+${quote.voteCount}` : quote.voteCount}
@@ -193,7 +193,7 @@ export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
                     onClick={() => voteQuote(quote.id, 'down')}
                     className={cn(
                       'p-1.5 rounded-md hover:bg-destructive/15 transition-colors',
-                      userVote?.type === 'down' && 'text-red-500 bg-red-500/10',
+                      userVote?.type === 'down' && 'text-destructive bg-destructive/10',
                     )}
                     title="Phản đối"
                   >

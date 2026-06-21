@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundDomainException, ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import {
+  NotFoundDomainException,
+  ForbiddenDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { ReadingRoomResult } from '../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
@@ -11,7 +14,9 @@ export class JoinRoomUseCase {
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: JoinRoomCommand): Promise<ReadingRoomResult> {
-    const room = await this.roomRepository.findById(RoomId.create(command.roomCode));
+    const room = await this.roomRepository.findById(
+      RoomId.create(command.roomCode),
+    );
     if (!room) {
       throw new NotFoundDomainException('Phòng không tồn tại');
     }
@@ -24,7 +29,7 @@ export class JoinRoomUseCase {
       room.addMember(command.userId);
       await this.roomRepository.save(room);
     }
-    
+
     return ReadingRoomApplicationMapper.toResult(room);
   }
 }

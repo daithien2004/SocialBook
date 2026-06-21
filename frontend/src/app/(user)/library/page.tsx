@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Lock,
   Globe,
+  Pencil,
 } from 'lucide-react';
 
 import {
@@ -131,12 +132,12 @@ export default function LibraryPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pt-1.5">
                 <button
                   onClick={() => openCreateCollection({ onSuccess: refetchCollections })}
-                  className="group relative flex flex-col items-center justify-center h-36 rounded-2xl border-2 border-dashed border-border/80 hover:border-red-500/50 hover:bg-red-500/[0.015] dark:hover:bg-red-500/[0.01] hover:shadow-md transition-all duration-500 bg-card cursor-pointer"
+                  className="group relative flex flex-col items-center justify-center h-36 rounded-2xl border-2 border-dashed border-border/80 hover:border-brand/50 hover:bg-brand/[0.015] dark:hover:bg-brand/[0.01] hover:shadow-md transition-all duration-500 bg-card cursor-pointer"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-muted group-hover:bg-gradient-to-br group-hover:from-red-500 group-hover:to-rose-500 flex items-center justify-center text-muted-foreground group-hover:text-white transition-all duration-500 shadow-sm group-hover:shadow-[0_4px_12px_rgba(239,68,68,0.2)]">
+                  <div className="w-12 h-12 rounded-2xl bg-muted group-hover:bg-gradient-to-br group-hover:from-brand-gradient-start group-hover:to-brand-gradient-end flex items-center justify-center text-muted-foreground group-hover:text-brand-foreground transition-all duration-500 shadow-sm group-hover:shadow-lg">
                     <FolderPlus size={22} className="transition-transform duration-500 group-hover:scale-110" />
                   </div>
-                  <span className="text-xs font-bold mt-4 text-muted-foreground group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+                  <span className="text-xs font-bold mt-4 text-muted-foreground group-hover:text-brand transition-colors">
                     Tạo bộ sưu tập mới
                   </span>
                 </button>
@@ -184,7 +185,7 @@ export default function LibraryPage() {
                     {books?.map((item) => (
                       <Card
                         key={item.id}
-                        className="group flex flex-col h-full overflow-hidden border-border/85 transition-all duration-500 hover:border-red-500/40 hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] bg-card text-foreground"
+                        className="group flex flex-col h-full overflow-hidden border-border/85 transition-all duration-500 hover:border-brand/40 hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] bg-card text-foreground"
                       >
                         {/* Book Cover */}
                         <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted">
@@ -201,7 +202,7 @@ export default function LibraryPage() {
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 backdrop-blur-[1px]">
                             <Link
                               href={`/books/${item.bookId.slug}`}
-                              className="px-4 py-2 bg-white text-black font-semibold text-xs rounded-full hover:bg-red-600 hover:text-white shadow-md transition-all duration-300 scale-90 group-hover:scale-100"
+                              className="px-4 py-2 bg-background text-foreground font-semibold text-xs rounded-full hover:bg-brand hover:text-brand-foreground shadow-md transition-all duration-300 scale-90 group-hover:scale-100"
                             >
                               Chi tiết truyện
                             </Link>
@@ -214,7 +215,7 @@ export default function LibraryPage() {
                             {item.bookId.authorName || 'Tác giả'}
                           </p>
                           <Link href={`/books/${item.bookId.slug}`}>
-                            <h3 className="font-semibold text-sm line-clamp-2 hover:text-red-600 dark:hover:text-red-400 transition-colors mb-2 min-h-[40px] leading-tight text-foreground">
+                            <h3 className="font-semibold text-sm line-clamp-2 hover:text-brand transition-colors mb-2 min-h-[40px] leading-tight text-foreground">
                               {item.bookId.title}
                             </h3>
                           </Link>
@@ -231,7 +232,7 @@ export default function LibraryPage() {
                                 </div>
                                 <Link
                                   href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
-                                  className="w-full flex items-center justify-center gap-1.5 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-500/20 text-xs font-bold py-2 rounded-full transition-all duration-300"
+                                  className="w-full flex items-center justify-center gap-1.5 bg-brand/10 hover:bg-brand/20 text-brand border border-brand/20 text-xs font-bold py-2 rounded-full transition-all duration-300"
                                 >
                                   <BookOpen size={13} />
                                   Đọc tiếp
@@ -269,7 +270,7 @@ export default function LibraryPage() {
                   </p>
                   <Link
                     href="/books"
-                    className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
+                    className="px-6 py-2.5 bg-brand hover:bg-brand/90 text-brand-foreground rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
                   >
                     Khám phá ngay <ChevronRight size={16} />
                   </Link>
@@ -306,26 +307,44 @@ function LibrarySkeleton() {
 }
 
 function CollectionCard({ col }: { col: Collection }) {
+  const router = useRouter();
   const { data: detail } = useGetCollectionDetailQuery(col.id);
   const books = detail?.books || [];
+  const { openEditCollection } = useModalStore();
   
   // Lấy tối đa 3 bìa sách
   const covers = books.slice(0, 3).map((b) => b.bookId.coverUrl);
 
   return (
-    <Link
-      href={`/collections/${col.id}`}
-      className="group relative flex flex-col justify-between h-36 bg-card rounded-2xl border border-border p-5 hover:border-red-500/40 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.02)] transition-all duration-300 cursor-pointer overflow-hidden"
+    <div
+      onClick={() => router.push(`/collections/${col.id}`)}
+      className="group relative flex flex-col justify-between h-36 bg-card rounded-2xl border border-border p-5 hover:border-brand/40 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.02)] transition-all duration-300 cursor-pointer overflow-hidden"
     >
-      {/* Accent red gradient line at the top */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-500 to-rose-500 opacity-80 group-hover:opacity-100 transition-opacity z-10" />
+      {/* Accent brand gradient line at the top */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-gradient-start to-brand-gradient-end opacity-80 group-hover:opacity-100 transition-opacity z-10" />
+
+      {/* Edit button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          openEditCollection({
+            collectionId: col.id,
+            currentName: col.name,
+            currentIsPublic: col.isPublic,
+          });
+        }}
+        className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted cursor-pointer"
+        title="Chỉnh sửa bộ sưu tập"
+      >
+        <Pencil size={12} className="text-muted-foreground" />
+      </button>
 
       {/* Main card body layout */}
       <div className="flex gap-4 items-start justify-between h-full min-w-0 z-10">
         {/* Left: Info */}
         <div className="flex flex-col justify-between h-full min-w-0 flex-1">
           <div className="space-y-1">
-            <h3 className="font-bold text-base text-foreground truncate group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+            <h3 className="font-bold text-base text-foreground truncate group-hover:text-brand transition-colors">
               {col.name}
             </h3>
             <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
@@ -395,6 +414,6 @@ function CollectionCard({ col }: { col: Collection }) {
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

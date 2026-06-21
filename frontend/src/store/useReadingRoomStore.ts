@@ -51,12 +51,12 @@ export interface EmotionEvent {
 
 // User color palette for collaborative selections (assigned by hash)
 export const PARTY_COLORS = [
-  { bg: 'rgba(251,191,36,0.35)',  border: '#fbbf24' }, // amber
-  { bg: 'rgba(20,184,166,0.30)',  border: '#14b8a6' }, // teal
-  { bg: 'rgba(244,63,94,0.28)',   border: '#f43f5e' }, // rose
-  { bg: 'rgba(139,92,246,0.28)', border: '#8b5cf6' }, // violet
-  { bg: 'rgba(56,189,248,0.30)',  border: '#38bdf8' }, // sky
-  { bg: 'rgba(249,115,22,0.30)', border: '#f97316' }, // orange
+  { bg: 'oklch(0.75 0.15 85 / 0.35)',  border: 'oklch(0.75 0.15 85)' },
+  { bg: 'oklch(0.6 0.14 180 / 0.30)',   border: 'oklch(0.6 0.14 180)' },
+  { bg: 'oklch(0.6 0.22 360 / 0.28)',   border: 'oklch(0.6 0.22 360)' },
+  { bg: 'oklch(0.55 0.2 300 / 0.28)',  border: 'oklch(0.55 0.2 300)' },
+  { bg: 'oklch(0.6 0.14 230 / 0.30)',   border: 'oklch(0.6 0.14 230)' },
+  { bg: 'oklch(0.7 0.18 60 / 0.30)',   border: 'oklch(0.7 0.18 60)' },
 ];
 
 export interface RemoteSelection {

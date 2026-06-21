@@ -149,7 +149,7 @@ export function FileImportModal({
                     </div>
                     <button
                         onClick={handleClose}
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        className="text-muted-foreground hover:text-foreground"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -159,7 +159,7 @@ export function FileImportModal({
                 <div className="flex-1 overflow-hidden">
                     {step === 'upload' ? (
                         <div className="flex items-center justify-center h-full p-6">
-                            <div className="flex flex-col items-center justify-center w-full max-w-2xl h-96 border-2 border-dashed rounded-lg border-gray-300 bg-gray-50 dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <div className="flex flex-col items-center justify-center w-full max-w-2xl h-96 border-2 border-dashed rounded-lg border-border bg-muted/50 hover:bg-accent transition-colors">
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -172,11 +172,11 @@ export function FileImportModal({
                                     htmlFor="file-upload"
                                     className="flex flex-col items-center cursor-pointer w-full h-full justify-center"
                                 >
-                                    <Upload className="h-16 w-16 text-gray-400 mb-4" />
+                                    <Upload className="h-16 w-16 text-muted-foreground mb-4" />
                                     <span className="text-xl font-medium text-foreground">
                                         {file ? file.name : 'Nhấn để tải lên EPUB hoặc MOBI'}
                                     </span>
-                                    <span className="text-sm text-gray-500 mt-2">
+                                    <span className="text-sm text-muted-foreground mt-2">
                                         Định dạng hỗ trợ: .epub, .mobi
                                     </span>
                                 </label>
@@ -185,7 +185,7 @@ export function FileImportModal({
                     ) : (
                         <div className="flex h-full">
                             {/* Left Panel - Chapter List */}
-                            <div className="w-96 border-r border-border flex flex-col bg-gray-50 dark:bg-gray-900/50">
+                            <div className="w-96 border-r border-border flex flex-col bg-muted/50">
                                 <div className="p-4 border-b border-border">
                                     <div className="flex items-center justify-between mb-3">
                                         <h3 className="text-sm font-semibold text-foreground">
@@ -197,7 +197,7 @@ export function FileImportModal({
                                                     prev.map((c) => ({ ...c, selected: !prev.every((x) => x.selected) }))
                                                 )
                                             }
-                                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                                            className="text-xs text-info hover:text-info/80 font-medium"
                                         >
                                             {parsedChapters.every((c) => c.selected)
                                                 ? 'Bỏ chọn tất cả'
@@ -215,15 +215,15 @@ export function FileImportModal({
                                             key={index}
                                             onClick={() => setSelectedChapterIndex(index)}
                                             className={`p-4 border-b border-border cursor-pointer transition-colors ${selectedChapterIndex === index
-                                                ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-600'
-                                                : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 border-l-4 border-l-transparent'
+                                                ? 'bg-info/10 dark:bg-info/20 border-l-4 border-l-info'
+                                                : 'hover:bg-accent border-l-4 border-l-transparent'
                                                 }`}
                                         >
                                             <div className="flex items-start gap-3">
                                                 <div
                                                     className={`mt-0.5 h-5 w-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${chapter.selected
-                                                        ? 'bg-blue-600 border-blue-600 text-white'
-                                                        : 'border-gray-300 dark:border-gray-600'
+                                                        ? 'bg-info border-info text-info-foreground'
+                                                        : 'border-border'
                                                         }`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -252,7 +252,7 @@ export function FileImportModal({
                             {/* Right Panel - Chapter Preview & Edit */}
                             <div className="flex-1 flex flex-col bg-card">
                                 <div className="p-6 border-b border-border">
-                                    <div className="flex items-center gap-2 text-blue-600 mb-2">
+                                    <div className="flex items-center gap-2 text-info mb-2">
                                         <Eye className="h-4 w-4" />
                                         <span className="text-xs font-medium uppercase tracking-wide">Xem trước & Chỉnh sửa</span>
                                     </div>
@@ -265,7 +265,7 @@ export function FileImportModal({
                                     {parsedChapters[selectedChapterIndex] && (
                                         <>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                <label className="block text-sm font-medium text-muted-foreground mb-2">
                                                     Tiêu đề chương
                                                 </label>
                                                 <input
@@ -273,14 +273,14 @@ export function FileImportModal({
                                                     onChange={(e) =>
                                                         handleChapterChange(selectedChapterIndex, 'title', e.target.value)
                                                     }
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 dark:border-gray-700 text-lg font-medium"
+                                                    className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-info focus:border-info outline-none bg-background text-lg font-medium"
                                                     placeholder="Nhập tiêu đề chương"
                                                 />
                                             </div>
 
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    <label className="block text-sm font-medium text-muted-foreground">
                                                         Nội dung chương
                                                     </label>
                                                     <span className="text-xs text-muted-foreground">
@@ -292,7 +292,7 @@ export function FileImportModal({
                                                     onChange={(e) =>
                                                         handleChapterChange(selectedChapterIndex, 'content', e.target.value)
                                                     }
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-800 dark:border-gray-700 font-mono text-sm resize-none"
+                                                    className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-info focus:border-info outline-none bg-background font-mono text-sm resize-none"
                                                     style={{ minHeight: '500px' }}
                                                     placeholder="Nội dung chương sẽ xuất hiện ở đây..."
                                                 />
@@ -306,8 +306,8 @@ export function FileImportModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-border flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="p-6 border-t border-border flex justify-between items-center bg-muted/50">
+                    <div className="text-sm text-muted-foreground">
                         {step === 'preview' && (
                             <span>
                                 {parsedChapters.filter((c) => c.selected).length} trong tổng số {parsedChapters.length} chương đã chọn
@@ -319,7 +319,7 @@ export function FileImportModal({
                             <button
                                 onClick={handlePreview}
                                 disabled={!file || isPreviewLoading}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                                className="flex items-center gap-2 px-6 py-2.5 bg-info text-info-foreground rounded-lg hover:bg-info/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                             >
                                 {isPreviewLoading && (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -330,14 +330,14 @@ export function FileImportModal({
                             <>
                                 <button
                                     onClick={() => setStep('upload')}
-                                    className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors font-medium"
+                                    className="px-6 py-2.5 border border-border rounded-lg hover:bg-accent transition-colors font-medium"
                                 >
                                     Quay lại
                                 </button>
                                 <button
                                     onClick={handleImportConfirm}
                                     disabled={isImporting || parsedChapters.filter((c) => c.selected).length === 0}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+className="flex items-center gap-2 px-6 py-2.5 bg-info text-info-foreground rounded-lg hover:bg-info/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                                 >
                                     {isImporting && (
                                         <Loader2 className="h-4 w-4 animate-spin" />

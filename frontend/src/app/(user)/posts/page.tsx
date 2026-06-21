@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useCallback, useRef, useEffect } from 'react';
 import { useAppAuth } from '@/features/auth/hooks';
-import { PenSquare } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useModalStore } from '@/store/useModalStore';
 import PostList from '@/components/post/PostList';

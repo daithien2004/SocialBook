@@ -23,7 +23,7 @@ export function ReadingProgress({ userId, displayName, avatarUrl }: ReadingProgr
       </div>
       <div className={cn(
         'absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-background rounded-full',
-        presence ? 'bg-green-500' : 'bg-muted-foreground/30',
+        presence ? 'bg-success' : 'bg-muted-foreground/30',
       )} />
     </div>
   );

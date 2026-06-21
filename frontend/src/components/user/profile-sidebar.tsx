@@ -7,6 +7,7 @@ import {useRouter} from "next/navigation";
 import {formatDate} from "@/lib/utils";
 import { MapPin, Paperclip } from 'lucide-react';
 import { useProfileShare } from './hooks';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ProfileNavProps {
   profileUserId: string;
@@ -33,14 +34,8 @@ export function ProfileSidebar(props : ProfileNavProps) {
 
   return (
       <>
-        <div
-            className="
-        rounded-2xl p-5
-        bg-white dark:bg-neutral-900
-        border border-border
-        shadow-sm
-      "
-        >
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-5">
           <h3 className="mb-4 text-sm text-muted-foreground">
             {props.bio}
           </h3>
@@ -57,14 +52,14 @@ export function ProfileSidebar(props : ProfileNavProps) {
 
             {location && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 text-slate-500" />
+                <MapPin className="w-4 h-4 text-muted-foreground" />
                 <span>{location}</span>
               </div>
             )}
 
             {website && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Paperclip className="w-4 h-4 text-slate-500" />
+                <Paperclip className="w-4 h-4 text-muted-foreground" />
                 <a
                   href={website.startsWith('http') ? website : `https://${website}`}
                   target="_blank"
@@ -110,7 +105,7 @@ export function ProfileSidebar(props : ProfileNavProps) {
                     {Array.from({ length: 4 }).map((_, i) => (
                         <div
                             key={i}
-                            className="h-8 w-8 rounded-full bg-slate-200 dark:bg-gray-800 animate-pulse"
+                            className="h-8 w-8 rounded-full bg-muted animate-pulse"
                         />
                     ))}
                   </div>
@@ -127,7 +122,8 @@ export function ProfileSidebar(props : ProfileNavProps) {
               </div>
             </div>
           </div>
-        </div>
+        </CardContent>
+        </Card>
       </>
   )
 }

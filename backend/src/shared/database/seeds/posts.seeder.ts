@@ -9,9 +9,14 @@ import {
   User,
   UserDocument,
 } from '@/infrastructure/database/schemas/user.schema';
+import {
+  Book,
+  BookDocument,
+} from '@/infrastructure/database/schemas/book.schema';
 
 interface PostSeedData {
   userId: Types.ObjectId;
+  bookId: Types.ObjectId;
   content: string;
   imageUrls: string[];
   moderationStatus: string;
@@ -26,6 +31,7 @@ export class PostsSeed {
   constructor(
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
   ) {}
 
   async run(): Promise<void> {
@@ -43,6 +49,12 @@ export class PostsSeed {
       return;
     }
 
+    const books = await this.bookModel.find().exec();
+    if (books.length === 0) {
+      this.logger.error('❌ Books not found. Skipping posts...');
+      return;
+    }
+
     const postTemplates = [
       'Vừa đọc xong một cuốn sách tuyệt vời! Cảm xúc vẫn còn nguyên vẹn. Mọi người có gợi ý gì hay không?',
       'Cuối tuần rảnh rỗi, định đọc thử thể loại mới. Ai recommend vài cuốn hay với!',
@@ -57,8 +69,10 @@ export class PostsSeed {
     for (const user of users) {
       const numPosts = Math.floor(Math.random() * 2) + 1;
       for (let i = 0; i < numPosts; i++) {
+        const book = books[Math.floor(Math.random() * books.length)];
         posts.push({
           userId: user._id,
+          bookId: book._id,
           content:
             postTemplates[Math.floor(Math.random() * postTemplates.length)],
           imageUrls: [],

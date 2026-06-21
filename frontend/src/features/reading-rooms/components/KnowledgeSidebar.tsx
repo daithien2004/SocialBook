@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useGetChapterKnowledgeQuery, useAskChapterAIMutation, useLazyGetChapterKnowledgeQuery } from '@/features/chapters/api/chaptersApi';
 import { useState, useEffect, useRef } from 'react';
+import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 
 import { KnowledgeEntity } from '@/features/chapters/types/chapter.interface';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,9 +24,11 @@ interface KnowledgeSidebarProps {
 }
 
 export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSidebarProps) => {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAppAuth();
+
   const { data, isLoading: isQueryLoading, error, refetch } = useGetChapterKnowledgeQuery(
     { bookSlug, chapterId },
-    { skip: !chapterId }
+    { skip: !chapterId || !isAuthenticated }
   );
 
   const [triggerForceGet, { isLoading: isForceLoading }] = useLazyGetChapterKnowledgeQuery();
@@ -170,10 +173,17 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSideb
                 </div>
               ) : error ? (
                 <div className="p-8 text-center space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
-                    <Info className="w-5 h-5 text-red-500" />
+                  <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+                    <Info className="w-5 h-5 text-destructive" />
                   </div>
                   <p className="text-[10px] text-muted-foreground">Không thể tải kiến thức chương này. Thử lại sau nhé!</p>
+                </div>
+              ) : !isAuthenticated ? (
+                <div className="p-8 text-center space-y-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <Users className="w-5 h-5 text-primary" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Vui lòng đăng nhập để xem kiến thức chương này nhé!</p>
                 </div>
               ) : !data ? (
                 <div className="p-8 text-center space-y-3">
@@ -304,13 +314,14 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSideb
               <Input
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                placeholder="Hỏi AI về nội dung..."
+                placeholder={isAuthenticated ? "Hỏi AI về nội dung..." : "Vui lòng đăng nhập để chat..."}
+                disabled={!isAuthenticated}
                 className="h-9 text-xs rounded-xl bg-background dark:bg-black/40 border-border/50 focus-visible:ring-primary/20"
               />
               <Button
                 type="submit"
                 size="icon"
-                disabled={!question.trim()}
+                disabled={!question.trim() || !isAuthenticated}
                 className="h-9 w-9 shrink-0 rounded-xl"
               >
                 <Send className="w-3.5 h-3.5" />

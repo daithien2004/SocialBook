@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { type FollowStateResponse } from "@/features/follows/api/followApi";
 import { usersApi } from "@/features/users/api/usersApi";
-import { cn } from "@/lib/utils";
 import { Settings } from "lucide-react";
 import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { useState } from "react";
@@ -41,7 +40,7 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
     };
 
     return (
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="sticky top-0 z-10 bg-card border-b border-border">
             <div className="container mx-auto max-w-6xl px-4">
                 <div className="flex flex-col md:flex-row md:h-14 items-center justify-between gap-4 py-2 md:py-0">
 
@@ -76,9 +75,7 @@ export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProp
                                     userId={profileUserId}
                                     initialIsFollowing={isFollowing}
                                     size="sm"
-                                    className={cn("h-9 min-w-[120px]",
-                                        !isFollowing && "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                    )}
+                                    className="h-9 min-w-[120px]"
                                     onFollowChange={(newIsFollowing) => {
                                         setFollowState((prev) =>
                                             prev ? { ...prev, isFollowing: newIsFollowing } : prev

@@ -356,7 +356,7 @@ export class ReadingRoomGateway
 
     try {
       const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
-      const room = await this.leaveRoomUseCase.execute(command);
+      await this.leaveRoomUseCase.execute(command);
       await this.presenceService.removePresence(roomId, userId);
 
       void socket.leave(`room:${roomId}`);
@@ -405,10 +405,7 @@ export class ReadingRoomGateway
 
       // Save progress as 0 when starting a new chapter
       if (body.bookId) {
-        this.lastSavedProgress.set(
-          `${userId}:${body.chapterSlug}`,
-          0,
-        );
+        this.lastSavedProgress.set(`${userId}:${body.chapterSlug}`, 0);
         await this.saveReadingProgress(
           userId,
           body.bookId,
@@ -541,17 +538,16 @@ export class ReadingRoomGateway
     const { userId, displayName, avatarUrl } = sd;
     if (!userId || !body.roomId) return;
 
-    socket.to(`room:${body.roomId}`).emit(
-      ReadingRoomServerEvent.PARTY_REMOTE_SELECTION,
-      {
+    socket
+      .to(`room:${body.roomId}`)
+      .emit(ReadingRoomServerEvent.PARTY_REMOTE_SELECTION, {
         userId,
         displayName: displayName ?? '',
         avatarUrl: avatarUrl ?? '',
         paragraphId: body.paragraphId,
         startOffset: body.startOffset,
         endOffset: body.endOffset,
-      },
-    );
+      });
   }
 
   @SubscribeMessage('party:selection_cleared')
@@ -563,17 +559,16 @@ export class ReadingRoomGateway
     const { userId } = sd;
     if (!userId || !body.roomId) return;
 
-    socket.to(`room:${body.roomId}`).emit(
-      ReadingRoomServerEvent.PARTY_REMOTE_SELECTION,
-      {
+    socket
+      .to(`room:${body.roomId}`)
+      .emit(ReadingRoomServerEvent.PARTY_REMOTE_SELECTION, {
         userId,
         displayName: '',
         avatarUrl: '',
         paragraphId: null,
         startOffset: 0,
         endOffset: 0,
-      },
-    );
+      });
   }
 
   @SubscribeMessage('heartbeat')
@@ -606,17 +601,10 @@ export class ReadingRoomGateway
       });
 
       // Save reading progress when threshold met
-      if (
-        body.bookId &&
-        body.chapterId &&
-        body.progress !== undefined
-      ) {
+      if (body.bookId && body.chapterId && body.progress !== undefined) {
         const cacheKey = `${userId}:${body.chapterSlug}`;
         const lastSaved = this.lastSavedProgress.get(cacheKey) ?? -1;
-        if (
-          body.progress - lastSaved >= 10 ||
-          body.progress === 100
-        ) {
+        if (body.progress - lastSaved >= 10 || body.progress === 100) {
           this.lastSavedProgress.set(cacheKey, body.progress);
           await this.saveReadingProgress(
             userId,
@@ -699,10 +687,7 @@ export class ReadingRoomGateway
   }
 
   @OnEvent('reading-room.reactivated')
-  handleRoomReactivated(payload: {
-    roomId: string;
-    reactivatedBy: string;
-  }) {
+  handleRoomReactivated(payload: { roomId: string; reactivatedBy: string }) {
     this.server
       .to(`room:${payload.roomId}`)
       .emit(ReadingRoomServerEvent.ROOM_REACTIVATED, {

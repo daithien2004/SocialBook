@@ -14,6 +14,7 @@ describe('AddQuoteUseCase (Unit)', () => {
       findById: jest.fn(),
       updateVotes: jest.fn(),
       deleteByRoom: jest.fn(),
+      deleteById: jest.fn(),
     };
     useCase = new AddQuoteUseCase(mockQuoteRepo);
   });
@@ -41,7 +42,7 @@ describe('AddQuoteUseCase (Unit)', () => {
     );
   });
 
-  it('should reject empty content', () => {
+  it('should reject empty content', async () => {
     const command = new AddQuoteCommand(
       'user-1',
       'room-abc',
@@ -50,8 +51,8 @@ describe('AddQuoteUseCase (Unit)', () => {
       '   ',
     );
 
-    expect(() => useCase.execute(command)).rejects.toThrow(
-      'Quote content cannot be empty',
+    await expect(useCase.execute(command)).rejects.toThrow(
+      'Nội dung trích dẫn không được để trống',
     );
   });
 

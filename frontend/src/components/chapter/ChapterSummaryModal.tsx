@@ -43,12 +43,12 @@ export default function ChapterSummaryModal() {
     return (
         <Dialog open={isChapterSummaryOpen} onOpenChange={closeChapterSummary}>
             <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl">
-                <DialogHeader className="p-5 border-b border-gray-100 dark:border-white/5 bg-background shrink-0">
+                <DialogHeader className="p-5 border-b border-border bg-background shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-black dark:bg-white flex items-center justify-center">
-                            <Sparkles size={16} className="text-white dark:text-black" />
+                        <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center">
+                            <Sparkles size={16} className="text-background" />
                         </div>
-                        <DialogTitle className="font-semibold text-lg text-gray-900 dark:text-white">
+                        <DialogTitle className="font-semibold text-lg text-foreground">
                             Tóm tắt AI
                         </DialogTitle>
                     </div>
@@ -56,24 +56,24 @@ export default function ChapterSummaryModal() {
 
                 <div className="p-6 overflow-y-auto custom-scrollbar bg-muted flex-1">
                     <h4 className="text-muted-foreground font-medium mb-6 text-sm flex items-center gap-2">
-                        Đang tóm tắt: <span className="text-gray-900 dark:text-white font-semibold">{chapterTitle}</span>
+                        Đang tóm tắt: <span className="text-foreground font-semibold">{chapterTitle}</span>
                     </h4>
 
                     {/* Initial State */}
                     {!summary && !isLoading && !hasFetched && (
                         <div className="text-center py-12 space-y-6">
-                            <div className="w-20 h-20 bg-gray-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Sparkles size={32} className="text-gray-400 dark:text-gray-500" />
+                            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Sparkles size={32} className="text-muted-foreground" />
                             </div>
                             <div className="space-y-2">
-                                <p className="text-gray-900 dark:text-white font-medium">Bắt đầu tóm tắt</p>
+                                <p className="text-foreground font-medium">Bắt đầu tóm tắt</p>
                                 <p className="text-muted-foreground text-sm max-w-xs mx-auto leading-relaxed">
                                     Sử dụng trí tuệ nhân tạo để phân tích và tóm tắt nội dung chính của chương này trong vài giây.
                                 </p>
                             </div>
                             <button
                                 onClick={handleSummarize}
-                                className="px-8 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium transition-all hover:scale-105 active:scale-95 flex items-center gap-2 mx-auto shadow-lg"
+                                className="px-8 py-3 bg-foreground text-background rounded-xl font-medium transition-all hover:scale-105 active:scale-95 flex items-center gap-2 mx-auto shadow-lg"
                             >
                                 <Sparkles size={18} />
                                 Tạo tóm tắt
@@ -84,7 +84,7 @@ export default function ChapterSummaryModal() {
                     {/* Loading State */}
                     {isLoading && (
                         <div className="text-center py-16 space-y-4">
-                            <Loader2 size={32} className="animate-spin text-gray-900 dark:text-white mx-auto" />
+                            <Loader2 size={32} className="animate-spin text-foreground mx-auto" />
                             <p className="text-muted-foreground text-sm animate-pulse font-medium">
                                 Đang xử lý nội dung...
                             </p>
@@ -94,15 +94,15 @@ export default function ChapterSummaryModal() {
                     {/* Error State */}
                     {error && (
                         <div className="text-center py-12 space-y-4">
-                            <div className="w-16 h-16 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-red-500 text-xl font-bold">X</span>
+                            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-destructive text-xl font-bold">X</span>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm">
+                            <p className="text-muted-foreground text-sm">
                                 Đã có lỗi xảy ra.
                             </p>
                             <button
                                 onClick={handleSummarize}
-                                className="px-4 py-2 border border-gray-200 dark:border-gray-700 hover:bg-muted rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto text-gray-700 dark:text-gray-300"
+                                className="px-4 py-2 border border-border hover:bg-muted rounded-lg text-sm font-medium transition-colors flex items-center gap-2 mx-auto text-muted-foreground"
                             >
                                 <RefreshCw size={14} />
                                 Thử lại
@@ -113,13 +113,13 @@ export default function ChapterSummaryModal() {
                     {/* Success State (Summary) */}
                     {summary && !isLoading && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <div className="bg-card border border-gray-200 dark:border-white/5 rounded-2xl p-6 text-gray-800 dark:text-gray-200 leading-7 text-[15px] shadow-sm whitespace-pre-line">
+                            <div className="bg-card border border-border rounded-2xl p-6 text-foreground leading-7 text-[15px] shadow-sm whitespace-pre-line">
                                 {summary?.summary}
                             </div>
                             <div className="mt-6 flex justify-center">
                                 <button
                                     onClick={handleSummarize}
-                                    className="px-4 py-2 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center gap-2 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-white/5"
+                                    className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors rounded-lg hover:bg-accent"
                                     title="Tạo lại tóm tắt mới"
                                 >
                                     <RefreshCw size={14} />

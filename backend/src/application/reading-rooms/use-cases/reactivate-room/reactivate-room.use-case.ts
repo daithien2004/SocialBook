@@ -31,7 +31,9 @@ export class ReactivateRoomUseCase {
     }
 
     if (!room.isHost(command.userId)) {
-      throw new ForbiddenDomainException('Chỉ chủ phòng mới có thể mở lại phòng');
+      throw new ForbiddenDomainException(
+        'Chỉ chủ phòng mới có thể mở lại phòng',
+      );
     }
 
     await this.roomRepository.updateStatus(

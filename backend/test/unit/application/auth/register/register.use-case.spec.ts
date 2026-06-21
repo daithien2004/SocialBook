@@ -1,4 +1,7 @@
-import { ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
 import { RegisterCommand } from '@/application/auth/use-cases/register/register.command';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -30,11 +33,15 @@ function createMockUserRepository(): jest.Mocked<IUserRepository> {
   };
 }
 
-function createMockCreateUserUseCase(): jest.Mocked<Partial<CreateUserUseCase>> {
+function createMockCreateUserUseCase(): jest.Mocked<
+  Partial<CreateUserUseCase>
+> {
   return { execute: jest.fn() } as any;
 }
 
-function createMockGetRoleByNameUseCase(): jest.Mocked<Partial<GetRoleByNameUseCase>> {
+function createMockGetRoleByNameUseCase(): jest.Mocked<
+  Partial<GetRoleByNameUseCase>
+> {
   return { execute: jest.fn() } as any;
 }
 
@@ -42,7 +49,10 @@ function createMockSendOtpUseCase(): jest.Mocked<Partial<SendOtpUseCase>> {
   return { execute: jest.fn() } as any;
 }
 
-function createMockPasswordHasher(): jest.Mocked<{ hash: jest.Mock; compare: jest.Mock }> {
+function createMockPasswordHasher(): jest.Mocked<{
+  hash: jest.Mock;
+  compare: jest.Mock;
+}> {
   return { hash: jest.fn(), compare: jest.fn() };
 }
 
@@ -104,7 +114,10 @@ describe('RegisterUseCase (Unit)', () => {
 
   it('should register a new user successfully', async () => {
     mockUserRepo.findByEmail.mockResolvedValue(null);
-    mockGetRoleByName.execute.mockResolvedValue({ id: 'role-user', name: 'user' } as any);
+    mockGetRoleByName.execute.mockResolvedValue({
+      id: 'role-user',
+      name: 'user',
+    } as any);
     mockCreateUser.execute.mockResolvedValue(undefined);
     mockSendOtp.execute.mockResolvedValue(undefined);
 
@@ -160,9 +173,14 @@ describe('RegisterUseCase (Unit)', () => {
 
   it('should propagate errors from SendOtpUseCase', async () => {
     mockUserRepo.findByEmail.mockResolvedValue(null);
-    mockGetRoleByName.execute.mockResolvedValue({ id: 'role-user', name: 'user' } as any);
+    mockGetRoleByName.execute.mockResolvedValue({
+      id: 'role-user',
+      name: 'user',
+    } as any);
     mockCreateUser.execute.mockResolvedValue(undefined);
-    mockSendOtp.execute.mockRejectedValue(new Error('Email service unavailable'));
+    mockSendOtp.execute.mockRejectedValue(
+      new Error('Email service unavailable'),
+    );
 
     await expect(
       useCase.execute(

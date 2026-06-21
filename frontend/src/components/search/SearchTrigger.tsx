@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, startTransition } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useLazyGetBooksQuery } from '@/features/books/api/bookApi';
+import { useLazyGetBooksQuery, useRecordSearchKeywordMutation } from '@/features/books/api/bookApi';
 
 export function SearchTrigger() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export function SearchTrigger() {
 
   const [triggerSearch, { data: searchData, isLoading, isFetching }] =
     useLazyGetBooksQuery();
+  const [recordSearchKeyword] = useRecordSearchKeywordMutation();
 
   useEffect(() => {
     if (isComposing.current) return;
@@ -71,6 +72,7 @@ export function SearchTrigger() {
     const trimmed = query.trim();
     if (trimmed) {
       setIsOpen(false);
+      recordSearchKeyword(trimmed);
       router.push(`/books?search=${encodeURIComponent(trimmed)}`);
     }
   };
@@ -84,6 +86,7 @@ export function SearchTrigger() {
     const trimmed = query.trim();
     if (trimmed) {
       setIsOpen(false);
+      recordSearchKeyword(trimmed);
       router.push(`/books?search=${encodeURIComponent(trimmed)}`);
     }
   };

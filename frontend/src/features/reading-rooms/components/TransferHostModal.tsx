@@ -47,7 +47,7 @@ export function TransferHostModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Crown size={18} className="text-amber-500" />
+            <Crown size={18} className="text-warning" />
             Chuyển quyền trưởng phòng
           </DialogTitle>
           <DialogDescription>
@@ -70,7 +70,7 @@ export function TransferHostModal({
                 <Label
                   key={m.userId}
                   htmlFor={m.userId}
-                  className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:bg-accent transition-colors has-[[data-state=checked]]:border-amber-500 has-[[data-state=checked]]:bg-amber-50 dark:has-[[data-state=checked]]:bg-amber-950/20"
+                  className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer hover:bg-accent transition-colors has-[[data-state=checked]]:border-warning has-[[data-state=checked]]:bg-warning/[0.08] dark:has-[[data-state=checked]]:bg-warning/10"
                 >
                   <RadioGroupItem value={m.userId} id={m.userId} />
                   <Avatar className="w-8 h-8">
@@ -84,7 +84,7 @@ export function TransferHostModal({
                       {displayName}
                     </p>
                   </div>
-                  <Crown size={14} className="text-amber-500 shrink-0" />
+                  <Crown size={14} className="text-warning shrink-0" />
                 </Label>
               );
             })}

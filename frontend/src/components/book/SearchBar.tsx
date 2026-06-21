@@ -2,6 +2,7 @@
 import { X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useRecordSearchKeywordMutation } from '@/features/books/api/bookApi';
 
 interface SearchBarProps {
   initialValue: string;
@@ -20,10 +21,25 @@ export const SearchBar = ({
 }: SearchBarProps) => {
   const [input, setInput] = useState(initialValue);
   const debouncedInput = useDebounce(input, debounceMs);
+  const [recordSearchKeyword] = useRecordSearchKeywordMutation();
   const isComposing = useRef(false);
   const lastSearchedValue = useRef(initialValue);
+  const onSearchRef = useRef(onSearch);
+  const onClearRef = useRef(onClear);
+  
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+    onClearRef.current = onClear;
+  }, [onSearch, onClear]);
+
+  const userCleared = useRef(false);
 
   useEffect(() => {
+    if (userCleared.current) {
+      userCleared.current = false;
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInput(initialValue);
     lastSearchedValue.current = initialValue;
   }, [initialValue]);
@@ -36,13 +52,13 @@ export const SearchBar = ({
 
     if (trimmedInput !== trimmedLast) {
       if (trimmedInput) {
-        onSearch(debouncedInput);
+        onSearchRef.current(debouncedInput);
       } else {
-        onClear();
+        onClearRef.current();
       }
       lastSearchedValue.current = debouncedInput;
     }
-  }, [debouncedInput, onSearch, onClear]);
+  }, [debouncedInput]);
 
   const handleCompositionStart = () => {
     isComposing.current = true;
@@ -56,11 +72,16 @@ export const SearchBar = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(input);
+    const trimmed = input.trim();
+    if (trimmed) {
+      recordSearchKeyword(trimmed);
+    }
+    onSearchRef.current(input);
     lastSearchedValue.current = input;
   };
 
   const handleClear = () => {
+    userCleared.current = true;
     setInput('');
     onClear();
     lastSearchedValue.current = '';
@@ -80,15 +101,15 @@ export const SearchBar = ({
         placeholder="Tìm kiếm tên truyện, tác giả..."
         className={
           compact
-            ? 'block w-full pl-4 pr-10 py-2.5 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all text-sm'
-            : 'block w-full pl-5 pr-12 py-4 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/50 shadow-lg backdrop-blur-sm transition-all'
+            ? 'block w-full pl-4 pr-10 py-2.5 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500'
+            : 'block w-full pl-5 pr-12 py-4 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-lg backdrop-blur-sm transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500'
         }
       />
       {input && (
         <button
           type="button"
           onClick={handleClear}
-          className={`absolute inset-y-0 flex items-center text-gray-400 hover:text-brand transition-colors ${
+          className={`absolute inset-y-0 flex items-center text-muted-foreground hover:text-foreground transition-colors ${
             compact ? 'right-3' : 'right-4'
           }`}
         >

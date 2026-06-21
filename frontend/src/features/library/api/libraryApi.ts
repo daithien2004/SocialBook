@@ -20,7 +20,7 @@ import { recommendationsApi } from '../../recommendations/api/recommendationsApi
 export const libraryApi = createApi({
   reducerPath: 'libraryApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Library', 'Collection'],
+  tagTypes: ['Library', 'Collection', 'KnowledgeGraph'],
   endpoints: (builder) => ({
     getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus | string; limit?: number }>({
       query: ({ status, limit }) => ({
@@ -185,7 +185,8 @@ export const libraryApi = createApi({
         url: NESTJS_LIBRARY_ENDPOINTS.knowledgeGraph,
         method: 'GET',
       }),
-      providesTags: ['Library'],
+      providesTags: ['KnowledgeGraph'],
+      keepUnusedDataFor: 3600, // Giữ cache 1 tiếng thay vì 60s
     }),
   }),
 });

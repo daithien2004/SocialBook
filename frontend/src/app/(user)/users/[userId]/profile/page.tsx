@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     useGetUserOverviewQuery, usePatchUpdateUserAvatarMutation,
     usePatchUpdateUserProfileOverviewMutation,
@@ -70,17 +71,11 @@ const UserProfilePage = () => {
     });
 
     return (
-        <div
-            className="
-      rounded-2xl
-      bg-white dark:bg-neutral-900
-      shadow-sm
-      border border-border
-    "
-        >
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-0">
             {/* Header */}
             <div
-                className="relative rounded-t-2xl bg-gradient-to-b from-teal-700 via-teal-600 to-teal-500 px-6 py-10 md:py-12">
+                className="relative rounded-t-2xl bg-muted px-6 py-10 md:py-12">
                 <div className="pointer-events-none absolute inset-0 opacity-10">
                     <div
                         className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJub25lIi8+PHBhdHRlcm4gaWQ9InBhdHRlcm4iIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48L3BhdHRlcm4+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIi8+PC9zdmc+')] bg-repeat"></div>
@@ -106,8 +101,8 @@ const UserProfilePage = () => {
               shadow-lg disabled:opacity-60
             "
                         >
-                            <div
-                                className="relative h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden">
+                                <div
+                                    className="relative h-24 w-24 rounded-full p-[2px] bg-gradient-to-br from-indigo-500 to-cyan-400 overflow-hidden">
                                 <Image
                                     src={
                                         previewUrl ??
@@ -141,9 +136,9 @@ const UserProfilePage = () => {
                                     className="
                   px-2 py-1 rounded-full text-[10px]
                   border border-border
-                  bg-white dark:bg-neutral-900
+                  bg-background
                   text-foreground
-                  hover:bg-slate-50 dark:hover:bg-gray-800
+                  hover:bg-muted
                 "
                                 >
                                     Hủy
@@ -172,12 +167,12 @@ const UserProfilePage = () => {
                         onChange={handleChange}
                         className="
             mb-2 rounded-lg border-0
-            bg-white/90 dark:bg-neutral-800
+            bg-background/90
             px-6 py-3 text-center text-base font-semibold
             text-foreground
-            placeholder-slate-400 dark:placeholder-gray-500
+            placeholder-muted-foreground
             focus:outline-none focus:ring-2
-            focus:ring-white/50 dark:focus:ring-gray-700
+            focus:ring-primary/50
           "
                     />
                 </div>
@@ -199,12 +194,12 @@ const UserProfilePage = () => {
                             className="
               mt-1 w-full rounded-lg
               border border-border
-              bg-slate-50 dark:bg-neutral-900
+              bg-muted
               px-3 py-2 text-sm
               text-foreground
               outline-none
-              focus:border-teal-500
-              focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
+              focus:border-primary
+              focus:ring-2 focus:ring-primary/20
             "
                         />
                     </div>
@@ -222,12 +217,12 @@ const UserProfilePage = () => {
                             className="
               mt-1 w-full rounded-lg
               border border-border
-              bg-slate-50 dark:bg-neutral-900
+              bg-muted
               px-3 py-2 text-sm
               text-foreground
               outline-none
-              focus:border-teal-500
-              focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
+              focus:border-primary
+              focus:ring-2 focus:ring-primary/20
             "
                         />
                     </div>
@@ -247,8 +242,8 @@ const UserProfilePage = () => {
               px-3 py-2 text-sm
               text-foreground
               outline-none appearance-none
-              focus:border-teal-500
-              focus:ring-2 focus:ring-teal-100 dark:focus:ring-teal-900/40
+              focus:border-primary
+              focus:ring-2 focus:ring-primary/20
             "
                         >
                             <option value="">-- Chọn quốc gia --</option>
@@ -263,14 +258,9 @@ const UserProfilePage = () => {
                     {isDirty && (
                         <div className="md:col-span-2 flex justify-end gap-2">
                             <Button
-                                variant="secondary"
+                                variant="outline"
                                 disabled={isSaving}
                                 onClick={handleResetForm}
-                                className="
-                bg-slate-100 dark:bg-gray-800
-                text-foreground
-                hover:bg-slate-200 dark:hover:bg-gray-700
-              "
                             >
                                 Hoàn tác
                             </Button>
@@ -278,7 +268,6 @@ const UserProfilePage = () => {
                             <Button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="bg-orange-500 text-white hover:bg-orange-600"
                             >
                                 {isSaving ? 'Đang lưu…' : 'Lưu thay đổi'}
                             </Button>
@@ -286,7 +275,8 @@ const UserProfilePage = () => {
                     )}
                 </div>
             </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 };
 

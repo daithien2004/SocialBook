@@ -25,7 +25,9 @@ export class RoomComment extends Entity<string> {
 
   static create(props: RoomCommentProps): RoomComment {
     if (!props.content.trim()) {
-      throw new BadRequestDomainException('Nội dung bình luận không được để trống');
+      throw new BadRequestDomainException(
+        'Nội dung bình luận không được để trống',
+      );
     }
     if (props.content.length > 1000) {
       throw new BadRequestDomainException(
@@ -63,7 +65,9 @@ export class RoomComment extends Entity<string> {
 
   editContent(newContent: string): void {
     if (!newContent.trim()) {
-      throw new BadRequestDomainException('Nội dung bình luận không được để trống');
+      throw new BadRequestDomainException(
+        'Nội dung bình luận không được để trống',
+      );
     }
     if (newContent.length > 1000) {
       throw new BadRequestDomainException(

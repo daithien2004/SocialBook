@@ -30,7 +30,7 @@ export const BookItem = memo(function BookItem(props: BookItemProps) {
             relative aspect-[4/6] w-[140px]
             overflow-hidden rounded-xl
             shadow-md dark:shadow-none
-            bg-slate-100 dark:bg-gray-900
+            bg-muted
             cursor-pointer
             transition-transform
           "
@@ -54,7 +54,7 @@ export const BookItem = memo(function BookItem(props: BookItemProps) {
                         className="
               font-semibold text-base font-serif leading-tight line-clamp-2
               text-foreground
-              group-hover:text-[#ff9800]
+              group-hover:text-primary
               transition-colors cursor-pointer
             "
                     >
@@ -66,7 +66,7 @@ export const BookItem = memo(function BookItem(props: BookItemProps) {
                     </p>
 
                     {props.showStats !== false && (
-                    <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-gray-500">
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                         <div className="flex items-center gap-1">
                             <Eye className="h-4 w-3 relative -top-[0.5px]" />
                             <span className="font-serif text-[12px]">

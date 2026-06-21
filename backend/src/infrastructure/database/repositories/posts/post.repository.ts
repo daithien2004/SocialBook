@@ -7,6 +7,7 @@ import {
   PaginatedResult,
 } from '@/domain/posts/repositories/post.repository.interface';
 import { PostMapper } from '@/infrastructure/database/repositories/posts/post.mapper';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
@@ -79,29 +80,246 @@ export class PostRepository implements IPostRepository {
   async findAll(
     options: FindAllOptions,
   ): Promise<CursorPaginatedResult<PostEntity>> {
-    const filter: FilterQuery<PostDocument> = { isDeleted: false };
+    if (options.userId || !options.viewerUserId) {
+      const filter: FilterQuery<PostDocument> = { isDeleted: false };
 
-    if (options.userId) {
-      filter.userId = new Types.ObjectId(options.userId);
+      if (options.userId) {
+        filter.userId = new Types.ObjectId(options.userId);
+      }
+      if (options.cursor) {
+        const cursorId = options.cursor.includes('_')
+          ? options.cursor.split('_')[1]
+          : options.cursor;
+
+        if (Types.ObjectId.isValid(cursorId)) {
+          filter._id = { $lt: new Types.ObjectId(cursorId) };
+        }
+      }
+
+      if (options.isFlagged !== undefined) {
+        filter.isFlagged = options.isFlagged;
+      } else if (!(options.userId && options.viewerUserId === options.userId)) {
+        filter.isFlagged = { $ne: true };
+      }
+
+      const docs = await this.model
+        .find(filter)
+        .sort({ _id: -1 })
+        .limit(options.limit + 1)
+        .populate(POPULATE_USER)
+        .populate(POPULATE_BOOK)
+        .lean()
+        .exec();
+
+      const hasMore = docs.length > options.limit;
+      if (hasMore) docs.pop();
+
+      const enrichedDocs = await this.enrichPosts(docs, options.viewerUserId);
+
+      const data = enrichedDocs
+        .map((doc) => PostMapper.toDomain(doc))
+        .filter((p): p is PostEntity => p !== null);
+
+      return {
+        data,
+        nextCursor: hasMore ? docs[docs.length - 1]._id.toString() : null,
+        hasMore,
+      };
     }
+
+    // Otherwise, we calculate the personalized feed!
+    const viewerObjId = new Types.ObjectId(options.viewerUserId);
+
+    let cursorScore: number | null = null;
+    let cursorId: string | null = null;
+
     if (options.cursor) {
-      filter._id = { $lt: new Types.ObjectId(options.cursor) };
+      if (options.cursor.includes('_')) {
+        const parts = options.cursor.split('_');
+        cursorScore = parseFloat(parts[0]);
+        cursorId = parts[1];
+      } else if (Types.ObjectId.isValid(options.cursor)) {
+        cursorId = options.cursor;
+        const legacyPost = await this.model.findById(cursorId).lean().exec();
+        if (legacyPost) {
+          const hoursAge =
+            (Date.now() - new Date(legacyPost.createdAt).getTime()) / 3600000;
+          cursorScore = 1 / Math.pow(hoursAge + 2, 1.5);
+        } else {
+          cursorScore = 0;
+        }
+      }
     }
 
-    if (options.isFlagged !== undefined) {
-      filter.isFlagged = options.isFlagged;
-    } else if (!(options.userId && options.viewerUserId === options.userId)) {
-      filter.isFlagged = { $ne: true };
+    const pipeline: any[] = [
+      { $match: { isDeleted: false, isFlagged: { $ne: true } } },
+      // 1. Lookup likes count
+      {
+        $lookup: {
+          from: 'likes',
+          let: { postId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$targetId', '$$postId'] },
+                    { $eq: ['$targetType', 'post'] },
+                    { $eq: ['$status', true] },
+                  ],
+                },
+              },
+            },
+            { $count: 'count' },
+          ],
+          as: 'likesInfo',
+        },
+      },
+      // 2. Lookup comments count
+      {
+        $lookup: {
+          from: 'comments',
+          let: { postId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$targetId', '$$postId'] },
+                    { $eq: ['$targetType', 'post'] },
+                    { $eq: ['$isDeleted', false] },
+                  ],
+                },
+              },
+            },
+            { $count: 'count' },
+          ],
+          as: 'commentsInfo',
+        },
+      },
+      // 3. Lookup book info
+      {
+        $lookup: {
+          from: 'books',
+          localField: 'bookId',
+          foreignField: '_id',
+          as: 'bookInfo',
+        },
+      },
+      // 4. Lookup user preferences
+      {
+        $lookup: {
+          from: 'user_preferences',
+          let: {
+            bookGenres: {
+              $ifNull: [{ $arrayElemAt: ['$bookInfo.genres', 0] }, []],
+            },
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$userId', viewerObjId] },
+                    { $in: ['$genreId', '$$bookGenres'] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'prefInfo',
+        },
+      },
+      // 5. Lookup follow info
+      {
+        $lookup: {
+          from: 'follows',
+          let: { authorId: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$userId', viewerObjId] },
+                    { $eq: ['$targetId', '$$authorId'] },
+                    { $eq: ['$status', true] },
+                    { $eq: ['$isDeleted', false] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'followInfo',
+        },
+      },
+      // 6. Compute scores
+      {
+        $addFields: {
+          likesCount: {
+            $ifNull: [{ $arrayElemAt: ['$likesInfo.count', 0] }, 0],
+          },
+          commentsCount: {
+            $ifNull: [{ $arrayElemAt: ['$commentsInfo.count', 0] }, 0],
+          },
+          genreScore: { $sum: '$prefInfo.score' },
+          followScore: {
+            $cond: {
+              if: { $gt: [{ $size: '$followInfo' }, 0] },
+              then: 100,
+              else: 0,
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          engagementScore: {
+            $add: ['$likesCount', { $multiply: ['$commentsCount', 3] }],
+          },
+          hoursAge: {
+            $divide: [{ $subtract: [new Date(), '$createdAt'] }, 3600000],
+          },
+        },
+      },
+      {
+        $addFields: {
+          score: {
+            $divide: [
+              { $add: ['$followScore', '$genreScore', '$engagementScore', 1] },
+              { $pow: [{ $add: ['$hoursAge', 2] }, 1.5] },
+            ],
+          },
+        },
+      },
+    ];
+
+    // Filter by cursor
+    if (cursorScore !== null && cursorId !== null) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { score: { $lt: cursorScore } },
+            { score: cursorScore, _id: { $lt: new Types.ObjectId(cursorId) } },
+          ],
+        },
+      });
     }
 
-    const docs = await this.model
-      .find(filter)
-      .sort({ _id: -1 })
-      .limit(options.limit + 1)
-      .populate(POPULATE_USER)
-      .populate(POPULATE_BOOK)
-      .lean()
-      .exec();
+    pipeline.push({ $sort: { score: -1, _id: -1 } });
+    pipeline.push({ $limit: options.limit + 1 });
+
+    let docs = await this.model.aggregate(pipeline).exec();
+
+    console.log('=== PERSONALIZED FEED SCORES ===');
+    docs.forEach((doc: any) => {
+      console.log(
+        `Post ID: ${doc._id.toString()} | Score: ${Number(doc.score || 0).toFixed(4)} | FollowScore: ${doc.followScore} | GenreScore: ${doc.genreScore} | Engagement: ${doc.engagementScore} | Age: ${Number(doc.hoursAge || 0).toFixed(2)}h`,
+      );
+    });
+
+    if (docs.length > 0) {
+      docs = await this.model.populate(docs, [POPULATE_USER, POPULATE_BOOK]);
+    }
 
     const hasMore = docs.length > options.limit;
     if (hasMore) docs.pop();
@@ -114,7 +332,9 @@ export class PostRepository implements IPostRepository {
 
     return {
       data,
-      nextCursor: hasMore ? docs[docs.length - 1]._id.toString() : null,
+      nextCursor: hasMore
+        ? `${docs[docs.length - 1].score}_${docs[docs.length - 1]._id.toString()}`
+        : null,
       hasMore,
     };
   }
@@ -292,7 +512,6 @@ export class PostRepository implements IPostRepository {
     );
 
     return docs.map((doc) => {
-      const docObj = typeof doc.toObject === 'function' ? doc.toObject() : doc;
       return {
         ...doc,
         likesCount: likeCountMap.get(doc._id.toString()) ?? 0,

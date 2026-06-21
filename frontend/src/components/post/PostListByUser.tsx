@@ -94,7 +94,7 @@ const PostListUser: React.FC<PostListProps> = ({ userId }) => {
   if (isLoading && cursor === undefined) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -102,10 +102,10 @@ const PostListUser: React.FC<PostListProps> = ({ userId }) => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-8 space-y-4">
-        <p className="text-red-600">Lỗi tải dữ liệu bài viết 😢</p>
+        <p className="text-destructive">Lỗi tải dữ liệu bài viết 😢</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
         >
           Thử lại
         </button>
@@ -116,7 +116,7 @@ const PostListUser: React.FC<PostListProps> = ({ userId }) => {
   if (!allPosts.length && !isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <p className="text-gray-600">Chưa có bài viết nào</p>
+        <p className="text-muted-foreground">Chưa có bài viết nào</p>
       </div>
     );
   }

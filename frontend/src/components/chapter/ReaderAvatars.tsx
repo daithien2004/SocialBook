@@ -66,7 +66,7 @@ export const ReaderAvatars = memo(function ReaderAvatars({
                     </div>
                   )}
                   {/* Reading pulse indicator */}
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-500 border border-background" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-success border border-background" />
                 </motion.div>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-[10px] font-bold">

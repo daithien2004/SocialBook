@@ -9,7 +9,6 @@ interface UseHeaderNavigationReturn {
     navigateToReadingRooms: () => void;
     navigateToProfile: (userId: string) => void;
     navigateToFollowing: (userId: string) => void;
-    navigateToSettings: () => void;
     navigateToKnowledgeMap: () => void;
     navigateToLogin: () => void;
 }
@@ -22,7 +21,6 @@ export function useHeaderNavigation(): UseHeaderNavigationReturn {
     const navigateToPosts = useCallback(() => router.push('/posts'), [router]);
     const navigateToLibrary = useCallback(() => router.push('/library'), [router]);
     const navigateToReadingRooms = useCallback(() => router.push('/reading-rooms'), [router]);
-    const navigateToSettings = useCallback(() => router.push('/settings'), [router]);
     const navigateToKnowledgeMap = useCallback(() => router.push('/knowledge-map'), [router]);
     const navigateToLogin = useCallback(() => router.push('/login'), [router]);
     const navigateToProfile = useCallback((userId: string) => router.push(`/users/${userId}`), [router]);
@@ -36,7 +34,6 @@ export function useHeaderNavigation(): UseHeaderNavigationReturn {
         navigateToReadingRooms,
         navigateToProfile,
         navigateToFollowing,
-        navigateToSettings,
         navigateToKnowledgeMap,
         navigateToLogin,
     };

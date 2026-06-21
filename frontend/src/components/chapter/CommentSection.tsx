@@ -75,7 +75,7 @@ const CommentSection = memo(function CommentSection({
     return (
         <section className={`w-full mt-16 ${className}`}>
             <div className="flex items-center gap-4 mb-8">
-                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">
                     Thảo luận chương ({commentCount?.count ?? 0})
                 </h3>
                 <Separator className="flex-1" />

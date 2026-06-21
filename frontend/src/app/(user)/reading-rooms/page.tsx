@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState } from 'react';
 import Image from 'next/image';
@@ -121,7 +121,7 @@ export default function ReadingRoomsHub() {
                 placeholder="Nhập mã phòng để tham gia..."
                 value={roomCode}
                 onChange={e => setRoomCode(e.target.value.toUpperCase())}
-                className="block w-full pl-5 pr-10 py-4 h-12 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600/50 shadow-lg backdrop-blur-sm transition-all text-base placeholder:normal-case placeholder:tracking-normal"
+                className="block w-full pl-5 pr-10 py-4 h-12 rounded-full bg-background border border-border text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 shadow-lg backdrop-blur-sm transition-all text-base placeholder:normal-case placeholder:tracking-normal"
                 maxLength={6}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleJoin();
@@ -131,7 +131,7 @@ export default function ReadingRoomsHub() {
                 <button
                   type="button"
                   onClick={() => setRoomCode('')}
-                  className="absolute right-4 text-gray-400 hover:text-red-500 transition-colors"
+                  className="absolute right-4 text-muted-foreground hover:text-destructive transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -486,7 +486,7 @@ export default function ReadingRoomsHub() {
                         </div>
                       </div>
 
-                      <div className="mt-3 bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 p-2.5 rounded-lg text-xs flex items-start gap-2">
+                      <div className="mt-3 bg-info/10 text-info p-2.5 rounded-lg text-xs flex items-start gap-2">
                         <span className="text-[10px] mt-0.5">💡</span>
                         <p>
                           <strong>Mẹo:</strong> Phòng từ 5-10 người thường mang lại trải nghiệm đọc và thảo luận tập trung nhất!
@@ -536,7 +536,7 @@ export default function ReadingRoomsHub() {
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
                           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                            <Badge className="bg-red-600/90 hover:bg-red-600 text-white border-0 mb-3 backdrop-blur-md">
+                            <Badge className="bg-destructive/90 hover:bg-destructive text-destructive-foreground border-0 mb-3 backdrop-blur-md">
                               Live
                             </Badge>
                             <h3 className="text-2xl font-bold mb-2 line-clamp-2 drop-shadow-md">

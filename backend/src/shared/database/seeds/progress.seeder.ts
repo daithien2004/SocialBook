@@ -10,6 +10,10 @@ import {
   ChapterDocument,
 } from '@/infrastructure/database/schemas/chapter.schema';
 import {
+  Book,
+  BookDocument,
+} from '@/infrastructure/database/schemas/book.schema';
+import {
   User,
   UserDocument,
 } from '@/infrastructure/database/schemas/user.schema';
@@ -37,6 +41,7 @@ export class ProgressSeed {
   constructor(
     @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
     @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
+    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
@@ -52,22 +57,32 @@ export class ProgressSeed {
     }
 
     const users = await this.userModel.find();
-    const chapters = await this.chapterModel.find().limit(30);
+    const chapters = await this.chapterModel.find();
+    const books = await this.bookModel.find();
 
-    if (users.length === 0 || chapters.length === 0) {
-      this.logger.error('❌ Users or chapters not found.');
+    if (users.length === 0 || chapters.length === 0 || books.length === 0) {
+      this.logger.error('❌ Users, chapters or books not found.');
       return;
+    }
+
+    // Group chapters by bookId for quick lookup
+    const chaptersByBook = new Map<string, typeof chapters>();
+    for (const ch of chapters) {
+      const key = ch.bookId.toString();
+      if (!chaptersByBook.has(key)) chaptersByBook.set(key, []);
+      chaptersByBook.get(key)!.push(ch);
     }
 
     const progresses: ProgressSeedData[] = [];
     const seen = new Set<string>();
 
     for (const user of users) {
+      // --- Random reading progress (for variety) ---
       const numChapters = Math.floor(Math.random() * 8) + 3;
-      const shuffled = [...chapters].sort(() => Math.random() - 0.5);
+      const shuffledChapters = [...chapters].sort(() => Math.random() - 0.5);
 
-      for (let i = 0; i < Math.min(numChapters, shuffled.length); i++) {
-        const ch = shuffled[i];
+      for (let i = 0; i < Math.min(numChapters, shuffledChapters.length); i++) {
+        const ch = shuffledChapters[i];
         const key = `${user._id.toString()}:${ch._id.toString()}`;
         if (seen.has(key)) continue;
         seen.add(key);
@@ -93,6 +108,42 @@ export class ProgressSeed {
           ),
           updatedAt: new Date(),
         });
+      }
+
+      // --- Fully completed books (for reviews + "Đã hoàn thành" section) ---
+      const completedCount = Math.floor(Math.random() * 2) + 1; // 1-2 books
+      const shuffledBooks = [...books].sort(() => Math.random() - 0.5);
+
+      for (let b = 0; b < Math.min(completedCount, shuffledBooks.length); b++) {
+        const book = shuffledBooks[b];
+        const bookChapters = chaptersByBook.get(book._id.toString()) || [];
+
+        if (bookChapters.length === 0) continue;
+
+        for (const ch of bookChapters) {
+          const key = `${user._id.toString()}:${ch._id.toString()}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          progresses.push({
+            userId: user._id,
+            bookId: book._id,
+            chapterId: ch._id,
+            progress: 100,
+            timeSpent: Math.floor(Math.random() * 3600) + 600,
+            status: ReadingStatus.COMPLETED,
+            xpEarned: Math.floor(Math.random() * 100) + 50,
+            pagesRead: Math.floor(Math.random() * 20) + 10,
+            wordsRead: Math.floor(Math.random() * 5000) + 1000,
+            lastReadAt: new Date(
+              Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
+            ),
+            createdAt: new Date(
+              Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000,
+            ),
+            updatedAt: new Date(),
+          });
+        }
       }
     }
 

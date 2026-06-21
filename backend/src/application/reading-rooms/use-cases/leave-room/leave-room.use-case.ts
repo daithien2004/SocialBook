@@ -22,7 +22,9 @@ export class LeaveRoomUseCase {
     }
 
     if (!room.isMember(command.userId)) {
-      throw new BadRequestDomainException('Bạn không phải thành viên của phòng này');
+      throw new BadRequestDomainException(
+        'Bạn không phải thành viên của phòng này',
+      );
     }
 
     if (command.newHostId) {

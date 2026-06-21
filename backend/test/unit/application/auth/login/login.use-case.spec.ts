@@ -82,7 +82,10 @@ describe('LoginUseCase (Unit)', () => {
 
   it('should return tokens and user data for a verified user', async () => {
     const user = createVerifiedUser();
-    mockRoleRepository.findById.mockResolvedValue({ id: 'role-1', name: 'user' } as any);
+    mockRoleRepository.findById.mockResolvedValue({
+      id: 'role-1',
+      name: 'user',
+    } as any);
     mockTokenService.signTokens.mockResolvedValue({
       accessToken: 'access-token-123',
       refreshToken: 'refresh-token-123',
@@ -125,7 +128,10 @@ describe('LoginUseCase (Unit)', () => {
 
   it('should use role name from repository when roleId exists', async () => {
     const user = createVerifiedUser();
-    mockRoleRepository.findById.mockResolvedValue({ id: 'role-1', name: 'admin' } as any);
+    mockRoleRepository.findById.mockResolvedValue({
+      id: 'role-1',
+      name: 'admin',
+    } as any);
     mockTokenService.signTokens.mockResolvedValue({
       accessToken: 'access-token-123',
       refreshToken: 'refresh-token-123',
@@ -138,32 +144,37 @@ describe('LoginUseCase (Unit)', () => {
   });
 
   it('should throw UnauthorizedDomainException when user is null', async () => {
-    await expect(
-      useCase.execute(new LoginCommand(null)),
-    ).rejects.toThrow(UnauthorizedDomainException);
+    await expect(useCase.execute(new LoginCommand(null))).rejects.toThrow(
+      UnauthorizedDomainException,
+    );
   });
 
   it('should throw UnauthorizedDomainException when user is not verified', async () => {
     const user = createUnverifiedUser();
-    await expect(
-      useCase.execute(new LoginCommand(user)),
-    ).rejects.toThrow(UnauthorizedDomainException);
+    await expect(useCase.execute(new LoginCommand(user))).rejects.toThrow(
+      UnauthorizedDomainException,
+    );
   });
 
   it('should throw UserBannedDomainException when user is banned', async () => {
     const user = createBannedUser();
-    await expect(
-      useCase.execute(new LoginCommand(user)),
-    ).rejects.toThrow(UserBannedDomainException);
+    await expect(useCase.execute(new LoginCommand(user))).rejects.toThrow(
+      UserBannedDomainException,
+    );
   });
 
   it('should propagate errors from TokenService', async () => {
     const user = createVerifiedUser();
-    mockRoleRepository.findById.mockResolvedValue({ id: 'role-1', name: 'user' } as any);
-    mockTokenService.signTokens.mockRejectedValue(new Error('JWT signing failed'));
+    mockRoleRepository.findById.mockResolvedValue({
+      id: 'role-1',
+      name: 'user',
+    } as any);
+    mockTokenService.signTokens.mockRejectedValue(
+      new Error('JWT signing failed'),
+    );
 
-    await expect(
-      useCase.execute(new LoginCommand(user)),
-    ).rejects.toThrow('JWT signing failed');
+    await expect(useCase.execute(new LoginCommand(user))).rejects.toThrow(
+      'JWT signing failed',
+    );
   });
 });

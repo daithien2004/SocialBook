@@ -11,6 +11,7 @@ import { GetBookBySlugUseCase } from './use-cases/get-book-by-slug/get-book-by-s
 import { GetBooksUseCase } from './use-cases/get-books/get-books.use-case';
 import { GetFiltersUseCase } from './use-cases/get-filters/get-filters.use-case';
 import { GetBookFiltersUseCase } from './use-cases/get-book-filters/get-book-filters.use-case';
+import { GetTopReadBooksUseCase } from './use-cases/get-top-read-books/get-top-read-books.use-case';
 import { UpdateBookUseCase } from './use-cases/update-book/update-book.use-case';
 import { ToggleBookLikeUseCase } from './use-cases/toggle-book-like/toggle-book-like.use-case';
 import { LikesApplicationModule } from '@/application/likes/likes-application.module';
@@ -33,6 +34,7 @@ import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/
     GetBooksUseCase,
     GetFiltersUseCase,
     GetBookFiltersUseCase,
+    GetTopReadBooksUseCase,
     UpdateBookUseCase,
     ToggleBookLikeUseCase,
     RecordBookViewUseCase,
@@ -45,6 +47,7 @@ import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/
     GetBooksUseCase,
     GetFiltersUseCase,
     GetBookFiltersUseCase,
+    GetTopReadBooksUseCase,
     UpdateBookUseCase,
     ToggleBookLikeUseCase,
     RecordBookViewUseCase,

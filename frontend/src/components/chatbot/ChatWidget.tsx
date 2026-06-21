@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, Send, X, Sparkles } from 'lucide-react';
+import { Bot, Send, X } from 'lucide-react';
 import { useAskChatbotMutation } from '@/features/chatbot/api/chatBotApi';
 import { useChatWidget } from '@/features/chatbot/hooks/useChatWidget';
 import { useAppAuth } from '@/features/auth/hooks/useAppAuth';

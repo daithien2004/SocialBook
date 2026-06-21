@@ -9,6 +9,7 @@ export const BOOK_TAGS = {
   BOOK_DETAIL: 'BookDetail',
   ADMIN_BOOKS: 'AdminBooks',
   BOOK_STATS: 'BookStats',
+  TRENDING_SEARCHES: 'TrendingSearches',
 } as const;
 
 export type BookTagType = typeof BOOK_TAGS[keyof typeof BOOK_TAGS];
@@ -132,6 +133,31 @@ export const booksApi = createApi({
         method: 'POST',
       }),
     }),
+
+    getTrendingSearches: builder.query<string[], void>({
+      query: () => ({
+        url: '/search/trending-keywords',
+        method: 'GET',
+      }),
+      providesTags: [BOOK_TAGS.TRENDING_SEARCHES],
+    }),
+
+    getTopReadBooks: builder.query<Book[], { timeRange: string; limit?: number }>({
+      query: (params) => ({
+        url: '/books/top-read',
+        method: 'GET',
+        params,
+      }),
+    }),
+
+    recordSearchKeyword: builder.mutation<void, string>({
+      query: (keyword) => ({
+        url: '/search/record',
+        method: 'POST',
+        body: { keyword },
+      }),
+      invalidatesTags: [BOOK_TAGS.TRENDING_SEARCHES],
+    }),
   }),
 });
 
@@ -148,4 +174,7 @@ export const {
   useLikeBookMutation,
   useRecordViewMutation,
   useGetFiltersQuery,
+  useGetTrendingSearchesQuery,
+  useGetTopReadBooksQuery,
+  useRecordSearchKeywordMutation,
 } = booksApi;

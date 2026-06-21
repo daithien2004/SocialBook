@@ -28,11 +28,11 @@ export const BookCard = memo(function BookCard({ book, priority }: BookCardProps
         <>
             <Link
                 href={`/books/${book.slug}`}
-                className="group relative block w-full max-w-[220px]"
+                className="group relative flex flex-col w-full h-full max-w-[220px]"
             >
-                <Card className="overflow-hidden border-gray-200 dark:border-white/10 transition-all duration-500 hover:border-gray-400 dark:hover:border-white/30 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] bg-card text-card-foreground">
+                <Card className="overflow-hidden border-gray-200 dark:border-white/10 shadow-none bg-card text-card-foreground h-full flex flex-col">
                     <BookCover book={book} priority={priority} />
-                    <CardContent className="flex flex-col p-4 pt-2">
+                    <CardContent className="flex flex-col flex-1 p-4 pt-2">
                         <BookInfo book={book} />
                         <BookStats book={book} handleAddToLibrary={handleAddToLibrary} isCurrentBookOpen={isCurrentBookOpen} />
                     </CardContent>
@@ -51,7 +51,7 @@ function BookCover({ book, priority }: { book: Book, priority?: boolean }) {
                 fill
                 priority={priority}
                 sizes="(max-width: 768px) 160px, 220px"
-                className="object-cover opacity-90 transition-all duration-700 group-hover:scale-105 group-hover:opacity-100 group-hover:contrast-125"
+                className="object-cover opacity-90 transition-all duration-700 group-hover:scale-105"
             />
 
             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-80" />
@@ -62,10 +62,10 @@ function BookCover({ book, priority }: { book: Book, priority?: boolean }) {
 function BookInfo({ book }: { book: Book }) {
     return (
         <div className="mb-1 text-center">
-            <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-muted-foreground group-hover:text-foreground transition-colors">
+            <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-muted-foreground">
                 {book.authorId.name}
             </p>
-            <h3 className="mb-4 text-center text-sm font-notosans font-semibold text-foreground bg-clip-text group-hover:text-brand dark:group-hover:text-white group-hover:drop-shadow-[0_0_8px_var(--brand)] dark:group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all line-clamp-2">
+            <h3 className="mb-4 text-center text-sm font-notosans font-semibold text-foreground line-clamp-2">
                 {book.title}
             </h3>
         </div>
@@ -104,7 +104,6 @@ function BookStats({ book, handleAddToLibrary, isCurrentBookOpen }: BookStatsPro
             >
                 <Bookmark
                     size={16}
-                    className="transition-transform hover:scale-110"
                     fill={isCurrentBookOpen ? 'currentColor' : 'none'}
                 />
             </Button>

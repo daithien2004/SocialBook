@@ -27,6 +27,7 @@ describe('VoteQuoteUseCase (Unit)', () => {
       findById: jest.fn(),
       updateVotes: jest.fn(),
       deleteByRoom: jest.fn(),
+      deleteById: jest.fn(),
     };
     useCase = new VoteQuoteUseCase(mockQuoteRepo);
   });
@@ -88,7 +89,7 @@ describe('VoteQuoteUseCase (Unit)', () => {
       useCase.execute(
         new VoteQuoteCommand('user-2', 'room-abc', 'nonexistent', 'up'),
       ),
-    ).rejects.toThrow('Quote not found');
+    ).rejects.toThrow('Không tìm thấy trích dẫn');
   });
 
   it('should propagate repository errors', async () => {

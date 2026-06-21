@@ -27,7 +27,9 @@ export class GenerateHighlightInsightUseCase {
       throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
-    const highlightIndex = room.highlights.findIndex(h => h.id === command.highlightId);
+    const highlightIndex = room.highlights.findIndex(
+      (h) => h.id === command.highlightId,
+    );
     if (highlightIndex === -1) {
       throw new NotFoundDomainException('Highlight không tồn tại');
     }

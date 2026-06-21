@@ -133,9 +133,9 @@ describe('Book Entity (Unit)', () => {
     });
 
     it('updateGenres should throw on more than 5 genres', () => {
-      expect(() =>
-        book.updateGenres(['1', '2', '3', '4', '5', '6']),
-      ).toThrow('Book cannot have more than 5 genres');
+      expect(() => book.updateGenres(['1', '2', '3', '4', '5', '6'])).toThrow(
+        'Book cannot have more than 5 genres',
+      );
     });
 
     it('incrementViews should increase view count', () => {

@@ -41,6 +41,10 @@ import {
   Post,
   PostSchema,
 } from '@/infrastructure/database/schemas/post.schema';
+import {
+  Notification,
+  NotificationSchema,
+} from '@/infrastructure/database/schemas/notification.schema';
 
 import { SeederService } from './seeder.service';
 import { RolesSeed } from './roles.seed';
@@ -51,6 +55,7 @@ import { FollowsSeed } from './follows.seeder';
 import { LikesSeed } from './likes.seeder';
 import { ProgressSeed } from './progress.seeder';
 import { PostsSeed } from './posts.seeder';
+import { NotificationSeed } from './notifications.seeder';
 
 @Module({
   imports: [
@@ -79,6 +84,7 @@ import { PostsSeed } from './posts.seeder';
       { name: Like.name, schema: LikeSchema },
       { name: Progress.name, schema: ProgressSchema },
       { name: Post.name, schema: PostSchema },
+      { name: Notification.name, schema: NotificationSchema },
     ]),
   ],
   providers: [
@@ -91,6 +97,7 @@ import { PostsSeed } from './posts.seeder';
     LikesSeed,
     ProgressSeed,
     PostsSeed,
+    NotificationSeed,
   ],
   exports: [SeederService],
 })

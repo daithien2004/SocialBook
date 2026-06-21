@@ -278,7 +278,7 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5 text-red-500" />
+                            <AlertTriangle className="w-5 h-5 text-destructive" />
                             Đặt lại cài đặt?
                         </DialogTitle>
                         <DialogDescription>

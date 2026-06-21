@@ -31,11 +31,15 @@ export class DeleteQuoteUseCase {
 
     if (!room) {
       // Room is not active, and user is not author, so forbid.
-      throw new ForbiddenDomainException('Bạn không có quyền xóa trích dẫn này');
+      throw new ForbiddenDomainException(
+        'Bạn không có quyền xóa trích dẫn này',
+      );
     }
 
     if (room.hostId !== command.userId) {
-      throw new ForbiddenDomainException('Bạn không có quyền xóa trích dẫn này');
+      throw new ForbiddenDomainException(
+        'Bạn không có quyền xóa trích dẫn này',
+      );
     }
 
     await this.quoteRepository.deleteById(command.quoteId);

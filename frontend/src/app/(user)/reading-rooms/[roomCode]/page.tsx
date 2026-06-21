@@ -1,5 +1,6 @@
 'use client';
-import { use, useEffect, useState, useCallback } from 'react';
+import { use, useEffect, useState, useCallback, useRef } from 'react';
+import throttle from 'lodash/throttle';
 import { useGetRoomQuery, useReactivateRoomMutation } from '@/features/reading-rooms/api/readingRoomsApi';
 import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -113,14 +114,32 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
   }, [isEnded, initialRoom]);
 
   const [readingParagraphId, setReadingParagraphId] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [readingProgress, setReadingProgress] = useState(0);
 
-  let readingProgress = 0;
-  if (chapter?.paragraphs?.length && readingParagraphId) {
-    const index = chapter.paragraphs.findIndex(p => p.id === readingParagraphId);
-    if (index >= 0) {
-      readingProgress = Math.round(((index + 1) / chapter.paragraphs.length) * 100);
-    }
-  }
+  useEffect(() => {
+    const handleScroll = throttle(() => {
+      if (!contentRef.current) return;
+      const rect = contentRef.current.getBoundingClientRect();
+      const contentTop = rect.top + window.scrollY;
+      const contentHeight = contentRef.current.offsetHeight;
+      const viewportHeight = window.innerHeight;
+      const scrolledPast = Math.max(0, window.scrollY - contentTop);
+      const totalScrollable = contentHeight - viewportHeight;
+      if (totalScrollable <= 0) {
+        setReadingProgress(window.scrollY >= contentTop ? 100 : 0);
+        return;
+      }
+      setReadingProgress(Math.min(100, Math.round((scrolledPast / totalScrollable) * 100)));
+    }, 500);
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      handleScroll.cancel();
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const [transferHostOpen, setTransferHostOpen] = useState(false);
   const { isControlsVisible, showSettings, setShowSettings } = useReadingView();
@@ -191,7 +210,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
           title="Không tìm thấy phòng"
           description="Phòng không tồn tại hoặc đã kết thúc."
           action={<Button onClick={() => router.push('/reading-rooms')}>Quay lại</Button>}
-          iconClassName="text-red-500"
+          iconClassName="text-destructive"
         />
       </div>
     );
@@ -235,7 +254,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                     className="p-1 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-primary"
                     title="Sao chép mã phòng"
                   >
-                    {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                    {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
                   </button>
                   <Badge variant="outline" className="text-[10px] uppercase font-black px-2 py-0.5 bg-primary/5 text-primary border-primary/20">
                     {room?.mode === 'sync' ? 'Đồng bộ' : 'Tự do'}
@@ -286,7 +305,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                           )}
                         </div>
                         <div className="flex items-center gap-2 bg-background/50 border border-border px-3 py-1.5 rounded-full text-[11px] font-bold shadow-sm">
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                          <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
                           <span>{Object.keys(presences).length} online</span>
                         </div>
                       </div>
@@ -378,7 +397,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                       onClick={handleCopyCode}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-background/50 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {copied ? <Check size={12} className="text-green-500" /> : <Copy size={12} />}
+                      {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
                       <span className="hidden sm:inline">{roomCode}</span>
                     </button>
                   </>
@@ -438,7 +457,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button onClick={handleCopyCode} className="w-10 h-10 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors group">
-                    {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} className="group-hover:text-primary" />}
+                    {copied ? <Check size={16} className="text-success" /> : <Copy size={16} className="group-hover:text-primary" />}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-popover text-popover-foreground border border-border shadow-md py-2 px-3">
@@ -620,15 +639,17 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                     />
                   </div>
                   
-                  <ChapterContent
-                    paragraphs={chapter.paragraphs}
-                    chapterId={chapter.id}
-                    bookId={bookData.id}
-                    bookSlug={bookData.slug}
-                    bookCoverImage={bookData.coverUrl}
-                    bookTitle={bookData.title}
-                    onActiveParagraphChange={setReadingParagraphId}
-                  />
+                  <div ref={contentRef}>
+                    <ChapterContent
+                      paragraphs={chapter.paragraphs}
+                      chapterId={chapter.id}
+                      bookId={bookData.id}
+                      bookSlug={bookData.slug}
+                      bookCoverImage={bookData.coverUrl}
+                      bookTitle={bookData.title}
+                      onActiveParagraphChange={setReadingParagraphId}
+                    />
+                  </div>
 
                   
                   <div className="mt-12 pt-12 border-t border-border pb-20">
@@ -774,7 +795,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                                         <Button 
                                           variant="ghost" 
                                           size="icon" 
-                                          className="w-7 h-7 rounded-full hover:bg-amber-500/10 text-amber-500 hover:text-amber-600"
+                                          className="w-7 h-7 rounded-full hover:bg-warning/10 text-warning hover:text-warning/80"
                                           onClick={() => {
                                             openConfirm({
                                               title: "Chuyển quyền trưởng phòng?",
@@ -790,7 +811,7 @@ export default function ReadingRoomPage({ params }: { params: Promise<{ roomCode
                                           <Crown size={14} />
                                         </Button>
                                       </TooltipTrigger>
-                                      <TooltipContent side="top" className="text-xs font-medium text-amber-500">Chuyển quyền Host</TooltipContent>
+                                      <TooltipContent side="top" className="text-xs font-medium text-warning">Chuyển quyền Host</TooltipContent>
                                     </Tooltip>
                                   )}
                                 </div>

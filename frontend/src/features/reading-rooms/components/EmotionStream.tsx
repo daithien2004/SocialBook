@@ -18,6 +18,7 @@ export const EmotionStream = memo(function EmotionStream() {
     // When events change, find the new ones that are very recent
     const now = Date.now();
     const newActive = events.filter(e => now - e.timestamp < 3500).slice(0, 5); // Max 5 toasts
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveToasts(newActive);
 
     const interval = setInterval(() => {

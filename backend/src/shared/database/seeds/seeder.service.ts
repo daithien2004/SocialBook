@@ -7,6 +7,7 @@ import { FollowsSeed } from './follows.seeder';
 import { LikesSeed } from './likes.seeder';
 import { ProgressSeed } from './progress.seeder';
 import { PostsSeed } from './posts.seeder';
+import { NotificationSeed } from './notifications.seeder';
 
 @Injectable()
 export class SeederService {
@@ -21,6 +22,7 @@ export class SeederService {
     private readonly likesSeed: LikesSeed,
     private readonly progressSeed: ProgressSeed,
     private readonly postsSeed: PostsSeed,
+    private readonly notificationSeed: NotificationSeed,
   ) {}
 
   async seed() {
@@ -35,6 +37,7 @@ export class SeederService {
       await this.followsSeed.run();
       await this.likesSeed.run();
       await this.progressSeed.run();
+      await this.notificationSeed.run();
 
       this.logger.log('✅ All seeding completed successfully!');
     } catch (error) {
@@ -55,6 +58,7 @@ export class SeederService {
       await this.followsSeed['followModel'].deleteMany({});
       await this.likesSeed['likeModel'].deleteMany({});
       await this.progressSeed['progressModel'].deleteMany({});
+      await this.notificationSeed['notificationModel'].deleteMany({});
 
       this.logger.log('✅ All seed data cleared!');
     } catch (error) {

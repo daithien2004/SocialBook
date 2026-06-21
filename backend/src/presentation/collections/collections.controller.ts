@@ -5,6 +5,7 @@ import { UpdateCollectionUseCase } from '@/application/library/use-cases/update-
 import { DeleteCollectionUseCase } from '@/application/library/use-cases/delete-collection/delete-collection.use-case';
 import { UpdateCollectionCommand } from '@/application/library/use-cases/update-collection/update-collection.command';
 import { Public } from '@/common/decorators/custom.decorator';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import {
   CreateCollectionDto,
@@ -61,9 +62,13 @@ export class CollectionsController {
   @Public()
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(@Query('userId') userId?: string) {
+  async findAll(
+    @Query('userId') userId?: string,
+    @CurrentUser('id') viewerId?: string,
+  ) {
     const results = await this.getAllCollectionsUseCase.execute({
       userId: userId || '',
+      viewerId,
     });
     return {
       message: 'Get collections successfully',

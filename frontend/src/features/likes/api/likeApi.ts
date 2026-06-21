@@ -43,8 +43,9 @@ export const likeApi = createApi({
 
                         if (key.startsWith('getPosts(') || key.startsWith('getPostsByUser(')) {
                             const endpointName = key.startsWith('getPosts(') ? 'getPosts' : 'getPostsByUser';
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                             
                             const patchResult = dispatch(
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 postApi.util.updateQueryData(endpointName, originalArgs as any, (draft: PaginatedPostsResponse) => {
                                     const post = draft.data?.find(p => p.id === arg.targetId);
                                     if (post) {

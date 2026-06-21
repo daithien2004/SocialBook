@@ -49,26 +49,38 @@ export class AskChatbotUseCase {
       `Chatbot search: "${question}" → ${results.length} results`,
     );
 
-    const sources: ChatbotSource[] = results.map((r) => ({
-      title: String(r.document.metadata?.['title'] ?? 'Không rõ tiêu đề'),
-      bookId: r.document.metadata?.['bookId'] as string | undefined,
-      chapterTitle: r.document.metadata?.['chapterTitle'] as string | undefined,
-      type: (r.document.contentType?.toString() === 'chapter'
-        ? 'chapter'
-        : 'book') as 'book' | 'chapter',
-    }));
+    const sources: ChatbotSource[] = results.map((r) => {
+      const metadata = r.document.metadata;
+      return {
+        title:
+          typeof metadata?.['title'] === 'string'
+            ? metadata['title']
+            : 'Không rõ tiêu đề',
+        bookId: metadata?.['bookId'] as string | undefined,
+        chapterTitle: metadata?.['chapterTitle'] as string | undefined,
+        type:
+          r.document.contentType?.toString() === 'chapter' ? 'chapter' : 'book',
+      };
+    });
 
     const contextText = results
       .map((r, i) => {
-        const title = String(r.document.metadata?.['title'] ?? '');
-        const chapterTitle = String(r.document.metadata?.['chapterTitle'] ?? '');
+        const title =
+          typeof r.document.metadata?.['title'] === 'string'
+            ? r.document.metadata['title']
+            : '';
+        const chapterTitle =
+          typeof r.document.metadata?.['chapterTitle'] === 'string'
+            ? r.document.metadata['chapterTitle']
+            : '';
         const label = chapterTitle ? `${title} - ${chapterTitle}` : title;
         return `[${i + 1}] ${label}:\n${r.document.content}`;
       })
       .join('\n\n');
 
-    const prompt = results.length > 0
-      ? `Bạn là trợ lý đọc sách thông minh của SocialBook. Hãy trả lời câu hỏi dưới đây dựa trên ngữ cảnh từ các cuốn sách và chương được cung cấp.
+    const prompt =
+      results.length > 0
+        ? `Bạn là trợ lý đọc sách thông minh của SocialBook. Hãy trả lời câu hỏi dưới đây dựa trên ngữ cảnh từ các cuốn sách và chương được cung cấp.
 
 Ngữ cảnh:
 ${contextText}
@@ -79,7 +91,7 @@ Yêu cầu:
 - Trả lời bằng tiếng Việt, ngắn gọn và chính xác
 - Dựa trên ngữ cảnh được cung cấp
 - Nếu ngữ cảnh không đủ thông tin, hãy nói rõ`
-      : `Bạn là trợ lý đọc sách thông minh của SocialBook. Hãy trả lời câu hỏi sau bằng tiếng Việt một cách ngắn gọn và hữu ích:
+        : `Bạn là trợ lý đọc sách thông minh của SocialBook. Hãy trả lời câu hỏi sau bằng tiếng Việt một cách ngắn gọn và hữu ích:
 
 Câu hỏi: ${question}`;
 

@@ -17,6 +17,8 @@ import { GenresSection } from '@/components/book/GenresSection';
 import { MobileReadingSection } from '@/components/book/MobileReadingSection';
 import { ReadingSidebar } from '@/components/book/ReadingSidebar';
 import { RecommendedForYouSection } from '@/components/book/RecommendedForYouSection';
+import { TopReadSection } from '@/components/book/TopReadSection';
+import { TrendingKeywordsSection } from '@/components/book/TrendingKeywordsSection';
 import { TabNavigation } from '@/components/book/TabNavigation';
 
 const EMPTY_BOOKS: LibraryItem[] = [];
@@ -74,6 +76,7 @@ export default function HomePage() {
             <aside className="hidden xl:block xl:w-64 flex-shrink-0">
               <div className="top-20 space-y-6">
                 <ReadingSidebar books={readingBooks} isLoading={isReadingLoading} isGuest={isGuest} />
+                <TrendingKeywordsSection />
                 <GenresSection books={currentState.books} />
               </div>
             </aside>
@@ -92,8 +95,9 @@ export default function HomePage() {
             </div>
 
             <aside className="hidden xl:block xl:w-80 flex-shrink-0">
-              <div className="top-20">
+              <div className="top-20 space-y-6">
                 <RecommendedForYouSection />
+                <TopReadSection />
               </div>
             </aside>
           </div>

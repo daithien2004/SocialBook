@@ -17,7 +17,7 @@ const FollowerItem = memo(function FollowerItem(props: FollowingUser) {
 
     return (
         <div
-            className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-gray-800/60"
+            className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-accent"
         >
             {/* Left */}
             <div className="flex items-center gap-3">

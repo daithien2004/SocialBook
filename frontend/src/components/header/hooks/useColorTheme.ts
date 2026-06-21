@@ -7,6 +7,7 @@ export function useColorTheme() {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
         const savedTheme = (localStorage.getItem('color-theme') as ColorTheme) || 'mono';
         if (savedTheme === 'red') {

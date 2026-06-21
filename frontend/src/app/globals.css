@@ -51,6 +51,18 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-gradient-start: var(--brand-gradient-start);
   --color-brand-gradient-end: var(--brand-gradient-end);
+  --color-party-1: var(--party-1);
+  --color-party-1-bg: var(--party-1-bg);
+  --color-party-2: var(--party-2);
+  --color-party-2-bg: var(--party-2-bg);
+  --color-party-3: var(--party-3);
+  --color-party-3-bg: var(--party-3-bg);
+  --color-party-4: var(--party-4);
+  --color-party-4-bg: var(--party-4-bg);
+  --color-party-5: var(--party-5);
+  --color-party-5-bg: var(--party-5-bg);
+  --color-party-6: var(--party-6);
+  --color-party-6-bg: var(--party-6-bg);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 

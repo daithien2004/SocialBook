@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import ListComments from '@/components/comment/ListComments';
 import { usePostCreateMutation } from '@/features/comments/api/commentApi';
-import { cn, formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { ShieldAlert, Info } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useModalStore } from '@/store/useModalStore';

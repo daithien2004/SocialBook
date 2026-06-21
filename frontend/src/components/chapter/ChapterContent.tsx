@@ -315,7 +315,7 @@ export const ChapterContent = memo(function ChapterContent({
                                 <div className="flex-1 min-w-0 relative">
                                     <p
                                         className={`transition-colors duration-300 w-full relative ${activeParagraphId === para.id
-                                            ? 'bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-2 -mx-2'
+                                            ? 'bg-warning/10 dark:bg-warning/20 rounded-lg px-2 -mx-2'
                                             : ''
                                             }`}
                                         style={{
@@ -375,7 +375,7 @@ export const ChapterContent = memo(function ChapterContent({
                                     <FloatingReactionBubbles paragraphId={para.id} />
                                 )}
 
-                                <div className="absolute left-full top-0 ml-16 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pt-0.5 shrink-0 z-10">
+                                <div className="absolute right-full top-0 mr-16 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pt-0.5 shrink-0 z-10">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button
@@ -448,7 +448,7 @@ export const ChapterContent = memo(function ChapterContent({
 
                                 {room && !isEnded && (
                                     <>
-                                        <div className="w-[1px] h-4 bg-neutral-600 mx-1" />
+                                        <div className="w-[1px] h-4 bg-border mx-1" />
 
                                         <Button
                                             size="sm"
@@ -480,7 +480,7 @@ export const ChapterContent = memo(function ChapterContent({
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="pointer-events-auto absolute top-2 left-0 -translate-x-1/2 w-80 max-h-60 overflow-hidden rounded-2xl bg-background dark:bg-black/90 backdrop-blur-xl border border-border dark:border-gray-700 shadow-2xl shadow-black/15 dark:shadow-black/60 p-4 flex flex-col gap-3"
+                                        className="pointer-events-auto absolute top-2 left-0 -translate-x-1/2 w-80 max-h-60 overflow-hidden rounded-2xl bg-background/80 backdrop-blur-xl border border-border shadow-2xl shadow-black/15 dark:shadow-black/60 p-4 flex flex-col gap-3"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
@@ -614,7 +614,7 @@ const ChapterTextRenderer = ({
                 newParts.push(
                     <Popover key={`h-${h.id}-${index}`}>
                         <PopoverTrigger asChild>
-                            <span className="bg-yellow-400/30 dark:bg-yellow-600/40 border-b-2 border-yellow-500/50 cursor-pointer transition-all hover:bg-yellow-400/50">
+                            <span className="bg-warning/20 dark:bg-warning/30 border-b-2 border-warning/50 cursor-pointer transition-all hover:bg-warning/30">
                                 {h.content}
                             </span>
                         </PopoverTrigger>

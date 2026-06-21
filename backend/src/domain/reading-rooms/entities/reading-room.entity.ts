@@ -164,7 +164,9 @@ export class ReadingRoom extends Entity<RoomId> {
     content: string;
   }): void {
     if (this._props.status === 'ended') {
-      throw new BadRequestDomainException('Không thể highlight trong phòng đã kết thúc');
+      throw new BadRequestDomainException(
+        'Không thể highlight trong phòng đã kết thúc',
+      );
     }
 
     this._props.highlights.push({
@@ -292,7 +294,9 @@ export class ReadingRoom extends Entity<RoomId> {
 
   changeMode(userId: string, newMode: string): void {
     if (this._props.status === 'ended') {
-      throw new BadRequestDomainException('Không thể đổi chế độ trong phòng đã kết thúc');
+      throw new BadRequestDomainException(
+        'Không thể đổi chế độ trong phòng đã kết thúc',
+      );
     }
 
     if (userId !== this.hostId) {

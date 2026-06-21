@@ -18,6 +18,8 @@ import {
   QueryAnalysis,
 } from '../services/search-query-expansion.service';
 import { SearchRankingService } from '../services/search-ranking.service';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 interface HybridScore {
   finalScore: number;
@@ -41,6 +43,7 @@ export class IntelligentSearchUseCase {
     private readonly authorRepository: IAuthorRepository,
     private readonly queryExpansionService: SearchQueryExpansionService,
     private readonly rankingService: SearchRankingService,
+    @InjectRedis() private readonly redis: Redis,
   ) {}
 
   async execute(
@@ -51,6 +54,8 @@ export class IntelligentSearchUseCase {
 
     try {
       const normalizedQuery = query.toLowerCase().trim();
+
+      // Track trending searches is now handled explicitly via POST /search/record
 
       // 1. KIỂM TRA TÁC GIẢ & TÊN SÁCH TRƯỚC (Cực nhanh, local DB)
       const [authors, exactBook] = await Promise.all([
@@ -430,5 +435,19 @@ export class IntelligentSearchUseCase {
         totalPages: Math.ceil(total / divisor),
       },
     };
+  }
+
+  async recordSearch(keyword: string): Promise<void> {
+    const cleanKeyword = keyword.trim().toLowerCase();
+    if (cleanKeyword.length > 2) {
+      await this.redis
+        .zincrby('trending:searches', 1, cleanKeyword)
+        .catch((err) => {
+          this.logger.error(
+            `Failed to increment trending search for keyword: ${cleanKeyword}`,
+            err,
+          );
+        });
+    }
   }
 }

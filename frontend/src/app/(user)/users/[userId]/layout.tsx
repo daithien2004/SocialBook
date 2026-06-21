@@ -20,12 +20,12 @@ export default async function UserLayout({
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
+          <h1 className="text-2xl font-bold text-destructive mb-4">
             Không tìm thấy người dùng
           </h1>
-          <p className="text-gray-600">Người dùng không tồn tại.</p>
+          <p className="text-muted-foreground">Người dùng không tồn tại.</p>
         </div>
       </div>
     );

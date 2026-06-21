@@ -41,6 +41,8 @@ import { ToggleBookLikeUseCase } from '@/application/books/use-cases/toggle-book
 import { RecordBookViewUseCase } from '@/application/books/use-cases/record-book-view/record-book-view.use-case';
 import { RecordBookViewCommand } from '@/application/books/use-cases/record-book-view/record-book-view.command';
 import { ToggleBookLikeCommand } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.command';
+import { GetTopReadBooksUseCase } from '@/application/books/use-cases/get-top-read-books/get-top-read-books.use-case';
+import { GetTopReadBooksQuery } from '@/application/books/use-cases/get-top-read-books/get-top-read-books.query';
 import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -60,6 +62,7 @@ export class BooksController {
     private readonly toggleBookLikeUseCase: ToggleBookLikeUseCase,
     private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
     private readonly recordBookViewUseCase: RecordBookViewUseCase,
+    private readonly getTopReadBooksUseCase: GetTopReadBooksUseCase,
   ) {}
 
   @Post()
@@ -114,6 +117,21 @@ export class BooksController {
     return {
       message: 'Lấy danh sách bộ lọc thành công',
       data,
+    };
+  }
+
+  @Public()
+  @Get('top-read')
+  async getTopReadBooks(
+    @Query('timeRange') timeRange: 'weekly' | 'monthly' | 'all' = 'all',
+    @Query('limit') limit: number = 5,
+  ) {
+    const query = new GetTopReadBooksQuery(timeRange, Number(limit));
+    const result = await this.getTopReadBooksUseCase.execute(query);
+
+    return {
+      message: 'Lấy danh sách top đọc nhiều thành công',
+      data: BookResponseDto.fromArray(result),
     };
   }
 

@@ -1,4 +1,3 @@
-import { getErrorMessage } from '@/common/utils/error.util';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
@@ -36,7 +35,6 @@ export class AddHighlightUseCase {
       content: command.content,
     });
 
-    const highlightIndex = room.highlights.length - 1;
     await this.readingRoomRepository.save(room);
 
     return room;
