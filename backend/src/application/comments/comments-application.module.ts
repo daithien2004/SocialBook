@@ -5,13 +5,16 @@ import { GetCommentsUseCase } from './use-cases/get-comments/get-comments.use-ca
 import { GetCommentCountUseCase } from './use-cases/get-comment-count/get-comment-count.use-case';
 import { ModerateCommentUseCase } from './use-cases/moderate-comment/moderate-comment.use-case';
 import { UpdateCommentUseCase } from './use-cases/update-comment/update-comment.use-case';
+
 import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
 
 @Module({
   imports: [
     CommentsRepositoryModule,
     IdGeneratorModule,
+    ContentModerationApplicationModule,
   ],
   providers: [
     CreateCommentUseCase,
@@ -30,4 +33,4 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     UpdateCommentUseCase,
   ],
 })
-export class CommentsApplicationModule { }
+export class CommentsApplicationModule {}

@@ -1,9 +1,11 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
-import { Menu, X, Home, Users, BookOpen, FileText, MessageSquare, BarChart2, LogOut, PenLine, Shapes, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
+import { X, Home, Users, BookOpen, BarChart2, LogOut, PenLine, Shapes, AlertTriangle, ShieldAlert, Gauge } from 'lucide-react';
+import LoginWall from '@/components/auth/LoginWall';
 
 const navItems = [
   { name: 'Dashboard', icon: Home, href: '/admin/dashboard' },
@@ -13,14 +15,24 @@ const navItems = [
   { name: 'Authors', icon: PenLine, href: '/admin/authors' },
   { name: 'Genres', icon: Shapes, href: '/admin/genres' },
   { name: 'Moderation', icon: AlertTriangle, href: '/admin/moderation-queue' },
-  { name: 'Posts', icon: FileText, href: '/admin/posts' },
-  { name: 'Comments', icon: MessageSquare, href: '/admin/comments' },
+  { name: 'Toxic Dictionary', icon: ShieldAlert, href: '/admin/toxic-words' },
   { name: 'Reports', icon: BarChart2, href: '/admin/reports' },
+  { name: 'Rate Limits', icon: Gauge, href: '/admin/rate-limits' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAppAuth();
+  const { isAuthenticated } = useAppAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  if (!isAuthenticated) {
+    return (
+      <LoginWall
+        icon={<ShieldAlert size={40} className="text-blue-600 dark:text-blue-400" />}
+        title="Khu vực quản trị"
+        description="Đăng nhập bằng tài khoản quản trị viên để truy cập trang quản lý."
+      />
+    );
+  }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">
@@ -52,13 +64,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.name}>
-                <a
+                <Link
                   href={item.href}
                   className="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-indigo-50 hover:text-indigo-600"
                 >
                   <item.icon size={20} className="mr-3" />
                   {item.name}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

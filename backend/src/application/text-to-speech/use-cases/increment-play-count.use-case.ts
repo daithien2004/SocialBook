@@ -3,16 +3,13 @@ import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/te
 
 @Injectable()
 export class IncrementPlayCountUseCase {
-    constructor(
-        private readonly ttsRepository: ITextToSpeechRepository,
-    ) {}
+  constructor(private readonly ttsRepository: ITextToSpeechRepository) {}
 
-    async execute(chapterId: string): Promise<void> {
-        const audio = await this.ttsRepository.findCompletedByChapterId(chapterId);
-        if (audio) {
-            audio.incrementPlayCount();
-            await this.ttsRepository.save(audio);
-        }
+  async execute(chapterId: string): Promise<void> {
+    const audio = await this.ttsRepository.findCompletedByChapterId(chapterId);
+    if (audio) {
+      audio.incrementPlayCount();
+      await this.ttsRepository.save(audio);
     }
+  }
 }
-

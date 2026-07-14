@@ -3,95 +3,100 @@ import { AuthorId } from '../value-objects/author-id.vo';
 import { AuthorName } from '../value-objects/author-name.vo';
 import slugify from 'slugify';
 
+export interface AuthorProps {
+  name: AuthorName;
+  slug: string;
+  bio: string;
+  photoUrl: string;
+}
+
 export class Author extends Entity<AuthorId> {
-    private constructor(
-        id: AuthorId,
-        private _name: AuthorName,
-        private _slug: string,
-        private _bio: string,
-        private _photoUrl: string,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+  private _props: AuthorProps;
 
-    static create(props: {
-        id: AuthorId;
-        name: string;
-        bio?: string;
-        photoUrl?: string;
-    }): Author {
-        const name = AuthorName.create(props.name);
-        const slug = Author.generateSlug(props.name);
-        
-        return new Author(
-            props.id,
-            name,
-            slug,
-            props.bio?.trim() || '',
-            props.photoUrl?.trim() || ''
-        );
-    }
+  private constructor(
+    id: AuthorId,
+    props: AuthorProps,
+    createdAt?: Date,
+    updatedAt?: Date,
+  ) {
+    super(id, createdAt, updatedAt);
+    this._props = props;
+  }
 
-    static reconstitute(props: {
-        id: string;
-        name: string;
-        slug: string;
-        bio: string;
-        photoUrl: string;
-        createdAt: Date;
-        updatedAt: Date;
-    }): Author {
-        return new Author(
-            AuthorId.create(props.id),
-            AuthorName.create(props.name),
-            props.slug,
-            props.bio,
-            props.photoUrl,
-            props.createdAt,
-            props.updatedAt
-        );
-    }
+  static create(props: {
+    id: AuthorId;
+    name: string;
+    bio?: string;
+    photoUrl?: string;
+  }): Author {
+    const name = AuthorName.create(props.name);
+    const slug = Author.generateSlug(props.name);
 
-    get name(): AuthorName {
-        return this._name;
-    }
+    return new Author(props.id, {
+      name,
+      slug,
+      bio: props.bio?.trim() || '',
+      photoUrl: props.photoUrl?.trim() || '',
+    });
+  }
 
-    get slug(): string {
-        return this._slug;
-    }
+  static reconstitute(props: {
+    id: string;
+    name: string;
+    slug: string;
+    bio: string;
+    photoUrl: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Author {
+    return new Author(
+      AuthorId.create(props.id),
+      {
+        name: AuthorName.create(props.name),
+        slug: props.slug,
+        bio: props.bio,
+        photoUrl: props.photoUrl,
+      },
+      props.createdAt,
+      props.updatedAt,
+    );
+  }
 
-    get bio(): string {
-        return this._bio;
-    }
+  get name(): AuthorName {
+    return this._props.name;
+  }
+  get slug(): string {
+    return this._props.slug;
+  }
+  get bio(): string {
+    return this._props.bio;
+  }
+  get photoUrl(): string {
+    return this._props.photoUrl;
+  }
 
-    get photoUrl(): string {
-        return this._photoUrl;
-    }
+  changeName(newName: string): void {
+    const name = AuthorName.create(newName);
+    this._props.name = name;
+    this._props.slug = Author.generateSlug(newName);
+    this.markAsUpdated();
+  }
 
-    changeName(newName: string): void {
-        const name = AuthorName.create(newName);
-        this._name = name;
-        this._slug = Author.generateSlug(newName);
-        this.markAsUpdated();
-    }
+  updateBio(bio: string): void {
+    this._props.bio = bio.trim();
+    this.markAsUpdated();
+  }
 
-    updateBio(bio: string): void {
-        this._bio = bio.trim();
-        this.markAsUpdated();
-    }
+  updatePhotoUrl(photoUrl: string): void {
+    this._props.photoUrl = photoUrl.trim();
+    this.markAsUpdated();
+  }
 
-    updatePhotoUrl(photoUrl: string): void {
-        this._photoUrl = photoUrl.trim();
-        this.markAsUpdated();
-    }
-
-    private static generateSlug(name: string): string {
-        return slugify(name, {
-            lower: true,
-            strict: true,
-            locale: 'vi'
-        });
-    }
+  private static generateSlug(name: string): string {
+    return slugify(name, {
+      lower: true,
+      strict: true,
+      locale: 'vi',
+    });
+  }
 }

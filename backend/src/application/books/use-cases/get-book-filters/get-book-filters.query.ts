@@ -1,3 +1,3 @@
 export class GetBookFiltersQuery {
-    constructor() {}
+  constructor() {}
 }

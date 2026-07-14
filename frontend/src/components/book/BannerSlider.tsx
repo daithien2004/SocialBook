@@ -3,9 +3,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Book } from '@/features/books/types/book.interface';
-import { formatCompact } from '@/lib/utils';
+import { formatCompact, isNewBook } from '@/lib/utils';
 import { BookOpen, ChevronLeft, ChevronRight, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
+import { SafeImage } from '../common/SafeImage';
 import { useEffect, useState } from 'react';
 
 interface BannerSliderProps {
@@ -41,11 +42,14 @@ export function BannerSlider({ books }: BannerSliderProps) {
 
       <div className="relative z-10 h-full flex items-center justify-between px-6 md:px-12 lg:px-20">
         <div className="hidden md:block w-[280px] h-[420px] lg:w-[320px] lg:h-[480px] flex-shrink-0 mr-8 relative animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <img
+          <SafeImage
             key={currentBook.coverUrl}
             src={currentBook.coverUrl}
             alt={currentBook.title}
-            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 rounded-md shadow-2xl"
+            fill
+            priority={currentSlide === 0}
+            sizes="(max-width: 1024px) 280px, 320px"
+            className="rounded-md object-cover shadow-2xl transition-transform duration-500 hover:scale-105"
           />
         </div>
 
@@ -60,9 +64,13 @@ export function BannerSlider({ books }: BannerSliderProps) {
 
           <div className="flex flex-wrap items-center gap-2 mb-4 drop-shadow-md transition-colors duration-300">
             {currentBook.genres?.map((genre) => (
-              <Badge key={genre.id} variant="secondary" className="bg-background/50 hover:bg-background/80 backdrop-blur-sm">
+              <Link
+                key={genre.id}
+                href={`/books?genres=${encodeURIComponent(genre.slug)}`}
+                className="inline-flex px-3 py-1 rounded-full border border-black/10 dark:border-white/20 text-foreground/80 dark:text-white/90 text-xs font-medium backdrop-blur-sm bg-black/5 dark:bg-white/5 hover:border-brand/30 dark:hover:border-brand/30 hover:text-brand transition-all cursor-pointer"
+              >
                 {genre.name}
-              </Badge>
+              </Link>
             ))}
           </div>
 
@@ -72,11 +80,13 @@ export function BannerSlider({ books }: BannerSliderProps) {
           </p>
 
           <div className="flex items-center gap-4 text-sm text-foreground/80 mb-8 transition-colors duration-300">
-            <div className="flex items-center gap-2">
-              <Badge variant="destructive" className="rounded-sm px-1.5 py-0 text-xs font-bold">
-                NEW
-              </Badge>
-            </div>
+            {isNewBook(currentBook.createdAt) && (
+              <div className="flex items-center gap-2">
+                <Badge variant="destructive" className="rounded-sm px-1.5 py-0 text-xs font-bold">
+                  NEW
+                </Badge>
+              </div>
+            )}
             <div className="flex items-center gap-2 font-medium">
               <Eye size={16} /> {formatCompact(currentBook.stats?.views || 0)}
             </div>
@@ -123,12 +133,12 @@ export function BannerSlider({ books }: BannerSliderProps) {
       </div>
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {books.map((_, index) => (
+        {books.map((book, index) => (
           <button
-            key={index}
+            key={book.id}
             onClick={() => setCurrentSlide(index)}
             className={`h-2 rounded-full transition-all duration-300 ${index === currentSlide
-              ? 'w-8 bg-red-600 dark:bg-primary'
+              ? 'w-8 bg-brand'
               : 'w-2 bg-gray-400/50 hover:bg-gray-400'
               }`}
             aria-label={`Go to slide ${index + 1}`}

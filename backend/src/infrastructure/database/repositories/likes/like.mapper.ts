@@ -2,8 +2,7 @@ import { Like } from '@/domain/likes/entities/like.entity';
 import { LikeDocument } from '@/infrastructure/database/schemas/like.schema';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { Types } from 'mongoose';
-
-interface LikePersistence {
+export interface LikePersistence {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   targetId: Types.ObjectId;
@@ -14,15 +13,15 @@ interface LikePersistence {
 }
 
 export class LikeMapper {
-  static toDomain(doc: LikeDocument | any): Like {
+  static toDomain(doc: LikeDocument): Like {
     return Like.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),
       targetId: doc.targetId.toString(),
       targetType: doc.targetType as TargetType,
       status: doc.status,
-      createdAt: doc.createdAt as Date,
-      updatedAt: doc.updatedAt as Date
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     });
   }
 
@@ -34,7 +33,7 @@ export class LikeMapper {
       targetType: like.targetType,
       status: like.status,
       createdAt: like.createdAt,
-      updatedAt: like.updatedAt
+      updatedAt: like.updatedAt,
     };
   }
 }

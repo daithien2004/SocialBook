@@ -1,40 +1,32 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Genre } from '@/domain/genres/entities/genre.entity';
 
 export class GenreResponseDto {
-    @ApiProperty()
-    id: string;
+  id: string;
 
-    @ApiProperty()
-    name: string;
+  name: string;
 
-    @ApiProperty()
-    slug: string;
+  slug: string;
 
-    @ApiProperty({ required: false })
-    description?: string;
+  description?: string;
 
-    @ApiProperty()
-    createdAt: Date;
+  createdAt: Date;
 
-    @ApiProperty()
-    updatedAt: Date;
+  updatedAt: Date;
 
-    constructor(genre: Genre) {
-        this.id = genre.id.toString();
-        this.name = genre.name.toString();
-        this.slug = genre.slug;
-        this.description = genre.description;
-        this.createdAt = genre.createdAt;
-        this.updatedAt = genre.updatedAt;
-    }
+  constructor(genre: Genre) {
+    this.id = genre.id.toString();
+    this.name = genre.name.toString();
+    this.slug = genre.slug;
+    this.description = genre.description;
+    this.createdAt = genre.createdAt;
+    this.updatedAt = genre.updatedAt;
+  }
 
-    static fromDomain(genre: Genre): GenreResponseDto {
-        return new GenreResponseDto(genre);
-    }
+  static fromDomain(genre: Genre): GenreResponseDto {
+    return new GenreResponseDto(genre);
+  }
 
-    static fromArray(genres: Genre[]): GenreResponseDto[] {
-        return genres.map(genre => new GenreResponseDto(genre));
-    }
+  static fromArray(genres: Genre[]): GenreResponseDto[] {
+    return genres.map((genre) => new GenreResponseDto(genre));
+  }
 }
-

@@ -7,7 +7,7 @@ import { GetUserNotificationsQuery } from './get-user-notifications.query';
 export class GetUserNotificationsUseCase {
   constructor(
     private readonly notificationRepository: INotificationRepository,
-  ) { }
+  ) {}
 
   async execute(query: GetUserNotificationsQuery): Promise<Notification[]> {
     const offset = (query.page - 1) * query.limit;
@@ -15,7 +15,7 @@ export class GetUserNotificationsUseCase {
       query.userId,
       query.limit,
       offset,
-      query.isRead
+      query.isRead,
     );
   }
 }

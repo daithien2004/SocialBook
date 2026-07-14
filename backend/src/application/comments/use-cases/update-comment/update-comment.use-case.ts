@@ -1,4 +1,8 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  NotFoundDomainException,
+  ForbiddenDomainException,
+} from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { UpdateCommentCommand } from './update-comment.command';
@@ -6,41 +10,42 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class UpdateCommentUseCase {
-    private readonly logger = new Logger(UpdateCommentUseCase.name);
+  private readonly logger = new Logger(UpdateCommentUseCase.name);
 
-    constructor(
-        private readonly commentRepository: ICommentRepository
-    ) {}
+  constructor(private readonly commentRepository: ICommentRepository) {}
 
-    async execute(command: UpdateCommentCommand) {
-        try {
-            const commentId = CommentId.create(command.id);
-            
-            // Find the comment
-            const comment = await this.commentRepository.findById(commentId);
-            if (!comment) {
-                throw new NotFoundException(ErrorMessages.COMMENT_NOT_FOUND);
-            }
+  async execute(command: UpdateCommentCommand) {
+    try {
+      const commentId = CommentId.create(command.id);
 
-            // Check if user can edit this comment
-            if (!comment.canBeEdited(command.userId)) {
-                throw new ForbiddenException('You cannot edit this comment');
-            }
+      // Find the comment
+      const comment = await this.commentRepository.findById(commentId);
+      if (!comment) {
+        throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
+      }
 
-            // Update the content
-            comment.updateContent(command.content);
+      // Check if user can edit this comment
+      if (!comment.canBeEdited(command.userId)) {
+        throw new ForbiddenDomainException('You cannot edit this comment');
+      }
 
-            // Save the updated comment
-            await this.commentRepository.save(comment);
+      // Update the content
+      comment.updateContent(command.content);
 
-            this.logger.log(`Comment updated successfully: ${comment.id.toString()} by user ${command.userId}`);
+      // Save the updated comment
+      await this.commentRepository.save(comment);
 
-            return comment;
-        } catch (error) {
-            this.logger.error(`Failed to update comment ${command.id} by user ${command.userId}`, error);
-            throw error;
-        }
+      this.logger.log(
+        `Comment updated successfully: ${comment.id.toString()} by user ${command.userId}`,
+      );
+
+      return comment;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update comment ${command.id} by user ${command.userId}`,
+        error,
+      );
+      throw error;
     }
+  }
 }
-
-

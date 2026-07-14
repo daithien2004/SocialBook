@@ -10,10 +10,12 @@ import {
   SignupFormValues,
   signupSchema,
 } from '@/features/auth/types/auth.type';
+import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 
+import { AppButton } from '@/components/common/AppButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -49,8 +51,8 @@ export default function SignupPage() {
     try {
       await signup(data).unwrap();
       router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
-    } catch (err: any) {
-      console.error('Signup failed:', err);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -61,6 +63,7 @@ export default function SignupPage() {
           src="https://res.cloudinary.com/dajg703uq/image/upload/v1763780207/snapedit_1763780184287_v11fnr.jpg"
           alt="Login background"
           fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover opacity-80"
           priority
         />
@@ -70,8 +73,8 @@ export default function SignupPage() {
             <h1 className="text-5xl font-bold leading-tight font-serif mb-4">
               LES MISERABLES
             </h1>
-            <p className="text-2xl text-teal-100 font-serif italic border-l-4 border-teal-500 pl-4">
-              "To love another person is to see the face of God."
+            <p className="text-2xl text-white/90 font-serif italic border-l-4 border-white/60 pl-4">
+              &quot;To love another person is to see the face of God.&quot;
             </p>
             <p className="mt-4 text-lg font-medium">— Victor Hugo</p>
           </div>
@@ -100,7 +103,7 @@ export default function SignupPage() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tên đăng nhập</FormLabel>
+                      <FormLabel>Tên người dùng</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="thungly123"
@@ -155,7 +158,7 @@ export default function SignupPage() {
                           variant="ghost"
                           size="icon"
                           className="absolute right-0 top-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={() => setShowPassword((prev) => !prev)}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -190,7 +193,7 @@ export default function SignupPage() {
                           variant="ghost"
                           size="icon"
                           className="absolute right-0 top-0 h-11 w-11 text-muted-foreground hover:text-foreground"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() => setShowConfirmPassword((prev) => !prev)}
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -204,20 +207,14 @@ export default function SignupPage() {
                   )}
                 />
 
-                <Button
+                <AppButton
                   type="submit"
-                  className="w-full h-11 text-base font-semibold mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={isLoading}
+                  className="w-full h-11 text-base font-semibold mt-4"
+                  loading={isLoading}
+                  loadingText="Đang tạo tài khoản..."
                 >
-                  {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Đang tạo tài khoản...
-                    </>
-                  ) : (
-                    'Tạo Tài Khoản'
-                  )}
-                </Button>
+                  Tạo Tài Khoản
+                </AppButton>
               </form>
             </Form>
 

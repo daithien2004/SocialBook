@@ -19,14 +19,14 @@ export const NESTJS_COMMENTS_ENDPOINTS = {
     postCreate: '/comments',
     getResolveParent: '/comments/resolve-parent',
     getCount: '/comments/count',
-    editComment: (id: string) => `/comments/${id}/edit`,
+    editComment: (id: string) => `/comments/${id}`,
     deleteComment: (id: string) => `/comments/${id}`,
 };
 
 export const NESTJS_LIKES_ENDPOINTS = {
     postToggleLike: '/likes/toggle',
-    getCount: 'likes/count',
-    getStatus: 'likes/status',
+    getCount: '/likes/count',
+    getStatus: '/likes/status',
 };
 
 export const NESTJS_BOOKS_ENDPOINTS = {
@@ -39,6 +39,7 @@ export const NESTJS_BOOKS_ENDPOINTS = {
     deleteBook: (bookId: string) => `/books/${bookId}`,
     getAllBookForAdmin: '/books/admin/all',
     like: (bookSlug: string) => `/books/${bookSlug}/like`,
+    recordView: (bookSlug: string) => `/books/${bookSlug}/views`,
     getFilters: '/books/filters/all',
 };
 
@@ -46,6 +47,8 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
     // Public endpoints
     getChapterBySlug: (bookSlug: string, chapterSlug: string) =>
         `/books/${bookSlug}/chapters/${chapterSlug}`,
+    recordChapterView: (bookSlug: string, chapterSlug: string) =>
+        `/books/${bookSlug}/chapters/${chapterSlug}/view`,
     getChapters: (bookSlug: string) => `/books/${bookSlug}/chapters`,
     getChapterById: (bookSlug: string, chapterId: string) =>
         `/books/${bookSlug}/chapters/id/${chapterId}`,
@@ -61,7 +64,11 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
     deleteChapterAdmin: (bookSlug: string, chapterId: string) =>
         `/books/${bookSlug}/chapters/${chapterId}`,
     importPreview: (bookSlug: string) => `/books/${bookSlug}/chapters/import/preview`,
+    importStart: (bookSlug: string) => `/books/${bookSlug}/chapters/import/start`,
+    importStatus: (bookSlug: string, jobId: string) => `/books/${bookSlug}/chapters/import/status/${jobId}`,
+    getChapterKnowledge: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}/knowledge`,
 };
+
 
 export const NESTJS_POSTS_ENDPOINTS = {
     getAllByUsers: '/posts/user',
@@ -92,6 +99,8 @@ export const NESTJS_LIBRARY_ENDPOINTS = {
     updateBookCollections: '/library/collections',
     removeBook: (bookId: string) => `/library/${bookId}`,
     getBookLibraryInfo: (bookId: string) => `/library/book/${bookId}`,
+    knowledgeGraph: '/library/knowledge-graph',
+
 
     // Collections System (Folder)
     collections: '/collections', // GET, POST
@@ -143,21 +152,6 @@ export const NESTJS_RECOMMENDATIONS_ENDPOINTS = {
     getPersonalized: '/recommendations/personalized',
 };
 
-export const NESTJS_ONBOARDING_ENDPOINTS = {
-    status: '/onboarding/status',
-    start: '/onboarding/start',
-    updateStep: '/onboarding/update-step',
-    complete: '/onboarding/complete',
-};
-
-export const NESTJS_GAMIFICATION_ENDPOINTS = {
-    stats: '/gamification/stats',
-    achievements: '/gamification/achievements',
-    dailyGoals: '/gamification/daily-goals',
-    streak: '/gamification/streak',
-    streakCheckIn: '/gamification/streak/check-in',
-};
-
 export const NESTJS_ANALYTICS_ENDPOINTS = {
     getReadingHeatmap: '/statistics/analytics/reading-heatmap',
     getChapterEngagement: '/statistics/analytics/chapter-engagement',
@@ -165,5 +159,9 @@ export const NESTJS_ANALYTICS_ENDPOINTS = {
     getGeographicDistribution: '/statistics/analytics/geographic',
     getActiveUsers: '/statistics/analytics/active-users',
     seedReadingHistory: '/statistics/seed-reading-history',
+};
+
+export const NESTJS_CHROMA_ENDPOINTS = {
+    reindexAll: '/chroma/reindex-all',
 };
 

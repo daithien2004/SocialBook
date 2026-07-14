@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Author, AuthorSchema } from '@/infrastructure/database/schemas/author.schema';
+import {
+  Author,
+  AuthorSchema,
+} from '@/infrastructure/database/schemas/author.schema';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { AuthorRepository } from './author.repository';
 
@@ -14,9 +17,6 @@ import { AuthorRepository } from './author.repository';
       useClass: AuthorRepository,
     },
   ],
-  exports: [
-    IAuthorRepository,
-    MongooseModule,
-  ],
+  exports: [IAuthorRepository, MongooseModule],
 })
 export class AuthorsRepositoryModule {}

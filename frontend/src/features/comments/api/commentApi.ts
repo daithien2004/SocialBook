@@ -16,10 +16,19 @@ import {
     CommentRequest,
     EditCommentRequest,
     EditCommentResponse,
-    DeleteCommentRequest,
-    GetReplyCountByParentResponse,
-    GetReplyCountByParentRequest
+    DeleteCommentRequest
 } from '../types/comment.interface';
+import type { RootState } from '@/store/store';
+import { postApi } from '../../posts/api/postApi';
+import type { PaginatedPostsResponse, Post } from '../../posts/types/post.interface';
+
+type RawCommentsResponse = {
+    comments?: GetCommentsResponse['comments'];
+    meta?: {
+        nextCursor?: string | null;
+        hasMore?: boolean;
+    };
+};
 
 export const commentApi = createApi({
     reducerPath: 'commentApi',
@@ -32,6 +41,11 @@ export const commentApi = createApi({
                     url: NESTJS_COMMENTS_ENDPOINTS.getCommentsByTarget,
                     method: 'GET',
                     params: { targetId, parentId, cursor, limit },
+                }),
+                transformResponse: (response: RawCommentsResponse): GetCommentsResponse => ({
+                    comments: response.comments ?? [],
+                    nextCursor: response.meta?.nextCursor ?? null,
+                    hasMore: response.meta?.hasMore ?? false,
                 }),
                 providesTags: (result, error, arg) => {
                     const threadTag = {
@@ -57,7 +71,7 @@ export const commentApi = createApi({
             GetResolveParentRequest
         >({
             query: ({ targetId, parentId, targetType }) => ({
-                url: NESTJS_COMMENTS_ENDPOINTS.getCommentsByTarget,
+                url: NESTJS_COMMENTS_ENDPOINTS.getResolveParent,
                 method: 'GET',
                 params: { targetId, parentId, targetType },
             }),
@@ -70,7 +84,7 @@ export const commentApi = createApi({
                 body: data,
             }),
 
-            invalidatesTags: (result, error) => {
+            invalidatesTags: (result) => {
                 if (!result) return [];
 
                 return [
@@ -89,6 +103,54 @@ export const commentApi = createApi({
                         }
                         : undefined,
                 ].filter(Boolean) as { type: 'Comment'; id: string }[];
+            },
+
+            async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
+                const patchResults: { undo: () => void }[] = [];
+
+                if (arg.targetType === 'post' && !arg.parentId) {
+                    const state = getState() as RootState;
+                    const queries = state.postApi?.queries || {};
+
+                    for (const [key, query] of Object.entries(queries)) {
+                        if (!query) continue;
+
+                        const q = query as { originalArgs?: unknown };
+                        if (q.originalArgs === undefined) continue;
+
+                        const originalArgs = q.originalArgs;
+
+                        if (key.startsWith('getPosts(') || key.startsWith('getPostsByUser(')) {
+                            const endpointName = key.startsWith('getPosts(') ? 'getPosts' : 'getPostsByUser';
+                             
+                            const patchResult = dispatch(
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                postApi.util.updateQueryData(endpointName, originalArgs as any, (draft: PaginatedPostsResponse) => {
+                                    const post = draft.data?.find(p => p.id === arg.targetId);
+                                    if (post) {
+                                        post.totalComments = (post.totalComments || 0) + 1;
+                                    }
+                                })
+                            );
+                            patchResults.push(patchResult);
+                        } else if (key.startsWith('getPostById(')) {
+                            const patchResult = dispatch(
+                                postApi.util.updateQueryData('getPostById', originalArgs as unknown as { id: string; userId?: string }, (draft: Post) => {
+                                    if (draft.id === arg.targetId) {
+                                        draft.totalComments = (draft.totalComments || 0) + 1;
+                                    }
+                                })
+                            );
+                            patchResults.push(patchResult);
+                        }
+                    }
+                }
+
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResults.forEach(pr => pr.undo());
+                }
             },
         }),
 
@@ -129,7 +191,7 @@ export const commentApi = createApi({
         >({
             query: ({ id, content }) => ({
                 url: NESTJS_COMMENTS_ENDPOINTS.editComment(id),
-                method: 'POST',
+                method: 'PUT',
                 body: { content },
             }),
             invalidatesTags: (_, __, arg) => [
@@ -159,23 +221,6 @@ export const commentApi = createApi({
                 },
             ],
         }),
-
-        getReplyCountByParent: builder.query<
-            GetReplyCountByParentResponse,
-            GetReplyCountByParentRequest
-        >({
-            query: ({ targetId, targetType, parentId }) => ({
-                url: NESTJS_COMMENTS_ENDPOINTS.getCount,
-                method: "GET",
-                params: { targetId, targetType, parentId },
-            }),
-            providesTags: (result, error, arg) => [
-                {
-                    type: 'Comment',
-                    id: `REPLY-COUNT-${arg.parentId}`,
-                },
-            ],
-        }),
     }),
 });
 
@@ -185,7 +230,6 @@ export const {
     useLazyGetResolveParentQuery,
     useGetCommentCountQuery,
     usePostToggleLikeMutation,
-    useGetReplyCountByParentQuery,
     useEditCommentMutation,
     useDeleteCommentMutation,
 } = commentApi;

@@ -1,43 +1,49 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AuthorsSeed } from './authors.seeder';
-import { GenresSeed } from './genres.seeder';
-import { BooksSeed } from './books.seeder';
-import { ReviewsSeed } from './reviews.seeder';
-import { ChaptersSeed } from './chapters.seeder';
-import { UsersSeed } from './users.seeder';
-import { CommentsSeed } from './comments.seeder';
 import { RolesSeed } from './roles.seed';
-import { TextToSpeechSeed } from './textToSpeech.seeder';
+import { UsersSeed } from './users.seeder';
+import { ReviewsSeed } from './reviews.seeder';
+import { CommentsSeed } from './comments.seeder';
+import { FollowsSeed } from './follows.seeder';
+import { LikesSeed } from './likes.seeder';
+import { ProgressSeed } from './progress.seeder';
+import { PostsSeed } from './posts.seeder';
+import { NotificationSeed } from './notifications.seeder';
+import { ToxicWordsSeed } from './toxic-words.seeder';
+import { ChapterDiscussionsSeed } from './chapter-discussions.seeder';
+
 @Injectable()
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
 
   constructor(
-    private readonly authorsSeed: AuthorsSeed,
-    private readonly genresSeed: GenresSeed,
-    private readonly booksSeed: BooksSeed,
-    private readonly reviewsSeed: ReviewsSeed,
-    private readonly chaptersSeed: ChaptersSeed,
-    private readonly usersSeed: UsersSeed,
-    private readonly commentsSeed: CommentsSeed,
     private readonly rolesSeed: RolesSeed,
-    private readonly textToSpeechSeed: TextToSpeechSeed,
-  ) { }
+    private readonly usersSeed: UsersSeed,
+    private readonly reviewsSeed: ReviewsSeed,
+    private readonly commentsSeed: CommentsSeed,
+    private readonly followsSeed: FollowsSeed,
+    private readonly likesSeed: LikesSeed,
+    private readonly progressSeed: ProgressSeed,
+    private readonly postsSeed: PostsSeed,
+    private readonly notificationSeed: NotificationSeed,
+    private readonly toxicWordsSeed: ToxicWordsSeed,
+    private readonly chapterDiscussionsSeed: ChapterDiscussionsSeed,
+  ) {}
 
   async seed() {
     try {
       this.logger.log('🎯 Starting database seeding...');
 
-      // Thứ tự seeding quan trọng
       await this.rolesSeed.run();
       await this.usersSeed.run();
-      await this.authorsSeed.run();
-      await this.genresSeed.run();
-      await this.booksSeed.run();
-      await this.chaptersSeed.run();
+      await this.postsSeed.run();
       await this.reviewsSeed.run();
       await this.commentsSeed.run();
-      await this.textToSpeechSeed.run();
+      await this.followsSeed.run();
+      await this.likesSeed.run();
+      await this.progressSeed.run();
+      await this.notificationSeed.run();
+      await this.toxicWordsSeed.run();
+      await this.chapterDiscussionsSeed.run();
 
       this.logger.log('✅ All seeding completed successfully!');
     } catch (error) {
@@ -50,16 +56,16 @@ export class SeederService {
     try {
       this.logger.log('🗑️ Clearing all seed data...');
 
-      // Xóa theo thứ tự ngược để tránh constraint errors
       await this.rolesSeed['roleModel'].deleteMany({});
       await this.usersSeed['userModel'].deleteMany({});
+      await this.postsSeed['postModel'].deleteMany({});
       await this.reviewsSeed['reviewModel'].deleteMany({});
-      await this.chaptersSeed['chapterModel'].deleteMany({});
-      await this.booksSeed['bookModel'].deleteMany({});
-      await this.authorsSeed['authorModel'].deleteMany({});
-      await this.genresSeed['genreModel'].deleteMany({});
       await this.commentsSeed['commentModel'].deleteMany({});
-      await this.textToSpeechSeed['textToSpeechModel'].deleteMany({});
+      await this.followsSeed['followModel'].deleteMany({});
+      await this.likesSeed['likeModel'].deleteMany({});
+      await this.progressSeed['progressModel'].deleteMany({});
+      await this.notificationSeed['notificationModel'].deleteMany({});
+      await this.toxicWordsSeed['toxicWordModel'].deleteMany({});
 
       this.logger.log('✅ All seed data cleared!');
     } catch (error) {

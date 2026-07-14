@@ -5,18 +5,16 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   UseGuards,
-  Inject,
 } from '@nestjs/common';
 import {
   GenerateChapterAudioDto,
   GenerateBookAudioDto,
-} from '@/presentation/text-to-speech/dto/textToSpeech.dto';
-import { Public } from '@/common/decorators/customize';
+  TextToSpeechResponseDto,
+} from '@/presentation/text-to-speech/dto/text-to-speech.dto';
+import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { GenerateChapterAudioUseCase } from '@/application/text-to-speech/use-cases/generate-chapter-audio.use-case';
 import { GetChapterAudioUseCase } from '@/application/text-to-speech/use-cases/get-chapter-audio.use-case';
 import { DeleteChapterAudioUseCase } from '@/application/text-to-speech/use-cases/delete-chapter-audio.use-case';
@@ -26,27 +24,30 @@ import { IncrementPlayCountUseCase } from '@/application/text-to-speech/use-case
 @Controller('text-to-speech')
 export class TextToSpeechController {
   constructor(
-      private readonly generateChapterAudioUseCase: GenerateChapterAudioUseCase,
-      private readonly getChapterAudioUseCase: GetChapterAudioUseCase,
-      private readonly deleteChapterAudioUseCase: DeleteChapterAudioUseCase,
-      private readonly generateBookAudioUseCase: GenerateBookAudioUseCase,
-      private readonly incrementPlayCountUseCase: IncrementPlayCountUseCase,
-  ) { }
+    private readonly generateChapterAudioUseCase: GenerateChapterAudioUseCase,
+    private readonly getChapterAudioUseCase: GetChapterAudioUseCase,
+    private readonly deleteChapterAudioUseCase: DeleteChapterAudioUseCase,
+    private readonly generateBookAudioUseCase: GenerateBookAudioUseCase,
+    private readonly incrementPlayCountUseCase: IncrementPlayCountUseCase,
+  ) {}
 
   /**
    * Generate audio for a single chapter (admin only)
    */
   @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Post('chapter/:chapterId')
   async generateChapterAudio(
     @Param('chapterId') chapterId: string,
     @Body() dto: GenerateChapterAudioDto,
   ) {
-    const result = await this.generateChapterAudioUseCase.execute(chapterId, dto);
+    const result = await this.generateChapterAudioUseCase.execute(
+      chapterId,
+      dto,
+    );
     return {
       message: 'Audio generated successfully',
-      data: result,
+      data: TextToSpeechResponseDto.fromEntity(result),
     };
   }
 
@@ -54,7 +55,7 @@ export class TextToSpeechController {
    * Generate audio for all chapters in a book (admin only)
    */
   @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Post('book/:bookId/all')
   async generateBookAudio(
     @Param('bookId') bookId: string,
@@ -84,7 +85,7 @@ export class TextToSpeechController {
 
     return {
       message: 'Audio retrieved successfully',
-      data: result, // result is TextToSpeech entity, NestJS serializes it. Might need DTO mapping if strict.
+      data: TextToSpeechResponseDto.fromEntity(result),
     };
   }
 
@@ -92,7 +93,7 @@ export class TextToSpeechController {
    * Delete TTS for a chapter (admin only)
    */
   @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Delete('chapter/:chapterId')
   async deleteChapterAudio(@Param('chapterId') chapterId: string) {
     await this.deleteChapterAudioUseCase.execute(chapterId);

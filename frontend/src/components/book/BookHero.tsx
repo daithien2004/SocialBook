@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
 import { cn } from '@/lib/utils';
 import { BookOpen, Bookmark, Heart, Share2, Star } from 'lucide-react';
-import Image from 'next/image';
+import { SafeImage } from '../common/SafeImage';
 import Link from 'next/link';
 import { ElementType } from 'react';
 
@@ -32,10 +32,13 @@ export const BookHero = ({
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="flex-none mx-auto lg:mx-0">
             <div className="w-[240px] h-[360px] md:w-[280px] md:h-[420px] relative rounded-lg overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)] dark:shadow-[0_0_40px_rgba(0,0,0,0.6)] group">
-              <Image
+              <SafeImage
                 src={book.coverUrl}
                 alt={book.title}
                 fill
+                priority
+                loading="eager"
+                sizes="(max-width: 768px) 280px, (max-width: 1200px) 300px, 400px"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -45,7 +48,7 @@ export const BookHero = ({
           <div className="flex-1">
             <div className="mb-2 flex items-center gap-2">
               <Badge
-                variant={book.status === 'completed' ? 'secondary' : 'default'} // mapped simple logic
+                variant={book.status === 'completed' ? 'secondary' : 'default'}
                 className={cn(
                   "px-2 py-0.5 text-xs font-bold uppercase tracking-wider border",
                   book.status === 'completed'
@@ -66,7 +69,7 @@ export const BookHero = ({
 
             <p className="text-lg text-muted-foreground mb-6 flex items-center gap-2">
               Tác giả:{' '}
-              <span className="font-bold text-red-600 dark:text-red-500 hover:underline cursor-pointer">
+              <span className="font-bold text-foreground hover:text-brand transition-colors cursor-pointer">
                 {book.authorId.name}
               </span>
             </p>
@@ -78,7 +81,7 @@ export const BookHero = ({
                 <Button
                   asChild
                   size="lg"
-                  className="rounded-full font-bold shadow-lg hover:-translate-y-1 transition-all bg-red-600 hover:bg-red-700 text-white"
+                  className="rounded-full font-bold shadow-lg hover:-translate-y-1 transition-all bg-brand hover:bg-brand/90 text-brand-foreground"
                 >
                   <Link href={`/books/${book.slug}/chapters/${book.chapters[0].slug}`}>
                     <BookOpen size={20} className="mr-2" /> Đọc ngay
@@ -120,10 +123,9 @@ interface StatsGridProps {
 const StatsGrid = ({ book }: StatsGridProps) => (
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-50 dark:bg-white/5 p-4 rounded-lg border border-gray-200 dark:border-white/5">
     <StatItem
-      value={book.stats?.averageRating || 0}
-      label="Đánh giá"
+      value={book.stats?.totalRatings || 0}
+      label="Lượt đánh giá"
       icon={<Star size={16} />}
-      isRating
     />
     <StatItem value={book.stats?.views?.toLocaleString()} label="Lượt xem" />
     <StatItem value={book.stats?.likes?.toLocaleString()} label="Yêu thích" />
@@ -170,8 +172,8 @@ const IconButton = ({ onClick, active, disabled, icon: Icon, title }: IconButton
     className={cn(
       "rounded-full h-12 w-12 border transition-all",
       active
-        ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700 dark:bg-red-500/20 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-500/30"
-        : "border-gray-200 dark:border-white/20 text-gray-400 hover:text-red-500 hover:border-red-200 dark:hover:border-white dark:hover:text-white"
+        ? "bg-brand/10 border-brand/20 text-brand hover:bg-brand/20 dark:bg-brand/20 dark:border-brand dark:text-brand dark:hover:bg-brand/30"
+        : "border-gray-200 dark:border-white/20 text-gray-400 hover:text-brand hover:border-brand/30 dark:hover:border-white dark:hover:text-white"
     )}
   >
     <Icon size={20} className={active ? 'fill-current' : ''} />

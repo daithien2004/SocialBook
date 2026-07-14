@@ -1,168 +1,161 @@
 'use client';
 
-import { useState } from 'react';
-import { useGetUsersQuery, useBanUserMutation } from '@/features/users/api/usersApi';
-import { toast } from 'sonner';
-import { Loader2, ChevronLeft, ChevronRight, Lock, Unlock, Mail, Shield, CheckCircle, XCircle } from 'lucide-react';
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
+import {
+    CheckCircle,
+    Mail,
+    Shield,
+    XCircle,
+    Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+
+import { useUserManagement } from '@/features/admin/hooks/users/useUserManagement';
+import { AdminSearchBar } from '@/features/admin/components/AdminSearchBar';
+import { AdminPagination } from '@/features/admin/components/AdminPagination';
 
 const UsersPage = () => {
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
-    const { data, isLoading, isFetching, refetch } = useGetUsersQuery(
-        `current=${page}&pageSize=${pageSize}`
-    );
-    const [banUser, { isLoading: isBanning }] = useBanUserMutation();
-    const users = data?.data || [];
-    const total = data?.meta?.total || 0;
-    const totalPages = data?.meta?.totalPages || Math.ceil(total / pageSize);
-
-    const handleBan = async (id: string) => {
-        try {
-            await banUser(id).unwrap();
-            toast.success('Cập nhật trạng thái người dùng thành công');
-            refetch();
-        } catch (error) {
-            toast.error('Có lỗi xảy ra');
-        }
-    };
+    const {
+        page,
+        setPage,
+        pageSize,
+        users,
+        total,
+        totalPages,
+        isLoading,
+        isFetching,
+        isBanning,
+        handleBan,
+        openConfirm
+    } = useUserManagement();
 
     return (
-        <div className="min-h-screen bg-gray-50 rounded-lg">
+        <div className="min-h-screen rounded-lg bg-gray-50">
+            <AdminSearchBar
+                title="Quản lý người dùng"
+                totalItems={total}
+                totalLabel="người dùng"
+            />
 
-            {/* Loading */}
             {(isLoading || isFetching) && (
-                <div className="flex justify-center items-center py-32">
-                    <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                <div className="flex items-center justify-center py-32">
+                    <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
                 </div>
             )}
 
-            {/* Table */}
             {!(isLoading || isFetching) && (
-                <div className="py-6">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Username</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Provider</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Trạng thái</th>
-                                        <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {users.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="text-center py-16 text-gray-500 text-lg">
-                                                Không tìm thấy người dùng nào
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        users.map((user: any) => (
-                                            <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="font-semibold text-gray-900">{user.username}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2 text-gray-600">
-                                                        <Mail className="w-4 h-4" />
-                                                        {user.email}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                                                        ${user.provider === 'google' ? 'bg-red-100 text-red-800' :
-                                                            user.provider === 'facebook' ? 'bg-blue-100 text-blue-800' :
-                                                                'bg-gray-100 text-gray-800'}`}>
-                                                        {user.provider}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex items-center gap-2">
-                                                            {user.isBanned ? (
-                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                                                                    <XCircle className="w-3 h-3" /> Banned
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                                                    <CheckCircle className="w-3 h-3" /> Active
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            {user.isVerified ? (
-                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                                                    <Shield className="w-3 h-3" /> Verified
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
-                                                                    <Shield className="w-3 h-3" /> Unverified
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex justify-center">
-                                                        <ConfirmDelete
-                                                            title={user.isBanned ? 'Mở khóa người dùng' : 'Khóa người dùng'}
-                                                            description={user.isBanned ? 'Bạn có chắc chắn muốn mở khóa người dùng này?' : 'Bạn có chắc chắn muốn khóa người dùng này?'}
-                                                            onConfirm={() => handleBan(user.id)}
-                                                            okText={user.isBanned ? 'Mở khóa' : 'Khóa'}
-                                                            okButtonProps={{ danger: !user.isBanned }} // Ban = danger, Unban = not danger
-                                                        >
-                                                            <button
-                                                                className={`px-3 py-1.5 rounded-md transition-all text-sm font-medium border shadow-sm flex items-center gap-2
-                                                                    ${user.isBanned
-                                                                        ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-500' // Primary style (Unban)
-                                                                        : 'bg-white text-red-500 border-red-200 border-dashed hover:text-red-600 hover:border-red-400' // Dashed Danger style (Ban)
-                                                                    }`}
-                                                                title={user.isBanned ? 'Unban User' : 'Ban User'}
-                                                            >
-                                                                {user.isBanned ? (
-                                                                    <>Unban</>
-                                                                ) : (
-                                                                    <>Ban</>
-                                                                )}
-                                                            </button>
-                                                        </ConfirmDelete>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                <div className="py-0">
+                    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                        <Table>
+                            <TableHeader className="border-b border-gray-200 bg-gray-50">
+                                <TableRow>
+                                    <TableHead>Username</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Provider</TableHead>
+                                    <TableHead>Trạng thái</TableHead>
+                                    <TableHead className="text-center">Hành động</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {users.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="py-16 text-center text-lg text-gray-500 italic">
+                                            Không tìm thấy người dùng nào
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    users.map((user) => (
+                                        <TableRow key={user.id} className="group hover:bg-gray-50/80 transition-colors">
+                                            <TableCell>
+                                                <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                                    {user.username}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2 text-gray-600 font-medium">
+                                                    <Mail className="h-4 w-4 text-gray-400" />
+                                                    {user.email}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`capitalize font-semibold border shadow-none px-2.5 ${
+                                                        user.provider === 'google'
+                                                            ? 'bg-rose-50 text-rose-700 border-rose-100'
+                                                            : user.provider === 'facebook'
+                                                                ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                                                : 'bg-slate-50 text-slate-700 border-slate-100'
+                                                    }`}
+                                                >
+                                                    {user.provider}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1.5 w-fit">
+                                                    <Badge
+                                                        variant={user.isBanned ? 'destructive' : 'outline'}
+                                                        className={`gap-1 shadow-none ${!user.isBanned ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : ''}`}
+                                                    >
+                                                        {user.isBanned ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+                                                        {user.isBanned ? 'Banned' : 'Active'}
+                                                    </Badge>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={`gap-1 shadow-none ${user.isVerified ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}
+                                                    >
+                                                        <Shield className="h-3 w-3" />
+                                                        {user.isVerified ? 'Verified' : 'Unverified'}
+                                                    </Badge>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex justify-center">
+                                                    <Button
+                                                        variant={user.isBanned ? 'default' : 'outline'}
+                                                        size="sm"
+                                                        onClick={() => openConfirm({
+                                                            title: user.isBanned ? 'Mở khóa người dùng' : 'Khóa người dùng',
+                                                            description: user.isBanned 
+                                                                ? `Bạn có chắc chắn muốn mở khóa người dùng "${user.username}"?`
+                                                                : `Bạn có chắc chắn muốn khóa người dùng "${user.username}"? Hành động này sẽ tạm dừng quyền truy cập của họ.`,
+                                                            confirmText: user.isBanned ? 'Mở khóa' : 'Khóa người dùng',
+                                                            variant: user.isBanned ? 'default' : 'destructive',
+                                                            onConfirm: () => handleBan(user.id)
+                                                        })}
+                                                        className={`rounded-xl px-4 font-bold transition-all ${
+                                                            user.isBanned
+                                                                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20'
+                                                                : 'border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300'
+                                                        }`}
+                                                        disabled={isBanning}
+                                                    >
+                                                        {user.isBanned ? 'Unban' : 'Ban User'}
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between text-sm">
-                                <div className="text-gray-600">
-                                    Hiển thị {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} trong {total.toLocaleString()} người dùng
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <button
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </button>
-                                    <span className="font-medium">Trang {page} / {totalPages}</span>
-                                    <button
-                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={page === totalPages}
-                                        className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <ChevronRight className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+                        <AdminPagination
+                            page={page}
+                            totalPages={totalPages}
+                            totalItems={total}
+                            pageSize={pageSize}
+                            itemLabel="người dùng"
+                            onPageChange={setPage}
+                        />
                     </div>
                 </div>
             )}

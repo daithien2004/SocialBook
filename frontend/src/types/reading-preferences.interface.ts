@@ -1,5 +1,5 @@
 export interface ReadingPreferences {
-    theme: 'light' | 'dark' | 'sepia';
+    theme: 'light' | 'dark' | 'sepia' | 'paper';
     fontSize: number;
     fontFamily: string;
     lineHeight: number;
@@ -8,10 +8,12 @@ export interface ReadingPreferences {
     textColor: string;
     textAlign: 'left' | 'center' | 'justify';
     marginWidth: number;
+    warmth: number;
+    brightness: number;
 }
 
 export interface UpdateReadingPreferencesDto {
-    theme?: 'light' | 'dark' | 'sepia';
+    theme?: 'light' | 'dark' | 'sepia' | 'paper';
     fontSize?: number;
     fontFamily?: string;
     lineHeight?: number;
@@ -20,4 +22,6 @@ export interface UpdateReadingPreferencesDto {
     textColor?: string;
     textAlign?: 'left' | 'center' | 'justify';
     marginWidth?: number;
+    warmth?: number;
+    brightness?: number;
 }

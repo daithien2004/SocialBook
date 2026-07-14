@@ -1,20 +1,22 @@
-import { AIRequest, AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
+import {
+  AIRequest,
+  AIRequestType,
+} from '@/domain/gemini/entities/ai-request.entity';
 import { AIRequestDocument } from '@/infrastructure/database/schemas/ai-request.schema';
 import { Types } from 'mongoose';
-
-interface AIRequestPersistence {
+export interface AIRequestPersistence {
   _id: Types.ObjectId;
   prompt: string;
   response: string | null;
   type: AIRequestType;
   userId: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export class AIRequestMapper {
-  static toDomain(doc: AIRequestDocument | any): AIRequest {
+  static toDomain(doc: AIRequestDocument): AIRequest {
     return AIRequest.reconstitute({
       id: doc._id.toString(),
       prompt: doc.prompt,
@@ -22,8 +24,8 @@ export class AIRequestMapper {
       type: doc.type,
       userId: doc.userId,
       metadata: doc.metadata || {},
-      createdAt: doc.createdAt as Date,
-      updatedAt: doc.updatedAt as Date
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     });
   }
 
@@ -36,7 +38,7 @@ export class AIRequestMapper {
       userId: request.userId.toString(),
       metadata: request.metadata,
       createdAt: request.createdAt,
-      updatedAt: request.updatedAt
+      updatedAt: request.updatedAt,
     };
   }
 }

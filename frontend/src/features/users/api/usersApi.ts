@@ -1,13 +1,18 @@
 import { NESTJS_USERS_ENDPOINTS } from '@/constants/server-endpoints';
 import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { mapPaginatedResponse } from '@/lib/api-response';
 import { createApi } from '@reduxjs/toolkit/query/react';
+import { buildFormData } from '@/lib/utils';
 import {
     SearchUsersParams,
+    SearchUsersRawItem,
+    SearchUsersRawResponse,
     SearchUsersResponse,
     UpdateUserOverviewRequest,
     UserListResponse,
     UserOverviewResponse
 } from '../types/user.types';
+import { ReadingPreferences } from '@/types/reading-preferences.interface';
 
 export const usersApi = createApi({
     reducerPath: 'usersApi',
@@ -47,16 +52,11 @@ export const usersApi = createApi({
             UserOverviewResponse,
             { file: File; userId: string }
         >({
-            query: ({ file }) => {
-                const formData = new FormData();
-                formData.append("file", file);
-
-                return {
-                    url: `/users/me/avatar`,
-                    method: "PATCH",
-                    body: formData,
-                };
-            },
+            query: ({ file }) => ({
+                url: `/users/me/avatar`,
+                method: "PATCH",
+                body: buildFormData({ file }),
+            }),
             invalidatesTags: (result, error, { userId }) => [
                 { type: "Users", id: `OVERVIEW_${userId}` },
             ],
@@ -72,7 +72,7 @@ export const usersApi = createApi({
             ],
         }),
 
-        getReadingPreferences: builder.query<any, void>({
+        getReadingPreferences: builder.query<ReadingPreferences, void>({
             query: () => ({
                 url: '/users/me/reading-preferences',
                 method: 'GET',
@@ -80,7 +80,7 @@ export const usersApi = createApi({
             providesTags: ['Users'],
         }),
 
-        updateReadingPreferences: builder.mutation<any, any>({
+        updateReadingPreferences: builder.mutation<ReadingPreferences, Partial<ReadingPreferences>>({
             query: (body) => ({
                 url: '/users/me/reading-preferences',
                 method: 'PUT',
@@ -90,15 +90,26 @@ export const usersApi = createApi({
         }),
 
         searchUsers: builder.query<SearchUsersResponse, SearchUsersParams>({
-            query: ({ keyword, current = 1, pageSize = 10 }) => ({
+            query: ({ keyword, current, pageSize }) => ({
                 url: `/users/search`,
                 method: 'GET',
                 params: {
-                    keyword,
-                    current,
-                    pageSize,
+                    username: keyword,
+                    page: current,
+                    limit: pageSize,
                 },
             }),
+            transformResponse: (response: SearchUsersRawResponse): SearchUsersResponse =>
+                mapPaginatedResponse<SearchUsersRawItem, SearchUsersResponse['data'][number]>(
+                    response,
+                    (user) => ({
+                    id: user.id,
+                    username: user.username,
+                    avatar: user.image,
+                    bio: user.bio,
+                    createdAt: user.createdAt,
+                    })
+                ),
             providesTags: ['Users'],
         }),
 

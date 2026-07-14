@@ -1,8 +1,9 @@
-import { User } from '../../auth/slice/authSlice';
+import { User } from "@/features/users/types/user.types";
 
 export interface Review {
   id: string;
-  userId: User;
+  userId: string;
+  user?: User;
   bookId: string;
   content: string;
   rating: number;

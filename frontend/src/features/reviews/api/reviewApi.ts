@@ -37,8 +37,11 @@ export const reviewApi = createApi({
         { type: 'Review', id: `LIST_${bookId}` },
       ],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        await queryFulfilled;
-        dispatch(recommendationsApi.util.resetApiState());
+        try {
+          await queryFulfilled;
+          dispatch(recommendationsApi.util.resetApiState());
+        } catch {
+        }
       },
     }),
 

@@ -1,10 +1,21 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
-  
+
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,17 +26,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+      secretOrKey: configService.getOrThrow<string>('env.JWT_ACCESS_SECRET'),
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     // Check if user is banned in database
     const userId = UserId.create(payload.sub);
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-        throw new UnauthorizedException();
+      throw new UnauthorizedException();
     }
 
     if (user.isBanned) {
@@ -39,4 +50,3 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return { id: payload.sub, email: payload.email, role: payload.role };
   }
 }
-

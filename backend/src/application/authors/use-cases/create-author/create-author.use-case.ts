@@ -1,4 +1,5 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Author } from '@/domain/authors/entities/author.entity';
@@ -9,30 +10,30 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class CreateAuthorUseCase {
-    constructor(
-        private readonly authorRepository: IAuthorRepository,
-        private readonly idGenerator: IIdGenerator
-    ) {}
+  constructor(
+    private readonly authorRepository: IAuthorRepository,
+    private readonly idGenerator: IIdGenerator,
+  ) {}
 
-    async execute(command: CreateAuthorCommand): Promise<Author> {
-        const name = AuthorName.create(command.name);
-        const exists = await this.authorRepository.existsByName(name);
-        
-        if (exists) {
-            throw new ConflictException(ErrorMessages.AUTHOR_EXISTS || 'Author already exists');
-        }
+  async execute(command: CreateAuthorCommand): Promise<Author> {
+    const name = AuthorName.create(command.name);
+    const exists = await this.authorRepository.existsByName(name);
 
-        const author = Author.create({
-            id: AuthorId.create(this.idGenerator.generate()),
-            name: command.name,
-            bio: command.bio,
-            photoUrl: command.photoUrl
-        });
-
-        await this.authorRepository.save(author);
-
-        return author;
+    if (exists) {
+      throw new ConflictDomainException(
+        ErrorMessages.AUTHOR_EXISTS || 'Author already exists',
+      );
     }
+
+    const author = Author.create({
+      id: AuthorId.create(this.idGenerator.generate()),
+      name: command.name,
+      bio: command.bio,
+      photoUrl: command.photoUrl,
+    });
+
+    await this.authorRepository.save(author);
+
+    return author;
+  }
 }
-
-

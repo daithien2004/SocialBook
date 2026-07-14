@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Role, RoleSchema } from '@/infrastructure/database/schemas/role.schema';
+import {
+  Role,
+  RoleSchema,
+} from '@/infrastructure/database/schemas/role.schema';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { RoleRepository } from './role.repository';
 
@@ -14,9 +17,6 @@ import { RoleRepository } from './role.repository';
       useClass: RoleRepository,
     },
   ],
-  exports: [
-    IRoleRepository,
-    MongooseModule,
-  ],
+  exports: [IRoleRepository, MongooseModule],
 })
 export class RolesRepositoryModule {}

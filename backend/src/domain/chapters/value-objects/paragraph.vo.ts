@@ -1,46 +1,46 @@
 export class Paragraph {
-    private constructor(
-        public readonly id: string,
-        private _content: string
-    ) {}
+  private constructor(
+    public readonly id: string,
+    private _content: string,
+  ) {}
 
-    static create(id: string, content: string): Paragraph {
-        if (!id || id.trim().length === 0) {
-            throw new Error('Paragraph ID cannot be empty');
-        }
-
-        if (!content || content.trim().length === 0) {
-            throw new Error('Paragraph content cannot be empty');
-        }
-
-        return new Paragraph(id.trim(), content.trim());
+  static create(id: string, content: string): Paragraph {
+    if (!id || id.trim().length === 0) {
+      throw new Error('Paragraph ID cannot be empty');
     }
 
-    static createWithoutId(content: string): Paragraph {
-        const id = this.generateId();
-        return new Paragraph(id, content.trim());
+    if (!content || content.trim().length === 0) {
+      throw new Error('Paragraph content cannot be empty');
     }
 
-    get content(): string {
-        return this._content;
-    }
+    return new Paragraph(id.trim(), content.trim());
+  }
 
-    updateContent(newContent: string): void {
-        if (!newContent || newContent.trim().length === 0) {
-            throw new Error('Paragraph content cannot be empty');
-        }
-        this._content = newContent.trim();
-    }
+  static createWithoutId(content: string): Paragraph {
+    const id = this.generateId();
+    return new Paragraph(id, content.trim());
+  }
 
-    private static generateId(): string {
-        return Math.random().toString(36).substr(2, 9);
-    }
+  get content(): string {
+    return this._content;
+  }
 
-    toString(): string {
-        return this._content;
+  updateContent(newContent: string): void {
+    if (!newContent || newContent.trim().length === 0) {
+      throw new Error('Paragraph content cannot be empty');
     }
+    this._content = newContent.trim();
+  }
 
-    equals(other: Paragraph): boolean {
-        return this.id === other.id && this._content === other._content;
-    }
+  private static generateId(): string {
+    return Math.random().toString(36).substr(2, 9);
+  }
+
+  toString(): string {
+    return this._content;
+  }
+
+  equals(other: Paragraph): boolean {
+    return this.id === other.id && this._content === other._content;
+  }
 }

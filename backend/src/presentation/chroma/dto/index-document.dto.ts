@@ -1,27 +1,28 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsEnum, IsNumber } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class IndexDocumentDto {
-    @ApiProperty({ description: 'Content ID' })
-    @IsString()
-    @IsNotEmpty()
-    contentId: string;
+  @IsString()
+  @IsNotEmpty()
+  contentId: string;
 
-    @ApiProperty({ enum: ['book', 'author', 'chapter'], description: 'Content type' })
-    @IsEnum(['book', 'author', 'chapter'])
-    contentType: 'book' | 'author' | 'chapter';
+  @IsEnum(['book', 'author', 'chapter'])
+  contentType: 'book' | 'author' | 'chapter';
 
-    @ApiProperty({ description: 'Content text' })
-    @IsString()
-    @IsNotEmpty()
-    content: string;
+  @IsString()
+  @IsNotEmpty()
+  content: string;
 
-    @ApiProperty({ description: 'Metadata', required: false })
-    @IsOptional()
-    metadata?: Record<string, any>;
+  @IsOptional()
+  metadata?: Record<string, unknown>;
 
-    @ApiProperty({ description: 'Embedding vector', type: [Number] })
-    @IsArray()
-    @IsNumber({}, { each: true })
-    embedding: number[];
+  @IsArray()
+  @IsNumber({}, { each: true })
+  embedding: number[];
 }

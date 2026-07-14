@@ -23,6 +23,9 @@ export class User extends BaseSchema {
   @Prop({ default: false })
   isBanned: boolean;
 
+  @Prop({ default: 0 })
+  violationCount: number;
+
   @Prop({
     type: String,
     enum: ['local', 'google', 'facebook'],
@@ -48,20 +51,14 @@ export class User extends BaseSchema {
   @Prop()
   hashedRt?: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'UserGamification' })
-  gamificationId?: Types.ObjectId;
-
-  @Prop({ type: Types.ObjectId, ref: 'UserOnboarding' })
-  onboardingId?: Types.ObjectId;
-
-  @Prop({ default: false })
-  onboardingCompleted: boolean;
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Genre' }], default: [] })
+  favoriteGenres: Types.ObjectId[];
 
   @Prop({
     type: {
       theme: {
         type: String,
-        enum: ['light', 'dark', 'sepia'],
+        enum: ['light', 'dark', 'sepia', 'paper'],
         default: 'dark',
       },
       fontSize: { type: Number, default: 18, min: 12, max: 32 },
@@ -75,7 +72,9 @@ export class User extends BaseSchema {
         enum: ['left', 'center', 'justify'],
         default: 'justify',
       },
-      marginWidth: { type: Number, default: 0, min: 0, max: 100 },
+      marginWidth: { type: Number, default: 40, min: 0, max: 100 },
+      warmth: { type: Number, default: 0, min: 0, max: 100 },
+      brightness: { type: Number, default: 100, min: 10, max: 100 },
     },
     default: {},
   })
@@ -89,6 +88,8 @@ export class User extends BaseSchema {
     textColor: string;
     textAlign: string;
     marginWidth: number;
+    warmth: number;
+    brightness: number;
   };
 }
 
@@ -98,3 +99,6 @@ export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.index({ createdAt: -1 });
 UserSchema.index({ provider: 1 });
+UserSchema.index({ isBanned: 1 });
+UserSchema.index({ isVerified: 1 });
+UserSchema.index({ roleId: 1 });

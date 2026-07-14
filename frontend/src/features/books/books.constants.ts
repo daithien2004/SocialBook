@@ -1,4 +1,4 @@
-import { Flame, Sparkles, BookPlus, Star } from 'lucide-react';
+import { Flame, Zap, BookPlus, Star } from 'lucide-react';
 
 export const PAGINATION = {
     BOOKS_PER_PAGE: 20,
@@ -36,7 +36,7 @@ export const TAB_CONFIG = {
     UPDATED: {
         id: 'updated',
         label: 'Mới cập nhật',
-        icon: Sparkles,
+        icon: Zap,
         sortBy: 'updatedAt',
     },
 } as const;

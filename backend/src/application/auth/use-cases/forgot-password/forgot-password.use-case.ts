@@ -10,7 +10,7 @@ export class ForgotPasswordUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly sendOtpUseCase: SendOtpUseCase,
-  ) { }
+  ) {}
 
   async execute(command: ForgotPasswordCommand): Promise<string> {
     const emailVO = UserEmail.create(command.email);
@@ -21,7 +21,7 @@ export class ForgotPasswordUseCase {
 
     if (!existingUser.password) {
       throw new BadRequestException(
-        'Tài khoản này đăng nhập bằng bên thứ ba nên không thể đổi mật khẩu'
+        'Tài khoản này đăng nhập bằng bên thứ ba nên không thể đổi mật khẩu',
       );
     }
 

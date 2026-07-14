@@ -5,29 +5,41 @@ import { Injectable } from '@nestjs/common';
 import { GetAllCollectionsQuery } from './get-all-collections.query';
 
 export interface GetAllCollectionsResult {
-    collection: Collection;
-    bookCount: number;
+  collection: Collection;
+  bookCount: number;
 }
 
 @Injectable()
 export class GetAllCollectionsUseCase {
-    constructor(
-        private readonly collectionRepository: ICollectionRepository,
-        private readonly readingListRepository: IReadingListRepository,
-    ) { }
+  constructor(
+    private readonly collectionRepository: ICollectionRepository,
+    private readonly readingListRepository: IReadingListRepository,
+  ) {}
 
-    async execute(query: GetAllCollectionsQuery): Promise<GetAllCollectionsResult[]> {
-        const collections = await this.collectionRepository.findByUserId(query.userId);
+  async execute(
+    query: GetAllCollectionsQuery,
+  ): Promise<GetAllCollectionsResult[]> {
+    const collections = await this.collectionRepository.findByUserId(
+      query.userId,
+    );
 
-        const results = await Promise.all(collections.map(async (collection) => {
-            const bookCount = await this.readingListRepository.countByCollectionId(collection.id);
+    const isOwner = query.viewerId === query.userId;
 
-            return {
-                collection,
-                bookCount
-            };
-        }));
+    const visible = collections.filter((c) => isOwner || c.isPublic);
 
-        return results;
-    }
+    const results = await Promise.all(
+      visible.map(async (collection) => {
+        const bookCount = await this.readingListRepository.countByCollectionId(
+          collection.id,
+        );
+
+        return {
+          collection,
+          bookCount,
+        };
+      }),
+    );
+
+    return results;
+  }
 }

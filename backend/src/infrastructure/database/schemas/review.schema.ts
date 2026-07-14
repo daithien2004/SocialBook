@@ -20,7 +20,7 @@ export class Review extends BaseSchema {
     type: Number,
     min: 1,
     max: 5,
-    required: true
+    required: true,
   })
   rating: number;
 
@@ -39,15 +39,15 @@ export class Review extends BaseSchema {
   @Prop({ type: String })
   moderationReason?: string;
 
-  @Prop({ type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' })
+  @Prop({
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  })
   moderationStatus?: string;
 }
 
 export const ReviewSchema = SchemaFactory.createForClass(Review);
 
-ReviewSchema.virtual('id').get(function () {
-  return this._id.toString();
-});
-
-// Index để đảm bảo mỗi user chỉ review 1 lần cho 1 book
 ReviewSchema.index({ userId: 1, bookId: 1 }, { unique: true });
+ReviewSchema.index({ bookId: 1, createdAt: -1 });

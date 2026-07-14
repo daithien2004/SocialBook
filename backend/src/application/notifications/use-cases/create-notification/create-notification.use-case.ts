@@ -9,18 +9,18 @@ export class CreateNotificationUseCase {
   constructor(
     private readonly notificationRepository: INotificationRepository,
     private readonly idGenerator: IIdGenerator,
-  ) { }
+  ) {}
 
   async execute(command: CreateNotificationCommand): Promise<Notification> {
-    const notification = Notification.create(
-      this.idGenerator.generate(),
-      command.userId,
-      command.title,
-      command.message,
-      command.type,
-      command.meta,
-      command.actionUrl
-    );
+    const notification = Notification.create({
+      id: this.idGenerator.generate(),
+      userId: command.userId,
+      title: command.title,
+      message: command.message,
+      type: command.type,
+      meta: command.meta,
+      actionUrl: command.actionUrl,
+    });
     return this.notificationRepository.save(notification);
   }
 }

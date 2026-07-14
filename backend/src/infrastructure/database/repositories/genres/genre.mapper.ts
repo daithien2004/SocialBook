@@ -1,8 +1,7 @@
 import { Genre as GenreEntity } from '@/domain/genres/entities/genre.entity';
 import { GenreDocument } from '@/infrastructure/database/schemas/genre.schema';
 import { Types } from 'mongoose';
-
-interface GenrePersistence {
+export interface GenrePersistence {
   _id: Types.ObjectId;
   name: string;
   slug: string;
@@ -12,7 +11,7 @@ interface GenrePersistence {
 }
 
 export class GenreMapper {
-  static toDomain(doc: GenreDocument | any): GenreEntity {
+  static toDomain(doc: GenreDocument): GenreEntity {
     return GenreEntity.reconstitute({
       id: doc._id.toString(),
       name: doc.name,

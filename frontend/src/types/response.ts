@@ -1,19 +1,9 @@
-export interface AuthResponse {
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    username: string;
-    image?: string;
-  };
-}
-
 export interface ResponseDto<T> {
   success: boolean;
   statusCode: number;
   message: string;
   data: T;
-  meta?: any;
+  meta?: Record<string, unknown>;
   path: string;
 }
 

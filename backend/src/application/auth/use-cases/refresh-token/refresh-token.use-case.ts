@@ -1,5 +1,7 @@
-import { Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
+import { Injectable } from '@nestjs/common';
+import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import { Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -7,6 +9,14 @@ import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { RefreshTokenCommand } from './refresh-token.command';
+
+interface TokenPayload {
+  sub: string;
+  email: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+}
 
 @Injectable()
 export class RefreshTokenUseCase {
@@ -16,7 +26,8 @@ export class RefreshTokenUseCase {
     private readonly tokenService: TokenService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
+  ) {}
 
   async execute(command: RefreshTokenCommand) {
     const { userId, refreshToken } = command;
@@ -24,11 +35,14 @@ export class RefreshTokenUseCase {
     const user = await this.userRepository.findById(id);
 
     if (!user || !user.hashedRt) {
-      throw new ForbiddenException('Từ chối truy cập');
+      throw new UnauthorizedDomainException('Từ chối truy cập');
     }
-    const rtMatches = await bcrypt.compare(refreshToken, user.hashedRt);
+    const rtMatches = await this.passwordHasher.compare(
+      refreshToken,
+      user.hashedRt,
+    );
     if (!rtMatches) {
-      throw new ForbiddenException('Từ chối truy cập');
+      throw new UnauthorizedDomainException('Từ chối truy cập');
     }
 
     let roleName = 'user';
@@ -36,29 +50,32 @@ export class RefreshTokenUseCase {
       const role = await this.rolesRepository.findById(user.roleId);
       if (role) roleName = role.name;
     }
-    return this.tokenService.signTokens(user.id.toString(), user.email.value, roleName);
+    return this.tokenService.signTokens(
+      user.id.toString(),
+      user.email.value,
+      roleName,
+    );
   }
 
-  async validateRefreshToken(token: string) {
+  async validateRefreshToken(token: string): Promise<TokenPayload | false> {
     try {
-      const payload = this.jwtService.verify(token, {
+      const payload: TokenPayload = this.jwtService.verify(token, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
-      // Check DB
       const id = UserId.create(payload.sub);
       const user = await this.userRepository.findById(id);
       if (!user || !user.hashedRt) return false;
 
-      const isMatch = await bcrypt.compare(token, user.hashedRt);
+      const isMatch = await this.passwordHasher.compare(token, user.hashedRt);
 
       if (!isMatch) {
-        throw new UnauthorizedException('Refresh token không hợp lệ');
+        throw new UnauthorizedDomainException('Refresh token không hợp lệ');
       }
 
       return payload;
-    } catch (error) {
-      throw new UnauthorizedException('Refresh token không hợp lệ');
+    } catch {
+      throw new UnauthorizedDomainException('Refresh token không hợp lệ');
     }
   }
 }

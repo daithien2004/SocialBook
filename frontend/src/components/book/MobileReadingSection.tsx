@@ -1,44 +1,42 @@
 'use client';
 
-import { BookOpen, ChevronRight, LogIn } from 'lucide-react';
-import Image from 'next/image';
+import { ChevronRight, LogIn } from 'lucide-react';
 import Link from 'next/link';
-import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
-import { LibraryStatus } from '@/features/library/types/library.interface';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { SafeImage } from '@/components/common/SafeImage';
+import { LibraryItem } from '@/features/library/types/library.interface';
 
-export function MobileReadingSection() {
-  const { isAuthenticated, isGuest } = useAppAuth();
-  const { data: books = [], isLoading } = useGetLibraryBooksQuery(
-    { status: LibraryStatus.READING },
-    { skip: !isAuthenticated }
-  );
+interface MobileReadingSectionProps {
+  books: LibraryItem[];
+  isLoading: boolean;
+  isGuest: boolean;
+}
+
+const EMPTY_BOOKS: LibraryItem[] = [];
+
+export function MobileReadingSection({ books = EMPTY_BOOKS, isLoading, isGuest }: MobileReadingSectionProps) {
 
   // Chưa đăng nhập
   if (isGuest) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+        <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+            Sách đang đọc
+          </h2>
 
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
-              <LogIn size={28} className="text-blue-600 dark:text-blue-400" />
+            <div className="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mb-4">
+              <LogIn size={28} className="text-brand" />
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
               Đăng nhập để tiếp tục đọc
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-xs">
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
               Theo dõi tiến trình đọc sách và tiếp tục từ nơi bạn dừng lại
             </p>
             <Link
               href="/login"
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
+              className="px-6 py-2.5 bg-brand hover:bg-brand/90 text-brand-foreground rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
             >
               Đăng nhập ngay
               <ChevronRight size={16} />
@@ -53,13 +51,10 @@ export function MobileReadingSection() {
   if (isLoading) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+        <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+            Sách đang đọc
+          </h2>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex-none w-32 animate-pulse">
@@ -78,30 +73,21 @@ export function MobileReadingSection() {
   if (books.length === 0) {
     return (
       <section className="xl:hidden px-4 py-6">
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+        <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+            Sách đang đọc
+          </h2>
 
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-16 h-16 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <BookOpen
-                size={28}
-                className="text-gray-400 dark:text-gray-500"
-              />
-            </div>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
               Chưa có sách nào
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 max-w-xs">
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
               Khám phá và bắt đầu đọc sách yêu thích của bạn
             </p>
             <Link
               href="/books"
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
+              className="px-6 py-2.5 bg-brand hover:bg-brand/90 text-brand-foreground rounded-full font-medium transition-colors shadow-sm hover:shadow-md flex items-center gap-2"
             >
               Khám phá ngay
               <ChevronRight size={16} />
@@ -117,18 +103,15 @@ export function MobileReadingSection() {
 
   return (
     <section className="xl:hidden px-4 py-6">
-      <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm dark:shadow-none border border-gray-100 dark:border-white/10 p-6 transition-colors duration-300">
+      <div className="bg-transparent p-0 border-b border-gray-200/50 dark:border-white/10">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BookOpen className="text-blue-600 dark:text-blue-400" size={20} />
-            <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-              Sách đang đọc
-            </h2>
-          </div>
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white">
+            Sách đang đọc
+          </h2>
           {hasMore && (
             <Link
               href="/library"
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              className="text-xs text-brand hover:underline font-medium"
             >
               Xem tất cả
             </Link>
@@ -136,17 +119,19 @@ export function MobileReadingSection() {
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          {displayBooks.filter(item => item.bookId).map((item) => (
-            <div key={item.bookId.slug} className="flex-none w-32">
+          {displayBooks.filter(item => item.bookId).map((item, index) => (
+            <div key={item.bookId.slug} className="flex-none w-32 flex flex-col">
               {/* Book Cover */}
               <Link
                 href={`/books/${item.bookId.slug}`}
                 className="block relative aspect-[2/3] rounded-lg overflow-hidden shadow-sm mb-2 hover:shadow-md transition-shadow"
               >
-                <Image
+                <SafeImage
                   src={item.bookId.coverUrl}
                   alt={item.bookId.title}
                   fill
+                  sizes="128px"
+                  priority={index < 4}
                   className="object-cover hover:scale-105 transition-transform duration-300"
                 />
               </Link>
@@ -154,7 +139,7 @@ export function MobileReadingSection() {
               {/* Book Info */}
               <Link
                 href={`/books/${item.bookId.slug}`}
-                className="block font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-2 min-h-[2.5rem]"
+                className="block font-semibold text-sm text-gray-900 dark:text-white line-clamp-2 hover:text-primary transition-colors mb-2 min-h-[2.5rem]"
               >
                 {item.bookId.title}
               </Link>
@@ -163,15 +148,14 @@ export function MobileReadingSection() {
               {item.lastReadChapterId ? (
                 <Link
                   href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
-                  className="w-full flex items-center justify-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20 text-xs font-semibold py-2 rounded-lg transition-all"
+                  className="w-full mt-auto flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 shadow-none text-xs font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
                 >
-                  <BookOpen size={12} />
                   Chương {item.lastReadChapterId.orderIndex}
                 </Link>
               ) : (
                 <Link
                   href={`/books/${item.bookId.slug}`}
-                  className="w-full flex items-center justify-center gap-1.5 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10 text-xs font-semibold py-2 rounded-lg transition-all"
+                  className="w-full mt-auto flex items-center justify-center gap-1.5 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10 text-xs font-semibold py-2 rounded-lg transition-all"
                 >
                   Bắt đầu đọc
                 </Link>
@@ -183,7 +167,7 @@ export function MobileReadingSection() {
         {hasMore && (
           <Link
             href="/library"
-            className="mt-4 w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
+            className="mt-4 w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
           >
             Xem thêm {books.length - 10} sách
             <ChevronRight size={16} />

@@ -1,23 +1,11 @@
-export class CommentId {
-    private readonly value: string;
+import { Identifier } from '@/shared/domain/identifier.base';
 
-    private constructor(id: string) {
-        this.value = id;
-    }
+export class CommentId extends Identifier {
+  private constructor(id: string) {
+    super(id);
+  }
 
-    static create(id: string): CommentId {
-        if (!id || id.trim().length === 0) {
-            throw new Error('Comment ID cannot be empty');
-        }
-        return new CommentId(id.trim());
-    }
-
-    toString(): string {
-        return this.value;
-    }
-
-    equals(other: CommentId): boolean {
-        if (!other) return false;
-        return this.value === other.value;
-    }
+  static create(id: string): CommentId {
+    return new CommentId(Identifier.validate(id, 'Comment ID'));
+  }
 }

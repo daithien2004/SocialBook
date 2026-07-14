@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
@@ -6,29 +6,34 @@ import { CheckUserExistQuery } from './check-user-exist.query';
 
 @Injectable()
 export class CheckUserExistUseCase {
-    constructor(private readonly userRepository: IUserRepository) { }
+  private readonly logger = new Logger(CheckUserExistUseCase.name);
 
-    async execute(query: CheckUserExistQuery): Promise<boolean> {
-        try {
-            if (query.id) {
-                const userId = UserId.create(query.id);
-                const user = await this.userRepository.findById(userId);
-                return !!user;
-            }
+  constructor(private readonly userRepository: IUserRepository) {}
 
-            if (query.email) {
-                const user = await this.userRepository.findByEmail(UserEmail.create(query.email));
-                return !!user;
-            }
+  async execute(query: CheckUserExistQuery): Promise<boolean> {
+    try {
+      if (query.id) {
+        const userId = UserId.create(query.id);
+        const user = await this.userRepository.findById(userId);
+        return !!user;
+      }
 
-            if (query.username) {
-                const user = await this.userRepository.findByUsername(query.username);
-                return !!user;
-            }
+      if (query.email) {
+        const user = await this.userRepository.findByEmail(
+          UserEmail.create(query.email),
+        );
+        return !!user;
+      }
 
-            return false;
-        } catch {
-            return false;
-        }
+      if (query.username) {
+        const user = await this.userRepository.findByUsername(query.username);
+        return !!user;
+      }
+
+      return false;
+    } catch (error) {
+      this.logger.error('Failed to check user existence', error);
+      return false;
     }
+  }
 }

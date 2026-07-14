@@ -1,4 +1,5 @@
-import { User } from '../../auth/slice/authSlice';
+import { User } from "@/features/users/types/user.types";
+
 
 export interface GetCommentsRequest {
     targetId: string;
@@ -75,22 +76,11 @@ export interface EditCommentRequest {
 }
 
 export interface EditCommentResponse {
-    data: any;
+    data: Record<string, unknown>;
 }
 
 export interface DeleteCommentRequest {
     id: string;
     targetId: string;
     parentId?: string | null;
-}
-
-// types/comment.interface.ts
-export interface GetReplyCountByParentRequest {
-    targetId: string;
-    targetType: string;
-    parentId: string;
-}
-
-export interface GetReplyCountByParentResponse {
-    count: number;
 }

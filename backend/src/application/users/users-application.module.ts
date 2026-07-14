@@ -15,8 +15,9 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/follows/follows-repository.module';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
-import { ExternalServicesModule } from '@/infrastructure/external/external-services.module';
+import { MediaInfrastructureModule } from '@/infrastructure/media/media-infrastructure.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 
 @Module({
   imports: [
@@ -24,8 +25,9 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     PostsRepositoryModule,
     FollowsRepositoryModule,
     LibraryRepositoryModule,
-    ExternalServicesModule,
+    MediaInfrastructureModule,
     IdGeneratorModule,
+    PasswordHasherModule,
   ],
   providers: [
     CheckUserExistUseCase,

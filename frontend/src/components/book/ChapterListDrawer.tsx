@@ -19,6 +19,7 @@ interface ChapterListDrawerProps {
   currentChapterSlug?: string;
   totalChapters?: number;
   hasHeader?: boolean;
+  onNavigate?: (slug: string) => void;
 }
 
 export default function ChapterListDrawer({
@@ -28,18 +29,22 @@ export default function ChapterListDrawer({
   bookSlug,
   currentChapterSlug,
   totalChapters,
-  hasHeader = false,
+  onNavigate,
 }: ChapterListDrawerProps) {
   const router = useRouter();
 
   const handleChapterSelect = (slug: string) => {
     onClose();
+    if (onNavigate) {
+      onNavigate(slug);
+      return;
+    }
     router.push(`/books/${bookSlug}/chapters/${slug}`);
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-80 p-0 flex flex-col gap-0 border-l border-border bg-background">
+      <SheetContent side="right" className="w-96 p-0 flex flex-col gap-0 border-l border-border bg-background">
         <SheetHeader className="p-5 border-b border-border bg-background">
           <SheetTitle className="text-lg font-bold">Mục lục</SheetTitle>
           <SheetDescription className="text-xs text-muted-foreground mt-0.5">
@@ -57,13 +62,13 @@ export default function ChapterListDrawer({
                   variant={isActive ? "secondary" : "ghost"}
                   onClick={() => handleChapterSelect(chap.slug)}
                   className={cn(
-                    "w-full justify-between h-auto py-3 px-4 rounded-xl transition-all",
+                    "w-full h-auto py-3 px-4 rounded-xl transition-all relative whitespace-normal text-left",
                     isActive
                       ? "bg-blue-50 text-blue-900 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-500/30"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <div className="flex flex-col gap-0.5 items-start text-left w-full overflow-hidden">
+                  <div className="flex flex-col gap-0.5 items-start text-left w-full min-w-0 pr-4">
                     <span
                       className={cn(
                         "text-xs font-bold uppercase tracking-wider",
@@ -74,12 +79,12 @@ export default function ChapterListDrawer({
                     >
                       Chương {chap.orderIndex}
                     </span>
-                    <span className="text-sm font-medium line-clamp-1 w-full">
+                    <span className="text-sm font-medium break-all w-full">
                       {chap.title}
                     </span>
                   </div>
                   {isActive && (
-                    <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(220,38,38,0.8)] shrink-0 ml-2" />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(220,38,38,0.8)] shrink-0" />
                   )}
                 </Button>
               );

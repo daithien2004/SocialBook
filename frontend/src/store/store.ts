@@ -1,5 +1,4 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '../features/auth/slice/authSlice';
 import { authApi } from '../features/auth/api/authApi';
 import { postApi } from '@/features/posts/api/postApi';
 import { booksApi } from '../features/books/api/bookApi';
@@ -9,6 +8,8 @@ import { bookRelationApi } from '../features/admin/api/bookRelationApi';
 import { followApi } from '@/features/follows/api/followApi';
 import { reviewApi } from '../features/reviews/api/reviewApi';
 import { libraryApi } from '../features/library/api/libraryApi';
+import { userHighlightsApi } from '../features/user-highlights/api/userHighlightsApi';
+import { bookmarkApi } from '../features/bookmarks/api/bookmarkApi';
 import { usersApi } from '../features/users/api/usersApi';
 import { ttsApi } from '../features/tts/api/ttsApi';
 import { authorApi } from '../features/authors/api/authorApi';
@@ -18,36 +19,15 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { likeApi } from '@/features/likes/api/likeApi';
 import { geminiApi } from '../features/gemini/api/geminiApi';
 import { recommendationsApi } from '../features/recommendations/api/recommendationsApi';
-import {
-  persistStore,
-  persistReducer,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
-} from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
 import { chatBotApi } from '../features/chatbot/api/chatBotApi';
-import { onboardingApi } from '../features/onboarding/api/onboardingApi';
-import { gamificationApi } from '../features/gamification/api/gamificationApi';
 import { moderationApi } from '../features/admin/api/moderationApi';
-
-const recommendationsPersistConfig = {
-  key: 'recommendations',
-  storage,
-  whitelist: ['queries'], // chỉ persist queries, không persist mutations
-};
-
-const persistedRecommendationsReducer = persistReducer(
-  recommendationsPersistConfig,
-  recommendationsApi.reducer
-);
+import { readingRoomsApi } from '../features/reading-rooms/api/readingRoomsApi';
+import { roomInteractionsApi } from '../features/reading-room-interactions/api/roomInteractionsApi';
+import { toxicWordsApi } from '../features/admin/api/toxicWordsApi';
+import { rateLimitApi } from '../features/admin/api/rateLimitApi';
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
     [authApi.reducerPath]: authApi.reducer,
     [postApi.reducerPath]: postApi.reducer,
     [booksApi.reducerPath]: booksApi.reducer,
@@ -64,19 +44,18 @@ export const store = configureStore({
     [genreApi.reducerPath]: genreApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [geminiApi.reducerPath]: geminiApi.reducer,
-    [recommendationsApi.reducerPath]: persistedRecommendationsReducer,
+    [recommendationsApi.reducerPath]: recommendationsApi.reducer,
     [chatBotApi.reducerPath]: chatBotApi.reducer,
-    [onboardingApi.reducerPath]: onboardingApi.reducer,
-    [gamificationApi.reducerPath]: gamificationApi.reducer,
     [moderationApi.reducerPath]: moderationApi.reducer,
+    [readingRoomsApi.reducerPath]: readingRoomsApi.reducer,
+    [roomInteractionsApi.reducerPath]: roomInteractionsApi.reducer,
+    [userHighlightsApi.reducerPath]: userHighlightsApi.reducer,
+    [bookmarkApi.reducerPath]: bookmarkApi.reducer,
+    [toxicWordsApi.reducerPath]: toxicWordsApi.reducer,
+    [rateLimitApi.reducerPath]: rateLimitApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        // Bỏ qua các action của redux-persist
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      },
-    })
+    getDefaultMiddleware()
       .concat(authApi.middleware)
       .concat(postApi.middleware)
       .concat(booksApi.middleware)
@@ -95,14 +74,16 @@ export const store = configureStore({
       .concat(geminiApi.middleware)
       .concat(recommendationsApi.middleware)
       .concat(chatBotApi.middleware)
-      .concat(onboardingApi.middleware)
-      .concat(gamificationApi.middleware)
       .concat(moderationApi.middleware)
+      .concat(readingRoomsApi.middleware)
+      .concat(roomInteractionsApi.middleware)
+      .concat(userHighlightsApi.middleware)
+      .concat(bookmarkApi.middleware)
+      .concat(toxicWordsApi.middleware)
+      .concat(rateLimitApi.middleware)
 });
 
 setupListeners(store.dispatch);
-
-export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

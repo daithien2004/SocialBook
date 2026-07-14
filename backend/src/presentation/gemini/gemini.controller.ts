@@ -4,10 +4,12 @@ import {
   Body,
   Param,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { GenerateTextUseCase } from '@/application/gemini/use-cases/generate-text/generate-text.use-case';
 import { SummarizeChapterUseCase } from '@/application/gemini/use-cases/summarize-chapter/summarize-chapter.use-case';
-import { Public } from '@/common/decorators/customize';
+import { Public } from '@/common/decorators/custom.decorator';
+import { GeminiThrottleGuard } from '@/common/guards/gemini-throttle.guard';
 
 @Controller('gemini')
 export class GeminiController {
@@ -17,29 +19,32 @@ export class GeminiController {
   ) {}
 
   @Public()
+  @UseGuards(GeminiThrottleGuard)
   @Post('generate-text')
-  async generateText(@Body() body: { prompt: string; userId: string }) {
-    if (!body.prompt || !body.userId) {
-      throw new BadRequestException('Prompt and userId are required');
+  async generateText(@Body() body: { prompt: string; userId?: string }) {
+    if (!body.prompt) {
+      throw new BadRequestException('Prompt is required');
     }
     return await this.generateTextUseCase.execute({
       prompt: body.prompt,
-      userId: body.userId,
+      userId: body.userId || 'GUEST',
     });
   }
 
   @Public()
+  @UseGuards(GeminiThrottleGuard)
   @Post('summarize-chapter/:chapterId')
   async summarizeChapter(
     @Param('chapterId') chapterId: string,
-    @Body() body: { userId: string }
+    @Body() body: { userId?: string },
   ) {
-    if (!chapterId || !body.userId) {
-      throw new BadRequestException('Chapter ID and userId are required');
+    if (!chapterId) {
+      throw new BadRequestException('Chapter ID is required');
     }
-    return await this.summarizeChapterUseCase.execute({
+    const result = await this.summarizeChapterUseCase.execute({
       chapterId,
-      userId: body.userId,
+      userId: body?.userId || 'GUEST',
     });
+    return { data: result, message: 'Tóm tắt chương thành công' };
   }
 }

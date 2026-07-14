@@ -1,9 +1,10 @@
-import { PaginationMeta } from "../interfaces/pagination.interface";
+import { PaginationMeta } from '@/common/interfaces/pagination.interface';
 
 export class ResponseDto<T> {
   success: boolean;
   statusCode: number;
   message: string;
+  warning?: string;
   data?: T;
   meta?: PaginationMeta;
   timestamp: string;

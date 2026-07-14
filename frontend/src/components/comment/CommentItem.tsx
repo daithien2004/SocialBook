@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import {
     CornerDownRight,
     Heart,
@@ -8,25 +8,13 @@ import {
     MessageCircle,
     MoreVertical,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 
 import ListComments from './ListComments';
+import { useCommentActions } from '@/features/comments/hooks/useCommentActions';
 
-import {
-    useDeleteCommentMutation,
-    useEditCommentMutation, useGetReplyCountByParentQuery,
-    useLazyGetResolveParentQuery,
-    usePostCreateMutation,
-} from '@/features/comments/api/commentApi';
-
-import {
-    useGetCountQuery,
-    useGetStatusQuery,
-    usePostToggleLikeMutation,
-} from '@/features/likes/api/likeApi';
-
-import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/common/UserAvatar';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -35,177 +23,92 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { CommentItem } from '@/features/comments/types/comment.interface';
-import { getErrorMessage } from '@/lib/utils';
-import { toast } from "sonner";
+import { useModalStore } from '@/store/useModalStore';
 
 interface CommentItemProps {
     comment: CommentItem;
     targetId: string;
     targetType: string;
+    depth?: number;
+    onReplyAdded?: () => void;
+    onReplyRemoved?: () => void;
 }
 
-const CommentItemCard: React.FC<CommentItemProps> = ({
+const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentItemCard({
     comment,
     targetId,
     targetType,
-}) => {
-    const [showReplies, setShowReplies] = useState(false);
-    const [isReplying, setIsReplying] = useState(false);
-    const [replyText, setReplyText] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
-    const [editText, setEditText] = useState(comment.content);
-
-    const { isAuthenticated } = useAppAuth();
-
+    depth = 1,
+    onReplyAdded,
+    onReplyRemoved,
+}) {
+    const router = useRouter();
+    const { closePostComment } = useModalStore();
     const { user } = useAppAuth();
-    const isOwner = comment.user.id === user?.id;
+    const userId = user?.id;
 
-    const [editComment, { isLoading: isEditingComment }] =
-        useEditCommentMutation();
-    const [deleteComment, { isLoading: isDeletingComment }] =
-        useDeleteCommentMutation();
-
-    const [postToggleLike] = usePostToggleLikeMutation();
-    const [createComment, { isLoading: isPostingReply }] =
-        usePostCreateMutation();
-
-    const { data: replyCount, isLoading } = useGetReplyCountByParentQuery({
-        targetId: targetId,
-        targetType: targetType,
-        parentId: comment.id,
-    });
-
-    const { data: likeCount } = useGetCountQuery({
-        targetId: comment.id,
-        targetType: 'comment',
-    });
-
-    const { data: likeStatus } = useGetStatusQuery({
-        targetId: comment.id,
-        targetType: 'comment',
-    }, {
-        skip: !isAuthenticated,
-    });
-
-    const [
-        triggerResolveParent,
-        { data: resolvedData, isLoading: isResolvingParent },
-    ] = useLazyGetResolveParentQuery();
-
-    const handleReplyClick = () => {
-        setShowReplies(true);
-        setIsReplying((prev) => !prev);
-    };
-
-    const handleEditComment = async () => {
-        const content = editText.trim();
-        if (!content || content === comment.content) {
-            setIsEditing(false);
-            return;
-        }
-
-        try {
-            await editComment({
-                id: comment.id,
-                content,
-                targetId,
-                parentId: comment.parentId ?? null,
-            }).unwrap();
-            toast.success('Bình luận đã được chỉnh sửa!');
-            setIsEditing(false);
-        } catch (e: any) {
-            if (e?.status === 400 && e?.data?.message) {
-                toast.error(`Sửa thất bại: ${e.data.message}`);
-            } else if (e?.status !== 401) {
-                toast.error(getErrorMessage(e));
-            }
-        }
-    };
-
-    const handleDeleteComment = async () => {
-        try {
-            await deleteComment({
-                id: comment.id,
-                targetId,
-                parentId: comment.parentId ?? null,
-            }).unwrap();
-            toast.success('Bình luận đã được xóa!');
-        } catch (e: any) {
-            if (e?.status !== 401) {
-                toast.error(getErrorMessage(e));
-            }
-        }
-    };
-
-    useEffect(() => {
-        if (!showReplies || resolvedData) return;
-
-        triggerResolveParent({
-            targetId,
-            parentId: comment.id,
-            targetType,
-        });
-    }, [
+    const {
+        isOwner,
+        optimisticIsLiked,
+        optimisticReplyCount,
+        isEditing,
+        editText,
+        setEditText,
+        isReplying,
+        replyText,
+        setReplyText,
         showReplies,
-        resolvedData,
-        triggerResolveParent,
+        isEditingComment,
+        isDeletingComment,
+        isPostingReply,
+        effectiveParentId,
+        setIsEditing,
+        handleEditComment,
+        handleDeleteComment,
+        handleSubmitReply,
+        handleLikeComment,
+        handleReplyClick,
+        setOptimisticReplyCount,
+    } = useCommentActions({
+        comment,
         targetId,
-        comment.id,
         targetType,
-    ]);
+        userId,
+        depth,
+        onReplyAdded,
+        onReplyRemoved,
+    });
 
-    const effectiveParentId = resolvedData?.parentId ?? comment.id;
-    const level = resolvedData?.level;
-
-    const handleSubmitReply = async () => {
-        const content = replyText.trim();
-        if (!content) return;
-
-        try {
-            await createComment({
-                targetType,
-                targetId,
-                content,
-                parentId: effectiveParentId,
-            }).unwrap();
-
-            setReplyText('');
-            setShowReplies(true);
-            setIsReplying(false);
-        } catch (e: any) {
-            console.log('Create reply failed:', e);
-            toast.error(getErrorMessage(e));
-        }
-    };
-
-    const handleLikeComment = async () => {
-        try {
-            await postToggleLike({
-                targetId: comment.id,
-                targetType: 'comment',
-            }).unwrap();
-        } catch (e) {
-            console.error('Like comment failed:', e);
-        }
-    };
+    const hasReplyCount = comment.repliesCount !== undefined;
+    const displayedReplyCount = hasReplyCount ? optimisticReplyCount : null;
 
     return (
-        <div className="flex w-full items-start gap-3 group animate-in fade-in duration-300">
-            {/* Avatar */}
-            <Avatar className="mt-1 h-8 w-8 shrink-0 border border-border">
-                <AvatarImage src={comment.user.image} alt={comment.user.username} />
-                <AvatarFallback className="text-[10px] font-bold">
-                    {comment.user.username?.[0]?.toUpperCase() || '?'}
-                </AvatarFallback>
-            </Avatar>
+        <div className="group flex w-full animate-in fade-in items-start gap-3 duration-300">
+            <UserAvatar
+                src={comment.user.image}
+                name={comment.user.username}
+                size="sm"
+                className="mt-1 shrink-0 border border-border"
+                fallbackClassName="text-[10px]"
+                onClick={() => {
+                    closePostComment();
+                    router.push(`/users/${comment.user.id}`);
+                }}
+            />
 
             <div className="min-w-0 flex-1">
-                {/* Comment bubble + menu */}
                 <div className="flex items-center">
-                    <div className="relative rounded-2xl bg-muted/50 px-3 py-2">
+                    <div className="relative rounded-2xl px-3 py-2 bg-muted/50">
                         <div className="pr-6">
-                            <span className="mb-0.5 block text-sm font-bold text-foreground">
+                            <span
+                                onClick={() => {
+                                    closePostComment();
+                                    router.push(`/users/${comment.user.id}`);
+                                }}
+                                className="mb-0.5 block text-sm font-bold cursor-pointer hover:underline text-foreground"
+                            >
                                 {comment.user.username}
                             </span>
 
@@ -213,9 +116,14 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                 <div className="flex items-start gap-2">
                                     <Input
                                         value={editText}
-                                        onChange={(e) => setEditText(e.target.value)}
+                                        onChange={(e) =>
+                                            setEditText(e.target.value)
+                                        }
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                            if (
+                                                e.key === 'Enter' &&
+                                                !e.shiftKey
+                                            ) {
                                                 e.preventDefault();
                                                 handleEditComment();
                                             }
@@ -233,7 +141,8 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                         onClick={handleEditComment}
                                         size="icon"
                                         variant="ghost"
-                                        className="h-8 w-8 text-blue-600 hover:text-blue-500 hover:bg-blue-50"
+                                        className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary/20"
+                                        aria-label="Xác nhận sửa"
                                     >
                                         <CornerDownRight size={14} />
                                     </Button>
@@ -253,97 +162,130 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                                        className="h-8 w-8 rounded-full opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
+                                        aria-label="Tùy chọn bình luận"
                                     >
-                                        <MoreVertical size={16} className="text-muted-foreground" />
+                                        <MoreVertical
+                                            size={16}
+                                            className="text-muted-foreground"
+                                        />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" side="bottom" className="w-40">
-                                    <DropdownMenuItem onClick={() => { setIsEditing(true); setEditText(comment.content); }}>
+                                <DropdownMenuContent
+                                    align="start"
+                                    side="bottom"
+                                    className="w-40"
+                                >
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            setIsEditing(true);
+                                            setEditText(comment.content);
+                                        }}
+                                    >
                                         Chỉnh sửa
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleDeleteComment} className="text-red-600 focus:text-red-700 focus:bg-red-50">
-                                        {isDeletingComment ? 'Đang xóa...' : 'Xóa'}
-                                    </DropdownMenuItem>
+                                    {optimisticReplyCount === 0 && (
+                                        <DropdownMenuItem
+                                            onClick={handleDeleteComment}
+                                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                        >
+                                            {isDeletingComment
+                                                ? 'Đang xóa...'
+                                                : 'Xóa'}
+                                        </DropdownMenuItem>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
                     )}
                 </div>
 
-                {/* Actions */}
-                <div className="ml-3 mt-1 flex items-center gap-4">
+                <div className="mt-1 flex items-center gap-4 ml-3">
                     <button
                         onClick={handleLikeComment}
                         className={cn(
-                            "flex items-center gap-1.5 text-xs font-medium transition-colors hover:bg-transparent",
-                            likeStatus?.isLiked
-                                ? 'text-red-500'
-                                : 'text-muted-foreground hover:text-red-500'
+                            'flex items-center gap-1.5 text-xs font-medium transition-colors hover:bg-transparent',
+                                    optimisticIsLiked
+                                        ? 'text-destructive'
+                                        : 'text-muted-foreground hover:text-destructive'
                         )}
                     >
                         <Heart
                             size={12}
-                            className={likeStatus?.isLiked ? 'fill-current' : ''}
+                            className={optimisticIsLiked ? 'fill-current' : ''}
                         />
-                        {(likeCount?.count ?? 0) > 0 && <span>{likeCount?.count}</span>}
                         <span className="hidden sm:inline">Thích</span>
                     </button>
 
                     <button
                         onClick={handleReplyClick}
-                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-transparent"
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
                     >
                         <MessageCircle size={12} />
-                        Trả lời ({replyCount?.count})
+                        {displayedReplyCount !== null
+                            ? `Trả lời (${displayedReplyCount})`
+                            : 'Trả lời'}
                     </button>
                 </div>
 
-                {/* Replies */}
                 <div className="mt-2">
                     {showReplies && (
-                        <div className="ml-2 mt-2 mb-2 space-y-3 border-l-2 border-border pl-3">
-                            {isResolvingParent && !resolvedData && (
-                                <div
-                                    className="flex items-center gap-2 px-2 text-xs text-muted-foreground">
-                                    <Loader2 size={12} className="animate-spin" />
-                                    Đang tải phản hồi...
-                                </div>
-                            )}
-
-                            {resolvedData && level !== 3 && (
+                        <div className="mb-2 mt-2 space-y-3 border-l-2 border-border pl-3 ml-2">
+                            {depth < 3 && (
                                 <ListComments
                                     targetId={targetId}
                                     isCommentOpen
                                     parentId={effectiveParentId}
                                     targetType={targetType}
+                                    depth={depth + 1}
+                                    onReplyAdded={() => {
+                                        if (hasReplyCount) {
+                                            setOptimisticReplyCount((prev) => prev + 1);
+                                        }
+                                    }}
+                                    onReplyRemoved={() => {
+                                        if (hasReplyCount) {
+                                            setOptimisticReplyCount((prev) => Math.max(0, prev - 1));
+                                        }
+                                    }}
                                 />
                             )}
 
                             {isReplying && (
-                                <div className="flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                                <div className="flex animate-in items-start gap-2 fade-in slide-in-from-top-2">
                                     <Input
                                         placeholder={`Trả lời ${comment.user.username}...`}
                                         value={replyText}
-                                        onChange={(e) => setReplyText(e.target.value)}
+                                        onChange={(e) =>
+                                            setReplyText(e.target.value)
+                                        }
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                            if (
+                                                e.key === 'Enter' &&
+                                                !e.shiftKey
+                                            ) {
                                                 e.preventDefault();
                                                 handleSubmitReply();
                                             }
                                         }}
-                                        className="flex-1 h-9 text-sm"
+                                        className="h-9 flex-1 text-sm"
                                         autoFocus
                                     />
 
                                     <Button
-                                        disabled={isPostingReply || !replyText.trim()}
+                                        disabled={
+                                            isPostingReply || !replyText.trim()
+                                        }
                                         onClick={handleSubmitReply}
                                         size="icon"
-                                        className="h-9 w-9 bg-blue-600 hover:bg-blue-500"
+                                        className="h-9 w-9 bg-primary hover:bg-primary/90"
+                                        aria-label="Gửi phản hồi"
                                     >
                                         {isPostingReply ? (
-                                            <Loader2 size={16} className="animate-spin" />
+                                            <Loader2
+                                                size={16}
+                                                className="animate-spin"
+                                            />
                                         ) : (
                                             <CornerDownRight size={16} />
                                         )}
@@ -356,6 +298,6 @@ const CommentItemCard: React.FC<CommentItemProps> = ({
             </div>
         </div>
     );
-};
+});
 
 export default CommentItemCard;

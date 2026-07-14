@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { User } from '../slice/authSlice';
 
 const strongPasswordSchema = z.string()
   .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
@@ -41,11 +40,6 @@ export const forgotPasswordSchema = z
 export type SignupFormValues = z.infer<typeof signupSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
-
-export interface AuthResponse {
-  accessToken: string;
-  user: User;
-}
 
 export interface LoginRequest {
   email: string;

@@ -1,40 +1,46 @@
 import { Entity } from '@/shared/domain/entity.base';
 
+export interface RoleProps {
+  name: string;
+}
+
 export class Role extends Entity<string> {
-    private constructor(
-        id: string,
-        private _name: string,
-        createdAt?: Date,
-        updatedAt?: Date,
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+  private _props: RoleProps;
 
-    get name(): string { return this._name; }
+  private constructor(
+    id: string,
+    props: RoleProps,
+    createdAt?: Date,
+    updatedAt?: Date,
+  ) {
+    super(id, createdAt, updatedAt);
+    this._props = props;
+  }
 
-    static create(id: string, name: string): Role {
-        return new Role(
-            id,
-            name
-        );
-    }
+  static create(props: { id: string; name: string }): Role {
+    return new Role(props.id, { name: props.name });
+  }
 
-    static reconstitute(props: {
-        id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
-    }): Role {
-        return new Role(
-            props.id,
-            props.name,
-            props.createdAt,
-            props.updatedAt,
-        );
-    }
+  static reconstitute(props: {
+    id: string;
+    name: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Role {
+    return new Role(
+      props.id,
+      { name: props.name },
+      props.createdAt,
+      props.updatedAt,
+    );
+  }
 
-    updateName(name: string): void {
-        this._name = name;
-        this.markAsUpdated();
-    }
+  get name(): string {
+    return this._props.name;
+  }
+
+  updateName(name: string): void {
+    this._props.name = name;
+    this.markAsUpdated();
+  }
 }

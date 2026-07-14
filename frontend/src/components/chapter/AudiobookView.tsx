@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Volume2, Play, Pause, SkipForward, SkipBack, Loader2 } from 'lucide-react';
+import { Volume2, Play, Pause, SkipForward, SkipBack, Rewind, FastForward, Loader2 } from 'lucide-react';
 import { useGetChapterAudioQuery, useIncrementPlayCountMutation } from '@/features/tts/api/ttsApi';
 
 interface Paragraph {
@@ -15,6 +15,11 @@ interface AudiobookViewProps {
     paragraphs: Paragraph[];
     bookTitle?: string;
     bookCoverImage?: string;
+    onPrevious?: () => void;
+    onNext?: (autoplay?: boolean) => void;
+    hasPrevious?: boolean;
+    hasNext?: boolean;
+    autoPlay?: boolean;
 }
 
 export default function AudiobookView({
@@ -22,7 +27,11 @@ export default function AudiobookView({
     chapterTitle,
     paragraphs,
     bookTitle,
-    bookCoverImage,
+    onPrevious,
+    onNext,
+    hasPrevious,
+    hasNext,
+    autoPlay,
 }: AudiobookViewProps) {
     const { data: ttsData, isLoading } = useGetChapterAudioQuery(chapterId);
     const [incrementPlayCount] = useIncrementPlayCountMutation();
@@ -31,8 +40,8 @@ export default function AudiobookView({
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [playbackRate, setPlaybackRate] = useState(1);
-    const [activeParagraphIndex, setActiveParagraphIndex] = useState<number>(-1);
     const [hasTrackedPlay, setHasTrackedPlay] = useState(false);
+    const [autoPlayStarted, setAutoPlayStarted] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const paragraphRefs = useRef<(HTMLParagraphElement | null)[]>([]);
@@ -66,30 +75,41 @@ export default function AudiobookView({
         });
     }, [duration, paragraphs]);
 
-    // Sync active paragraph with audio time
-    useEffect(() => {
-        if (!paragraphTimings.length || !isPlaying) return;
-
-        const index = paragraphTimings.findIndex(
+    const activeParagraphIndex = useMemo(() => {
+        if (!paragraphTimings.length || !isPlaying) return -1;
+        return paragraphTimings.findIndex(
             (t) => currentTime >= t.startTime && currentTime < t.endTime
         );
+    }, [currentTime, paragraphTimings, isPlaying]);
 
-        if (index !== -1 && index !== activeParagraphIndex) {
-            setActiveParagraphIndex(index);
-
-            // Auto-scroll
-            const element = paragraphRefs.current[index];
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+    useEffect(() => {
+        if (activeParagraphIndex === -1) return;
+        const element = paragraphRefs.current[activeParagraphIndex];
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-    }, [currentTime, paragraphTimings, activeParagraphIndex, isPlaying]);
+    }, [activeParagraphIndex]);
 
     // Audio event handlers
-    const onLoadedMetadata = (e: React.SyntheticEvent<HTMLAudioElement>) => {
+    const onLoadedMetadata = async (e: React.SyntheticEvent<HTMLAudioElement>) => {
         const audio = e.currentTarget;
         if (audio.duration && !isNaN(audio.duration) && audio.duration !== Infinity) {
             setDuration(audio.duration);
+        }
+
+        // Auto-play logic
+        if (autoPlay && !autoPlayStarted) {
+            setAutoPlayStarted(true);
+            try {
+                await audio.play();
+                setIsPlaying(true);
+                if (!hasTrackedPlay && ttsData?.chapterId) {
+                    incrementPlayCount(ttsData.chapterId);
+                    setHasTrackedPlay(true);
+                }
+            } catch (err) {
+                console.error("Autoplay prevented by browser:", err);
+            }
         }
     };
 
@@ -99,8 +119,12 @@ export default function AudiobookView({
 
     const onEnded = () => {
         setIsPlaying(false);
-        setActiveParagraphIndex(-1);
         setCurrentTime(0);
+        
+        // Auto-play next chapter if available
+        if (hasNext && onNext) {
+            onNext(true);
+        }
     };
 
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,7 +181,6 @@ export default function AudiobookView({
         if (timing && audioRef.current) {
             audioRef.current.currentTime = timing.startTime;
             if (!isPlaying) togglePlay();
-            setActiveParagraphIndex(index);
         }
     };
 
@@ -287,11 +310,20 @@ export default function AudiobookView({
                     {/* Main Controls */}
                     <div className="flex items-center gap-6">
                         <button
+                            onClick={onPrevious}
+                            disabled={!hasPrevious}
+                            className="p-2 text-[#666666] hover:text-[#1A1A1A] transition-colors disabled:opacity-30 disabled:hover:text-[#666666] disabled:cursor-not-allowed"
+                            title="Chương trước"
+                        >
+                            <SkipBack className="w-6 h-6" />
+                        </button>
+
+                        <button
                             onClick={() => skip(-10)}
                             className="p-2 text-[#666666] hover:text-[#1A1A1A] transition-colors"
                             title="Lùi 10s"
                         >
-                            <SkipBack className="w-6 h-6" />
+                            <Rewind className="w-6 h-6" />
                         </button>
 
                         <button
@@ -309,6 +341,15 @@ export default function AudiobookView({
                             onClick={() => skip(10)}
                             className="p-2 text-[#666666] hover:text-[#1A1A1A] transition-colors"
                             title="Tua 10s"
+                        >
+                            <FastForward className="w-6 h-6" />
+                        </button>
+
+                        <button
+                            onClick={() => onNext?.()}
+                            disabled={!hasNext}
+                            className="p-2 text-[#666666] hover:text-[#1A1A1A] transition-colors disabled:opacity-30 disabled:hover:text-[#666666] disabled:cursor-not-allowed"
+                            title="Chương sau"
                         >
                             <SkipForward className="w-6 h-6" />
                         </button>

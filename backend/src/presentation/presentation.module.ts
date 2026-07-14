@@ -7,13 +7,11 @@ import { ChromaController } from './chroma/chroma.controller';
 import { CommentsController } from './comments/comments.controller';
 import { CollectionsController } from './collections/collections.controller';
 import { FollowsController } from './follows/follows.controller';
-import { GamificationController } from './gamification/gamification.controller';
 import { GeminiController } from './gemini/gemini.controller';
 import { GenresController } from './genres/genres.controller';
 import { LibraryController } from './library/library.controller';
 import { LikesController } from './likes/likes.controller';
 import { NotificationController } from './notification/notification.controller';
-import { OnboardingController } from './onboarding/onboarding.controller';
 import { PostsController } from './posts/posts.controller';
 import { RecommendationsController } from './recommendations/recommendations.controller';
 import { ReviewsController } from './reviews/reviews.controller';
@@ -22,7 +20,10 @@ import { SearchController } from './search/search.controller';
 import { StatisticsController } from './statistics/statistics.controller';
 import { TextToSpeechController } from './text-to-speech/text-to-speech.controller';
 import { UsersController } from './users/users.controller';
-
+import { AdminToxicWordsController } from './content-moderation/admin-toxic-words.controller';
+import { AdminRateLimitController } from './admin/rate-limit.controller';
+import { RateLimitConfigService } from '@/common/services/rate-limit-config.service';
+import { ReadingRoomsPresentationModule } from './reading-rooms/reading-rooms-presentation.module';
 import { UsersApplicationModule } from '@/application/users/users-application.module';
 import { BooksApplicationModule } from '@/application/books/books-application.module';
 import { AuthorsApplicationModule } from '@/application/authors/authors-application.module';
@@ -37,15 +38,18 @@ import { LibraryApplicationModule } from '@/application/library/library-applicat
 import { LikesApplicationModule } from '@/application/likes/likes-application.module';
 import { StatisticsApplicationModule } from '@/application/statistics/statistics-application.module';
 import { ChromaApplicationModule } from '@/application/chroma/chroma-application.module';
-import { GamificationApplicationModule } from '@/application/gamification/gamification-application.module';
 import { ScraperApplicationModule } from '@/application/scraper/scraper-application.module';
 import { SearchApplicationModule } from '@/application/search/search-application.module';
 import { TextToSpeechApplicationModule } from '@/application/text-to-speech/text-to-speech-application.module';
-import { OnboardingApplicationModule } from '@/application/onboarding/onboarding-application.module';
 import { GeminiApplicationModule } from '@/application/gemini/gemini-application.module';
 import { RecommendationsApplicationModule } from '@/application/recommendations/recommendations-application.module';
 import { NotificationsApplicationModule } from '@/application/notifications/notifications-application.module';
+import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
+import { AnalyticsPresentationModule } from './analytics/analytics-presentation.module';
+import { ReadingRoomInteractionsPresentationModule } from './reading-room-interactions/reading-room-interactions-presentation.module';
+import { UserHighlightsModule } from './user-highlights/user-highlights.module';
+import { BookmarkModule } from './bookmarks/bookmark.module';
 
 @Module({
   imports: [
@@ -63,14 +67,18 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     LikesApplicationModule,
     StatisticsApplicationModule,
     ChromaApplicationModule,
-    GamificationApplicationModule,
     ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
-    OnboardingApplicationModule,
     GeminiApplicationModule,
     RecommendationsApplicationModule,
     NotificationsApplicationModule,
+    ContentModerationApplicationModule,
+    ReadingRoomsPresentationModule,
+    AnalyticsPresentationModule,
+    ReadingRoomInteractionsPresentationModule,
+    UserHighlightsModule,
+    BookmarkModule,
     InfrastructureModule,
   ],
   controllers: [
@@ -82,13 +90,11 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     CommentsController,
     CollectionsController,
     FollowsController,
-    GamificationController,
     GeminiController,
     GenresController,
     LibraryController,
     LikesController,
     NotificationController,
-    OnboardingController,
     PostsController,
     RecommendationsController,
     ReviewsController,
@@ -97,6 +103,9 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     StatisticsController,
     TextToSpeechController,
     UsersController,
+    AdminToxicWordsController,
+    AdminRateLimitController,
   ],
+  providers: [RateLimitConfigService],
 })
-export class PresentationModule { }
+export class PresentationModule {}

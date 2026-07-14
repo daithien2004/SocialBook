@@ -20,7 +20,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             className={cn(
               'flex items-center gap-2 px-6 py-3 font-medium whitespace-nowrap transition-all duration-300',
               isActive
-                ? 'text-red-600 dark:text-red-500 border-b-2 border-red-600 dark:border-red-500'
+                ? 'text-brand border-b-2 border-brand'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
             )}
           >

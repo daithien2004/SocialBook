@@ -1,33 +1,34 @@
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import {
+  UnauthorizedDomainException,
+  UserBannedDomainException,
+} from '@/domain/auth/exceptions/auth-exceptions';
 import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { LoginCommand } from './login.command';
-import { User } from '@/domain/users/entities/user.entity';
 
 @Injectable()
 export class LoginUseCase {
   constructor(
     private readonly tokenService: TokenService,
     private readonly rolesRepository: IRoleRepository,
-  ) { }
+  ) {}
 
   async execute(command: LoginCommand) {
-    const user = command.user as User;
+    const user = command.user;
 
     if (!user) {
-      throw new UnauthorizedException('Người dùng không tồn tại');
+      throw new UnauthorizedDomainException('Người dùng không tồn tại');
     }
 
     if (!user.isVerified) {
-      throw new UnauthorizedException('Tài khoản chưa được xác thực');
+      throw new UnauthorizedDomainException('Tài khoản chưa được xác thực');
     }
 
     if (user.isBanned) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        message: 'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
-        error: 'USER_BANNED',
-      });
+      throw new UserBannedDomainException(
+        'Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.',
+      );
     }
 
     let roleName = 'user';
@@ -51,7 +52,6 @@ export class LoginUseCase {
         username: user.username,
         image: user.image,
         role: roleName,
-        onboardingCompleted: user.onboardingCompleted,
       },
     };
   }

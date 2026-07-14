@@ -1,72 +1,83 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Post } from '@/domain/posts/entities/post.entity';
 
 export class PostResponseDto {
-    @ApiProperty()
+  id: string;
+
+  content: string;
+
+  imageUrls: string[];
+
+  isFlagged: boolean;
+
+  moderationStatus?: string;
+  moderationReason?: string;
+
+  user?: {
     id: string;
+    username: string;
+    image?: string;
+    violationCount?: number;
+  };
 
-    @ApiProperty()
-    content: string;
+  book?: {
+    id: string;
+    title: string;
+    slug?: string;
+    coverUrl?: string;
+    authorId?: { name: string; bio: string };
+  };
 
-    @ApiProperty()
-    imageUrls: string[];
+  likesCount?: number;
 
-    @ApiProperty()
-    isFlagged: boolean;
+  commentsCount?: number;
 
-    @ApiProperty({ required: false })
-    moderationStatus?: string;
+  likedByCurrentUser?: boolean;
 
-    @ApiProperty({ type: Object, required: false })
-    user?: { id: string; username: string; image?: string };
+  createdAt: Date;
 
-    @ApiProperty({ type: Object, required: false })
-    book?: { id: string; title: string; slug?: string };
+  updatedAt: Date;
 
-    @ApiProperty({ required: false })
-    likesCount?: number;
+  constructor(post: Post) {
+    this.id = post.id.toString();
+    this.content = post.content;
+    this.imageUrls = post.imageUrls || [];
+    this.isFlagged = post.isFlagged || false;
+    this.moderationStatus = post.moderationStatus;
+    this.moderationReason = post.moderationReason;
+    this.createdAt = post.createdAt;
+    this.updatedAt = post.updatedAt;
 
-    @ApiProperty({ required: false })
-    commentsCount?: number;
-
-    @ApiProperty()
-    createdAt: Date;
-
-    @ApiProperty()
-    updatedAt: Date;
-
-    constructor(post: Post) {
-        this.id = post.id.toString();
-        this.content = post.content;
-        this.imageUrls = post.imageUrls || [];
-        this.isFlagged = post.isFlagged || false;
-        this.moderationStatus = post.moderationStatus;
-        this.createdAt = post.createdAt;
-        this.updatedAt = post.updatedAt;
-
-        // Handle populated author
-        if (post.author) {
-            this.user = {
-                id: post.author.id,
-                username: post.author.username,
-                image: post.author.image,
-            };
-        }
-
-        // Handle populated book
-        if (post.book) {
-            this.book = {
-                id: post.book.id,
-                title: post.book.title,
-            };
-        }
+    // Handle populated author
+    if (post.author) {
+      this.user = {
+        id: post.author.id,
+        username: post.author.username,
+        image: post.author.image,
+        violationCount: post.author.violationCount,
+      };
     }
 
-    static fromDomain(post: Post): PostResponseDto {
-        return new PostResponseDto(post);
+    // Handle populated book
+    if (post.book) {
+      this.book = {
+        id: post.book.id,
+        title: post.book.title,
+        slug: post.book.slug,
+        coverUrl: post.book.coverUrl,
+        authorId: post.book.authorId,
+      };
     }
 
-    static fromArray(posts: Post[]): PostResponseDto[] {
-        return posts.map(post => new PostResponseDto(post));
-    }
+    this.likesCount = post.likesCount;
+    this.commentsCount = post.commentsCount;
+    this.likedByCurrentUser = post.likedByCurrentUser;
+  }
+
+  static fromDomain(post: Post): PostResponseDto {
+    return new PostResponseDto(post);
+  }
+
+  static fromArray(posts: Post[]): PostResponseDto[] {
+    return posts.map((post) => new PostResponseDto(post));
+  }
 }

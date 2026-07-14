@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Review, ReviewSchema } from '@/infrastructure/database/schemas/review.schema';
+import {
+  Review,
+  ReviewSchema,
+} from '@/infrastructure/database/schemas/review.schema';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { ReviewRepository } from './review.repository';
 
@@ -14,9 +17,6 @@ import { ReviewRepository } from './review.repository';
       useClass: ReviewRepository,
     },
   ],
-  exports: [
-    IReviewRepository,
-    MongooseModule,
-  ],
+  exports: [IReviewRepository, MongooseModule],
 })
 export class ReviewsRepositoryModule {}

@@ -1,10 +1,4 @@
-import {
-  IsArray,
-  IsBoolean,
-  IsMongoId,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsBoolean, IsMongoId, IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
   @IsMongoId()
@@ -15,5 +9,5 @@ export class CreatePostDto {
 
   @IsBoolean()
   @IsOptional()
-  isDelete?: boolean;
+  isDeleted?: boolean;
 }

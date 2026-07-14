@@ -1,159 +1,148 @@
 'use client';
 
-import { ConfirmDelete } from '@/components/admin/ConfirmDelete';
-import { useDeleteBookMutation, useGetAdminBooksQuery } from '@/features/books/api/bookApi';
-import { BackendPagination, BookForAdmin } from '@/features/books/types/book.interface';
-import { useDebounce } from '@/hooks/useDebounce';
+import { BookForAdmin, BookStatus } from '@/features/books/types/book.interface';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { BookOpen, BookText, ChevronLeft, ChevronRight, Edit, Eye, Filter, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import { BookOpen, BookText, Edit, Eye, Filter, Loader2, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
-type BookStatus = 'draft' | 'published' | 'completed';
-type StatusFilter = BookStatus | 'all';
+import { useBookManagement } from '@/features/admin/hooks/books/useBookManagement';
+import { AdminSearchBar } from '@/features/admin/components/AdminSearchBar';
+import { AdminPagination } from '@/features/admin/components/AdminPagination';
 
 export default function AdminBooksPage() {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 500);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-
-  const { data, isLoading, isFetching, refetch } = useGetAdminBooksQuery({
+  const router = useRouter();
+  const {
     page,
-    limit: 15,
-    search: debouncedSearch || undefined,
-    status: statusFilter === 'all' ? undefined : statusFilter,
-  }, {
-    refetchOnMountOrArgChange: true,
-  });
+    setPage,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    books,
+    pagination,
+    isLoading,
+    isFetching,
+    error,
+    isDeleting,
+    handleDelete,
+    openDeleteBook
+  } = useBookManagement();
 
-  const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
-  const books: BookForAdmin[] = data?.data || [];
-  const pagination: BackendPagination | undefined = data?.meta;
-
-  // Delete handlers
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteBook(id).unwrap();
-      toast.success('Xóa sách thành công');
-      refetch();
-    } catch (error) {
-      console.error('Failed to delete book:', error);
-      toast.error('Xóa sách thất bại');
-    }
-  };
+  type StatusFilter = BookStatus | 'all';
 
   const getStatusBadge = (status: BookStatus) => {
     const styles: Record<BookStatus, string> = {
-      draft: 'bg-gray-100 text-gray-700 border-gray-300',
-      published: 'bg-green-100 text-green-700 border-green-300',
-      completed: 'bg-blue-100 text-blue-700 border-blue-300',
+      draft: 'bg-slate-100 text-slate-700 border-slate-200',
+      published: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+      completed: 'bg-sky-50 text-sky-700 border-sky-100',
     };
-    return `inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${styles[status]}`;
-  };
-
-  const getStatusText = (status: BookStatus) => {
-    return status === 'draft' ? 'Bản nháp' : status === 'published' ? 'Đang phát hành' : 'Hoàn thành';
+    return (
+      <Badge variant="outline" className={`${styles[status]} font-medium px-2.5 py-0.5 rounded-full border shadow-none`}>
+        {status === 'draft' ? 'Bản nháp' : status === 'published' ? 'Đang phát hành' : 'Hoàn thành'}
+      </Badge>
+    );
   };
 
   return (
     <div className="min-h-screen bg-gray-50 rounded-lg">
-      {/* Header & Filters Card */}
-      <div className="bg-white rounded-b-xl shadow-md border border-gray-100 mb-6 overflow-hidden">
-        {/* Top Header */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-white">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Quản lý sách</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Tổng cộng <span className="font-semibold text-gray-800">{pagination?.total?.toLocaleString() || 0}</span> cuốn sách
-            </p>
-          </div>
-          <Link
-            href="/admin/books/new"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
+      <AdminSearchBar
+        title="Quản lý sách"
+        totalItems={pagination?.total || 0}
+        totalLabel="cuốn sách"
+        searchPlaceholder="Tìm tên sách hoặc tác giả..."
+        searchValue={search}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
+        onAddClick={() => router.push('/admin/books/new')}
+        addLabel="Thêm sách mới"
+      >
+        <div className="flex items-center gap-2 w-full sm:w-auto font-medium">
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value as StatusFilter);
+              setPage(1);
+            }}
           >
-            <Plus className="w-5 h-5" />
-            Thêm sách mới
-          </Link>
+            <SelectTrigger className="min-w-[180px] h-10 bg-white rounded-lg border-slate-200 focus:ring-2 focus:ring-indigo-500/10 text-sm font-medium">
+              <div className="flex items-center">
+                <Filter className="w-3.5 h-3.5 text-slate-500 mr-2" />
+                <SelectValue placeholder="Trạng thái" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-lg border-slate-100 shadow-lg font-medium">
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
+              <SelectItem value="draft">Bản nháp</SelectItem>
+              <SelectItem value="published">Đang phát hành</SelectItem>
+              <SelectItem value="completed">Hoàn thành</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+      </AdminSearchBar>
 
-        {/* Filters Bar */}
-        <div className="px-6 py-4 bg-gray-50/50 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm tên sách hoặc tác giả..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-            />
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 z-10" />
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value as StatusFilter);
-                  setPage(1);
-                }}
-                className="pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none appearance-none cursor-pointer shadow-sm min-w-[180px]"
-              >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="draft">Bản nháp</option>
-                <option value="published">Đang phát hành</option>
-                <option value="completed">Hoàn thành</option>
-              </select>
-              <ChevronLeft className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 rotate-[-90deg] pointer-events-none" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Loading */}
-      {(isLoading || isFetching) && (
+      {/* Loading (Initial) */}
+      {isLoading && (
         <div className="flex justify-center items-center py-32">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
         </div>
       )}
 
+      {/* Error State */}
+      {!isLoading && !!error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center my-8 font-medium">
+          <p className="text-red-700 font-medium mb-4">Đã có lỗi xảy ra khi tải danh sách sách.</p>
+          <Button onClick={() => window.location.reload()} variant="outline" className="border-red-200 text-red-700 hover:bg-red-100">
+            Thử lại
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
-      {!(isLoading || isFetching) && (
+      {!isLoading && !error && (
         <div className="py-0">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-opacity duration-200 ${isFetching ? 'opacity-60' : 'opacity-100'}`}>
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Bìa sách</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tên sách</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tác giả</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Thể loại</th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Trạng thái</th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Chương</th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Xem</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cập nhật</th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Hành động</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
+              <Table>
+                <TableHeader className="bg-gray-50">
+                  <TableRow>
+                    <TableHead>Bìa sách</TableHead>
+                    <TableHead>Tên sách</TableHead>
+                    <TableHead>Tác giả</TableHead>
+                    <TableHead>Thể loại</TableHead>
+                    <TableHead className="text-center">Trạng thái</TableHead>
+                    <TableHead className="text-center">Chương</TableHead>
+                    <TableHead className="text-center">Xem</TableHead>
+                    <TableHead>Cập nhật</TableHead>
+                    <TableHead className="text-center">Hành động</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {books.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="text-center py-16 text-gray-500 text-lg">
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-16 text-gray-500 text-lg">
                         Không tìm thấy sách nào
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
-                    books.map((book) => (
-                      <tr key={book.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
+                    books.map((book: BookForAdmin, index) => (
+                      <TableRow key={`${book.id}-${index}`}>
+                        <TableCell className="px-6 py-4">
                           <div className="w-16 h-20 relative rounded-lg overflow-hidden shadow-md">
                             {book.coverUrl ? (
                               <Image src={book.coverUrl} alt={book.title} fill className="object-cover" sizes="64px" />
@@ -163,90 +152,89 @@ export default function AdminBooksPage() {
                               </div>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
+                        </TableCell>
+                        <TableCell>
                           <div className="font-semibold text-gray-900">{book.title}</div>
                           <div className="text-sm text-gray-500">/{book.slug}</div>
-                        </td>
-                        <td className="px-6 py-4 font-medium">{book.authorId?.name || '—'}</td>
-                        <td className="px-6 py-4">
+                        </TableCell>
+                        <TableCell className="font-medium">{book.authorId?.name || '—'}</TableCell>
+                        <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {book.genres?.length > 0 ? (
                               book.genres.map((g) => (
-                                <span
-                                  key={`${book.id}-${g.id || (g as any)._id || g.name}`}
-                                  className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+                                <Badge
+                                  key={`${book.id}-${g.id || g.name}`}
+                                  variant="secondary"
+                                  className="bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold"
                                 >
                                   {g.name}
-                                </span>
+                                </Badge>
                               ))
                             ) : (
                               <span className="text-gray-400 text-xs">Chưa có</span>
                             )}
                           </div>
-                        </td>
-                        <td className="py-4 text-center">
-                          <span className={getStatusBadge(book.status)}>{getStatusText(book.status)}</span>
-                        </td>
-                        <td className="py-4 text-center font-bold text-lg">{book.stats?.chapterCount || 0}</td>
-                        <td className="py-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Eye className="w-5 h-5 text-gray-500" />
-                            <span className="font-semibold">{(book.stats?.views || 0).toLocaleString()}</span>
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          {getStatusBadge(book.status)}
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          <span className="font-bold text-lg text-gray-800 bg-gray-100 px-3 py-1 rounded-lg">
+                            {book.stats?.chapterCount || 0}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          <div className="flex items-center justify-center gap-1.5 text-blue-600 bg-blue-50 px-3 py-1 rounded-lg w-fit mx-auto">
+                            <Eye className="w-4 h-4" />
+                            <span className="font-bold">{(book.stats?.views || 0).toLocaleString()}</span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {(book.updatedAt || book.createdAt) ? format(new Date(book.updatedAt || book.createdAt), 'dd/MM/yyyy HH:mm', { locale: vi }) : '—'}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex justify-center gap-2">
-                            <Link href={`/admin/books/chapters/${book.id}`} className="p-2 hover:bg-purple-50 rounded-lg transition-colors" title="Quản lý chương">
-                              <BookText className="w-5 h-5 text-purple-600" />
-                            </Link>
-                            <Link href={`/admin/books/${book.slug}`} className="p-2 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết">
-                              <Eye className="w-5 h-5 text-blue-600" />
-                            </Link>
-                            <Link href={`/admin/books/edit/${book.id}`} className="p-2 hover:bg-green-50 rounded-lg transition-colors" title="Chỉnh sửa">
-                              <Edit className="w-5 h-5 text-green-600" />
-                            </Link>
-                            <ConfirmDelete
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-500 font-medium">
+                          {(book.updatedAt || book.createdAt) ? format(new Date(book.updatedAt || book.createdAt), 'dd MMM, yyyy', { locale: vi }) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-1">
+                            <Button variant="ghost" size="icon" asChild className="text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg">
+                              <Link href={`/admin/books/chapters/${book.id}`} title="Quản lý chương">
+                                <BookText className="w-4.5 h-4.5" />
+                              </Link>
+                            </Button>
+                            <Button variant="ghost" size="icon" asChild className="text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg">
+                              <Link href={`/admin/books/${book.slug}`} title="Xem chi tiết">
+                                <Eye className="w-4.5 h-4.5" />
+                              </Link>
+                            </Button>
+                            <Button variant="ghost" size="icon" asChild className="text-slate-600 hover:text-emerald-600 hover:bg-slate-100 rounded-lg">
+                              <Link href={`/admin/books/edit/${book.id}`} title="Chỉnh sửa">
+                                <Edit className="w-4.5 h-4.5" />
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openDeleteBook({ book, isDeleting, onConfirm: () => handleDelete(book.id) })}
+                              className="text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-lg"
                               title="Xóa sách"
-                              description={`Bạn có chắc chắn muốn xóa sách "${book.title}"?`}
-                              onConfirm={() => handleDelete(book.id)}
                             >
-                              <button
-                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Xóa sách"
-                              >
-                                <Trash2 className="w-5 h-5 text-red-600" />
-                              </button>
-                            </ConfirmDelete>
+                              <Trash2 className="w-4.5 h-4.5" />
+                            </Button>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between text-sm">
-                <div className="text-gray-600">
-                  Hiển thị {(page - 1) * 15 + 1} - {Math.min(page * 15, pagination.total)} trong {pagination.total.toLocaleString()} sách
-                </div>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50">
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <span className="font-medium">Trang {page} / {pagination.totalPages}</span>
-                  <button onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))} disabled={page === pagination.totalPages} className="p-2 hover:bg-gray-200 rounded-lg disabled:opacity-50">
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            )}
+            <AdminPagination
+              page={page}
+              totalPages={pagination?.totalPages || 0}
+              totalItems={pagination?.total || 0}
+              pageSize={15}
+              itemLabel="sách"
+              onPageChange={setPage}
+            />
           </div>
         </div>
       )}

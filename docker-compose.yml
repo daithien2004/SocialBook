@@ -1,4 +1,18 @@
-version: '3.8'
+
+x-backend-common: &backend-common
+  image: daithien/socialbook-be:dev
+  restart: unless-stopped
+  expose:
+    - '5000'
+  env_file:
+    - backend.env
+  depends_on:
+    mongo:
+      condition: service_started
+    redis:
+      condition: service_started
+    chroma:
+      condition: service_started
 
 services:
   nginx:
@@ -7,24 +21,22 @@ services:
     restart: unless-stopped
     ports:
       - '80:80'
+      - '443:443'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - backend
+      - backend1
+      - backend2
       - frontend
 
-  backend:
-    image: daithien/socialbook-be:dev
-    container_name: socialbook-backend
-    restart: unless-stopped
-    expose:
-      - '5000'
-    env_file:
-      - backend.env
-    depends_on:
-      - mongo
-      - redis
-      - chroma
+  backend1:
+    <<: *backend-common
+    container_name: socialbook-backend1
+
+  backend2:
+    <<: *backend-common
+    container_name: socialbook-backend2
 
   frontend:
     image: daithien/socialbook-fe:dev
@@ -35,7 +47,7 @@ services:
     env_file:
       - frontend.env
     depends_on:
-      - backend
+      - backend1
 
   mongo:
     image: mongo:7
@@ -45,10 +57,9 @@ services:
       - '27017:27017'
     volumes:
       - mongo_data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=password
-      - MONGO_INITDB_DATABASE=socialbook
+    env_file:
+      - mongo.env
+
 
   redis:
     image: redis:7-alpine
@@ -58,6 +69,7 @@ services:
       - '6379:6379'
     volumes:
       - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
 
   chroma:
     image: chromadb/chroma:latest
@@ -70,6 +82,8 @@ services:
     environment:
       - IS_PERSISTENT=TRUE
       - ANONYMIZED_TELEMETRY=FALSE
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
+
 
 volumes:
   mongo_data:

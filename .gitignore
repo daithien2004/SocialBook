@@ -2,3 +2,12 @@
 UML
 CODING_RULESET.md
 .gitignore
+docs
+ports.env
+mongo.env
+backend.env
+frontend.env
+*.env.local
+
+# Generated
+frontend/src/app/tokens.generated.css

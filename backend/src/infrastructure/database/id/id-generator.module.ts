@@ -3,12 +3,12 @@ import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { MongoIdGenerator } from './mongo-id-generator';
 
 @Module({
-    providers: [
-        {
-            provide: IIdGenerator,
-            useClass: MongoIdGenerator,
-        },
-    ],
-    exports: [IIdGenerator],
+  providers: [
+    {
+      provide: IIdGenerator,
+      useClass: MongoIdGenerator,
+    },
+  ],
+  exports: [IIdGenerator],
 })
 export class IdGeneratorModule {}

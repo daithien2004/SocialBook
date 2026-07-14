@@ -1,96 +1,98 @@
 import {
-    Body,
-    Controller,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    Req,
-    UseGuards,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto'; // Need CreateNotificationDto? usually internal. Or create one.
-import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
 import { CreateNotificationCommand } from '@/application/notifications/use-cases/create-notification/create-notification.command';
-import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
+import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
 import { GetUserNotificationsQuery } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.query';
-import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
+import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
 import { MarkNotificationReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.command';
+import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
+import { MarkAllNotificationsReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-all-notifications-read.command';
+import { MarkAllNotificationsReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-all-notifications-read.use-case';
+import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto';
 
-import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
 import { FilterNotificationDto } from '@/presentation/notification/dto/filter-notification.dto';
+import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
 
-@ApiTags('Notifications')
-@ApiBearerAuth()
 @Controller('notifications')
-@UseGuards(JwtAuthGuard)
 export class NotificationController {
-    constructor(
-        private readonly createNotificationUseCase: CreateNotificationUseCase,
-        private readonly getUserNotificationsUseCase: GetUserNotificationsUseCase,
-        private readonly markNotificationReadUseCase: MarkNotificationReadUseCase,
-    ) { }
+  constructor(
+    private readonly createNotificationUseCase: CreateNotificationUseCase,
+    private readonly getUserNotificationsUseCase: GetUserNotificationsUseCase,
+    private readonly markNotificationReadUseCase: MarkNotificationReadUseCase,
+    private readonly markAllNotificationsReadUseCase: MarkAllNotificationsReadUseCase,
+  ) {}
 
-    @Get()
-    async getMyNotifications(
-        @Req() req: Request & { user: { id: string } },
-        @Query() filter: FilterNotificationDto,
-    ) {
-        const query = new GetUserNotificationsQuery(
-            req.user.id,
-            filter.page,
-            filter.limit,
-            filter.isRead
-        );
+  @Get()
+  async getMyNotifications(
+    @CurrentUser('id') userId: string,
+    @Query() filter: FilterNotificationDto,
+  ) {
+    const query = new GetUserNotificationsQuery(
+      userId,
+      filter.page,
+      filter.limit,
+      filter.isRead,
+    );
 
-        const result = await this.getUserNotificationsUseCase.execute(query);
+    const result = await this.getUserNotificationsUseCase.execute(query);
 
-        return {
-            message: 'Get notifications successfully',
-            data: result.map(notification => new NotificationResponseDto(notification)),
-        };
-    }
+    return {
+      message: 'Get notifications successfully',
+      data: result.map(
+        (notification) => new NotificationResponseDto(notification),
+      ),
+    };
+  }
 
-    @Patch(':id/read')
-    async markRead(
-        @Param('id') id: string,
-        @Req() req: Request & { user: { id: string } }
-    ) {
-        const command = new MarkNotificationReadCommand(req.user.id, id);
-        await this.markNotificationReadUseCase.execute(command);
-        return {
-            message: 'Notification marked as read',
-        };
-    }
+  @Patch('read-all')
+  async markAllRead(@CurrentUser('id') userId: string) {
+    const command = new MarkAllNotificationsReadCommand(userId);
+    await this.markAllNotificationsReadUseCase.execute(command);
+    return {
+      message: 'All notifications marked as read',
+    };
+  }
 
-    // Admin endpoint to manually create notification (for testing or system notifications)
-    @Post()
-    @Roles('admin')
-    @UseGuards(RolesGuard)
-    async create(
-        @Body() dto: CreateNotificationDto
-    ) {
-        const command = new CreateNotificationCommand(
-            dto.userId,
-            dto.title,
-            dto.message,
-            dto.type,
-            dto.meta,
-            dto.actionUrl
-        );
+  @Patch(':id/read')
+  async markRead(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    const command = new MarkNotificationReadCommand(userId, id);
+    await this.markNotificationReadUseCase.execute(command);
+    return {
+      message: 'Notification marked as read',
+    };
+  }
 
-        const notification = await this.createNotificationUseCase.execute(command);
+  @Post()
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async create(@Body() dto: CreateNotificationDto) {
+    const command = new CreateNotificationCommand(
+      dto.userId,
+      dto.title,
+      dto.message,
+      dto.type,
+      dto.meta,
+      dto.actionUrl,
+    );
 
-        return {
-            message: 'Notification created successfully',
-            data: new NotificationResponseDto(notification),
-        };
-    }
+    const notification = await this.createNotificationUseCase.execute(command);
+
+    return {
+      message: 'Notification created successfully',
+      data: new NotificationResponseDto(notification),
+    };
+  }
 }

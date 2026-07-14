@@ -6,6 +6,7 @@ import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories
 import { AuthorsRepositoryModule } from '@/infrastructure/database/repositories/authors/authors-repository.module';
 import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
 import { ScraperInfrastructureModule } from '@/infrastructure/scraper/scraper-infrastructure.module';
+import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
   imports: [
@@ -14,14 +15,9 @@ import { ScraperInfrastructureModule } from '@/infrastructure/scraper/scraper-in
     AuthorsRepositoryModule,
     GenresRepositoryModule,
     ScraperInfrastructureModule,
+    IdGeneratorModule,
   ],
-  providers: [
-    ScrapeBookUseCase,
-    ScrapeChapterUseCase,
-  ],
-  exports: [
-    ScrapeBookUseCase,
-    ScrapeChapterUseCase,
-  ],
+  providers: [ScrapeBookUseCase, ScrapeChapterUseCase],
+  exports: [ScrapeBookUseCase, ScrapeChapterUseCase],
 })
 export class ScraperApplicationModule {}

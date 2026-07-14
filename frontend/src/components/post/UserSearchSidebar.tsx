@@ -1,105 +1,114 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useLazySearchUsersQuery } from '@/features/users/api/usersApi';
-import { useRouter } from "next/navigation";
-
-interface User {
-    id: string;
-    username: string;
-    avatar?: string;
-}
+import { UserAvatar } from '@/components/common/UserAvatar';
 
 export default function UserSearchSidebar() {
-    const [keyword, setKeyword] = useState('');
-    const [users, setUsers] = useState<User[]>([]);
-    const route = useRouter();
-    const [triggerSearch, {data, isFetching}] = useLazySearchUsersQuery();
-    useEffect(() => {
-        if (!keyword.trim()) {
-            setUsers([]);
-            return;
-        }
+  const router = useRouter();
+  const [keyword, setKeyword] = useState('');
+  const debouncedKeyword = useDebounce(keyword, 300);
+  const [searchUsers, { data, isLoading, isFetching }] = useLazySearchUsersQuery();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-        const timeout = setTimeout(() => {
-            triggerSearch({
-                keyword,
-                current: 1,
-                pageSize: 5,
-            });
-        }, 300);
+  useEffect(() => {
+    if (debouncedKeyword.trim().length >= 2) {
+      searchUsers({ keyword: debouncedKeyword.trim(), current: 1, pageSize: 5 });
+    }
+  }, [debouncedKeyword, searchUsers]);
 
-        return () => clearTimeout(timeout);
-    }, [keyword, triggerSearch]);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-    useEffect(() => {
-        if (!data?.data) return;
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
 
-        const mappedUsers: User[] = data.data.map((u) => ({
-            id: u.id,
-            username: u.username,
-            avatar: u.image,
-        }));
+  const results = data?.data || [];
+  const isLoadingResults = isLoading || isFetching;
 
-        setUsers(mappedUsers);
-    }, [data]);
+  return (
+    <div ref={containerRef} className="relative bg-card rounded-2xl shadow-md border border-border p-4">
+      <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+        Tìm kiếm
+      </h2>
 
-    return (
-        <div
-            className="bg-white dark:dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-100 dark:border-gray-800 p-4 space-y-2">
-            {/* HEADER */}
-            <h2 className="text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wide">
-                Tìm người dùng
-            </h2>
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <input
+          type="text"
+          value={keyword}
+          onChange={(e) => {
+            setKeyword(e.target.value);
+            if (e.target.value.trim().length >= 2) setIsOpen(true);
+            else setIsOpen(false);
+          }}
+          onFocus={() => { if (debouncedKeyword.trim().length >= 2) setIsOpen(true); }}
+          placeholder="Tìm người dùng..."
+          className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background transition-all"
+        />
+      </div>
 
-            {/* SEARCH INPUT */}
-            <div className="relative">
-                <Search
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500"
-                />
-                <input
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    placeholder="Tìm theo tên người dùng..."
-                    className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-gray-700 text-slate-800 dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                />
+      {isOpen && (
+        <div className="absolute left-4 right-4 top-full mt-1.5 z-50 bg-card border border-border/60 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          {isLoadingResults ? (
+            <div className="flex items-center justify-center py-6 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Đang tìm...</span>
             </div>
-
-            {/* RESULT LIST */}
-            <div className="space-y-2">
-                {!isFetching && users.length === 0 && keyword && (
-                    <p className="text-xs text-slate-500 dark:text-gray-400 text-center py-3">
-                        Không tìm thấy người dùng
-                    </p>
-                )}
-
-                {users
-                    .filter((user) => Boolean(user?.id))
-                    .map((user) => (
-                        <button
-                            onClick={() => route.push(`/users/${user.id}`)}
-                            key={user.id}
-                            className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition text-left"
-                        >
-                            <img
-                                src={user.avatar || '/abstract-book-pattern.png'}
-                                alt={user.username}
-                                className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-gray-700"
-                            />
-
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-900 dark:text-gray-100 truncate">
-                                    {user.username}
-                                </p>
-                                <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
-                                    Xem hồ sơ
-                                </p>
-                            </div>
-                        </button>
-                    ))}
+          ) : results.length > 0 ? (
+            <ul className="py-1">
+              {results.map((user) => (
+                <li key={user.id}>
+                  <button
+                    type="button"
+                    onClick={() => { setIsOpen(false); router.push(`/users/${user.id}`); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent transition-colors text-left"
+                  >
+                    <UserAvatar
+                      src={user.avatar}
+                      name={user.username}
+                      size="sm"
+                      className="h-8 w-8 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {user.username}
+                      </p>
+                      {user.bio && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {user.bio}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 px-4 gap-1.5">
+              <p className="text-sm text-muted-foreground">Không tìm thấy người dùng</p>
+              <p className="text-xs text-muted-foreground/60">Thử thay đổi từ khóa tìm kiếm</p>
             </div>
+          )}
         </div>
-    );
+      )}
+    </div>
+  );
 }

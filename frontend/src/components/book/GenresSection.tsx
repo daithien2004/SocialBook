@@ -1,10 +1,8 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
-import { ArrowRight, Tag } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -46,44 +44,41 @@ export const GenresSection = ({ books }: GenresSectionProps) => {
   if (genresWithCount.length === 0) return null;
 
   return (
-    <Card className="border-gray-100 dark:border-white/10 shadow-sm dark:shadow-none transition-colors duration-300">
+    <Card className="bg-transparent border border-border/50 shadow-none overflow-hidden relative">
+      {/* Top accent gradient line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-gradient-start to-brand-gradient-end opacity-80" />
+
       {/* Header */}
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-bold flex items-center gap-2">
-          <Tag className="text-red-600 dark:text-red-400" size={18} />
-          Thể loại
+      <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0 pt-4">
+        <CardTitle className="text-sm font-bold flex items-center gap-2">
+          <span className="w-1 h-3.5 bg-gradient-to-b from-brand-gradient-start to-brand-gradient-end rounded-full shrink-0" />
+          Thể loại nổi bật
         </CardTitle>
+        <Link 
+          href="/books" 
+          className="text-muted-foreground hover:text-brand transition-colors group flex items-center"
+          title="Xem tất cả"
+        >
+          <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-300" />
+        </Link>
       </CardHeader>
 
       <CardContent>
         {/* Genres Grid */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-nowrap xl:flex-wrap gap-2 pt-1 pb-2 xl:pb-0 overflow-x-auto xl:overflow-visible scrollbar-hide">
           {genresWithCount.map((genre) => (
-            <Button
+            <button
               key={genre.slug}
-              variant="outline"
-              size="sm"
               onClick={() => handleGenreClick(genre.slug)}
-              className="h-auto py-1.5 px-3 hover:border-red-500 hover:text-red-600 dark:hover:text-red-400 transition-all text-left"
+              className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card hover:bg-brand/[0.03] dark:hover:bg-brand/[0.02] hover:text-brand hover:border-brand/30 border border-border/70 text-xs font-semibold text-foreground/80 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer shadow-sm flex-shrink-0 whitespace-nowrap"
             >
-              <span className="mr-1.5">{genre.name}</span>
-              <Badge variant="secondary" className="bg-muted text-[10px] px-1 h-4 flex items-center justify-center min-w-[1.25rem]">
+              {genre.name}
+              <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-muted text-[9px] text-muted-foreground group-hover:bg-brand/10 group-hover:text-brand font-bold transition-all">
                 {genre.count}
-              </Badge>
-            </Button>
+              </span>
+            </button>
           ))}
         </div>
-
-        {/* View All Link */}
-        <Button asChild variant="ghost" className="w-full text-muted-foreground hover:text-red-600 dark:hover:text-red-400 group">
-          <Link href="/books" className="flex items-center justify-center gap-1">
-            Xem tất cả
-            <ArrowRight
-              size={14}
-              className="group-hover:translate-x-1 transition-transform"
-            />
-          </Link>
-        </Button>
       </CardContent>
     </Card>
   );

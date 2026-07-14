@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '@/common/decorators/customize';
+import { IS_PUBLIC_KEY } from '@/common/decorators/custom.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -16,14 +16,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err, user, info, context: ExecutionContext) {
+  handleRequest<TUser = Express.User>(
+    err: Error | null,
+    user: TUser,
+    _info: unknown,
+    context: ExecutionContext,
+  ): TUser {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
     if (err || !user) {
       if (isPublic) {
-        return null;
+        return null as TUser;
       }
       throw (
         err ||

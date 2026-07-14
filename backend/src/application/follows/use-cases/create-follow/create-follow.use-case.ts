@@ -1,4 +1,6 @@
-import { Injectable, Logger, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Follow } from '@/domain/follows/entities/follow.entity';
@@ -6,54 +8,67 @@ import { FollowId } from '@/domain/follows/value-objects/follow-id.vo';
 import { UserId } from '@/domain/follows/value-objects/user-id.vo';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
 import { CreateFollowCommand } from './create-follow.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
 
 @Injectable()
 export class CreateFollowUseCase {
-    private readonly logger = new Logger(CreateFollowUseCase.name);
+  private readonly logger = new Logger(CreateFollowUseCase.name);
 
-    constructor(
-        private readonly followRepository: IFollowRepository,
-        private readonly idGenerator: IIdGenerator
-    ) {}
+  constructor(
+    private readonly followRepository: IFollowRepository,
+    private readonly idGenerator: IIdGenerator,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
-    async execute(command: CreateFollowCommand): Promise<Follow> {
-        try {
-            // Validate user ID and target ID
-            const userId = UserId.create(command.userId);
-            const targetId = TargetId.create(command.targetId);
+  async execute(command: CreateFollowCommand): Promise<Follow> {
+    try {
+      const userId = UserId.create(command.userId);
+      const targetId = TargetId.create(command.targetId);
 
-            // Check if user is trying to follow themselves
-            if (userId.getValue() === targetId.getValue()) {
-                throw new BadRequestException('User cannot follow themselves');
-            }
+      if (userId.getValue() === targetId.getValue()) {
+        throw new BadRequestDomainException('User cannot follow themselves');
+      }
 
-            // Check if follow already exists
-            const existingFollow = await this.followRepository.exists(userId, targetId);
-            
-            if (existingFollow) {
-                throw new ConflictException('Follow relationship already exists');
-            }
+      const existingFollow = await this.followRepository.exists(
+        userId,
+        targetId,
+      );
 
-            // Create the follow
-            const follow = Follow.create({
-                id: FollowId.create(this.idGenerator.generate()),
-                userId: command.userId,
-                targetId: command.targetId,
-                status: command.status !== undefined ? command.status : true
-            });
+      if (existingFollow) {
+        existingFollow.toggleStatus();
+        await this.followRepository.save(existingFollow);
 
-            // Save to repository
-            await this.followRepository.save(follow);
+        this.logger.log(
+          `Follow status toggled to ${existingFollow.isActive()} successfully: ${existingFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
+        );
 
-            this.logger.log(`Follow created successfully: ${follow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`);
+        return existingFollow;
+      } else {
+        const newFollow = Follow.create({
+          id: FollowId.create(this.idGenerator.generate()),
+          userId: command.userId,
+          targetId: command.targetId,
+          status: true,
+        });
 
-            return follow;
-        } catch (error) {
-            this.logger.error(`Failed to create follow: ${command.userId} -> ${command.targetId}`, error);
-            throw error;
-        }
+        await this.followRepository.save(newFollow);
+
+        this.logger.log(
+          `Follow created successfully: ${newFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
+        );
+
+        this.eventEmitter.emit('user.followed', {
+          userId: command.userId,
+          targetId: command.targetId,
+        });
+
+        return newFollow;
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to create follow: ${command.userId} -> ${command.targetId}`,
+        error,
+      );
+      throw error;
     }
+  }
 }
-
-

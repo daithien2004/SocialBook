@@ -3,7 +3,7 @@ import { CacheService } from './cache.service';
 
 @Global()
 @Module({
-    providers: [CacheService],
-    exports: [CacheService],
+  providers: [CacheService],
+  exports: [CacheService],
 })
-export class CacheModule { }
+export class CacheModule {}

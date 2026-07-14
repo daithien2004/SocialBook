@@ -1,10 +1,5 @@
 import { Transform } from 'class-transformer';
-import {
-  IsArray,
-  IsEnum,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 export class FilterBookDto extends PaginationQueryDto {
@@ -16,24 +11,33 @@ export class FilterBookDto extends PaginationQueryDto {
   @IsString({ message: 'Author ID không hợp lệ' })
   authorId?: string;
 
-  @Transform(({ value }) => {
-    if (!value || (typeof value === 'string' && value.trim() === '')) return undefined;
-    if (Array.isArray(value)) return value;
+  @Transform(({ value }: { value: unknown }) => {
+    if (!value || (typeof value === 'string' && value.trim() === ''))
+      return undefined;
+    if (Array.isArray(value)) return value as string[];
     if (typeof value === 'string') {
-      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value.trim()];
+      return value.includes(',')
+        ? value.split(',').map((s) => s.trim())
+        : [value.trim()];
     }
     return undefined;
   })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true, message: 'Mỗi genre phải là một chuỗi (ID hoặc slug)' })
+  @IsString({
+    each: true,
+    message: 'Mỗi genre phải là một chuỗi (ID hoặc slug)',
+  })
   genres?: string[];
 
-  @Transform(({ value }) => {
-    if (!value || (typeof value === 'string' && value.trim() === '')) return undefined;
-    if (Array.isArray(value)) return value;
+  @Transform(({ value }: { value: unknown }) => {
+    if (!value || (typeof value === 'string' && value.trim() === ''))
+      return undefined;
+    if (Array.isArray(value)) return value as string[];
     if (typeof value === 'string') {
-      return value.includes(',') ? value.split(',').map(s => s.trim()) : [value.trim()];
+      return value.includes(',')
+        ? value.split(',').map((s) => s.trim())
+        : [value.trim()];
     }
     return undefined;
   })
@@ -53,6 +57,40 @@ export class FilterBookDto extends PaginationQueryDto {
   search?: string;
 
   @IsOptional()
+  @IsEnum(['keyword', 'semantic', 'hybrid'])
+  mode?: 'keyword' | 'semantic' | 'hybrid';
+
+  @IsOptional()
   @IsString()
   publishedYear?: string;
+
+  @IsOptional()
+  @IsEnum(
+    [
+      'createdAt',
+      'updatedAt',
+      'title',
+      'views',
+      'likes',
+      'publishedYear',
+      'rating',
+      'score',
+    ],
+    {
+      message: 'Trường sắp xếp không hợp lệ',
+    },
+  )
+  override sortBy?:
+    | 'createdAt'
+    | 'updatedAt'
+    | 'title'
+    | 'views'
+    | 'likes'
+    | 'publishedYear'
+    | 'rating'
+    | 'score' = undefined;
+
+  @IsOptional()
+  @IsEnum(['asc', 'desc'], { message: 'Thứ tự sắp xếp phải là asc hoặc desc' })
+  override order: 'asc' | 'desc' = 'desc';
 }

@@ -27,15 +27,12 @@ export const SortDropdown = ({
     )?.label || 'Sắp xếp';
 
   return (
-    <div className="lg:w-64 flex-shrink-0">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">
-        Sắp xếp theo
-      </h3>
+    <div className="w-44 flex-shrink-0">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-between bg-background border-input hover:bg-accent hover:text-accent-foreground font-normal"
+            className="w-full justify-between bg-background border-input hover:bg-accent hover:text-accent-foreground font-normal text-sm h-9"
           >
             {activeLabel}
             <ChevronDown className="ml-2 h-4 w-4 opacity-50" />

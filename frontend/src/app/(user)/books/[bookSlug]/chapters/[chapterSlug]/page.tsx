@@ -1,41 +1,50 @@
-'use client';
+"use client";
 
-import { use, useMemo, useCallback, useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import Image from "next/image";
+import { use, useMemo, useCallback, useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+import { MESSAGES } from "@/constants/messages";
+import { getErrorMessage } from "@/lib/utils";
+import { BookmarksDrawer } from '@/components/chapter/BookmarksDrawer';
 import {
   Bookmark,
   ChevronLeft,
+  ChevronRight,
   List,
   Headphones,
   BookOpen,
   Settings,
   Share2,
+  Highlighter,
+  Bot,
+  Library,
   Sparkles,
-  X,
-} from 'lucide-react';
+} from "lucide-react";
 
-// --- IMPORTS THƯ VIỆN & COMPONENT ---
-import AddToLibraryModal from '@/components/library/AddToLibraryModal';
 import {
   useGetChapterQuery,
   useGetChaptersQuery,
-} from '@/features/chapters/api/chaptersApi';
-import CreatePostModal, {
-  CreatePostData,
-} from '@/components/post/CreatePostModal';
-import { useCreatePostMutation } from '@/features/posts/api/postApi';
-import ChapterNavigation from '@/components/chapter/ChapterNavigation';
-import CommentSection from '@/components/chapter/CommentSection';
-import ChapterHeader from '@/components/chapter/ChapterHeader';
-import { ChapterContent } from '@/components/chapter/ChapterContent';
-import { useReadingProgress } from '@/hooks/useReadingProgress';
-import AudiobookView from '@/components/chapter/AudiobookView';
-import ChapterSummaryModal from '@/components/chapter/ChapterSummaryModal';
-import ReadingSettingsPanel from '@/components/chapter/ReadingSettingsPanel';
-import ChapterListDrawer from '@/components/book/ChapterListDrawer';
-import { ReadingTimeTracker } from '@/features/books/components/ReadingTimeTracker';
-import { useAppAuth } from '@/hooks/useAppAuth';
+  useRecordChapterViewMutation,
+} from "@/features/chapters/api/chaptersApi";
+import { useCreatePostMutation } from "@/features/posts/api/postApi";
+import { useModalStore } from "@/store/useModalStore";
+import ChapterNavigation from "@/components/chapter/ChapterNavigation";
+import CommentSection from "@/components/chapter/CommentSection";
+import ChapterHeader from "@/components/chapter/ChapterHeader";
+import { ChapterContent } from "@/components/chapter/ChapterContent";
+import { PersonalHighlightsDrawer } from "@/components/chapter/PersonalHighlightsDrawer";
+import ContentProtection from "@/components/chapter/ContentProtection";
+import { useReadingProgress, useReadingView } from "@/features/books/hooks";
+import { useReadingSettings } from "@/store/useReadingSettings";
+import { useAppAuth } from "@/features/auth/hooks";
+import { ReadingTimeTracker } from "@/features/books/components/ReadingTimeTracker";
+import AudiobookView from "@/components/chapter/AudiobookView";
+import ChapterListDrawer from "@/components/book/ChapterListDrawer";
+import ReadingSettingsPanel from "@/components/chapter/ReadingSettingsPanel";
+import { KnowledgeSidebar } from "@/features/reading-rooms/components/KnowledgeSidebar";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ChapterPageProps {
   params: Promise<{
@@ -47,18 +56,14 @@ interface ChapterPageProps {
 export default function ChapterPage({ params }: ChapterPageProps) {
   const { bookSlug, chapterSlug } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const autoplay = searchParams.get('autoplay') === 'true';
 
   const { isAuthenticated: isLoggedIn } = useAppAuth();
 
-  const [showTOC, setShowTOC] = useState(false);
-  const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
-  const [showSettings, setShowSettings] = useState(false);
-
-  const [isControlsVisible, setIsControlsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const openCreatePost = useModalStore(s => s.openCreatePost);
+  const openAddToLibrary = useModalStore(s => s.openAddToLibrary);
+  const openChapterSummary = useModalStore(s => s.openChapterSummary);
 
   const {
     data: chapterData,
@@ -66,8 +71,15 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     error,
   } = useGetChapterQuery({ bookSlug, chapterSlug });
 
-  const { data: chaptersData } = useGetChaptersQuery({ bookSlug });
-  const [createPost, { isLoading: isCreatingPost }] = useCreatePostMutation();
+  const { data: chaptersData } = useGetChaptersQuery({ bookSlug, limit: 1000 });
+  const [recordChapterView] = useRecordChapterViewMutation();
+  const [createPost] = useCreatePostMutation();
+
+  useEffect(() => {
+    if (chapterData) {
+      recordChapterView({ bookSlug, chapterSlug });
+    }
+  }, [chapterData, bookSlug, chapterSlug, recordChapterView]);
 
   const book = chapterData?.book;
   const chapter = chapterData?.chapter;
@@ -75,23 +87,39 @@ export default function ChapterPage({ params }: ChapterPageProps) {
 
   const chapters = chaptersData?.chapters || [];
   const totalChapters = chaptersData?.total || 0;
+  const paragraphs = useMemo(() => chapter?.paragraphs || [], [chapter?.paragraphs]);
+
+  const {
+    viewMode,
+    isControlsVisible,
+    showTOC,
+    showSettings,
+    setViewMode,
+    setShowTOC,
+    setShowSettings,
+  } = useReadingView();
+
+  const [showAISidebar, setShowAISidebar] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const { settings, updateSettings } = useReadingSettings();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const { savedProgress, restoreScroll } = useReadingProgress(
-    book?.id || '',
-    chapter?.id || '',
-    !isLoading && !!chapter && viewMode === 'read' && isLoggedIn
+    book?.id || "",
+    chapter?.id || "",
+    !isLoading && !!chapter && viewMode === "read" && isLoggedIn,
+    contentRef,
   );
 
-  const hasShownResumeToast = useRef(false);
-
   useEffect(() => {
-    if (savedProgress > 5 && !hasShownResumeToast.current) {
-      hasShownResumeToast.current = true;
+    if (savedProgress > 5 && savedProgress < 100) {
       setTimeout(() => {
-        toast('Bạn đang đọc dở chương này', {
+        toast("Bạn đang đọc dở chương này", {
           description: `Tiếp tục tại vị trí ${Math.floor(savedProgress)}%?`,
           action: {
-            label: 'Đọc tiếp',
+            label: "Đọc tiếp",
             onClick: restoreScroll,
           },
           duration: 8000,
@@ -100,76 +128,83 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     }
   }, [savedProgress, restoreScroll]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsControlsVisible(false);
-      } else {
-        setIsControlsVisible(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
-
-  const handleSharePost = async (data: CreatePostData) => {
-    if (!book?.id) {
-      toast.error('Không tìm thấy thông tin sách');
-      return;
+  const goToPreviousChapter = useCallback(() => {
+    if (navigation?.previous) {
+      router.push(
+        `/books/${bookSlug}/chapters/${navigation.previous.slug}`,
+      );
     }
+  }, [navigation, bookSlug, router]);
 
-    try {
-      const result = await createPost({
-        bookId: book.id,
-        content: data.content,
-        images: data.images,
-      }).unwrap();
-
-      if (result.warning) {
-        toast.warning('Bài viết đang được xem xét', {
-          description: result.warning,
-          duration: 5000
-        });
-      } else {
-        toast.success('Chia sẻ thành công!');
-      }
-      setIsShareModalOpen(false);
-    } catch (error: any) {
-      if (error?.status !== 401) {
-        toast.error(error?.data?.message || 'Không thể tạo bài viết');
-      }
+  const goToNextChapter = useCallback((autoplayNext = false) => {
+    if (navigation?.next) {
+      router.push(
+        `/books/${bookSlug}/chapters/${navigation.next.slug}${autoplayNext === true ? '?autoplay=true' : ''}`,
+      );
     }
-  };
+  }, [navigation, bookSlug, router]);
 
-  const defaultShareContent =
-    book && chapter
-      ? `📖 Đang đọc: ${book.title} - ${chapter.title}
+  const defaultShareContent = useMemo(() => {
+    if (!book || !chapter) return "";
+    return `📖 Đang đọc: ${book.title} - ${chapter.title}
 ✍️ Tác giả: ${book.authorId.name}
 
 ${book.description?.slice(0, 100)}...
 
-#${book.title.replace(/\s+/g, '')} #${chapter.title.replace(/\s+/g, '')}`
-      : '';
+#${book.title.replace(/\s+/g, "")} #${chapter.title.replace(/\s+/g, "")}`;
+  }, [book, chapter]);
+
+  const handleOpenShareModal = () => {
+    openCreatePost({
+      title: `Chia sẻ "${chapter?.title}"`,
+      contentPlaceholder: "Chia sẻ cảm nghĩ của bạn về chương này...",
+      defaultContent: defaultShareContent,
+      defaultBookId: book?.id,
+      defaultBookTitle: book?.title,
+      onSubmit: async (data) => {
+        if (!book?.id) {
+          toast.error("Không tìm thấy thông tin sách");
+          return;
+        }
+
+        try {
+          const result = await createPost({
+            bookId: book.id,
+            content: data.content,
+            images: data.images,
+          }).unwrap();
+
+          if (result.warning) {
+            toast.warning("Bài viết đang được xem xét", {
+              description: result.warning,
+              duration: 5000,
+            });
+          } else {
+            toast.success("Chia sẻ thành công!");
+          }
+        } catch (error) {
+          toast.error(getErrorMessage(error));
+        }
+      },
+    });
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#141414] flex items-center justify-center transition-colors duration-300">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors duration-300">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error || !chapterData || !book || !chapter) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#141414] text-gray-900 dark:text-white transition-colors duration-300">
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground transition-colors duration-300">
         <div className="text-center space-y-4">
-          <p className="text-xl">⚠️ Không thể tải nội dung</p>
+          <p className="text-xl font-medium">⚠️ Không thể tải nội dung</p>
           <button
             onClick={() => router.push(`/books/${bookSlug}`)}
-            className="px-6 py-2 bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/20 rounded-lg transition-colors text-sm"
+            className="px-6 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg transition-colors text-sm font-medium"
           >
             Quay lại mục lục
           </button>
@@ -178,26 +213,26 @@ ${book.description?.slice(0, 100)}...
     );
   }
 
-  if (viewMode === 'listen') {
+  if (viewMode === "listen") {
     return (
-      <div className="h-screen bg-gray-50 dark:bg-[#1a1a1a] flex flex-col overflow-hidden animate-in fade-in duration-300 transition-colors">
-        <div className="h-16 px-4 flex items-center justify-between border-b border-gray-200 dark:border-white/5 bg-white dark:bg-[#1a1a1a] shrink-0 z-50 transition-colors duration-300">
+      <div className="h-screen bg-background flex flex-col overflow-hidden animate-in fade-in duration-300">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-border bg-background shrink-0 z-50 transition-colors duration-300">
           <button
-            onClick={() => router.push(`/books/${bookSlug}`)}
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-2"
+            onClick={() => setViewMode("read")}
+            className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
           >
             <ChevronLeft size={20} />
             <span className="text-sm font-medium">Quay lại</span>
           </button>
 
-          <div className="flex bg-gray-100 dark:bg-black/40 p-1 rounded-lg border border-gray-200 dark:border-white/5 transition-colors duration-300">
+          <div className="flex bg-muted p-1 rounded-lg border border-border">
             <button
-              onClick={() => setViewMode('read')}
-              className="px-4 py-1.5 rounded-md text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all"
+              onClick={() => setViewMode("read")}
+              className="px-4 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-all"
             >
               Đọc
             </button>
-            <button className="px-4 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white shadow-lg transition-all">
+            <button className="px-4 py-1.5 rounded-md text-sm font-medium bg-primary text-primary-foreground shadow-lg">
               Nghe
             </button>
           </div>
@@ -205,145 +240,246 @@ ${book.description?.slice(0, 100)}...
         </div>
 
         <div className="flex-1 overflow-hidden relative">
-          <AudiobookView
-            chapterId={chapter.id}
-            chapterTitle={chapter.title}
-            paragraphs={chapter.paragraphs}
-            bookTitle={book.title}
-            bookCoverImage={book.coverUrl}
-          />
+          <ContentProtection className="h-full w-full">
+            <AudiobookView
+              chapterId={chapter.id}
+              chapterTitle={chapter.title}
+              paragraphs={chapter.paragraphs}
+              bookTitle={book.title}
+              bookCoverImage={book.coverUrl}
+              onPrevious={() => goToPreviousChapter()}
+              onNext={(shouldAutoPlay) => goToNextChapter(shouldAutoPlay)}
+              hasPrevious={!!navigation?.previous}
+              hasNext={!!navigation?.next}
+              autoPlay={autoplay}
+            />
+          </ContentProtection>
         </div>
       </div>
     );
   }
 
-  // --- RENDER READ MODE ---
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#161515] text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-600 selection:text-white pb-32 relative transition-colors duration-300">
-      {/* GLOBAL BACKGROUND FIXED */}
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground pb-32 relative transition-colors duration-300">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/main-background.jpg"
-          alt="Background Texture"
-          className="w-full h-full object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
+          alt="BG"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40"
         />
-        <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300"></div>
+        <div className="absolute inset-0 bg-background/80 dark:bg-background/90"></div>
       </div>
 
-      {book && chapter && (
-        <ReadingTimeTracker bookId={book.id} chapterId={chapter.id} />
-      )}
+      <ReadingTimeTracker bookId={book.id} chapterId={chapter.id} />
 
-      {/* 1. PROGRESS BAR (Top) */}
       <div
-        className="fixed top-0 left-0 h-1 bg-blue-600 z-[60] transition-all duration-300 ease-out"
+        className="fixed top-0 left-0 h-1 bg-primary z-[60] transition-all duration-300 ease-out"
         style={{
           width: `${savedProgress}%`,
           opacity: isControlsVisible ? 1 : 0,
         }}
       />
 
-      {/* 3. MAIN CONTENT */}
-      <main className="relative z-10 pt-20 px-4 sm:px-6 lg:px-8 mx-auto max-w-3xl transition-opacity duration-500">
-        <ChapterHeader
-          bookTitle={book.title}
-          bookSlug={book.slug}
-          chapterTitle={chapter.title}
-          chapterOrder={chapter.orderIndex}
-          viewsCount={chapter.viewsCount}
-        />
+      <main className="relative z-10 pt-20 px-4 sm:px-6 lg:px-8 mx-auto transition-all duration-500 max-w-7xl">
+        <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
+          {/* Main Content */}
+          <div
+            className={`flex-1 w-full max-w-3xl transition-all duration-500 ${showAISidebar ? "lg:mr-0" : "mx-auto"}`}
+          >
+            <ChapterHeader
+              bookTitle={book.title}
+              bookSlug={book.slug}
+              chapterTitle={chapter.title}
+              chapterOrder={chapter.orderIndex}
+              viewsCount={chapter.viewsCount}
+            />
 
-        <ChapterContent
-          paragraphs={chapter.paragraphs}
-          chapterId={chapter.id}
-          bookId={book.id}
-          bookCoverImage={book.coverUrl}
-          bookTitle={book.title}
-        />
+            <div className="mb-8">
+              <ChapterNavigation
+                hasPrevious={!!navigation?.previous}
+                hasNext={!!navigation?.next}
+                onPrevious={goToPreviousChapter}
+                onNext={goToNextChapter}
+              />
+            </div>
 
-        {/* Navigation Bottom */}
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/5 transition-colors duration-300">
-          <ChapterNavigation
-            hasPrevious={!!navigation?.previous}
-            hasNext={!!navigation?.next}
-            onPrevious={() =>
-              navigation?.previous &&
-              router.push(
-                `/books/${bookSlug}/chapters/${navigation.previous.slug}`
-              )
-            }
-            onNext={() =>
-              navigation?.next &&
-              router.push(`/books/${bookSlug}/chapters/${navigation.next.slug}`)
-            }
-          />
-        </div>
+            <div ref={contentRef}>
+              <ContentProtection>
+                <ChapterContent
+                  paragraphs={paragraphs}
+                  chapterId={chapter.id}
+                  chapterSlug={chapterSlug}
+                  bookId={book.id}
+                  bookSlug={bookSlug}
+                  bookCoverImage={book.coverUrl}
+                  bookTitle={book.title}
+                />
+              </ContentProtection>
+            </div>
 
-        <div className="mt-8">
-          <CommentSection targetId={chapter.id} targetType="chapter" />
+            <div className="mt-12 pt-8 border-t border-border">
+              <ChapterNavigation
+                hasPrevious={!!navigation?.previous}
+                hasNext={!!navigation?.next}
+                onPrevious={goToPreviousChapter}
+                onNext={goToNextChapter}
+              />
+            </div>
+
+            <div className="mt-8">
+              <CommentSection targetId={chapter.id} targetType="chapter" />
+            </div>
+          </div>
+
+          {/* Desktop AI Sidebar */}
+          {showAISidebar && !isMobile && (
+            <aside className="w-full lg:w-80 sticky top-24 shrink-0 animate-in slide-in-from-right-4 duration-300">
+              <KnowledgeSidebar bookSlug={bookSlug} chapterId={chapter.id} />
+            </aside>
+          )}
+
+          {/* Mobile AI Sidebar (Sheet) */}
+          <Sheet open={showAISidebar && isMobile} onOpenChange={setShowAISidebar}>
+            <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-3xl border-t border-border overflow-hidden flex flex-col z-50">
+              <SheetTitle className="sr-only">Trợ lý AI phân tích nội dung</SheetTitle>
+              <KnowledgeSidebar bookSlug={bookSlug} chapterId={chapter.id} />
+            </SheetContent>
+          </Sheet>
         </div>
       </main>
 
-      {/* 4. FLOATING DOCK (Thanh công cụ nổi) */}
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isControlsVisible
-          ? 'translate-y-0 opacity-100'
-          : 'translate-y-24 opacity-0'
-          }`}
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
+          isControlsVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-24 opacity-0"
+        }`}
       >
-        <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-xl border border-gray-300 dark:border-white/10 shadow-2xl transition-colors duration-300">
-          {/* Nút Mục Lục */}
+        <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-background/90 backdrop-blur-xl border border-border shadow-2xl max-w-[95vw] overflow-x-auto scrollbar-hide">
+          <DockButton
+            icon={<ChevronLeft size={20} />}
+            label="Chương trước"
+            disabled={!navigation?.previous}
+            onClick={goToPreviousChapter}
+          />
+          <DockButton
+            icon={<ChevronRight size={20} />}
+            label="Chương sau"
+            disabled={!navigation?.next}
+            onClick={goToNextChapter}
+          />
+
+          <div className="w-px h-6 bg-border mx-1 shrink-0" />
+
           <DockButton
             icon={<List size={20} />}
             label="Mục lục"
             onClick={() => setShowTOC(true)}
           />
 
-          <div className="w-px h-6 bg-gray-300 dark:bg-white/10 mx-1 transition-colors duration-300" />
+          <DockButton
+            icon={<Highlighter size={20} className="text-yellow-500" />}
+            label="Highlights"
+            onClick={() => {
+              if (!isLoggedIn) {
+                toast.info(MESSAGES.REQUIRE_LOGIN, {
+                  action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
+                });
+                return;
+              }
+              setShowHighlights(true);
+            }}
+          />
 
-          {/* Switch Mode */}
-          <div className="flex bg-gray-100 dark:bg-black/40 rounded-xl p-1 transition-colors duration-300">
+          <div className="w-px h-6 bg-border mx-1 shrink-0" />
+
+          <div className="flex bg-muted rounded-xl p-1 shrink-0">
             <button
-              onClick={() => setViewMode('read')}
-              className="p-2 rounded-lg bg-black/40 text-white shadow-sm transition-all"
+              onClick={() => setViewMode("read")}
+              className="p-2 rounded-lg bg-background text-foreground shadow-sm transition-all"
             >
               <BookOpen size={18} />
             </button>
             <button
-              onClick={() => setViewMode('listen')}
-              className="p-2 rounded-lg text-gray-500 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5 transition-all"
+              onClick={() => setViewMode("listen")}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all"
             >
               <Headphones size={18} />
             </button>
           </div>
 
-          <div className="w-px h-6 bg-gray-300 dark:bg-white/10 mx-1 transition-colors duration-300" />
+          <div className="w-px h-6 bg-border mx-1 shrink-0" />
 
-          {/* Actions */}
           <DockButton
-            icon={
-              <Bookmark
-                size={20}
-                className={
-                  isLibraryModalOpen ? 'fill-blue-600 text-blue-600' : ''
-                }
-              />
-            }
+            icon={<Library size={20} />}
             label="Lưu"
-            onClick={() => setIsLibraryModalOpen(true)}
+            onClick={() => openAddToLibrary({ bookId: book.id })}
           />
 
           <DockButton
             icon={<Share2 size={20} />}
             label="Chia sẻ"
-            onClick={() => setIsShareModalOpen(true)}
+            onClick={handleOpenShareModal}
+          />
+
+          {!isLoggedIn && (
+            <DockButton
+              icon={<Sparkles size={20} />}
+              label="Tóm tắt AI"
+              onClick={() => openChapterSummary({ chapterId: chapter.id, chapterTitle: chapter.title })}
+            />
+          )}
+
+          <DockButton
+            icon={<Bot size={20} />}
+            label="Trợ lý sách"
+            onClick={() => {
+              if (window.innerWidth < 1024) {
+                window.dispatchEvent(new CustomEvent('toggle-global-chat'));
+              }
+              setShowAISidebar(!showAISidebar);
+            }}
           />
 
           <DockButton
-            icon={<Sparkles size={20} />}
-            label="Tóm tắt AI"
-            onClick={() => setIsSummaryModalOpen(true)}
+            icon={<Bookmark size={20} />}
+            label="Bookmarks"
+            onClick={() => {
+              if (!isLoggedIn) {
+                toast.info(MESSAGES.REQUIRE_LOGIN, {
+                  action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
+                });
+                return;
+              }
+              setShowBookmarks(true);
+            }}
           />
+
+          <div className="w-px h-6 bg-border mx-1 shrink-0" />
+
+          {/* Quick: Font size A-/A+ */}
+          <div className="flex items-center bg-muted rounded-xl p-1 shrink-0 gap-0.5">
+            <button
+              onClick={() => updateSettings({ fontSize: Math.max(13, settings.fontSize - 1) })}
+              className="w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all flex items-center justify-center text-sm font-bold"
+              title="Giảm cỡ chữ"
+            >
+              A-
+            </button>
+            <span className="text-[10px] text-muted-foreground px-1 tabular-nums">{settings.fontSize}</span>
+            <button
+              onClick={() => updateSettings({ fontSize: Math.min(26, settings.fontSize + 1) })}
+              className="w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all flex items-center justify-center text-sm font-bold"
+              title="Tăng cỡ chữ"
+            >
+              A+
+            </button>
+          </div>
+
+          <div className="w-px h-6 bg-border mx-1 shrink-0" />
 
           <DockButton
             icon={<Settings size={20} />}
@@ -353,15 +489,6 @@ ${book.description?.slice(0, 100)}...
         </div>
       </div>
 
-      {/* 5. DRAWER MỤC LỤC (Slide-over) */}
-      {/* Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${showTOC ? 'opacity-100 visible' : 'opacity-0 invisible'
-          }`}
-        onClick={() => setShowTOC(false)}
-      />
-
-      {/* Drawer Panel */}
       <ChapterListDrawer
         isOpen={showTOC}
         onClose={() => setShowTOC(false)}
@@ -371,37 +498,20 @@ ${book.description?.slice(0, 100)}...
         totalChapters={totalChapters}
       />
 
-      {/* --- MODALS --- */}
-      {book && (
-        <AddToLibraryModal
-          isOpen={isLibraryModalOpen}
-          onClose={() => setIsLibraryModalOpen(false)}
-          bookId={book.id}
-        />
-      )}
+      <PersonalHighlightsDrawer
+        open={showHighlights}
+        onOpenChange={setShowHighlights}
+        bookId={book.id}
+        bookSlug={bookSlug}
+        currentChapterId={chapter.id}
+        chapters={chapters.map(c => ({ id: c.id, slug: c.slug }))}
+      />
 
-      {book && (
-        <CreatePostModal
-          isSubmitting={isCreatingPost}
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
-          onSubmit={handleSharePost}
-          defaultContent={defaultShareContent}
-          title={`Chia sẻ "${chapter.title}"`}
-          contentLabel="Nội dung bài viết"
-          contentPlaceholder="Chia sẻ cảm nghĩ của bạn về chương này..."
-          maxImages={10}
-        />
-      )}
-
-      {book && chapter && (
-        <ChapterSummaryModal
-          isOpen={isSummaryModalOpen}
-          onClose={() => setIsSummaryModalOpen(false)}
-          chapterId={chapter.id}
-          chapterTitle={chapter.title}
-        />
-      )}
+      <BookmarksDrawer
+        open={showBookmarks}
+        onOpenChange={setShowBookmarks}
+        bookId={book.id}
+      />
 
       <ReadingSettingsPanel
         isOpen={showSettings}
@@ -411,26 +521,31 @@ ${book.description?.slice(0, 100)}...
   );
 }
 
-// Sub-component nút bấm
 function DockButton({
   icon,
   label,
   onClick,
+  disabled = false,
+  className,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
+  disabled?: boolean;
+  className?: string;
 }) {
   return (
     <button
       onClick={onClick}
-      className="relative flex flex-col items-center justify-center w-12 h-12 rounded-xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all group"
+      disabled={disabled}
+      className={`relative flex flex-col shrink-0 items-center justify-center w-12 h-12 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-all group ${className || ''}`}
     >
       {icon}
-      {/* Tooltip */}
-      <span className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform px-2 py-1 bg-gray-900 dark:bg-gray-800 text-white text-[10px] rounded shadow-sm whitespace-nowrap pointer-events-none">
-        {label}
-      </span>
+      {!disabled && (
+        <span className="absolute -top-10 scale-0 group-hover:scale-100 transition-transform px-2 py-1 bg-popover text-popover-foreground text-[10px] rounded shadow-sm whitespace-nowrap pointer-events-none border border-border">
+          {label}
+        </span>
+      )}
     </button>
   );
 }

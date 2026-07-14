@@ -1,11 +1,19 @@
+import { Public } from '@/common/decorators/custom.decorator';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { RolesGuard } from '@/common/guards/roles.guard';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
   HttpCode,
   HttpStatus,
+  Ip,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Post,
   Put,
   Query,
@@ -13,18 +21,14 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { Public } from '@/common/decorators/customize';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
 
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response.dto';
 import { CreateChapterDto } from '@/presentation/chapters/dto/create-chapter.dto';
 import { FilterChapterDto } from '@/presentation/chapters/dto/filter-chapter.dto';
 import { UpdateChapterDto } from '@/presentation/chapters/dto/update-chapter.dto';
-import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 
 import { CreateChapterUseCase } from '@/application/chapters/use-cases/create-chapter/create-chapter.use-case';
 import { DeleteChapterUseCase } from '@/application/chapters/use-cases/delete-chapter/delete-chapter.use-case';
@@ -33,15 +37,28 @@ import { UpdateChapterUseCase } from '@/application/chapters/use-cases/update-ch
 
 import { CreateChapterCommand } from '@/application/chapters/use-cases/create-chapter/create-chapter.command';
 import { DeleteChapterCommand } from '@/application/chapters/use-cases/delete-chapter/delete-chapter.command';
+import { GetChapterByIdQuery } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.query';
+import { GetChapterByIdUseCase } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.use-case';
 import { GetChapterBySlugQuery } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.query';
 import { GetChapterBySlugUseCase } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
 import { GetChaptersQuery } from '@/application/chapters/use-cases/get-chapters/get-chapters.query';
 import { UpdateChapterCommand } from '@/application/chapters/use-cases/update-chapter/update-chapter.command';
-import { GetChapterByIdQuery } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.query';
-import { GetChapterByIdUseCase } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.use-case';
-import { EpubParserService } from '@/infrastructure/external/epub-parser.service';
+import { ImportEpubPreviewUseCase } from '@/application/chapters/use-cases/import-epub-preview/import-epub-preview.use-case';
+import { StartChaptersImportUseCase } from '@/application/chapters/use-cases/start-chapters-import/start-chapters-import.use-case';
+import { GetChaptersImportStatusUseCase } from '@/application/chapters/use-cases/get-chapters-import-status/get-chapters-import-status.use-case';
+import { StartChaptersImportCommand } from '@/application/chapters/use-cases/start-chapters-import/start-chapters-import.command';
+import { GetChaptersImportStatusQuery } from '@/application/chapters/use-cases/get-chapters-import-status/get-chapters-import-status.query';
+import { StartChaptersImportDto } from './dto/start-chapters-import.dto';
 
-@ApiTags('Chapters')
+import { GetChapterKnowledgeUseCase } from '@/application/chapters/use-cases/get-chapter-knowledge/get-chapter-knowledge.use-case';
+import { GetChapterKnowledgeQuery } from '@/application/chapters/use-cases/get-chapter-knowledge/get-chapter-knowledge.query';
+import { AskChapterAIUseCase } from '@/application/chapters/use-cases/ask-ai/ask-chapter-ai.use-case';
+import { AskChapterAICommand } from '@/application/chapters/use-cases/ask-ai/ask-chapter-ai.command';
+import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dto';
+import { RecordChapterViewUseCase } from '@/application/chapters/use-cases/record-chapter-view/record-chapter-view.use-case';
+import { RecordChapterViewQuery } from '@/application/chapters/use-cases/record-chapter-view/record-chapter-view.query';
+import { GeminiThrottleGuard } from '@/common/guards/gemini-throttle.guard';
+
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
   constructor(
@@ -51,26 +68,103 @@ export class ChaptersController {
     private readonly getChapterBySlugUseCase: GetChapterBySlugUseCase,
     private readonly deleteChapterUseCase: DeleteChapterUseCase,
     private readonly getChapterByIdUseCase: GetChapterByIdUseCase,
-    private readonly epubParserService: EpubParserService,
-  ) { }
+    private readonly importEpubPreviewUseCase: ImportEpubPreviewUseCase,
+    private readonly startChaptersImportUseCase: StartChaptersImportUseCase,
+    private readonly getChaptersImportStatusUseCase: GetChaptersImportStatusUseCase,
+    private readonly getChapterKnowledgeUseCase: GetChapterKnowledgeUseCase,
+    private readonly askChapterAIUseCase: AskChapterAIUseCase,
+    private readonly recordChapterViewUseCase: RecordChapterViewUseCase,
+  ) {}
 
-  /**
-   * POST /books/:bookSlug/chapters/import/preview
-   * Parse EPUB/MOBI file and return chapter preview list
-   */
+  @Get(':chapterId/knowledge')
+  async getKnowledge(
+    @Param('chapterId') chapterId: string,
+    @Query('force') force?: string,
+  ) {
+    const query = new GetChapterKnowledgeQuery(chapterId, force === 'true');
+    const result = await this.getChapterKnowledgeUseCase.execute(query);
+    return {
+      message: 'Get chapter knowledge successfully',
+      data: ChapterKnowledgeResponseDto.fromEntity(result),
+    };
+  }
+
+  @UseGuards(GeminiThrottleGuard)
+  @Post(':chapterId/ask-ai')
+  async askAI(
+    @Param('bookSlug') bookSlug: string,
+    @Param('chapterId') chapterId: string,
+    @Body('question') question: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    const result = await this.askChapterAIUseCase.execute(
+      new AskChapterAICommand(chapterId, bookSlug, userId, question),
+    );
+
+    return {
+      message: 'AI response generated successfully',
+      data: result,
+    };
+  }
+
   @Post('import/preview')
   @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(RolesGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 20 * 1024 * 1024 },
+    }),
+  )
   @HttpCode(HttpStatus.OK)
   async importPreview(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 20 * 1024 * 1024 }),
+          new FileTypeValidator({
+            fileType:
+              /^(application\/epub\+zip|application\/zip|application\/x-zip-compressed)$/,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new Error('No file uploaded');
+      throw new BadRequestException('No file uploaded');
     }
-    const chapters = await this.epubParserService.parseEpub(file.buffer, file.originalname);
-    return chapters;
+    const result = await this.importEpubPreviewUseCase.execute(
+      file.buffer,
+      file.originalname,
+    );
+    return {
+      message: 'File parsed successfully',
+      data: result,
+    };
+  }
+
+  @Post('import/start')
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async startImport(@Body() dto: StartChaptersImportDto) {
+    const command = new StartChaptersImportCommand(dto.bookId, dto.chapters);
+    const result = await this.startChaptersImportUseCase.execute(command);
+    return {
+      message: 'Import job started successfully',
+      data: result,
+    };
+  }
+
+  @Get('import/status/:jobId')
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async getImportStatus(@Param('jobId') jobId: string) {
+    const query = new GetChaptersImportStatusQuery(jobId);
+    const result = await this.getChaptersImportStatusUseCase.execute(query);
+    return {
+      message: 'Get import status successfully',
+      data: result,
+    };
   }
 
   @Public()
@@ -108,89 +202,10 @@ export class ChaptersController {
     };
   }
 
-  @Public()
   @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Get('id/:chapterId')
-  async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
-    const query = new GetChapterByIdQuery(chapterId);
-    const chapter = await this.getChapterByIdUseCase.execute(query);
-    return {
-      message: 'Get chapter successfully',
-      data: new ChapterResponseDto(chapter),
-    };
-  }
-
-  @Public()
-  @Get(':chapterSlug')
-  async getChapterBySlug(@Param('chapterSlug') chapterSlug: string, @Param('bookSlug') bookSlug: string) {
-    const query = new GetChapterBySlugQuery(chapterSlug, bookSlug);
-    const result = await this.getChapterBySlugUseCase.execute(query);
-    return {
-      message: 'Get chapter successfully',
-      data: result,
-    };
-  }
-
-  @Post()
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async create(@Body() createChapterDto: CreateChapterDto) {
-    const command = new CreateChapterCommand(
-      createChapterDto.title,
-      createChapterDto.bookId,
-      createChapterDto.paragraphs,
-      createChapterDto.slug,
-      createChapterDto.orderIndex
-    );
-
-    const chapterResult = await this.createChapterUseCase.execute(command);
-    return {
-      message: 'Tạo chương thành công',
-      data: ChapterResponseDto.fromResult(chapterResult),
-    };
-  }
-
-  @Put(':chapterId')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async update(
-    @Param('chapterId') chapterId: string,
-    @Body() updateChapterDto: UpdateChapterDto
-  ) {
-    const command = new UpdateChapterCommand(
-      chapterId,
-      updateChapterDto.title,
-      updateChapterDto.bookId,
-      updateChapterDto.paragraphs,
-      updateChapterDto.slug,
-      updateChapterDto.orderIndex
-    );
-
-    const chapterResult = await this.updateChapterUseCase.execute(command);
-    return {
-      message: 'Cập nhật chương thành công',
-      data: ChapterResponseDto.fromResult(chapterResult),
-    };
-  }
-
-  @Delete(':chapterId')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async remove(@Param('chapterId') chapterId: string) {
-    const command = new DeleteChapterCommand(chapterId);
-    await this.deleteChapterUseCase.execute(command);
-    return {
-      message: 'Xóa chương thành công',
-    };
-  }
-
-  @Get()
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async getAllChaptersAdmin(
-    @Query() filter: FilterChapterDto,
-  ) {
+  @UseGuards(RolesGuard)
+  @Get('admin/list')
+  async getAllChaptersAdmin(@Query() filter: FilterChapterDto) {
     const query = new GetChaptersQuery(
       filter.page,
       filter.limit,
@@ -198,10 +213,14 @@ export class ChaptersController {
       filter.bookId,
       undefined,
       filter.orderIndex,
-      filter.minWordCount,
-      filter.maxWordCount,
-      filter.sortBy as any,
-      filter.order as any
+      filter.sortBy as
+        | 'createdAt'
+        | 'updatedAt'
+        | 'title'
+        | 'orderIndex'
+        | 'viewsCount'
+        | undefined,
+      filter.order as 'asc' | 'desc' | undefined,
     );
 
     const result = await this.getChaptersUseCase.execute(query);
@@ -213,11 +232,111 @@ export class ChaptersController {
       };
     }
 
-    const paginatedResult = result as any;
+    const paginatedResult = result;
     return {
       message: 'Get all chapters successfully',
       data: ChapterResponseDto.fromArray(paginatedResult.data),
       meta: paginatedResult.meta,
+    };
+  }
+
+  @Get('id/:chapterId')
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
+    const query = new GetChapterByIdQuery(chapterId);
+    const chapter = await this.getChapterByIdUseCase.execute(query);
+    return {
+      message: 'Get chapter successfully',
+      data: new ChapterResponseDto(chapter),
+    };
+  }
+
+  @Public()
+  @Get(':chapterSlug')
+  async getChapterBySlug(
+    @Param('chapterSlug') chapterSlug: string,
+    @Param('bookSlug') bookSlug: string,
+  ) {
+    const query = new GetChapterBySlugQuery(chapterSlug, bookSlug);
+    const result = await this.getChapterBySlugUseCase.execute(query);
+    return {
+      message: 'Get chapter successfully',
+      data: result,
+    };
+  }
+
+  @Public()
+  @Post(':chapterSlug/view')
+  @HttpCode(HttpStatus.OK)
+  async recordChapterView(
+    @Param('chapterSlug') chapterSlug: string,
+    @Param('bookSlug') bookSlug: string,
+    @CurrentUser('id') userId?: string,
+    @Ip() clientIp?: string,
+  ) {
+    const query = new RecordChapterViewQuery(
+      bookSlug,
+      chapterSlug,
+      userId,
+      clientIp,
+    );
+    await this.recordChapterViewUseCase.execute(query);
+    return {
+      message: 'View recorded successfully',
+    };
+  }
+
+  @Post()
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async create(@Body() createChapterDto: CreateChapterDto) {
+    const command = new CreateChapterCommand(
+      createChapterDto.title,
+      createChapterDto.bookId,
+      createChapterDto.paragraphs,
+      createChapterDto.slug,
+      createChapterDto.orderIndex,
+    );
+
+    const chapterResult = await this.createChapterUseCase.execute(command);
+    return {
+      message: 'Tạo chương thành công',
+      data: ChapterResponseDto.fromResult(chapterResult),
+    };
+  }
+
+  @Put(':chapterId')
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async update(
+    @Param('chapterId') chapterId: string,
+    @Body() updateChapterDto: UpdateChapterDto,
+  ) {
+    const command = new UpdateChapterCommand(
+      chapterId,
+      updateChapterDto.title,
+      updateChapterDto.bookId,
+      updateChapterDto.paragraphs,
+      updateChapterDto.slug,
+      updateChapterDto.orderIndex,
+    );
+
+    const chapterResult = await this.updateChapterUseCase.execute(command);
+    return {
+      message: 'Cập nhật chương thành công',
+      data: ChapterResponseDto.fromResult(chapterResult),
+    };
+  }
+
+  @Delete(':chapterId')
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async remove(@Param('chapterId') chapterId: string) {
+    const command = new DeleteChapterCommand(chapterId);
+    await this.deleteChapterUseCase.execute(command);
+    return {
+      message: 'Xóa chương thành công',
     };
   }
 }

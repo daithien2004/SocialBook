@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
 
-import { BaseSchema } from '../../../shared/schemas/base.schema';
+import { BaseSchema } from '@/shared/schemas/base.schema';
 
 export type ProgressDocument = HydratedDocument<Progress>;
 
@@ -23,7 +23,11 @@ export class Progress extends BaseSchema {
   @Prop({ default: 0 })
   timeSpent: number;
 
-  @Prop({ type: String, enum: ReadingStatus, default: ReadingStatus.READING })
+  @Prop({
+    type: String,
+    enum: ChapterStatus,
+    default: ChapterStatus.READING,
+  })
   status: string;
 
   @Prop({ default: 0 })
@@ -43,6 +47,7 @@ export const ProgressSchema = SchemaFactory.createForClass(Progress);
 
 ProgressSchema.index({ userId: 1, chapterId: 1 }, { unique: true });
 
+ProgressSchema.index({ userId: 1, bookId: 1 });
 ProgressSchema.index({ lastReadAt: 1 });
 ProgressSchema.index({ userId: 1, lastReadAt: -1 });
 ProgressSchema.index({ bookId: 1, lastReadAt: -1 });

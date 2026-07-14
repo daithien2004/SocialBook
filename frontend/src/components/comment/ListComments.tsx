@@ -1,117 +1,86 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import {
-  CommentItem,
-  useLazyGetCommentsByTargetQuery,
-} from '@/features/comments/api/commentApi';
+import React from 'react';
+import { useCommentList } from '@/features/comments/hooks/useCommentList';
 import CommentItemCard from '@/components/comment/CommentItem';
 
 interface ListCommentsProps {
-  targetId: string;
-  isCommentOpen: boolean;
-  parentId: string | null;
-  targetType: string;
-  theme?: 'light' | 'dark';
-  className?: string;
+    targetId: string;
+    isCommentOpen: boolean;
+    parentId: string | null;
+    targetType: string;
+    className?: string;
+    depth?: number;
+    onReplyAdded?: () => void;
+    onReplyRemoved?: () => void;
 }
 
 const ListComments: React.FC<ListCommentsProps> = (props) => {
-  const {
-    isCommentOpen,
-    parentId,
-    targetId,
-    targetType,
-    theme = 'light', // Mặc định là sáng để tương thích ngược
-    className = '',
-  } = props;
-
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [allComments, setAllComments] = useState<CommentItem[]>([]);
-
-  const [
-    fetchComments,
-    { data, isLoading, isError, isFetching, isUninitialized },
-  ] = useLazyGetCommentsByTargetQuery();
-  const isFirstLoading = isLoading || (isFetching && isUninitialized);
-
-  // --- Logic Style động theo Theme ---
-  const isDark = theme === 'dark';
-  const textClass = isDark ? 'text-neutral-400' : 'text-gray-500';
-  const errorClass = isDark ? 'text-red-400' : 'text-red-500';
-  const linkClass = isDark
-    ? 'text-blue-400 hover:text-blue-300'
-    : 'text-indigo-600 hover:text-indigo-700';
-
-  useEffect(() => {
-    if (!isCommentOpen) return;
-    if (isCommentOpen && targetId) {
-      setAllComments([]);
-      setCursor(undefined);
-      fetchComments({ targetId: targetId, parentId, limit: 20 });
-    }
-  }, [isCommentOpen, targetId, parentId, fetchComments]);
-
-  useEffect(() => {
-    if (data?.comments) {
-      setAllComments(data.comments);
-      setCursor(data.nextCursor ?? undefined);
-    }
-  }, [data]);
-
-  const handleLoadMore = () => {
-    if (cursor && targetId) {
-      fetchComments({
-        targetId: targetId,
+    const {
+        isCommentOpen,
         parentId,
-        cursor,
-        limit: 20,
-      });
-    }
-  };
+        targetId,
+        targetType,
+        className = '',
+        depth = 1,
+        onReplyAdded,
+        onReplyRemoved,
+    } = props;
 
-  return (
-    <div className={`flex-1 overflow-y-auto px-2 space-y-1 ${className}`}>
-      {isFirstLoading && (
-        <p className={`text-sm ${textClass} animate-pulse`}>
-          Đang tải bình luận...
-        </p>
-      )}
+    const {
+        comments,
+        isLoading,
+        isError,
+        isFetching,
+        hasMore,
+        loadMore,
+    } = useCommentList({ targetId, isCommentOpen, parentId });
 
-      {isError && (
-        <p className={`text-sm ${errorClass}`}>Có lỗi khi tải bình luận.</p>
-      )}
+    return (
+        <div className={`flex-1 overflow-y-auto px-2 space-y-1 ${className}`}>
+            {isLoading && (
+                <p className="text-sm text-muted-foreground animate-pulse">
+                    Đang tải bình luận...
+                </p>
+            )}
 
-      {!isFirstLoading && !isError && (
-        <>
-          {allComments.length ? (
-            allComments.map((c) => (
-              <CommentItemCard
-                key={c.id}
-                targetType={targetType}
-                comment={c}
-                targetId={targetId}
-              />
-            ))
-          ) : (
-            <p className={`text-sm ${textClass}`}>Chưa có bình luận nào.</p>
-          )}
+            {isError && (
+                <p className="text-sm text-destructive">Có lỗi khi tải bình luận.</p>
+            )}
 
-          {data?.hasMore && (
-            <div className="flex justify-start mt-3">
-              <button
-                disabled={isFetching || !cursor}
-                onClick={handleLoadMore}
-                className={`text-xs font-semibold disabled:opacity-50 cursor-pointer transition-colors ${linkClass}`}
-              >
-                {isFetching ? 'Đang tải thêm...' : 'Xem thêm bình luận'}
-              </button>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+            {!isLoading && !isError && (
+                <>
+                    {comments.length ? (
+                        comments.map((c) => (
+                            <CommentItemCard
+                                key={c.id}
+                                targetType={targetType}
+                                comment={c}
+                                targetId={targetId}
+                                depth={depth}
+                                onReplyAdded={onReplyAdded}
+                                onReplyRemoved={onReplyRemoved}
+                            />
+                        ))
+                    ) : (
+                        <p className="text-sm text-muted-foreground">Chưa có bình luận nào.</p>
+                    )}
+
+                    {hasMore && (
+                        <div className="flex justify-start mt-3">
+                            <button
+                                disabled={isFetching}
+                                onClick={loadMore}
+                                className="text-xs font-semibold disabled:opacity-50 cursor-pointer transition-colors text-primary hover:text-primary/80"
+                            >
+                                {isFetching ? 'Đang tải thêm...' : 'Xem thêm bình luận'}
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
 };
 
 export default ListComments;

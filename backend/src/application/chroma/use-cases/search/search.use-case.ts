@@ -6,41 +6,41 @@ import { SearchCommand } from './search.command';
 
 @Injectable()
 export class SearchUseCase {
-    private readonly logger = new Logger(SearchUseCase.name);
+  private readonly logger = new Logger(SearchUseCase.name);
 
-    constructor(
-        private readonly vectorRepository: IVectorRepository,
-        private readonly idGenerator: IIdGenerator,
-    ) {}
+  constructor(
+    private readonly vectorRepository: IVectorRepository,
+    private readonly idGenerator: IIdGenerator,
+  ) {}
 
-    async execute(command: SearchCommand) {
-        try {
-            // Create search query
-            const searchQuery = SearchQuery.create({
-                id: this.idGenerator.generate(),
-                query: command.query,
-                embedding: command.embedding || [],
-                contentType: command.contentType,
-                filters: command.filters,
-                limit: command.limit,
-                threshold: command.threshold
-            });
+  async execute(command: SearchCommand) {
+    try {
+      // Create search query
+      const searchQuery = SearchQuery.create({
+        id: this.idGenerator.generate(),
+        query: command.query,
+        embedding: command.embedding || [],
+        contentType: command.contentType,
+        filters: command.filters,
+        limit: command.limit,
+        threshold: command.threshold,
+      });
 
-            // Perform search
-            const results = await this.vectorRepository.search(searchQuery);
+      // Perform search
+      const results = await this.vectorRepository.search(searchQuery);
 
-            this.logger.log(`Search completed: ${command.query} -> ${results.length} results`);
+      this.logger.log(
+        `Search completed: ${command.query} -> ${results.length} results`,
+      );
 
-            return {
-                query: command.query,
-                results,
-                total: results.length
-            };
-        } catch (error) {
-            this.logger.error(`Search failed for query: ${command.query}`, error);
-            throw error;
-        }
+      return {
+        query: command.query,
+        results,
+        total: results.length,
+      };
+    } catch (error) {
+      this.logger.error(`Search failed for query: ${command.query}`, error);
+      throw error;
     }
+  }
 }
-
-

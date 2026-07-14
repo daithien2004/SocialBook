@@ -4,144 +4,168 @@ import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
 import { FollowStatus } from '../value-objects/follow-status.vo';
 
+export interface FollowProps {
+  userId: UserId;
+  targetId: TargetId;
+  status: FollowStatus;
+  isDeleted: boolean;
+}
+
 export class Follow extends Entity<FollowId> {
-    private constructor(
-        id: FollowId,
-        private _userId: UserId,
-        private _targetId: TargetId,
-        private _status: FollowStatus,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
-        super(id, createdAt, updatedAt);
+  private _props: FollowProps;
+
+  private constructor(
+    id: FollowId,
+    props: FollowProps,
+    createdAt?: Date,
+    updatedAt?: Date,
+  ) {
+    super(id, createdAt, updatedAt);
+    this._props = props;
+  }
+
+  static create(props: {
+    id: FollowId;
+    userId: string;
+    targetId: string;
+    status?: boolean;
+    isDeleted?: boolean;
+  }): Follow {
+    const userId = UserId.create(props.userId);
+    const targetId = TargetId.create(props.targetId);
+    const status =
+      props.status !== undefined
+        ? FollowStatus.create(props.status)
+        : FollowStatus.active();
+
+    if (userId.getValue() === targetId.getValue()) {
+      throw new Error('User cannot follow themselves');
     }
 
-    static create(props: {
-        id: FollowId;
-        userId: string;
-        targetId: string;
-        status?: boolean;
-    }): Follow {
-        const userId = UserId.create(props.userId);
-        const targetId = TargetId.create(props.targetId);
-        const status = props.status !== undefined ? FollowStatus.create(props.status) : FollowStatus.active();
+    return new Follow(props.id, {
+      userId,
+      targetId,
+      status,
+      isDeleted: props.isDeleted ?? !status.isActive(),
+    });
+  }
 
-        if (userId.getValue() === targetId.getValue()) {
-            throw new Error('User cannot follow themselves');
-        }
+  static reconstitute(props: {
+    id: string;
+    userId: string;
+    targetId: string;
+    status: boolean;
+    isDeleted: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Follow {
+    return new Follow(
+      FollowId.create(props.id),
+      {
+        userId: UserId.create(props.userId),
+        targetId: TargetId.create(props.targetId),
+        status: FollowStatus.create(props.status),
+        isDeleted: props.isDeleted,
+      },
+      props.createdAt,
+      props.updatedAt,
+    );
+  }
 
-        return new Follow(
-            props.id,
-            userId,
-            targetId,
-            status
-        );
+  // Getters
+  get userId(): UserId {
+    return this._props.userId;
+  }
+  get targetId(): TargetId {
+    return this._props.targetId;
+  }
+  get status(): FollowStatus {
+    return this._props.status;
+  }
+  get isDeleted(): boolean {
+    return this._props.isDeleted;
+  }
+
+  // Business methods
+  activate(): void {
+    this._props.status = FollowStatus.active();
+    this._props.isDeleted = false;
+    this.markAsUpdated();
+  }
+
+  deactivate(): void {
+    this._props.status = FollowStatus.inactive();
+    this._props.isDeleted = true;
+    this.markAsUpdated();
+  }
+
+  toggleStatus(): void {
+    this._props.status = this._props.status.toggle();
+    this._props.isDeleted = !this._props.status.isActive();
+    this.markAsUpdated();
+  }
+
+  updateTarget(newTargetId: string): void {
+    const targetId = TargetId.create(newTargetId);
+
+    if (this._props.userId.getValue() === targetId.getValue()) {
+      throw new Error('User cannot follow themselves');
     }
 
-    static reconstitute(props: {
-        id: string;
-        userId: string;
-        targetId: string;
-        status: boolean;
-        createdAt: Date;
-        updatedAt: Date;
-    }): Follow {
-        return new Follow(
-            FollowId.create(props.id),
-            UserId.create(props.userId),
-            TargetId.create(props.targetId),
-            FollowStatus.create(props.status),
-            props.createdAt,
-            props.updatedAt
-        );
-    }
+    this._props.targetId = targetId;
+    this.markAsUpdated();
+  }
 
-    // Getters
-    get userId(): UserId {
-        return this._userId;
-    }
+  isActive(): boolean {
+    return this._props.status.isActive();
+  }
 
-    get targetId(): TargetId {
-        return this._targetId;
-    }
+  isInactive(): boolean {
+    return this._props.status.isInactive();
+  }
 
-    get status(): FollowStatus {
-        return this._status;
-    }
+  canBeModified(userId: string): boolean {
+    return this._props.userId.getValue() === userId;
+  }
 
-    // Business methods
-    activate(): void {
-        this._status = FollowStatus.active();
-        this.markAsUpdated();
-    }
+  // Static methods for common operations
+  static createFollow(id: FollowId, userId: string, targetId: string): Follow {
+    return Follow.create({
+      id,
+      userId,
+      targetId,
+      status: true,
+    });
+  }
 
-    deactivate(): void {
-        this._status = FollowStatus.inactive();
-        this.markAsUpdated();
-    }
+  static createUnfollow(
+    id: FollowId,
+    userId: string,
+    targetId: string,
+  ): Follow {
+    return Follow.create({
+      id,
+      userId,
+      targetId,
+      status: false,
+    });
+  }
 
-    toggleStatus(): void {
-        this._status = this._status.toggle();
-        this.markAsUpdated();
-    }
+  // Validation methods
+  isValid(): boolean {
+    return this._props.userId.getValue() !== this._props.targetId.getValue();
+  }
 
-    updateTarget(newTargetId: string): void {
-        const targetId = TargetId.create(newTargetId);
-        
-        if (this._userId.getValue() === targetId.getValue()) {
-            throw new Error('User cannot follow themselves');
-        }
-
-        this._targetId = targetId;
-        this.markAsUpdated();
-    }
-
-    isActive(): boolean {
-        return this._status.isActive();
-    }
-
-    isInactive(): boolean {
-        return this._status.isInactive();
-    }
-
-    canBeModified(userId: string): boolean {
-        return this._userId.getValue() === userId;
-    }
-
-    // Static methods for common operations
-    static createFollow(id: FollowId, userId: string, targetId: string): Follow {
-        return Follow.create({
-            id,
-            userId,
-            targetId,
-            status: true
-        });
-    }
-
-    static createUnfollow(id: FollowId, userId: string, targetId: string): Follow {
-        return Follow.create({
-            id,
-            userId,
-            targetId,
-            status: false
-        });
-    }
-
-    // Validation methods
-    isValid(): boolean {
-        return this._userId.getValue() !== this._targetId.getValue();
-    }
-
-    // Helper methods
-    getFollowInfo() {
-        return {
-            id: this.id.toString(),
-            userId: this._userId.toString(),
-            targetId: this._targetId.toString(),
-            status: this._status.getValue(),
-            isActive: this.isActive(),
-            createdAt: this.createdAt,
-            updatedAt: this.updatedAt
-        };
-    }
+  // Helper methods
+  getFollowInfo() {
+    return {
+      id: this.id.toString(),
+      userId: this._props.userId.toString(),
+      targetId: this._props.targetId.toString(),
+      status: this._props.status.getValue(),
+      isActive: this.isActive(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
+  }
 }

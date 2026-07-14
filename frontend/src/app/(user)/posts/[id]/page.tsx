@@ -1,64 +1,80 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useParams } from 'next/navigation';
-import { useGetPostByIdQuery } from '@/features/posts/api/postApi';
+import { useEffect } from 'react';
 import ModalPostComment from '@/components/post/ModalPostComment';
-import {useGetCountQuery, useGetStatusQuery} from "@/features/likes/api/likeApi";
-import {useGetCommentCountQuery} from "@/features/comments/api/commentApi";
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useGetPostByIdQuery } from '@/features/posts/api/postApi';
+import { usePostToggleLikeMutation } from '@/features/likes/api/likeApi';
+import { useParams, useRouter } from 'next/navigation';
+import { useModalStore } from '@/store/useModalStore';
+import { useAppAuth } from '@/features/auth/hooks';
 
 export default function PostModalOverlay() {
     const router = useRouter();
     const { id } = useParams<{ id: string }>();
-    const { data: likeCount, isLoading: isLikeLoading } = useGetCountQuery({
-        targetId: id,
-        targetType: 'post',
+    const { openPostComment, isPostCommentOpen } = useModalStore();
+
+    const { user, isLoading: isAuthLoading } = useAppAuth();
+    const { data: post, isLoading } = useGetPostByIdQuery({ id, userId: user?.id }, {
+        skip: isAuthLoading,
     });
+    const [toggleLike] = usePostToggleLikeMutation();
 
-    const { isAuthenticated } = useAppAuth();
+    useEffect(() => {
+        if (post && !isPostCommentOpen) {
+            openPostComment({
+                post,
+                handleLike: async (postId: string) => {
+                    try {
+                        await toggleLike({ targetId: postId, targetType: 'post' }).unwrap();
+                    } catch (error) {
+                    }
+                },
+                likeStatus: post.likedByCurrentUser,
+                likeCount: post.totalLikes,
+            });
+        }
+    }, [post, openPostComment, isPostCommentOpen, toggleLike]);
 
-    const { data: likeStatus } = useGetStatusQuery({
-        targetId: id,
-        targetType: 'post',
-    }, {
-         skip: !isAuthenticated,
-    });
+    const showLoading = isAuthLoading || isLoading;
 
-    const { data: commentCount } = useGetCommentCountQuery({
-        targetId: id,
-        targetType: 'post',
-    });
-    // Gọi API để lấy thông tin bài viết
-    const { data: post, isLoading } = useGetPostByIdQuery(id);
+    useEffect(() => {
+        if (!showLoading && post && !isPostCommentOpen) {
+            router.push('/posts');
+        }
+    }, [isPostCommentOpen, showLoading, post, router]);
 
-    if (isLoading || !post) {
+    if (showLoading) {
         return (
-            <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                <div className="text-white">Đang tải bài viết...</div>
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
+                    <div className="text-white font-medium">Đang tải bài viết...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!post) {
+        return (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-card p-8 rounded-2xl shadow-xl max-w-sm w-full text-center space-y-4">
+                    <div className="text-4xl">😕</div>
+                    <h2 className="text-xl font-bold">Không tìm thấy bài viết</h2>
+                    <p className="text-muted-foreground">Bài viết này có thể đã bị xóa hoặc không tồn tại.</p>
+                    <button
+                        onClick={() => router.push('/posts')}
+                        className="w-full py-2 bg-sky-600 text-white rounded-xl font-bold hover:bg-sky-700 transition-colors"
+                    >
+                        Quay lại Bảng tin
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div
-            className="fixed inset-0 z-[9999]  backdrop-blur-sm
-                 flex items-center justify-center"
-            onClick={() => router.push("/posts")}
-        >
-            <div
-                onClick={(e) => e.stopPropagation()}
-            >
-                <ModalPostComment
-                    post={post}
-                    isCommentOpen={true}
-                    closeCommentModal={() => router.push("/posts")}
-                    handleLike={() => {}}
-                    commentCount={commentCount?.count}
-                    likeStatus={likeStatus?.isLiked}
-                    likeCount={likeCount?.count}
-                />
-            </div>
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+            <ModalPostComment />
         </div>
     );
 }

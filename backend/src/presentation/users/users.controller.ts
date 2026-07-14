@@ -1,64 +1,64 @@
 import {
   Body,
   Controller,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   Patch,
   Post,
   Put,
   Query,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { Public } from '@/common/decorators/customize';
+import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-import { CreateUserDto, UpdateUserOverviewDto } from '@/presentation/users/dto/user.dto';
 import { FilterUserDto } from '@/presentation/users/dto/filter-user.dto';
 import { UpdateReadingPreferencesDto } from '@/presentation/users/dto/update-reading-preferences.dto';
+import {
+  CreateUserDto,
+  UpdateUserOverviewDto,
+} from '@/presentation/users/dto/user.dto';
 import { UserResponseDto } from '@/presentation/users/dto/user.response.dto';
 
-import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
-import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
-import { GetUsersUseCase } from '@/application/users/use-cases/get-users/get-users.use-case';
-import { GetUsersQuery } from '@/application/users/use-cases/get-users/get-users.query';
-import { GetUserByIdUseCase } from '@/application/users/use-cases/get-user-by-id/get-user-by-id.use-case';
-import { UpdateUserUseCase } from '@/application/users/use-cases/update-user/update-user.use-case';
-import { UpdateUserCommand } from '@/application/users/use-cases/update-user/update-user.command';
-import { DeleteUserUseCase } from '@/application/users/use-cases/delete-user/delete-user.use-case';
-import { DeleteUserCommand } from '@/application/users/use-cases/delete-user/delete-user.command';
-import { ToggleBanUseCase } from '@/application/users/use-cases/toggle-ban/toggle-ban.use-case';
-import { ToggleBanCommand } from '@/application/users/use-cases/toggle-ban/toggle-ban.command';
-import { GetUserProfileUseCase } from '@/application/users/use-cases/get-user-profile/get-user-profile.use-case';
-import { GetUserProfileQuery } from '@/application/users/use-cases/get-user-profile/get-user-profile.query';
-import { CheckUserExistUseCase } from '@/application/users/use-cases/check-user-exist/check-user-exist.use-case';
 import { CheckUserExistQuery } from '@/application/users/use-cases/check-user-exist/check-user-exist.query';
-import { UpdateUserImageUseCase } from '@/application/users/use-cases/update-user-image/update-user-image.use-case';
-import { UpdateUserImageCommand } from '@/application/users/use-cases/update-user-image/update-user-image.command';
-import { GetReadingPreferencesUseCase } from '@/application/users/use-cases/get-reading-preferences/get-reading-preferences.use-case';
+import { CheckUserExistUseCase } from '@/application/users/use-cases/check-user-exist/check-user-exist.use-case';
+import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
+import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
+import { DeleteUserUseCase } from '@/application/users/use-cases/delete-user/delete-user.use-case';
 import { GetReadingPreferencesQuery } from '@/application/users/use-cases/get-reading-preferences/get-reading-preferences.query';
-import { UpdateReadingPreferencesUseCase } from '@/application/users/use-cases/update-reading-preferences/update-reading-preferences.use-case';
-import { UpdateReadingPreferencesCommand } from '@/application/users/use-cases/update-reading-preferences/update-reading-preferences.command';
-import { SearchUsersUseCase } from '@/application/users/use-cases/search-users/search-users.use-case';
+import { GetReadingPreferencesUseCase } from '@/application/users/use-cases/get-reading-preferences/get-reading-preferences.use-case';
+import { GetUserByIdUseCase } from '@/application/users/use-cases/get-user-by-id/get-user-by-id.use-case';
+import { GetUserProfileQuery } from '@/application/users/use-cases/get-user-profile/get-user-profile.query';
+import { GetUserProfileUseCase } from '@/application/users/use-cases/get-user-profile/get-user-profile.use-case';
+import { GetUsersQuery } from '@/application/users/use-cases/get-users/get-users.query';
+import { GetUsersUseCase } from '@/application/users/use-cases/get-users/get-users.use-case';
 import { SearchUsersQuery } from '@/application/users/use-cases/search-users/search-users.query';
+import { SearchUsersUseCase } from '@/application/users/use-cases/search-users/search-users.use-case';
+import { ToggleBanCommand } from '@/application/users/use-cases/toggle-ban/toggle-ban.command';
+import { ToggleBanUseCase } from '@/application/users/use-cases/toggle-ban/toggle-ban.use-case';
+import { UpdateReadingPreferencesCommand } from '@/application/users/use-cases/update-reading-preferences/update-reading-preferences.command';
+import { UpdateReadingPreferencesUseCase } from '@/application/users/use-cases/update-reading-preferences/update-reading-preferences.use-case';
+import { UpdateUserImageCommand } from '@/application/users/use-cases/update-user-image/update-user-image.command';
+import { UpdateUserImageUseCase } from '@/application/users/use-cases/update-user-image/update-user-image.use-case';
+import { UpdateUserCommand } from '@/application/users/use-cases/update-user/update-user.command';
+import { UpdateUserUseCase } from '@/application/users/use-cases/update-user/update-user.use-case';
 
-@ApiTags('Users')
-@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    private readonly getUserByIdUseCase: GetUserByIdUseCase, // Not used directly in this controller yet?
+
+    private readonly getUserByIdUseCase: GetUserByIdUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly toggleBanUseCase: ToggleBanUseCase,
@@ -67,8 +67,8 @@ export class UsersController {
     private readonly updateUserImageUseCase: UpdateUserImageUseCase,
     private readonly getReadingPreferencesUseCase: GetReadingPreferencesUseCase,
     private readonly updateReadingPreferencesUseCase: UpdateReadingPreferencesUseCase,
-    private readonly searchUsersUseCase: SearchUsersUseCase
-  ) { }
+    private readonly searchUsersUseCase: SearchUsersUseCase,
+  ) {}
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
@@ -79,7 +79,7 @@ export class UsersController {
       createUserDto.roleId,
       createUserDto.image,
       createUserDto.provider,
-      createUserDto.providerId
+      createUserDto.providerId,
     );
     const user = await this.createUserUseCase.execute(command);
     return {
@@ -90,51 +90,47 @@ export class UsersController {
 
   @Get('admin')
   @Roles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async findAllAdmin(
-    @Query() filter: FilterUserDto,
-  ) {
+  @UseGuards(RolesGuard)
+  async findAllAdmin(@Query() filter: FilterUserDto) {
     const getUsersQuery = new GetUsersQuery(
-      filter.page,
-      filter.limit,
+      filter.actualPage,
+      filter.actualLimit,
       filter.username,
       filter.email,
       filter.roleId,
       filter.isBanned,
-      filter.isVerified
+      filter.isVerified,
     );
     const result = await this.getUsersUseCase.execute(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map(user => new UserResponseDto(user)),
+      data: result.data.map((user) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
 
   @Public()
   @Get()
-  async findAll(
-    @Query() filter: FilterUserDto,
-  ) {
+  async findAll(@Query() filter: FilterUserDto) {
     const getUsersQuery = new GetUsersQuery(
-      filter.page,
-      filter.limit,
+      filter.actualPage,
+      filter.actualLimit,
       filter.username,
       filter.email,
       filter.roleId,
       undefined,
-      undefined
+      undefined,
     );
     const result = await this.getUsersUseCase.execute(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map(user => new UserResponseDto(user)),
+      data: result.data.map((user) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
 
   @Patch(':id/ban')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
   async toggleBan(@Param('id') id: string) {
     const command = new ToggleBanCommand(id);
@@ -169,15 +165,15 @@ export class UsersController {
 
   @Patch('me/overview')
   async updateMyProfileOverview(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Body() dto: UpdateUserOverviewDto,
   ) {
     const command = new UpdateUserCommand(
-      req.user.id,
+      userId,
       dto.username,
       dto.bio,
       dto.location,
-      dto.website
+      dto.website,
     );
     const user = await this.updateUserUseCase.execute(command);
     return {
@@ -187,35 +183,36 @@ export class UsersController {
   }
 
   @Patch('me/avatar')
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-      required: ['file']
-    },
-  })
-  @UseInterceptors(FileInterceptor('file')) // field name = "file"
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async updateMyAvatar(
-    @Req() req: Request & { user: { id: string } },
-    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser('id') userId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({
+            fileType: /^(image\/jpeg|image\/png|image\/webp|image\/avif)$/,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
   ) {
-    const command = new UpdateUserImageCommand(req.user.id);
+    const command = new UpdateUserImageCommand(userId);
     const result = await this.updateUserImageUseCase.execute(command, file);
     return {
       message: 'Update avatar successfully',
-      data: result
+      data: result,
     };
   }
 
   @Get('me/reading-preferences')
-  async getMyReadingPreferences(@Req() req: Request & { user: { id: string } }) {
-    const query = new GetReadingPreferencesQuery(req.user.id);
+  async getMyReadingPreferences(@CurrentUser('id') userId: string) {
+    const query = new GetReadingPreferencesQuery(userId);
     const data = await this.getReadingPreferencesUseCase.execute(query);
     return {
       message: 'Get reading preferences successfully',
@@ -225,11 +222,11 @@ export class UsersController {
 
   @Put('me/reading-preferences')
   async updateMyReadingPreferences(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Body() dto: UpdateReadingPreferencesDto,
   ) {
     const command = new UpdateReadingPreferencesCommand(
-      req.user.id,
+      userId,
       dto.theme,
       dto.fontSize,
       dto.fontFamily,
@@ -239,14 +236,14 @@ export class UsersController {
       dto.textColor,
       dto.textAlign,
       dto.marginWidth,
+      dto.warmth,
+      dto.brightness,
       dto.preferredGenres,
-      dto.dailyReadingGoal
+      dto.dailyReadingGoal,
     );
 
-    
     const user = await this.updateReadingPreferencesUseCase.execute(command);
 
-    // Since we need to return readingPreferences according to previous code
     return {
       message: 'Reading preferences updated successfully',
       data: user.readingPreferences,
@@ -255,18 +252,15 @@ export class UsersController {
 
   @Public()
   @Get('search')
-  async searchUsers(
-    @Query() filter: FilterUserDto,
-  ) {
+  async searchUsers(@Query() filter: FilterUserDto) {
     const keyword = filter.username || filter.email || '';
     const query = new SearchUsersQuery(keyword, filter.page, filter.limit);
     const result = await this.searchUsersUseCase.execute(query);
 
     return {
       message: 'Search users successfully',
-      data: result.data.map(user => new UserResponseDto(user)),
+      data: result.data.map((user) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
-
 }

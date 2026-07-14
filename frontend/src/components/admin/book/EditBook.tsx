@@ -1,6 +1,7 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useState, useCallback, useEffect } from 'react';
+import Image from 'next/image';
+import { ChangeEvent, FormEvent, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useUpdateBookMutation, useGetBookByIdQuery } from '@/features/books/api/bookApi';
 import { useGetAuthorsQuery, useGetGenresQuery } from '@/features/admin/api/bookRelationApi';
+import type { Author, Genre } from '@/features/books/types/book.interface';
 import { getErrorMessage } from '@/lib/utils';
 
 const DEFAULT_COVER = '/abstract-book-pattern.png';
@@ -37,14 +39,17 @@ interface EditBookProps {
     bookId: string;
 }
 
+const EMPTY_AUTHORS: Author[] = [];
+const EMPTY_GENRES: Genre[] = [];
+
 export default function EditBook({ bookId }: EditBookProps) {
     const router = useRouter();
 
     // Fetch existing book data
     const { data: bookData, isLoading: loadingBook, error: bookError } = useGetBookByIdQuery(bookId);
     const [updateBook, { isLoading: isUpdating }] = useUpdateBookMutation();
-    const { data: authors = [], isLoading: loadingAuthors } = useGetAuthorsQuery();
-    const { data: genres = [], isLoading: loadingGenres } = useGetGenresQuery();
+    const { data: authors = EMPTY_AUTHORS, isLoading: loadingAuthors } = useGetAuthorsQuery();
+    const { data: genres = EMPTY_GENRES, isLoading: loadingGenres } = useGetGenresQuery();
 
     const [formData, setFormData] = useState<FormData>({
         title: '',
@@ -63,25 +68,24 @@ export default function EditBook({ bookId }: EditBookProps) {
         type: 'success' | 'error';
         text: string;
     } | null>(null);
+    const [bookDataSnapshot, setBookDataSnapshot] = useState<typeof bookData>(undefined);
 
-    // Populate form when book data loads
-    useEffect(() => {
-        if (bookData) {
-            setFormData({
-                title: bookData.title || '',
-                authorId: bookData.authorId?.id || '',
-                genres: bookData.genres?.map((g: any) => g.id) || [],
-                description: bookData.description || '',
-                publishedYear: bookData.publishedYear || new Date().getFullYear().toString(),
-                status: bookData.status || 'draft',
-                tagsInput: bookData.tags?.join(', ') || '',
-            });
+    if (bookData && bookData !== bookDataSnapshot) {
+        setBookDataSnapshot(bookData);
+        setFormData({
+            title: bookData.title || '',
+            authorId: bookData.authorId?.id || '',
+            genres: bookData.genres?.map((g) => g.id) || [],
+            description: bookData.description || '',
+            publishedYear: bookData.publishedYear || new Date().getFullYear().toString(),
+            status: bookData.status || 'draft',
+            tagsInput: bookData.tags?.join(', ') || '',
+        });
 
-            if (bookData.coverUrl) {
-                setCoverPreview(bookData.coverUrl);
-            }
+        if (bookData.coverUrl) {
+            setCoverPreview(bookData.coverUrl);
         }
-    }, [bookData]);
+    }
 
     const handleImageUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -114,12 +118,12 @@ export default function EditBook({ bookId }: EditBookProps) {
     };
 
     const getGenreName = (genreId: string) => {
-        const genre = genres.find((g: any) => g.id === genreId);
+        const genre = genres.find((g: Genre) => g.id === genreId);
         return genre?.name || genreId;
     };
 
     const getAuthorName = (authorId: string) => {
-        const author = authors.find((a: any) => a.id === authorId);
+        const author = authors.find((a: Author) => a.id === authorId);
         return author?.name || 'Chưa chọn';
     };
 
@@ -179,7 +183,7 @@ export default function EditBook({ bookId }: EditBookProps) {
                 router.push('/admin/books');
             }, 1500);
 
-        } catch (err: any) {
+        } catch (err) {
             setMessage({ type: 'error', text: getErrorMessage(err) });
         }
     };
@@ -224,7 +228,7 @@ export default function EditBook({ bookId }: EditBookProps) {
                         Chỉnh sửa sách
                     </h1>
                     <p className="text-lg text-gray-600">
-                        Cập nhật thông tin cho "{bookData.title}"
+                        Cập nhật thông tin cho &ldquo;{bookData.title}&rdquo;
                     </p>
                 </div>
 
@@ -245,10 +249,13 @@ export default function EditBook({ bookId }: EditBookProps) {
                             {/* Book Cover Section */}
                             <div className="flex-none">
                                 <div className="w-64 h-96 relative rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 group">
-                                    <img
+                                    <Image
                                         src={coverPreview}
                                         alt="Bìa sách"
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        unoptimized
+                                        sizes="256px"
+                                        className="object-cover"
                                     />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <div className="text-center text-white">
@@ -333,7 +340,7 @@ export default function EditBook({ bookId }: EditBookProps) {
                                                 <option value="">
                                                     {loadingAuthors ? 'Đang tải...' : 'Chọn tác giả'}
                                                 </option>
-                                                {authors.map((author: any) => (
+                                                {authors.map((author: Author) => (
                                                     <option key={author.id} value={author.id}>
                                                         {author.name}
                                                     </option>
@@ -441,7 +448,7 @@ export default function EditBook({ bookId }: EditBookProps) {
                                                 <option value="">
                                                     {loadingGenres ? 'Đang tải...' : 'Chọn thể loại'}
                                                 </option>
-                                                {genres.map((genre: any) => (
+                                                {genres.map((genre: Genre) => (
                                                     <option
                                                         key={genre.id}
                                                         value={genre.id}

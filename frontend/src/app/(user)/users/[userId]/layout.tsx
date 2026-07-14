@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import type { FollowStateResponse } from '@/features/follows/api/followApi';
 import { followServerApi } from '@/features/follows/api/followServerApi';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth.config';
 import { userServerApi } from '@/features/users/api/usersServerApi';
 
 export default async function UserLayout({
@@ -20,12 +20,12 @@ export default async function UserLayout({
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
+          <h1 className="text-2xl font-bold text-destructive mb-4">
             Không tìm thấy người dùng
           </h1>
-          <p className="text-gray-600">Người dùng không tồn tại.</p>
+          <p className="text-muted-foreground">Người dùng không tồn tại.</p>
         </div>
       </div>
     );
@@ -42,8 +42,8 @@ export default async function UserLayout({
     try {
       const followApi = await followServerApi();
       initialFollowState = await followApi.getFollowState(userId);
-    } catch (error) {
-      console.error('SSR follow state error:', error);
+    } catch {
+      // ignore SSR follow state error
     }
   }
 

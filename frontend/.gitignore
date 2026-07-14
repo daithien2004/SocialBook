@@ -43,3 +43,6 @@ next-env.d.ts
 # IntelliJ IDEA
 .idea/
 *.iml
+
+/playwright-report
+/test-results

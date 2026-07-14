@@ -1,4 +1,7 @@
-import { ReadingList, ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import {
+  ReadingList,
+  ReadingStatus,
+} from '@/domain/library/entities/reading-list.entity';
 import { ReadingListDocument } from '@/infrastructure/database/schemas/reading-list.schema';
 import { Types } from 'mongoose';
 
@@ -14,16 +17,18 @@ interface ReadingListPersistence {
 }
 
 export class ReadingListMapper {
-  static toDomain(doc: ReadingListDocument | any): ReadingList {
+  static toDomain(doc: ReadingListDocument): ReadingList {
     return ReadingList.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),
       bookId: doc.bookId.toString(),
       status: doc.status,
       lastReadChapterId: doc.lastReadChapterId?.toString() || null,
-      collectionIds: doc.collectionIds.map((id: any) => id.toString()),
-      createdAt: doc.createdAt as Date,
-      updatedAt: doc.updatedAt as Date
+      collectionIds: doc.collectionIds.map((id: Types.ObjectId) =>
+        id.toString(),
+      ),
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     });
   }
 
@@ -33,12 +38,14 @@ export class ReadingListMapper {
       userId: new Types.ObjectId(readingList.userId.toString()),
       bookId: new Types.ObjectId(readingList.bookId.toString()),
       status: readingList.status,
-      lastReadChapterId: readingList.lastReadChapterId 
-        ? new Types.ObjectId(readingList.lastReadChapterId.toString()) 
+      lastReadChapterId: readingList.lastReadChapterId
+        ? new Types.ObjectId(readingList.lastReadChapterId.toString())
         : null,
-      collectionIds: readingList.collectionIds.map(id => new Types.ObjectId(id)),
+      collectionIds: readingList.collectionIds.map(
+        (id) => new Types.ObjectId(id),
+      ),
       createdAt: readingList.createdAt,
-      updatedAt: readingList.updatedAt
+      updatedAt: readingList.updatedAt,
     };
   }
 }

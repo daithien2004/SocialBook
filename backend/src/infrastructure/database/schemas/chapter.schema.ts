@@ -30,7 +30,6 @@ export class Chapter extends BaseSchema {
     required: true,
     trim: true,
     lowercase: true,
-    index: true,
   })
   slug: string;
 
@@ -45,3 +44,9 @@ export class Chapter extends BaseSchema {
 }
 
 export const ChapterSchema = SchemaFactory.createForClass(Chapter);
+
+// Lấy danh sách chapter của 1 cuốn sách, sắp theo thứ tự — query phổ biến nhất
+ChapterSchema.index({ bookId: 1, orderIndex: 1 });
+
+// Tìm chapter theo slug trong phạm vi 1 cuốn sách (findBySlug, findDetailBySlug)
+ChapterSchema.index({ bookId: 1, slug: 1 }, { unique: true });

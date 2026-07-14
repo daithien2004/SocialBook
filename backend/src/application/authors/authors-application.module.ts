@@ -8,10 +8,7 @@ import { AuthorsRepositoryModule } from '@/infrastructure/database/repositories/
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    AuthorsRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [AuthorsRepositoryModule, IdGeneratorModule],
   providers: [
     CreateAuthorUseCase,
     DeleteAuthorUseCase,

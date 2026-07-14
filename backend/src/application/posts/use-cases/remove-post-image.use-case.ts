@@ -1,25 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { CloudinaryService } from '@/infrastructure/external/cloudinary.service';
+import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { RemovePostImageCommand } from './remove-post-image.command';
 
 @Injectable()
 export class RemovePostImageUseCase {
+  private readonly logger = new Logger(RemovePostImageUseCase.name);
+
   constructor(
     private readonly postRepository: IPostRepository,
-    private readonly cloudinaryService: CloudinaryService
-  ) { }
+    private readonly mediaService: IMediaService,
+  ) {}
 
   async execute(command: RemovePostImageCommand) {
     const post = await this.postRepository.findById(command.postId);
-    if (!post) throw new NotFoundException(ErrorMessages.POST_NOT_FOUND);
+    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+
+    if (!command.isAdmin && post.userId !== command.userId) {
+      throw new ForbiddenDomainException(ErrorMessages.POST_UPDATE_FORBIDDEN);
+    }
 
     post.removeImage(command.imageUrl);
     await this.postRepository.update(post);
 
-    this.cloudinaryService.deleteImage(command.imageUrl)
-      .catch((err) => console.error('Cloudinary delete error:', err));
+    this.mediaService
+      .deleteImage(command.imageUrl)
+      .catch((err) => this.logger.error('Media delete error:', err));
 
     return { imageUrls: post.imageUrls };
   }

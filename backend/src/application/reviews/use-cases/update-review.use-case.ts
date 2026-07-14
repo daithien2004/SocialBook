@@ -1,31 +1,42 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ErrorMessages } from '@/common/constants/error-messages';
+import {
+  BadRequestDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
-import { UpdateReviewDto } from '@/presentation/reviews/dto/update-review.dto';
-import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
+import { Review } from '@/domain/reviews/entities/review.entity';
+import { UpdateReviewDto } from '@/application/reviews/dto/update-review.dto';
+import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
 
 @Injectable()
 export class UpdateReviewUseCase {
-  constructor(
-    private readonly reviewRepository: IReviewRepository,
-    private readonly checkContentUseCase: CheckContentUseCase,
-  ) {}
+  constructor(private readonly reviewRepository: IReviewRepository) {}
 
-  async execute(userId: string, reviewId: string, dto: UpdateReviewDto): Promise<any> {
+  async execute(
+    userId: string,
+    reviewId: string,
+    dto: UpdateReviewDto,
+  ): Promise<Review> {
     const review = await this.reviewRepository.findById(reviewId);
     if (!review) {
-      throw new NotFoundException('Review not found');
+      throw new NotFoundDomainException(ErrorMessages.REVIEW_NOT_FOUND);
     }
 
     if (review.userId !== userId) {
-      throw new BadRequestException('You can only update your own review');
+      throw new BadRequestDomainException(
+        ErrorMessages.REVIEW_UPDATE_FORBIDDEN,
+      );
     }
 
     let updated = false;
 
     if (dto.content !== undefined) {
-      const moderationResult = await this.checkContentUseCase.execute(dto.content);
-      if (!moderationResult.isSafe) {
-         throw new BadRequestException(`Content rejected: ${moderationResult.reason}`);
+      const quickCheck = containsVietnameseToxicWords(dto.content);
+      if (quickCheck) {
+        throw new BadRequestDomainException(
+          `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
+        );
       }
       review.updateContent(dto.content);
       updated = true;
@@ -35,12 +46,11 @@ export class UpdateReviewUseCase {
       review.updateRating(dto.rating);
       updated = true;
     }
-    
+
     if (updated) {
       return this.reviewRepository.update(review);
     }
-    
+
     return review;
   }
 }
-

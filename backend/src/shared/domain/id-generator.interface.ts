@@ -1,3 +1,3 @@
 export abstract class IIdGenerator {
-    abstract generate(): string;
+  abstract generate(): string;
 }

@@ -9,9 +9,11 @@ export class ResendOtpUseCase {
   constructor(
     private readonly sendOtpUseCase: SendOtpUseCase,
     private readonly otpRepository: IOtpRepository,
-  ) { }
+  ) {}
 
-  async execute(command: ResendOtpCommand): Promise<{ resendCooldown: number }> {
+  async execute(
+    command: ResendOtpCommand,
+  ): Promise<{ resendCooldown: number }> {
     const { email } = command;
     const ttl = await this.otpRepository.getTtl(email);
 

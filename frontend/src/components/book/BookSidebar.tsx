@@ -1,11 +1,9 @@
 'use client';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Book } from '@/features/books/types/book.interface';
-import { Chapter } from '@/features/chapters/types/chapter.interface';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import ChapterListDrawer from './ChapterListDrawer';
 
@@ -15,7 +13,6 @@ interface BookSidebarProps {
 }
 
 export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
-  const router = useRouter();
   const [showAllChapters, setShowAllChapters] = useState(false);
 
   const recentChapters = book.chapters
@@ -42,11 +39,12 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
               }
               highlight
             />
+            <DetailRow label="Tác giả" value={book.authorId?.name || 'Đang cập nhật'} />
             <DetailRow label="Số chương" value={book.chapters?.length || 0} />
             <DetailRow label="Năm xuất bản" value={book.publishedYear} />
             <DetailRow
               label="Cập nhật cuối"
-              value={new Date(book.updatedAt).toLocaleDateString('vi-VN')}
+              value={formatDate(book.updatedAt)}
             />
           </CardContent>
         </Card>
@@ -80,7 +78,7 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Chương {chapter.orderIndex}</span>
                     <span>
-                      {new Date(chapter.createdAt).toLocaleDateString('vi-VN')}
+                      {formatDate(chapter.createdAt)}
                     </span>
                   </div>
                 </Link>
@@ -102,7 +100,7 @@ export const BookSidebar = ({ book, bookSlug }: BookSidebarProps) => {
       <ChapterListDrawer
         isOpen={showAllChapters}
         onClose={() => setShowAllChapters(false)}
-        chapters={allChapters as unknown as Chapter[]}
+        chapters={allChapters}
         bookSlug={bookSlug}
         totalChapters={allChapters.length}
         hasHeader={true}

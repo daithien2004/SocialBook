@@ -1,0 +1,132 @@
+'use client';
+
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useGetBooksQuery } from '@/features/books/api/bookApi';
+import { TabType, TABS, PAGINATION } from '@/features/books/books.constants';
+import { shouldLoadMore } from '@/features/books/books.utils';
+import { useInfiniteScroll } from '@/features/books/hooks/useInfiniteScroll';
+import { useTabsManager } from '@/features/books/hooks/useTabsManager';
+import { BookOrderField } from '@/features/books/types/book.interface';
+import { useAppAuth } from '@/features/auth/hooks';
+import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
+import { LibraryItem, LibraryStatus } from '@/features/library/types/library.interface';
+import { BannerSlider } from '@/components/book/BannerSlider';
+import { BookGrid } from '@/components/book/BookGrid';
+import { GenresSection } from '@/components/book/GenresSection';
+import { MobileReadingSection } from '@/components/book/MobileReadingSection';
+import { ReadingSidebar } from '@/components/book/ReadingSidebar';
+import { RecommendedForYouSection } from '@/components/book/RecommendedForYouSection';
+import { TopReadSection } from '@/components/book/TopReadSection';
+import { TrendingKeywordsSection } from '@/components/book/TrendingKeywordsSection';
+import { TabNavigation } from '@/components/book/TabNavigation';
+
+const EMPTY_BOOKS: LibraryItem[] = [];
+
+export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<TabType>('trending');
+
+  const { isAuthenticated, isGuest } = useAppAuth();
+  const { data: readingBooks = EMPTY_BOOKS, isLoading: isReadingLoading } = useGetLibraryBooksQuery(
+    { status: LibraryStatus.READING, limit: 10 },
+    { skip: !isAuthenticated }
+  );
+
+  const currentTabConfig = TABS.find((t) => t.id === activeTab)!;
+
+  const { currentState, loadMoreBooks, setFetchedData } = useTabsManager({
+    activeTab,
+  });
+
+  const { data, isLoading, isFetching } = useGetBooksQuery({
+    page: currentState.page,
+    limit: PAGINATION.BOOKS_PER_PAGE,
+    sortBy: currentTabConfig.sortBy as BookOrderField,
+  });
+
+  useEffect(() => {
+    if (data) {
+      setFetchedData(data);
+    }
+  }, [data, setFetchedData]);
+
+  const lastBookRef = useInfiniteScroll({
+    onLoadMore: loadMoreBooks,
+    isEnabled: shouldLoadMore(isFetching, currentState.hasMore),
+  });
+
+  const featuredBooks = currentState.books.slice(
+    0,
+    PAGINATION.FEATURED_BOOKS_COUNT
+  );
+
+  return (
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-brand selection:text-brand-foreground relative transition-colors duration-300">
+      <PageBackground />
+
+      <div className="relative z-10">
+        <main>
+          <div className="pb-8">
+            <BannerSlider books={featuredBooks} />
+          </div>
+
+          <MobileReadingSection books={readingBooks} isLoading={isReadingLoading} isGuest={isGuest} />
+
+          <div className="max-w-[1920px] mx-auto px-4 xl:px-8 flex gap-8">
+            <aside className="hidden xl:block xl:w-64 flex-shrink-0">
+              <div className="top-20 space-y-6">
+                <ReadingSidebar books={readingBooks} isLoading={isReadingLoading} isGuest={isGuest} />
+                <TrendingKeywordsSection />
+                <GenresSection books={currentState.books} />
+              </div>
+            </aside>
+
+            <div className="flex-1 min-w-0">
+              {/* Mobile sections */}
+              <div className="xl:hidden flex flex-col gap-6 mb-8 mt-2">
+                <TrendingKeywordsSection />
+                <RecommendedForYouSection />
+                <TopReadSection />
+                <GenresSection books={currentState.books} />
+              </div>
+
+              <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+              <BookGrid
+                books={currentState.books}
+                isLoading={isLoading}
+                isFetching={isFetching}
+                hasMore={currentState.hasMore}
+                isInitialized={currentState.isInitialized}
+                onLastElementVisible={lastBookRef}
+              />
+            </div>
+
+            <aside className="hidden xl:block xl:w-80 flex-shrink-0">
+              <div className="top-20 space-y-6">
+                <RecommendedForYouSection />
+                <TopReadSection />
+              </div>
+            </aside>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function PageBackground() {
+  return (
+    <div className="fixed inset-0 z-0">
+      <Image
+        src="/main-background.jpg"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover opacity-10 dark:opacity-40 transition-opacity duration-300"
+      />
+      <div className="absolute inset-0 bg-white/60 dark:bg-[#0f0f0f]/70 transition-colors duration-300" />
+    </div>
+  );
+}

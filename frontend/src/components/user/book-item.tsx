@@ -3,6 +3,7 @@ import { Eye, Heart, List } from "lucide-react";
 import { useGetBookStatsQuery } from "@/features/books/api/bookApi";
 import { formatNumber } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { memo } from "react";
 
 interface BookItemProps {
     bookId: string;
@@ -10,10 +11,13 @@ interface BookItemProps {
     authorName: string;
     bookImage: string;
     slug: string;
+    showStats?: boolean;
 }
 
-export function BookItem(props: BookItemProps) {
-    const { data: stats } = useGetBookStatsQuery(props.bookId);
+export const BookItem = memo(function BookItem(props: BookItemProps) {
+    const { data: stats } = useGetBookStatsQuery(props.bookId, {
+        skip: props.showStats === false,
+    });
     const router = useRouter();
 
     return (
@@ -26,7 +30,7 @@ export function BookItem(props: BookItemProps) {
             relative aspect-[4/6] w-[140px]
             overflow-hidden rounded-xl
             shadow-md dark:shadow-none
-            bg-slate-100 dark:bg-gray-900
+            bg-muted
             cursor-pointer
             transition-transform
           "
@@ -35,6 +39,7 @@ export function BookItem(props: BookItemProps) {
                         src={props.bookImage}
                         alt={props.bookName}
                         fill
+                        sizes="140px"
                         className="object-cover"
                     />
 
@@ -48,19 +53,20 @@ export function BookItem(props: BookItemProps) {
                         onClick={() => router.push(`/books/${props.slug}`)}
                         className="
               font-semibold text-base font-serif leading-tight line-clamp-2
-              text-slate-900 dark:text-gray-100
-              group-hover:text-[#ff9800]
+              text-foreground
+              group-hover:text-primary
               transition-colors cursor-pointer
             "
                     >
                         {props.bookName}
                     </h4>
 
-                    <p className="text-xs font-serif font-semibold text-slate-500 dark:text-gray-400">
+                    <p className="text-xs font-serif font-semibold text-muted-foreground">
                         {props.authorName}
                     </p>
 
-                    <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-gray-500">
+                    {props.showStats !== false && (
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                         <div className="flex items-center gap-1">
                             <Eye className="h-4 w-3 relative -top-[0.5px]" />
                             <span className="font-serif text-[12px]">
@@ -78,12 +84,13 @@ export function BookItem(props: BookItemProps) {
                         <div className="flex items-center gap-1">
                             <List className="h-4 w-3 relative -top-[0.5px]" />
                             <span className="font-serif text-[12px]">
-                {formatNumber(stats?.chapters)}
+                {formatNumber(stats?.chapterCount)}
               </span>
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
         </div>
     );
-}
+});

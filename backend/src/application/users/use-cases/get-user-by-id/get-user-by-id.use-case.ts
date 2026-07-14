@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { User } from '@/domain/users/entities/user.entity';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
@@ -6,18 +7,16 @@ import { GetUserByIdQuery } from './get-user-by-id.query';
 
 @Injectable()
 export class GetUserByIdUseCase {
-    constructor(
-        private readonly userRepository: IUserRepository
-    ) { }
+  constructor(private readonly userRepository: IUserRepository) {}
 
-    async execute(query: GetUserByIdQuery): Promise<User> {
-        const userId = UserId.create(query.id);
-        const user = await this.userRepository.findById(userId);
+  async execute(query: GetUserByIdQuery): Promise<User> {
+    const userId = UserId.create(query.id);
+    const user = await this.userRepository.findById(userId);
 
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-
-        return user;
+    if (!user) {
+      throw new NotFoundDomainException('User not found');
     }
+
+    return user;
+  }
 }

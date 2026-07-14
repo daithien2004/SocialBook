@@ -23,8 +23,8 @@ export const ActiveFilters = ({
   if (genres.length === 0 && tags.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-white/5 overflow-x-auto scrollbar-hide">
-      <span className="text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+    <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+      <span className="text-xs text-muted-foreground uppercase font-bold whitespace-nowrap">
         Đang lọc:
       </span>
 

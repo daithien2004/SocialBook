@@ -3,7 +3,7 @@ import { Logger } from './logger.service';
 
 @Global()
 @Module({
-    providers: [Logger],
-    exports: [Logger],
+  providers: [Logger],
+  exports: [Logger],
 })
-export class LoggerModule { }
+export class LoggerModule {}

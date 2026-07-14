@@ -1,208 +1,269 @@
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { User as UserEntity } from '@/domain/users/entities/user.entity';
+import {
+  IUserRepository,
+  UserFilter,
+  UserPaginationOptions,
+} from '@/domain/users/repositories/user.repository.interface';
+import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
+import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { User as UserEntity } from '@/domain/users/entities/user.entity';
-import { IUserRepository, UserFilter, UserPaginationOptions } from '@/domain/users/repositories/user.repository.interface';
-import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
-import { IReadingPreferences } from '@/domain/users/value-objects/reading-preferences.vo';
 import { User, UserDocument } from '../../schemas/user.schema';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { UserMapper } from './user.mapper';
-
-interface UserPersistence {
-    _id: Types.ObjectId;
-    roleId: Types.ObjectId;
-    username: string;
-    email: string;
-    password?: string;
-    isVerified: boolean;
-    isBanned: boolean;
-    provider: string;
-    providerId?: string;
-    image?: string;
-    bio?: string;
-    location?: string;
-    website?: string;
-    hashedRt?: string;
-    onboardingCompleted: boolean;
-    readingPreferences?: IReadingPreferences;
-    createdAt: Date;
-    updatedAt: Date;
-}
+import { UserPersistence } from './user.mapper';
 
 @Injectable()
 export class UsersRepository implements IUserRepository {
-    constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+  ) {}
 
-    private toDomain(doc: UserDocument): UserEntity {
-        return UserMapper.toDomain(doc);
+  private toDomain(doc: UserDocument): UserEntity {
+    return UserMapper.toDomain(doc);
+  }
+
+  private toPersistence(entity: UserEntity): UserPersistence {
+    return UserMapper.toPersistence(entity);
+  }
+
+  async findById(id: UserId): Promise<UserEntity | null> {
+    const doc = await this.userModel.findById(id.toString()).lean().exec();
+    return doc ? this.toDomain(doc) : null;
+  }
+
+  async findByEmail(email: UserEmail): Promise<UserEntity | null> {
+    const doc = await this.userModel
+      .findOne({ email: email.toString() })
+      .lean()
+      .exec();
+    return doc ? this.toDomain(doc) : null;
+  }
+
+  async findByUsername(username: string): Promise<UserEntity | null> {
+    const doc = await this.userModel.findOne({ username }).lean().exec();
+    return doc ? this.toDomain(doc) : null;
+  }
+
+  async findAll(
+    filter: UserFilter,
+    pagination: UserPaginationOptions,
+  ): Promise<PaginatedResult<UserEntity>> {
+    const query: FilterQuery<UserDocument> = {};
+
+    if (filter.username) {
+      query.username = { $regex: filter.username, $options: 'i' };
+    }
+    if (filter.email) {
+      query.email = { $regex: filter.email, $options: 'i' };
+    }
+    if (filter.roleId) {
+      query.roleId = new Types.ObjectId(filter.roleId);
+    }
+    if (filter.isBanned !== undefined) {
+      query.isBanned = filter.isBanned;
+    }
+    if (filter.isVerified !== undefined) {
+      query.isVerified = filter.isVerified;
     }
 
-    private toPersistence(entity: UserEntity): UserPersistence {
-        return UserMapper.toPersistence(entity);
+    const skip = (pagination.page - 1) * pagination.limit;
+
+    const facetResult = await this.userModel
+      .aggregate<{ metadata: Array<{ total: number }>; data: UserDocument[] }>([
+        { $match: query },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }],
+            data: [
+              { $sort: { createdAt: -1 } },
+              { $skip: skip },
+              { $limit: pagination.limit },
+            ],
+          },
+        },
+      ])
+      .exec();
+
+    const result = facetResult[0] ?? { metadata: [], data: [] };
+    const total = result.metadata[0]?.total ?? 0;
+    const docs = result.data;
+
+    return {
+      data: docs.map((doc: UserDocument) => this.toDomain(doc)),
+      meta: {
+        total,
+        current: pagination.page,
+        pageSize: pagination.limit,
+        totalPages: Math.ceil(total / pagination.limit),
+      },
+    };
+  }
+
+  async save(user: UserEntity): Promise<void> {
+    const persistenceData = this.toPersistence(user);
+    const { _id, ...updateData } = persistenceData;
+
+    await this.userModel
+      .findOneAndUpdate(
+        { _id },
+        { $set: updateData },
+        { upsert: true, new: true },
+      )
+      .exec();
+  }
+
+  async delete(id: UserId): Promise<void> {
+    await this.userModel.findByIdAndDelete(id.toString()).exec();
+  }
+
+  async existsByEmail(email: UserEmail, excludeId?: UserId): Promise<boolean> {
+    const query: FilterQuery<UserDocument> = { email: email.toString() };
+    if (excludeId) {
+      query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
+    }
+    const result = await this.userModel.exists(query);
+    return !!result;
+  }
+
+  async existsByUsername(
+    username: string,
+    excludeId?: UserId,
+  ): Promise<boolean> {
+    const query: FilterQuery<UserDocument> = { username };
+    if (excludeId) {
+      query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
+    }
+    const result = await this.userModel.exists(query);
+    return !!result;
+  }
+
+  async existsById(id: UserId): Promise<boolean> {
+    const result = await this.userModel.exists({ _id: id.toString() });
+    return !!result;
+  }
+
+  async findByIds(ids: UserId[]): Promise<UserEntity[]> {
+    const docs = await this.userModel
+      .find({
+        _id: { $in: ids.map((id) => id.toString()) },
+      })
+      .lean()
+      .exec();
+    return docs.map((doc) => this.toDomain(doc));
+  }
+
+  async updateFavoriteGenres(id: UserId, genres: string[]): Promise<void> {
+    const genreObjectIds = genres.map((g) => new Types.ObjectId(g));
+    await this.userModel
+      .findByIdAndUpdate(id.toString(), {
+        $set: { favoriteGenres: genreObjectIds },
+      })
+      .exec();
+  }
+
+  // Statistics
+  async countByDate(startDate: Date, endDate?: Date): Promise<number> {
+    const createdAtQuery: Record<string, unknown> = { $gte: startDate };
+    if (endDate) createdAtQuery.$lt = endDate;
+    const query: FilterQuery<UserDocument> = { createdAt: createdAtQuery };
+    return await this.userModel.countDocuments(query).exec();
+  }
+
+  async countByProvider(): Promise<Map<string, number>> {
+    const result = await this.userModel
+      .aggregate<{
+        _id: string | null;
+        count: number;
+      }>([{ $group: { _id: '$provider', count: { $sum: 1 } } }])
+      .exec();
+
+    const map = new Map<string, number>();
+    result.forEach((item) => map.set(item._id ?? 'local', item.count));
+    return map;
+  }
+
+  async getGeographicDistribution(): Promise<
+    Array<{ country: string; userCount: number }>
+  > {
+    const result = await this.userModel
+      .aggregate<{
+        _id: string;
+        userCount: number;
+      }>([
+        { $group: { _id: '$location', userCount: { $sum: 1 } } },
+        { $match: { _id: { $nin: [null, ''] } } },
+        { $sort: { userCount: -1 } },
+        { $limit: 20 },
+      ])
+      .exec();
+
+    return result.map((item) => ({
+      country: item._id,
+      userCount: item.userCount,
+    }));
+  }
+
+  async getGrowthMetrics(
+    startDate: Date,
+    groupBy: 'day' | 'month' | 'year',
+  ): Promise<Array<{ _id: string; count: number }>> {
+    let dateFormat: string;
+    switch (groupBy) {
+      case 'month':
+        dateFormat = '%Y-%m';
+        break;
+      case 'year':
+        dateFormat = '%Y';
+        break;
+      case 'day':
+      default:
+        dateFormat = '%Y-%m-%d';
+        break;
     }
 
-    async findById(id: UserId): Promise<UserEntity | null> {
-        const doc = await this.userModel.findById(id.toString()).exec();
-        return doc ? this.toDomain(doc) : null;
-    }
+    return await this.userModel
+      .aggregate<{ _id: string; count: number }>([
+        { $match: { createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ])
+      .exec();
+  }
 
-    async findByEmail(email: UserEmail): Promise<UserEntity | null> {
-        const doc = await this.userModel.findOne({ email: email.toString() }).exec();
-        return doc ? this.toDomain(doc) : null;
-    }
+  async countAll(): Promise<number> {
+    return this.userModel.countDocuments().exec();
+  }
 
-    async findByUsername(username: string): Promise<UserEntity | null> {
-        const doc = await this.userModel.findOne({ username }).exec();
-        return doc ? this.toDomain(doc) : null;
-    }
+  async countWithLocation(): Promise<number> {
+    return this.userModel
+      .countDocuments({
+        location: { $ne: null, $nin: ['', 'null', 'undefined'] },
+      })
+      .exec();
+  }
 
-    async findAll(
-        filter: UserFilter,
-        pagination: UserPaginationOptions
-    ): Promise<PaginatedResult<UserEntity>> {
-        const query: FilterQuery<UserDocument> = {};
-        
-        if (filter.username) {
-            query.username = { $regex: filter.username, $options: 'i' };
-        }
-        if (filter.email) {
-            query.email = { $regex: filter.email, $options: 'i' };
-        }
-        if (filter.roleId) {
-            query.roleId = new Types.ObjectId(filter.roleId);
-        }
-        if (filter.isBanned !== undefined) {
-            query.isBanned = filter.isBanned;
-        }
-        if (filter.isVerified !== undefined) {
-            query.isVerified = filter.isVerified;
-        }
+  async findSampleUsersWithLocation(
+    limit: number,
+  ): Promise<Array<{ username: string; location: string }>> {
+    const users = await this.userModel
+      .find({
+        location: { $ne: null, $nin: ['', 'null', 'undefined'] },
+      })
+      .limit(limit)
+      .select('username location')
+      .lean()
+      .exec();
 
-        const skip = (pagination.page - 1) * pagination.limit;
-        
-        const [docs, total] = await Promise.all([
-            this.userModel.find(query)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(pagination.limit)
-                .exec(),
-            this.userModel.countDocuments(query).exec()
-        ]);
-
-        return {
-            data: docs.map(doc => this.toDomain(doc)),
-            meta: {
-                total,
-                current: pagination.page,
-                pageSize: pagination.limit,
-                totalPages: Math.ceil(total / pagination.limit),
-            },
-        };
-    }
-
-    async save(user: UserEntity): Promise<void> {
-        const persistenceData = this.toPersistence(user);
-        
-        await this.userModel.findOneAndUpdate(
-            { _id: persistenceData._id },
-            { $set: persistenceData },
-            { upsert: true, new: true }
-        ).exec();
-    }
-
-    async delete(id: UserId): Promise<void> {
-        await this.userModel.findByIdAndDelete(id.toString()).exec();
-    }
-    
-    async existsByEmail(email: UserEmail, excludeId?: UserId): Promise<boolean> {
-        const query: FilterQuery<UserDocument> = { email: email.toString() };
-        if (excludeId) {
-            query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
-        }
-        const result = await this.userModel.exists(query);
-        return !!result;
-    }
-
-    async existsByUsername(username: string, excludeId?: UserId): Promise<boolean> {
-        const query: FilterQuery<UserDocument> = { username };
-        if (excludeId) {
-            query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
-        }
-        const result = await this.userModel.exists(query);
-        return !!result;
-    }
-
-    async existsById(id: UserId): Promise<boolean> {
-        const result = await this.userModel.exists({ _id: id.toString() });
-        return !!result;
-    }
-
-    async findByIds(ids: UserId[]): Promise<UserEntity[]> {
-        const docs = await this.userModel.find({
-            _id: { $in: ids.map(id => id.toString()) }
-        }).exec();
-        return docs.map(doc => this.toDomain(doc));
-    }
-
-    async updateOnboardingData(id: UserId, data: { onboardingId?: string; gamificationId?: string; onboardingCompleted?: boolean }): Promise<void> {
-        const update: any = {};
-        if (data.onboardingId) update.onboardingId = new Types.ObjectId(data.onboardingId);
-        if (data.gamificationId) update.gamificationId = new Types.ObjectId(data.gamificationId);
-        if (data.onboardingCompleted !== undefined) update.onboardingCompleted = data.onboardingCompleted;
-
-        await this.userModel.findByIdAndUpdate(id.toString(), { $set: update }).exec();
-    }
-
-    // Statistics
-    async countByDate(startDate: Date, endDate?: Date): Promise<number> {
-        const query: FilterQuery<UserDocument> = { createdAt: { $gte: startDate } };
-        if (endDate) {
-            query.createdAt.$lt = endDate;
-        }
-        return await this.userModel.countDocuments(query).exec();
-    }
-
-    async countByProvider(): Promise<Map<string, number>> {
-        const result = await this.userModel.aggregate([
-            { $group: { _id: '$provider', count: { $sum: 1 } } }
-        ]).exec();
-
-        const map = new Map<string, number>();
-        result.forEach(item => map.set(item._id || 'local', item.count));
-        return map;
-    }
-
-    async getGeographicDistribution(): Promise<Array<{ country: string; userCount: number }>> {
-        const result = await this.userModel.aggregate([
-            { $group: { _id: '$location', userCount: { $sum: 1 } } },
-            { $match: { $and: [{ _id: { $ne: null } }, { _id: { $ne: '' } }] } },
-            { $sort: { userCount: -1 } },
-            { $limit: 20 }
-        ]).exec();
-
-        return result.map(item => ({ country: item._id, userCount: item.userCount }));
-    }
-
-    async getGrowthMetrics(startDate: Date, groupBy: 'day' | 'month' | 'year'): Promise<Array<{ _id: string; count: number }>> {
-        let dateFormat: string;
-         switch (groupBy) {
-            case 'month': dateFormat = '%Y-%m'; break;
-            case 'year': dateFormat = '%Y'; break;
-            case 'day': default: dateFormat = '%Y-%m-%d'; break;
-        }
-
-        return await this.userModel.aggregate([
-            { $match: { createdAt: { $gte: startDate } } },
-            {
-                $group: {
-                    _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } }
-        ]).exec();
-    }
+    return users.map((user) => ({
+      username: user.username,
+      location: user.location || '',
+    }));
+  }
 }
-

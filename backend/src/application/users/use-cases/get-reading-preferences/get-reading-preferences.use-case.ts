@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { ReadingPreferences } from '@/domain/users/value-objects/reading-preferences.vo';
@@ -6,16 +7,18 @@ import { GetReadingPreferencesQuery } from './get-reading-preferences.query';
 
 @Injectable()
 export class GetReadingPreferencesUseCase {
-    constructor(private readonly userRepository: IUserRepository) { }
+  constructor(private readonly userRepository: IUserRepository) {}
 
-    async execute(query: GetReadingPreferencesQuery): Promise<ReadingPreferences> {
-        const userId = UserId.create(query.userId);
-        const user = await this.userRepository.findById(userId);
+  async execute(
+    query: GetReadingPreferencesQuery,
+  ): Promise<ReadingPreferences> {
+    const userId = UserId.create(query.userId);
+    const user = await this.userRepository.findById(userId);
 
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-
-        return user.readingPreferences || ReadingPreferences.createDefault();
+    if (!user) {
+      throw new NotFoundDomainException('User not found');
     }
+
+    return user.readingPreferences || ReadingPreferences.createDefault();
+  }
 }

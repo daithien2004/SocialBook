@@ -6,18 +6,28 @@ import { GetGenresQuery } from '@/application/genres/use-cases/get-genres/get-ge
 import { GetGenresUseCase } from '@/application/genres/use-cases/get-genres/get-genres.use-case';
 import { UpdateGenreCommand } from '@/application/genres/use-cases/update-genre/update-genre.command';
 import { UpdateGenreUseCase } from '@/application/genres/use-cases/update-genre/update-genre.use-case';
-import { Public } from '@/common/decorators/customize';
+import { Public } from '@/common/decorators/custom.decorator';
 import { CreateGenreDto } from '@/presentation/genres/dto/create-genre.dto';
 import { FilterGenreDto } from '@/presentation/genres/dto/filter-genre.dto';
 import { GenreResponseDto } from '@/presentation/genres/dto/genre.response.dto';
 import { UpdateGenreDto } from '@/presentation/genres/dto/update-genre.dto';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { GetGenreByIdQuery } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.query';
 import { GetGenreByIdUseCase } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.use-case';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { RolesGuard } from '@/common/guards/roles.guard';
 
-@ApiTags('Genres')
 @Controller('genres')
 export class GenresController {
   constructor(
@@ -26,42 +36,53 @@ export class GenresController {
     private readonly getGenresUseCase: GetGenresUseCase,
     private readonly deleteGenreUseCase: DeleteGenreUseCase,
     private readonly getGenreByIdUseCase: GetGenreByIdUseCase,
-  ) { }
+  ) {}
 
   @Post()
+  @Roles('admin')
+  @UseGuards(RolesGuard)
   async create(@Body() createGenreDto: CreateGenreDto) {
-    const command = new CreateGenreCommand(createGenreDto.name, createGenreDto.description);
+    const command = new CreateGenreCommand(
+      createGenreDto.name,
+      createGenreDto.description,
+    );
     const genre = await this.createGenreUseCase.execute(command);
-    return new GenreResponseDto(genre);
+    return {
+      message: 'Genre created successfully',
+      data: new GenreResponseDto(genre),
+    };
   }
 
   @Public()
   @Get()
-  async findAll(
-    @Query() filter: FilterGenreDto,
-    @Query('page') page: string = '1',
-    @Query('limit') limit: string = '10',
-  ) {
-    const query = new GetGenresQuery(Number(page), Number(limit), filter.name);
+  async findAll(@Query() filter: FilterGenreDto) {
+    const query = new GetGenresQuery(
+      filter.actualPage,
+      filter.actualLimit,
+      filter.name,
+    );
     const result = await this.getGenresUseCase.execute(query);
 
     return {
-      data: result.data.map(genre => new GenreResponseDto(genre)),
+      message: 'Get genres successfully',
+      data: result.data.map((genre) => new GenreResponseDto(genre)),
       meta: result.meta,
     };
   }
 
   @Get('admin')
-  async findAllAdmin(
-    @Query() filter: FilterGenreDto,
-    @Query('current') current: string = '1',
-    @Query('pageSize') pageSize: string = '15',
-  ) {
-    // Nếu ProTable gửi current/pageSize thì map nó, không thì dùng mặc định
-    const query = new GetGenresQuery(Number(current), Number(pageSize), filter.name);
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async findAllAdmin(@Query() filter: FilterGenreDto) {
+    const query = new GetGenresQuery(
+      filter.actualPage,
+      filter.actualLimit,
+      filter.name,
+    );
     const result = await this.getGenresUseCase.execute(query);
 
     return {
+      message: 'Get genres (Admin) successfully',
       data: result.data.map((genre) => new GenreResponseDto(genre)),
       meta: result.meta,
     };
@@ -72,20 +93,37 @@ export class GenresController {
   async findOne(@Param('id') id: string) {
     const query = new GetGenreByIdQuery(id);
     const genre = await this.getGenreByIdUseCase.execute(query);
-    return new GenreResponseDto(genre);
+    return {
+      message: 'Get genre successfully',
+      data: new GenreResponseDto(genre),
+    };
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateGenreDto: UpdateGenreDto) {
-    const command = new UpdateGenreCommand(id, updateGenreDto.name, updateGenreDto.description);
+  @Roles('admin')
+  @UseGuards(RolesGuard)
+  async update(
+    @Param('id') id: string,
+    @Body() updateGenreDto: UpdateGenreDto,
+  ) {
+    const command = new UpdateGenreCommand(
+      id,
+      updateGenreDto.name,
+      updateGenreDto.description,
+    );
     const genre = await this.updateGenreUseCase.execute(command);
-    return new GenreResponseDto(genre);
+    return {
+      message: 'Genre updated successfully',
+      data: new GenreResponseDto(genre),
+    };
   }
 
   @Delete(':id')
+  @Roles('admin')
+  @UseGuards(RolesGuard)
   async remove(@Param('id') id: string) {
     const command = new DeleteGenreCommand(id);
     await this.deleteGenreUseCase.execute(command);
-    return { success: true };
+    return { message: 'Genre deleted successfully' };
   }
 }

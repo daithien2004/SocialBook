@@ -4,15 +4,15 @@ import {
   LoginFormValues,
   loginSchema,
 } from '@/features/auth/types/auth.type';
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useLoginFlow } from '@/features/auth/hooks/useLoginFlow';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signIn } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
+import { AppButton } from '@/components/common/AppButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -26,34 +26,24 @@ import {
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAppAuth();
 
-  const [isCredentialsLoading, setIsCredentialsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      const userRole = user.role;
-      if (userRole === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/');
-      }
-    }
-  }, [isAuthenticated, user, router]);
+  const {
+    isLoading,
+    serverError,
+    showPassword,
+    setServerError,
+    setShowPassword,
+    handleSubmit,
+    handleGoogleSignin,
+    handleErrorFromParams,
+  } = useLoginFlow();
 
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error) {
-      setServerError('Sign in failed. Please try again.');
-      router.replace('/login');
-    }
-  }, [searchParams, router]);
+    handleErrorFromParams();
+  }, [handleErrorFromParams]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -64,54 +54,13 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    setIsCredentialsLoading(true);
-    setServerError(null);
-
-    try {
-      const result = await signIn('credentials', {
-        redirect: false,
-        email: data.email,
-        password: data.password,
-      });
-
-      if (result?.ok) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        const sessionResponse = await fetch('/api/auth/session');
-        const sessionData = await sessionResponse.json();
-        const userRole = sessionData?.user?.role;
-
-        if (userRole === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/');
-        }
-      } else {
-        setServerError(result?.error || 'Invalid email or password.');
-      }
-    } catch (error) {
-      setServerError('An unexpected error occurred.');
-    } finally {
-      setIsCredentialsLoading(false);
-    }
+  const onSubmit = (data: LoginFormValues) => {
+    handleSubmit(data);
   };
 
-  const handleGoogleSignin = async () => {
-    setIsGoogleLoading(true);
-    signIn('google', { redirect: true, callbackUrl: '/' });
+  const handleGoogleSigninWrapper = () => {
+    handleGoogleSignin();
   };
-
-  const isAnyLoading =
-    isCredentialsLoading || isGoogleLoading || isAuthLoading;
-
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex">
@@ -120,6 +69,7 @@ export default function LoginPage() {
           src="https://res.cloudinary.com/dajg703uq/image/upload/v1763780207/snapedit_1763780184287_v11fnr.jpg"
           alt="Login background"
           fill
+          sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover opacity-80"
           priority
         />
@@ -129,8 +79,8 @@ export default function LoginPage() {
             <h1 className="text-5xl font-bold leading-tight font-serif mb-4">
               LES MISERABLES
             </h1>
-            <p className="text-2xl text-teal-100 font-serif italic border-l-4 border-teal-500 pl-4">
-              "Even the darkest night will end and the sun will rise."
+            <p className="text-2xl text-white/90 font-serif italic border-l-4 border-white/60 pl-4">
+              &quot;Even the darkest night will end and the sun will rise.&quot;
             </p>
             <p className="mt-4 text-lg font-medium">— Victor Hugo</p>
           </div>
@@ -152,16 +102,16 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button
+            <AppButton
               variant="outline"
               type="button"
-              onClick={handleGoogleSignin}
-              disabled={isAnyLoading}
-              className="w-full py-5 text-base font-medium relative"
+              onClick={handleGoogleSigninWrapper}
+              disabled={isLoading}
+              loading={false}
+              className="w-full py-6 text-base font-medium relative"
+              aria-label="Đăng nhập bằng Google"
             >
-              {isGoogleLoading ? (
-                <div className="w-5 h-5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin mr-2" />
-              ) : (
+              {!isLoading && (
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
@@ -182,7 +132,7 @@ export default function LoginPage() {
                 </svg>
               )}
               Đăng nhập bằng Google
-            </Button>
+            </AppButton>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -260,20 +210,15 @@ export default function LoginPage() {
                   )}
                 />
 
-                <Button
+                <AppButton
                   type="submit"
                   className="w-full h-11 text-base font-semibold mt-2"
-                  disabled={isAnyLoading}
+                  disabled={isLoading}
+                  loading={isLoading}
+                  loadingText="Đang đăng nhập..."
                 >
-                  {isCredentialsLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                      Đang đăng nhập...
-                    </>
-                  ) : (
-                    'Đăng nhập'
-                  )}
-                </Button>
+                  Đăng nhập
+                </AppButton>
               </form>
             </Form>
 
@@ -290,5 +235,13 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="size-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" /></div>}>
+      <LoginPage />
+    </Suspense>
   );
 }

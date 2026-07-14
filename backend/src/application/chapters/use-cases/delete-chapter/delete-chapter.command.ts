@@ -1,5 +1,3 @@
 export class DeleteChapterCommand {
-    constructor(
-        public readonly id: string
-    ) {}
+  constructor(public readonly id: string) {}
 }

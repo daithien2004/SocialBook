@@ -26,9 +26,8 @@ export interface PaginationMeta {
   hasPrevPage: boolean;
 }
 
-export interface RecommendationsResponse {
+export interface RecommendationsResponse extends PaginationMeta {
   recommendations: BookRecommendation[];
-  pagination: PaginationMeta;
   analysis: RecommendationAnalysis;
 }
 

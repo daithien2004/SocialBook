@@ -1,14 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-import { BaseSchema } from '@/shared/schemas/base.schema';
+import { BaseSoftDeleteSchema } from '@/shared/schemas/base.schema';
 
 @Schema({ timestamps: true })
-export class Follow extends BaseSchema {
+export class Follow extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   targetId: Types.ObjectId;
 
   @Prop({ required: true })
@@ -18,7 +18,5 @@ export class Follow extends BaseSchema {
 export type FollowDocument = HydratedDocument<Follow>;
 export const FollowSchema = SchemaFactory.createForClass(Follow);
 
-FollowSchema.index(
-  { userId: 1, targetId: 1 },
-  { unique: true },
-);
+FollowSchema.index({ userId: 1, targetId: 1 }, { unique: true });
+FollowSchema.index({ targetId: 1, status: 1 });

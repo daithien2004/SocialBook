@@ -1,87 +1,103 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { GeminiService } from '../../external/gemini.service';
-import { INFRASTRUCTURE_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import { IRecommendationStrategy, UserProfile } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
-import { RecommendationResponse, RecommendationResult } from '@/domain/recommendations/interfaces/recommendation.interface';
+import { GeminiService } from '../../ai/gemini.service';
+import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
+import {
+  IRecommendationStrategy,
+  UserProfile,
+} from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
+import {
+  RecommendationResponse,
+  RecommendationResult,
+} from '@/domain/recommendations/interfaces/recommendation.interface';
+import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.port';
+import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { FallbackRecommendationStrategy } from './fallback-recommendation.strategy';
 
 interface AIAnalysis {
-    favoriteGenres: string[];
-    readingPace: 'fast' | 'medium' | 'slow';
-    preferredLength: 'short' | 'medium' | 'long';
-    themes: string[];
+  favoriteGenres: string[];
+  readingPace: 'fast' | 'medium' | 'slow';
+  preferredLength: 'short' | 'medium' | 'long';
+  themes: string[];
 }
-  
+
 interface AIRecommendation {
-    bookId: string;
-    title: string;
-    reason: string;
-    matchScore: number;
+  bookId: string;
+  title: string;
+  reason: string;
+  matchScore: number;
 }
-  
+
 interface AIResponse {
-    analysis: AIAnalysis;
-    recommendations: AIRecommendation[];
+  analysis: AIAnalysis;
+  recommendations: AIRecommendation[];
 }
 
 @Injectable()
 export class AIRecommendationStrategy implements IRecommendationStrategy {
-    private readonly logger = new Logger(AIRecommendationStrategy.name);
+  private readonly logger = new Logger(AIRecommendationStrategy.name);
 
-    constructor(
-        @Inject(INFRASTRUCTURE_TOKENS.GEMINI_SERVICE)
-        private geminiService: GeminiService,
-        private fallbackStrategy: FallbackRecommendationStrategy
-    ) {}
+  constructor(
+    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
+    private geminiService: GeminiService,
+    private fallbackStrategy: FallbackRecommendationStrategy,
+    private cacheService: RecommendationCachePort,
+  ) {}
 
-    async generate(
-        userId: string,
-        userProfile: UserProfile,
-        availableBooks: any[],
-        limit: number
-    ): Promise<RecommendationResponse> {
-        try {
-            const completedBooksText = userProfile.completedBooks
-                .slice(0, 10)
-                .map((cb) => {
-                    const book = cb.book;
-                    if (!book) return null;
-                    return `- ${book.title} (${book.genres?.map((g: any) => g.name).join(', ') || 'N/A'})`;
-                })
-                .filter((text): text is string => text !== null)
-                .join('\n');
+  async generate(
+    userId: string,
+    userProfile: UserProfile,
+    availableBooks: PopulatedBook[],
+    limit: number,
+  ): Promise<RecommendationResponse> {
+    const cached = await this.cacheService.get(userId);
+    if (cached) {
+      this.logger.log(`Cache hit for user ${userId}`);
+      return cached;
+    }
 
-            const currentlyReadingText = userProfile.currentlyReading
-                .map((cr) => {
-                    const book = cr.book;
-                    if (!book) return null;
-                    return `- ${book.title} (Đã đọc ${cr.progress} chương)`;
-                })
-                .filter((text): text is string => text !== null)
-                .join('\n');
+    try {
+      const completedBooksText = userProfile.completedBooks
+        .slice(0, 10)
+        .map((cb) => {
+          const book = cb.book;
+          if (!book) return null;
+          return `- ${book.title} (${book.genres?.map((g: { _id: string; name: string; slug: string }) => g.name).join(', ') || 'N/A'})`;
+        })
+        .filter((text): text is string => text !== null)
+        .join('\n');
 
-            const highRatedBooksText = userProfile.highRatedBooks
-                .slice(0, 5)
-                .map((hr) => {
-                    const book = hr.book;
-                    if (!book) return null;
-                    return `- ${book.title}: ${hr.rating}⭐ - "${hr.review}"`;
-                })
-                .filter((text): text is string => text !== null)
-                .join('\n');
+      const currentlyReadingText = userProfile.currentlyReading
+        .map((cr) => {
+          const book = cr.book;
+          if (!book) return null;
+          return `- ${book.title} (Đã đọc ${cr.progress} chương)`;
+        })
+        .filter((text): text is string => text !== null)
+        .join('\n');
 
-            const availableBooksText = availableBooks
-                .slice(0, 50)
-                .map((book) => ({
-                    id: book._id.toString(),
-                    title: book.title,
-                    genres: book.genres?.map((g: any) => g.name).join(', ') || 'N/A',
-                    description: book.description?.substring(0, 200) || 'No description',
-                    views: book.views || 0,
-                    likes: book.likes || 0,
-                }));
+      const highRatedBooksText = userProfile.highRatedBooks
+        .slice(0, 5)
+        .map((hr) => {
+          const book = hr.book;
+          if (!book) return null;
+          return `- ${book.title}: ${hr.rating}⭐ - "${hr.review}"`;
+        })
+        .filter((text): text is string => text !== null)
+        .join('\n');
 
-            const prompt = `
+      const availableBooksText = availableBooks.slice(0, 50).map((book) => ({
+        id: book._id.toString(),
+        title: book.title,
+        genres:
+          book.genres
+            ?.map((g: { _id: string; name: string; slug: string }) => g.name)
+            .join(', ') || 'N/A',
+        description: book.description?.substring(0, 200) || 'No description',
+        views: book.views || 0,
+        likes: book.likes || 0,
+      }));
+
+      const prompt = `
 Bạn là một chuyên gia đề xuất sách thông minh. Phân tích sở thích đọc sách của người dùng và đề xuất sách phù hợp.
 
 📚 LỊCH SỬ ĐỌC SÁCH:
@@ -146,35 +162,42 @@ ${JSON.stringify(availableBooksText, null, 2)}
 CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
 `;
 
-            const result = await this.geminiService.generateJSON<AIResponse>(prompt);
+      const result = await this.geminiService.generateJSON<AIResponse>(prompt);
 
-            const bookMap = new Map<string, any>(
-                availableBooks.map((book) => [book._id.toString(), book]),
-            );
+      const bookMap = new Map<string, PopulatedBook>(
+        availableBooks.map((book) => [book._id.toString(), book]),
+      );
 
-            const recommendations: RecommendationResult[] = result.recommendations
-                .filter((rec) => bookMap.has(rec.bookId))
-                .map((rec) => {
-                    const book = bookMap.get(rec.bookId)!;
-                    return {
-                        bookId: rec.bookId,
-                        title: rec.title,
-                        reason: rec.reason,
-                        matchScore: rec.matchScore,
-                        slug: book.slug,
-                        book: book,
-                    };
-                });
+      const recommendations: RecommendationResult[] = result.recommendations
+        .filter((rec) => bookMap.has(rec.bookId))
+        .map((rec) => {
+          const book = bookMap.get(rec.bookId)!;
+          return {
+            bookId: rec.bookId,
+            title: rec.title,
+            reason: rec.reason,
+            matchScore: rec.matchScore,
+            slug: book.slug,
+            book: book,
+          };
+        });
 
-            return {
-                analysis: result.analysis,
-                recommendations,
-            };
+      const response: RecommendationResponse = {
+        analysis: result.analysis,
+        recommendations,
+      };
 
-        } catch (error) {
-            this.logger.error('AI recommendation generation failed:', error);
-            return this.fallbackStrategy.generate(userId, userProfile, availableBooks, limit);
-        }
+      void this.cacheService.set(userId, response);
+
+      return response;
+    } catch (error) {
+      this.logger.error('AI recommendation generation failed:', error);
+      return this.fallbackStrategy.generate(
+        userId,
+        userProfile,
+        availableBooks,
+        limit,
+      );
     }
+  }
 }
-

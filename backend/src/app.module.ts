@@ -1,17 +1,20 @@
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CacheModule } from '@/shared/cache/redis.module';
 import { LoggerModule } from '@/shared/logger/logger.module';
-import { RedisModule } from '@nestjs-modules/ioredis';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { Module } from '@nestjs/common';
+import { getRedisConnectionToken, RedisModule } from '@nestjs-modules/ioredis';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import Redis from 'ioredis';
+import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config';
+import { MongoExceptionFilter } from './common/filters/mongo-exception.filter';
 
 // Clean Architecture Modules
 import { ApplicationModule } from './application/application.module';
@@ -27,29 +30,11 @@ import { PresentationModule } from './presentation/presentation.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>(
           'env.MONGO_URI',
           'mongodb://localhost:27017/socialbook',
         ),
-      }),
-    }),
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        transport: {
-          host: 'smtp.gmail.com',
-          port: 587,
-          secure: false,
-          auth: {
-            user: configService.get<string>('env.EMAIL_USER'),
-            pass: configService.get<string>('env.EMAIL_PASS'),
-          },
-        },
-        defaults: {
-          from: `"No Reply" <${configService.get<string>('env.EMAIL_USER')}>`,
-        },
       }),
     }),
     RedisModule.forRootAsync({
@@ -66,27 +51,56 @@ import { PresentationModule } from './presentation/presentation.module';
             host,
             port,
             password,
-            tls: host !== 'localhost' ? { rejectUnauthorized: false } : undefined,
-            lazyConnect: true,
-            maxRetriesPerRequest: 3,
+            tls:
+              host.includes('upstash') || host.includes('rediss')
+                ? { rejectUnauthorized: false }
+                : undefined,
+            connectTimeout: 10000,
+            maxRetriesPerRequest: 5,
             retryStrategy: (times: number) => {
-              if (times > 3) {
-                console.warn('[Redis] Connection failed after 3 retries. Redis features will be disabled.');
-                return null; // Stop retrying
+              if (times > 5) {
+                new Logger(AppModule.name).error(
+                  '[Redis] Connection failed after 5 retries. Redis features will be disabled.',
+                );
+                return null;
               }
-              return Math.min(times * 500, 2000); // Retry with delay
+              return Math.min(times * 500, 2000);
+            },
+            reconnectOnError: (err) => {
+              const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
+              if (targetErrors.some((e) => err.message.includes(e))) {
+                return true;
+              }
+              return false;
             },
           },
         };
       },
     }),
-    ThrottlerModule.forRoot([
-      {
-        name: 'global',
-        ttl: 60,
-        limit: 10,
-      },
-    ]),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('env.REDIS_HOST', 'localhost'),
+          port: configService.get<number>('env.REDIS_PORT', 6379),
+          password: configService.get<string>('env.REDIS_PASSWORD'),
+        },
+      }),
+    }),
+    ThrottlerModule.forRootAsync({
+      inject: [getRedisConnectionToken()],
+      useFactory: (redis: Redis) => ({
+        throttlers: [
+          {
+            name: 'global',
+            ttl: 60_000,
+            limit: 100,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService(redis),
+      }),
+    }),
     EventEmitterModule.forRoot(),
     CacheModule,
     LoggerModule,
@@ -99,6 +113,10 @@ import { PresentationModule } from './presentation/presentation.module';
   providers: [
     AppService,
     {
+      provide: APP_FILTER,
+      useClass: MongoExceptionFilter,
+    },
+    {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
@@ -108,4 +126,4 @@ import { PresentationModule } from './presentation/presentation.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

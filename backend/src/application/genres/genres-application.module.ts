@@ -9,11 +9,7 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    GenresRepositoryModule,
-    BooksRepositoryModule,
-    IdGeneratorModule,
-  ],
+  imports: [GenresRepositoryModule, BooksRepositoryModule, IdGeneratorModule],
   providers: [
     CreateGenreUseCase,
     DeleteGenreUseCase,

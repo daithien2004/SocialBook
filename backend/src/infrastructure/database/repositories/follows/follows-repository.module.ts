@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Follow, FollowSchema } from '@/infrastructure/database/schemas/follow.schema';
+import {
+  Follow,
+  FollowSchema,
+} from '@/infrastructure/database/schemas/follow.schema';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { FollowRepository } from './follow.repository';
@@ -11,14 +14,12 @@ import { FollowRepository } from './follow.repository';
     IdGeneratorModule,
   ],
   providers: [
+    FollowRepository,
     {
       provide: IFollowRepository,
       useClass: FollowRepository,
     },
   ],
-  exports: [
-    IFollowRepository,
-    MongooseModule,
-  ],
+  exports: [FollowRepository, IFollowRepository, MongooseModule],
 })
 export class FollowsRepositoryModule {}

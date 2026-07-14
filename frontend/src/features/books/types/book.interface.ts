@@ -1,4 +1,6 @@
+import type { PaginatedApiResult, PaginationMeta } from '@/lib/api-response';
 import { TabType } from "../books.constants";
+import { Chapter } from '@/features/chapters/types/chapter.interface';
 
 export interface Book {
   id: string;
@@ -26,31 +28,12 @@ export interface Book {
     views: number;
     likes: number;
   };
+  isSemantic?: boolean;
 }
 
-export interface Author {
-  id: string;
-  name: string;
-  bio: string;
-}
-
-export interface Genre {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-}
-
-export interface Chapter {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  orderIndex: number;
-  viewsCount: number;
-  createdAt: string;
-  updatedAt?: string;
-}
+import type { Author } from '@/features/authors/types/author.interface';
+import type { Genre } from '@/features/genres/types/genre.interface';
+export type { Author, Genre };
 
 export interface Review {
   id: string;
@@ -91,12 +74,7 @@ export interface BookForAdmin {
   };
 }
 
-export interface BackendPagination {
-  current: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
+export type BackendPagination = PaginationMeta;
 
 export const BOOK_STATUS = {
   DRAFT: 'draft',
@@ -126,8 +104,10 @@ export interface GetBooksParams {
   search?: string;
   genres?: string;
   tags?: string;
+  mode?: 'keyword' | 'semantic' | 'hybrid';
   sortBy?: BookOrderField;
   order?: 'asc' | 'desc';
+  status?: BookStatus | 'all';
 }
 
 export interface GetAdminBooksParams {
@@ -149,10 +129,7 @@ export interface BookStats {
   chapterCount: number;
 }
 
-export interface AdminBooksData {
-  data: BookForAdmin[];
-  meta: BackendPagination;
-}
+export type AdminBooksData = PaginatedApiResult<BookForAdmin>;
 
 export interface FiltersData {
   genres: Array<{
@@ -173,15 +150,7 @@ export interface LikeResult {
   likes: number;
 }
 
-export interface PaginatedData<T> {
-  data: T[];
-  meta: {
-    current: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-}
+export type PaginatedData<T> = PaginatedApiResult<T>;
 
 export interface TabState {
   books: Book[];

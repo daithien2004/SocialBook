@@ -1,17 +1,68 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/lib/nestjs-client-api';
-import { NESTJS_CHAPTERS_ENDPOINTS } from '@/constants/server-endpoints';
-import { Chapter, ChapterDetailData, ChapterPreview, ChaptersListData, CreateChapterParams, DeleteChapterParams, GetChapterByIdParams, GetChapterParams, GetChaptersParams, ImportChaptersParams, UpdateChapterParams } from '../types/chapter.interface';
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { axiosBaseQuery } from "@/lib/nestjs-client-api";
+import { NESTJS_CHAPTERS_ENDPOINTS } from "@/constants/server-endpoints";
+import type { PaginationMeta } from '@/lib/api-response';
+import {
+  Chapter,
+  ChapterDetailData,
+  ChapterKnowledge,
+  ChapterPreview,
+  ChaptersImportStatus,
+  ChaptersListData,
+  CreateChapterParams,
+  DeleteChapterParams,
+  GetChapterByIdParams,
+  GetChapterKnowledgeParams,
+  GetChapterParams,
+  GetChaptersImportStatusParams,
+  GetChaptersParams,
+  ImportChaptersParams,
+  RecordChapterViewParams,
+  StartChaptersImportParams,
+  StartChaptersImportResponse,
+  UpdateChapterParams,
+} from "../types/chapter.interface";
 
 export const CHAPTER_TAGS = {
-  CHAPTERS: 'Chapters',
-  CHAPTER: 'Chapter',
+  CHAPTERS: "Chapters",
+  CHAPTER: "Chapter",
 } as const;
 
-export type ChapterTagType = typeof CHAPTER_TAGS[keyof typeof CHAPTER_TAGS];
+export type ChapterTagType = (typeof CHAPTER_TAGS)[keyof typeof CHAPTER_TAGS];
+
+const normalizeChaptersListResponse = (response: unknown): ChaptersListData => {
+  const objResponse = response as {
+    chapters?: Chapter[];
+    data?: Chapter[];
+    meta?: PaginationMeta;
+  };
+
+  if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
+    return {
+      chapters: objResponse.chapters,
+      total: objResponse.meta?.total ?? objResponse.chapters.length,
+    };
+  }
+
+  if (objResponse?.data && Array.isArray(objResponse.data)) {
+    return {
+      chapters: objResponse.data,
+      total: objResponse.meta?.total ?? objResponse.data.length,
+    };
+  }
+
+  if (Array.isArray(response)) {
+    return {
+      chapters: response as Chapter[],
+      total: response.length,
+    };
+  }
+
+  return { chapters: [], total: 0 };
+};
 
 export const chaptersApi = createApi({
-  reducerPath: 'chaptersApi',
+  reducerPath: "chaptersApi",
   baseQuery: axiosBaseQuery(),
   tagTypes: Object.values(CHAPTER_TAGS),
   endpoints: (builder) => ({
@@ -19,105 +70,55 @@ export const chaptersApi = createApi({
       query: (params) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.getChapterBySlug(
           params.bookSlug,
-          params.chapterSlug
+          params.chapterSlug,
         ),
-        method: 'GET',
+        method: "GET",
       }),
       providesTags: (result, error, params) => [
         { type: CHAPTER_TAGS.CHAPTER, id: params.chapterSlug },
       ],
     }),
 
+    recordChapterView: builder.mutation<void, RecordChapterViewParams>({
+      query: (params) => ({
+        url: NESTJS_CHAPTERS_ENDPOINTS.recordChapterView(
+          params.bookSlug,
+          params.chapterSlug,
+        ),
+        method: "POST",
+      }),
+    }),
+
     getChapters: builder.query<ChaptersListData, GetChaptersParams>({
       query: (params) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
-        method: 'GET',
+        method: "GET",
         params: {
           page: params.page,
-          limit: params.limit
-        }
+          limit: params.limit,
+        },
       }),
-      transformResponse: (response: unknown): ChaptersListData => {
-        const objResponse = response as { book?: any, chapters?: Chapter[], data?: Chapter[], meta?: any };
-
-        if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
-          return {
-            chapters: objResponse.chapters,
-            total: objResponse.meta?.total ?? objResponse.chapters.length,
-            book: objResponse.book || {}
-          };
-        }
-
-        if (objResponse?.data && Array.isArray(objResponse.data)) {
-          return {
-            chapters: objResponse.data,
-            total: objResponse.meta?.total ?? objResponse.data.length,
-            book: {}
-          };
-        }
-
-        if (Array.isArray(response)) {
-          return {
-            chapters: response as Chapter[],
-            total: (response as Chapter[]).length,
-            book: {}
-          };
-        }
-
-        return { chapters: [], total: 0, book: {} };
-      },
-      providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
+      transformResponse: normalizeChaptersListResponse,
+      providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: "LIST" }],
     }),
 
     getAdminChapters: builder.query<ChaptersListData, GetChaptersParams>({
       query: (params) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
-        method: 'GET',
+        method: "GET",
         params: {
           page: params.page,
-          limit: params.limit
-        }
+          limit: params.limit,
+        },
       }),
-      transformResponse: (response: unknown): ChaptersListData => {
-        // AxiosBaseQuery extracts response.data. In case of { book, chapters }
-        const objResponse = response as { book?: any, chapters?: Chapter[], data?: Chapter[], meta?: any };
-
-        if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
-          return {
-            chapters: objResponse.chapters,
-            total: objResponse.meta?.total ?? objResponse.chapters.length,
-            book: objResponse.book || {}
-          };
-        }
-
-        // Response từ axiosBaseQuery khi có meta: { data: Chapter[], meta: PaginationMeta }
-        if (objResponse?.data && Array.isArray(objResponse.data)) {
-          return {
-            chapters: objResponse.data,
-            total: objResponse.meta?.total ?? objResponse.data.length,
-            book: {}
-          };
-        }
-
-        // Fallback: response là array trực tiếp
-        if (Array.isArray(response)) {
-          return {
-            chapters: response as Chapter[],
-            total: (response as Chapter[]).length,
-            book: {}
-          };
-        }
-
-        // Default empty state
-        return { chapters: [], total: 0, book: {} };
-      },
-      providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
+      transformResponse: normalizeChaptersListResponse,
+      providesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: "LIST" }],
     }),
 
     getChapterById: builder.query<Chapter, GetChapterByIdParams>({
       query: ({ bookSlug, chapterId }) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.getChapterById(bookSlug, chapterId),
-        method: 'GET',
+        method: "GET",
       }),
       providesTags: (result, error, { chapterId }) => [
         { type: CHAPTER_TAGS.CHAPTER, id: chapterId },
@@ -127,40 +128,95 @@ export const chaptersApi = createApi({
     createChapter: builder.mutation<Chapter, CreateChapterParams>({
       query: ({ bookSlug, data }) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.createChapter(bookSlug),
-        method: 'POST',
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
+      invalidatesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: "LIST" }],
     }),
 
     updateChapter: builder.mutation<Chapter, UpdateChapterParams>({
       query: ({ bookSlug, chapterId, data }) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.updateChapter(bookSlug, chapterId),
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
       invalidatesTags: (result, error, { chapterId }) => [
         { type: CHAPTER_TAGS.CHAPTER, id: chapterId },
-        { type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' },
+        { type: CHAPTER_TAGS.CHAPTERS, id: "LIST" },
       ],
     }),
 
     deleteChapter: builder.mutation<void, DeleteChapterParams>({
       query: ({ bookSlug, chapterId }) => ({
         url: NESTJS_CHAPTERS_ENDPOINTS.deleteChapter(bookSlug, chapterId),
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: 'LIST' }],
+      invalidatesTags: [{ type: CHAPTER_TAGS.CHAPTERS, id: "LIST" }],
     }),
 
-    importChaptersPreview: builder.mutation<ChapterPreview[],
-      ImportChaptersParams>({
-        query: ({ bookSlug, formData }) => ({
-          url: NESTJS_CHAPTERS_ENDPOINTS.importPreview(bookSlug),
-          method: 'POST',
-          body: formData,
-        }),
+    importChaptersPreview: builder.mutation<
+      ChapterPreview[],
+      ImportChaptersParams
+    >({
+      query: ({ bookSlug, formData }) => ({
+        url: NESTJS_CHAPTERS_ENDPOINTS.importPreview(bookSlug),
+        method: "POST",
+        body: formData,
       }),
+      transformResponse: (response: {
+        chapters: ChapterPreview[];
+        totalChapters: number;
+      }) => response.chapters,
+    }),
+
+    startChaptersImport: builder.mutation<
+      StartChaptersImportResponse,
+      StartChaptersImportParams
+    >({
+      query: ({ bookSlug, data }) => ({
+        url: NESTJS_CHAPTERS_ENDPOINTS.importStart(bookSlug),
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: [],
+    }),
+
+    getChaptersImportStatus: builder.query<
+      ChaptersImportStatus,
+      GetChaptersImportStatusParams
+    >({
+      query: ({ bookSlug, jobId, timestamp }) => ({
+        url: NESTJS_CHAPTERS_ENDPOINTS.importStatus(bookSlug, jobId),
+        method: "GET",
+        params: timestamp ? { t: timestamp } : undefined,
+      }),
+      keepUnusedDataFor: 0,
+    }),
+
+    getChapterKnowledge: builder.query<
+      ChapterKnowledge,
+      GetChapterKnowledgeParams
+    >({
+      query: ({ bookSlug, chapterId, force }) => ({
+        url: NESTJS_CHAPTERS_ENDPOINTS.getChapterKnowledge(bookSlug, chapterId),
+        method: "GET",
+        params: { force: force ? "true" : undefined },
+      }),
+      providesTags: (result, error, { chapterId }) => [
+        { type: CHAPTER_TAGS.CHAPTER, id: `KNOWLEDGE_${chapterId}` },
+      ],
+    }),
+
+    askChapterAI: builder.mutation<
+      { answer: string; createdAt: string },
+      { bookSlug: string; chapterId: string; question: string }
+    >({
+      query: ({ bookSlug, chapterId, question }) => ({
+        url: `${NESTJS_CHAPTERS_ENDPOINTS.getChapters(bookSlug)}/${chapterId}/ask-ai`,
+        method: "POST",
+        body: { question },
+      }),
+    }),
   }),
 });
 
@@ -168,10 +224,18 @@ export const {
   useGetChapterQuery,
   useGetChaptersQuery,
   useGetAdminChaptersQuery,
+  useLazyGetAdminChaptersQuery,
   useGetChapterByIdQuery,
   useLazyGetChapterByIdQuery,
   useCreateChapterMutation,
   useUpdateChapterMutation,
   useDeleteChapterMutation,
   useImportChaptersPreviewMutation,
+  useStartChaptersImportMutation,
+  useGetChaptersImportStatusQuery,
+  useLazyGetChaptersImportStatusQuery,
+  useGetChapterKnowledgeQuery,
+  useLazyGetChapterKnowledgeQuery,
+  useAskChapterAIMutation,
+  useRecordChapterViewMutation,
 } = chaptersApi;

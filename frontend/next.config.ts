@@ -1,17 +1,13 @@
 import type { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
+let nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
         port: '',
-        pathname: '/**', // Cho phép tất cả các đường dẫn con
-      },
-      {
-        protocol: 'https',
-        hostname: '**',
+        pathname: '/**',
       },
       {
         protocol: 'https',
@@ -23,7 +19,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
         port: '',
-        pathname: '/**', // Cho phép tất cả các đường dẫn con
+        pathname: '/**',
       },
       {
         protocol: 'https',
@@ -51,15 +47,26 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'nhasachmienphi.com',
+        hostname: 'edit.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-icons-png.flaticon.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
       },
     ],
   },
-
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
 };
+
+if (process.env.ANALYZE === 'true') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const withBundleAnalyzer = require('@next/bundle-analyzer')({
+    enabled: true,
+  });
+  nextConfig = withBundleAnalyzer(nextConfig);
+}
 
 export default nextConfig;

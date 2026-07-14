@@ -2,49 +2,96 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
-  Author,
-  AuthorSchema,
-} from '@/infrastructure/database/schemas/author.schema';
-import { Book, BookSchema } from '@/infrastructure/database/schemas/book.schema';
-import { Genre, GenreSchema } from '@/infrastructure/database/schemas/genre.schema';
-import { Review, ReviewSchema } from '@/infrastructure/database/schemas/review.schema';
-import { Chapter, ChapterSchema } from '@/infrastructure/database/schemas/chapter.schema';
-import { User, UserSchema } from '@/infrastructure/database/schemas/user.schema';
-import { Role, RoleSchema } from '@/infrastructure/database/schemas/role.schema';
-import { TextToSpeech } from '@/domain/text-to-speech/entities/text-to-speech.entity';
-import { Post, PostSchema } from '@/infrastructure/database/schemas/post.schema';
-import { Notification, NotificationSchema } from '@/infrastructure/database/schemas/notification.schema';
-import { Progress, ProgressSchema } from '@/infrastructure/database/schemas/progress.schema';
-import { Follow, FollowSchema } from '@/infrastructure/database/schemas/follow.schema';
-import { Like, LikeSchema } from '@/infrastructure/database/schemas/like.schema';
+  User,
+  UserSchema,
+} from '@/infrastructure/database/schemas/user.schema';
+import {
+  Role,
+  RoleSchema,
+} from '@/infrastructure/database/schemas/role.schema';
+import {
+  Book,
+  BookSchema,
+} from '@/infrastructure/database/schemas/book.schema';
+import {
+  Chapter,
+  ChapterSchema,
+} from '@/infrastructure/database/schemas/chapter.schema';
+import {
+  Review,
+  ReviewSchema,
+} from '@/infrastructure/database/schemas/review.schema';
 import {
   Comment,
   CommentSchema,
 } from '@/infrastructure/database/schemas/comment.schema';
+import {
+  Follow,
+  FollowSchema,
+} from '@/infrastructure/database/schemas/follow.schema';
+import {
+  Like,
+  LikeSchema,
+} from '@/infrastructure/database/schemas/like.schema';
+import {
+  Progress,
+  ProgressSchema,
+} from '@/infrastructure/database/schemas/progress.schema';
+import {
+  Post,
+  PostSchema,
+} from '@/infrastructure/database/schemas/post.schema';
+import {
+  Notification,
+  NotificationSchema,
+} from '@/infrastructure/database/schemas/notification.schema';
+import {
+  ToxicWordDocument,
+  ToxicWordSchema,
+} from '@/infrastructure/database/schemas/toxic-word.schema';
 
-import { AuthorsSeed } from './authors.seeder';
-import { GenresSeed } from './genres.seeder';
-import { BooksSeed } from './books.seeder';
-import { ReviewsSeed } from './reviews.seeder';
-import { ChaptersSeed } from './chapters.seeder';
 import { SeederService } from './seeder.service';
-import { UsersSeed } from './users.seeder';
-import { CommentsSeed } from './comments.seeder';
 import { RolesSeed } from './roles.seed';
-import { TextToSpeechSeed } from './textToSpeech.seeder';
-import { TextToSpeechSchema } from '@/infrastructure/database/schemas/text-to-speech.schema';
+import { UsersSeed } from './users.seeder';
+import { ReviewsSeed } from './reviews.seeder';
+import { CommentsSeed } from './comments.seeder';
+import { FollowsSeed } from './follows.seeder';
+import { LikesSeed } from './likes.seeder';
+import { ProgressSeed } from './progress.seeder';
+import { PostsSeed } from './posts.seeder';
+import { NotificationSeed } from './notifications.seeder';
+import { ToxicWordsSeed } from './toxic-words.seeder';
+import { ChapterDiscussionsSeed } from './chapter-discussions.seeder';
+import { ReadProgressReviewSeed } from './read-progress-review.seeder';
+import { PostsDiverseSeed } from './posts-diverse.seeder';
+import { BookPostLikesSeed } from './book-post-likes.seeder';
+import {
+  ReadingRoom,
+  ReadingRoomSchema,
+} from '@/infrastructure/database/schemas/reading-room.schema';
+import {
+  RoomCommentSchema,
+  RoomCommentSchemaFactory,
+} from '@/infrastructure/database/schemas/reading-room-interactions/room-comment.schema';
+import {
+  RoomReactionSchema,
+  RoomReactionSchemaFactory,
+} from '@/infrastructure/database/schemas/reading-room-interactions/room-reaction.schema';
+import {
+  RoomQuoteSchema,
+  RoomQuoteSchemaFactory,
+} from '@/infrastructure/database/schemas/reading-room-interactions/room-quote.schema';
+import { ReadingRoomsSeed } from './reading-rooms.seeder';
 
 @Module({
   imports: [
-    // Cần import ConfigModule để sử dụng ConfigService
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
-    // Kết nối MongoDB
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>(
           'MONGO_URI',
           'mongodb://localhost:27017/socialbook',
@@ -52,37 +99,43 @@ import { TextToSpeechSchema } from '@/infrastructure/database/schemas/text-to-sp
       }),
       inject: [ConfigService],
     }),
-    // Register các schema
     MongooseModule.forFeature([
-      { name: Author.name, schema: AuthorSchema },
-      { name: Book.name, schema: BookSchema },
-      { name: Genre.name, schema: GenreSchema },
-      { name: Review.name, schema: ReviewSchema },
-      { name: Chapter.name, schema: ChapterSchema },
       { name: User.name, schema: UserSchema },
-      { name: Comment.name, schema: CommentSchema },
       { name: Role.name, schema: RoleSchema },
-      { name: TextToSpeech.name, schema: TextToSpeechSchema },
-      { name: Post.name, schema: PostSchema },
-      { name: Notification.name, schema: NotificationSchema },
-      { name: Progress.name, schema: ProgressSchema },
+      { name: Book.name, schema: BookSchema },
+      { name: Chapter.name, schema: ChapterSchema },
+      { name: Review.name, schema: ReviewSchema },
+      { name: Comment.name, schema: CommentSchema },
       { name: Follow.name, schema: FollowSchema },
       { name: Like.name, schema: LikeSchema },
+      { name: Progress.name, schema: ProgressSchema },
+      { name: Post.name, schema: PostSchema },
+      { name: Notification.name, schema: NotificationSchema },
+      { name: ToxicWordDocument.name, schema: ToxicWordSchema },
+      { name: ReadingRoom.name, schema: ReadingRoomSchema },
+      { name: RoomCommentSchema.name, schema: RoomCommentSchemaFactory },
+      { name: RoomReactionSchema.name, schema: RoomReactionSchemaFactory },
+      { name: RoomQuoteSchema.name, schema: RoomQuoteSchemaFactory },
     ]),
   ],
   providers: [
     SeederService,
-    AuthorsSeed,
-    GenresSeed,
-    BooksSeed,
-    ReviewsSeed,
-    ChaptersSeed,
-    UsersSeed,
-    CommentsSeed,
     RolesSeed,
-    TextToSpeechSeed,
+    UsersSeed,
+    ReviewsSeed,
+    CommentsSeed,
+    FollowsSeed,
+    LikesSeed,
+    ProgressSeed,
+    PostsSeed,
+    NotificationSeed,
+    ToxicWordsSeed,
+    ChapterDiscussionsSeed,
+    ReadProgressReviewSeed,
+    PostsDiverseSeed,
+    BookPostLikesSeed,
+    ReadingRoomsSeed,
   ],
   exports: [SeederService],
 })
-export class DatabaseSeedModule { }
-
+export class DatabaseSeedModule {}

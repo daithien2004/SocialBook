@@ -1,13 +1,15 @@
+import { PopulatedBook } from './recommendation-data.port';
+
 export interface EnrichedRecommendation {
   bookId: string;
   title: string;
   reason: string;
   matchScore: number;
   slug: string;
-  book: any; // PopulatedBook
+  book: PopulatedBook;
 }
 
-export interface RecommendationResult extends EnrichedRecommendation {}
+export type RecommendationResult = EnrichedRecommendation;
 
 export interface RecommendationAnalysis {
   favoriteGenres: string[];
@@ -22,12 +24,12 @@ export interface RecommendationResponse {
 }
 
 export interface PaginatedRecommendationResponse {
-    analysis: RecommendationAnalysis;
-    recommendations: EnrichedRecommendation[];
-    currentPage: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
+  analysis: RecommendationAnalysis;
+  recommendations: EnrichedRecommendation[];
+  currentPage: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }

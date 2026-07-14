@@ -2,7 +2,7 @@ import { BookTagType, BOOK_TAGS } from "./api/bookApi";
 import { BookForAdmin, LikeResult } from "./types/book.interface";
 
 
-export function buildListTags<T extends Record<string, any>>(
+export function buildListTags<T extends object>(
     items: T[] | undefined,
     tagType: BookTagType,
     idField: keyof T = 'slug' as keyof T
@@ -41,19 +41,10 @@ export function buildUpdateBookInvalidationTags(
 }
 
 export function buildLikeBookInvalidationTags(
-    result: LikeResult | undefined,
+    _result: LikeResult | undefined,
     bookId: string
 ) {
-    const tags: Array<{ type: BookTagType; id: string }> = [
+    return [
         { type: BOOK_TAGS.BOOK_STATS, id: bookId },
     ];
-
-    if (result?.slug) {
-        tags.push({
-            type: BOOK_TAGS.BOOK_DETAIL,
-            id: result.slug,
-        });
-    }
-
-    return tags;
 }

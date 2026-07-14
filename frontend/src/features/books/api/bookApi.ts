@@ -1,14 +1,15 @@
 import { NESTJS_BOOKS_ENDPOINTS } from '@/constants/server-endpoints';
 import { axiosBaseQuery } from '@/lib/nestjs-client-api';
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { buildLikeBookInvalidationTags, buildListTags, buildUpdateBookInvalidationTags } from '../books.helpers';
-import { AdminBooksData, Book, BookForAdmin, BookStats, FiltersData, GetAdminBooksParams, GetBookParams, GetBooksParams, PaginatedData, UpdateBookParams } from '../types/book.interface';
+import { buildListTags, buildUpdateBookInvalidationTags } from '../books.helpers';
+import { AdminBooksData, Book, BookForAdmin, BookStats, FiltersData, GetAdminBooksParams, GetBookParams, GetBooksParams, LikeResult, PaginatedData, UpdateBookParams } from '../types/book.interface';
 
 export const BOOK_TAGS = {
   BOOKS: 'Books',
   BOOK_DETAIL: 'BookDetail',
   ADMIN_BOOKS: 'AdminBooks',
   BOOK_STATS: 'BookStats',
+  TRENDING_SEARCHES: 'TrendingSearches',
 } as const;
 
 export type BookTagType = typeof BOOK_TAGS[keyof typeof BOOK_TAGS];
@@ -116,22 +117,53 @@ export const booksApi = createApi({
       ],
     }),
 
-    likeBook: builder.mutation<
-      { slug: string; isLiked: boolean; likes: number },
-      string
-    >({
-      query: (bookId) => ({
-        url: NESTJS_BOOKS_ENDPOINTS.like(bookId),
+    likeBook: builder.mutation<LikeResult, string>({
+      query: (bookSlug) => ({
+        url: NESTJS_BOOKS_ENDPOINTS.like(bookSlug),
         method: 'PATCH',
       }),
-      invalidatesTags: (result, error, bookId) =>
-        buildLikeBookInvalidationTags(result, bookId),
+      invalidatesTags: [
+        { type: BOOK_TAGS.BOOKS, id: 'LIST' },
+      ],
+    }),
+
+    recordView: builder.mutation<void, string>({
+      query: (bookSlug) => ({
+        url: NESTJS_BOOKS_ENDPOINTS.recordView(bookSlug),
+        method: 'POST',
+      }),
+    }),
+
+    getTrendingSearches: builder.query<string[], void>({
+      query: () => ({
+        url: '/search/trending-keywords',
+        method: 'GET',
+      }),
+      providesTags: [BOOK_TAGS.TRENDING_SEARCHES],
+    }),
+
+    getTopReadBooks: builder.query<Book[], { timeRange: string; limit?: number }>({
+      query: (params) => ({
+        url: '/books/top-read',
+        method: 'GET',
+        params,
+      }),
+    }),
+
+    recordSearchKeyword: builder.mutation<void, string>({
+      query: (keyword) => ({
+        url: '/search/record',
+        method: 'POST',
+        body: { keyword },
+      }),
+      invalidatesTags: [BOOK_TAGS.TRENDING_SEARCHES],
     }),
   }),
 });
 
 export const {
   useGetBooksQuery,
+  useLazyGetBooksQuery,
   useGetBookBySlugQuery,
   useCreateBookMutation,
   useGetAdminBooksQuery,
@@ -140,5 +172,9 @@ export const {
   useUpdateBookMutation,
   useDeleteBookMutation,
   useLikeBookMutation,
+  useRecordViewMutation,
   useGetFiltersQuery,
+  useGetTrendingSearchesQuery,
+  useGetTopReadBooksQuery,
+  useRecordSearchKeywordMutation,
 } = booksApi;

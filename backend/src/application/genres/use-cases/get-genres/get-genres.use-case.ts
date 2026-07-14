@@ -6,16 +6,12 @@ import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 
 @Injectable()
 export class GetGenresUseCase {
-    constructor(
-        private readonly genreRepository: IGenreRepository
-    ) {}
+  constructor(private readonly genreRepository: IGenreRepository) {}
 
-    async execute(query: GetGenresQuery): Promise<PaginatedResult<Genre>> {
-        return this.genreRepository.findAll(
-            { name: query.name },
-            { page: query.page, limit: query.limit }
-        );
-    }
+  async execute(query: GetGenresQuery): Promise<PaginatedResult<Genre>> {
+    return this.genreRepository.findAll(
+      { name: query.name },
+      { page: query.page, limit: query.limit },
+    );
+  }
 }
-
-

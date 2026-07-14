@@ -1,5 +1,4 @@
 'use client'
-import PostList from "@/components/post/PostList";
 import PostListUser from "@/components/post/PostListByUser";
 import {useParams} from "next/navigation";
 

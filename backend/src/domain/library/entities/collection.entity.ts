@@ -1,79 +1,85 @@
 import { Entity } from '@/shared/domain/entity.base';
 import { UserId } from '../value-objects/user-id.vo';
 
+export interface CollectionProps {
+  userId: UserId;
+  name: string;
+  description: string;
+  isPublic: boolean;
+}
+
 export class Collection extends Entity<string> {
-    private constructor(
-        id: string,
-        private _userId: UserId,
-        private _name: string,
-        private _description: string,
-        private _isPublic: boolean,
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+  private _props: CollectionProps;
 
-    static create(props: {
-        id: string;
-        userId: string;
-        name: string;
-        description?: string;
-        isPublic?: boolean;
-    }): Collection {
-        return new Collection(
-            props.id,
-            UserId.create(props.userId),
-            props.name,
-            props.description || '',
-            props.isPublic || false
-        );
-    }
+  private constructor(
+    id: string,
+    props: CollectionProps,
+    createdAt?: Date,
+    updatedAt?: Date,
+  ) {
+    super(id, createdAt, updatedAt);
+    this._props = props;
+  }
 
-    static reconstitute(props: {
-        id: string;
-        userId: string;
-        name: string;
-        description: string;
-        isPublic: boolean;
-        createdAt: Date;
-        updatedAt: Date;
-    }): Collection {
-        return new Collection(
-            props.id,
-            UserId.create(props.userId),
-            props.name,
-            props.description,
-            props.isPublic,
-            props.createdAt,
-            props.updatedAt
-        );
-    }
+  static create(props: {
+    id: string;
+    userId: string;
+    name: string;
+    description?: string;
+    isPublic?: boolean;
+  }): Collection {
+    return new Collection(props.id, {
+      userId: UserId.create(props.userId),
+      name: props.name,
+      description: props.description || '',
+      isPublic: props.isPublic || false,
+    });
+  }
 
-    get userId(): UserId {
-        return this._userId;
-    }
+  static reconstitute(props: {
+    id: string;
+    userId: string;
+    name: string;
+    description: string;
+    isPublic: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Collection {
+    return new Collection(
+      props.id,
+      {
+        userId: UserId.create(props.userId),
+        name: props.name,
+        description: props.description,
+        isPublic: props.isPublic,
+      },
+      props.createdAt,
+      props.updatedAt,
+    );
+  }
 
-    get name(): string {
-        return this._name;
-    }
+  get userId(): UserId {
+    return this._props.userId;
+  }
+  get name(): string {
+    return this._props.name;
+  }
+  get description(): string {
+    return this._props.description;
+  }
+  get isPublic(): boolean {
+    return this._props.isPublic;
+  }
 
-    get description(): string {
-        return this._description;
-    }
-
-    get isPublic(): boolean {
-        return this._isPublic;
-    }
-
-    updateInfo(props: {
-        name?: string;
-        description?: string;
-        isPublic?: boolean;
-    }): void {
-        if (props.name !== undefined) this._name = props.name;
-        if (props.description !== undefined) this._description = props.description;
-        if (props.isPublic !== undefined) this._isPublic = props.isPublic;
-        this.markAsUpdated();
-    }
+  updateInfo(props: {
+    name?: string;
+    description?: string;
+    isPublic?: boolean;
+  }): void {
+    if (props.name !== undefined) this._props.name = props.name;
+    if (props.description !== undefined)
+      this._props.description = props.description;
+    if (props.isPublic !== undefined) this._props.isPublic = props.isPublic;
+    this.markAsUpdated();
+  }
 }

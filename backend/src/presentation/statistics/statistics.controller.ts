@@ -1,15 +1,6 @@
-import { LocationCheckService } from '@/infrastructure/external/location-check.service';
-import {
-  Controller,
-  Get,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 
 import { Roles } from '@/common/decorators/roles.decorator';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
 import { GetBookStatsUseCase } from '@/application/statistics/use-cases/get-book-stats.use-case';
@@ -17,11 +8,10 @@ import { GetEngagementStatsUseCase } from '@/application/statistics/use-cases/ge
 import { GetGrowthStatsUseCase } from '@/application/statistics/use-cases/get-growth-stats.use-case';
 import { GetOverviewStatsUseCase } from '@/application/statistics/use-cases/get-overview-stats.use-case';
 import { GetUserStatsUseCase } from '@/application/statistics/use-cases/get-user-stats.use-case';
+import { CheckUserLocationsUseCase } from '@/application/statistics/use-cases/check-user-locations/check-user-locations.use-case';
 
-@ApiTags('Statistics')
 @Controller('statistics')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@ApiBearerAuth()
+@UseGuards(RolesGuard)
 @Roles('admin', 'editor')
 export class StatisticsController {
   constructor(
@@ -30,8 +20,8 @@ export class StatisticsController {
     private readonly getBookStatsUseCase: GetBookStatsUseCase,
     private readonly getEngagementStatsUseCase: GetEngagementStatsUseCase,
     private readonly getGrowthStatsUseCase: GetGrowthStatsUseCase,
-    private readonly locationCheckService: LocationCheckService,
-  ) { }
+    private readonly checkUserLocationsUseCase: CheckUserLocationsUseCase,
+  ) {}
 
   @Get('overview')
   async getOverview() {
@@ -67,7 +57,10 @@ export class StatisticsController {
   ) {
     const numDays = days ? parseInt(days, 10) : 30;
     const groupByValue = (groupBy as 'day' | 'month' | 'year') || 'day';
-    const data = await this.getGrowthStatsUseCase.execute(numDays, groupByValue);
+    const data = await this.getGrowthStatsUseCase.execute(
+      numDays,
+      groupByValue,
+    );
     return {
       message: 'Get growth statistics successfully',
       data,
@@ -86,7 +79,8 @@ export class StatisticsController {
   @Get('analytics/chapter-engagement')
   async getChapterEngagement(@Query('limit') limit?: string) {
     const numLimit = limit ? parseInt(limit, 10) : 10;
-    const data = await this.getEngagementStatsUseCase.getChapterEngagement(numLimit);
+    const data =
+      await this.getEngagementStatsUseCase.getChapterEngagement(numLimit);
     return {
       message: 'Get chapter engagement successfully',
       data,
@@ -114,7 +108,8 @@ export class StatisticsController {
 
   @Get('analytics/geographic')
   async getGeographicDistribution() {
-    const data = await this.getEngagementStatsUseCase.getGeographicDistribution();
+    const data =
+      await this.getEngagementStatsUseCase.getGeographicDistribution();
     return {
       message: 'Get geographic distribution successfully',
       data,
@@ -123,28 +118,9 @@ export class StatisticsController {
 
   @Get('check-locations')
   async checkLocations() {
-    const result = await this.locationCheckService.checkUserLocations();
+    const result = await this.checkUserLocationsUseCase.execute();
     return {
       message: 'Location check completed',
-      data: result,
-    };
-  }
-
-  @Post('seed-locations')
-  async seedLocations() {
-    const result = await this.locationCheckService.seedLocations();
-    return {
-      message: 'Location seeding completed',
-      data: result,
-    };
-  }
-
-  @Post('seed-reading-history')
-  async seedReadingHistory(@Query('days') days?: string) {
-    const numDays = days ? parseInt(days, 10) : 30;
-    const result = await this.locationCheckService.seedReadingHistory(numDays);
-    return {
-      message: 'Reading history seeding completed',
       data: result,
     };
   }

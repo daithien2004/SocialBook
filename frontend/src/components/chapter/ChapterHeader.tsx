@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import Link from 'next/link';
-import { Eye, BookOpen, Clock } from 'lucide-react';
+import { Eye, BookOpen } from 'lucide-react';
 
 interface ChapterHeaderProps {
   bookTitle: string;
@@ -11,7 +12,7 @@ interface ChapterHeaderProps {
   className?: string;
 }
 
-export default function ChapterHeader({
+const ChapterHeader = memo(function ChapterHeader({
   bookTitle,
   bookSlug,
   chapterTitle,
@@ -25,21 +26,21 @@ export default function ChapterHeader({
       {showBookLink && (
         <Link
           href={`/books/${bookSlug}`}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest"
         >
           <BookOpen size={14} />
           <span>{bookTitle}</span>
         </Link>
       )}
 
-      <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
-        <span className="block text-lg font-medium text-gray-400 dark:text-gray-500 mb-2">
+      <h1 className="text-3xl sm:text-4xl font-bold text-foreground leading-tight">
+        <span className="block text-lg font-medium text-muted-foreground mb-2">
           Chương {chapterOrder}
         </span>
         {chapterTitle}
       </h1>
 
-      <div className="flex items-center justify-center gap-6 text-sm text-gray-400 dark:text-gray-500 font-medium">
+      <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground font-medium">
         <div className="flex items-center gap-2">
           <Eye size={16} />
           <span>{viewsCount.toLocaleString('vi-VN')} lượt đọc</span>
@@ -47,7 +48,9 @@ export default function ChapterHeader({
       </div>
       
       {/* Minimal Divider */}
-      <div className="w-16 h-px bg-gray-200 dark:bg-white/10 mx-auto" />
+      <div className="w-16 h-px bg-border mx-auto" />
     </header>
   );
-}
+});
+
+export default ChapterHeader;

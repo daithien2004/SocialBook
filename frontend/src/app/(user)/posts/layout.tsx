@@ -1,7 +1,9 @@
+import { ReactNode } from 'react';
+
 export default function PostsLayout({
-                                        children,
-                                    }: {
-    children: React.ReactNode;
+    children,
+}: {
+    children: ReactNode;
 }) {
     return (
         <>

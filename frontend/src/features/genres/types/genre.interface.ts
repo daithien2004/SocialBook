@@ -1,3 +1,5 @@
+import type { PaginatedApiResult } from '@/lib/api-response';
+
 export interface Genre {
     id: string;
     name: string;
@@ -7,15 +9,7 @@ export interface Genre {
     updatedAt: string;
 }
 
-export interface GenresListResponse {
-    data: Genre[];
-    meta: {
-        current: number;
-        pageSize: number;
-        total: number;
-        totalPages: number;
-    };
-}
+export type GenresListResponse = PaginatedApiResult<Genre>;
 
 export interface CreateGenreRequest {
     name: string;

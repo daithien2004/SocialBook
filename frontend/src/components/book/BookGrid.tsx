@@ -41,19 +41,19 @@ export function BookGrid({
 
           if (isLastBook) {
             return (
-              <div key={book.id} ref={onLastElementVisible}>
-                <BookCard book={book} />
+              <div key={book.id} ref={onLastElementVisible} className="h-full">
+                <BookCard book={book} priority={index < 8} />
               </div>
             );
           }
 
-          return <BookCard key={book.id} book={book} />;
+          return <BookCard key={book.id} book={book} priority={index < 8} />;
         })}
       </div>
 
-      {isFetching && isInitialized && <LoadingMoreIndicator />}
+      {isFetching && isInitialized ? <LoadingMoreIndicator /> : null}
 
-      {!hasMore && books.length > 0 && <EndOfListMessage />}
+      {!hasMore && books.length > 0 ? <EndOfListMessage /> : null}
     </>
   );
 }

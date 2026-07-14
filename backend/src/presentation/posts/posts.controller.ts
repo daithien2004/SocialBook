@@ -10,49 +10,52 @@ import {
   Patch,
   Post,
   Query,
-  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 
+import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { CreatePostDto } from '@/presentation/posts/dto/create-post.dto';
-import { PaginationDto, PaginationUserDto } from '@/presentation/posts/dto/pagination.dto';
+import { PaginationUserDto } from '@/presentation/posts/dto/pagination.dto';
 import { UpdatePostDto } from '@/presentation/posts/dto/update-post.dto';
 
-import { Public } from '@/common/decorators/customize';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 // Use Cases
-import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
-import { CreatePostCommand } from '@/application/posts/use-cases/create-post.command';
-import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
-import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
-import { GetPostsByUserUseCase } from '@/application/posts/use-cases/get-posts-by-user.use-case';
-import { GetPostsByUserQuery } from '@/application/posts/use-cases/get-posts-by-user.query';
-import { GetPostUseCase } from '@/application/posts/use-cases/get-post.use-case';
-import { GetPostQuery } from '@/application/posts/use-cases/get-post.query';
-import { UpdatePostUseCase } from '@/application/posts/use-cases/update-post.use-case';
-import { UpdatePostCommand } from '@/application/posts/use-cases/update-post.command';
-import { DeletePostUseCase } from '@/application/posts/use-cases/delete-post.use-case';
-import { DeletePostCommand } from '@/application/posts/use-cases/delete-post.command';
-import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-post-image.use-case';
-import { RemovePostImageCommand } from '@/application/posts/use-cases/remove-post-image.command';
-import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
-import { GetFlaggedPostsQuery } from '@/application/posts/use-cases/get-flagged-posts.query';
-import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
 import { ApprovePostCommand } from '@/application/posts/use-cases/approve-post.command';
-import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
+import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
+import { CreatePostCommand } from '@/application/posts/use-cases/create-post.command';
+import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
+import { DeletePostCommand } from '@/application/posts/use-cases/delete-post.command';
+import { DeletePostUseCase } from '@/application/posts/use-cases/delete-post.use-case';
+import { GetFlaggedPostsQuery } from '@/application/posts/use-cases/get-flagged-posts.query';
+import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
+import { GetPostQuery } from '@/application/posts/use-cases/get-post.query';
+import { GetPostUseCase } from '@/application/posts/use-cases/get-post.use-case';
+import { GetPostsByUserQuery } from '@/application/posts/use-cases/get-posts-by-user.query';
+import { GetPostsByUserUseCase } from '@/application/posts/use-cases/get-posts-by-user.use-case';
+import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
+import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
 import { RejectPostCommand } from '@/application/posts/use-cases/reject-post.command';
+import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
+import { RemovePostImageCommand } from '@/application/posts/use-cases/remove-post-image.command';
+import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-post-image.use-case';
+import { UpdatePostCommand } from '@/application/posts/use-cases/update-post.command';
+import { UpdatePostUseCase } from '@/application/posts/use-cases/update-post.use-case';
 import { PostResponseDto } from '@/presentation/posts/dto/post.response.dto';
+import { IsOptional, IsString } from 'class-validator';
 
-@ApiTags('Posts')
-@ApiBearerAuth()
+export class FlaggedPostsQueryDto extends PaginationQueryDto {
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}
+
 @Controller('posts')
 export class PostsController {
   constructor(
@@ -66,48 +69,60 @@ export class PostsController {
     private readonly getFlaggedPostsUseCase: GetFlaggedPostsUseCase,
     private readonly approvePostUseCase: ApprovePostUseCase,
     private readonly rejectPostUseCase: RejectPostUseCase,
-  ) { }
+  ) {}
 
   @Public()
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    const limit = query.limit > 100 ? 100 : query.limit;
-    const postsQuery = new GetPostsQuery(query.page, limit);
+  async findAll(
+    @CurrentUser('id') userId: string,
+    @Query() query: PaginationQueryDto & { cursor?: string },
+  ) {
+    const limit = Math.min(query.actualLimit || 10, 100);
+    const postsQuery = new GetPostsQuery(limit, query.cursor, userId);
     const result = await this.getPostsUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
-      data: PostResponseDto.fromArray(result.data), // Response DTO handles Post Entity mapping
+      data: PostResponseDto.fromArray(result.data),
       meta: {
-        page: query.page,
         limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / limit),
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
       },
     };
   }
 
   @Public()
   @Get('user')
-  async findAllByUser(@Req() req: Request & { user?: { id: string } }, @Query() query: PaginationUserDto) {
-    const limit = query.limit > 100 ? 100 : query.limit;
-    const postsQuery = new GetPostsByUserQuery(query.userId, query.page, limit);
+  async findAllByUser(
+    @CurrentUser('id') currentUserId: string,
+    @Query() query: PaginationUserDto & { cursor?: string },
+  ) {
+    const limit = Math.min(query.actualLimit || 10, 100);
+    const postsQuery = new GetPostsByUserQuery(
+      query.userId,
+      limit,
+      query.cursor,
+      currentUserId,
+    );
     const result = await this.getPostsByUserUseCase.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
       meta: {
-        page: query.page,
         limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / limit),
+        nextCursor: result.nextCursor,
+        hasMore: result.hasMore,
       },
     };
   }
 
   @Public()
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const query = new GetPostQuery(id);
+  async findOne(
+    @Query('userId') userId: string | undefined,
+    @Param('id') id: string,
+  ) {
+    const query = new GetPostQuery(id, userId);
     const data = await this.getPostUseCase.execute(query);
     return {
       message: 'Get post detail successfully',
@@ -116,11 +131,9 @@ export class PostsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
-  @ApiConsumes('multipart/form-data')
   async create(
-    @Req() req: Request & { user: { id: string } },
+    @CurrentUser('id') userId: string,
     @Body() dto: CreatePostDto,
     @UploadedFiles(
       new ParseFilePipe({
@@ -132,30 +145,22 @@ export class PostsController {
     )
     files?: Express.Multer.File[],
   ) {
-    if (files && files.length > 10) {
-      throw new BadRequestException('Maximum 10 images allowed');
-    }
-    const command = new CreatePostCommand(req.user.id, dto.bookId, dto.content);
-    const data = await this.createPostUseCase.execute(command, files);
+    const command = new CreatePostCommand(userId, dto.bookId, dto.content);
+    const { post, moderationMessage } = await this.createPostUseCase.execute(
+      command,
+      files,
+    );
 
-    const responseDto = new PostResponseDto(data);
-    if (data.isFlagged) {
-      return {
-        ...responseDto,
-        warning: `Bài viết phát hiện nội dung vi phạm cần quản trị viên phê duyệt: ${data.moderationReason}`,
-      }
-    }
-
+    const responseDto = new PostResponseDto(post);
     return {
-      message: 'Create post successfully',
+      message: moderationMessage ? undefined : 'Đăng bài viết thành công',
       data: responseDto,
+      warning: moderationMessage,
     };
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 10))
-  @ApiConsumes('multipart/form-data')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdatePostDto,
@@ -168,26 +173,29 @@ export class PostsController {
       }),
     )
     files?: Express.Multer.File[],
-    @Req() req?: Request & { user: { id: string } }
+    @CurrentUser('id') userId?: string,
   ) {
-    if (files && files.length > 10) {
-      throw new BadRequestException('Maximum 10 images allowed');
-    }
-
-    const userId = req?.user?.id || '';
-    const command = new UpdatePostCommand(userId, id, dto.content, dto.bookId, dto.imageUrls);
-    const data = await this.updatePostUseCase.execute(command, files);
+    const command = new UpdatePostCommand(
+      userId || '',
+      id,
+      dto.content,
+      dto.bookId,
+      dto.imageUrls,
+    );
+    const { post, moderationMessage } = await this.updatePostUseCase.execute(
+      command,
+      files,
+    );
     return {
-      message: 'Update post successfully',
-      data: new PostResponseDto(data),
+      message: moderationMessage ? undefined : 'Cập nhật bài viết thành công',
+      data: new PostResponseDto(post),
+      warning: moderationMessage,
     };
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  async remove(@Param('id') id: string, @Req() req: Request & { user: { id: string } }) {
-    const userId = req.user.id;
-    const command = new DeletePostCommand(userId, id, false, false); // isHardDelete=false, isAdmin=false (assuming user delete own post)
+  async remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    const command = new DeletePostCommand(userId, id, false, false);
     await this.deletePostUseCase.execute(command);
     return {
       message: 'Delete post successfully',
@@ -195,11 +203,10 @@ export class PostsController {
   }
 
   @Delete(':id/permanent')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
-  async removeHard(@Param('id') id: string, @Req() req: Request & { user: { id: string } }) {
-    const userId = req.user.id;
-    const command = new DeletePostCommand(userId, id, true, true); // isHardDelete=true, isAdmin=true
+  async removeHard(@Param('id') id: string, @CurrentUser('id') userId: string) {
+    const command = new DeletePostCommand(userId, id, true, true);
     await this.deletePostUseCase.execute(command);
     return {
       message: 'Permanently deleted post',
@@ -207,16 +214,14 @@ export class PostsController {
   }
 
   @Delete(':id/images')
-  @UseGuards(JwtAuthGuard)
   async removeImage(
     @Param('id') id: string,
     @Body('imageUrl') imageUrl: string,
-    @Req() req: Request & { user: { id: string } }
+    @CurrentUser('id') userId: string,
   ) {
     if (!imageUrl) throw new BadRequestException('imageUrl is required');
 
-    // We pass userId for potential ownership check in future
-    const command = new RemovePostImageCommand(req.user.id, id, imageUrl, false);
+    const command = new RemovePostImageCommand(userId, id, imageUrl, false);
     const data = await this.removePostImageUseCase.execute(command);
     return {
       message: 'Image removed successfully',
@@ -227,26 +232,30 @@ export class PostsController {
   // ===== ADMIN ENDPOINTS =====
 
   @Get('admin/flagged')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
-  async getFlaggedPosts(@Query() query: PaginationDto) {
-    const limit = query.limit > 100 ? 100 : query.limit;
-    const flaggedQuery = new GetFlaggedPostsQuery(query.page, limit);
+  async getFlaggedPosts(@Query() query: FlaggedPostsQueryDto) {
+    const limit = query.actualLimit > 100 ? 100 : query.actualLimit;
+    const flaggedQuery = new GetFlaggedPostsQuery(
+      query.actualPage,
+      limit,
+      query.reason,
+    );
     const result = await this.getFlaggedPostsUseCase.execute(flaggedQuery);
     return {
+      message: 'Get flagged posts successfully',
       data: PostResponseDto.fromArray(result.data),
       meta: {
-        page: query.page,
+        page: query.actualPage,
         limit,
         total: result.total,
         totalPages: Math.ceil(result.total / limit),
       },
-      message: 'Get flagged posts successfully',
     };
   }
 
   @Patch('admin/:id/approve')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
   async approvePost(@Param('id') id: string) {
     const command = new ApprovePostCommand(id);
@@ -257,14 +266,53 @@ export class PostsController {
   }
 
   @Delete('admin/:id/reject')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
   async rejectPost(@Param('id') id: string) {
-    // For reject, maybe we want a reason?
     const command = new RejectPostCommand(id, 'Rejected by admin');
     const result = await this.rejectPostUseCase.execute(command);
     return {
       message: result.message,
+    };
+  }
+
+  @Post('admin/bulk-approve')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async bulkApprovePosts(@Body('postIds') postIds: string[]) {
+    if (!postIds || !Array.isArray(postIds))
+      throw new BadRequestException('postIds array is required');
+
+    const results = await Promise.allSettled(
+      postIds.map((id) =>
+        this.approvePostUseCase.execute(new ApprovePostCommand(id)),
+      ),
+    );
+
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    return {
+      message: `Approved ${successCount}/${postIds.length} posts`,
+    };
+  }
+
+  @Post('admin/bulk-reject')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async bulkRejectPosts(@Body('postIds') postIds: string[]) {
+    if (!postIds || !Array.isArray(postIds))
+      throw new BadRequestException('postIds array is required');
+
+    const results = await Promise.allSettled(
+      postIds.map((id) =>
+        this.rejectPostUseCase.execute(
+          new RejectPostCommand(id, 'Rejected by admin'),
+        ),
+      ),
+    );
+
+    const successCount = results.filter((r) => r.status === 'fulfilled').length;
+    return {
+      message: `Rejected ${successCount}/${postIds.length} posts`,
     };
   }
 }

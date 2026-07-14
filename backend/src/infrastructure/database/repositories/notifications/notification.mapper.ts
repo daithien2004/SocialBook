@@ -1,4 +1,8 @@
-import { Notification, NotificationType, NotificationMeta } from '@/domain/notifications/entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+  NotificationMeta,
+} from '@/domain/notifications/entities/notification.entity';
 import { NotificationDocument } from '@/infrastructure/database/schemas/notification.schema';
 import { Types } from 'mongoose';
 
@@ -15,7 +19,7 @@ interface NotificationPersistence {
 }
 
 export class NotificationMapper {
-  static toDomain(doc: NotificationDocument | any): Notification {
+  static toDomain(doc: NotificationDocument): Notification {
     return Notification.reconstitute({
       id: doc._id.toString(),
       userId: doc.userId.toString(),
@@ -23,9 +27,15 @@ export class NotificationMapper {
       message: doc.message,
       type: doc.type,
       isRead: doc.isRead,
-      sentAt: doc.sentAt,
-      actionUrl: doc.actionUrl,
-      meta: doc.meta,
+      sentAt: doc.sentAt as Date,
+      actionUrl: doc.actionUrl ?? undefined,
+      meta: doc.meta
+        ? {
+            ...doc.meta,
+            actorId: doc.meta.actorId?.toString(),
+            targetId: doc.meta.targetId?.toString(),
+          }
+        : undefined,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     });
@@ -33,7 +43,10 @@ export class NotificationMapper {
 
   static toPersistence(entity: Notification): NotificationPersistence {
     return {
-      _id: entity.id && Types.ObjectId.isValid(entity.id) ? new Types.ObjectId(entity.id) : undefined,
+      _id:
+        entity.id && Types.ObjectId.isValid(entity.id)
+          ? new Types.ObjectId(entity.id)
+          : undefined,
       userId: new Types.ObjectId(entity.userId),
       title: entity.title,
       message: entity.message,

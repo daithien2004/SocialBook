@@ -1,65 +1,64 @@
 'use client';
-import { Search, X } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useRecordSearchKeywordMutation } from '@/features/books/api/bookApi';
 
 interface SearchBarProps {
   initialValue: string;
   onSearch: (value: string) => void;
   onClear: () => void;
-  debounceMs?: number; // Default 500ms
+  debounceMs?: number;
+  compact?: boolean;
 }
 
 export const SearchBar = ({
   initialValue,
   onSearch,
   onClear,
-  debounceMs = 500
+  debounceMs = 500,
+  compact = false,
 }: SearchBarProps) => {
   const [input, setInput] = useState(initialValue);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedInput = useDebounce(input, debounceMs);
+  const [recordSearchKeyword] = useRecordSearchKeywordMutation();
   const isComposing = useRef(false);
   const lastSearchedValue = useRef(initialValue);
-
-  // Sync khi URL thay đổi từ bên ngoài (nhưng bỏ qua nếu do chính mình vừa search)
+  const onSearchRef = useRef(onSearch);
+  const onClearRef = useRef(onClear);
+  
   useEffect(() => {
-    // So sánh đã trim() để tránh việc URL (thường bị trim) ghi đè mất dấu cách cuối câu người dùng đang gõ
-    const normalizedInitial = initialValue.trim();
-    const normalizedLast = lastSearchedValue.current.trim();
+    onSearchRef.current = onSearch;
+    onClearRef.current = onClear;
+  }, [onSearch, onClear]);
 
-    if (normalizedInitial !== normalizedLast) {
-      setInput(initialValue);
-      lastSearchedValue.current = initialValue;
+  const userCleared = useRef(false);
+
+  useEffect(() => {
+    if (userCleared.current) {
+      userCleared.current = false;
+      return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setInput(initialValue);
+    lastSearchedValue.current = initialValue;
   }, [initialValue]);
 
-  // Cleanup debounce on unmount
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-    };
-  }, []);
-
-  // Debounced search handler
-  const handleInputChange = useCallback((value: string) => {
-    setInput(value);
-
     if (isComposing.current) return;
 
-    // Clear previous timeout
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    const trimmedInput = debouncedInput.trim();
+    const trimmedLast = lastSearchedValue.current.trim();
 
-    // Set new timeout for debounced search
-    debounceRef.current = setTimeout(() => {
-      if (value.trim()) {
-        onSearch(value);
-        lastSearchedValue.current = value;
+    if (trimmedInput !== trimmedLast) {
+      if (trimmedInput) {
+        onSearchRef.current(debouncedInput);
+      } else {
+        onClearRef.current();
       }
-    }, debounceMs);
-  }, [onSearch, debounceMs]);
+      lastSearchedValue.current = debouncedInput;
+    }
+  }, [debouncedInput]);
 
   const handleCompositionStart = () => {
     isComposing.current = true;
@@ -67,36 +66,22 @@ export const SearchBar = ({
 
   const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
     isComposing.current = false;
-    // Trigger search immediately after composition ends (optional, or wait for next debounce)
     const value = e.currentTarget.value;
-
-    // Clear previous timeout to maintain consistent debounce behavior
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = setTimeout(() => {
-      if (value.trim()) {
-        onSearch(value);
-        lastSearchedValue.current = value;
-      }
-    }, debounceMs);
+    setInput(value);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Clear debounce and search immediately on submit
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
+    const trimmed = input.trim();
+    if (trimmed) {
+      recordSearchKeyword(trimmed);
     }
-    onSearch(input);
+    onSearchRef.current(input);
     lastSearchedValue.current = input;
   };
 
   const handleClear = () => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    userCleared.current = true;
     setInput('');
     onClear();
     lastSearchedValue.current = '';
@@ -105,24 +90,30 @@ export const SearchBar = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-10 max-w-3xl mx-auto relative group"
+      className={compact ? 'relative flex-1' : 'max-w-3xl mx-auto relative group'}
     >
       <input
         type="text"
         value={input}
-        onChange={(e) => handleInputChange(e.target.value)}
+        onChange={(e) => setInput(e.target.value)}
         onCompositionStart={handleCompositionStart}
         onCompositionEnd={handleCompositionEnd}
         placeholder="Tìm kiếm tên truyện, tác giả..."
-        className="block w-full pl-5 pr-12 py-4 rounded-full bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-600/50 shadow-lg backdrop-blur-sm transition-all"
+        className={
+          compact
+            ? 'block w-full pl-4 pr-10 py-2.5 rounded-full bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm placeholder:text-muted-foreground'
+            : 'block w-full pl-5 pr-12 py-4 rounded-full bg-transparent border-none text-foreground focus:outline-none focus:ring-0 transition-all placeholder:text-muted-foreground'
+        }
       />
-      {(input || initialValue) && (
+      {input && (
         <button
           type="button"
           onClick={handleClear}
-          className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-red-500 transition-colors"
+          className={`absolute inset-y-0 flex items-center text-muted-foreground hover:text-foreground transition-colors ${
+            compact ? 'right-3' : 'right-4'
+          }`}
         >
-          <X size={20} />
+          <X size={compact ? 16 : 20} />
         </button>
       )}
     </form>

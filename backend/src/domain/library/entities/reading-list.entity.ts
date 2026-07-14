@@ -1,127 +1,132 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { UserId } from '../value-objects/user-id.vo';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
+import { UserId } from '../value-objects/user-id.vo';
+import { ReadingStatus } from '../enums/reading-status.enum';
 
-export enum ReadingStatus {
-    READING = 'READING',
-    COMPLETED = 'COMPLETED',
-    ARCHIVED = 'ARCHIVED',
+export { ReadingStatus };
+
+export interface ReadingListProps {
+  userId: UserId;
+  bookId: BookId;
+  status: ReadingStatus;
+  lastReadChapterId: ChapterId | null;
+  collectionIds: string[];
 }
 
 export class ReadingList extends Entity<string> {
-    private constructor(
-        id: string,
-        private _userId: UserId,
-        private _bookId: BookId,
-        private _status: ReadingStatus,
-        private _lastReadChapterId: ChapterId | null,
-        private _collectionIds: string[],
-        createdAt?: Date,
-        updatedAt?: Date
-    ) {
-        super(id, createdAt, updatedAt);
-    }
+  private _props: ReadingListProps;
 
-    static create(props: {
-        id: string;
-        userId: string;
-        bookId: string;
-        status?: ReadingStatus;
-        lastReadChapterId?: string | null;
-        collectionIds?: string[];
-    }): ReadingList {
-        return new ReadingList(
-            props.id,
-            UserId.create(props.userId),
-            BookId.create(props.bookId),
-            props.status || ReadingStatus.READING,
-            props.lastReadChapterId ? ChapterId.create(props.lastReadChapterId) : null,
-            props.collectionIds || []
-        );
-    }
+  private constructor(
+    id: string,
+    props: ReadingListProps,
+    createdAt?: Date,
+    updatedAt?: Date,
+  ) {
+    super(id, createdAt, updatedAt);
+    this._props = props;
+  }
 
-    static reconstitute(props: {
-        id: string;
-        userId: string;
-        bookId: string;
-        status: ReadingStatus;
-        lastReadChapterId: string | null;
-        collectionIds: string[];
-        createdAt: Date;
-        updatedAt: Date;
-    }): ReadingList {
-        return new ReadingList(
-            props.id,
-            UserId.create(props.userId),
-            BookId.create(props.bookId),
-            props.status,
-            props.lastReadChapterId ? ChapterId.create(props.lastReadChapterId) : null,
-            props.collectionIds,
-            props.createdAt,
-            props.updatedAt
-        );
-    }
+  static create(props: {
+    id: string;
+    userId: string;
+    bookId: string;
+    status?: ReadingStatus;
+    lastReadChapterId?: string | null;
+    collectionIds?: string[];
+  }): ReadingList {
+    return new ReadingList(props.id, {
+      userId: UserId.create(props.userId),
+      bookId: BookId.create(props.bookId),
+      status: props.status || ReadingStatus.READING,
+      lastReadChapterId: props.lastReadChapterId
+        ? ChapterId.create(props.lastReadChapterId)
+        : null,
+      collectionIds: props.collectionIds || [],
+    });
+  }
 
-    get userId(): UserId {
-        return this._userId;
-    }
+  static reconstitute(props: {
+    id: string;
+    userId: string;
+    bookId: string;
+    status: ReadingStatus;
+    lastReadChapterId: string | null;
+    collectionIds: string[];
+    createdAt: Date;
+    updatedAt: Date;
+  }): ReadingList {
+    return new ReadingList(
+      props.id,
+      {
+        userId: UserId.create(props.userId),
+        bookId: BookId.create(props.bookId),
+        status: props.status,
+        lastReadChapterId: props.lastReadChapterId
+          ? ChapterId.create(props.lastReadChapterId)
+          : null,
+        collectionIds: props.collectionIds,
+      },
+      props.createdAt,
+      props.updatedAt,
+    );
+  }
 
-    get bookId(): BookId {
-        return this._bookId;
-    }
+  get userId(): UserId {
+    return this._props.userId;
+  }
+  get bookId(): BookId {
+    return this._props.bookId;
+  }
+  get status(): ReadingStatus {
+    return this._props.status;
+  }
+  get lastReadChapterId(): ChapterId | null {
+    return this._props.lastReadChapterId;
+  }
+  get collectionIds(): string[] {
+    return [...this._props.collectionIds];
+  }
 
-    get status(): ReadingStatus {
-        return this._status;
-    }
+  updateStatus(status: ReadingStatus): void {
+    this._props.status = status;
+    this.markAsUpdated();
+  }
 
-    get lastReadChapterId(): ChapterId | null {
-        return this._lastReadChapterId;
-    }
+  updateLastReadChapter(chapterId: string): void {
+    this._props.lastReadChapterId = ChapterId.create(chapterId);
+    this.markAsUpdated();
+  }
 
-    get collectionIds(): string[] {
-        return [...this._collectionIds];
-    }
+  updateCollections(collectionIds: string[]): void {
+    this._props.collectionIds = [...collectionIds];
+    this.markAsUpdated();
+  }
 
-    updateStatus(status: ReadingStatus): void {
-        this._status = status;
-        this.markAsUpdated();
+  addCollection(collectionId: string): void {
+    if (!this._props.collectionIds.includes(collectionId)) {
+      this._props.collectionIds.push(collectionId);
+      this.markAsUpdated();
     }
+  }
 
-    updateLastReadChapter(chapterId: string): void {
-        this._lastReadChapterId = ChapterId.create(chapterId);
-        this.markAsUpdated();
+  removeCollection(collectionId: string): void {
+    const index = this._props.collectionIds.indexOf(collectionId);
+    if (index > -1) {
+      this._props.collectionIds.splice(index, 1);
+      this.markAsUpdated();
     }
+  }
 
-    updateCollections(collectionIds: string[]): void {
-        this._collectionIds = [...collectionIds];
-        this.markAsUpdated();
-    }
+  isCompleted(): boolean {
+    return this._props.status === ReadingStatus.COMPLETED;
+  }
 
-    addCollection(collectionId: string): void {
-        if (!this._collectionIds.includes(collectionId)) {
-            this._collectionIds.push(collectionId);
-            this.markAsUpdated();
-        }
-    }
+  isReading(): boolean {
+    return this._props.status === ReadingStatus.READING;
+  }
 
-    removeCollection(collectionId: string): void {
-        const index = this._collectionIds.indexOf(collectionId);
-        if (index > -1) {
-            this._collectionIds.splice(index, 1);
-            this.markAsUpdated();
-        }
-    }
-
-    isCompleted(): boolean {
-        return this._status === ReadingStatus.COMPLETED;
-    }
-
-    isReading(): boolean {
-        return this._status === ReadingStatus.READING;
-    }
-
-    isArchived(): boolean {
-        return this._status === ReadingStatus.ARCHIVED;
-    }
+  isArchived(): boolean {
+    return this._props.status === ReadingStatus.ARCHIVED;
+  }
 }

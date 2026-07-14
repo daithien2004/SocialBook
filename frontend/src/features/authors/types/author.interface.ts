@@ -1,3 +1,5 @@
+import type { PaginatedApiResult } from '@/lib/api-response';
+
 export interface Author {
     id: string;
     name: string;
@@ -27,12 +29,4 @@ export interface AuthorResponse {
     data: Author;
 }
 
-export interface AuthorsListResponse {
-    meta: {
-        current: number;
-        pageSize: number;
-        totalPages: number;
-        total: number;
-    };
-    data: Author[];
-}
+export type AuthorsListResponse = PaginatedApiResult<Author>;

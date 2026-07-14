@@ -1,12 +1,13 @@
 'use client';
 
-import { useAppAuth } from '@/hooks/useAppAuth';
+import { useAppAuth } from '@/features/auth/hooks';
 import { getErrorMessage } from '@/lib/utils';
 import { Loader2, MessageSquare, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
 import ListComments from '@/components/comment/ListComments';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,7 +26,7 @@ interface ParagraphCommentDrawerProps {
     onClose: () => void;
     paragraphId: string | null;
     paragraphContent?: string;
-    hasHeader?: boolean;
+    chapterId: string;
 }
 
 export default function ParagraphCommentDrawer({
@@ -33,7 +34,7 @@ export default function ParagraphCommentDrawer({
     onClose,
     paragraphId,
     paragraphContent,
-    hasHeader = false,
+    chapterId,
 }: ParagraphCommentDrawerProps) {
     const [commentText, setCommentText] = useState('');
 
@@ -41,6 +42,7 @@ export default function ParagraphCommentDrawer({
 
     const { isAuthenticated } = useAppAuth();
     const router = useRouter();
+    const { notifyCommented } = useReadingRoomSocket();
 
     const handleSubmit = async () => {
         if (!paragraphId || !commentText.trim()) return;
@@ -60,12 +62,11 @@ export default function ParagraphCommentDrawer({
                 parentId: null,
             }).unwrap();
 
+            notifyCommented(paragraphId, chapterId, 'new_comment_id');
+
             setCommentText('');
-            toast.success('Bình luận đã được gửi!');
-        } catch (e: any) {
-            if (e?.status !== 401) {
-                toast.error(getErrorMessage(e));
-            }
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error));
         }
     };
 
@@ -79,7 +80,7 @@ export default function ParagraphCommentDrawer({
                     </SheetTitle>
                     {paragraphContent && (
                         <div className="mt-2 text-sm text-muted-foreground bg-muted/30 p-3 rounded-md border border-border italic border-l-4 border-l-primary/50">
-                            "{paragraphContent.length > 150 ? paragraphContent.substring(0, 150) + '...' : paragraphContent}"
+                            &ldquo;{paragraphContent.length > 150 ? paragraphContent.substring(0, 150) + '...' : paragraphContent}&rdquo;
                         </div>
                     )}
                     <SheetDescription className="sr-only">
@@ -128,7 +129,6 @@ export default function ParagraphCommentDrawer({
                                 parentId={null}
                                 targetType="paragraph"
                                 isCommentOpen={true}
-                                theme="dark"
                             />
                         )}
                     </ScrollArea>

@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 import { useRecordReadingTimeMutation } from '@/features/library/api/libraryApi';
-import { useAppAuth } from '@/hooks/useAppAuth';
-import { useDispatch } from 'react-redux';
-import { gamificationApi } from '@/features/gamification/api/gamificationApi';
+import { useAppAuth } from '@/features/auth/hooks';
+import { useTracking, UserEventType } from '@/hooks/use-tracking';
+
 
 interface ReadingTimeTrackerProps {
   bookId: string;
@@ -19,11 +19,22 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
   const accumulatedSeconds = useRef(0);
 
   const recordReadingTimeRef = useRef(recordReadingTime);
-  const dispatch = useDispatch();
 
   useEffect(() => {
     recordReadingTimeRef.current = recordReadingTime;
   }, [recordReadingTime]);
+
+  const { trackEvent } = useTracking();
+
+  useEffect(() => {
+    if (isAuthenticated && bookId) {
+      trackEvent({
+        eventType: UserEventType.START_READING,
+        bookId,
+        chapterId,
+      });
+    }
+  }, [bookId, chapterId, isAuthenticated, trackEvent]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -38,17 +49,21 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
              const secondsToRecord = 60; 
              accumulatedSeconds.current -= 60;
              
+             // Record for library stats
              recordReadingTimeRef.current({
                 bookId,
                 chapterId,
                 durationInSeconds: secondsToRecord
              })
-             .then((result) => {
-                 if ('data' in result) {
-                     dispatch(gamificationApi.util.invalidateTags(['DailyGoals', 'GamificationStats']));
-                 }
-             })
-             .catch(console.error);
+             .catch(() => {});
+
+             // Record for analytics/scoring
+             trackEvent({
+                eventType: UserEventType.READING_PROGRESS,
+                bookId,
+                chapterId,
+                durationSeconds: secondsToRecord
+             });
           }
        }
     };
@@ -58,7 +73,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [bookId, chapterId, isAuthenticated, dispatch]);
+  }, [bookId, chapterId, isAuthenticated, trackEvent]);
 
   return null;
 }

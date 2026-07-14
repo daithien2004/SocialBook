@@ -2,171 +2,209 @@ import { VectorId } from '../value-objects/vector-id.vo';
 import { EmbeddingVector } from '../value-objects/embedding-vector.vo';
 import { ContentType } from '../value-objects/content-type.vo';
 
+export interface SearchQueryProps {
+  query: string;
+  embedding: EmbeddingVector;
+  limit: number;
+  threshold: number;
+  contentType?: ContentType;
+  filters?: Record<string, unknown>;
+}
+
 export class SearchQuery {
-    private constructor(
-        public readonly id: VectorId,
-        private _query: string,
-        private _embedding: EmbeddingVector,
-        private _limit: number,
-        private _threshold: number,
-        private _contentType?: ContentType,
-        private _filters?: Record<string, any>,
-        public readonly createdAt: Date = new Date()
-    ) {}
+  private _props: SearchQueryProps;
+  public readonly id: VectorId;
+  public readonly createdAt: Date;
 
-    static create(props: {
-        id: string;
-        query: string;
-        embedding: number[];
-        contentType?: 'book' | 'author' | 'chapter';
-        filters?: Record<string, any>;
-        limit?: number;
-        threshold?: number;
-    }): SearchQuery {
-        if (!props.query || props.query.trim().length === 0) {
-            throw new Error('Query cannot be empty');
-        }
+  private constructor(
+    id: VectorId,
+    props: SearchQueryProps,
+    createdAt: Date = new Date(),
+  ) {
+    this.id = id;
+    this._props = props;
+    this.createdAt = createdAt;
+  }
 
-        return new SearchQuery(
-            VectorId.create(props.id),
-            props.query.trim(),
-            EmbeddingVector.create(props.embedding),
-            props.limit || 10,
-            props.threshold || 0.7,
-            props.contentType ? ContentType.create(props.contentType) : undefined,
-            props.filters,
-            new Date()
-        );
+  static create(props: {
+    id: string;
+    query: string;
+    embedding: number[];
+    contentType?: 'book' | 'author' | 'chapter';
+    filters?: Record<string, unknown>;
+    limit?: number;
+    threshold?: number;
+  }): SearchQuery {
+    if (!props.query || props.query.trim().length === 0) {
+      throw new Error('Query cannot be empty');
     }
 
-    static reconstitute(props: {
-        id: string;
-        query: string;
-        embedding: number[];
-        contentType?: 'book' | 'author' | 'chapter';
-        filters?: Record<string, any>;
-        limit?: number;
-        threshold?: number;
-        createdAt: Date;
-    }): SearchQuery {
-        return new SearchQuery(
-            VectorId.create(props.id),
-            props.query,
-            EmbeddingVector.create(props.embedding),
-            props.limit || 10,
-            props.threshold || 0.7,
-            props.contentType ? ContentType.create(props.contentType) : undefined,
-            props.filters,
-            props.createdAt
-        );
-    }
+    return new SearchQuery(
+      VectorId.create(props.id),
+      {
+        query: props.query.trim(),
+        embedding: EmbeddingVector.create(props.embedding),
+        limit: props.limit || 10,
+        threshold: props.threshold || 0.5,
+        contentType: props.contentType
+          ? ContentType.create(props.contentType)
+          : undefined,
+        filters: props.filters,
+      },
+      new Date(),
+    );
+  }
 
-    // Getters
-    get query(): string {
-        return this._query;
-    }
+  static reconstitute(props: {
+    id: string;
+    query: string;
+    embedding: number[];
+    contentType?: 'book' | 'author' | 'chapter';
+    filters?: Record<string, unknown>;
+    limit?: number;
+    threshold?: number;
+    createdAt: Date;
+  }): SearchQuery {
+    return new SearchQuery(
+      VectorId.create(props.id),
+      {
+        query: props.query,
+        embedding: EmbeddingVector.create(props.embedding),
+        limit: props.limit || 10,
+        threshold: props.threshold || 0.5,
+        contentType: props.contentType
+          ? ContentType.create(props.contentType)
+          : undefined,
+        filters: props.filters,
+      },
+      props.createdAt,
+    );
+  }
 
-    get embedding(): EmbeddingVector {
-        return this._embedding;
-    }
+  // Getters
+  get query(): string {
+    return this._props.query;
+  }
+  get embedding(): EmbeddingVector {
+    return this._props.embedding;
+  }
+  get contentType(): ContentType | undefined {
+    return this._props.contentType;
+  }
+  get filters(): Record<string, unknown> | undefined {
+    return this._props.filters ? { ...this._props.filters } : undefined;
+  }
+  get limit(): number {
+    return this._props.limit || 10;
+  }
+  get threshold(): number {
+    return this._props.threshold || 0.5;
+  }
 
-    get contentType(): ContentType | undefined {
-        return this._contentType;
-    }
+  // Business methods
+  hasContentType(): boolean {
+    return this._props.contentType !== undefined;
+  }
 
-    get filters(): Record<string, any> | undefined {
-        return this._filters ? { ...this._filters } : undefined;
-    }
+  hasFilters(): boolean {
+    return (
+      this._props.filters !== undefined &&
+      Object.keys(this._props.filters).length > 0
+    );
+  }
 
-    get limit(): number {
-        return this._limit || 10;
-    }
+  getFilter(key: string): unknown {
+    return this._props.filters?.[key];
+  }
 
-    get threshold(): number {
-        return this._threshold || 0.7;
+  addFilter(key: string, value: unknown): void {
+    if (!this._props.filters) {
+      this._props.filters = {};
     }
+    this._props.filters[key] = value;
+  }
 
-    // Business methods
-    hasContentType(): boolean {
-        return this._contentType !== undefined;
+  removeFilter(key: string): void {
+    if (this._props.filters) {
+      delete this._props.filters[key];
     }
+  }
 
-    hasFilters(): boolean {
-        return this._filters !== undefined && Object.keys(this._filters).length > 0;
+  updateLimit(newLimit: number): void {
+    if (newLimit <= 0) {
+      throw new Error('Limit must be greater than 0');
     }
+    this._props.limit = newLimit;
+  }
 
-    getFilter(key: string): any {
-        return this._filters?.[key];
+  updateThreshold(newThreshold: number): void {
+    if (newThreshold < 0 || newThreshold > 1) {
+      throw new Error('Threshold must be between 0 and 1');
     }
+    this._props.threshold = newThreshold;
+  }
 
-    addFilter(key: string, value: any): void {
-        if (!this._filters) {
-            this._filters = {};
-        }
-        this._filters[key] = value;
-    }
+  matchesContentType(type: 'book' | 'author' | 'chapter'): boolean {
+    return this._props.contentType?.toString() === type;
+  }
 
-    removeFilter(key: string): void {
-        if (this._filters) {
-            delete this._filters[key];
-        }
-    }
+  // Static methods for common query types
+  static createBookSearch(
+    id: string,
+    query: string,
+    embedding: number[],
+    limit?: number,
+  ): SearchQuery {
+    return SearchQuery.create({
+      id,
+      query,
+      embedding,
+      contentType: 'book',
+      limit,
+    });
+  }
 
-    updateLimit(newLimit: number): void {
-        if (newLimit <= 0) {
-            throw new Error('Limit must be greater than 0');
-        }
-        this._limit = newLimit;
-    }
+  static createAuthorSearch(
+    id: string,
+    query: string,
+    embedding: number[],
+    limit?: number,
+  ): SearchQuery {
+    return SearchQuery.create({
+      id,
+      query,
+      embedding,
+      contentType: 'author',
+      limit,
+    });
+  }
 
-    updateThreshold(newThreshold: number): void {
-        if (newThreshold < 0 || newThreshold > 1) {
-            throw new Error('Threshold must be between 0 and 1');
-        }
-        this._threshold = newThreshold;
-    }
+  static createChapterSearch(
+    id: string,
+    query: string,
+    embedding: number[],
+    limit?: number,
+  ): SearchQuery {
+    return SearchQuery.create({
+      id,
+      query,
+      embedding,
+      contentType: 'chapter',
+      limit,
+    });
+  }
 
-    matchesContentType(type: 'book' | 'author' | 'chapter'): boolean {
-        return this._contentType?.toString() === type;
-    }
-
-    // Static methods for common query types
-    static createBookSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
-        return SearchQuery.create({
-            id,
-            query,
-            embedding,
-            contentType: 'book',
-            limit
-        });
-    }
-
-    static createAuthorSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
-        return SearchQuery.create({
-            id,
-            query,
-            embedding,
-            contentType: 'author',
-            limit
-        });
-    }
-
-    static createChapterSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
-        return SearchQuery.create({
-            id,
-            query,
-            embedding,
-            contentType: 'chapter',
-            limit
-        });
-    }
-
-    static createGeneralSearch(id: string, query: string, embedding: number[], limit?: number): SearchQuery {
-        return SearchQuery.create({
-            id,
-            query,
-            embedding,
-            limit
-        });
-    }
+  static createGeneralSearch(
+    id: string,
+    query: string,
+    embedding: number[],
+    limit?: number,
+  ): SearchQuery {
+    return SearchQuery.create({
+      id,
+      query,
+      embedding,
+      limit,
+    });
+  }
 }

@@ -12,10 +12,10 @@ export const useBookParams = () => {
     const genres = useMemo(() => searchParams.get('genres')?.split(',').filter(Boolean) || [], [searchParams]);
     const tags = useMemo(() => searchParams.get('tags')?.split(',').filter(Boolean) || [], [searchParams]);
     const searchQuery = searchParams.get('search') || '';
-    // When searching, default to 'score' for relevance; when browsing, default to 'createdAt'
     const defaultSort = searchQuery ? 'score' : 'createdAt';
     const sortBy = (searchParams.get('sortBy') as BookOrderField) || defaultSort;
     const order = (searchParams.get('order') as 'asc' | 'desc') || 'desc';
+    const status = searchParams.get('status') || 'all';
 
     const updateParams = useCallback((updates: Record<string, string | null>) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -26,28 +26,32 @@ export const useBookParams = () => {
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
     }, [searchParams, pathname, router]);
 
-    const toggleFilter = (type: 'genres' | 'tags', slug: string) => {
+    const toggleFilter = useCallback((type: 'genres' | 'tags', slug: string) => {
         const currentList = type === 'genres' ? genres : tags;
         const newList = currentList.includes(slug)
             ? currentList.filter((item) => item !== slug)
             : [...currentList, slug];
 
         updateParams({ [type]: newList.length > 0 ? newList.join(',') : null });
-    };
+    }, [genres, tags, updateParams]);
 
-    const setSort = (sortValue: string, sortOrder: string) => {
+    const setSort = useCallback((sortValue: string, sortOrder: string) => {
         updateParams({ sortBy: sortValue, order: sortOrder });
-    };
+    }, [updateParams]);
 
-    const setSearch = (term: string) => {
+    const setSearch = useCallback((term: string) => {
         updateParams({ search: term.trim() || null });
-    };
+    }, [updateParams]);
 
-    const clearFilters = () => updateParams({ genres: null, tags: null });
-    const clearGenres = () => updateParams({ genres: null });
-    const clearTags = () => updateParams({ tags: null });
-    const clearSearch = () => updateParams({ search: null });
-    const clearAll = () => router.push(pathname);
+    const setStatus = useCallback((s: string) => {
+        updateParams({ status: s === 'all' ? null : s });
+    }, [updateParams]);
+
+    const clearFilters = useCallback(() => updateParams({ genres: null, tags: null }), [updateParams]);
+    const clearGenres = useCallback(() => updateParams({ genres: null }), [updateParams]);
+    const clearTags = useCallback(() => updateParams({ tags: null }), [updateParams]);
+    const clearSearch = useCallback(() => updateParams({ search: null }), [updateParams]);
+    const clearAll = useCallback(() => router.push(pathname), [pathname, router]);
 
     return {
         genres,
@@ -55,9 +59,11 @@ export const useBookParams = () => {
         searchQuery,
         sortBy,
         order,
+        status,
         toggleFilter,
         setSort,
         setSearch,
+        setStatus,
         clearFilters,
         clearGenres,
         clearTags,

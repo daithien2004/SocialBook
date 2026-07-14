@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from '@/lib/nestjs-client-api';
+import { normalizeArrayResponse } from '@/lib/api-response';
 import { NESTJS_GENRES_ENDPOINTS } from '@/constants/server-endpoints';
 import { Genre, GenresListResponse, CreateGenreRequest, UpdateGenreRequest } from '../types/genre.interface';
 
@@ -18,6 +19,7 @@ export const genreApi = createApi({
                     name: params.name,
                 },
             }),
+            transformResponse: normalizeArrayResponse<Genre>,
             providesTags: (result) =>
                 result?.data
                     ? [

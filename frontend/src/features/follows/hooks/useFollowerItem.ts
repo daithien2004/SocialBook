@@ -1,0 +1,74 @@
+'use client';
+
+import { toast } from 'sonner';
+import { MESSAGES } from '@/constants/messages';
+import {
+    useGetFollowStatusQuery,
+    useToggleFollowMutation,
+    useUnfollowMutation,
+} from '@/features/follows/api/followApi';
+import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
+import { useModalStore } from '@/store/useModalStore';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+interface UseFollowerItemOptions {
+    userId: string;
+    isFollowedByCurrentUser: boolean;
+}
+
+export const useFollowerItem = ({
+    userId,
+    isFollowedByCurrentUser,
+}: UseFollowerItemOptions) => {
+    const auth = useAppAuth();
+    const router = useRouter();
+    const { closeFollowers } = useModalStore();
+
+    const [isFollowing, setIsFollowing] = useState(isFollowedByCurrentUser);
+
+    const { data: statusData } = useGetFollowStatusQuery(userId, {
+        skip: !auth.isAuthenticated || auth?.user?.id === userId,
+    });
+
+    useEffect(() => {
+        if (statusData) {
+            queueMicrotask(() => {
+                setIsFollowing(statusData.isFollowing);
+            });
+        }
+    }, [statusData]);
+
+    const [toggleFollow, { isLoading: isFollowLoading }] =
+        useToggleFollowMutation();
+    const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
+
+    const isToggling = isFollowLoading || isUnfollowLoading;
+    const isCurrentUser = auth?.user?.id === userId;
+
+    const handleToggleFollow = async () => {
+        try {
+            if (isFollowing) {
+                await unfollow(userId).unwrap();
+            } else {
+                await toggleFollow(userId).unwrap();
+            }
+            setIsFollowing((prev) => !prev);
+        } catch {
+            toast.error(MESSAGES.FOLLOW_TOGGLE_FAILED);
+        }
+    };
+
+    const handleNavigateToProfile = () => {
+        closeFollowers();
+        router.push(`/users/${userId}`);
+    };
+
+    return {
+        isFollowing,
+        isToggling,
+        isCurrentUser,
+        handleToggleFollow,
+        handleNavigateToProfile,
+    };
+};

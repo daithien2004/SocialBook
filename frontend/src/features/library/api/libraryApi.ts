@@ -11,19 +11,21 @@ import {
   AddToCollectionsRequest,
   CreateCollectionRequest,
   UpdateCollectionRequest,
+  KnowledgeGraphData,
+  GetBookLibraryInfoResult,
 } from '../types/library.interface';
 import { recommendationsApi } from '../../recommendations/api/recommendationsApi';
 
 export const libraryApi = createApi({
   reducerPath: 'libraryApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Library', 'Collection'],
+  tagTypes: ['Library', 'Collection', 'KnowledgeGraph'],
   endpoints: (builder) => ({
-    getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus }>({
-      query: ({ status }) => ({
+    getLibraryBooks: builder.query<LibraryItem[], { status: LibraryStatus | string; limit?: number }>({
+      query: ({ status, limit }) => ({
         url: NESTJS_LIBRARY_ENDPOINTS.getLibrary,
         method: 'GET',
-        params: { status },
+        params: { status, ...(limit ? { limit } : {}) },
       }),
       providesTags: (result, error, { status }) => [
         { type: 'Library', id: `LIST_${status}` },
@@ -37,7 +39,7 @@ export const libraryApi = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Library'],
+      invalidatesTags: ['Library', 'KnowledgeGraph'],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         await queryFulfilled;
         dispatch(recommendationsApi.util.resetApiState());
@@ -56,16 +58,20 @@ export const libraryApi = createApi({
       keepUnusedDataFor: 0,
     }),
 
-    updateReadingProgress: builder.mutation<LibraryItem, UpdateProgressRequest>(
+    updateReadingProgress: builder.mutation<
+      { readingList: LibraryItem; readingProgress: { progress: number } },
+      UpdateProgressRequest
+    >(
       {
         query: (data) => ({
           url: NESTJS_LIBRARY_ENDPOINTS.updateProgress,
-          method: 'PATCH',
+          method: 'POST',
           body: data,
         }),
         invalidatesTags: [
           { type: 'Library', id: `LIST_${LibraryStatus.READING}` },
           { type: 'Library', id: 'LIST_ALL' },
+          'KnowledgeGraph',
         ],
       }
     ),
@@ -91,7 +97,7 @@ export const libraryApi = createApi({
     }),
 
     getBookLibraryInfo: builder.query<
-      { status: LibraryStatus | null; collections: Collection[] },
+      GetBookLibraryInfoResult,
       string
     >({
       query: (bookId) => ({
@@ -164,18 +170,27 @@ export const libraryApi = createApi({
       invalidatesTags: ['Collection'],
     }),
 
-    recordReadingTime: builder.mutation<any, { bookId: string; chapterId: string; durationInSeconds: number }>({
+    recordReadingTime: builder.mutation<void, { bookId: string; chapterId: string; durationInSeconds: number }>({
       query: (body) => ({
         url: NESTJS_LIBRARY_ENDPOINTS.readingTime,
         method: 'POST',
         body,
       }),
-      invalidatesTags: (result, error, { bookId }) => [
+      invalidatesTags: () => [
         { type: 'Library', id: 'LIST_ALL' }
       ]
     }),
+    getKnowledgeGraph: builder.query<KnowledgeGraphData, void>({
+      query: () => ({
+        url: NESTJS_LIBRARY_ENDPOINTS.knowledgeGraph,
+        method: 'GET',
+      }),
+      providesTags: ['KnowledgeGraph'],
+      keepUnusedDataFor: 3600, // Giữ cache 1 tiếng thay vì 60s
+    }),
   }),
 });
+
 
 export const {
   // Library Hooks
@@ -195,4 +210,6 @@ export const {
   useUpdateCollectionMutation,
   useDeleteCollectionMutation,
   useRecordReadingTimeMutation,
+  useGetKnowledgeGraphQuery,
 } = libraryApi;
+

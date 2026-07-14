@@ -2,38 +2,79 @@ import { Review } from '@/domain/reviews/entities/review.entity';
 import { ReviewDocument } from '../../schemas/review.schema';
 import { Types } from 'mongoose';
 
+interface PopulatedUser {
+  _id: Types.ObjectId;
+  username: string;
+  image: string;
+}
+
+interface PopulatedBook {
+  _id: Types.ObjectId;
+  title: string;
+  coverUrl: string;
+}
+
+function isPopulatedUser(field: unknown): field is PopulatedUser {
+  return (
+    typeof field === 'object' &&
+    field !== null &&
+    '_id' in field &&
+    'username' in field
+  );
+}
+
+function isPopulatedBook(field: unknown): field is PopulatedBook {
+  return (
+    typeof field === 'object' &&
+    field !== null &&
+    '_id' in field &&
+    'title' in field
+  );
+}
+
+interface ReviewPersistence {
+  userId: Types.ObjectId;
+  bookId: Types.ObjectId;
+  content: string;
+  rating: number;
+  isFlagged: boolean;
+  moderationStatus: string;
+}
+
 export class ReviewMapper {
   static toDomain(reviewDoc: ReviewDocument): Review {
     const id = reviewDoc._id.toString();
-    
+
     let userId: string;
     let user: { id: string; username: string; image: string } | undefined;
 
-    if (reviewDoc.userId && typeof reviewDoc.userId === 'object' && 'username' in reviewDoc.userId) {
-        const userObj = reviewDoc.userId as any;
-        userId = userObj._id.toString();
-        user = {
-            id: userObj._id.toString(),
-            username: userObj.username,
-            image: userObj.image
-        };
+    const userIdField = reviewDoc.userId;
+    if (isPopulatedUser(userIdField)) {
+      userId = userIdField._id.toString();
+      user = {
+        id: userIdField._id.toString(),
+        username: userIdField.username,
+        image: userIdField.image,
+      };
     } else {
-        userId = reviewDoc.userId?.toString();
+      userId = userIdField?.toString();
     }
 
-    let bookId: string;
+    let bookId: string = '';
     let book: { id: string; title: string; coverUrl: string } | undefined;
 
-    if (reviewDoc.bookId && typeof reviewDoc.bookId === 'object' && 'title' in reviewDoc.bookId) {
-        const bookObj = reviewDoc.bookId as any;
-        bookId = bookObj._id.toString();
+    const bookIdField = reviewDoc.bookId;
+    if (bookIdField) {
+      if (isPopulatedBook(bookIdField)) {
+        bookId = bookIdField._id.toString();
         book = {
-            id: bookObj._id.toString(),
-            title: bookObj.title,
-            coverUrl: bookObj.coverUrl
+          id: bookIdField._id.toString(),
+          title: bookIdField.title,
+          coverUrl: bookIdField.coverUrl,
         };
-    } else {
-        bookId = reviewDoc.bookId?.toString();
+      } else {
+        bookId = bookIdField.toString();
+      }
     }
 
     return Review.reconstitute({
@@ -42,18 +83,18 @@ export class ReviewMapper {
       bookId,
       content: reviewDoc.content,
       rating: reviewDoc.rating,
-      createdAt: reviewDoc.createdAt as Date,
-      updatedAt: reviewDoc.updatedAt as Date,
+      createdAt: reviewDoc.createdAt,
+      updatedAt: reviewDoc.updatedAt,
       likesCount: reviewDoc.likesCount,
-      likedBy: reviewDoc.likedBy?.map(id => id.toString()) || [],
+      likedBy: reviewDoc.likedBy?.map((id) => id.toString()) || [],
       isFlagged: reviewDoc.isFlagged,
       moderationStatus: reviewDoc.moderationStatus || 'pending',
       user,
-      book
+      book,
     });
   }
 
-  static toPersistence(review: Review): any {
+  static toPersistence(review: Review): ReviewPersistence {
     return {
       userId: new Types.ObjectId(review.userId),
       bookId: new Types.ObjectId(review.bookId),
@@ -64,4 +105,3 @@ export class ReviewMapper {
     };
   }
 }
-

@@ -7,11 +7,9 @@ import Link from 'next/link';
 interface BookDescriptionProps {
   description: string;
   tags: string[];
-  title: string;
-  author: string;
 }
 
-export const BookDescription = ({ description, tags, title, author }: BookDescriptionProps) => {
+export const BookDescription = ({ description, tags }: BookDescriptionProps) => {
   return (
     <Card className="border-gray-200 dark:border-white/10 shadow-sm dark:shadow-lg bg-card">
       <CardHeader className="pb-4 border-b border-border">
@@ -22,12 +20,8 @@ export const BookDescription = ({ description, tags, title, author }: BookDescri
       </CardHeader>
 
       <CardContent className="pt-6 space-y-6">
-        <div className="text-muted-foreground leading-relaxed space-y-4 text-base md:text-lg font-light">
+        <div className="text-muted-foreground leading-relaxed text-base md:text-lg font-light">
           <p>{description}</p>
-          <p className="text-muted-foreground italic border-l-2 border-red-500 pl-4 bg-muted/30 py-2 pr-2 rounded-r-md">
-            "Cuốn sách {title} của tác giả {author} mang đến một câu chuyện đầy
-            cảm xúc và ý nghĩa..."
-          </p>
         </div>
 
         {tags?.length > 0 && (

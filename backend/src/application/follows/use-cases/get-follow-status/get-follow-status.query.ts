@@ -1,6 +1,6 @@
 export class GetFollowStatusQuery {
-    constructor(
-        public readonly userId: string,
-        public readonly targetId: string
-    ) { }
+  constructor(
+    public readonly userId: string,
+    public readonly targetId: string,
+  ) {}
 }

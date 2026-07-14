@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import slugify from 'slugify';
 
 import { BaseSchema } from '@/shared/schemas/base.schema';
@@ -24,12 +24,12 @@ export class Author extends BaseSchema {
 export const AuthorSchema = SchemaFactory.createForClass(Author);
 
 // Pre-save hook to generate slug from name
-AuthorSchema.pre('save', function(next) {
+AuthorSchema.pre('save', function (next) {
   if (this.isModified('name') || this.isNew) {
     this.slug = slugify(this.name, {
       lower: true,
       strict: true,
-      locale: 'vi'
+      locale: 'vi',
     });
   }
   next();

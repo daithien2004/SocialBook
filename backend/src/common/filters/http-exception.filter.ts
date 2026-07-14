@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ErrorResponseDto } from '../dto/response.dto';
+import { DomainException } from '@/shared/domain/domain-exception.base';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -30,10 +31,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = exceptionResponse;
         error = exception.name;
       } else if (typeof exceptionResponse === 'object') {
-        const response = exceptionResponse as any;
-        message = response.message || message;
-        error = response.error || exception.name;
+        const response = exceptionResponse as Record<string, unknown>;
+        message = (response.message as string) || message;
+        error = (response.error as string) || exception.name;
       }
+    } else if (exception instanceof DomainException) {
+      status = exception.statusCode;
+      message = exception.message;
+      error = exception.code;
     } else if (exception instanceof Error) {
       message = exception.message;
       error = exception.name;
