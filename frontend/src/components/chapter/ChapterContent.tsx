@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, memo, useSyncExternalStore } from 'react';
+import { useState, useRef, useEffect, useCallback, memo, useMemo, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { Highlighter, Sparkles, User, QuoteIcon, Trash2, MessageSquarePlus, Share2, Bookmark as BookmarkIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -94,7 +94,7 @@ export const ChapterContent = memo(function ChapterContent({
     const { data: bookmarksData } = useGetBookmarksByBookQuery(bookId, {
         skip: !bookId || !user,
     });
-    const bookmarks = bookmarksData || [];
+    const bookmarks = useMemo(() => bookmarksData ?? [], [bookmarksData]);
     const [createBookmark] = useCreateBookmarkMutation();
     const [deleteBookmark] = useDeleteBookmarkMutation();
 

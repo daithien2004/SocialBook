@@ -1,10 +1,9 @@
 'use client';
 
-import { Gauge, Save, RotateCcw, AlertCircle } from 'lucide-react';
+import { Gauge, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRateLimitManagement } from '@/features/admin/hooks/rate-limits/useRateLimitManagement';
-import { getErrorMessage } from '@/lib/utils';
 
 export default function RateLimitsPage() {
   const {

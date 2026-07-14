@@ -1,6 +1,7 @@
 'use client';
 
 import { memo } from 'react';
+import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { PresenceData } from '@/store/useReadingRoomStore';
@@ -48,12 +49,11 @@ export const ReaderAvatars = memo(function ReaderAvatars({
                 >
                   {reader.avatarUrl ? (
                     <>
-                      <img
+                      <Image
                       src={reader.avatarUrl}
                       alt={reader.displayName}
                       width={22}
                       height={22}
-                      loading="lazy"
                       className="w-[22px] h-[22px] rounded-full border-2 border-background ring-1 ring-primary/30 object-cover"
                     />
                     </>

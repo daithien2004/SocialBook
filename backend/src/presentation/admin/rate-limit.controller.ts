@@ -1,17 +1,9 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
-import {
-  RateLimitConfigService,
-} from '@/common/services/rate-limit-config.service';
+import { RateLimitConfigService } from '@/common/services/rate-limit-config.service';
 import { UpdateRateLimitDto } from './dto/update-rate-limit.dto';
 
 @ApiTags('Admin Rate Limits')
