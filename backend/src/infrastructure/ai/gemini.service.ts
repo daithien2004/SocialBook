@@ -1,48 +1,10 @@
-import {
-  Injectable,
-  Logger,
-  InternalServerErrorException,
-  OnModuleInit,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable } from '@nestjs/common';
 import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { OpenAICompatibleClient } from './openai-compatible.client';
 
 @Injectable()
-export class GeminiService implements IGeminiService, OnModuleInit {
-  private readonly logger = new Logger(GeminiService.name);
-  private client!: OpenAICompatibleClient;
-
-  constructor(private readonly configService: ConfigService) {}
-
-  onModuleInit(): void {
-    const apiKey = this.configService.get<string>('env.MODERATION_API_KEY');
-    if (!apiKey) {
-      throw new InternalServerErrorException(
-        'MODERATION_API_KEY is not configured. GeminiService cannot start.',
-      );
-    }
-
-    this.client = new OpenAICompatibleClient({
-      apiKey,
-      baseUrl:
-        this.configService.get<string>('env.MODERATION_API_BASE_URL') ??
-        'https://platform.beeknoee.com/v1',
-      model:
-        this.configService.get<string>('env.MODERATION_MODEL') ??
-        'gemini-2.5-flash-lite',
-      timeout:
-        this.configService.get<number>('env.MODERATION_TIMEOUT') ?? 60_000,
-    });
-
-    this.logger.log(
-      `GeminiService initialised with model "${this.configService.get<string>('env.MODERATION_MODEL')}" via Beenoee.`,
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Core primitives
-  // ---------------------------------------------------------------------------
+export class GeminiService implements IGeminiService {
+  constructor(private readonly client: OpenAICompatibleClient) {}
 
   async generateText(prompt: string, systemPrompt?: string): Promise<string> {
     return this.client.generateText(prompt, systemPrompt);
@@ -55,10 +17,6 @@ export class GeminiService implements IGeminiService, OnModuleInit {
   async embedText(text: string): Promise<number[]> {
     return this.client.embedText(text);
   }
-
-  // ---------------------------------------------------------------------------
-  // Higher-level helpers (built on top of core primitives)
-  // ---------------------------------------------------------------------------
 
   async summarizeChapter(content: string, title?: string): Promise<string> {
     const titlePart = title ? ` có tiêu đề "${title}"` : '';
