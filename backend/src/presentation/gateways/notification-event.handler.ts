@@ -6,10 +6,7 @@ import { ICommentRepository } from '@/domain/comments/repositories/comment.repos
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
-import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
+import { TargetResolverRegistry } from '@/application/target-resolution/target-resolution.registry';
 
 @Injectable()
 export class NotificationEventHandler {
@@ -20,53 +17,18 @@ export class NotificationEventHandler {
     private readonly postRepository: IPostRepository,
     private readonly commentRepository: ICommentRepository,
     private readonly userRepository: IUserRepository,
-    private readonly chapterRepository: IChapterRepository,
-    private readonly bookRepository: IBookRepository,
+    private readonly targetResolverRegistry: TargetResolverRegistry,
   ) {}
 
   private async resolveActionUrl(
     targetType: string,
     targetId: string,
   ): Promise<string | undefined> {
-    if (targetType === 'post') {
-      return `/posts/${targetId}`;
-    }
-
-    if (targetType === 'chapter') {
-      const chapter = await this.chapterRepository.findById(
-        ChapterId.create(targetId),
-      );
-      if (chapter) {
-        const book = await this.bookRepository.findById(
-          BookId.create(chapter.bookId.toString()),
-        );
-        if (book) {
-          return `/books/${book.slug}/chapters/${chapter.slug}`;
-        }
-        return `/chapters/${chapter.id.toString()}`;
-      }
-    }
-
-    if (targetType === 'paragraph') {
-      const chapter = await this.chapterRepository.findByParagraphId(targetId);
-      if (chapter) {
-        return this.resolveActionUrl('chapter', chapter.id.toString());
-      }
-    }
-
-    if (targetType === 'comment') {
-      const comment = await this.commentRepository.findById(
-        CommentId.create(targetId),
-      );
-      if (comment) {
-        return this.resolveActionUrl(
-          comment.targetType.toString(),
-          comment.targetId.toString(),
-        );
-      }
-    }
-
-    return undefined;
+    const resolution = await this.targetResolverRegistry.resolve(
+      targetType,
+      targetId,
+    );
+    return resolution.actionUrl;
   }
 
   @OnEvent('like.toggled')

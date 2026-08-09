@@ -13,8 +13,8 @@ import { ReadingRoomGateway } from './reading-room.gateway';
 import { ReadingRoomPresenceModule } from './reading-room-presence.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
-import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { LibraryApplicationModule } from '@/application/library/library-application.module';
+import { TargetResolutionModule } from '@/application/target-resolution/target-resolution.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { LibraryApplicationModule } from '@/application/library/library-applicat
     CommentsRepositoryModule,
     UsersRepositoryModule,
     ChaptersRepositoryModule,
-    BooksRepositoryModule,
+    TargetResolutionModule,
     ReadingRoomPresenceModule,
     LibraryApplicationModule,
     JwtModule.registerAsync({

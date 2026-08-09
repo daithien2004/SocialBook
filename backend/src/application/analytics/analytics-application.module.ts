@@ -6,10 +6,9 @@ import { AnalyticsRepositoryModule } from '@/infrastructure/database/repositorie
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
-import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
-import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { ScoringService } from './services/scoring.service';
 import { AnalyticsListener } from './listeners/analytics.listener';
+import { TargetResolutionModule } from '@/application/target-resolution/target-resolution.module';
 
 @Module({
   imports: [
@@ -17,8 +16,7 @@ import { AnalyticsListener } from './listeners/analytics.listener';
     IdGeneratorModule,
     BooksRepositoryModule,
     GenresRepositoryModule,
-    ChaptersRepositoryModule,
-    PostsRepositoryModule,
+    TargetResolutionModule,
   ],
   providers: [
     TrackUserEventUseCase,

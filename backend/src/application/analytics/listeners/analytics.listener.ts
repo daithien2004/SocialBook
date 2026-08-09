@@ -5,12 +5,10 @@ import { ScoringService } from '../services/scoring.service';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
-import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { IUserAnalyticsRepository } from '@/domain/analytics/repositories/user-analytics.repository.interface';
 import { UserEvent } from '@/domain/analytics/entities/user-event.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+import { TargetResolverRegistry } from '@/application/target-resolution/target-resolution.registry';
 
 @Injectable()
 export class AnalyticsListener {
@@ -20,10 +18,9 @@ export class AnalyticsListener {
     private readonly scoringService: ScoringService,
     private readonly bookRepository: IBookRepository,
     private readonly genreRepository: IGenreRepository,
-    private readonly chapterRepository: IChapterRepository,
-    private readonly postRepository: IPostRepository,
     private readonly analyticsRepository: IUserAnalyticsRepository,
     private readonly idGenerator: IIdGenerator,
+    private readonly targetResolverRegistry: TargetResolverRegistry,
   ) {}
 
   @OnEvent('user-event.tracked')
@@ -148,20 +145,10 @@ export class AnalyticsListener {
     targetId: string,
     targetType: string,
   ): Promise<string | null> {
-    if (targetType === 'book') return targetId;
-
-    if (targetType === 'chapter') {
-      const chapter = await this.chapterRepository.findById(
-        ChapterId.create(targetId),
-      );
-      return chapter?.bookId?.toString() || null;
-    }
-
-    if (targetType === 'post') {
-      const post = await this.postRepository.findById(targetId);
-      return post?.bookId || null;
-    }
-
-    return null;
+    const resolution = await this.targetResolverRegistry.resolve(
+      targetType,
+      targetId,
+    );
+    return resolution.bookId ?? null;
   }
 }
