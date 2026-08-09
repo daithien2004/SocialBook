@@ -4,11 +4,12 @@ import {
   OnModuleInit,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
 import { ChromaClient, type Where, type Collection } from 'chromadb';
 import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import { Document } from '@langchain/core/documents';
+
+import { ChromaConnectionFactory } from './chroma-connection.factory';
 
 import {
   IVectorRepository,
@@ -39,18 +40,14 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   private chromaClient: ChromaClient;
   private collection: Collection;
   private readonly DEFAULT_SEARCH_LIMIT = 10;
-  private readonly DEFAULT_COLLECTION_METADATA = {
-    'hnsw:space': 'cosine',
-    'hnsw:M': 16, // 1 vector have 16 edge in graph
-    'hnsw:search_ef': 50, // Reduce from 100 for faster search, slight recall trade-off
-    'hnsw:construction_ef': 100,
-  };
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly chromaConnectionFactory: ChromaConnectionFactory,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     try {
-      const hfKey = this.configService.get<string>('env.HUGGINGFACE_API_KEY');
+      const hfKey = this.chromaConnectionFactory.getHuggingFaceApiKey();
       if (!hfKey) {
         this.logger.error(
           '❌ HUGGINGFACE_API_KEY is missing in configuration!',
@@ -63,34 +60,25 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
       );
 
       // model cho tiếng Việt
-      this.embeddings = new HuggingFaceInferenceEmbeddings({
-        apiKey: hfKey,
-        model: 'keepitreal/vietnamese-sbert',
-      });
+      this.embeddings = this.chromaConnectionFactory.createEmbeddings();
 
-      const chromaUrl = this.configService.get<string>(
-        'env.CHROMA_URL',
-        'http://localhost:8000',
-      );
-      const collectionName = this.configService.get<string>(
-        'env.CHROMA_COLLECTION',
-        'socialbook_vectors_v2',
-      );
+      const chromaUrl = this.chromaConnectionFactory.getChromaUrl();
+      const collectionName = this.chromaConnectionFactory.getCollectionName();
 
       this.logger.log(
         `🌐 Connecting to Chroma at: ${chromaUrl}, Collection: ${collectionName}`,
       );
 
-      this.chromaClient = new ChromaClient({ path: chromaUrl });
+      this.chromaClient = this.chromaConnectionFactory.createChromaClient();
       this.collection = await this.chromaClient.getOrCreateCollection({
         name: collectionName,
-        metadata: this.DEFAULT_COLLECTION_METADATA,
+        metadata: this.chromaConnectionFactory.getCollectionMetadata(),
       });
 
-      this.vectorStore = new Chroma(this.embeddings, {
+      this.vectorStore = this.chromaConnectionFactory.createVectorStore(
+        this.embeddings,
         collectionName,
-        url: chromaUrl,
-      });
+      );
 
       this.isInitialized = true;
       this.logger.log('✅ Chroma vector store initialized successfully');
@@ -400,10 +388,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
     await this.ensureInitialized();
 
     try {
-      const collectionName = this.configService.get<string>(
-        'env.CHROMA_COLLECTION',
-        'socialbook_vectors_v2',
-      );
+      const collectionName = this.chromaConnectionFactory.getCollectionName();
 
       this.logger.log(`🗑️ Permanently deleting collection: ${collectionName}`);
 
@@ -418,16 +403,13 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
       this.collection = await this.chromaClient.createCollection({
         name: collectionName,
-        metadata: this.DEFAULT_COLLECTION_METADATA,
+        metadata: this.chromaConnectionFactory.getCollectionMetadata(),
       });
 
-      this.vectorStore = new Chroma(this.embeddings, {
+      this.vectorStore = this.chromaConnectionFactory.createVectorStore(
+        this.embeddings,
         collectionName,
-        url: this.configService.get<string>(
-          'env.CHROMA_URL',
-          'http://localhost:8000',
-        ),
-      });
+      );
 
       this.isInitialized = true;
       this.logger.log(`✅ Collection ${collectionName} has been recreated`);
