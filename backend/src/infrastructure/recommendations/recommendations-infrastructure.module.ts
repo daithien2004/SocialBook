@@ -26,11 +26,13 @@ import {
 } from '@/infrastructure/database/schemas/user-preference.schema';
 import { AIRecommendationStrategy } from './strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
+import { RecommendationStrategyProvider } from './providers/recommendation-strategy.provider';
 import { GeminiRepositoryModule } from '../database/repositories/gemini/gemini-repository.module';
 import { RecommendationDataAdapter } from './recommendation-data.adapter';
 import { RecommendationCacheService } from './cache/recommendation-cache.service';
 import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.port';
+import { IRecommendationStrategyProvider } from '@/domain/recommendations/interfaces/recommendation-strategy-provider.interface';
 
 @Module({
   imports: [
@@ -49,6 +51,10 @@ import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/rec
     FallbackRecommendationStrategy,
     RecommendationDataAdapter,
     {
+      provide: IRecommendationStrategyProvider,
+      useClass: RecommendationStrategyProvider,
+    },
+    {
       provide: IRecommendationDataPort,
       useClass: RecommendationDataAdapter,
     },
@@ -60,6 +66,7 @@ import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/rec
   exports: [
     AIRecommendationStrategy,
     FallbackRecommendationStrategy,
+    IRecommendationStrategyProvider,
     IRecommendationDataPort,
     RecommendationCachePort,
   ],
