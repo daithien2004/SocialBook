@@ -14,7 +14,7 @@ import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
-import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
+import { GeminiInfrastructureModule } from '@/infrastructure/gemini/gemini-infrastructure.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 import { ProcessReadingSessionUseCase } from './use-cases/process-reading-session/process-reading-session.use-case';
@@ -30,7 +30,7 @@ import { RecommendationsInfrastructureModule } from '@/infrastructure/recommenda
     BooksRepositoryModule,
     UsersRepositoryModule,
     GenresRepositoryModule,
-    AIInfrastructureModule,
+    GeminiInfrastructureModule,
     IdGeneratorModule,
     ChaptersRepositoryModule,
     RecommendationsInfrastructureModule,

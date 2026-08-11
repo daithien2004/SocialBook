@@ -4,8 +4,7 @@ import {
   AIRequest,
   AIRequestSchema,
 } from '@/infrastructure/database/schemas/ai-request.schema';
-import { GeminiService } from '../../../ai/gemini.service';
-import { AIInfrastructureModule } from '../../../ai/ai-infrastructure.module';
+import { GeminiInfrastructureModule } from '../../../gemini/gemini-infrastructure.module';
 import { AIRequestRepository } from './ai-request.repository';
 import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
@@ -14,13 +13,9 @@ import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
     MongooseModule.forFeature([
       { name: AIRequest.name, schema: AIRequestSchema },
     ]),
-    AIInfrastructureModule,
+    GeminiInfrastructureModule,
   ],
   providers: [
-    {
-      provide: GEMINI_TOKENS.GEMINI_SERVICE,
-      useClass: GeminiService,
-    },
     {
       provide: GEMINI_TOKENS.AI_REQUEST_REPOSITORY,
       useClass: AIRequestRepository,

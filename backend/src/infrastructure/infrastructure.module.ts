@@ -20,7 +20,7 @@ import { RolesRepositoryModule } from './database/repositories/roles/roles-repos
 import { TextToSpeechRepositoryModule } from './database/repositories/text-to-speech/text-to-speech-repository.module';
 import { UsersRepositoryModule } from './database/repositories/users/users-repository.module';
 import { ContentModerationRepositoryModule } from './database/repositories/content-moderation/content-moderation-repository.module';
-import { AIInfrastructureModule } from './ai/ai-infrastructure.module';
+import { GeminiInfrastructureModule } from './gemini/gemini-infrastructure.module';
 import { FilesInfrastructureModule } from './files/files-infrastructure.module';
 import { MediaInfrastructureModule } from './media/media-infrastructure.module';
 import { ModerationInfrastructureModule } from './moderation/moderation-infrastructure.module';
@@ -57,7 +57,7 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
     ContentModerationRepositoryModule,
-    AIInfrastructureModule,
+    GeminiInfrastructureModule,
     FilesInfrastructureModule,
     MediaInfrastructureModule,
     ModerationInfrastructureModule,
@@ -94,7 +94,7 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     GeminiRepositoryModule,
     TextToSpeechRepositoryModule,
     ContentModerationRepositoryModule,
-    AIInfrastructureModule,
+    GeminiInfrastructureModule,
     FilesInfrastructureModule,
     MediaInfrastructureModule,
     ModerationInfrastructureModule,

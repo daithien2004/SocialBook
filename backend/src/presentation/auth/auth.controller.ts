@@ -1,6 +1,4 @@
 import { Public } from '@/common/decorators/custom.decorator';
-import { JwtRefreshAuthGuard } from '@/common/guards/jwt-refresh-auth.guard';
-import { LocalAuthGuard } from '@/common/guards/local-auth.guard';
 import { User } from '@/domain/users/entities/user.entity';
 
 import {
@@ -15,6 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { Throttle } from '@nestjs/throttler';
+import { AuthGuard } from '@nestjs/passport';
 
 // Use Cases
 import { ForgotPasswordCommand } from '@/application/auth/use-cases/forgot-password/forgot-password.command';
@@ -37,6 +36,7 @@ import { VerifyOtpCommand } from '@/application/auth/use-cases/verify-otp/verify
 import { VerifyOtpUseCase } from '@/application/auth/use-cases/verify-otp/verify-otp.use-case';
 
 import type { JwtValidatedUser } from '@/common/interfaces/jwt-validated-user.interface';
+import type { JwtPayload } from '@/infrastructure/auth/strategies/jwt.strategy';
 import type { ApiResponse } from '@/common/interfaces/api-response.interface';
 import {
   ForgotPasswordDto,
@@ -87,7 +87,7 @@ export class AuthController {
 
   @Public()
   @Throttle({ global: { limit: 5 } })
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(
     @Req() req: { user: User },
@@ -160,10 +160,11 @@ export class AuthController {
     };
   }
 
-  @UseGuards(JwtRefreshAuthGuard)
+  @UseGuards(AuthGuard('jwt-refresh'))
   @Public()
   @Post('refresh')
   async refresh(
+    @Req() req: { user: JwtPayload },
     @Body() body: RefreshTokenDto,
   ): Promise<ApiResponse<TokenPairDto>> {
     const { refreshToken } = body;
@@ -174,17 +175,7 @@ export class AuthController {
       );
     }
 
-    const payload =
-      await this.refreshTokenUseCase.validateRefreshToken(refreshToken);
-    if (!payload) {
-      throw new HttpException(
-        'Refresh token không hợp lệ',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-    const sub: string = payload.sub;
-
-    const command = new RefreshTokenCommand(sub, refreshToken);
+    const command = new RefreshTokenCommand(req.user.sub, refreshToken);
     const { accessToken, refreshToken: newRefreshToken } =
       await this.refreshTokenUseCase.execute(command);
 

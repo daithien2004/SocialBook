@@ -36,4 +36,4 @@ import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
   ],
   exports: [GEMINI_TOKENS.GEMINI_SERVICE, OpenAICompatibleClient],
 })
-export class AIInfrastructureModule {}
+export class GeminiInfrastructureModule {}

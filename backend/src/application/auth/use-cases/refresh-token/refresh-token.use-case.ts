@@ -2,21 +2,11 @@ import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-excep
 import { Injectable } from '@nestjs/common';
 import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { Inject } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { RefreshTokenCommand } from './refresh-token.command';
-
-interface TokenPayload {
-  sub: string;
-  email: string;
-  role: string;
-  iat?: number;
-  exp?: number;
-}
 
 @Injectable()
 export class RefreshTokenUseCase {
@@ -24,8 +14,6 @@ export class RefreshTokenUseCase {
     private readonly userRepository: IUserRepository,
     private readonly rolesRepository: IRoleRepository,
     private readonly tokenService: TokenService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
     @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
   ) {}
 
@@ -55,27 +43,5 @@ export class RefreshTokenUseCase {
       user.email.value,
       roleName,
     );
-  }
-
-  async validateRefreshToken(token: string): Promise<TokenPayload | false> {
-    try {
-      const payload: TokenPayload = this.jwtService.verify(token, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      });
-
-      const id = UserId.create(payload.sub);
-      const user = await this.userRepository.findById(id);
-      if (!user || !user.hashedRt) return false;
-
-      const isMatch = await this.passwordHasher.compare(token, user.hashedRt);
-
-      if (!isMatch) {
-        throw new UnauthorizedDomainException('Refresh token không hợp lệ');
-      }
-
-      return payload;
-    } catch {
-      throw new UnauthorizedDomainException('Refresh token không hợp lệ');
-    }
   }
 }

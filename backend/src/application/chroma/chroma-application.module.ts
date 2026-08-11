@@ -12,7 +12,7 @@ import { BooksRepositoryModule } from '../../infrastructure/database/repositorie
 import { AuthorsRepositoryModule } from '../../infrastructure/database/repositories/authors/authors-repository.module';
 import { ChaptersRepositoryModule } from '../../infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
-import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
+import { GeminiInfrastructureModule } from '@/infrastructure/gemini/gemini-infrastructure.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.mo
     AuthorsRepositoryModule,
     ChaptersRepositoryModule,
     IdGeneratorModule,
-    AIInfrastructureModule,
+    GeminiInfrastructureModule,
   ],
   providers: [
     GetCollectionStatsUseCase,

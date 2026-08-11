@@ -31,7 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    // Check if user is banned in database
     const userId = UserId.create(payload.sub);
     const user = await this.userRepository.findById(userId);
 
