@@ -1,9 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import {
-  PASSWORD_HASHER_TOKEN,
-  type IPasswordHasher,
-} from '@/shared/domain/password-hasher.interface';
-import { Inject } from '@nestjs/common';
+import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { VerifyOtpUseCase } from '@/application/otp/use-cases/verify-otp.use-case';
@@ -15,7 +11,6 @@ export class ResetPasswordUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly verifyOtpUseCase: VerifyOtpUseCase,
-    @Inject(PASSWORD_HASHER_TOKEN)
     private readonly passwordHasher: IPasswordHasher,
   ) {}
 

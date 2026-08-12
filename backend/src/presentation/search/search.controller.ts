@@ -6,20 +6,17 @@ import {
   Body,
   HttpCode,
   RequestTimeoutException,
-  Inject,
 } from '@nestjs/common';
 import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelligent-search.use-case';
 import { IntelligentSearchQuery } from '@/application/search/use-cases/intelligent-search.query';
 import { Public } from '@/common/decorators/custom.decorator';
 import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
-import { TRENDING_KEYWORD_CACHE_TOKEN } from '@/domain/search/interfaces/trending-keyword.cache.interface';
-import type { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
+import { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
 
 @Controller('search')
 export class SearchController {
   constructor(
     private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
-    @Inject(TRENDING_KEYWORD_CACHE_TOKEN)
     private readonly trendingKeywordCache: ITrendingKeywordCache,
   ) {}
 

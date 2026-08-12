@@ -1,6 +1,6 @@
 import { Entity } from '@/shared/domain/entity.base';
 import {
-  IReadingPreferences,
+  ReadingPreferencesProps,
   ReadingPreferences,
 } from '../value-objects/reading-preferences.vo';
 import { UserEmail } from '../value-objects/user-email.vo';
@@ -87,7 +87,7 @@ export class User extends Entity<UserId> {
     website?: string;
     hashedRt?: string;
     favoriteGenres: string[];
-    readingPreferences?: IReadingPreferences;
+    readingPreferences?: ReadingPreferencesProps;
     createdAt: Date;
     updatedAt: Date;
   }): User {
@@ -185,7 +185,7 @@ export class User extends Entity<UserId> {
     this.markAsUpdated();
   }
 
-  updateReadingPreferences(props: Partial<IReadingPreferences>): void {
+  updateReadingPreferences(props: Partial<ReadingPreferencesProps>): void {
     const current =
       this._props.readingPreferences || ReadingPreferences.createDefault();
     this._props.readingPreferences = ReadingPreferences.create({

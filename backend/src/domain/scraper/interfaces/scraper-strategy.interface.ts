@@ -1,7 +1,7 @@
 import { ScrapedBookData, ScrapedChapterData } from './scraped-data.model';
 
-export interface IScraperStrategy {
-  scrapeBook(url: string): Promise<ScrapedBookData>;
-  scrapeChapter(url: string): Promise<ScrapedChapterData>;
-  canHandle(url: string): boolean;
+export abstract class IScraperStrategy {
+  abstract scrapeBook(url: string): Promise<ScrapedBookData>;
+  abstract scrapeChapter(url: string): Promise<ScrapedChapterData>;
+  abstract canHandle(url: string): boolean;
 }

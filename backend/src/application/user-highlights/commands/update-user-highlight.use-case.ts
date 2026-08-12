@@ -1,13 +1,9 @@
 import {
   Injectable,
-  Inject,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  USER_HIGHLIGHT_REPOSITORY_TOKEN,
-  type IUserHighlightRepository,
-} from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
+import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
 
 export interface UpdateUserHighlightCommand {
@@ -19,10 +15,7 @@ export interface UpdateUserHighlightCommand {
 
 @Injectable()
 export class UpdateUserHighlightUseCase {
-  constructor(
-    @Inject(USER_HIGHLIGHT_REPOSITORY_TOKEN)
-    private readonly highlightRepository: IUserHighlightRepository,
-  ) {}
+  constructor(private readonly highlightRepository: IUserHighlightRepository) {}
 
   async execute(command: UpdateUserHighlightCommand): Promise<UserHighlight> {
     const highlight = await this.highlightRepository.findById(

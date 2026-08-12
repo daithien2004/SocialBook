@@ -1,4 +1,4 @@
-import { PopulatedBook } from './recommendation-data.port';
+import { PopulatedBook } from './recommendation-data.interface';
 
 export interface EnrichedRecommendation {
   bookId: string;

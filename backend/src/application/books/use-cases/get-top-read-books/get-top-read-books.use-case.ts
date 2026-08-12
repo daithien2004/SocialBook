@@ -1,7 +1,6 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
-import { VIEW_RANKING_CACHE_TOKEN } from '@/domain/books/interfaces/view-ranking.cache.interface';
-import type { IViewRankingCache } from '@/domain/books/interfaces/view-ranking.cache.interface';
+import { IViewRankingCache } from '@/domain/books/interfaces/view-ranking.cache.interface';
 import { GetTopReadBooksQuery } from './get-top-read-books.query';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 
@@ -11,7 +10,6 @@ export class GetTopReadBooksUseCase {
 
   constructor(
     private readonly bookQueryProvider: IBookQueryProvider,
-    @Inject(VIEW_RANKING_CACHE_TOKEN)
     private readonly viewRankingCache: IViewRankingCache,
   ) {}
 

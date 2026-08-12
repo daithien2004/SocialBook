@@ -1,14 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ToxicWordDocument } from '@/infrastructure/database/schemas/toxic-word.schema';
+import {
+  ToxicWord,
+  ToxicWordDocument,
+} from '@/infrastructure/database/schemas/toxic-word.schema';
 
 @Injectable()
 export class ToxicWordsSeed {
   private readonly logger = new Logger(ToxicWordsSeed.name);
 
   constructor(
-    @InjectModel(ToxicWordDocument.name)
+    @InjectModel(ToxicWord.name)
     private readonly toxicWordModel: Model<ToxicWordDocument>,
   ) {}
 

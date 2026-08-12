@@ -40,6 +40,6 @@ import { ChapterKnowledgeRepository } from './chapter-knowledge.repository';
       useClass: ChapterKnowledgeRepository,
     },
   ],
-  exports: [IChapterRepository, IChapterKnowledgeRepository, MongooseModule],
+  exports: [IChapterRepository, IChapterKnowledgeRepository],
 })
 export class ChaptersRepositoryModule {}

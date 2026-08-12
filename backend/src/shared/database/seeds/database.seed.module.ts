@@ -46,7 +46,7 @@ import {
   NotificationSchema,
 } from '@/infrastructure/database/schemas/notification.schema';
 import {
-  ToxicWordDocument,
+  ToxicWord,
   ToxicWordSchema,
 } from '@/infrastructure/database/schemas/toxic-word.schema';
 
@@ -111,7 +111,7 @@ import { ReadingRoomsSeed } from './reading-rooms.seeder';
       { name: Progress.name, schema: ProgressSchema },
       { name: Post.name, schema: PostSchema },
       { name: Notification.name, schema: NotificationSchema },
-      { name: ToxicWordDocument.name, schema: ToxicWordSchema },
+      { name: ToxicWord.name, schema: ToxicWordSchema },
       { name: ReadingRoom.name, schema: ReadingRoomSchema },
       { name: RoomCommentSchema.name, schema: RoomCommentSchemaFactory },
       { name: RoomReactionSchema.name, schema: RoomReactionSchemaFactory },

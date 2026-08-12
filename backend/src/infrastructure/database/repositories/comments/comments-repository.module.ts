@@ -24,6 +24,6 @@ import {
       useClass: CommentRepository,
     },
   ],
-  exports: [ICommentRepository, MongooseModule],
+  exports: [ICommentRepository],
 })
 export class CommentsRepositoryModule {}

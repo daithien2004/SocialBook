@@ -2,17 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IToxicWordRepository } from '@/domain/content-moderation/repositories/toxic-word.repository.interface';
-import { ToxicWord } from '@/domain/content-moderation/entities/toxic-word.entity';
-import { ToxicWordDocument } from '@/infrastructure/database/schemas/toxic-word.schema';
+import { ToxicWord as ToxicWordEntity } from '@/domain/content-moderation/entities/toxic-word.entity';
+import {
+  ToxicWord as ToxicWordSchema,
+  ToxicWordDocument,
+} from '@/infrastructure/database/schemas/toxic-word.schema';
 
 @Injectable()
 export class ToxicWordRepository implements IToxicWordRepository {
   constructor(
-    @InjectModel('ToxicWord')
+    @InjectModel(ToxicWordSchema.name)
     private readonly toxicWordModel: Model<ToxicWordDocument>,
   ) {}
 
-  async create(word: ToxicWord): Promise<ToxicWord> {
+  async create(word: ToxicWordEntity): Promise<ToxicWordEntity> {
     const created = new this.toxicWordModel({
       _id: word.id,
       pattern: word.pattern,
@@ -28,7 +31,7 @@ export class ToxicWordRepository implements IToxicWordRepository {
     return result.deletedCount > 0;
   }
 
-  async findAll(): Promise<ToxicWord[]> {
+  async findAll(): Promise<ToxicWordEntity[]> {
     const documents = await this.toxicWordModel.find().exec();
     return documents.map((doc) => this.toEntity(doc));
   }
@@ -38,8 +41,8 @@ export class ToxicWordRepository implements IToxicWordRepository {
     return count > 0;
   }
 
-  private toEntity(doc: ToxicWordDocument): ToxicWord {
-    return ToxicWord.reconstitute({
+  private toEntity(doc: ToxicWordDocument): ToxicWordEntity {
+    return ToxicWordEntity.reconstitute({
       id: String(doc._id),
       pattern: doc.pattern,
       group: doc.group,

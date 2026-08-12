@@ -19,6 +19,6 @@ import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/read
       useClass: ReadingRoomRepository,
     },
   ],
-  exports: [IReadingRoomRepository, MongooseModule],
+  exports: [IReadingRoomRepository],
 })
 export class ReadingRoomsRepositoryModule {}

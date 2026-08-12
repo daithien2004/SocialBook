@@ -1,11 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { BOOK_CACHE_SERVICE_TOKEN } from '@/domain/books/interfaces/book-cache.service.interface';
-import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
+import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
 import { GetBookByIdQuery } from './get-book-by-id.query';
 import {
   BadRequestDomainException,
@@ -17,7 +16,6 @@ export class GetBookByIdUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly eventEmitter: EventEmitter2,
-    @Inject(BOOK_CACHE_SERVICE_TOKEN)
     private readonly bookCache: IBookCacheService,
   ) {}
 

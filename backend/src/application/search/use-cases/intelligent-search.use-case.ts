@@ -1,6 +1,6 @@
 import { getErrorMessage } from '@/common/utils/error.util';
 import { calculateFuzzyScore } from '@/common/utils/string.util';
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IntelligentSearchQuery } from './intelligent-search.query';
 import {
   PaginatedSearchResult,
@@ -20,10 +20,8 @@ import {
   QueryAnalysis,
 } from '../services/search-query-expansion.service';
 import { SearchRankingService } from '../services/search-ranking.service';
-import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
-import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
-import { TRENDING_KEYWORD_CACHE_TOKEN } from '@/domain/search/interfaces/trending-keyword.cache.interface';
-import type { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
+import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
+import { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
 
 interface HybridScore {
   finalScore: number;
@@ -47,9 +45,7 @@ export class IntelligentSearchUseCase {
     private readonly authorRepository: IAuthorRepository,
     private readonly queryExpansionService: SearchQueryExpansionService,
     private readonly rankingService: SearchRankingService,
-    @Inject(CACHE_SERVICE_TOKEN)
     private readonly cacheService: ICacheService,
-    @Inject(TRENDING_KEYWORD_CACHE_TOKEN)
     private readonly trendingKeywordCache: ITrendingKeywordCache,
   ) {}
 

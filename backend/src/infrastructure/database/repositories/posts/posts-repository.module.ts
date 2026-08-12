@@ -29,6 +29,6 @@ import { PostRepository } from './post.repository';
       useClass: PostRepository,
     },
   ],
-  exports: [IPostRepository, MongooseModule],
+  exports: [IPostRepository],
 })
 export class PostsRepositoryModule {}

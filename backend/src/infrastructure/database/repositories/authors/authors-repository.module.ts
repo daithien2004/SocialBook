@@ -17,6 +17,6 @@ import { AuthorRepository } from './author.repository';
       useClass: AuthorRepository,
     },
   ],
-  exports: [IAuthorRepository, MongooseModule],
+  exports: [IAuthorRepository],
 })
 export class AuthorsRepositoryModule {}

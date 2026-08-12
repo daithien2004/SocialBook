@@ -19,7 +19,7 @@ import { BookId as DomainBookId } from '@/domain/books/value-objects/book-id.vo'
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
-import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.interface';
 
 export interface UpdateProgressResult {
   readingList: LibraryItemReadModel;

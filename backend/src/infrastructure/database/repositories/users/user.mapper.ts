@@ -1,7 +1,7 @@
 import { User as UserEntity } from '@/domain/users/entities/user.entity';
 import { UserDocument } from '@/infrastructure/database/schemas/user.schema';
 import { Types } from 'mongoose';
-import { IReadingPreferences } from '@/domain/users/value-objects/reading-preferences.vo';
+import { ReadingPreferencesProps } from '@/domain/users/value-objects/reading-preferences.vo';
 
 export interface UserPersistence {
   _id: Types.ObjectId;
@@ -20,7 +20,7 @@ export interface UserPersistence {
   website?: string;
   hashedRt?: string;
   favoriteGenres: Types.ObjectId[];
-  readingPreferences?: IReadingPreferences;
+  readingPreferences?: ReadingPreferencesProps;
   createdAt: Date;
   updatedAt: Date;
 }

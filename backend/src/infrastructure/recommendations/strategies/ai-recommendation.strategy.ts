@@ -8,8 +8,8 @@ import {
   RecommendationResponse,
   RecommendationResult,
 } from '@/domain/recommendations/interfaces/recommendation.interface';
-import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.port';
-import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.interface';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.interface';
 import { FallbackRecommendationStrategy } from './fallback-recommendation.strategy';
 
 interface AIAnalysis {

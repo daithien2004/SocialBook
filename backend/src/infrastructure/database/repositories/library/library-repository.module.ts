@@ -42,7 +42,6 @@ import { ReadingProgressRepository } from './reading-progress.repository';
     },
   ],
   exports: [
-    MongooseModule,
     IReadingListRepository,
     IReadingProgressRepository,
     ICollectionRepository,

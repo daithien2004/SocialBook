@@ -17,7 +17,7 @@ import {
   RecommendationResponse,
   RecommendationResult,
 } from '@/domain/recommendations/interfaces/recommendation.interface';
-import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.port';
+import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.interface';
 
 @Injectable()
 export class FallbackRecommendationStrategy implements IRecommendationStrategy {

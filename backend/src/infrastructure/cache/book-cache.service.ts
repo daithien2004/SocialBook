@@ -1,7 +1,6 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
-import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
-import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
+import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { Book } from '@/domain/books/entities/book.entity';
 
@@ -29,9 +28,7 @@ interface BookCacheData {
 export class BookCacheService implements IBookCacheService {
   private readonly logger = new Logger(BookCacheService.name);
 
-  constructor(
-    @Inject(CACHE_SERVICE_TOKEN) private readonly cache: ICacheService,
-  ) {}
+  constructor(private readonly cache: ICacheService) {}
 
   async getDetail(bookId: string): Promise<Book | null> {
     const key = `books:detail:${bookId}`;

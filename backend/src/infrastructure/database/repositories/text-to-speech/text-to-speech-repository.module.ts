@@ -19,6 +19,6 @@ import { TextToSpeechRepository } from './text-to-speech.repository';
       useClass: TextToSpeechRepository,
     },
   ],
-  exports: [MongooseModule, ITextToSpeechRepository],
+  exports: [ITextToSpeechRepository],
 })
 export class TextToSpeechRepositoryModule {}

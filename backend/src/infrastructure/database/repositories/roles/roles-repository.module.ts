@@ -17,6 +17,6 @@ import { RoleRepository } from './role.repository';
       useClass: RoleRepository,
     },
   ],
-  exports: [IRoleRepository, MongooseModule],
+  exports: [IRoleRepository],
 })
 export class RolesRepositoryModule {}

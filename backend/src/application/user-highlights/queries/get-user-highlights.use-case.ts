@@ -1,8 +1,5 @@
-import { Injectable, Inject } from '@nestjs/common';
-import {
-  USER_HIGHLIGHT_REPOSITORY_TOKEN,
-  type IUserHighlightRepository,
-} from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
+import { Injectable } from '@nestjs/common';
+import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
 
 export interface GetUserHighlightsQuery {
@@ -13,10 +10,7 @@ export interface GetUserHighlightsQuery {
 
 @Injectable()
 export class GetUserHighlightsUseCase {
-  constructor(
-    @Inject(USER_HIGHLIGHT_REPOSITORY_TOKEN)
-    private readonly highlightRepository: IUserHighlightRepository,
-  ) {}
+  constructor(private readonly highlightRepository: IUserHighlightRepository) {}
 
   async execute(query: GetUserHighlightsQuery): Promise<UserHighlight[]> {
     if (query.chapterId) {

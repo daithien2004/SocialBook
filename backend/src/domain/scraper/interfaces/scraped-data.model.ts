@@ -1,7 +1,7 @@
 export interface ScrapedChapterData {
   title: string;
   order: number;
-  content: string; // HTML or text content
+  content: string;
   paragraphs?: { content: string }[];
 }
 

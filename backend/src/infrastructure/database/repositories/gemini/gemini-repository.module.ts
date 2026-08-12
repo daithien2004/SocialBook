@@ -4,8 +4,6 @@ import {
   AIRequest,
   AIRequestSchema,
 } from '@/infrastructure/database/schemas/ai-request.schema';
-import { GeminiInfrastructureModule } from '../../../gemini/gemini-infrastructure.module';
-import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
 import { AIRequestRepository } from './ai-request.repository';
 
@@ -14,7 +12,6 @@ import { AIRequestRepository } from './ai-request.repository';
     MongooseModule.forFeature([
       { name: AIRequest.name, schema: AIRequestSchema },
     ]),
-    GeminiInfrastructureModule,
   ],
   providers: [
     {
@@ -22,6 +19,6 @@ import { AIRequestRepository } from './ai-request.repository';
       useClass: AIRequestRepository,
     },
   ],
-  exports: [MongooseModule, IGeminiService, IAIRequestRepository],
+  exports: [IAIRequestRepository],
 })
 export class GeminiRepositoryModule {}

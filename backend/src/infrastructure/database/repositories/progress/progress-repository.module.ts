@@ -19,6 +19,6 @@ import { ProgressRepository } from './progress.repository';
       useClass: ProgressRepository,
     },
   ],
-  exports: [MongooseModule, IProgressRepository],
+  exports: [IProgressRepository],
 })
 export class ProgressRepositoryModule {}

@@ -4,7 +4,7 @@ import {
   BadRequestDomainException,
   InternalServerDomainException,
 } from '@/shared/domain/common-exceptions';
-import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
+import { IOtpRepository } from '@/domain/auth/otp/repositories/otp.repository.interface';
 import { VerifyOtpCommand } from './verify-otp.command';
 
 @Injectable()

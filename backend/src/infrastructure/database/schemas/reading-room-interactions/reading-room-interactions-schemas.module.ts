@@ -18,6 +18,6 @@ const models = [
 
 @Module({
   imports: [MongooseModule.forFeature(models)],
-  exports: [MongooseModule.forFeature(models)],
+  exports: [MongooseModule],
 })
 export class ReadingRoomInteractionsSchemasModule {}

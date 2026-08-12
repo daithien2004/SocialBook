@@ -12,7 +12,7 @@ import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { CreatePostCommand } from './create-post.command';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
-import { IPostModerationQueuePort } from '@/domain/posts/interfaces/post-moderation-queue.port';
+import { IPostModerationQueuePort } from '@/domain/posts/interfaces/post-moderation-queue.interface';
 
 @Injectable()
 export class CreatePostUseCase {

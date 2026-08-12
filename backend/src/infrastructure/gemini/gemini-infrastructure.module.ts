@@ -34,6 +34,6 @@ import { OpenAICompatibleClient } from './openai-compatible.client';
       useClass: GeminiService,
     },
   ],
-  exports: [IGeminiService, OpenAICompatibleClient],
+  exports: [IGeminiService],
 })
 export class GeminiInfrastructureModule {}

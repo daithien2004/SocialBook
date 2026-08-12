@@ -27,11 +27,11 @@ import {
 import { AIRecommendationStrategy } from './strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
 import { RecommendationStrategyProvider } from './recommendation-strategy.provider';
-import { GeminiRepositoryModule } from '../database/repositories/gemini/gemini-repository.module';
+import { GeminiInfrastructureModule } from '../gemini/gemini-infrastructure.module';
 import { RecommendationDataAdapter } from './recommendation-data.adapter';
 import { RecommendationCacheService } from './recommendation-cache.service';
-import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
-import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.port';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.interface';
+import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.interface';
 import { IRecommendationStrategyProvider } from '@/domain/recommendations/interfaces/recommendation-strategy-provider.interface';
 
 @Module({
@@ -44,7 +44,7 @@ import { IRecommendationStrategyProvider } from '@/domain/recommendations/interf
       { name: Review.name, schema: ReviewSchema },
       { name: UserPreference.name, schema: UserPreferenceSchema },
     ]),
-    GeminiRepositoryModule,
+    GeminiInfrastructureModule,
   ],
   providers: [
     AIRecommendationStrategy,

@@ -1,8 +1,8 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import type { Queue } from 'bullmq';
-import { IPostModerationQueuePort } from '@/domain/posts/interfaces/post-moderation-queue.port';
-import type { PostModerationJobInput } from '@/domain/posts/interfaces/post-moderation-queue.port';
+import { IPostModerationQueuePort } from '@/domain/posts/interfaces/post-moderation-queue.interface';
+import type { PostModerationJobInput } from '@/domain/posts/interfaces/post-moderation-queue.interface';
 import {
   POST_MODERATION_QUEUE,
   POST_MODERATION_JOB,

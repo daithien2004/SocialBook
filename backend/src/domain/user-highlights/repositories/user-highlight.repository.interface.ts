@@ -1,11 +1,15 @@
 import { UserHighlight } from '../entities/user-highlight.entity';
 
-export const USER_HIGHLIGHT_REPOSITORY_TOKEN = 'IUserHighlightRepository';
-
-export interface IUserHighlightRepository {
-  save(highlight: UserHighlight): Promise<void>;
-  findById(id: string): Promise<UserHighlight | null>;
-  findByBookId(userId: string, bookId: string): Promise<UserHighlight[]>;
-  findByChapterId(userId: string, chapterId: string): Promise<UserHighlight[]>;
-  delete(id: string): Promise<void>;
+export abstract class IUserHighlightRepository {
+  abstract save(highlight: UserHighlight): Promise<void>;
+  abstract findById(id: string): Promise<UserHighlight | null>;
+  abstract findByBookId(
+    userId: string,
+    bookId: string,
+  ): Promise<UserHighlight[]>;
+  abstract findByChapterId(
+    userId: string,
+    chapterId: string,
+  ): Promise<UserHighlight[]>;
+  abstract delete(id: string): Promise<void>;
 }

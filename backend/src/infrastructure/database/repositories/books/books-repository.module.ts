@@ -42,6 +42,6 @@ import { ChromaRepositoryModule } from '../chroma/chroma-repository.module';
       useClass: BookQueryProvider,
     },
   ],
-  exports: [IBookRepository, IBookQueryProvider, MongooseModule],
+  exports: [IBookRepository, IBookQueryProvider],
 })
 export class BooksRepositoryModule {}

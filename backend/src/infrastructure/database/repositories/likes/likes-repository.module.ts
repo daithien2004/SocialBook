@@ -17,6 +17,6 @@ import { LikeRepository } from './like.repository';
       useClass: LikeRepository,
     },
   ],
-  exports: [ILikeRepository, MongooseModule],
+  exports: [ILikeRepository],
 })
 export class LikesRepositoryModule {}

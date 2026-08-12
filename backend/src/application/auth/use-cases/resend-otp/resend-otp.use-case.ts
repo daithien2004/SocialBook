@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { SendOtpUseCase } from '@/application/otp/use-cases/send-otp.use-case';
 import { SendOtpCommand } from '@/application/otp/use-cases/send-otp.command';
-import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
+import { IOtpRepository } from '@/domain/auth/otp/repositories/otp.repository.interface';
 import { ResendOtpCommand } from './resend-otp.command';
 
 @Injectable()

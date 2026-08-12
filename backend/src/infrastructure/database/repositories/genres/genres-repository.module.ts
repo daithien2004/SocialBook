@@ -17,6 +17,6 @@ import { GenresRepository } from './genres.repository';
       useClass: GenresRepository,
     },
   ],
-  exports: [IGenreRepository, MongooseModule],
+  exports: [IGenreRepository],
 })
 export class GenresRepositoryModule {}

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IRecommendationStrategy } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
 import { IRecommendationStrategyProvider } from '@/domain/recommendations/interfaces/recommendation-strategy-provider.interface';
-import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.port';
+import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.interface';
 import { AIRecommendationStrategy } from './strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
 

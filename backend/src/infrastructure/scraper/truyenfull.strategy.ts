@@ -9,11 +9,12 @@ import {
 } from '@/domain/scraper/interfaces/scraped-data.model';
 
 @Injectable()
-export class TruyenFullStrategy implements IScraperStrategy {
+export class TruyenFullStrategy extends IScraperStrategy {
   private readonly logger = new Logger(TruyenFullStrategy.name);
-  private readonly baseUrl = 'https://truyenfull.vision';
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) {
+    super();
+  }
 
   canHandle(url: string): boolean {
     return url.includes('truyenfull.vision') || url.includes('truyenfull.vn');

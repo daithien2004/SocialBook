@@ -1,4 +1,4 @@
-export interface IReadingPreferences {
+export interface ReadingPreferencesProps {
   theme: string;
   fontSize: number;
   fontFamily: string;
@@ -49,7 +49,7 @@ export class ReadingPreferences {
     );
   }
 
-  static create(props: Partial<IReadingPreferences>): ReadingPreferences {
+  static create(props: Partial<ReadingPreferencesProps>): ReadingPreferences {
     const defaults = this.createDefault();
     return new ReadingPreferences(
       props.theme || defaults.theme,

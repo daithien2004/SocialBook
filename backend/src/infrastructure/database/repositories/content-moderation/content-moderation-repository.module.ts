@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ToxicWordSchema } from '@/infrastructure/database/schemas/toxic-word.schema';
+import {
+  ToxicWord,
+  ToxicWordSchema,
+} from '@/infrastructure/database/schemas/toxic-word.schema';
 import { IToxicWordRepository } from '@/domain/content-moderation/repositories/toxic-word.repository.interface';
 import { ToxicWordRepository } from './toxic-word.repository';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'ToxicWord', schema: ToxicWordSchema }]),
+    MongooseModule.forFeature([
+      { name: ToxicWord.name, schema: ToxicWordSchema },
+    ]),
   ],
   providers: [
     {
@@ -14,6 +19,6 @@ import { ToxicWordRepository } from './toxic-word.repository';
       useClass: ToxicWordRepository,
     },
   ],
-  exports: [IToxicWordRepository, MongooseModule],
+  exports: [IToxicWordRepository],
 })
 export class ContentModerationRepositoryModule {}

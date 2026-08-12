@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ThrottlerStorage } from '@nestjs/throttler';
 import { InjectThrottlerStorage } from '@nestjs/throttler/dist/throttler.decorator';
-import { RateLimitConfigService } from '@/common/services/rate-limit-config.service';
+import { RateLimitConfigService } from '@/shared/infrastructure/rate-limit-config.service';
 
 @Injectable()
 export class GeminiThrottleGuard implements CanActivate {

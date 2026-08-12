@@ -1,13 +1,7 @@
-import {
-  Injectable,
-  BadRequestException,
-  Logger,
-  Inject,
-} from '@nestjs/common';
-import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
-import { Otp } from '@/domain/otp/entities/otp.entity';
-import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
-import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { IOtpRepository } from '@/domain/auth/otp/repositories/otp.repository.interface';
+import { Otp } from '@/domain/auth/otp/entities/otp.entity';
+import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
 
 @Injectable()
 export class OtpRepository implements IOtpRepository {
@@ -18,9 +12,7 @@ export class OtpRepository implements IOtpRepository {
   private readonly RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds
   private readonly logger = new Logger(OtpRepository.name);
 
-  constructor(
-    @Inject(CACHE_SERVICE_TOKEN) private readonly cacheService: ICacheService,
-  ) {}
+  constructor(private readonly cacheService: ICacheService) {}
 
   async save(otp: Otp): Promise<void> {
     // Store OTP code with TTL

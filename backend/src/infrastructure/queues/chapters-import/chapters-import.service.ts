@@ -11,7 +11,7 @@ import {
   StartChaptersImportParams,
   StartChaptersImportResult,
   ChaptersImportStatusResult,
-} from '@/domain/chapters/interfaces/chapters-import.port';
+} from '@/domain/chapters/interfaces/chapters-import.interface';
 import type {
   ImportChaptersJobData,
   ImportChaptersJobResult,

@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import {
@@ -6,8 +6,7 @@ import {
   ToggleLikeRequest,
 } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
-import { BOOK_CACHE_SERVICE_TOKEN } from '@/domain/books/interfaces/book-cache.service.interface';
-import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
+import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
 import { ToggleBookLikeCommand } from './toggle-book-like.command';
 
 export interface ToggleBookLikeResponse {
@@ -22,7 +21,6 @@ export class ToggleBookLikeUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly toggleLikeUseCase: ToggleLikeUseCase,
-    @Inject(BOOK_CACHE_SERVICE_TOKEN)
     private readonly bookCache: IBookCacheService,
   ) {}
 

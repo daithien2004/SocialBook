@@ -2,7 +2,7 @@ import { getErrorMessage } from '@/common/utils/error.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
-import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
+import type { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
 
 @Injectable()
 export class RedisCacheService implements ICacheService {

@@ -14,12 +14,11 @@ import { FollowRepository } from './follow.repository';
     IdGeneratorModule,
   ],
   providers: [
-    FollowRepository,
     {
       provide: IFollowRepository,
       useClass: FollowRepository,
     },
   ],
-  exports: [FollowRepository, IFollowRepository, MongooseModule],
+  exports: [IFollowRepository],
 })
 export class FollowsRepositoryModule {}

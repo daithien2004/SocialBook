@@ -7,18 +7,13 @@ import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { CreateUserCommand } from './create-user.command';
 
-import {
-  PASSWORD_HASHER_TOKEN,
-  type IPasswordHasher,
-} from '@/shared/domain/password-hasher.interface';
-import { Inject } from '@nestjs/common';
+import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 
 @Injectable()
 export class CreateUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly idGenerator: IIdGenerator,
-    @Inject(PASSWORD_HASHER_TOKEN)
     private readonly passwordHasher: IPasswordHasher,
   ) {}
 

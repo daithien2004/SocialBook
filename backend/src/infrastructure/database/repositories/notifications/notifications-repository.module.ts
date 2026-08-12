@@ -19,6 +19,6 @@ import { NotificationRepository } from './notification.repository';
       useClass: NotificationRepository,
     },
   ],
-  exports: [INotificationRepository, MongooseModule],
+  exports: [INotificationRepository],
 })
 export class NotificationsRepositoryModule {}

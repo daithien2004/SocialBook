@@ -1,9 +1,6 @@
 import { UserBannedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
-import { Injectable, Inject } from '@nestjs/common';
-import {
-  PASSWORD_HASHER_TOKEN,
-  type IPasswordHasher,
-} from '@/shared/domain/password-hasher.interface';
+import { Injectable } from '@nestjs/common';
+import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { User } from '@/domain/users/entities/user.entity';
@@ -17,7 +14,6 @@ export interface ValidateUserCommand {
 export class ValidateUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
-    @Inject(PASSWORD_HASHER_TOKEN)
     private readonly passwordHasher: IPasswordHasher,
   ) {}
 

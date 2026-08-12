@@ -6,7 +6,7 @@ import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { UpdateStatusCommand } from './update-status.command';
-import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.interface';
 
 @Injectable()
 export class UpdateStatusUseCase {

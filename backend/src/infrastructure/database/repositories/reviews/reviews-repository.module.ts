@@ -17,6 +17,6 @@ import { ReviewRepository } from './review.repository';
       useClass: ReviewRepository,
     },
   ],
-  exports: [IReviewRepository, MongooseModule],
+  exports: [IReviewRepository],
 })
 export class ReviewsRepositoryModule {}

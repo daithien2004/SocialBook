@@ -2,21 +2,19 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Inject,
 } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { DeleteBookCommand } from './delete-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
-import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
+import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
 
 @Injectable()
 export class DeleteBookUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
-    @Inject(CACHE_SERVICE_TOKEN) private readonly cache: ICacheService,
+    private readonly cache: ICacheService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

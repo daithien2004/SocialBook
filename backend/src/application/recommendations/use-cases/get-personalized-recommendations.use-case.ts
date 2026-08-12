@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IRecommendationStrategyProvider } from '@/domain/recommendations/interfaces/recommendation-strategy-provider.interface';
-import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.port';
+import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.interface';
 import {
   RecommendationResponse,
   PaginatedRecommendationResponse,

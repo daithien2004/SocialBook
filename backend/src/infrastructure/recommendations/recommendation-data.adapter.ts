@@ -24,7 +24,7 @@ import {
 import {
   IRecommendationDataPort,
   PopulatedBook,
-} from '@/domain/recommendations/interfaces/recommendation-data.port';
+} from '@/domain/recommendations/interfaces/recommendation-data.interface';
 import { UserProfile } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
 
 type LeanedReadingList = {

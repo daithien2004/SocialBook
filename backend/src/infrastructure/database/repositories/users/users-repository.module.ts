@@ -17,6 +17,6 @@ import { UsersRepository } from './users.repository';
       useClass: UsersRepository,
     },
   ],
-  exports: [IUserRepository, MongooseModule],
+  exports: [IUserRepository],
 })
 export class UsersRepositoryModule {}

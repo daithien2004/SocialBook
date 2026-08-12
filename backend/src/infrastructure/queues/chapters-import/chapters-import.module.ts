@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { IChaptersImportService } from '@/domain/chapters/interfaces/chapters-import.port';
+import { IChaptersImportService } from '@/domain/chapters/interfaces/chapters-import.interface';
 import { ChaptersApplicationModule } from '@/application/chapters/chapters-application.module';
 import {
   ChaptersImportProcessor,

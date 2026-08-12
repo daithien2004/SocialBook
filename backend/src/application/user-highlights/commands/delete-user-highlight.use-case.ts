@@ -1,13 +1,9 @@
 import {
   Injectable,
-  Inject,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  USER_HIGHLIGHT_REPOSITORY_TOKEN,
-  type IUserHighlightRepository,
-} from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
+import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 
 export interface DeleteUserHighlightCommand {
   highlightId: string;
@@ -16,10 +12,7 @@ export interface DeleteUserHighlightCommand {
 
 @Injectable()
 export class DeleteUserHighlightUseCase {
-  constructor(
-    @Inject(USER_HIGHLIGHT_REPOSITORY_TOKEN)
-    private readonly highlightRepository: IUserHighlightRepository,
-  ) {}
+  constructor(private readonly highlightRepository: IUserHighlightRepository) {}
 
   async execute(command: DeleteUserHighlightCommand): Promise<void> {
     const highlight = await this.highlightRepository.findById(

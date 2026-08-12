@@ -4,7 +4,7 @@ import {
   UserHighlight,
   UserHighlightSchema,
 } from '@/infrastructure/database/schemas/user-highlight.schema';
-import { USER_HIGHLIGHT_REPOSITORY_TOKEN } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
+import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlightRepository } from './user-highlight.repository';
 
 @Module({
@@ -15,10 +15,10 @@ import { UserHighlightRepository } from './user-highlight.repository';
   ],
   providers: [
     {
-      provide: USER_HIGHLIGHT_REPOSITORY_TOKEN,
+      provide: IUserHighlightRepository,
       useClass: UserHighlightRepository,
     },
   ],
-  exports: [USER_HIGHLIGHT_REPOSITORY_TOKEN],
+  exports: [IUserHighlightRepository],
 })
 export class UserHighlightsRepositoryModule {}

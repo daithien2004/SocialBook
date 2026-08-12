@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 import {
   IMailerPort,
   SendMailOptions,
-} from '@/domain/otp/interfaces/mailer.port';
+} from '@/domain/auth/otp/interfaces/mailer.interface';
 
 @Injectable()
 export class MailerAdapter extends IMailerPort {

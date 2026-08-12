@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IChaptersImportService } from '@/domain/chapters/interfaces/chapters-import.port';
+import { IChaptersImportService } from '@/domain/chapters/interfaces/chapters-import.interface';
 import { GetChaptersImportStatusQuery } from './get-chapters-import-status.query';
 
 @Injectable()
