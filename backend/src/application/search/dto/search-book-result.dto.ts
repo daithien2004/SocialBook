@@ -13,7 +13,7 @@ export interface BookStats {
   reviews: number;
 }
 
-export interface SearchResultBook {
+export interface SearchBookResult {
   id: string;
   _id: string; // Keep for compatibility if needed, but prefer id
   title: string;
@@ -41,7 +41,7 @@ export interface SearchResultBook {
   matchType?: string;
 }
 
-export interface PaginatedSearchResult {
-  data: SearchResultBook[];
+export interface PaginatedSearchBookResult {
+  data: SearchBookResult[];
   meta: PaginationMeta;
 }

@@ -1,35 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IRecommendationFactory } from '@/domain/recommendations/interfaces/recommendation-factory.interface';
 import { IRecommendationDataRepository } from '@/domain/recommendations/interfaces/recommendation-data.repository.interface';
 import {
-  RecommendationResponse,
-  PaginatedRecommendationResponse,
-} from '@/domain/recommendations/interfaces/recommendation.interface';
+  RecommendationResult,
+  PaginatedRecommendationResult,
+} from '../dto/recommendation-result.dto';
+
+export interface GetPersonalizedRecommendationsQuery {
+  userId: string;
+  page?: number;
+  limit?: number;
+}
 
 @Injectable()
 export class GetPersonalizedRecommendationsUseCase {
+  private readonly logger = new Logger(
+    GetPersonalizedRecommendationsUseCase.name,
+  );
+
   constructor(
+    private readonly recommendationFactory: IRecommendationFactory,
     private readonly dataRepository: IRecommendationDataRepository,
-    private readonly strategyFactory: IRecommendationFactory,
   ) {}
 
   async execute(
-    userId: string,
-    page: number = 1,
-    limit: number = 10,
-  ): Promise<PaginatedRecommendationResponse> {
+    query: GetPersonalizedRecommendationsQuery,
+  ): Promise<PaginatedRecommendationResult> {
+    const { userId, page = 1, limit = 10 } = query;
+    this.logger.log(
+      `Getting recommendations for user ${userId} (page ${page}, limit ${limit})`,
+    );
+
     const userProfile = await this.dataRepository.buildUserProfile(userId);
     const availableBooks = await this.dataRepository.getAvailableBooks(userId);
-    const totalRecommendationsToGenerate = 15;
 
-    const strategy = await this.strategyFactory.getStrategy(userId);
-    const recommendationsResponse: RecommendationResponse =
-      await strategy.generate(
-        userId,
-        userProfile,
-        availableBooks,
-        totalRecommendationsToGenerate,
-      );
+    const strategy = await this.recommendationFactory.getStrategy(userId);
+    const recommendationsResponse: RecommendationResult =
+      await strategy.generate(userId, userProfile, availableBooks, 100);
 
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;

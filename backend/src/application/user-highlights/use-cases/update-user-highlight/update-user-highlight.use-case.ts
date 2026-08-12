@@ -5,13 +5,7 @@ import {
 } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
-
-export interface UpdateUserHighlightCommand {
-  highlightId: string;
-  userId: string;
-  color?: string;
-  note?: string;
-}
+import { UpdateUserHighlightCommand } from './update-user-highlight.command';
 
 @Injectable()
 export class UpdateUserHighlightUseCase {

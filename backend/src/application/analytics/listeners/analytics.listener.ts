@@ -12,8 +12,6 @@ import { TargetResolverRegistry } from '@/application/target-resolution/target-r
 
 @Injectable()
 export class AnalyticsListener {
-  private readonly logger = new Logger(AnalyticsListener.name);
-
   constructor(
     private readonly scoringService: ScoringService,
     private readonly bookRepository: IBookRepository,
@@ -21,7 +19,7 @@ export class AnalyticsListener {
     private readonly analyticsRepository: IUserAnalyticsRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly targetResolverRegistry: TargetResolverRegistry,
-  ) {}
+  ) { }
 
   @OnEvent('user-event.tracked')
   async handleUserEventTracked(payload: { userId: string; event: UserEvent }) {

@@ -13,10 +13,8 @@ import {
   IRecommendationStrategy,
   UserProfile,
 } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
-import {
-  RecommendationResponse,
-  RecommendationResult,
-} from '@/domain/recommendations/interfaces/recommendation.interface';
+import { RecommendationResult } from '@/application/recommendations/dto/recommendation-result.dto';
+import { EnrichedRecommendation } from '@/domain/recommendations/interfaces/recommendation.interface';
 import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.repository.interface';
 
 @Injectable()
@@ -31,8 +29,8 @@ export class FallbackRecommendationStrategy implements IRecommendationStrategy {
     userProfile: UserProfile,
     availableBooks: PopulatedBook[],
     limit: number,
-  ): Promise<RecommendationResponse> {
-    let recommendations: RecommendationResult[] = [];
+  ): Promise<RecommendationResult> {
+    let recommendations: EnrichedRecommendation[] = [];
     const favoriteGenreNames = userProfile.favoriteGenres || [];
 
     // 1. Content-based filtering using genres

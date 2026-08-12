@@ -1,16 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
-
-export interface CreateUserHighlightCommand {
-  userId: string;
-  bookId: string;
-  chapterId: string;
-  paragraphId: string;
-  content: string;
-  color?: string;
-  note?: string;
-}
+import { CreateUserHighlightCommand } from './create-user-highlight.command';
 
 @Injectable()
 export class CreateUserHighlightUseCase {

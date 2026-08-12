@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { SearchQuery as VectorSearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 
 export interface RankedCandidate {
   id: string;

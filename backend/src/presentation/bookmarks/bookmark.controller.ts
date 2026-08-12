@@ -9,18 +9,12 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import {
-  CreateBookmarkUseCase,
-  CreateBookmarkCommand,
-} from '@/application/bookmarks/commands/create-bookmark.use-case';
-import {
-  DeleteBookmarkUseCase,
-  DeleteBookmarkCommand,
-} from '@/application/bookmarks/commands/delete-bookmark.use-case';
-import {
-  GetBookmarksByBookUseCase,
-  GetBookmarksByBookQuery,
-} from '@/application/bookmarks/queries/get-bookmarks-by-book.use-case';
+import { CreateBookmarkUseCase } from '@/application/bookmarks/use-cases/create-bookmark/create-bookmark.use-case';
+import { CreateBookmarkCommand } from '@/application/bookmarks/use-cases/create-bookmark/create-bookmark.command';
+import { DeleteBookmarkUseCase } from '@/application/bookmarks/use-cases/delete-bookmark/delete-bookmark.use-case';
+import { DeleteBookmarkCommand } from '@/application/bookmarks/use-cases/delete-bookmark/delete-bookmark.command';
+import { GetBookmarksByBookUseCase } from '@/application/bookmarks/use-cases/get-bookmarks-by-book/get-bookmarks-by-book.use-case';
+import { GetBookmarksByBookQuery } from '@/application/bookmarks/use-cases/get-bookmarks-by-book/get-bookmarks-by-book.query';
 
 @Controller('bookmarks')
 @UseGuards(JwtAuthGuard)

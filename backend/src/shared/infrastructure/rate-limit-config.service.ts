@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 
 export interface AIRateLimitConfig {
   guestLimit: number;

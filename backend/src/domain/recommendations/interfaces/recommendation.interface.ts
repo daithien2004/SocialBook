@@ -18,18 +18,3 @@ export interface RecommendationAnalysis {
   themes: string[];
 }
 
-export interface RecommendationResponse {
-  analysis: RecommendationAnalysis;
-  recommendations: EnrichedRecommendation[];
-}
-
-export interface PaginatedRecommendationResponse {
-  analysis: RecommendationAnalysis;
-  recommendations: EnrichedRecommendation[];
-  currentPage: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}

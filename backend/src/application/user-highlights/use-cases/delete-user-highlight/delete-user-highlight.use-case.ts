@@ -4,11 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
-
-export interface DeleteUserHighlightCommand {
-  highlightId: string;
-  userId: string;
-}
+import { DeleteUserHighlightCommand } from './delete-user-highlight.command';
 
 @Injectable()
 export class DeleteUserHighlightUseCase {

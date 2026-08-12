@@ -3,7 +3,7 @@ import {
   BookListReadModel,
   GenreSummary,
 } from '@/domain/books/read-models/book-list.read-model';
-import { SearchResultBook } from '@/domain/search/interfaces/search-result.model';
+import { SearchBookResult } from '@/application/search/dto/search-book-result.dto';
 
 export class BookResponseDto {
   id: string;
@@ -111,7 +111,7 @@ export class BookResponseDto {
     return readModels.map((rm) => BookResponseDto.fromReadModel(rm));
   }
 
-  static fromSearchResult(result: SearchResultBook): BookResponseDto {
+  static fromSearchResult(result: SearchBookResult): BookResponseDto {
     return new BookResponseDto({
       id: result.id,
       title: result.title,
@@ -139,7 +139,7 @@ export class BookResponseDto {
     });
   }
 
-  static fromSearchResults(results: SearchResultBook[]): BookResponseDto[] {
+  static fromSearchResults(results: SearchBookResult[]): BookResponseDto[] {
     return results.map((result) => BookResponseDto.fromSearchResult(result));
   }
 }

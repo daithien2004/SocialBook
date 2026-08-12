@@ -82,6 +82,11 @@ npm run build && npm run lint
 **Architecture Naming Rule**:
 - `XxxPort`: Interfaces in Domain/Application that communicate with the outside world (AI, email, file storage, payment, queues). Implementations will be `XxxAdapter`.
 - `XxxService`: Pure domain logic that runs entirely within the domain without touching external infrastructure. Do not use interfaces unless required for swapping or mocking.
+- `Result` vs `DTO` Rule:
+  - **Domain**: Contract result objects returned by Ports/Repositories use `Result` (e.g. `ModerationResult`, `FollowStatusResult`, `PaginatedResult<T>`).
+  - **Application**: Output Boundary objects returned by Use Cases to Controllers use `Result` (e.g. `CreateReadingListResult`, `RecommendationResult`, `SearchBookResult`).
+  - **Presentation**: HTTP response payload objects use `Dto` or `ResponseDto` (e.g. `ReadingListResponseDto`).
+  - *Note*: Result is used for Domain & Application (distinguished by path). Only Presentation uses Dto/ResponseDto. Do not use `Response` (without Dto suffix) in any layer to avoid confusing with Presentation responses.
 | Constants | SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT` |
 
 ## Import Order

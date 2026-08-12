@@ -1,4 +1,4 @@
-import { RecommendationResponse } from './recommendation.interface';
+import { RecommendationResult } from '@/application/recommendations/dto/recommendation-result.dto';
 import { PopulatedBook } from './recommendation-data.repository.interface';
 
 export interface CompletedBookEntry {
@@ -37,5 +37,5 @@ export interface IRecommendationStrategy {
     userProfile: UserProfile,
     availableBooks: PopulatedBook[],
     limit: number,
-  ): Promise<RecommendationResponse>;
+  ): Promise<RecommendationResult>;
 }

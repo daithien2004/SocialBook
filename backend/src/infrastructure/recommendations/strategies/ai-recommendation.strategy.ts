@@ -5,8 +5,10 @@ import {
   UserProfile,
 } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
 import {
-  RecommendationResponse,
   RecommendationResult,
+} from '@/application/recommendations/dto/recommendation-result.dto';
+import {
+  EnrichedRecommendation,
 } from '@/domain/recommendations/interfaces/recommendation.interface';
 import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.repository.interface';
 import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
@@ -46,7 +48,7 @@ export class AIRecommendationStrategy implements IRecommendationStrategy {
     userProfile: UserProfile,
     availableBooks: PopulatedBook[],
     limit: number,
-  ): Promise<RecommendationResponse> {
+  ): Promise<RecommendationResult> {
     const cached = await this.cacheService.get(userId);
     if (cached) {
       this.logger.log(`Cache hit for user ${userId}`);
@@ -166,7 +168,7 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
         availableBooks.map((book) => [book._id.toString(), book]),
       );
 
-      const recommendations: RecommendationResult[] = result.recommendations
+      const recommendations: EnrichedRecommendation[] = result.recommendations
         .filter((rec) => bookMap.has(rec.bookId))
         .map((rec) => {
           const book = bookMap.get(rec.bookId)!;
@@ -180,7 +182,7 @@ CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
           };
         });
 
-      const response: RecommendationResponse = {
+      const response: RecommendationResult = {
         analysis: result.analysis,
         recommendations,
       };

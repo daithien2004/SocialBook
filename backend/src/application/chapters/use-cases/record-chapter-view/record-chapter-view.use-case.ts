@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 import { RecordChapterViewQuery } from './record-chapter-view.query';
 
 const VIEW_DEDUP_TTL = 30 * 60; // 30 phút

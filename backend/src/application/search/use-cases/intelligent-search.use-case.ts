@@ -3,9 +3,9 @@ import { calculateFuzzyScore } from '@/common/utils/string.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { IntelligentSearchQuery } from './intelligent-search.query';
 import {
-  PaginatedSearchResult,
-  SearchResultBook,
-} from '@/domain/search/interfaces/search-result.model';
+  PaginatedSearchBookResult,
+  SearchBookResult,
+} from '../dto/search-book-result.dto';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
@@ -20,7 +20,7 @@ import {
   QueryAnalysis,
 } from '../services/search-query-expansion.service';
 import { SearchRankingService } from '../services/search-ranking.service';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';
 
 interface HybridScore {
@@ -51,7 +51,7 @@ export class IntelligentSearchUseCase {
 
   async execute(
     queryDto: IntelligentSearchQuery,
-  ): Promise<PaginatedSearchResult> {
+  ): Promise<PaginatedSearchBookResult> {
     const start = performance.now();
     const { query, page = 1, limit = 10, genres, order = 'desc' } = queryDto;
 
@@ -63,7 +63,7 @@ export class IntelligentSearchUseCase {
 
     try {
       const cachedResult =
-        await this.cacheService.get<PaginatedSearchResult>(cacheKey);
+        await this.cacheService.get<PaginatedSearchBookResult>(cacheKey);
       if (cachedResult) {
         this.logger.debug(`[Search Cache Hit] ${cacheKey}`);
         return cachedResult;
@@ -337,7 +337,7 @@ export class IntelligentSearchUseCase {
   private async enrichAndMap(
     books: Book[],
     scoreMap: Map<string, HybridScore>,
-  ): Promise<SearchResultBook[]> {
+  ): Promise<SearchBookResult[]> {
     const foundIds = books.map((b) => b.id.toString());
     const [chapterCounts, reviewStats] = await Promise.all([
       this.chapterRepository.countChaptersForBooks(foundIds),
@@ -390,7 +390,7 @@ export class IntelligentSearchUseCase {
     page: number,
     limit: number,
     total = 0,
-  ): PaginatedSearchResult {
+  ): PaginatedSearchBookResult {
     const divisor = limit || 1;
     return {
       data: [],

@@ -15,11 +15,11 @@ export class RecommendationsController {
     @Query() filter: GetRecommendationsDto,
   ) {
     const userId = (req as unknown as { user: { id: string } }).user.id;
-    const result = await this.getPersonalizedRecommendationsUseCase.execute(
+    const result = await this.getPersonalizedRecommendationsUseCase.execute({
       userId,
-      filter.page,
-      filter.limit,
-    );
+      page: filter.page,
+      limit: filter.limit,
+    });
 
     return {
       message: 'Recommendations generated successfully',

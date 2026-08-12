@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
 import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';

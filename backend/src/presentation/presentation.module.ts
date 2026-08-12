@@ -22,9 +22,15 @@ import { TextToSpeechController } from './text-to-speech/text-to-speech.controll
 import { UsersController } from './users/users.controller';
 import { AdminToxicWordsController } from './content-moderation/admin-toxic-words.controller';
 import { AdminRateLimitController } from './admin/rate-limit.controller';
+import { BookmarkController } from './bookmarks/bookmark.controller';
+import { UserHighlightsController } from './user-highlights/user-highlights.controller';
+import { ReadingRoomsController } from './reading-rooms/reading-rooms.controller';
+import { ReadingRoomInteractionsController } from './reading-room-interactions/reading-room-interactions.controller';
+import { AnalyticsController } from './analytics/analytics.controller';
+
 import { RateLimitConfigService } from '@/shared/infrastructure/rate-limit-config.service';
 import { GatewaysModule } from './gateways/gateways.module';
-import { ReadingRoomsPresentationModule } from './reading-rooms/reading-rooms-presentation.module';
+
 import { UsersApplicationModule } from '@/application/users/users-application.module';
 import { BooksApplicationModule } from '@/application/books/books-application.module';
 import { AuthorsApplicationModule } from '@/application/authors/authors-application.module';
@@ -46,11 +52,13 @@ import { AIApplicationModule } from '@/application/ai/ai-application.module';
 import { RecommendationsApplicationModule } from '@/application/recommendations/recommendations-application.module';
 import { NotificationsApplicationModule } from '@/application/notifications/notifications-application.module';
 import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
+import { BookmarksApplicationModule } from '@/application/bookmarks/bookmarks-application.module';
+import { UserHighlightsApplicationModule } from '@/application/user-highlights/user-highlights-application.module';
+import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
+import { ReadingRoomInteractionsApplicationModule } from '@/application/reading-room-interactions/reading-room-interactions-application.module';
+import { AnalyticsApplicationModule } from '@/application/analytics/analytics-application.module';
+
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
-import { AnalyticsPresentationModule } from './analytics/analytics-presentation.module';
-import { ReadingRoomInteractionsPresentationModule } from './reading-room-interactions/reading-room-interactions-presentation.module';
-import { UserHighlightsModule } from './user-highlights/user-highlights.module';
-import { BookmarkModule } from './bookmarks/bookmark.module';
 
 @Module({
   imports: [
@@ -75,11 +83,11 @@ import { BookmarkModule } from './bookmarks/bookmark.module';
     RecommendationsApplicationModule,
     NotificationsApplicationModule,
     ContentModerationApplicationModule,
-    ReadingRoomsPresentationModule,
-    AnalyticsPresentationModule,
-    ReadingRoomInteractionsPresentationModule,
-    UserHighlightsModule,
-    BookmarkModule,
+    BookmarksApplicationModule,
+    UserHighlightsApplicationModule,
+    ReadingRoomsApplicationModule,
+    ReadingRoomInteractionsApplicationModule,
+    AnalyticsApplicationModule,
     GatewaysModule,
     InfrastructureModule,
   ],
@@ -107,6 +115,11 @@ import { BookmarkModule } from './bookmarks/bookmark.module';
     UsersController,
     AdminToxicWordsController,
     AdminRateLimitController,
+    BookmarkController,
+    UserHighlightsController,
+    ReadingRoomsController,
+    ReadingRoomInteractionsController,
+    AnalyticsController,
   ],
   providers: [RateLimitConfigService],
 })

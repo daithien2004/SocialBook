@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { IOtpRepository } from '@/domain/auth/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/auth/otp/entities/otp.entity';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 
 @Injectable()
 export class OtpRepository implements IOtpRepository {

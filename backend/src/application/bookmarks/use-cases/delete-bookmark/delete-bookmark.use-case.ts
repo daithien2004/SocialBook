@@ -1,12 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { IBookmarkRepository } from '@/domain/bookmarks/repositories/bookmark.repository.interface';
-
-export class DeleteBookmarkCommand {
-  constructor(
-    public readonly userId: string,
-    public readonly paragraphId: string,
-  ) {}
-}
+import { DeleteBookmarkCommand } from './delete-bookmark.command';
 
 @Injectable()
 export class DeleteBookmarkUseCase {

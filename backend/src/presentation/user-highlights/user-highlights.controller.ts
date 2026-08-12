@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { CreateUserHighlightUseCase } from '@/application/user-highlights/commands/create-user-highlight.use-case';
-import { UpdateUserHighlightUseCase } from '@/application/user-highlights/commands/update-user-highlight.use-case';
-import { DeleteUserHighlightUseCase } from '@/application/user-highlights/commands/delete-user-highlight.use-case';
-import { GetUserHighlightsUseCase } from '@/application/user-highlights/queries/get-user-highlights.use-case';
+import { CreateUserHighlightUseCase } from '@/application/user-highlights/use-cases/create-user-highlight/create-user-highlight.use-case';
+import { UpdateUserHighlightUseCase } from '@/application/user-highlights/use-cases/update-user-highlight/update-user-highlight.use-case';
+import { DeleteUserHighlightUseCase } from '@/application/user-highlights/use-cases/delete-user-highlight/delete-user-highlight.use-case';
+import { GetUserHighlightsUseCase } from '@/application/user-highlights/use-cases/get-user-highlights/get-user-highlights.use-case';
 import { CreateUserHighlightDto } from './dto/create-user-highlight.dto';
 import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
 

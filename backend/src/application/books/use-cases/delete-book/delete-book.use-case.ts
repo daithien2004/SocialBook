@@ -8,7 +8,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { DeleteBookCommand } from './delete-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 
 @Injectable()
 export class DeleteBookUseCase {

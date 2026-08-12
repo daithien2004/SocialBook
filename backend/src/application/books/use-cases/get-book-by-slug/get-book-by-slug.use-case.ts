@@ -7,7 +7,7 @@ import {
   BadRequestDomainException,
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
-import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ICachePort } from '@/shared/domain/cache.port';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { GetBookBySlugQuery } from './get-book-by-slug.query';
 
