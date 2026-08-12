@@ -19,7 +19,7 @@ import { BookId as DomainBookId } from '@/domain/books/value-objects/book-id.vo'
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
-import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 
 export interface UpdateProgressResult {
   readingList: LibraryItemReadModel;
@@ -34,7 +34,7 @@ export class UpdateProgressUseCase {
     private readonly idGenerator: IIdGenerator,
     private readonly bookRepository: IBookRepository,
     private readonly chapterRepository: IChapterRepository,
-    private readonly recommendationCache: RecommendationCachePort,
+    private readonly recommendationCache: IRecommendationCachePort,
   ) {}
 
   async execute(command: UpdateProgressCommand): Promise<UpdateProgressResult> {

@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
+import { IEpubParser } from '@/domain/chapters/interfaces/epub-parser.interface';
 import { EpubParserService } from './epub-parser.service';
-import { FileImportService } from './file-import.service';
 
 @Module({
-  providers: [EpubParserService, FileImportService],
-  exports: [EpubParserService, FileImportService],
+  providers: [
+    {
+      provide: IEpubParser,
+      useClass: EpubParserService,
+    },
+  ],
+  exports: [IEpubParser],
 })
 export class FilesInfrastructureModule {}

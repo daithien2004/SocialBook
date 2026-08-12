@@ -2,7 +2,7 @@ import { getErrorMessage } from '@/common/utils/error.util';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
-import { ScraperFactory } from '@/infrastructure/scraper/factories/scraper.factory';
+import { IScraperFactory } from '@/domain/scraper/interfaces/scraper-factory.interface';
 import { ScrapedChapterData } from '@/domain/scraper/interfaces/scraped-data.model';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { Chapter } from '@/domain/chapters/entities/chapter.entity';
@@ -14,7 +14,7 @@ export class ScrapeChapterUseCase {
   private readonly logger = new Logger(ScrapeChapterUseCase.name);
 
   constructor(
-    private readonly scraperFactory: ScraperFactory,
+    private readonly scraperFactory: IScraperFactory,
     private readonly chapterRepository: IChapterRepository,
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
@@ -51,17 +51,6 @@ export class ScrapeChapterUseCase {
         `Failed to scrape chapter ${chapterUrl}: ${getErrorMessage(error)}`,
       );
       throw error;
-    }
-  }
-
-  private extractSlug(url: string): string {
-    try {
-      const u = new URL(url);
-      const parts = u.pathname.split('/').filter((p) => !!p);
-      return parts[parts.length - 1];
-    } catch (error) {
-      this.logger.error('Failed to extract slug from URL', error);
-      return '';
     }
   }
 }

@@ -10,8 +10,8 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { NotificationsService } from '@/infrastructure/notifications/notifications.service';
-import type { CreateNotificationInput } from '@/infrastructure/notifications/dto/create-notification-input.interface';
+import { NotificationsService } from './notifications.service';
+import type { CreateNotificationInput } from './dto/create-notification-input.interface';
 import { JwtService } from '@nestjs/jwt';
 
 interface SocketData {

@@ -3,6 +3,9 @@ export interface ParsedChapter {
   content: string;
 }
 
-export interface IEpubParser {
-  parseEpub(fileBuffer: Buffer, originalName: string): Promise<ParsedChapter[]>;
+export abstract class IEpubParser {
+  abstract parseEpub(
+    fileBuffer: Buffer,
+    originalName: string,
+  ): Promise<ParsedChapter[]>;
 }

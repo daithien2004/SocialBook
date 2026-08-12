@@ -1,9 +1,8 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { getChapterContext } from '@/application/shared/utils/chapter-context-extractor';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { AskChapterAICommand } from './ask-chapter-ai.command';
@@ -15,7 +14,6 @@ export class AskChapterAIUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly chapterRepository: IChapterRepository,
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
   ) {}
 

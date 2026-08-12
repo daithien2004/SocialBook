@@ -1,9 +1,8 @@
-import { Injectable, Inject, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { IChapterKnowledgeRepository } from '@/domain/chapters/repositories/chapter-knowledge.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import {
   ChapterKnowledge,
   KnowledgeEntityType,
@@ -20,7 +19,6 @@ export class GetChapterKnowledgeUseCase {
   constructor(
     private readonly knowledgeRepository: IChapterKnowledgeRepository,
     private readonly chapterRepository: IChapterRepository,
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
     private readonly idGenerator: IIdGenerator,
   ) {}

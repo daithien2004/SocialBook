@@ -1,6 +1,5 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
-import { GeminiService } from '../../gemini/gemini.service';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
+import { Injectable, Logger } from '@nestjs/common';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import {
   IRecommendationStrategy,
   UserProfile,
@@ -10,7 +9,7 @@ import {
   RecommendationResult,
 } from '@/domain/recommendations/interfaces/recommendation.interface';
 import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.port';
-import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { FallbackRecommendationStrategy } from './fallback-recommendation.strategy';
 
 interface AIAnalysis {
@@ -37,10 +36,9 @@ export class AIRecommendationStrategy implements IRecommendationStrategy {
   private readonly logger = new Logger(AIRecommendationStrategy.name);
 
   constructor(
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
-    private geminiService: GeminiService,
+    private geminiService: IGeminiService,
     private fallbackStrategy: FallbackRecommendationStrategy,
-    private cacheService: RecommendationCachePort,
+    private cacheService: IRecommendationCachePort,
   ) {}
 
   async generate(

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ChaptersImportService } from '@/infrastructure/queues/chapters-import/chapters-import.service';
+import { IChaptersImportService } from '@/domain/chapters/interfaces/chapters-import.port';
 import { StartChaptersImportCommand } from './start-chapters-import.command';
 
 @Injectable()
 export class StartChaptersImportUseCase {
-  constructor(private readonly chaptersImportService: ChaptersImportService) {}
+  constructor(private readonly chaptersImportService: IChaptersImportService) {}
 
   async execute(command: StartChaptersImportCommand) {
     return this.chaptersImportService.startImport({

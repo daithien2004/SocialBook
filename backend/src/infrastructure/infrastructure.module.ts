@@ -24,7 +24,6 @@ import { GeminiInfrastructureModule } from './gemini/gemini-infrastructure.modul
 import { FilesInfrastructureModule } from './files/files-infrastructure.module';
 import { MediaInfrastructureModule } from './media/media-infrastructure.module';
 import { ModerationInfrastructureModule } from './moderation/moderation-infrastructure.module';
-import { NotificationsInfrastructureModule } from './notifications/notifications-infrastructure.module';
 import { TtsInfrastructureModule } from './text-to-speech/tts-infrastructure.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
 import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
@@ -61,7 +60,6 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     FilesInfrastructureModule,
     MediaInfrastructureModule,
     ModerationInfrastructureModule,
-    NotificationsInfrastructureModule,
     TtsInfrastructureModule,
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
@@ -98,7 +96,6 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     FilesInfrastructureModule,
     MediaInfrastructureModule,
     ModerationInfrastructureModule,
-    NotificationsInfrastructureModule,
     TtsInfrastructureModule,
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,

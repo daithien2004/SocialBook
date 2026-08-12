@@ -10,14 +10,15 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import { BOOK_CACHE_SERVICE } from '@/domain/books/interfaces/book-cache.service.interface';
+import { BOOK_CACHE_SERVICE_TOKEN } from '@/domain/books/interfaces/book-cache.service.interface';
 import type { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
 
 @Injectable()
 export class UpdateBookUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
-    @Inject(BOOK_CACHE_SERVICE) private readonly bookCache: IBookCacheService,
+    @Inject(BOOK_CACHE_SERVICE_TOKEN)
+    private readonly bookCache: IBookCacheService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

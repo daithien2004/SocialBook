@@ -1,9 +1,8 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IContentModerationService } from '@/domain/content-moderation/interfaces/content-moderation.service.interface';
 import { ModerationResult } from '@/domain/content-moderation/interfaces/moderation-result.interface';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
 import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 interface ModerationAIResult {
   action: 'ALLOW' | 'REVIEW' | 'BLOCK';
@@ -50,10 +49,7 @@ Quy tắc quyết định (action):
 export class ContentModerationService implements IContentModerationService {
   private readonly logger = new Logger(ContentModerationService.name);
 
-  constructor(
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
-    private readonly geminiService: IGeminiService,
-  ) {}
+  constructor(private readonly geminiService: IGeminiService) {}
 
   async checkContent(text: string): Promise<ModerationResult> {
     if (!text?.trim()) {

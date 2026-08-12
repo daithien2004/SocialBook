@@ -1,23 +1,13 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 
 import { AddHighlightCommand } from './add-highlight.command';
 
 @Injectable()
 export class AddHighlightUseCase {
-  private readonly logger = new Logger(AddHighlightUseCase.name);
-
-  constructor(
-    private readonly readingRoomRepository: IReadingRoomRepository,
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
-    private readonly geminiService: IGeminiService,
-    private readonly eventEmitter: EventEmitter2,
-  ) {}
+  constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(command: AddHighlightCommand) {
     const room = await this.readingRoomRepository.findById(

@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { SearchQuery as VectorSearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
 import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
 
 export interface RankedCandidate {
@@ -61,7 +61,7 @@ export class SearchRankingService {
   constructor(
     private readonly vectorRepository: IVectorRepository,
     private readonly idGenerator: IIdGenerator,
-    @Inject(CACHE_SERVICE) private readonly cacheService: ICacheService,
+    @Inject(CACHE_SERVICE_TOKEN) private readonly cacheService: ICacheService,
   ) {}
 
   /**

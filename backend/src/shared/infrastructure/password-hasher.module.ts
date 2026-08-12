@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
+import { PASSWORD_HASHER_TOKEN } from '@/shared/domain/password-hasher.interface';
 import { BcryptPasswordHasher } from './bcrypt-password-hasher';
 
 @Module({
   providers: [
     {
-      provide: 'IPasswordHasher',
+      provide: PASSWORD_HASHER_TOKEN,
       useClass: BcryptPasswordHasher,
     },
   ],
-  exports: ['IPasswordHasher'],
+  exports: [PASSWORD_HASHER_TOKEN],
 })
 export class PasswordHasherModule {}

@@ -4,9 +4,8 @@ import {
   UserHighlight,
   UserHighlightSchema,
 } from '@/infrastructure/database/schemas/user-highlight.schema';
+import { USER_HIGHLIGHT_REPOSITORY_TOKEN } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlightRepository } from './user-highlight.repository';
-
-export const USER_HIGHLIGHT_REPOSITORY_TOKEN = 'IUserHighlightRepository';
 
 @Module({
   imports: [

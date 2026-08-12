@@ -1,17 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
 import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
-import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { RecommendationResponse } from '@/domain/recommendations/interfaces/recommendation.interface';
 
 const TTL_SECONDS = 2 * 60 * 60;
 
 @Injectable()
-export class RecommendationCacheService extends RecommendationCachePort {
+export class RecommendationCacheService extends IRecommendationCachePort {
   private readonly keyPrefix = 'recommendation:user:';
 
   constructor(
-    @Inject(CACHE_SERVICE)
+    @Inject(CACHE_SERVICE_TOKEN)
     private readonly cache: ICacheService,
   ) {
     super();

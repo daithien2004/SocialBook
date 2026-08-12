@@ -26,11 +26,11 @@ import {
 } from '@/infrastructure/database/schemas/user-preference.schema';
 import { AIRecommendationStrategy } from './strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
-import { RecommendationStrategyProvider } from './providers/recommendation-strategy.provider';
+import { RecommendationStrategyProvider } from './recommendation-strategy.provider';
 import { GeminiRepositoryModule } from '../database/repositories/gemini/gemini-repository.module';
 import { RecommendationDataAdapter } from './recommendation-data.adapter';
-import { RecommendationCacheService } from './cache/recommendation-cache.service';
-import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { RecommendationCacheService } from './recommendation-cache.service';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.port';
 import { IRecommendationStrategyProvider } from '@/domain/recommendations/interfaces/recommendation-strategy-provider.interface';
 
@@ -49,7 +49,6 @@ import { IRecommendationStrategyProvider } from '@/domain/recommendations/interf
   providers: [
     AIRecommendationStrategy,
     FallbackRecommendationStrategy,
-    RecommendationDataAdapter,
     {
       provide: IRecommendationStrategyProvider,
       useClass: RecommendationStrategyProvider,
@@ -59,16 +58,14 @@ import { IRecommendationStrategyProvider } from '@/domain/recommendations/interf
       useClass: RecommendationDataAdapter,
     },
     {
-      provide: RecommendationCachePort,
+      provide: IRecommendationCachePort,
       useClass: RecommendationCacheService,
     },
   ],
   exports: [
-    AIRecommendationStrategy,
-    FallbackRecommendationStrategy,
     IRecommendationStrategyProvider,
     IRecommendationDataPort,
-    RecommendationCachePort,
+    IRecommendationCachePort,
   ],
 })
 export class RecommendationsInfrastructureModule {}

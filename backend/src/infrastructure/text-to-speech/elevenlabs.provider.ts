@@ -82,7 +82,7 @@ export class ElevenLabsProvider implements ITextToSpeechProvider {
 
       const audioUrl = await this.mediaService.uploadAudio(fakeAudioFile);
 
-      return { audioUrl, format, duration: 0 };
+      return { audioUrl, format };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new InternalServerErrorException(

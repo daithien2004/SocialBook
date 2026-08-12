@@ -15,7 +15,7 @@ import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
-import { RecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 
 @Injectable()
 export class CreateReviewUseCase {
@@ -25,7 +25,7 @@ export class CreateReviewUseCase {
     private readonly idGenerator: IIdGenerator,
     private readonly readingProgressRepository: IReadingProgressRepository,
     private readonly chapterRepository: IChapterRepository,
-    private readonly recommendationCache: RecommendationCachePort,
+    private readonly recommendationCache: IRecommendationCachePort,
   ) {}
 
   async execute(userId: string, dto: CreateReviewDto): Promise<Review> {

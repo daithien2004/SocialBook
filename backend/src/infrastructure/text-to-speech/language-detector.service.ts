@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { LanguageDetectionResult } from '@/domain/text-to-speech/interfaces/language-detector.interface';
+import {
+  ILanguageDetector,
+  LanguageDetectionResult,
+} from '@/domain/text-to-speech/interfaces/language-detector.interface';
 
 @Injectable()
-export class LanguageDetectorService {
+export class LanguageDetectorService implements ILanguageDetector {
   private readonly vietnamesePattern =
     /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
 

@@ -10,13 +10,13 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { DeleteBookCommand } from './delete-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
 
 @Injectable()
 export class DeleteBookUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
-    @Inject(CACHE_SERVICE) private readonly cache: ICacheService,
+    @Inject(CACHE_SERVICE_TOKEN) private readonly cache: ICacheService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

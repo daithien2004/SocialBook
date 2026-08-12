@@ -3,3 +3,7 @@ export interface LanguageDetectionResult {
   voice: string;
   name: string;
 }
+
+export abstract class ILanguageDetector {
+  abstract detect(text: string): LanguageDetectionResult;
+}

@@ -1,5 +1,8 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import {
+  PASSWORD_HASHER_TOKEN,
+  type IPasswordHasher,
+} from '@/shared/domain/password-hasher.interface';
 import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
@@ -12,7 +15,8 @@ export class ResetPasswordUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly verifyOtpUseCase: VerifyOtpUseCase,
-    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
+    @Inject(PASSWORD_HASHER_TOKEN)
+    private readonly passwordHasher: IPasswordHasher,
   ) {}
 
   async execute(command: ResetPasswordCommand): Promise<string> {

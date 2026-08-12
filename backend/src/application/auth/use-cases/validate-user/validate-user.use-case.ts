@@ -1,11 +1,12 @@
 import { UserBannedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
 import { Injectable, Inject } from '@nestjs/common';
-import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import {
+  PASSWORD_HASHER_TOKEN,
+  type IPasswordHasher,
+} from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { User } from '@/domain/users/entities/user.entity';
-
-export const PASSWORD_HASHER_TOKEN = 'IPasswordHasher';
 
 export interface ValidateUserCommand {
   email: string;

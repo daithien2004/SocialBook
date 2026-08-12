@@ -6,19 +6,21 @@ import {
   Body,
   HttpCode,
   RequestTimeoutException,
+  Inject,
 } from '@nestjs/common';
 import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelligent-search.use-case';
 import { IntelligentSearchQuery } from '@/application/search/use-cases/intelligent-search.query';
 import { Public } from '@/common/decorators/custom.decorator';
 import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import type { Redis } from 'ioredis';
+import { TRENDING_KEYWORD_CACHE_TOKEN } from '@/domain/search/interfaces/trending-keyword.cache.interface';
+import type { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
 
 @Controller('search')
 export class SearchController {
   constructor(
     private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
-    @InjectRedis() private readonly redis: Redis,
+    @Inject(TRENDING_KEYWORD_CACHE_TOKEN)
+    private readonly trendingKeywordCache: ITrendingKeywordCache,
   ) {}
 
   @Public()
@@ -56,35 +58,7 @@ export class SearchController {
   @Public()
   @Get('trending-keywords')
   async getTrendingKeywords() {
-    const bucketKeys: string[] = [];
-    const now = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      bucketKeys.push(`trending:searches:${d.toISOString().slice(0, 10)}`);
-    }
-
-    const existingKeys = (
-      await Promise.all(
-        bucketKeys.map((k) => this.redis.exists(k).then((v) => (v ? k : null))),
-      )
-    ).filter((k): k is string => k !== null);
-
-    let keywords: string[] = [];
-
-    if (existingKeys.length > 0) {
-      const tempKey = `trending:searches:temp:${Date.now()}`;
-      try {
-        await this.redis.zunionstore(
-          tempKey,
-          existingKeys.length,
-          ...existingKeys,
-        );
-        keywords = await this.redis.zrevrange(tempKey, 0, 9);
-      } finally {
-        await this.redis.del(tempKey).catch(() => undefined);
-      }
-    }
+    const keywords = await this.trendingKeywordCache.getTrendingKeywords();
 
     return {
       message: 'Lấy từ khóa tìm kiếm thịnh hành thành công',

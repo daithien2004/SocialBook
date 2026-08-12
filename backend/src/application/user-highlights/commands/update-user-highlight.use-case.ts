@@ -4,7 +4,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
+import {
+  USER_HIGHLIGHT_REPOSITORY_TOKEN,
+  type IUserHighlightRepository,
+} from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
 
 export interface UpdateUserHighlightCommand {
@@ -17,7 +20,7 @@ export interface UpdateUserHighlightCommand {
 @Injectable()
 export class UpdateUserHighlightUseCase {
   constructor(
-    @Inject('IUserHighlightRepository')
+    @Inject(USER_HIGHLIGHT_REPOSITORY_TOKEN)
     private readonly highlightRepository: IUserHighlightRepository,
   ) {}
 

@@ -16,10 +16,3 @@ export interface ScrapedBookData {
   slug?: string;
   chapters?: ScrapedChapterData[];
 }
-
-export interface ScrapeResult {
-  success: boolean;
-  data?: ScrapedBookData;
-  error?: string;
-  message?: string;
-}

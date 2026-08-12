@@ -22,7 +22,6 @@ import { OtpApplicationModule } from '../otp/otp-application.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { RolesRepositoryModule } from '@/infrastructure/database/repositories/roles/roles-repository.module';
 import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/otp-repository.module';
-import { LocalStrategy } from '@/infrastructure/auth/strategies/local.strategy';
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 
 @Module({
@@ -58,7 +57,6 @@ import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.mo
     VerifyOtpUseCase,
     ResendOtpUseCase,
     ValidateUserUseCase,
-    LocalStrategy,
   ],
 
   exports: [

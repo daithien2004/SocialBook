@@ -28,7 +28,7 @@ interface EpubInstance {
 }
 
 @Injectable()
-export class EpubParserService implements IEpubParser {
+export class EpubParserService extends IEpubParser {
   async parseEpub(
     fileBuffer: Buffer,
     originalName: string,

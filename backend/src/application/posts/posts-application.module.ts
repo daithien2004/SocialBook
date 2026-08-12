@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
 import { ApprovePostUseCase } from './use-cases/approve-post.use-case';
 import { CreatePostUseCase } from './use-cases/create-post.use-case';
 import { DeletePostUseCase } from './use-cases/delete-post.use-case';
@@ -18,7 +17,7 @@ import { MediaInfrastructureModule } from '@/infrastructure/media/media-infrastr
 import { ContentModerationApplicationModule } from '../content-moderation/content-moderation-application.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
-import { POST_MODERATION_QUEUE } from '@/infrastructure/queues/post-moderation/post-moderation.processor';
+import { PostModerationQueueModule } from '@/infrastructure/queues/post-moderation/post-moderation.module';
 
 @Module({
   imports: [
@@ -28,7 +27,7 @@ import { POST_MODERATION_QUEUE } from '@/infrastructure/queues/post-moderation/p
     MediaInfrastructureModule,
     ContentModerationApplicationModule,
     IdGeneratorModule,
-    BullModule.registerQueue({ name: POST_MODERATION_QUEUE }),
+    PostModerationQueueModule,
   ],
   providers: [
     ApprovePostUseCase,

@@ -1,11 +1,18 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { ScraperFactory } from './factories/scraper.factory';
-import { TruyenFullStrategy } from './strategies/truyenfull.strategy';
+import { IScraperFactory } from '@/domain/scraper/interfaces/scraper-factory.interface';
+import { ScraperFactory } from './scraper.factory';
+import { TruyenFullStrategy } from './truyenfull.strategy';
 
 @Module({
   imports: [HttpModule],
-  providers: [ScraperFactory, TruyenFullStrategy],
-  exports: [ScraperFactory, TruyenFullStrategy],
+  providers: [
+    TruyenFullStrategy,
+    {
+      provide: IScraperFactory,
+      useClass: ScraperFactory,
+    },
+  ],
+  exports: [IScraperFactory],
 })
 export class ScraperInfrastructureModule {}

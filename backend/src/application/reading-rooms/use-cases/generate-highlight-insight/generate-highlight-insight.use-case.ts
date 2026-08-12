@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
@@ -6,8 +6,7 @@ import { IBookRepository } from '@/domain/books/repositories/book.repository.int
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { getChapterContext } from '@/application/shared/utils/chapter-context-extractor';
 import { GenerateHighlightInsightCommand } from './generate-highlight-insight.command';
 
@@ -19,7 +18,6 @@ export class GenerateHighlightInsightUseCase {
     private readonly readingRoomRepository: IReadingRoomRepository,
     private readonly bookRepository: IBookRepository,
     private readonly chapterRepository: IChapterRepository,
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
     private readonly eventEmitter: EventEmitter2,
   ) {}

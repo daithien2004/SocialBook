@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { IChaptersImportService } from '@/domain/chapters/interfaces/chapters-import.port';
 import { ChaptersApplicationModule } from '@/application/chapters/chapters-application.module';
 import {
   ChaptersImportProcessor,
@@ -18,12 +19,15 @@ import { GetChaptersImportStatusUseCase } from '@/application/chapters/use-cases
   ],
   providers: [
     ChaptersImportProcessor,
-    ChaptersImportService,
     StartChaptersImportUseCase,
     GetChaptersImportStatusUseCase,
+    {
+      provide: IChaptersImportService,
+      useClass: ChaptersImportService,
+    },
   ],
   exports: [
-    ChaptersImportService,
+    IChaptersImportService,
     StartChaptersImportUseCase,
     GetChaptersImportStatusUseCase,
   ],

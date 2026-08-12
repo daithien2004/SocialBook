@@ -14,24 +14,24 @@ export interface AIRequestFilter {
   dateTo?: Date;
 }
 
-export interface IAIRequestRepository {
-  save(request: AIRequest): Promise<void>;
-  findById(id: AIRequestId): Promise<AIRequest | null>;
-  findByUserId(
+export abstract class IAIRequestRepository {
+  abstract save(request: AIRequest): Promise<void>;
+  abstract findById(id: AIRequestId): Promise<AIRequest | null>;
+  abstract findByUserId(
     userId: UserId,
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<AIRequest>>;
-  findByType(
+  abstract findByType(
     type: AIRequestType,
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<AIRequest>>;
-  findAll(
+  abstract findAll(
     filter: AIRequestFilter,
     pagination: PaginationOptions,
   ): Promise<PaginatedResult<AIRequest>>;
-  delete(id: AIRequestId): Promise<void>;
-  countByUserId(userId: UserId): Promise<number>;
-  countByType(type: AIRequestType): Promise<number>;
-  count(filter?: AIRequestFilter): Promise<number>;
-  existsById(id: AIRequestId): Promise<boolean>;
+  abstract delete(id: AIRequestId): Promise<void>;
+  abstract countByUserId(userId: UserId): Promise<number>;
+  abstract countByType(type: AIRequestType): Promise<number>;
+  abstract count(filter?: AIRequestFilter): Promise<number>;
+  abstract existsById(id: AIRequestId): Promise<boolean>;
 }

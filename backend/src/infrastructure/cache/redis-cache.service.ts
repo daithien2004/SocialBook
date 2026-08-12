@@ -47,6 +47,29 @@ export class RedisCacheService implements ICacheService {
     }
   }
 
+  async setIfNotExists(
+    key: string,
+    value: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    try {
+      const result = await this.redis.call(
+        'SET',
+        key,
+        value,
+        'NX',
+        'EX',
+        ttlSeconds,
+      );
+      return result === 'OK';
+    } catch (error) {
+      this.logger.error(
+        `Failed to set nx cache key "${key}": ${getErrorMessage(error)}`,
+      );
+      return false;
+    }
+  }
+
   async reset(): Promise<void> {
     try {
       await this.redis.flushdb();

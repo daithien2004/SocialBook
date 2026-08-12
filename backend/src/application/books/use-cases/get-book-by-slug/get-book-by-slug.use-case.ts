@@ -8,7 +8,7 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { GetBookBySlugQuery } from './get-book-by-slug.query';
 
@@ -16,7 +16,7 @@ import { GetBookBySlugQuery } from './get-book-by-slug.query';
 export class GetBookBySlugUseCase {
   constructor(
     private readonly bookQueryProvider: IBookQueryProvider,
-    @Inject(CACHE_SERVICE) private readonly cache: ICacheService,
+    @Inject(CACHE_SERVICE_TOKEN) private readonly cache: ICacheService,
     private readonly reviewRepository: IReviewRepository,
   ) {}
 

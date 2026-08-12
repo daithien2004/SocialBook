@@ -7,7 +7,6 @@ import { UpdateChapterUseCase } from './use-cases/update-chapter/update-chapter.
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
-import { EpubParserService } from '@/infrastructure/files/epub-parser.service';
 import { ImportEpubPreviewUseCase } from './use-cases/import-epub-preview/import-epub-preview.use-case';
 import { RecordChapterViewUseCase } from './use-cases/record-chapter-view/record-chapter-view.use-case';
 
@@ -15,6 +14,7 @@ import { GetChapterKnowledgeUseCase } from './use-cases/get-chapter-knowledge/ge
 import { AskChapterAIUseCase } from './use-cases/ask-ai/ask-chapter-ai.use-case';
 import { GeminiApplicationModule } from '../gemini/gemini-application.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
+import { FilesInfrastructureModule } from '@/infrastructure/files/files-infrastructure.module';
 
 @Module({
   imports: [
@@ -22,6 +22,7 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
     IdGeneratorModule,
     GeminiApplicationModule,
     BooksRepositoryModule,
+    FilesInfrastructureModule,
   ],
 
   providers: [
@@ -31,7 +32,6 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
     GetChapterBySlugUseCase,
     GetChaptersUseCase,
     UpdateChapterUseCase,
-    EpubParserService,
     ImportEpubPreviewUseCase,
     RecordChapterViewUseCase,
     GetChapterKnowledgeUseCase,
@@ -45,7 +45,6 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
     GetChapterBySlugUseCase,
     GetChaptersUseCase,
     UpdateChapterUseCase,
-    EpubParserService,
     ImportEpubPreviewUseCase,
     RecordChapterViewUseCase,
     GetChapterKnowledgeUseCase,

@@ -1,8 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
-import type { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import {
@@ -26,9 +25,7 @@ export interface SummarizeChapterResponse {
 @Injectable()
 export class SummarizeChapterUseCase {
   constructor(
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
-    @Inject(GEMINI_TOKENS.AI_REQUEST_REPOSITORY)
     private readonly aiRequestRepository: IAIRequestRepository,
     private readonly chapterRepository: IChapterRepository,
     private readonly idGenerator: IIdGenerator,

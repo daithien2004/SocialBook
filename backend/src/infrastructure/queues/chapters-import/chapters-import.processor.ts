@@ -1,22 +1,20 @@
 import { CreateChapterUseCase } from '@/application/chapters/use-cases/create-chapter/create-chapter.use-case';
 import { CreateChapterCommand } from '@/application/chapters/use-cases/create-chapter/create-chapter.command';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import type { Job } from 'bullmq';
 
 import type {
   ImportChaptersJobData,
   ImportChaptersJobProgress,
   ImportChaptersJobResult,
-} from '@/application/chapters/dto/chapters-import.types';
+} from '@/domain/chapters/interfaces/chapters-import.types';
 
 const JOB_NAME = 'import-chapters';
 const QUEUE_NAME = 'chapters-import';
 
 @Processor(QUEUE_NAME)
 export class ChaptersImportProcessor extends WorkerHost {
-  private readonly logger = new Logger(ChaptersImportProcessor.name);
-
   constructor(private readonly createChapterUseCase: CreateChapterUseCase) {
     super();
   }

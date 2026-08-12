@@ -6,44 +6,28 @@ import {
   CHAPTERS_IMPORT_JOB_NAME,
   CHAPTERS_IMPORT_QUEUE,
 } from './chapters-import.processor';
+import {
+  IChaptersImportService,
+  StartChaptersImportParams,
+  StartChaptersImportResult,
+  ChaptersImportStatusResult,
+} from '@/domain/chapters/interfaces/chapters-import.port';
 import type {
-  ImportChaptersChapterInput,
   ImportChaptersJobData,
   ImportChaptersJobResult,
-} from '@/application/chapters/dto/chapters-import.types';
-
-export interface StartChaptersImportParams {
-  bookId: string;
-  chapters: ImportChaptersChapterInput[];
-}
-
-export interface StartChaptersImportResult {
-  jobId: string;
-}
-
-export interface ChaptersImportStatusResult {
-  state:
-    | 'completed'
-    | 'failed'
-    | 'active'
-    | 'waiting'
-    | 'delayed'
-    | 'paused'
-    | 'unknown';
-  progress: unknown;
-  result?: ImportChaptersJobResult;
-  failedReason?: string;
-}
+} from '@/domain/chapters/interfaces/chapters-import.types';
 
 @Injectable()
-export class ChaptersImportService {
+export class ChaptersImportService extends IChaptersImportService {
   constructor(
     @InjectQueue(CHAPTERS_IMPORT_QUEUE)
     private readonly queue: Queue<
       ImportChaptersJobData,
       ImportChaptersJobResult
     >,
-  ) {}
+  ) {
+    super();
+  }
 
   async startImport(
     params: StartChaptersImportParams,

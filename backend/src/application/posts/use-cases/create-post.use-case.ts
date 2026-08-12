@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   NotFoundDomainException,
@@ -14,11 +12,7 @@ import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { CreatePostCommand } from './create-post.command';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
-import {
-  POST_MODERATION_QUEUE,
-  POST_MODERATION_JOB,
-  PostModerationJobData,
-} from '@/infrastructure/queues/post-moderation/post-moderation.processor';
+import { IPostModerationQueuePort } from '@/domain/posts/interfaces/post-moderation-queue.port';
 
 @Injectable()
 export class CreatePostUseCase {
@@ -28,8 +22,7 @@ export class CreatePostUseCase {
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly eventEmitter: EventEmitter2,
-    @InjectQueue(POST_MODERATION_QUEUE)
-    private readonly moderationQueue: Queue<PostModerationJobData>,
+    private readonly postModerationQueue: IPostModerationQueuePort,
   ) {}
 
   async execute(
@@ -73,19 +66,10 @@ export class CreatePostUseCase {
     });
 
     // Layer 2: Push Job to Queue for background AI moderation (ASYNCHRONOUS)
-    await this.moderationQueue.add(
-      POST_MODERATION_JOB,
-      {
-        postId: createdPost.id,
-        content: command.content,
-      },
-      {
-        attempts: 2,
-        backoff: { type: 'fixed', delay: 5000 },
-        removeOnComplete: true,
-        removeOnFail: 100,
-      },
-    );
+    await this.postModerationQueue.enqueue({
+      postId: createdPost.id,
+      content: command.content,
+    });
 
     return { post: createdPost };
   }

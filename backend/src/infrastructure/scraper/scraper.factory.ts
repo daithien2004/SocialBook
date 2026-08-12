@@ -1,10 +1,13 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { IScraperStrategy } from '@/domain/scraper/interfaces/scraper-strategy.interface';
-import { TruyenFullStrategy } from '../strategies/truyenfull.strategy';
+import { IScraperFactory } from '@/domain/scraper/interfaces/scraper-factory.interface';
+import { TruyenFullStrategy } from './truyenfull.strategy';
 
 @Injectable()
-export class ScraperFactory {
-  constructor(private readonly truyenFullStrategy: TruyenFullStrategy) {}
+export class ScraperFactory extends IScraperFactory {
+  constructor(private readonly truyenFullStrategy: TruyenFullStrategy) {
+    super();
+  }
 
   getStrategy(url: string): IScraperStrategy {
     if (this.truyenFullStrategy.canHandle(url)) {

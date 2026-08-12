@@ -1,7 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
-import { CacheService } from '@/shared/cache/cache.service';
+import {
+  CACHE_SERVICE_TOKEN,
+  type ICacheService,
+} from '@/domain/shared/interfaces/cache.service.interface';
 
 export interface GeminiRateLimitConfig {
   guestLimit: number;
@@ -24,7 +27,8 @@ export class RateLimitConfigService {
 
   constructor(
     @InjectConnection() private readonly connection: Connection,
-    private readonly cacheService: CacheService,
+    @Inject(CACHE_SERVICE_TOKEN)
+    private readonly cacheService: ICacheService,
   ) {}
 
   async getGeminiConfig(): Promise<GeminiRateLimitConfig> {

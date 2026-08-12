@@ -7,7 +7,7 @@ import {
 import { IOtpRepository } from '@/domain/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/otp/entities/otp.entity';
 import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
-import { CACHE_SERVICE } from '@/domain/shared/interfaces/cache.service.interface';
+import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
 
 @Injectable()
 export class OtpRepository implements IOtpRepository {
@@ -19,7 +19,7 @@ export class OtpRepository implements IOtpRepository {
   private readonly logger = new Logger(OtpRepository.name);
 
   constructor(
-    @Inject(CACHE_SERVICE) private readonly cacheService: ICacheService,
+    @Inject(CACHE_SERVICE_TOKEN) private readonly cacheService: ICacheService,
   ) {}
 
   async save(otp: Otp): Promise<void> {

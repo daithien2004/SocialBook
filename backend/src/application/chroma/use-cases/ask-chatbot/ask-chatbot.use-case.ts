@@ -1,7 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import { SearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
@@ -28,7 +27,6 @@ export class AskChatbotUseCase {
 
   constructor(
     private readonly vectorRepository: IVectorRepository,
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
     private readonly idGenerator: IIdGenerator,
     private readonly bookRepository: IBookRepository,

@@ -1,6 +1,9 @@
 import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
 import { Injectable } from '@nestjs/common';
-import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import {
+  PASSWORD_HASHER_TOKEN,
+  type IPasswordHasher,
+} from '@/shared/domain/password-hasher.interface';
 import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
@@ -14,7 +17,8 @@ export class RefreshTokenUseCase {
     private readonly userRepository: IUserRepository,
     private readonly rolesRepository: IRoleRepository,
     private readonly tokenService: TokenService,
-    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
+    @Inject(PASSWORD_HASHER_TOKEN)
+    private readonly passwordHasher: IPasswordHasher,
   ) {}
 
   async execute(command: RefreshTokenCommand) {

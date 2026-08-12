@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -8,7 +8,6 @@ import { ReadingStatus } from '@/domain/library/enums/reading-status.enum';
 import { GetKnowledgeGraphQuery } from './get-knowledge-graph.query';
 import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 import slugify from 'slugify';
 
 export interface GraphNode {
@@ -44,7 +43,6 @@ export class GetKnowledgeGraphUseCase {
     private readonly bookRepository: IBookRepository,
     private readonly userRepository: IUserRepository,
     private readonly genreRepository: IGenreRepository,
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
   ) {}
 

@@ -1,8 +1,8 @@
 import { Module, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
 import { GeminiService } from './gemini.service';
 import { OpenAICompatibleClient } from './openai-compatible.client';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 @Module({
   providers: [
@@ -30,10 +30,10 @@ import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
       inject: [ConfigService],
     },
     {
-      provide: GEMINI_TOKENS.GEMINI_SERVICE,
+      provide: IGeminiService,
       useClass: GeminiService,
     },
   ],
-  exports: [GEMINI_TOKENS.GEMINI_SERVICE, OpenAICompatibleClient],
+  exports: [IGeminiService, OpenAICompatibleClient],
 })
 export class GeminiInfrastructureModule {}

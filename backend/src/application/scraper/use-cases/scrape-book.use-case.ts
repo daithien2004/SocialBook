@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
-import { ScraperFactory } from '@/infrastructure/scraper/factories/scraper.factory';
+import { IScraperFactory } from '@/domain/scraper/interfaces/scraper-factory.interface';
 import { ScrapedBookData } from '@/domain/scraper/interfaces/scraped-data.model';
 import { AuthorName } from '@/domain/authors/value-objects/author-name.vo';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
@@ -21,7 +21,7 @@ export class ScrapeBookUseCase {
   private readonly logger = new Logger(ScrapeBookUseCase.name);
 
   constructor(
-    private readonly scraperFactory: ScraperFactory,
+    private readonly scraperFactory: IScraperFactory,
     private readonly bookRepository: IBookRepository,
     private readonly authorRepository: IAuthorRepository,
     private readonly genreRepository: IGenreRepository,

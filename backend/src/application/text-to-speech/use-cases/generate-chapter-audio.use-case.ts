@@ -7,6 +7,7 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
 import { ITextToSpeechProvider } from '@/domain/text-to-speech/interfaces/text-to-speech.provider.interface';
+import { ILanguageDetector } from '@/domain/text-to-speech/interfaces/language-detector.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import {
   TextToSpeech,
@@ -22,12 +23,6 @@ export interface GenerateAudioOptions {
   forceRegenerate?: boolean;
 }
 
-interface LanguageDetectionResult {
-  code: string;
-  voice: string;
-  name: string;
-}
-
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 
 @Injectable()
@@ -35,29 +30,10 @@ export class GenerateChapterAudioUseCase {
   constructor(
     private readonly ttsRepository: ITextToSpeechRepository,
     private readonly ttsProvider: ITextToSpeechProvider,
+    private readonly languageDetector: ILanguageDetector,
     private readonly chapterRepository: IChapterRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}
-
-  private detectLanguage(text: string): LanguageDetectionResult {
-    const vietnamesePattern =
-      /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
-    const hasVietnamese = vietnamesePattern.test(text);
-
-    if (hasVietnamese) {
-      return {
-        code: 'vi-VN',
-        voice: 'vi-VN',
-        name: 'Vietnamese',
-      };
-    }
-
-    return {
-      code: 'en-US',
-      voice: 'en-US',
-      name: 'English',
-    };
-  }
 
   async execute(
     chapterIdStr: string,
@@ -79,7 +55,7 @@ export class GenerateChapterAudioUseCase {
     }
 
     // 4. Detect Language/Defaults
-    const detected = this.detectLanguage(text);
+    const detected = this.languageDetector.detect(text);
     const {
       voice = detected.voice,
       speed = 1.0,

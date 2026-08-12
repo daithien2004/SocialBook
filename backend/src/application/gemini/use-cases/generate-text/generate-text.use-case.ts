@@ -1,7 +1,6 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
-import type { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
-import type { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
 import {
   AIRequest,
   AIRequestType,
@@ -23,9 +22,7 @@ export interface GenerateTextResponse {
 @Injectable()
 export class GenerateTextUseCase {
   constructor(
-    @Inject(GEMINI_TOKENS.GEMINI_SERVICE)
     private readonly geminiService: IGeminiService,
-    @Inject(GEMINI_TOKENS.AI_REQUEST_REPOSITORY)
     private readonly aiRequestRepository: IAIRequestRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}

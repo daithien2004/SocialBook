@@ -4,7 +4,10 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import type { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
+import {
+  PASSWORD_HASHER_TOKEN,
+  type IPasswordHasher,
+} from '@/shared/domain/password-hasher.interface';
 import { Inject } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
@@ -25,7 +28,8 @@ export class RegisterUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getRoleByNameUseCase: GetRoleByNameUseCase,
     private readonly sendOtpUseCase: SendOtpUseCase,
-    @Inject('IPasswordHasher') private readonly passwordHasher: IPasswordHasher,
+    @Inject(PASSWORD_HASHER_TOKEN)
+    private readonly passwordHasher: IPasswordHasher,
   ) {}
 
   async execute(command: RegisterCommand): Promise<string> {

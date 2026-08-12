@@ -7,14 +7,14 @@ import { IncrementPlayCountUseCase } from './use-cases/increment-play-count.use-
 import { TextToSpeechRepositoryModule } from '@/infrastructure/database/repositories/text-to-speech/text-to-speech-repository.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
-import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
+import { TtsInfrastructureModule } from '@/infrastructure/text-to-speech/tts-infrastructure.module';
 
 @Module({
   imports: [
     TextToSpeechRepositoryModule,
     ChaptersRepositoryModule,
     IdGeneratorModule,
-    InfrastructureModule,
+    TtsInfrastructureModule,
   ],
   providers: [
     DeleteChapterAudioUseCase,

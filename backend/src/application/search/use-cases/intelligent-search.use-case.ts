@@ -1,6 +1,6 @@
 import { getErrorMessage } from '@/common/utils/error.util';
 import { calculateFuzzyScore } from '@/common/utils/string.util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { IntelligentSearchQuery } from './intelligent-search.query';
 import {
   PaginatedSearchResult,
@@ -20,8 +20,10 @@ import {
   QueryAnalysis,
 } from '../services/search-query-expansion.service';
 import { SearchRankingService } from '../services/search-ranking.service';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import Redis from 'ioredis';
+import { CACHE_SERVICE_TOKEN } from '@/domain/shared/interfaces/cache.service.interface';
+import type { ICacheService } from '@/domain/shared/interfaces/cache.service.interface';
+import { TRENDING_KEYWORD_CACHE_TOKEN } from '@/domain/search/interfaces/trending-keyword.cache.interface';
+import type { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
 
 interface HybridScore {
   finalScore: number;
@@ -45,7 +47,10 @@ export class IntelligentSearchUseCase {
     private readonly authorRepository: IAuthorRepository,
     private readonly queryExpansionService: SearchQueryExpansionService,
     private readonly rankingService: SearchRankingService,
-    @InjectRedis() private readonly redis: Redis,
+    @Inject(CACHE_SERVICE_TOKEN)
+    private readonly cacheService: ICacheService,
+    @Inject(TRENDING_KEYWORD_CACHE_TOKEN)
+    private readonly trendingKeywordCache: ITrendingKeywordCache,
   ) {}
 
   async execute(
@@ -61,10 +66,11 @@ export class IntelligentSearchUseCase {
     const cacheKey = `search:${mode}:${encodeURIComponent(normalizedQuery)}:page:${page}:limit:${limit}:genres:${genres?.join(',') || 'all'}:order:${order}`;
 
     try {
-      const cachedResult = await this.redis.get(cacheKey);
+      const cachedResult =
+        await this.cacheService.get<PaginatedSearchResult>(cacheKey);
       if (cachedResult) {
         this.logger.debug(`[Search Cache Hit] ${cacheKey}`);
-        return JSON.parse(cachedResult) as PaginatedSearchResult;
+        return cachedResult;
       }
     } catch (err) {
       this.logger.warn(
@@ -168,14 +174,12 @@ export class IntelligentSearchUseCase {
       };
 
       // 4. Lưu cache vào Redis (TTL 24 giờ)
-      this.redis
-        .setex(cacheKey, 86400, JSON.stringify(resultToReturn))
-        .catch((err) => {
-          this.logger.warn(
-            `Failed to set search cache to Redis for key: ${cacheKey}`,
-            err,
-          );
-        });
+      this.cacheService.set(cacheKey, resultToReturn, 86400).catch((err) => {
+        this.logger.warn(
+          `Failed to set search cache to Redis for key: ${cacheKey}`,
+          err,
+        );
+      });
 
       return resultToReturn;
     } catch (e: unknown) {
@@ -407,20 +411,6 @@ export class IntelligentSearchUseCase {
     const cleanKeyword = keyword.trim().toLowerCase();
     if (cleanKeyword.length <= 2) return;
 
-    const today = new Date().toISOString().slice(0, 10);
-    const bucketKey = `trending:searches:${today}`;
-    const TTL_SECONDS = 8 * 24 * 3600;
-
-    try {
-      const pipeline = this.redis.pipeline();
-      pipeline.zincrby(bucketKey, 1, cleanKeyword);
-      pipeline.expire(bucketKey, TTL_SECONDS, 'NX');
-      await pipeline.exec();
-    } catch (err) {
-      this.logger.error(
-        `Failed to increment trending search for keyword: ${cleanKeyword}`,
-        err,
-      );
-    }
+    await this.trendingKeywordCache.recordSearch(cleanKeyword);
   }
 }

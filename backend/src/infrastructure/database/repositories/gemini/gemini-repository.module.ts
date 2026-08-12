@@ -5,8 +5,9 @@ import {
   AIRequestSchema,
 } from '@/infrastructure/database/schemas/ai-request.schema';
 import { GeminiInfrastructureModule } from '../../../gemini/gemini-infrastructure.module';
+import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIRequestRepository } from '@/domain/gemini/repositories/ai-request.repository.interface';
 import { AIRequestRepository } from './ai-request.repository';
-import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
 
 @Module({
   imports: [
@@ -17,14 +18,10 @@ import { GEMINI_TOKENS } from '@/domain/gemini/tokens/gemini.tokens';
   ],
   providers: [
     {
-      provide: GEMINI_TOKENS.AI_REQUEST_REPOSITORY,
+      provide: IAIRequestRepository,
       useClass: AIRequestRepository,
     },
   ],
-  exports: [
-    MongooseModule,
-    GEMINI_TOKENS.GEMINI_SERVICE,
-    GEMINI_TOKENS.AI_REQUEST_REPOSITORY,
-  ],
+  exports: [MongooseModule, IGeminiService, IAIRequestRepository],
 })
 export class GeminiRepositoryModule {}

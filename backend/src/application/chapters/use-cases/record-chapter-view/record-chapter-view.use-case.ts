@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { CacheService } from '@/shared/cache/cache.service';
+import {
+  CACHE_SERVICE_TOKEN,
+  type ICacheService,
+} from '@/domain/shared/interfaces/cache.service.interface';
 import { RecordChapterViewQuery } from './record-chapter-view.query';
 
 const VIEW_DEDUP_TTL = 30 * 60; // 30 phút
@@ -9,7 +12,8 @@ const VIEW_DEDUP_TTL = 30 * 60; // 30 phút
 export class RecordChapterViewUseCase {
   constructor(
     private readonly chapterRepository: IChapterRepository,
-    private readonly cacheService: CacheService,
+    @Inject(CACHE_SERVICE_TOKEN)
+    private readonly cacheService: ICacheService,
   ) {}
 
   async execute(query: RecordChapterViewQuery): Promise<void> {
