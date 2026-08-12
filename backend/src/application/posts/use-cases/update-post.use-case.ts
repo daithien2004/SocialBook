@@ -4,7 +4,7 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { PostModerationService } from '../services/post-moderation.service';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
@@ -15,7 +15,7 @@ import { UpdatePostCommand } from './update-post.command';
 export class UpdatePostUseCase {
   constructor(
     private readonly postRepository: IPostRepository,
-    private readonly mediaService: IMediaService,
+    private readonly mediaService: IMediaPort,
     private readonly bookRepository: IBookRepository,
     private readonly postModerationService: PostModerationService,
   ) {}

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
-  IPresenceCache,
+  IPresenceCachePort,
   PresenceData,
-} from '@/domain/reading-rooms/interfaces/presence-cache.interface';
+} from '@/domain/reading-rooms/interfaces/presence-cache.port';
 
 @Injectable()
 export class ReadingRoomPresenceService {
-  constructor(private readonly presenceCache: IPresenceCache) {}
+  constructor(private readonly presenceCache: IPresenceCachePort) {}
 
   async upsertPresence(
     roomId: string,

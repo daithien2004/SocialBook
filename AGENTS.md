@@ -75,8 +75,13 @@ npm run build && npm run lint
 | DTOs | `*.dto.ts` | `create-post.dto.ts` |
 | Schemas | `*.schema.ts` | `post.schema.ts` |
 | Interfaces | `*.interface.ts` | `book.interface.ts` |
+| Ports | `*.port.ts` | `mailer.port.ts` |
 | Classes/Types | PascalCase | `ReadingProgress`, `BookStatus` |
 | Variables/Functions | camelCase | `getErrorMessage`, `isCompleted` |
+
+**Architecture Naming Rule**:
+- `XxxPort`: Interfaces in Domain/Application that communicate with the outside world (AI, email, file storage, payment, queues). Implementations will be `XxxAdapter`.
+- `XxxService`: Pure domain logic that runs entirely within the domain without touching external infrastructure. Do not use interfaces unless required for swapping or mocking.
 | Constants | SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT` |
 
 ## Import Order

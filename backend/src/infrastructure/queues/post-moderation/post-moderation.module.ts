@@ -1,31 +1,33 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import {
   PostModerationProcessor,
   POST_MODERATION_QUEUE,
 } from './post-moderation.processor';
-import { PostModerationQueueAdapter } from './post-moderation-queue.adapter';
-import { IPostModerationQueuePort } from '@/domain/posts/interfaces/post-moderation-queue.interface';
-import { ModerationInfrastructureModule } from '@/infrastructure/moderation/moderation-infrastructure.module';
+import { PostModerationAdapter } from './post-moderation.adapter';
+import { IPostModerationPort } from '@/domain/posts/interfaces/post-moderation.port';
+
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
-import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
+import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
+import { PostsApplicationModule } from '@/application/posts/posts-application.module';
 
 @Module({
   imports: [
     BullModule.registerQueue({
       name: POST_MODERATION_QUEUE,
     }),
-    ModerationInfrastructureModule,
+    forwardRef(() => PostsApplicationModule),
+
     PostsRepositoryModule,
+    ContentModerationApplicationModule,
   ],
   providers: [
-    CheckContentUseCase,
     PostModerationProcessor,
     {
-      provide: IPostModerationQueuePort,
-      useClass: PostModerationQueueAdapter,
+      provide: IPostModerationPort,
+      useClass: PostModerationAdapter,
     },
   ],
-  exports: [IPostModerationQueuePort],
+  exports: [IPostModerationPort],
 })
 export class PostModerationQueueModule {}

@@ -26,13 +26,13 @@ import {
 } from '@/infrastructure/database/schemas/user-preference.schema';
 import { AIRecommendationStrategy } from './strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
-import { RecommendationStrategyProvider } from './recommendation-strategy.provider';
-import { GeminiInfrastructureModule } from '../gemini/gemini-infrastructure.module';
-import { RecommendationDataAdapter } from './recommendation-data.adapter';
-import { RecommendationCacheService } from './recommendation-cache.service';
-import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.interface';
-import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.interface';
-import { IRecommendationStrategyProvider } from '@/domain/recommendations/interfaces/recommendation-strategy-provider.interface';
+import { RecommendationFactory } from './recommendation.factory';
+import { AIInfrastructureModule } from '../ai/ai-infrastructure.module';
+import { RecommendationDataRepository } from './recommendation-data.repository';
+import { RecommendationCacheAdapter } from './recommendation-cache.adapter';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { IRecommendationDataRepository } from '@/domain/recommendations/interfaces/recommendation-data.repository.interface';
+import { IRecommendationFactory } from '@/domain/recommendations/interfaces/recommendation-factory.interface';
 
 @Module({
   imports: [
@@ -44,27 +44,27 @@ import { IRecommendationStrategyProvider } from '@/domain/recommendations/interf
       { name: Review.name, schema: ReviewSchema },
       { name: UserPreference.name, schema: UserPreferenceSchema },
     ]),
-    GeminiInfrastructureModule,
+    AIInfrastructureModule,
   ],
   providers: [
     AIRecommendationStrategy,
     FallbackRecommendationStrategy,
     {
-      provide: IRecommendationStrategyProvider,
-      useClass: RecommendationStrategyProvider,
+      provide: IRecommendationFactory,
+      useClass: RecommendationFactory,
     },
     {
-      provide: IRecommendationDataPort,
-      useClass: RecommendationDataAdapter,
+      provide: IRecommendationDataRepository,
+      useClass: RecommendationDataRepository,
     },
     {
       provide: IRecommendationCachePort,
-      useClass: RecommendationCacheService,
+      useClass: RecommendationCacheAdapter,
     },
   ],
   exports: [
-    IRecommendationStrategyProvider,
-    IRecommendationDataPort,
+    IRecommendationFactory,
+    IRecommendationDataRepository,
     IRecommendationCachePort,
   ],
 })

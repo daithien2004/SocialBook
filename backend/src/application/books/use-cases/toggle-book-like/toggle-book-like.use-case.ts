@@ -6,7 +6,7 @@ import {
   ToggleLikeRequest,
 } from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
-import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
+import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { ToggleBookLikeCommand } from './toggle-book-like.command';
 
 export interface ToggleBookLikeResponse {
@@ -21,7 +21,7 @@ export class ToggleBookLikeUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly toggleLikeUseCase: ToggleLikeUseCase,
-    private readonly bookCache: IBookCacheService,
+    private readonly bookCache: IBookCachePort,
   ) {}
 
   async execute(

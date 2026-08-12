@@ -5,14 +5,14 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { UpdateUserImageCommand } from './update-user-image.command';
 
 @Injectable()
 export class UpdateUserImageUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly mediaService: IMediaService,
+    private readonly mediaService: IMediaPort,
   ) {}
 
   async execute(

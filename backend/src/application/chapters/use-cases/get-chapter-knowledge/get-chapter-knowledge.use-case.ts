@@ -1,8 +1,8 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { IChapterKnowledgeRepository } from '@/domain/chapters/repositories/chapter-knowledge.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import {
   ChapterKnowledge,
   KnowledgeEntityType,
@@ -19,7 +19,7 @@ export class GetChapterKnowledgeUseCase {
   constructor(
     private readonly knowledgeRepository: IChapterKnowledgeRepository,
     private readonly chapterRepository: IChapterRepository,
-    private readonly geminiService: IGeminiService,
+    private readonly aiService: IAIPort,
     private readonly idGenerator: IIdGenerator,
   ) {}
 
@@ -102,7 +102,7 @@ export class GetChapterKnowledgeUseCase {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        result = await this.geminiService.generateJSON<KnowledgeResult>(prompt);
+        result = await this.aiService.generateJSON<KnowledgeResult>(prompt);
         break;
       } catch (error) {
         lastError = error as Error;

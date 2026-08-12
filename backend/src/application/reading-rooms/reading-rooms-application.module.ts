@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { CreateRoomUseCase } from './use-cases/create-room/create-room.use-case';
 import { JoinRoomUseCase } from './use-cases/join-room/join-room.use-case';
 import { LeaveRoomUseCase } from './use-cases/leave-room/leave-room.use-case';
@@ -16,7 +16,7 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
 import { AddHighlightUseCase } from './use-cases/add-highlight/add-highlight.use-case';
 import { GenerateHighlightInsightUseCase } from './use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
 import { RemoveHighlightUseCase } from './use-cases/remove-highlight/remove-highlight.use-case';
-import { GeminiApplicationModule } from '../gemini/gemini-application.module';
+import { AIApplicationModule } from '../ai/ai-application.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { ReadingRoomInteractionsRepositoryModule } from '@/infrastructure/database/repositories/reading-room-interactions/reading-room-interactions-repository.module';
 import { ReadingRoomPresenceModule } from '@/presentation/gateways/reading-room-presence.module';
@@ -26,7 +26,7 @@ import { ReadingRoomPresenceModule } from '@/presentation/gateways/reading-room-
     ReadingRoomsRepositoryModule,
     BooksRepositoryModule,
     ChaptersRepositoryModule,
-    GeminiApplicationModule,
+    AIApplicationModule,
     ReadingRoomInteractionsRepositoryModule,
     ReadingRoomPresenceModule,
   ],

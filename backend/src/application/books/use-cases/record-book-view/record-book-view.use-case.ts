@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { RecordBookViewCommand } from './record-book-view.command';
-import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
-import { IViewRankingCache } from '@/domain/books/interfaces/view-ranking.cache.interface';
+import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
+import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
@@ -12,8 +12,8 @@ export class RecordBookViewUseCase {
 
   constructor(
     private readonly bookRepository: IBookRepository,
-    private readonly bookCache: IBookCacheService,
-    private readonly viewRankingCache: IViewRankingCache,
+    private readonly bookCache: IBookCachePort,
+    private readonly viewRankingCache: IViewRankingCachePort,
   ) {}
 
   async execute(command: RecordBookViewCommand): Promise<void> {

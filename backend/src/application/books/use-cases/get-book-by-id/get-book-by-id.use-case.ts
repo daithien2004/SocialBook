@@ -4,7 +4,7 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
+import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { GetBookByIdQuery } from './get-book-by-id.query';
 import {
   BadRequestDomainException,
@@ -16,7 +16,7 @@ export class GetBookByIdUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly eventEmitter: EventEmitter2,
-    private readonly bookCache: IBookCacheService,
+    private readonly bookCache: IBookCachePort,
   ) {}
 
   async execute(query: GetBookByIdQuery): Promise<Book> {

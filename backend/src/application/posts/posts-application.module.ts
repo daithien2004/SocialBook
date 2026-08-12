@@ -10,6 +10,7 @@ import { GetPostsUseCase } from './use-cases/get-posts.use-case';
 import { RejectPostUseCase } from './use-cases/reject-post.use-case';
 import { RemovePostImageUseCase } from './use-cases/remove-post-image.use-case';
 import { UpdatePostUseCase } from './use-cases/update-post.use-case';
+import { ProcessPostModerationUseCase } from './use-cases/process-post-moderation.use-case';
 import { PostModerationService } from './services/post-moderation.service';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
@@ -41,6 +42,7 @@ import { PostModerationQueueModule } from '@/infrastructure/queues/post-moderati
     RejectPostUseCase,
     RemovePostImageUseCase,
     UpdatePostUseCase,
+    ProcessPostModerationUseCase,
     PostModerationService,
   ],
   exports: [
@@ -55,6 +57,7 @@ import { PostModerationQueueModule } from '@/infrastructure/queues/post-moderati
     RejectPostUseCase,
     RemovePostImageUseCase,
     UpdatePostUseCase,
+    ProcessPostModerationUseCase,
     PostModerationService,
   ],
 })

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { IMailerPort } from '@/domain/auth/otp/interfaces/mailer.interface';
+import { IMailerPort } from '@/domain/auth/otp/interfaces/mailer.port';
 import { MailerAdapter } from './mailer.adapter';
 
 @Module({

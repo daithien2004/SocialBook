@@ -8,13 +8,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { DeleteBookCommand } from './delete-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
+import { ICachePort } from '@/domain/shared/interfaces/cache.port';
 
 @Injectable()
 export class DeleteBookUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
-    private readonly cache: ICacheService,
+    private readonly cache: ICachePort,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

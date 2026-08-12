@@ -1,5 +1,5 @@
 import { RecommendationResponse } from './recommendation.interface';
-import { PopulatedBook } from './recommendation-data.interface';
+import { PopulatedBook } from './recommendation-data.repository.interface';
 
 export interface CompletedBookEntry {
   book: PopulatedBook;

@@ -1,1 +1,1 @@
-export * from './cache.repository.interface';
+export * from './cache.port';

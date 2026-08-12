@@ -9,7 +9,7 @@ import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { CreateBookCommand } from './create-book.command';
-import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
+import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { Author } from '@/domain/authors/entities/author.entity';
 import { AuthorId } from '@/domain/authors/value-objects/author-id.vo';
 import { AuthorName } from '@/domain/authors/value-objects/author-name.vo';
@@ -24,7 +24,7 @@ export class CreateBookUseCase {
     private readonly authorRepository: IAuthorRepository,
     private readonly genreRepository: IGenreRepository,
     private readonly idGenerator: IIdGenerator,
-    private readonly bookCache: IBookCacheService,
+    private readonly bookCache: IBookCachePort,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

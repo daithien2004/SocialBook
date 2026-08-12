@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import {
   IRecommendationStrategy,
   UserProfile,
@@ -8,8 +8,8 @@ import {
   RecommendationResponse,
   RecommendationResult,
 } from '@/domain/recommendations/interfaces/recommendation.interface';
-import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.interface';
-import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.interface';
+import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.repository.interface';
+import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 import { FallbackRecommendationStrategy } from './fallback-recommendation.strategy';
 
 interface AIAnalysis {
@@ -36,7 +36,7 @@ export class AIRecommendationStrategy implements IRecommendationStrategy {
   private readonly logger = new Logger(AIRecommendationStrategy.name);
 
   constructor(
-    private geminiService: IGeminiService,
+    private aiService: IAIPort,
     private fallbackStrategy: FallbackRecommendationStrategy,
     private cacheService: IRecommendationCachePort,
   ) {}
@@ -160,7 +160,7 @@ ${JSON.stringify(availableBooksText, null, 2)}
 CHỈ TRẢ VỀ JSON, KHÔNG THÊM TEXT NÀO KHÁC.
 `;
 
-      const result = await this.geminiService.generateJSON<AIResponse>(prompt);
+      const result = await this.aiService.generateJSON<AIResponse>(prompt);
 
       const bookMap = new Map<string, PopulatedBook>(
         availableBooks.map((book) => [book._id.toString(), book]),

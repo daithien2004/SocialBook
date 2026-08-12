@@ -42,7 +42,7 @@ import { RecordBookViewCommand } from '@/application/books/use-cases/record-book
 import { ToggleBookLikeCommand } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.command';
 import { GetTopReadBooksUseCase } from '@/application/books/use-cases/get-top-read-books/get-top-read-books.use-case';
 import { GetTopReadBooksQuery } from '@/application/books/use-cases/get-top-read-books/get-top-read-books.query';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('books')
@@ -54,7 +54,7 @@ export class BooksController {
     private readonly getBooksUseCase: GetBooksUseCase,
     private readonly getBookBySlugUseCase: GetBookBySlugUseCase,
     private readonly deleteBookUseCase: DeleteBookUseCase,
-    private readonly mediaService: IMediaService,
+    private readonly mediaService: IMediaPort,
     private readonly getBookByIdUseCase: GetBookByIdUseCase,
     private readonly getBookFiltersUseCase: GetBookFiltersUseCase,
     private readonly toggleBookLikeUseCase: ToggleBookLikeUseCase,

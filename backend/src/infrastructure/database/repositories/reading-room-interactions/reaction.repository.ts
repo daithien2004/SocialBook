@@ -19,12 +19,12 @@ interface ReactionAggregationRow {
 }
 
 @Injectable()
-export class ReactionRepository extends IReactionRepository {
+export class ReactionRepository implements IReactionRepository {
   constructor(
     @InjectModel(RoomReactionSchema.name)
     private readonly reactionModel: Model<RoomReactionDocument>,
   ) {
-    super();
+
   }
 
   async save(reaction: RoomReaction): Promise<void> {

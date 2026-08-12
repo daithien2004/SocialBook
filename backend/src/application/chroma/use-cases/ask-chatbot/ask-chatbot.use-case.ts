@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+﻿import { Injectable, Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
-import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { SearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
@@ -27,7 +27,7 @@ export class AskChatbotUseCase {
 
   constructor(
     private readonly vectorRepository: IVectorRepository,
-    private readonly geminiService: IGeminiService,
+    private readonly aiService: IAIPort,
     private readonly idGenerator: IIdGenerator,
     private readonly bookRepository: IBookRepository,
   ) {}
@@ -128,7 +128,7 @@ Yêu cầu:
 - Trả lời dựa trên ngữ cảnh được cung cấp
 - Nếu ngữ cảnh không đủ thông tin, hãy nói rõ`;
 
-    const answer = await this.geminiService.generateText(prompt, systemPrompt);
+    const answer = await this.aiService.generateText(prompt, systemPrompt);
 
     return { question, answer, sources };
   }

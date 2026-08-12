@@ -1,7 +1,7 @@
 import { getErrorMessage } from '@/common/utils/error.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
-import { IMailerPort } from '@/domain/auth/otp/interfaces/mailer.interface';
+import { IMailerPort } from '@/domain/auth/otp/interfaces/mailer.port';
 import { IOtpRepository } from '@/domain/auth/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/auth/otp/entities/otp.entity';
 import { SendOtpCommand } from './send-otp.command';

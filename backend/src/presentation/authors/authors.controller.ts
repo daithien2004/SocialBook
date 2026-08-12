@@ -31,7 +31,7 @@ import { GetAuthorByIdQuery } from '@/application/authors/use-cases/get-author-b
 import { GetAuthorsQuery } from '@/application/authors/use-cases/get-authors/get-authors.query';
 import { UpdateAuthorCommand } from '@/application/authors/use-cases/update-author/update-author.command';
 
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 
 @Controller('authors')
 export class AuthorsController {
@@ -41,7 +41,7 @@ export class AuthorsController {
     private readonly getAuthorsUseCase: GetAuthorsUseCase,
     private readonly getAuthorByIdUseCase: GetAuthorByIdUseCase,
     private readonly deleteAuthorUseCase: DeleteAuthorUseCase,
-    private readonly mediaService: IMediaService,
+    private readonly mediaService: IMediaPort,
   ) {}
 
   @Post()

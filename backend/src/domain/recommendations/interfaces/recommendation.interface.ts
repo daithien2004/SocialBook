@@ -1,4 +1,4 @@
-import { PopulatedBook } from './recommendation-data.interface';
+import { PopulatedBook } from './recommendation-data.repository.interface';
 
 export interface EnrichedRecommendation {
   bookId: string;

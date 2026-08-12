@@ -16,17 +16,17 @@ export class AdminRateLimitController {
     private readonly rateLimitConfigService: RateLimitConfigService,
   ) {}
 
-  @Get('gemini')
-  @ApiOperation({ summary: 'Lấy cấu hình rate limit cho Gemini AI' })
-  async getGeminiConfig() {
-    const config = await this.rateLimitConfigService.getGeminiConfig();
+  @Get('ai')
+  @ApiOperation({ summary: 'Lấy cấu hình rate limit cho AI' })
+  async getAIConfig() {
+    const config = await this.rateLimitConfigService.getAIConfig();
     return { data: config };
   }
 
-  @Put('gemini')
-  @ApiOperation({ summary: 'Cập nhật cấu hình rate limit cho Gemini AI' })
-  async updateGeminiConfig(@Body() dto: UpdateRateLimitDto) {
-    const config = await this.rateLimitConfigService.updateGeminiConfig(dto);
+  @Put('ai')
+  @ApiOperation({ summary: 'Cập nhật cấu hình rate limit cho AI' })
+  async updateAIConfig(@Body() dto: UpdateRateLimitDto) {
+    const config = await this.rateLimitConfigService.updateAIConfig(dto);
     return { message: 'Cập nhật cấu hình rate limit thành công', data: config };
   }
 }

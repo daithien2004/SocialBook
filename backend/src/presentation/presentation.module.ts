@@ -7,7 +7,7 @@ import { ChromaController } from './chroma/chroma.controller';
 import { CommentsController } from './comments/comments.controller';
 import { CollectionsController } from './collections/collections.controller';
 import { FollowsController } from './follows/follows.controller';
-import { GeminiController } from './gemini/gemini.controller';
+import { AIController } from './ai/ai.controller';
 import { GenresController } from './genres/genres.controller';
 import { LibraryController } from './library/library.controller';
 import { LikesController } from './likes/likes.controller';
@@ -42,7 +42,7 @@ import { ChromaApplicationModule } from '@/application/chroma/chroma-application
 import { ScraperApplicationModule } from '@/application/scraper/scraper-application.module';
 import { SearchApplicationModule } from '@/application/search/search-application.module';
 import { TextToSpeechApplicationModule } from '@/application/text-to-speech/text-to-speech-application.module';
-import { GeminiApplicationModule } from '@/application/gemini/gemini-application.module';
+import { AIApplicationModule } from '@/application/ai/ai-application.module';
 import { RecommendationsApplicationModule } from '@/application/recommendations/recommendations-application.module';
 import { NotificationsApplicationModule } from '@/application/notifications/notifications-application.module';
 import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
@@ -71,7 +71,7 @@ import { BookmarkModule } from './bookmarks/bookmark.module';
     ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
-    GeminiApplicationModule,
+    AIApplicationModule,
     RecommendationsApplicationModule,
     NotificationsApplicationModule,
     ContentModerationApplicationModule,
@@ -92,7 +92,7 @@ import { BookmarkModule } from './bookmarks/bookmark.module';
     CommentsController,
     CollectionsController,
     FollowsController,
-    GeminiController,
+    AIController,
     GenresController,
     LibraryController,
     LikesController,

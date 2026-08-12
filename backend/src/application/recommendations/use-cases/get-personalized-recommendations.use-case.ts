@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { IRecommendationStrategyProvider } from '@/domain/recommendations/interfaces/recommendation-strategy-provider.interface';
-import { IRecommendationDataPort } from '@/domain/recommendations/interfaces/recommendation-data.interface';
+import { IRecommendationFactory } from '@/domain/recommendations/interfaces/recommendation-factory.interface';
+import { IRecommendationDataRepository } from '@/domain/recommendations/interfaces/recommendation-data.repository.interface';
 import {
   RecommendationResponse,
   PaginatedRecommendationResponse,
@@ -9,8 +9,8 @@ import {
 @Injectable()
 export class GetPersonalizedRecommendationsUseCase {
   constructor(
-    private readonly dataPort: IRecommendationDataPort,
-    private readonly strategyProvider: IRecommendationStrategyProvider,
+    private readonly dataRepository: IRecommendationDataRepository,
+    private readonly strategyFactory: IRecommendationFactory,
   ) {}
 
   async execute(
@@ -18,11 +18,11 @@ export class GetPersonalizedRecommendationsUseCase {
     page: number = 1,
     limit: number = 10,
   ): Promise<PaginatedRecommendationResponse> {
-    const userProfile = await this.dataPort.buildUserProfile(userId);
-    const availableBooks = await this.dataPort.getAvailableBooks(userId);
+    const userProfile = await this.dataRepository.buildUserProfile(userId);
+    const availableBooks = await this.dataRepository.getAvailableBooks(userId);
     const totalRecommendationsToGenerate = 15;
 
-    const strategy = await this.strategyProvider.getStrategy(userId);
+    const strategy = await this.strategyFactory.getStrategy(userId);
     const recommendationsResponse: RecommendationResponse =
       await strategy.generate(
         userId,

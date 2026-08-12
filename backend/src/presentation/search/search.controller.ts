@@ -11,13 +11,13 @@ import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelli
 import { IntelligentSearchQuery } from '@/application/search/use-cases/intelligent-search.query';
 import { Public } from '@/common/decorators/custom.decorator';
 import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
-import { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
+import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';
 
 @Controller('search')
 export class SearchController {
   constructor(
     private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
-    private readonly trendingKeywordCache: ITrendingKeywordCache,
+    private readonly trendingKeywordCache: ITrendingKeywordCachePort,
   ) {}
 
   @Public()

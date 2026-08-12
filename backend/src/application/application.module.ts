@@ -20,7 +20,7 @@ import { ChromaApplicationModule } from './chroma/chroma-application.module';
 import { ScraperApplicationModule } from './scraper/scraper-application.module';
 import { SearchApplicationModule } from './search/search-application.module';
 import { TextToSpeechApplicationModule } from './text-to-speech/text-to-speech-application.module';
-import { GeminiApplicationModule } from './gemini/gemini-application.module';
+import { AIApplicationModule } from './ai/ai-application.module';
 import { RecommendationsApplicationModule } from './recommendations/recommendations-application.module';
 import { AnalyticsApplicationModule } from './analytics/analytics-application.module';
 import { ReadingRoomInteractionsApplicationModule } from './reading-room-interactions/reading-room-interactions-application.module';
@@ -48,7 +48,7 @@ import { ReadingRoomInteractionsApplicationModule } from './reading-room-interac
     ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
-    GeminiApplicationModule,
+    AIApplicationModule,
     RecommendationsApplicationModule,
     AnalyticsApplicationModule,
     ReadingRoomInteractionsApplicationModule,
@@ -75,7 +75,7 @@ import { ReadingRoomInteractionsApplicationModule } from './reading-room-interac
     ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
-    GeminiApplicationModule,
+    AIApplicationModule,
     RecommendationsApplicationModule,
     AnalyticsApplicationModule,
     ReadingRoomInteractionsApplicationModule,

@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
-import { CloudinaryService } from './cloudinary.service';
+import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
+import { CloudinaryAdapter } from './cloudinary.adapter';
 
 @Module({
   providers: [
     {
-      provide: IMediaService,
-      useClass: CloudinaryService,
+      provide: IMediaPort,
+      useClass: CloudinaryAdapter,
     },
   ],
-  exports: [IMediaService],
+  exports: [IMediaPort],
 })
 export class MediaInfrastructureModule {}

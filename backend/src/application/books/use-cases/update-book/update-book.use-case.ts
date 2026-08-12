@@ -10,13 +10,13 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
+import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 
 @Injectable()
 export class UpdateBookUseCase {
   constructor(
     private readonly bookRepository: IBookRepository,
-    private readonly bookCache: IBookCacheService,
+    private readonly bookCache: IBookCachePort,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 

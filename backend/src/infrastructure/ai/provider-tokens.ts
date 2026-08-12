@@ -1,0 +1,2 @@
+export const GEMINI_CLIENT = 'GEMINI_CLIENT';
+export const CHATGPT_CLIENT = 'CHATGPT_CLIENT';

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  IEpubParser,
+  IEpubParserPort,
   ParsedChapter,
-} from '@/domain/chapters/interfaces/epub-parser.interface';
+} from '@/domain/chapters/interfaces/epub-parser.port';
 
 export interface ImportEpubPreviewResult {
   chapters: ParsedChapter[];
@@ -13,7 +13,7 @@ export interface ImportEpubPreviewResult {
 export class ImportEpubPreviewUseCase {
   private readonly logger = new Logger(ImportEpubPreviewUseCase.name);
 
-  constructor(private readonly epubParser: IEpubParser) {}
+  constructor(private readonly epubParser: IEpubParserPort) {}
 
   async execute(
     fileBuffer: Buffer,

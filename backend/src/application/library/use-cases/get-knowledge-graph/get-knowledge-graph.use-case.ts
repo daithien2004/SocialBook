@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -6,7 +6,7 @@ import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { ReadingStatus } from '@/domain/library/enums/reading-status.enum';
 import { GetKnowledgeGraphQuery } from './get-knowledge-graph.query';
-import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import slugify from 'slugify';
 
@@ -43,7 +43,7 @@ export class GetKnowledgeGraphUseCase {
     private readonly bookRepository: IBookRepository,
     private readonly userRepository: IUserRepository,
     private readonly genreRepository: IGenreRepository,
-    private readonly geminiService: IGeminiService,
+    private readonly aiService: IAIPort,
   ) {}
 
   async execute(query: GetKnowledgeGraphQuery): Promise<KnowledgeGraphResult> {
@@ -234,7 +234,7 @@ export class GetKnowledgeGraphUseCase {
           }
         | undefined;
       try {
-        aiResult = await this.geminiService.generateJSON<{
+        aiResult = await this.aiService.generateJSON<{
           gaps: Array<{
             genre: string;
             reason: string;

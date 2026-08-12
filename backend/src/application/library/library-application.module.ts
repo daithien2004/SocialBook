@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { CreateCollectionUseCase } from './use-cases/create-collection/create-collection.use-case';
 import { GetAllCollectionsUseCase } from './use-cases/get-all-collections/get-all-collections.use-case';
 import { GetBookLibraryInfoUseCase } from './use-cases/get-book-library-info/get-book-library-info.use-case';
@@ -14,7 +14,7 @@ import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
-import { GeminiInfrastructureModule } from '@/infrastructure/gemini/gemini-infrastructure.module';
+import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 import { ProcessReadingSessionUseCase } from './use-cases/process-reading-session/process-reading-session.use-case';
@@ -30,7 +30,7 @@ import { RecommendationsInfrastructureModule } from '@/infrastructure/recommenda
     BooksRepositoryModule,
     UsersRepositoryModule,
     GenresRepositoryModule,
-    GeminiInfrastructureModule,
+    AIInfrastructureModule,
     IdGeneratorModule,
     ChaptersRepositoryModule,
     RecommendationsInfrastructureModule,

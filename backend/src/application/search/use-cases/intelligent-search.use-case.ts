@@ -20,8 +20,8 @@ import {
   QueryAnalysis,
 } from '../services/search-query-expansion.service';
 import { SearchRankingService } from '../services/search-ranking.service';
-import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
-import { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
+import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';
 
 interface HybridScore {
   finalScore: number;
@@ -45,8 +45,8 @@ export class IntelligentSearchUseCase {
     private readonly authorRepository: IAuthorRepository,
     private readonly queryExpansionService: SearchQueryExpansionService,
     private readonly rankingService: SearchRankingService,
-    private readonly cacheService: ICacheService,
-    private readonly trendingKeywordCache: ITrendingKeywordCache,
+    private readonly cacheService: ICachePort,
+    private readonly trendingKeywordCache: ITrendingKeywordCachePort,
   ) {}
 
   async execute(

@@ -1,4 +1,4 @@
-import { AIRequestType } from '@/domain/gemini/entities/ai-request.entity';
+﻿import { AIRequestType } from '@/domain/ai/entities/ai-request.entity';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 

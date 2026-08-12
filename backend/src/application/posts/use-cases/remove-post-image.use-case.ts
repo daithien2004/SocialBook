@@ -4,7 +4,7 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { RemovePostImageCommand } from './remove-post-image.command';
 
@@ -14,7 +14,7 @@ export class RemovePostImageUseCase {
 
   constructor(
     private readonly postRepository: IPostRepository,
-    private readonly mediaService: IMediaService,
+    private readonly mediaService: IMediaPort,
   ) {}
 
   async execute(command: RemovePostImageCommand) {

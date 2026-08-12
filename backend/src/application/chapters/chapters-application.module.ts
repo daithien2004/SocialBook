@@ -9,20 +9,23 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
 import { GetChapterBySlugUseCase } from './use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
 import { ImportEpubPreviewUseCase } from './use-cases/import-epub-preview/import-epub-preview.use-case';
 import { RecordChapterViewUseCase } from './use-cases/record-chapter-view/record-chapter-view.use-case';
-
 import { GetChapterKnowledgeUseCase } from './use-cases/get-chapter-knowledge/get-chapter-knowledge.use-case';
 import { AskChapterAIUseCase } from './use-cases/ask-ai/ask-chapter-ai.use-case';
-import { GeminiApplicationModule } from '../gemini/gemini-application.module';
+import { AIApplicationModule } from '../ai/ai-application.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { FilesInfrastructureModule } from '@/infrastructure/files/files-infrastructure.module';
+import { StartChaptersImportUseCase } from './use-cases/start-chapters-import/start-chapters-import.use-case';
+import { GetChaptersImportStatusUseCase } from './use-cases/get-chapters-import-status/get-chapters-import-status.use-case';
+import { ChaptersImportModule } from '@/infrastructure/queues/chapters-import/chapters-import.module';
 
 @Module({
   imports: [
     ChaptersRepositoryModule,
     IdGeneratorModule,
-    GeminiApplicationModule,
+    AIApplicationModule,
     BooksRepositoryModule,
     FilesInfrastructureModule,
+    ChaptersImportModule,
   ],
 
   providers: [
@@ -36,6 +39,8 @@ import { FilesInfrastructureModule } from '@/infrastructure/files/files-infrastr
     RecordChapterViewUseCase,
     GetChapterKnowledgeUseCase,
     AskChapterAIUseCase,
+    StartChaptersImportUseCase,
+    GetChaptersImportStatusUseCase,
   ],
 
   exports: [
@@ -49,6 +54,8 @@ import { FilesInfrastructureModule } from '@/infrastructure/files/files-infrastr
     RecordChapterViewUseCase,
     GetChapterKnowledgeUseCase,
     AskChapterAIUseCase,
+    StartChaptersImportUseCase,
+    GetChaptersImportStatusUseCase,
   ],
 })
 export class ChaptersApplicationModule {}

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
-import { IViewRankingCache } from '@/domain/books/interfaces/view-ranking.cache.interface';
+import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
 import { GetTopReadBooksQuery } from './get-top-read-books.query';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 
@@ -10,7 +10,7 @@ export class GetTopReadBooksUseCase {
 
   constructor(
     private readonly bookQueryProvider: IBookQueryProvider,
-    private readonly viewRankingCache: IViewRankingCache,
+    private readonly viewRankingCache: IViewRankingCachePort,
   ) {}
 
   async execute(query: GetTopReadBooksQuery): Promise<BookListReadModel[]> {

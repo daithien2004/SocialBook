@@ -120,7 +120,7 @@ export class ReadingRoom extends Entity<RoomId> {
 
   // Getters
   get roomId(): string {
-    return this._id.toString();
+    return this.id.toString();
   }
   get bookId(): string {
     return this._props.bookId.toString();

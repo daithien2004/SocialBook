@@ -1,4 +1,4 @@
-import { Public } from '@/common/decorators/custom.decorator';
+﻿import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import {
@@ -57,7 +57,7 @@ import { AskChapterAICommand } from '@/application/chapters/use-cases/ask-ai/ask
 import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dto';
 import { RecordChapterViewUseCase } from '@/application/chapters/use-cases/record-chapter-view/record-chapter-view.use-case';
 import { RecordChapterViewQuery } from '@/application/chapters/use-cases/record-chapter-view/record-chapter-view.query';
-import { GeminiThrottleGuard } from '@/common/guards/gemini-throttle.guard';
+import { AIThrottleGuard } from '@/common/guards/ai-throttle.guard';
 
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
@@ -89,7 +89,7 @@ export class ChaptersController {
     };
   }
 
-  @UseGuards(GeminiThrottleGuard)
+  @UseGuards(AIThrottleGuard)
   @Post(':chapterId/ask-ai')
   async askAI(
     @Param('bookSlug') bookSlug: string,

@@ -7,7 +7,7 @@ import {
   BadRequestDomainException,
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
-import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
+import { ICachePort } from '@/domain/shared/interfaces/cache.port';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { GetBookBySlugQuery } from './get-book-by-slug.query';
 
@@ -15,7 +15,7 @@ import { GetBookBySlugQuery } from './get-book-by-slug.query';
 export class GetBookBySlugUseCase {
   constructor(
     private readonly bookQueryProvider: IBookQueryProvider,
-    private readonly cache: ICacheService,
+    private readonly cache: ICachePort,
     private readonly reviewRepository: IReviewRepository,
   ) {}
 

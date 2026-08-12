@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+﻿import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
@@ -6,7 +6,7 @@ import { IBookRepository } from '@/domain/books/repositories/book.repository.int
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { IGeminiService } from '@/domain/gemini/interfaces/gemini.service.interface';
+import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { getChapterContext } from '@/application/shared/utils/chapter-context-extractor';
 import { GenerateHighlightInsightCommand } from './generate-highlight-insight.command';
 
@@ -18,7 +18,7 @@ export class GenerateHighlightInsightUseCase {
     private readonly readingRoomRepository: IReadingRoomRepository,
     private readonly bookRepository: IBookRepository,
     private readonly chapterRepository: IChapterRepository,
-    private readonly geminiService: IGeminiService,
+    private readonly aiService: IAIPort,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -75,10 +75,10 @@ export class GenerateHighlightInsightUseCase {
 
     let insight: string;
     try {
-      insight = await this.geminiService.generateText(prompt);
+      insight = await this.aiService.generateText(prompt);
     } catch (error) {
       this.logger.warn(
-        `Gemini failed for highlight ${command.highlightId}, using fallback. ${error instanceof Error ? error.message : String(error)}`,
+        `AI failed for highlight ${command.highlightId}, using fallback. ${error instanceof Error ? error.message : String(error)}`,
       );
       insight = 'Không thể tạo insight ngay lúc này. Vui lòng thử lại sau.';
     }

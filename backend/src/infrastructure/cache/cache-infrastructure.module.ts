@@ -1,45 +1,45 @@
 import { Global, Module } from '@nestjs/common';
-import { ICacheService } from '@/domain/shared/interfaces/cache.repository.interface';
-import { IBookCacheService } from '@/domain/books/interfaces/book-cache.service.interface';
-import { IViewRankingCache } from '@/domain/books/interfaces/view-ranking.cache.interface';
-import { ITrendingKeywordCache } from '@/domain/search/interfaces/trending-keyword.cache.interface';
-import { IPresenceCache } from '@/domain/reading-rooms/interfaces/presence-cache.interface';
-import { RedisCacheService } from './redis-cache.service';
-import { BookCacheService } from './book-cache.service';
-import { ViewRankingCacheService } from './view-ranking-cache.service';
-import { TrendingKeywordCacheService } from './trending-keyword-cache.service';
-import { PresenceCacheService } from './presence-cache.service';
+import { ICachePort } from '@/domain/shared/interfaces/cache.port';
+import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
+import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
+import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';
+import { IPresenceCachePort } from '@/domain/reading-rooms/interfaces/presence-cache.port';
+import { RedisCacheAdapter } from './redis-cache.adapter';
+import { BookCacheAdapter } from './book-cache.adapter';
+import { ViewRankingCacheAdapter } from './view-ranking-cache.adapter';
+import { TrendingKeywordCacheAdapter } from './trending-keyword-cache.adapter';
+import { PresenceCacheAdapter } from './presence-cache.adapter';
 
 @Global()
 @Module({
   providers: [
     {
-      provide: ICacheService,
-      useClass: RedisCacheService,
+      provide: ICachePort,
+      useClass: RedisCacheAdapter,
     },
     {
-      provide: IBookCacheService,
-      useClass: BookCacheService,
+      provide: IBookCachePort,
+      useClass: BookCacheAdapter,
     },
     {
-      provide: IViewRankingCache,
-      useClass: ViewRankingCacheService,
+      provide: IViewRankingCachePort,
+      useClass: ViewRankingCacheAdapter,
     },
     {
-      provide: ITrendingKeywordCache,
-      useClass: TrendingKeywordCacheService,
+      provide: ITrendingKeywordCachePort,
+      useClass: TrendingKeywordCacheAdapter,
     },
     {
-      provide: IPresenceCache,
-      useClass: PresenceCacheService,
+      provide: IPresenceCachePort,
+      useClass: PresenceCacheAdapter,
     },
   ],
   exports: [
-    ICacheService,
-    IBookCacheService,
-    IViewRankingCache,
-    ITrendingKeywordCache,
-    IPresenceCache,
+    ICachePort,
+    IBookCachePort,
+    IViewRankingCachePort,
+    ITrendingKeywordCachePort,
+    IPresenceCachePort,
   ],
 })
 export class CacheInfrastructureModule {}

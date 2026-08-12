@@ -7,7 +7,7 @@ import { BooksRepositoryModule } from './database/repositories/books/books-repos
 import { ChaptersRepositoryModule } from './database/repositories/chapters/chapters-repository.module';
 import { CommentsRepositoryModule } from './database/repositories/comments/comments-repository.module';
 import { FollowsRepositoryModule } from './database/repositories/follows/follows-repository.module';
-import { GeminiRepositoryModule } from './database/repositories/gemini/gemini-repository.module';
+import { AIRequestRepositoryModule } from './database/repositories/ai-requests/ai-request-repository.module';
 import { GenresRepositoryModule } from './database/repositories/genres/genres-repository.module';
 import { LibraryRepositoryModule } from './database/repositories/library/library-repository.module';
 import { LikesRepositoryModule } from './database/repositories/likes/likes-repository.module';
@@ -20,10 +20,10 @@ import { RolesRepositoryModule } from './database/repositories/roles/roles-repos
 import { TextToSpeechRepositoryModule } from './database/repositories/text-to-speech/text-to-speech-repository.module';
 import { UsersRepositoryModule } from './database/repositories/users/users-repository.module';
 import { ContentModerationRepositoryModule } from './database/repositories/content-moderation/content-moderation-repository.module';
-import { GeminiInfrastructureModule } from './gemini/gemini-infrastructure.module';
+import { AIInfrastructureModule } from './ai/ai-infrastructure.module';
 import { FilesInfrastructureModule } from './files/files-infrastructure.module';
 import { MediaInfrastructureModule } from './media/media-infrastructure.module';
-import { ModerationInfrastructureModule } from './moderation/moderation-infrastructure.module';
+
 import { TtsInfrastructureModule } from './text-to-speech/tts-infrastructure.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
 import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
@@ -53,13 +53,13 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     RolesRepositoryModule,
     OtpRepositoryModule,
     ProgressRepositoryModule,
-    GeminiRepositoryModule,
+    AIRequestRepositoryModule,
     TextToSpeechRepositoryModule,
     ContentModerationRepositoryModule,
-    GeminiInfrastructureModule,
+    AIInfrastructureModule,
     FilesInfrastructureModule,
     MediaInfrastructureModule,
-    ModerationInfrastructureModule,
+
     TtsInfrastructureModule,
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
@@ -89,13 +89,13 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     RolesRepositoryModule,
     OtpRepositoryModule,
     ProgressRepositoryModule,
-    GeminiRepositoryModule,
+    AIRequestRepositoryModule,
     TextToSpeechRepositoryModule,
     ContentModerationRepositoryModule,
-    GeminiInfrastructureModule,
+    AIInfrastructureModule,
     FilesInfrastructureModule,
     MediaInfrastructureModule,
-    ModerationInfrastructureModule,
+
     TtsInfrastructureModule,
     ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,

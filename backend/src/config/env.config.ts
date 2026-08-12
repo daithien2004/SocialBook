@@ -49,6 +49,15 @@ export default registerAs('env', () => ({
   MODERATION_TIMEOUT:
     parseInt(process.env.MODERATION_TIMEOUT ?? '', 10) || 15000,
 
+  // AI Provider (gemini | chatgpt)
+  AI_PROVIDER: process.env.AI_PROVIDER || 'gemini',
+
+  // ChatGPT (OpenAI-compatible provider)
+  CHATGPT_API_KEY: process.env.CHATGPT_API_KEY || '',
+  CHATGPT_MODEL: process.env.CHATGPT_MODEL || 'gpt-4o-mini',
+  CHATGPT_BASE_URL: process.env.CHATGPT_BASE_URL || 'https://api.openai.com/v1',
+  CHATGPT_TIMEOUT: parseInt(process.env.CHATGPT_TIMEOUT ?? '', 10) || 60000,
+
   // Chroma
   CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
   CHROMA_COLLECTION: process.env.CHROMA_COLLECTION || 'socialbook_vectors',

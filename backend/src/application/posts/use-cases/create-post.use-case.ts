@@ -5,24 +5,24 @@ import {
   BadRequestDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { IMediaService } from '@/domain/cloudinary/interfaces/media.service.interface';
+import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { CreatePostCommand } from './create-post.command';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
-import { IPostModerationQueuePort } from '@/domain/posts/interfaces/post-moderation-queue.interface';
+import { IPostModerationPort } from '@/domain/posts/interfaces/post-moderation.port';
 
 @Injectable()
 export class CreatePostUseCase {
   constructor(
     private readonly postRepository: IPostRepository,
-    private readonly mediaService: IMediaService,
+    private readonly mediaService: IMediaPort,
     private readonly bookRepository: IBookRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly eventEmitter: EventEmitter2,
-    private readonly postModerationQueue: IPostModerationQueuePort,
+    private readonly postModerationQueue: IPostModerationPort,
   ) {}
 
   async execute(

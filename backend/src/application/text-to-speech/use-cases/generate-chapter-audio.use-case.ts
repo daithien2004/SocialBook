@@ -6,8 +6,8 @@ import {
   InternalServerDomainException,
 } from '@/shared/domain/common-exceptions';
 import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
-import { ITextToSpeechProvider } from '@/domain/text-to-speech/interfaces/text-to-speech.provider.interface';
-import { ILanguageDetector } from '@/domain/text-to-speech/interfaces/language-detector.interface';
+import { ITextToSpeechPort } from '@/domain/text-to-speech/interfaces/text-to-speech.port';
+import { LanguageDetectorService } from '@/application/text-to-speech/services/language-detector.service';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import {
   TextToSpeech,
@@ -29,8 +29,8 @@ import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 export class GenerateChapterAudioUseCase {
   constructor(
     private readonly ttsRepository: ITextToSpeechRepository,
-    private readonly ttsProvider: ITextToSpeechProvider,
-    private readonly languageDetector: ILanguageDetector,
+    private readonly ttsProvider: ITextToSpeechPort,
+    private readonly languageDetector: LanguageDetectorService,
     private readonly chapterRepository: IChapterRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}

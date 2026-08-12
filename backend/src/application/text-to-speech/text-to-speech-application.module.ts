@@ -8,6 +8,7 @@ import { TextToSpeechRepositoryModule } from '@/infrastructure/database/reposito
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { TtsInfrastructureModule } from '@/infrastructure/text-to-speech/tts-infrastructure.module';
+import { LanguageDetectorService } from './services/language-detector.service';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TtsInfrastructureModule } from '@/infrastructure/text-to-speech/tts-inf
     GenerateChapterAudioUseCase,
     GetChapterAudioUseCase,
     IncrementPlayCountUseCase,
+    LanguageDetectorService,
   ],
   exports: [
     DeleteChapterAudioUseCase,

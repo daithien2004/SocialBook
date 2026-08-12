@@ -9,12 +9,12 @@ import {
 } from '../../schemas/reading-room-interactions/room-comment.schema';
 
 @Injectable()
-export class CommentRepository extends ICommentRepository {
+export class CommentRepository implements ICommentRepository {
   constructor(
     @InjectModel(RoomCommentSchema.name)
     private readonly commentModel: Model<RoomCommentDocument>,
   ) {
-    super();
+
   }
 
   async save(comment: RoomComment): Promise<void> {

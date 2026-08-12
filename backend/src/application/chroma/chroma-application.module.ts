@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { GetCollectionStatsUseCase } from './use-cases/get-collection-stats/get-collection-stats.use-case';
 import { ClearCollectionUseCase } from './use-cases/clear-collection/clear-collection.use-case';
 import { BatchIndexUseCase } from './use-cases/batch-index/batch-index.use-case';
@@ -12,7 +12,7 @@ import { BooksRepositoryModule } from '../../infrastructure/database/repositorie
 import { AuthorsRepositoryModule } from '../../infrastructure/database/repositories/authors/authors-repository.module';
 import { ChaptersRepositoryModule } from '../../infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
-import { GeminiInfrastructureModule } from '@/infrastructure/gemini/gemini-infrastructure.module';
+import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { GeminiInfrastructureModule } from '@/infrastructure/gemini/gemini-infra
     AuthorsRepositoryModule,
     ChaptersRepositoryModule,
     IdGeneratorModule,
-    GeminiInfrastructureModule,
+    AIInfrastructureModule,
   ],
   providers: [
     GetCollectionStatsUseCase,

@@ -4,16 +4,16 @@ import { Resend } from 'resend';
 import {
   IMailerPort,
   SendMailOptions,
-} from '@/domain/auth/otp/interfaces/mailer.interface';
+} from '@/domain/auth/otp/interfaces/mailer.port';
 
 @Injectable()
-export class MailerAdapter extends IMailerPort {
+export class MailerAdapter implements IMailerPort {
   private readonly resend: Resend;
   private readonly fromEmail: string;
   private readonly logger = new Logger(MailerAdapter.name);
 
   constructor(private readonly configService: ConfigService) {
-    super();
+
     const apiKey = this.configService.get<string>('env.RESEND_API_KEY', '');
     this.fromEmail = this.configService.get<string>(
       'env.RESEND_FROM_EMAIL',

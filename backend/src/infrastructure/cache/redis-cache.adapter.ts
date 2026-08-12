@@ -1,0 +1,80 @@
+import { getErrorMessage } from '@/common/utils/error.util';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
+import type { ICachePort } from '@/domain/shared/interfaces/cache.port';
+
+@Injectable()
+export class RedisCacheAdapter implements ICachePort {
+  private readonly logger = new Logger(RedisCacheAdapter.name);
+
+  constructor(@InjectRedis() private readonly redis: Redis) {}
+
+  async get<T>(key: string): Promise<T | null> {
+    try {
+      const value = await this.redis.get(key);
+      return value ? (JSON.parse(value) as T) : null;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get cache key "${key}": ${getErrorMessage(error)}`,
+      );
+      return null;
+    }
+  }
+
+  async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
+    try {
+      const serialized = JSON.stringify(value);
+      if (ttlSeconds !== undefined) {
+        await this.redis.setex(key, ttlSeconds, serialized);
+      } else {
+        await this.redis.set(key, serialized);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to set cache key "${key}": ${getErrorMessage(error)}`,
+      );
+    }
+  }
+
+  async del(key: string): Promise<void> {
+    try {
+      await this.redis.del(key);
+    } catch (error) {
+      this.logger.error(
+        `Failed to delete cache key "${key}": ${getErrorMessage(error)}`,
+      );
+    }
+  }
+
+  async setIfNotExists(
+    key: string,
+    value: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    try {
+      const result = await this.redis.call(
+        'SET',
+        key,
+        value,
+        'NX',
+        'EX',
+        ttlSeconds,
+      );
+      return result === 'OK';
+    } catch (error) {
+      this.logger.error(
+        `Failed to set nx cache key "${key}": ${getErrorMessage(error)}`,
+      );
+      return false;
+    }
+  }
+
+  async reset(): Promise<void> {
+    try {
+      await this.redis.flushdb();
+    } catch (error) {
+      this.logger.error(`Failed to reset cache: ${getErrorMessage(error)}`);
+    }
+  }
+}

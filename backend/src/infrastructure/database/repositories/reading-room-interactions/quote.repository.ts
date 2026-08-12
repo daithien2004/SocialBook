@@ -9,12 +9,12 @@ import {
 } from '../../schemas/reading-room-interactions/room-quote.schema';
 
 @Injectable()
-export class QuoteRepository extends IQuoteRepository {
+export class QuoteRepository implements IQuoteRepository {
   constructor(
     @InjectModel(RoomQuoteSchema.name)
     private readonly quoteModel: Model<RoomQuoteDocument>,
   ) {
-    super();
+
   }
 
   async save(quote: RoomQuote): Promise<void> {
