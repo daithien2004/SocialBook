@@ -4,7 +4,7 @@ import { IRecommendationDataRepository } from '@/domain/recommendations/interfac
 import {
   RecommendationResult,
   PaginatedRecommendationResult,
-} from '../dto/recommendation-result.dto';
+} from '@/domain/recommendations/interfaces/recommendation-result';
 
 export interface GetPersonalizedRecommendationsQuery {
   userId: string;

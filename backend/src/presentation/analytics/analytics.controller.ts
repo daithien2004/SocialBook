@@ -3,6 +3,7 @@ import { TrackUserEventUseCase } from '@/application/analytics/use-cases/track-u
 import { GetTrendingBooksUseCase } from '@/application/analytics/use-cases/get-trending-books/get-trending-books.use-case';
 import { GetTopActiveReadersUseCase } from '@/application/analytics/use-cases/get-top-active-readers/get-top-active-readers.use-case';
 import { TrackUserEventDto } from './dto/track-user-event.dto';
+import { TrackUserEventCommand } from '@/application/analytics/use-cases/track-user-event/track-user-event.command';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/custom.decorator';
 
@@ -19,7 +20,19 @@ export class AnalyticsController {
     @CurrentUser('id') userId: string,
     @Body() dto: TrackUserEventDto,
   ) {
-    await this.trackUserEventUseCase.execute(userId, dto);
+    const command = new TrackUserEventCommand(
+      userId,
+      dto.eventType,
+      dto.bookId,
+      dto.chapterId,
+      dto.durationSeconds,
+      dto.progressPercent,
+      dto.source,
+      dto.deviceType,
+      dto.metadata,
+      dto.sessionId,
+    );
+    await this.trackUserEventUseCase.execute(command);
     return { success: true };
   }
 

@@ -1,7 +1,7 @@
 import {
   PaginatedResult,
   PaginationOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Author } from '../entities/author.entity';
 import { AuthorId } from '../value-objects/author-id.vo';
 import { AuthorName } from '../value-objects/author-name.vo';

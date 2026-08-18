@@ -5,26 +5,26 @@ import { JwtModule } from '@nestjs/jwt';
 import { NotificationsService } from './notifications.service';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationEventHandler } from './notification-event.handler';
-import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
-import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
 import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
 import { ReadingRoomInteractionsApplicationModule } from '@/application/reading-room-interactions/reading-room-interactions-application.module';
 import { ReadingRoomGateway } from './reading-room.gateway';
-import { ReadingRoomPresenceModule } from './reading-room-presence.module';
-import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
-import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
+import { ReadingRoomPresenceModule } from '@/application/reading-rooms/presence/reading-room-presence.module';
 import { LibraryApplicationModule } from '@/application/library/library-application.module';
 import { TargetResolutionModule } from '@/application/target-resolution/target-resolution.module';
+import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
+import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
+import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
+import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 
 @Module({
   imports: [
     NotificationsApplicationModule,
     ReadingRoomsApplicationModule,
     ReadingRoomInteractionsApplicationModule,
+    ChaptersRepositoryModule,
     PostsRepositoryModule,
     CommentsRepositoryModule,
     UsersRepositoryModule,
-    ChaptersRepositoryModule,
     TargetResolutionModule,
     ReadingRoomPresenceModule,
     LibraryApplicationModule,

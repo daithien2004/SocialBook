@@ -2,7 +2,7 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { BookDetailReadModel } from '../read-models/book-detail.read-model';
 import { BookListReadModel } from '../read-models/book-list.read-model';
 import { BookId } from '../value-objects/book-id.vo';

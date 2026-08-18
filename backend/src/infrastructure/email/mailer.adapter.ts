@@ -13,7 +13,6 @@ export class MailerAdapter implements IMailerPort {
   private readonly logger = new Logger(MailerAdapter.name);
 
   constructor(private readonly configService: ConfigService) {
-
     const apiKey = this.configService.get<string>('env.RESEND_API_KEY', '');
     this.fromEmail = this.configService.get<string>(
       'env.RESEND_FROM_EMAIL',

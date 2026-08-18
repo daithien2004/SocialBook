@@ -1,4 +1,4 @@
-import { RecommendationResult } from '@/application/recommendations/dto/recommendation-result.dto';
+import { RecommendationResult } from './recommendation-result';
 
 export abstract class IRecommendationCachePort {
   abstract get(userId: string): Promise<RecommendationResult | null>;

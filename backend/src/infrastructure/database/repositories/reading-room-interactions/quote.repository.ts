@@ -13,9 +13,7 @@ export class QuoteRepository implements IQuoteRepository {
   constructor(
     @InjectModel(RoomQuoteSchema.name)
     private readonly quoteModel: Model<RoomQuoteDocument>,
-  ) {
-
-  }
+  ) {}
 
   async save(quote: RoomQuote): Promise<void> {
     await this.quoteModel.create({

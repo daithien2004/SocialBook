@@ -1,7 +1,7 @@
 import {
   PaginatedResult,
   PaginationOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Genre } from '../entities/genre.entity';
 import { GenreId } from '../value-objects/genre-id.vo';
 import { GenreName } from '../value-objects/genre-name.vo';

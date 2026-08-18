@@ -8,10 +8,7 @@ import { TruyenFullStrategy } from './truyenfull.strategy';
 @Module({
   imports: [HttpModule],
   providers: [
-    {
-      provide: IScraperStrategy,
-      useClass: TruyenFullStrategy,
-    },
+    TruyenFullStrategy,
     {
       provide: IScraperFactory,
       useClass: ScraperFactory,

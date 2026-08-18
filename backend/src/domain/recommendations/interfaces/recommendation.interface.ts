@@ -9,12 +9,9 @@ export interface EnrichedRecommendation {
   book: PopulatedBook;
 }
 
-export type RecommendationResult = EnrichedRecommendation;
-
 export interface RecommendationAnalysis {
   favoriteGenres: string[];
   readingPace: 'fast' | 'medium' | 'slow';
   preferredLength: 'short' | 'medium' | 'long';
   themes: string[];
 }
-

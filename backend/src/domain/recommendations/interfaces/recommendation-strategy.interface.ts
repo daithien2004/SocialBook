@@ -1,4 +1,4 @@
-import { RecommendationResult } from '@/application/recommendations/dto/recommendation-result.dto';
+import { RecommendationResult } from './recommendation-result';
 import { PopulatedBook } from './recommendation-data.repository.interface';
 
 export interface CompletedBookEntry {

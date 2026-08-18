@@ -13,7 +13,7 @@ import {
   IRecommendationStrategy,
   UserProfile,
 } from '@/domain/recommendations/interfaces/recommendation-strategy.interface';
-import { RecommendationResult } from '@/application/recommendations/dto/recommendation-result.dto';
+import { RecommendationResult } from '@/domain/recommendations/interfaces/recommendation-result';
 import { EnrichedRecommendation } from '@/domain/recommendations/interfaces/recommendation.interface';
 import { PopulatedBook } from '@/domain/recommendations/interfaces/recommendation-data.repository.interface';
 

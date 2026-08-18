@@ -1,4 +1,4 @@
-import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
+import { CursorPaginatedResult } from '@/shared/domain/pagination.types';
 import { Post } from '../entities/post.entity';
 
 export interface FindAllOptions {

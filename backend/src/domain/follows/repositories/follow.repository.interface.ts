@@ -2,7 +2,7 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Follow } from '../entities/follow.entity';
 import { FollowId } from '../value-objects/follow-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';

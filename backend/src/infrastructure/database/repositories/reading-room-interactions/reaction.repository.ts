@@ -23,9 +23,7 @@ export class ReactionRepository implements IReactionRepository {
   constructor(
     @InjectModel(RoomReactionSchema.name)
     private readonly reactionModel: Model<RoomReactionDocument>,
-  ) {
-
-  }
+  ) {}
 
   async save(reaction: RoomReaction): Promise<void> {
     await this.reactionModel.create({

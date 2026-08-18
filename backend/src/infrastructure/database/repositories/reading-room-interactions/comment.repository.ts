@@ -13,9 +13,7 @@ export class CommentRepository implements ICommentRepository {
   constructor(
     @InjectModel(RoomCommentSchema.name)
     private readonly commentModel: Model<RoomCommentDocument>,
-  ) {
-
-  }
+  ) {}
 
   async save(comment: RoomComment): Promise<void> {
     await this.commentModel

@@ -101,14 +101,8 @@ function createClient(
         ),
       inject: [ConfigService],
     },
-    {
-      provide: IAIProviderPort,
-      useClass: GeminiProvider,
-    },
-    {
-      provide: IAIProviderPort,
-      useClass: ChatGPTProvider,
-    },
+    GeminiProvider,
+    ChatGPTProvider,
     {
       provide: IAIProviderFactoryPort,
       useClass: AIProviderFactory,

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { CreateChapterUseCase } from './use-cases/create-chapter/create-chapter.use-case';
 import { DeleteChapterUseCase } from './use-cases/delete-chapter/delete-chapter.use-case';
 import { GetChapterByIdUseCase } from './use-cases/get-chapter-by-id/get-chapter-by-id.use-case';
@@ -17,6 +18,10 @@ import { FilesInfrastructureModule } from '@/infrastructure/files/files-infrastr
 import { StartChaptersImportUseCase } from './use-cases/start-chapters-import/start-chapters-import.use-case';
 import { GetChaptersImportStatusUseCase } from './use-cases/get-chapters-import-status/get-chapters-import-status.use-case';
 import { ChaptersImportModule } from '@/infrastructure/queues/chapters-import/chapters-import.module';
+import {
+  SingleChapterProcessor,
+  CREATE_SINGLE_CHAPTER_QUEUE,
+} from './processors/single-chapter.processor';
 
 @Module({
   imports: [
@@ -26,6 +31,9 @@ import { ChaptersImportModule } from '@/infrastructure/queues/chapters-import/ch
     BooksRepositoryModule,
     FilesInfrastructureModule,
     ChaptersImportModule,
+    BullModule.registerQueue({
+      name: CREATE_SINGLE_CHAPTER_QUEUE,
+    }),
   ],
 
   providers: [
@@ -41,6 +49,7 @@ import { ChaptersImportModule } from '@/infrastructure/queues/chapters-import/ch
     AskChapterAIUseCase,
     StartChaptersImportUseCase,
     GetChaptersImportStatusUseCase,
+    SingleChapterProcessor,
   ],
 
   exports: [

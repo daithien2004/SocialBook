@@ -1,4 +1,4 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { User } from '../entities/user.entity';
 import { UserEmail } from '../value-objects/user-email.vo';
 import { UserId } from '../value-objects/user-id.vo';

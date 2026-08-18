@@ -1,21 +1,27 @@
-import { CreateChapterUseCase } from '@/application/chapters/use-cases/create-chapter/create-chapter.use-case';
-import { CreateChapterCommand } from '@/application/chapters/use-cases/create-chapter/create-chapter.command';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { BadRequestException } from '@nestjs/common';
-import type { Job } from 'bullmq';
+import type { Job, Queue } from 'bullmq';
 
 import type {
   ImportChaptersJobData,
   ImportChaptersJobProgress,
   ImportChaptersJobResult,
 } from '@/domain/chapters/interfaces/chapters-import.types';
+import {
+  CREATE_SINGLE_CHAPTER_QUEUE,
+  CREATE_SINGLE_CHAPTER_JOB,
+  CreateSingleChapterJobData,
+} from '@/application/chapters/processors/single-chapter.processor';
 
 const JOB_NAME = 'import-chapters';
 const QUEUE_NAME = 'chapters-import';
 
 @Processor(QUEUE_NAME)
 export class ChaptersImportProcessor extends WorkerHost {
-  constructor(private readonly createChapterUseCase: CreateChapterUseCase) {
+  constructor(
+    @InjectQueue(CREATE_SINGLE_CHAPTER_QUEUE)
+    private readonly chapterCreationQueue: Queue<CreateSingleChapterJobData>,
+  ) {
     super();
   }
 
@@ -89,15 +95,11 @@ export class ChaptersImportProcessor extends WorkerHost {
       }
 
       try {
-        await this.createChapterUseCase.execute(
-          new CreateChapterCommand(
-            title || `Chapter ${i + 1}`,
-            bookId,
-            paragraphs,
-            undefined,
-            undefined,
-          ),
-        );
+        await this.chapterCreationQueue.add(CREATE_SINGLE_CHAPTER_JOB, {
+          bookId,
+          title: title || `Chapter ${i + 1}`,
+          paragraphs,
+        });
         successful++;
       } catch (error: unknown) {
         failed++;

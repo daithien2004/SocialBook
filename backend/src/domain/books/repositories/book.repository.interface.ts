@@ -2,7 +2,7 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Book } from '../entities/book.entity';
 import { AuthorId } from '../value-objects/author-id.vo';
 import { BookId } from '../value-objects/book-id.vo';

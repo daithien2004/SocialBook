@@ -1,10 +1,11 @@
-import { IAIProviderPort, AIProviderName } from '@/domain/ai/interfaces/ai-provider.port';
+import {
+  IAIProviderPort,
+  AIProviderName,
+} from '@/domain/ai/interfaces/ai-provider.port';
 import { OpenAICompatibleClient } from './openai-compatible.client';
 
 export abstract class OpenAIProviderBase implements IAIProviderPort {
-  protected constructor(protected readonly client: OpenAICompatibleClient) {
-
-  }
+  protected constructor(protected readonly client: OpenAICompatibleClient) {}
 
   abstract getProviderName(): AIProviderName;
 

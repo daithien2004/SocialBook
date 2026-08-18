@@ -19,7 +19,8 @@ import { RemoveHighlightUseCase } from './use-cases/remove-highlight/remove-high
 import { AIApplicationModule } from '../ai/ai-application.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { ReadingRoomInteractionsRepositoryModule } from '@/infrastructure/database/repositories/reading-room-interactions/reading-room-interactions-repository.module';
-import { ReadingRoomPresenceModule } from '@/presentation/gateways/reading-room-presence.module';
+import { IPresencePort } from '@/domain/reading-rooms/interfaces/presence.port';
+import { ReadingRoomPresenceService } from './presence/reading-room-presence.service';
 
 @Module({
   imports: [
@@ -28,7 +29,6 @@ import { ReadingRoomPresenceModule } from '@/presentation/gateways/reading-room-
     ChaptersRepositoryModule,
     AIApplicationModule,
     ReadingRoomInteractionsRepositoryModule,
-    ReadingRoomPresenceModule,
   ],
   providers: [
     CreateRoomUseCase,
@@ -45,6 +45,11 @@ import { ReadingRoomPresenceModule } from '@/presentation/gateways/reading-room-
     GetMyActiveRoomsUseCase,
     GetMyHistoryUseCase,
     GetRoomByCodeUseCase,
+    ReadingRoomPresenceService,
+    {
+      provide: IPresencePort,
+      useExisting: ReadingRoomPresenceService,
+    },
   ],
   exports: [
     CreateRoomUseCase,

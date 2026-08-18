@@ -8,7 +8,7 @@ import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { ICommentRepository } from '@/domain/reading-room-interactions/repositories/comment.repository.interface';
 import { IReactionRepository } from '@/domain/reading-room-interactions/repositories/reaction.repository.interface';
 import { IQuoteRepository } from '@/domain/reading-room-interactions/repositories/quote.repository.interface';
-import { ReadingRoomPresenceService } from '@/presentation/gateways/reading-room-presence.service';
+import { IPresencePort } from '@/domain/reading-rooms/interfaces/presence.port';
 import { DeleteRoomCommand } from './delete-room.command';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class DeleteRoomUseCase {
 
   constructor(
     private readonly roomRepository: IReadingRoomRepository,
-    private readonly presenceService: ReadingRoomPresenceService,
+    private readonly presencePort: IPresencePort,
     private readonly commentRepository: ICommentRepository,
     private readonly reactionRepository: IReactionRepository,
     private readonly quoteRepository: IQuoteRepository,
@@ -42,7 +42,7 @@ export class DeleteRoomUseCase {
       this.commentRepository.deleteByRoom(roomId),
       this.reactionRepository.deleteByRoom(roomId),
       this.quoteRepository.deleteByRoom(roomId),
-      this.presenceService.removeRoomPresences(roomId),
+      this.presencePort.removeRoomPresences(roomId),
     ]);
 
     this.logger.log(`Room ${roomId} deleted by user ${command.userId}`);

@@ -19,7 +19,7 @@ export class AnalyticsListener {
     private readonly analyticsRepository: IUserAnalyticsRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly targetResolverRegistry: TargetResolverRegistry,
-  ) { }
+  ) {}
 
   @OnEvent('user-event.tracked')
   async handleUserEventTracked(payload: { userId: string; event: UserEvent }) {

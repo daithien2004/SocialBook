@@ -12,7 +12,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { GenerateHighlightInsightUseCase } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
 import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.command';
-import { ReadingRoomPresenceService } from './reading-room-presence.service';
+import { ReadingRoomPresenceService } from '@/application/reading-rooms/presence/reading-room-presence.service';
 import { JoinRoomUseCase } from '@/application/reading-rooms/use-cases/join-room/join-room.use-case';
 import { LeaveRoomUseCase } from '@/application/reading-rooms/use-cases/leave-room/leave-room.use-case';
 import { ChangeChapterUseCase } from '@/application/reading-rooms/use-cases/change-chapter/change-chapter.use-case';

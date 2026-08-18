@@ -14,9 +14,7 @@ export class PostModerationAdapter implements IPostModerationPort {
   constructor(
     @InjectQueue(POST_MODERATION_QUEUE)
     private readonly queue: Queue<PostModerationJobData>,
-  ) {
-
-  }
+  ) {}
 
   async enqueue(input: PostModerationJobInput): Promise<void> {
     await this.queue.add(

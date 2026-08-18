@@ -2,7 +2,7 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Chapter } from '../entities/chapter.entity';
 import { ChapterDetailReadModel } from '../read-models/chapter-detail.read-model';
 import { ChapterListReadModel } from '../read-models/chapter-list.read-model';

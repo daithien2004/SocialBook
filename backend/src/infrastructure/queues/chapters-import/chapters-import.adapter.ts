@@ -25,9 +25,7 @@ export class ChaptersImportAdapter implements IChaptersImportPort {
       ImportChaptersJobData,
       ImportChaptersJobResult
     >,
-  ) {
-
-  }
+  ) {}
 
   async startImport(
     params: StartChaptersImportParams,
