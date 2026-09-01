@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -130,6 +131,7 @@ export class ChromaController {
   }
 
   @Public()
+  @SkipThrottle()
   @Get('health')
   health() {
     return {
