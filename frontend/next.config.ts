@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next';
+import path from 'path';
 
 let nextConfig: NextConfig = {
+  turbopack: {
+    root: path.join(__dirname, '..'),
+  },
   cacheComponents: true,
   images: {
     remotePatterns: [

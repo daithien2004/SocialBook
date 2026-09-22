@@ -50,6 +50,7 @@ import { PresentationModule } from './presentation/presentation.module';
             host,
             port,
             password,
+            db: 0,
             tls:
               host.includes('upstash') || host.includes('rediss')
                 ? { rejectUnauthorized: false }
@@ -84,6 +85,7 @@ import { PresentationModule } from './presentation/presentation.module';
           host: configService.get<string>('env.REDIS_HOST', 'localhost'),
           port: configService.get<number>('env.REDIS_PORT', 6379),
           password: configService.get<string>('env.REDIS_PASSWORD'),
+          db: 1,
         },
       }),
     }),

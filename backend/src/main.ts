@@ -86,8 +86,8 @@ async function bootstrap() {
   const redisPort = configService.get<number>('env.REDIS_PORT', 6379);
   const redisPassword = configService.get<string>('env.REDIS_PASSWORD', '');
   const redisUrl = redisPassword
-    ? `redis://:${redisPassword}@${redisHost}:${redisPort}`
-    : `redis://${redisHost}:${redisPort}`;
+    ? `redis://:${redisPassword}@${redisHost}:${redisPort}/2`
+    : `redis://${redisHost}:${redisPort}/2`;
 
   const redisIoAdapter = new RedisIoAdapter(app);
   await redisIoAdapter.connectToRedis(redisUrl);

@@ -18,6 +18,7 @@ import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/
 import { MediaInfrastructureModule } from '@/infrastructure/media/media-infrastructure.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
+import { CaslCacheListener } from './listeners/casl-cache.listener';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.mo
     UpdateReadingPreferencesUseCase,
     UpdateUserUseCase,
     UpdateUserImageUseCase,
+    CaslCacheListener,
   ],
   exports: [
     CheckUserExistUseCase,
