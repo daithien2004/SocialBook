@@ -1,16 +1,14 @@
 import { apiRequest } from '@/lib/nestjs-client-api';
 import {
-  normalizePaginatedPosts,
-  normalizePost,
-  normalizePostWithModeration,
+  paginatedPostsSchema,
+  postDetailSchema,
+  postWithModerationSchema,
   type DeleteImageRequest,
   type PaginatedPostsResponse,
   type PaginationParams,
   type PaginationParamsByUser,
   type Post,
   type PostWithModerationResult,
-  type RawPost,
-  type RawPaginatedPosts,
   type TopReader,
   type TrendingBook,
   type UpdatePostRequest,
@@ -32,45 +30,28 @@ export interface UpdatePostPayload {
   data: UpdatePostRequest;
 }
 
-type MutationRawResponse = { data: RawPost; warning?: string; message?: string } | RawPost;
 
-function isWrappedResponse(
-  response: MutationRawResponse,
-): response is { data: RawPost; warning?: string; message?: string } {
-  return response !== null && typeof response === 'object' && 'data' in response;
-}
-
-function normalizeMutationResponse(response: MutationRawResponse): PostWithModerationResult {
-  if (isWrappedResponse(response)) {
-    return normalizePostWithModeration(response);
-  }
-  return {
-    data: normalizePost(response),
-    warning: undefined,
-    message: undefined,
-  };
-}
 
 export async function getPostsFeed(params?: PaginationParams): Promise<PaginatedPostsResponse> {
-  const data = await apiRequest<RawPaginatedPosts>({
+  const data = await apiRequest<unknown>({
     url: '/posts',
     method: 'GET',
     params: { cursor: params?.cursor, limit: params?.limit ?? 10 },
   });
-  return normalizePaginatedPosts(data);
+  return paginatedPostsSchema.parse(data);
 }
 
 export async function getPostById(args: { id: string; userId?: string }): Promise<Post> {
-  const data = await apiRequest<RawPost>({
+  const data = await apiRequest<unknown>({
     url: `/posts/${args.id}`,
     method: 'GET',
     params: args.userId ? { userId: args.userId } : undefined,
   });
-  return normalizePost(data);
+  return postDetailSchema.parse(data);
 }
 
 export async function getPostsByUser(params: PaginationParamsByUser): Promise<PaginatedPostsResponse> {
-  const data = await apiRequest<RawPaginatedPosts>({
+  const data = await apiRequest<unknown>({
     url: '/posts/user',
     method: 'GET',
     params: {
@@ -79,7 +60,7 @@ export async function getPostsByUser(params: PaginationParamsByUser): Promise<Pa
       userId: params.userId,
     },
   });
-  return normalizePaginatedPosts(data);
+  return paginatedPostsSchema.parse(data);
 }
 
 function buildPostFormData(payload: {
@@ -97,7 +78,7 @@ function buildPostFormData(payload: {
 }
 
 export async function createPost(payload: CreatePostPayload): Promise<PostWithModerationResult> {
-  const response = await apiRequest<MutationRawResponse>({
+  const response = await apiRequest<unknown>({
     url: '/posts',
     method: 'POST',
     data: buildPostFormData({
@@ -106,12 +87,20 @@ export async function createPost(payload: CreatePostPayload): Promise<PostWithMo
       images: payload.images ? Array.from(payload.images) : undefined,
     }),
   });
-  return normalizeMutationResponse(response);
+  
+  // Xử lý cả 2 trường hợp: API trả về RawPost hoặc { data: RawPost, warning, message }
+  const isWrapped = response !== null && typeof response === 'object' && 'data' in response;
+  if (isWrapped) {
+    return postWithModerationSchema.parse(response);
+  }
+  return {
+    data: postDetailSchema.parse(response),
+  };
 }
 
 export async function updatePost(payload: UpdatePostPayload): Promise<PostWithModerationResult> {
   const { id, data } = payload;
-  const response = await apiRequest<MutationRawResponse>({
+  const response = await apiRequest<unknown>({
     url: `/posts/${id}`,
     method: 'PATCH',
     data: buildPostFormData({
@@ -121,7 +110,14 @@ export async function updatePost(payload: UpdatePostPayload): Promise<PostWithMo
       imageUrls: data.imageUrls,
     }),
   });
-  return normalizeMutationResponse(response);
+  
+  const isWrapped = response !== null && typeof response === 'object' && 'data' in response;
+  if (isWrapped) {
+    return postWithModerationSchema.parse(response);
+  }
+  return {
+    data: postDetailSchema.parse(response),
+  };
 }
 
 export async function deletePost(id: string): Promise<DeletePostResult> {
@@ -141,12 +137,12 @@ export async function deletePostPermanently(id: string): Promise<DeletePostResul
 }
 
 export async function deletePostImage(payload: { id: string; imageUrl: string }): Promise<Post> {
-  const data = await apiRequest<RawPost>({
+  const data = await apiRequest<unknown>({
     url: `/posts/${payload.id}/images`,
     method: 'DELETE',
     data: { imageUrl: payload.imageUrl } as DeleteImageRequest,
   });
-  return normalizePost(data);
+  return postDetailSchema.parse(data);
 }
 
 export async function getTrendingBooks(params?: { days?: number; limit?: number }): Promise<TrendingBook[]> {

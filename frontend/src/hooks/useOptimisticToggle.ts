@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-interface UseOptimisticToggleOptions {
+export interface UseOptimisticToggleOptions {
   initialCount: number;
   initialState: boolean;
   onToggle: () => Promise<unknown>;

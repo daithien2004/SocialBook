@@ -1,7 +1,10 @@
 import type { NextConfig } from 'next';
 import path from 'path';
+import './src/env';
 
 let nextConfig: NextConfig = {
+  output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname, '..'),
   turbopack: {
     root: path.join(__dirname, '..'),
   },

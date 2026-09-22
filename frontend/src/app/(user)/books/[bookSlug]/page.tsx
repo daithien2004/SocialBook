@@ -1,9 +1,9 @@
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import type { Metadata } from 'next';
 import BookDetailClient from '@/features/books/components/BookDetailClient';
+import { fetchBookBySlugServer } from '@/features/books/api/server-data';
 import { bookKeys } from '@/lib/query-keys';
 import { getQueryClient } from '@/lib/query-server';
-import { fetchBookBySlugServer } from '@/lib/server-data';
 import { withTimeout } from '@/lib/server-prefetch';
 
 interface BookDetailProps {

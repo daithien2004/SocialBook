@@ -11,9 +11,11 @@ import { Heart, Info, Loader2, MessageCircle, Pencil, Trash2, Star } from 'lucid
 import { useAppAuth } from '@/features/auth/hooks';
 import { libraryQueries } from '@/features/library/api/libraryApi';
 import type { Review } from '@/features/reviews/types/review.interface';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: string }) => {
-    const { isAuthenticated, user } = useAppAuth();
+    const { isAuthenticated, ability } = useAppAuth();
     const { data: libraryInfo } = useQuery({
         ...libraryQueries.bookInfo(bookId),
         enabled: isAuthenticated,
@@ -197,7 +199,7 @@ export const ReviewSection = ({ bookId, bookSlug }: { bookId: string; bookSlug: 
                                                 <span>{review.likesCount || 0}</span>
                                             </button>
 
-                                            {user?.id === review.userId && (
+                                            {ability?.can(Action.Update, subject(Subject.Review, { userId: review.userId })) && (
                                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => handleEdit(review)}

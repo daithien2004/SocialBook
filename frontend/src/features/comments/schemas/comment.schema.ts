@@ -28,16 +28,6 @@ export const commentsTargetResponseSchema = z.object({
 });
 export type CommentsTargetResponse = z.infer<typeof commentsTargetResponseSchema>;
 
-export function normalizeCommentsTargetResponse(
-  response: CommentsTargetResponse,
-): GetCommentsResponse {
-  return {
-    comments: response.comments,
-    nextCursor: response.meta.nextCursor,
-    hasMore: response.meta.hasMore,
-  };
-}
-
 export interface GetCommentsResponse {
   comments: CommentItem[];
   nextCursor: string | null;

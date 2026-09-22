@@ -13,8 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { readingRoomsApi } from '@/features/reading-rooms/api/readingRoomsApi';
 import { useModalStore } from '@/store/useModalStore';
+import { queryClient } from '@/lib/query-client';
+import { readingRoomsKeys } from '@/lib/query-keys';
 import { RoomResponse } from '@/features/reading-rooms/api/readingRoomsApi';
 import { PresenceData } from '@/store/useReadingRoomStore';
 
@@ -168,7 +169,8 @@ export function MobileHeader({
                     onConfirm: () => {
                       endRoom();
                       setTimeout(() => {
-                        readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory']);
+                        void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myActive() });
+                        void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myHistory() });
                         router.refresh();
                       }, 300);
                     }
@@ -183,7 +185,7 @@ export function MobileHeader({
                     variant: "destructive",
                     onConfirm: () => {
                       deleteRoom();
-                      readingRoomsApi.util.invalidateTags(['MyRooms']);
+                      void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myActive() });
                       router.push('/reading-rooms');
                     }
                   })}>

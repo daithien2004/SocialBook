@@ -1,6 +1,4 @@
-import { queryClient } from '@/lib/query-client';
 import { apiRequest } from '@/lib/nestjs-client-api';
-import { readingRoomsKeys } from '@/lib/query-keys';
 
 export interface RoomResponse {
   roomId: string;
@@ -73,31 +71,3 @@ export async function reactivateRoom(code: string): Promise<RoomResponse> {
     method: 'PATCH',
   });
 }
-
-export const readingRoomsApi = {
-  util: {
-    invalidateTags: (
-      tags: Array<string | { type: string; id?: string }>,
-    ) => {
-      tags.forEach((tag) => {
-        const type = typeof tag === 'string' ? tag : tag.type;
-        const id = typeof tag === 'string' ? undefined : tag.id;
-        if (type === 'MyRooms') {
-          queryClient.invalidateQueries({
-            queryKey: readingRoomsKeys.myActive(),
-          });
-        } else if (type === 'MyHistory') {
-          queryClient.invalidateQueries({
-            queryKey: readingRoomsKeys.myHistory(),
-          });
-        } else if (type === 'Room' && id) {
-          queryClient.invalidateQueries({
-            queryKey: readingRoomsKeys.room(id),
-          });
-        } else {
-          queryClient.invalidateQueries({ queryKey: readingRoomsKeys.all });
-        }
-      });
-    },
-  },
-};

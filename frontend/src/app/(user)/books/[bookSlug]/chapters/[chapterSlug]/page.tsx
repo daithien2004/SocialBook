@@ -2,9 +2,9 @@ import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import type { Metadata } from 'next';
 import ChapterViewClient from '@/features/chapters/components/ChapterViewClient';
+import { fetchChapterDetailServer } from '@/features/chapters/api/server-data';
 import { chapterKeys } from '@/lib/query-keys';
 import { getQueryClient } from '@/lib/query-server';
-import { fetchChapterDetailServer } from '@/lib/server-data';
 import { withTimeout } from '@/lib/server-prefetch';
 
 interface ChapterPageProps {

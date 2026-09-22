@@ -1,11 +1,15 @@
 import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
+import { TokenService } from '../../services/token.service';
+import { TokenRotationPort } from '@/application/ports/token-rotation.port';
 import { RefreshTokenCommand } from './refresh-token.command';
+
+// Tokens mới được giữ lâu hơn lock để các request ăn kè kịp đọc.
+const FRESH_TOKENS_TTL_SECONDS = 10;
 
 @Injectable()
 export class RefreshTokenUseCase {
@@ -14,33 +18,55 @@ export class RefreshTokenUseCase {
     private readonly rolesRepository: IRoleRepository,
     private readonly tokenService: TokenService,
     private readonly passwordHasher: IPasswordHasher,
+    @Inject(TokenRotationPort)
+    private readonly rotationPort: TokenRotationPort,
   ) {}
 
   async execute(command: RefreshTokenCommand) {
     const { userId, refreshToken } = command;
-    const id = UserId.create(userId);
-    const user = await this.userRepository.findById(id);
 
-    if (!user || !user.hashedRt) {
-      throw new UnauthorizedDomainException('Từ chối truy cập');
-    }
-    const rtMatches = await this.passwordHasher.compare(
-      refreshToken,
-      user.hashedRt,
-    );
-    if (!rtMatches) {
+    // Chỉ 1 request xoay vòng; các request song song ăn kè kết quả từ cache.
+    // Kẻ thua KHÔNG so sánh lại hash (hash cũ đã bị winner ghi đè) — chỉ đọc cache.
+    const hasLock = await this.rotationPort.tryAcquireLock(userId);
+    if (!hasLock) {
+      const fresh = await this.rotationPort.readFreshTokens(userId);
+      if (fresh) return fresh;
       throw new UnauthorizedDomainException('Từ chối truy cập');
     }
 
-    let roleName = 'user';
-    if (user.roleId) {
-      const role = await this.rolesRepository.findById(user.roleId);
-      if (role) roleName = role.name;
+    try {
+      const id = UserId.create(userId);
+      const user = await this.userRepository.findById(id);
+
+      if (!user || !user.hashedRt) {
+        throw new UnauthorizedDomainException('Từ chối truy cập');
+      }
+      const rtMatches = await this.passwordHasher.compare(
+        refreshToken,
+        user.hashedRt,
+      );
+      if (!rtMatches) {
+        throw new UnauthorizedDomainException('Từ chối truy cập');
+      }
+
+      let roleName = 'user';
+      if (user.roleId) {
+        const role = await this.rolesRepository.findById(user.roleId);
+        if (role) roleName = role.name;
+      }
+      const tokens = await this.tokenService.signTokens(
+        user.id.toString(),
+        user.email.value,
+        roleName,
+      );
+      await this.rotationPort.writeFreshTokens(
+        userId,
+        tokens,
+        FRESH_TOKENS_TTL_SECONDS,
+      );
+      return tokens;
+    } finally {
+      await this.rotationPort.releaseLock(userId);
     }
-    return this.tokenService.signTokens(
-      user.id.toString(),
-      user.email.value,
-      roleName,
-    );
   }
 }

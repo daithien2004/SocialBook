@@ -5,6 +5,8 @@ import { useAppAuth } from '@/features/auth/hooks';
 import { cn } from '@/lib/utils';
 import { ChevronUp, QuoteIcon, ArrowRightCircle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 import { useRouter } from 'next/navigation';
 import { useDeleteRoomQuote } from '@/features/reading-room-interactions/api/roomInteractionsApi';
 import { useModalStore } from '@/store/useModalStore';
@@ -19,7 +21,7 @@ interface QuoteBoardProps {
 export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
   const quotes = useReadingRoomStore((s) => s.quotes);
   const room = useReadingRoomStore((s) => s.room);
-  const { user } = useAppAuth();
+  const { user, ability } = useAppAuth();
   const { voteQuote, changeChapter } = useReadingRoomSocket();
   const router = useRouter();
   const deleteRoomQuote = useDeleteRoomQuote();
@@ -136,7 +138,7 @@ export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
                     <ArrowRightCircle className="w-4 h-4" />
                   </button>
 
-                  {(room?.hostId === user?.id || quote.userId === user?.id) && (
+                  {(room?.hostId === user?.id || ability?.can(Action.Delete, subject(Subject.RoomQuote, { userId: quote.userId }))) && (
                     <button
                       onClick={() => handleDeleteQuote(quote.id)}
                       className="flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 p-1"

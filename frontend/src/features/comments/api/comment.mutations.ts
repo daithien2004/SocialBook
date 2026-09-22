@@ -44,40 +44,40 @@ export function useCreateComment() {
 
       if (variables.targetType === 'post' && !variables.parentId) {
         queryClient.setQueriesData<
-          { data: Array<{ id: string; totalComments?: number }> }
+          { data: Array<{ id: string; commentsCount?: number }> }
         >({ queryKey: postKeys.lists() }, (old) => {
           if (!old?.data) return old;
           return {
             ...old,
             data: old.data.map((p) =>
               p.id === variables.targetId
-                ? { ...p, totalComments: (p.totalComments || 0) + 1 }
+                ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
                 : p,
             ),
           };
         });
 
         queryClient.setQueriesData<
-          { data: Array<{ id: string; totalComments?: number }> }
+          { data: Array<{ id: string; commentsCount?: number }> }
         >({ queryKey: postKeys.byUserLists() }, (old) => {
           if (!old?.data) return old;
           return {
             ...old,
             data: old.data.map((p) =>
               p.id === variables.targetId
-                ? { ...p, totalComments: (p.totalComments || 0) + 1 }
+                ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
                 : p,
             ),
           };
         });
 
         queryClient.setQueriesData<
-          { id: string; totalComments?: number } | null
+          { id: string; commentsCount?: number } | null
         >({ queryKey: postKeys.details() }, (old) => {
           if (!old || old.id !== variables.targetId) return old;
           return {
             ...old,
-            totalComments: (old.totalComments || 0) + 1,
+            commentsCount: (old.commentsCount || 0) + 1,
           };
         });
       }

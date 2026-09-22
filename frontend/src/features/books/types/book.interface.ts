@@ -21,8 +21,6 @@ export {
   type Book,
   bookAdminSchema,
   type BookForAdmin,
-  paginationMetaSchema,
-  type PaginationMetaData,
   bookSummaryPageSchema,
   type BookSummaryPage,
   bookAdminPageSchema,

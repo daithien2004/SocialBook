@@ -1,3 +1,4 @@
+import { HeaderClient } from '@/features/core/components/header';
 import BookDetailClient from '@/features/books/components/BookDetailClient';
 
 interface BookDetailProps {
@@ -9,5 +10,10 @@ interface BookDetailProps {
 export default async function BookDetail({ params }: BookDetailProps) {
     const { bookSlug } = await params;
 
-    return <BookDetailClient bookSlug={bookSlug} />;
+    return (
+        <>
+            <HeaderClient />
+            <BookDetailClient bookSlug={bookSlug} />
+        </>
+    );
 }

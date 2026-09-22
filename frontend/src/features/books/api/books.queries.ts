@@ -29,7 +29,7 @@ export const bookQueries = {
   list: (params?: GetBooksParams) =>
     queryOptions({
       queryKey: bookKeys.list(params),
-      queryFn: () => getBooks(params),
+      queryFn: ({ signal }) => getBooks(params, signal),
       placeholderData: keepPreviousData,
       staleTime: STALE_TIME.SEMI_STATIC,
       gcTime: GC_TIME.SEMI_STATIC,
@@ -39,8 +39,8 @@ export const bookQueries = {
     const limit = params?.limit ?? 12;
     return {
       queryKey: bookKeys.list(params),
-      queryFn: ({ pageParam = 1 }: { pageParam?: number }): Promise<BookSummaryPage> =>
-        getBooks({ ...params, page: pageParam, limit }),
+      queryFn: ({ pageParam = 1, signal }: { pageParam?: number; signal?: AbortSignal }): Promise<BookSummaryPage> =>
+        getBooks({ ...params, page: pageParam, limit }, signal),
       initialPageParam: 1,
       getNextPageParam: (lastPage: BookSummaryPage) =>
         lastPage.meta.current < lastPage.meta.totalPages

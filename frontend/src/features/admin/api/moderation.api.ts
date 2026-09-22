@@ -1,29 +1,34 @@
 import { apiRequest } from '@/lib/nestjs-client-api';
-import { normalizeArrayResponse } from '@/lib/api-response';
-import type { ArrayResponse, PaginatedApiResult } from '@/lib/api-response';
+import { z } from 'zod';
+import { paginationMetaSchema } from '@/lib/pagination.schema';
 
-export interface FlaggedPost {
-  id: string;
-  user: {
-    id: string;
-    username: string;
-    image?: string;
-    violationCount?: number;
-  };
-  book: {
-    id: string;
-    title: string;
-  };
-  content: string;
-  imageUrls: string[];
-  isFlagged: boolean;
-  moderationReason?: string;
-  moderationStatus?: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-  updatedAt: string;
-}
+export const flaggedPostSchema = z.object({
+  id: z.string(),
+  user: z.object({
+    id: z.string(),
+    username: z.string(),
+    image: z.string().optional(),
+    violationCount: z.number().optional(),
+  }),
+  book: z.object({
+    id: z.string(),
+    title: z.string(),
+  }),
+  content: z.string(),
+  imageUrls: z.array(z.string()),
+  isFlagged: z.boolean(),
+  moderationReason: z.string().optional(),
+  moderationStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type FlaggedPost = z.infer<typeof flaggedPostSchema>;
 
-export type FlaggedPostsResponse = PaginatedApiResult<FlaggedPost>;
+export const flaggedPostsPageSchema = z.object({
+  data: z.array(flaggedPostSchema),
+  meta: paginationMetaSchema,
+});
+export type FlaggedPostsResponse = z.infer<typeof flaggedPostsPageSchema>;
 
 export interface GetFlaggedPostsParams {
   page?: number;
@@ -52,12 +57,12 @@ export async function getFlaggedPosts(
     endDate: params?.endDate,
     sortBy: params?.sortBy,
   };
-  const response = await apiRequest<ArrayResponse<FlaggedPost>>({
+  const response = await apiRequest<unknown>({
     url: '/posts/admin/flagged',
     method: 'GET',
     params: queryParams,
   });
-  return normalizeArrayResponse<FlaggedPost>(response);
+  return flaggedPostsPageSchema.parse(response);
 }
 
 export async function getModerationStats(): Promise<ModerationStats> {

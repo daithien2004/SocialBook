@@ -1,6 +1,5 @@
-import type { Config } from 'jest';
-
-const config: Config = {
+/** @type {import('jest').Config} */
+const config = {
     // ==============================================================
     // CẤU HÌNH CHUNG (áp dụng cho tất cả projects)
     // ==============================================================
@@ -8,7 +7,7 @@ const config: Config = {
     // Các đuôi file mà Jest sẽ nhận diện
     moduleFileExtensions: ['js', 'json', 'ts'],
 
-    // Thư mục gốc = thư mục chứa file jest.config.ts (backend/)
+    // Thư mục gốc = thư mục chứa file jest.config.cjs (backend/)
     rootDir: '.',
 
     // Môi trường chạy test: Node.js (không phải browser/jsdom)
@@ -20,8 +19,6 @@ const config: Config = {
     },
 
     // Map path alias "@/*" → "src/*" (giống tsconfig.json paths)
-    // Đây chính là phần bị THIẾU trong cấu hình cũ, gây lỗi
-    // "Cannot find module '@/common/guards/jwt-auth.guard'"
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
     },
@@ -92,4 +89,4 @@ const config: Config = {
     coverageDirectory: './coverage',
 };
 
-export default config;
+module.exports = config;

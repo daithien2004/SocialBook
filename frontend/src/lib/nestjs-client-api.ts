@@ -1,18 +1,25 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import { getSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { getAccessToken, setAccessToken } from './token-store';
+import { getSessionSingleton } from './session';
 import { toast } from 'sonner';
 import { ErrorResponseDto } from '../types/response';
 
 const clientApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_NEST_API_URL,
-  withCredentials: true,
   timeout: 20_000,
 });
 
-// Mutex: đảm bảo chỉ 1 lần refresh token / initial fetch token chạy tại 1 thời điểm.
-let refreshingPromise: Promise<string | null> | null = null;
-let initTokenPromise: Promise<string | null> | null = null;
+// Lấy accessToken từ session qua single-flight + Web Locks (xem lib/session.ts).
+// Chỉ 1 lần fetch session thật sự chạy; tất cả caller chia sẻ dir=1 promise.
+async function getAccessTokenFromSession(): Promise<string | null> {
+  const session = await getSessionSingleton();
+  if (session?.accessToken) {
+    setAccessToken(session.accessToken);
+    return session.accessToken;
+  }
+  return null;
+}
 
 clientApi.interceptors.request.use(
   async (config) => {
@@ -22,20 +29,7 @@ clientApi.interceptors.request.use(
 
     let accessToken = getAccessToken();
     if (!accessToken) {
-      if (!initTokenPromise) {
-        initTokenPromise = getSession()
-          .then((session) => {
-            if (session?.accessToken) {
-              setAccessToken(session.accessToken);
-              return session.accessToken;
-            }
-            return null;
-          })
-          .finally(() => {
-            initTokenPromise = null;
-          });
-      }
-      accessToken = await initTokenPromise;
+      accessToken = await getAccessTokenFromSession();
     }
 
     if (accessToken && !config.headers.Authorization) {
@@ -60,21 +54,9 @@ clientApi.interceptors.response.use(
       const hadToken = !!originalRequest.headers?.Authorization;
 
       if (hadToken) {
-        if (!refreshingPromise) {
-          refreshingPromise = getSession()
-            .then((s) => {
-              if (s?.accessToken) {
-                setAccessToken(s.accessToken);
-                return s.accessToken;
-              }
-              return null;
-            })
-            .finally(() => {
-              refreshingPromise = null;
-            });
-        }
-
-        const newToken = await refreshingPromise;
+        // Refresh qua getSessionSingleton(): nếu token vẫn hết hạn, cookie refresh
+        // được đánh dấu và session trả về null → thoát đăng nhập.
+        const newToken = await getAccessTokenFromSession();
 
         if (newToken) {
           if (!originalRequest.headers) {

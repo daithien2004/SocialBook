@@ -33,11 +33,13 @@ export async function getBookBySlug(bookSlug: string): Promise<BookDetail> {
 
 export async function getBooks(
   params?: GetBooksParams,
+  signal?: AbortSignal,
 ): Promise<BookSummaryPage> {
   const payload = await apiRequest<unknown>({
     url: NESTJS_BOOKS_ENDPOINTS.getBooks,
     method: 'GET',
     params,
+    signal,
   });
   return bookSummaryPageSchema.parse(payload);
 }

@@ -15,7 +15,7 @@ export function useAppAuth() {
     const isAuthenticated = status === 'authenticated' && !!user;
     const isGuest = !isAuthenticated;
     const ability = isAuthenticated && user
-      ? defineRulesFor(user.role)
+      ? defineRulesFor(user.role, user.id)
       : undefined;
     const isAdmin = !!ability && canAccess(ability, Action.Manage, Subject.All);
 
@@ -24,6 +24,7 @@ export function useAppAuth() {
       isAuthenticated,
       isGuest,
       isAdmin,
+      ability,
       isLoading: status === 'loading',
       accessToken: session?.accessToken,
       update,

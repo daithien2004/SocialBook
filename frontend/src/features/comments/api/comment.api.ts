@@ -1,6 +1,7 @@
 import { apiRequest } from '@/lib/nestjs-client-api';
 import {
-  normalizeCommentsTargetResponse,
+  createdCommentSchema,
+  commentsTargetResponseSchema,
   type CommentsTargetResponse,
   type CreateCommentRequest,
   type CreatedComment,
@@ -13,12 +14,18 @@ import {
 export async function getCommentsByTarget(
   request: GetCommentsRequest,
 ): Promise<GetCommentsResponse> {
-  const response = await apiRequest<CommentsTargetResponse>({
+  const response = await apiRequest<unknown>({
     url: '/comments/target',
     method: 'GET',
     params: request,
   });
-  return normalizeCommentsTargetResponse(response);
+
+  const parsed = commentsTargetResponseSchema.parse(response);
+  return {
+    comments: parsed.comments,
+    nextCursor: parsed.meta.nextCursor,
+    hasMore: parsed.meta.hasMore,
+  };
 }
 
 export async function createComment(request: CreateCommentRequest): Promise<CreatedComment> {

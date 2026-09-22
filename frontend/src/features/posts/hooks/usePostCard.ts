@@ -8,6 +8,8 @@ import { usePostActions } from '@/features/posts/hooks/usePostActions';
 import { Post } from '@/features/posts/types/post.interface';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useModalStore } from '@/store/useModalStore';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 interface UsePostCardOptions {
     post: Post;
@@ -15,20 +17,20 @@ interface UsePostCardOptions {
 
 export function usePostCard({ post }: UsePostCardOptions) {
     const { openEditPost, openSharePost, openPostComment, openConfirm } = useModalStore();
-    const { user, isAuthenticated } = useAppAuth();
+    const { user, isAuthenticated, ability } = useAppAuth();
     const router = useRouter();
 
     const { likeCount, isLiked, isDeleting, toggleLike, deletePost } = usePostActions({
         postId: post.id,
-        initialLikeCount: post.totalLikes ?? 0,
+        initialLikeCount: post.likesCount ?? 0,
         initialLikeStatus: post.likedByCurrentUser ?? false,
     });
 
     const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`;
     const shareTitle = post.content?.slice(0, 100) || 'Xem bài viết này';
     const shareMedia = post.imageUrls?.[0] || '/abstract-book-pattern.png';
-    const isOwner = post.user?.id === user?.id;
-    const displayedCommentCount = post.totalComments ?? 0;
+    const isOwner = ability?.can(Action.Update, subject(Subject.Post, { userId: post.user?.id || '' })) ?? false;
+    const displayedCommentCount = post.commentsCount ?? 0;
 
     const handleLike = useCallback(async () => {
         if (!isAuthenticated) {

@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
-import { signIn, getSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginFormValues } from '@/features/auth/types/auth.type';
 import { queryClient } from '@/lib/query-client';
+import { waitForSessionRole } from '@/lib/session';
 
 export interface UseLoginFlowResult {
     isLoading: boolean;
@@ -26,7 +27,7 @@ export function useLoginFlow(): UseLoginFlowResult & {
     const [showPassword, setShowPassword] = useState(false);
 
     const handleAuthRedirect = useCallback(async () => {
-        const sessionData = await getSession();
+        const sessionData = await waitForSessionRole();
         const userRole = sessionData?.user?.role;
         if (userRole === 'admin') {
             router.push('/admin');
@@ -48,7 +49,6 @@ export function useLoginFlow(): UseLoginFlowResult & {
 
             if (result?.ok) {
                 queryClient.clear();
-                await new Promise((resolve) => setTimeout(resolve, 100));
                 handleAuthRedirect();
             } else {
                 setServerError(result?.error || 'Invalid email or password.');

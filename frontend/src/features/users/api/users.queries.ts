@@ -13,7 +13,7 @@ export const userQueries = {
   adminList(query: string) {
     return {
       queryKey: userKeys.adminList(query),
-      queryFn: (): Promise<UserListResponse> => getUsersAdmin(query),
+      queryFn: ({ signal }: { signal?: AbortSignal }): Promise<UserListResponse> => getUsersAdmin(query, signal),
     };
   },
   overview(userId: string) {
@@ -33,7 +33,7 @@ export const userQueries = {
   search(params: SearchUsersParams) {
     return {
       queryKey: userKeys.search(params),
-      queryFn: (): Promise<SearchUsersResponse> => searchUsers(params),
+      queryFn: ({ signal }: { signal?: AbortSignal }): Promise<SearchUsersResponse> => searchUsers(params, signal),
     };
   },
 };

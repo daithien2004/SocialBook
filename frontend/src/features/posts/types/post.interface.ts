@@ -1,6 +1,5 @@
 export type {
   Post,
-  RawPost,
   PostAuthor,
   PostBook,
   CreatePostRequest,

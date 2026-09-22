@@ -4,7 +4,6 @@ export {
   getMyHistory,
   getRoom,
   reactivateRoom,
-  readingRoomsApi,
 } from '@/features/reading-rooms/api/reading-rooms.api';
 export { readingRoomQueries } from '@/features/reading-rooms/api/reading-rooms.queries';
 export {

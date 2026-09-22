@@ -18,7 +18,7 @@ async function refreshAccessToken(token: JWT) {
       throw new Error('No refreshed tokens found');
     }
 
-    const decodedAccessToken = jwtDecode<{ exp: number }>(
+    const decodedAccessToken = jwtDecode<{ exp: number; role?: string }>(
       refreshedTokens.accessToken,
     );
 
@@ -27,6 +27,9 @@ async function refreshAccessToken(token: JWT) {
       accessToken: refreshedTokens.accessToken,
       refreshToken: refreshedTokens.refreshToken ?? token.refreshToken,
       accessTokenExpires: decodedAccessToken.exp * 1000,
+      // Backend ký role mới nhất (truy vấn DB) vào claim — re-stamp để FE
+      // không dính role cũ sau khi refresh.
+      role: decodedAccessToken.role ?? token.role,
     };
   } catch {
     return {

@@ -43,9 +43,9 @@ export default function ModalPostComment({ postData, isOpenOverride, onCloseOver
     const isPostCommentOpen = isOpenOverride !== undefined ? isOpenOverride : storeData.isOpen;
     const postCommentData = postData ? { 
         post: postData, 
-        likeCount: postData.totalLikes, 
+        likeCount: postData.likesCount, 
         likeStatus: postData.likedByCurrentUser,
-        commentCount: postData.totalComments
+        commentCount: postData.commentsCount
     } : storeData.data;
     
     const router = useRouter();

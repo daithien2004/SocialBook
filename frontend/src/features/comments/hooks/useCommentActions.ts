@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { subject } from '@casl/ability';
+import { Action, Subject } from '@socialbook/shared';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
+import { useAppAuth } from '@/features/auth/hooks';
 import {
     useCreateComment,
     useDeleteComment,
@@ -14,7 +17,6 @@ export interface UseCommentActionsOptions {
     comment: CommentItem;
     targetId: string;
     targetType: string;
-    userId?: string;
     depth?: number;
     onReplyAdded?: () => void;
     onReplyRemoved?: () => void;
@@ -52,11 +54,11 @@ export function useCommentActions({
     comment,
     targetId,
     targetType,
-    userId,
     depth = 1,
     onReplyAdded,
     onReplyRemoved,
 }: UseCommentActionsOptions): UseCommentActionsResult {
+    const { ability } = useAppAuth();
     const [showReplies, setShowReplies] = useState(false);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
@@ -66,7 +68,7 @@ export function useCommentActions({
         comment.repliesCount ?? 0
     );
 
-    const isOwner = comment.user.id === userId;
+    const isOwner = ability?.can(Action.Update, subject(Subject.Comment, { userId: comment.user.id })) ?? false;
     const hasReplyCount = comment.repliesCount !== undefined;
 
     const updateComment = useUpdateComment();

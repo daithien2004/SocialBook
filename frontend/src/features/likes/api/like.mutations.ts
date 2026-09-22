@@ -20,7 +20,7 @@ export function useToggleLike() {
         { data: Array<{
           id: string;
           likedByCurrentUser?: boolean;
-          totalLikes?: number;
+          likesCount?: number;
         }> }
       >({ queryKey: postKeys.lists() }, (old) => {
         if (!old?.data) return old;
@@ -36,7 +36,7 @@ export function useToggleLike() {
         { data: Array<{
           id: string;
           likedByCurrentUser?: boolean;
-          totalLikes?: number;
+          likesCount?: number;
         }> }
       >({ queryKey: postKeys.byUserLists() }, (old) => {
         if (!old?.data) return old;
@@ -49,7 +49,7 @@ export function useToggleLike() {
       });
 
       queryClient.setQueriesData<
-        { id: string; likedByCurrentUser?: boolean; totalLikes?: number } | null
+        { id: string; likedByCurrentUser?: boolean; likesCount?: number } | null
       >({ queryKey: postKeys.details() }, (old) => {
         if (!old || old.id !== targetId) return old;
         return updateOptimisticLike(old);
@@ -74,12 +74,12 @@ export function useToggleLike() {
 function updateOptimisticLike(p: {
   id: string;
   likedByCurrentUser?: boolean;
-  totalLikes?: number;
+  likesCount?: number;
 }) {
   const wasLiked = p.likedByCurrentUser ?? false;
   return {
     ...p,
     likedByCurrentUser: !wasLiked,
-    totalLikes: Math.max(0, (p.totalLikes || 0) + (wasLiked ? -1 : 1)),
+    likesCount: Math.max(0, (p.likesCount || 0) + (wasLiked ? -1 : 1)),
   };
 }

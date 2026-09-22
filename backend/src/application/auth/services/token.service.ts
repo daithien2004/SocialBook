@@ -40,7 +40,7 @@ export class TokenService {
         secret: accessSecret,
         expiresIn: this.configService.get<string>(
           'env.ACCESS_TOKEN_EXPIRES_IN',
-          '1h',
+          '15m',
         ),
       }),
       this.jwtService.signAsync(payload, {

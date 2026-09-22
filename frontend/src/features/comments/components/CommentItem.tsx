@@ -1,6 +1,5 @@
 'use client';
 
-import { useAppAuth } from '@/features/auth/hooks';
 import {
     CornerDownRight,
     Heart,
@@ -46,8 +45,6 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
 }) {
     const router = useRouter();
     const { closePostComment } = useModalStore();
-    const { user } = useAppAuth();
-    const userId = user?.id;
 
     const {
         isOwner,
@@ -75,7 +72,6 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
         comment,
         targetId,
         targetType,
-        userId,
         depth,
         onReplyAdded,
         onReplyRemoved,

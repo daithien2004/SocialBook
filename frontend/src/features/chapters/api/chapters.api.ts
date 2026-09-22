@@ -29,36 +29,7 @@ export const CHAPTER_TAGS = {
 
 export type ChapterTagType = (typeof CHAPTER_TAGS)[keyof typeof CHAPTER_TAGS];
 
-const normalizeChaptersListResponse = (response: unknown): ChaptersListData => {
-  const objResponse = response as {
-    chapters?: Chapter[];
-    data?: Chapter[];
-    meta?: PaginationMeta;
-  };
 
-  if (objResponse?.chapters && Array.isArray(objResponse.chapters)) {
-    return {
-      chapters: objResponse.chapters,
-      total: objResponse.meta?.total ?? objResponse.chapters.length,
-    };
-  }
-
-  if (objResponse?.data && Array.isArray(objResponse.data)) {
-    return {
-      chapters: objResponse.data,
-      total: objResponse.meta?.total ?? objResponse.data.length,
-    };
-  }
-
-  if (Array.isArray(response)) {
-    return {
-      chapters: response as Chapter[],
-      total: response.length,
-    };
-  }
-
-  return { chapters: [], total: 0 };
-};
 
 export function getChapter(params: GetChapterParams): Promise<ChapterDetailData> {
   return apiRequest<ChapterDetailData>({
@@ -85,7 +56,7 @@ export function recordChapterView(
 const fetchChapters = async (
   params: GetChaptersParams,
 ): Promise<ChaptersListData> => {
-  const response = await apiRequest<unknown>({
+  const response = await apiRequest<{ data?: Chapter[]; meta?: PaginationMeta } | Chapter[] | { chapters?: Chapter[]; meta?: PaginationMeta }>({
     url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
     method: 'GET',
     params: {
@@ -93,7 +64,16 @@ const fetchChapters = async (
       limit: params.limit,
     },
   });
-  return normalizeChaptersListResponse(response);
+
+  if (Array.isArray(response)) {
+    return { chapters: response, total: response.length };
+  }
+
+  const chaptersData = 'data' in response ? response.data : ('chapters' in response ? response.chapters : []);
+  return {
+    chapters: chaptersData || [],
+    total: response.meta?.total ?? chaptersData?.length ?? 0,
+  };
 };
 
 export function getChapters(params: GetChaptersParams): Promise<ChaptersListData> {

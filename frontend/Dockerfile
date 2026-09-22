@@ -22,23 +22,15 @@ ARG NEXT_PUBLIC_SOCKET_URL
 ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 RUN npm run build
 
-FROM node:20-alpine
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PORT=3000
 
-COPY package.json ./package.json
-COPY package-lock.json ./package-lock.json
-COPY frontend/package.json ./frontend/package.json
-COPY shared/package.json ./shared/package.json
-RUN npm ci --omit=dev --ignore-scripts --workspace=frontend
+COPY --from=builder /app/frontend/.next/standalone ./
+COPY --from=builder /app/frontend/.next/static ./frontend/.next/static
+COPY --from=builder /app/frontend/public ./frontend/public
 
-COPY --from=builder /app/frontend/.next /app/frontend/.next
-COPY --from=builder /app/frontend/public /app/frontend/public
-COPY --from=builder /app/frontend/package.json /app/frontend/
-COPY --from=builder /app/frontend/next.config.ts /app/frontend/
-COPY --from=builder /app/shared /app/shared
-
-WORKDIR /app/frontend
 USER node
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "frontend/server.js"]

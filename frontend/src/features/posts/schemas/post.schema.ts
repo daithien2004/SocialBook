@@ -22,7 +22,7 @@ export const postBookSchema = z.object({
 });
 export type PostBook = z.infer<typeof postBookSchema>;
 
-export const rawPostSchema = z.object({
+export const postSummarySchema = z.object({
   id: z.string(),
   content: z.string(),
   imageUrls: z.array(z.string()),
@@ -37,54 +37,14 @@ export const rawPostSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-export type RawPost = z.infer<typeof rawPostSchema>;
+export type PostSummary = z.infer<typeof postSummarySchema>;
 
-export const postSchema = z.object({
-  id: z.string(),
-  content: z.string(),
-  imageUrls: z.array(z.string()),
-  isFlagged: z.boolean(),
-  moderationStatus: z.string().optional(),
-  moderationReason: z.string().optional(),
-  user: postAuthorSchema.optional(),
-  book: postBookSchema.optional(),
-  totalLikes: z.number().optional(),
-  totalComments: z.number().optional(),
-  likedByCurrentUser: z.boolean().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-export type Post = z.infer<typeof postSchema>;
-
-export function normalizePost(raw: RawPost): Post {
-  return {
-    id: raw.id,
-    content: raw.content,
-    imageUrls: raw.imageUrls,
-    isFlagged: raw.isFlagged,
-    moderationStatus: raw.moderationStatus,
-    moderationReason: raw.moderationReason,
-    user: raw.user,
-    book: raw.book,
-    totalLikes: raw.likesCount,
-    totalComments: raw.commentsCount,
-    likedByCurrentUser: raw.likedByCurrentUser,
-    createdAt: raw.createdAt,
-    updatedAt: raw.updatedAt,
-  };
-}
-
-export const rawPaginatedPostsSchema = z.object({
-  data: z.array(rawPostSchema),
-  meta: z.object({
-    nextCursor: z.string().nullable(),
-    hasMore: z.boolean(),
-  }),
-});
-export type RawPaginatedPosts = z.infer<typeof rawPaginatedPostsSchema>;
+export const postDetailSchema = postSummarySchema;
+export type PostDetail = z.infer<typeof postDetailSchema>;
+export type Post = PostDetail;
 
 export const paginatedPostsSchema = z.object({
-  data: z.array(postSchema),
+  data: z.array(postSummarySchema),
   meta: z.object({
     nextCursor: z.string().nullable(),
     hasMore: z.boolean(),
@@ -92,32 +52,12 @@ export const paginatedPostsSchema = z.object({
 });
 export type PaginatedPostsResponse = z.infer<typeof paginatedPostsSchema>;
 
-export function normalizePaginatedPosts(raw: RawPaginatedPosts): PaginatedPostsResponse {
-  return {
-    data: raw.data.map(normalizePost),
-    meta: {
-      nextCursor: raw.meta.nextCursor,
-      hasMore: raw.meta.hasMore,
-    },
-  };
-}
-
 export const postWithModerationSchema = z.object({
-  data: postSchema,
+  data: postDetailSchema,
   warning: z.string().optional(),
   message: z.string().optional(),
 });
 export type PostWithModerationResult = z.infer<typeof postWithModerationSchema>;
-
-export function normalizePostWithModeration(
-  raw: { data: RawPost; warning?: string; message?: string },
-): PostWithModerationResult {
-  return {
-    data: normalizePost(raw.data),
-    warning: raw.warning,
-    message: raw.message,
-  };
-}
 
 export const createPostRequestSchema = z.object({
   bookId: z.string(),

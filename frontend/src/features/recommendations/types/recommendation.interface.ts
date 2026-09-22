@@ -17,7 +17,7 @@ export interface BookRecommendation {
   book: Book;
 }
 
-export interface PaginationMeta {
+export interface RecommendationPaginationMeta {
   currentPage: number;
   limit: number;
   totalItems: number;
@@ -26,7 +26,7 @@ export interface PaginationMeta {
   hasPrevPage: boolean;
 }
 
-export interface RecommendationsResponse extends PaginationMeta {
+export interface RecommendationsResponse extends RecommendationPaginationMeta {
   recommendations: BookRecommendation[];
   analysis: RecommendationAnalysis;
 }

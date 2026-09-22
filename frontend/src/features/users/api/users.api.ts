@@ -30,10 +30,11 @@ interface SearchUsersRawPage {
   meta: { current: number; pageSize: number; total: number; totalPages: number };
 }
 
-export async function getUsersAdmin(query: string): Promise<UserListResponse> {
+export async function getUsersAdmin(query: string, signal?: AbortSignal): Promise<UserListResponse> {
   const response = await apiRequest<UserListResponse>({
     url: `${NESTJS_USERS_ENDPOINTS.getUsersAdmin}?${query}`,
     method: 'GET',
+    signal,
   });
   return userPageSchema.parse(response);
 }
@@ -97,10 +98,12 @@ export async function updateReadingPreferences(
 
 export async function searchUsers(
   params: SearchUsersParams,
+  signal?: AbortSignal,
 ): Promise<SearchUsersResponse> {
   const response = await apiRequest<SearchUsersRawPage>({
     url: '/users/search',
     method: 'GET',
+    signal,
     params: {
       username: params.keyword,
       page: params.current,

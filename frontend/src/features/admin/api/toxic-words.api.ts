@@ -1,17 +1,22 @@
 import { apiRequest } from '@/lib/nestjs-client-api';
-import { normalizeArrayResponse } from '@/lib/api-response';
-import type { ArrayResponse, PaginatedApiResult } from '@/lib/api-response';
+import { z } from 'zod';
+import { paginationMetaSchema } from '@/lib/pagination.schema';
 
-export interface ToxicWord {
-  id: string;
-  pattern: string;
-  group: string;
-  originalWord: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export const toxicWordSchema = z.object({
+  id: z.string(),
+  pattern: z.string(),
+  group: z.string(),
+  originalWord: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type ToxicWord = z.infer<typeof toxicWordSchema>;
 
-export type ToxicWordsResponse = PaginatedApiResult<ToxicWord>;
+export const toxicWordsPageSchema = z.object({
+  data: z.array(toxicWordSchema),
+  meta: paginationMetaSchema,
+});
+export type ToxicWordsResponse = z.infer<typeof toxicWordsPageSchema>;
 
 export interface AddToxicWordPayload {
   pattern: string;
@@ -32,12 +37,12 @@ export async function getToxicWords(
     limit: params?.limit ?? 10,
     search: params?.search,
   };
-  const response = await apiRequest<ArrayResponse<ToxicWord>>({
+  const response = await apiRequest<unknown>({
     url: '/admin/toxic-words',
     method: 'GET',
     params: queryParams,
   });
-  return normalizeArrayResponse<ToxicWord>(response);
+  return toxicWordsPageSchema.parse(response);
 }
 
 export async function addToxicWord(

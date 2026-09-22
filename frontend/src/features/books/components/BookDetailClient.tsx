@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { HeaderClient } from '@/features/core/components/header/HeaderClient';
 import { useModalStore } from '@/store/useModalStore';
 
 import { useBookDetail } from '@/features/books/hooks/useBookDetail';
@@ -81,8 +80,6 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
       </div>
 
       <div className="relative z-10">
-        <HeaderClient />
-
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
           <BookHero
             book={book}

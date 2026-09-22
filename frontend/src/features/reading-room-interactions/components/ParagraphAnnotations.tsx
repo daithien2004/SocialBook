@@ -4,6 +4,8 @@ import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useRoomAnnotations } from '../hooks/useRoomAnnotations';
 import { useAppAuth } from '@/features/auth/hooks';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageCircle, MessageSquare, Send, X } from 'lucide-react';
@@ -21,7 +23,7 @@ interface ParagraphAnnotationsProps {
 export const ParagraphAnnotations = memo(function ParagraphAnnotations({ roomId, chapterSlug, paragraphId, isOpen: controlledOpen, onToggle }: ParagraphAnnotationsProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const { user } = useAppAuth();
+  const { user, ability } = useAppAuth();
   const setIsOpen = (value: boolean) => {
     setInternalOpen(value);
     onToggle?.(value);
@@ -88,11 +90,12 @@ export const ParagraphAnnotations = memo(function ParagraphAnnotations({ roomId,
 
                 {comments.map((c) => {
                   const isMe = c.userId === user?.id;
+                  const canDelete = ability?.can(Action.Delete, subject(Subject.RoomComment, { userId: c.userId }));
                   return (
                     <div key={c.id} className={cn('w-full group', isMe && 'flex flex-col items-end')}>
                       <div className={cn('flex items-baseline gap-1.5 mb-1', isMe ? 'mr-1' : 'ml-1')}>
                         <span className={cn('font-bold text-[10px] uppercase tracking-wider', isMe ? 'text-foreground/60' : 'text-primary/80')}>{c.displayName || c.userId.slice(0, 6)}</span>
-                        {isMe && (
+                        {canDelete && (
                           <button
                             onClick={() => deleteComment(roomId, c.id, c.paragraphId)}
                             className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"

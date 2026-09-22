@@ -1,11 +1,102 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useReadingRoomStore } from '@/store/useReadingRoomStore';
-import { readingRoomsApi } from '@/features/reading-rooms/api/readingRoomsApi';
+import { queryClient } from '@/lib/query-client';
+import { readingRoomsKeys } from '@/lib/query-keys';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '@/context/SocketProvider';
+import { useSocketEvents } from '@/hooks/useSocketEvents';
+import type { PresenceData, RoomHighlight, ChatMessage } from '@/store/useReadingRoomStore';
+import type { RoomResponse } from '@/features/reading-rooms/api/readingRoomsApi';
+import type { RoomComment, ReactionType } from '@/features/reading-room-interactions/types/room-interaction.types';
 import { ReadingRoomServerEvent, ReadingRoomClientEvent } from '../types/reading-room.events';
+
+interface RoomSnapshotPayload {
+  room: RoomResponse;
+  members: { userId: string; role: string }[];
+  presences: PresenceData[];
+}
+
+interface MemberJoinedPayload {
+  userId: string;
+  displayName: string;
+}
+
+interface MemberLeftPayload {
+  userId: string;
+}
+
+interface HostChangedPayload {
+  newHostId: string;
+}
+
+interface ChapterChangedPayload {
+  chapterSlug: string;
+  byUserId: string;
+}
+
+interface ModeChangedPayload {
+  mode: 'sync' | 'free';
+  changedBy: string;
+}
+
+interface RoomEndedPayload {
+  endedBy: string;
+}
+
+interface RoomReactivatedPayload {
+  reactivatedBy: string;
+}
+
+interface UpdateHighlightInsightPayload {
+  highlightId: string;
+  insight: string;
+}
+
+interface CommentDeletedPayload {
+  commentId: string;
+  paragraphId: string;
+}
+
+interface ReactionAddedPayload {
+  paragraphId: string;
+  reactionType: ReactionType;
+  userId: string;
+  displayName?: string;
+  chapterSlug?: string;
+  paragraphPreview?: string;
+}
+
+interface ReactionRemovedPayload {
+  paragraphId: string;
+  reactionType: ReactionType;
+  userId: string;
+}
+
+interface QuoteAddedPayload {
+  id: string;
+  content: string;
+  chapterSlug: string;
+  paragraphId: string;
+  userId: string;
+  displayName: string;
+  voteCount: number;
+  createdAt: string;
+}
+
+interface QuoteVotedPayload {
+  quoteId: string;
+  voteCount: number;
+  userId: string;
+  voteType: 'up' | 'down' | null;
+}
+
+const invalidateRoomCache = (code: string): void => {
+  void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myActive() });
+  void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myHistory() });
+  void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.room(code) });
+};
 
 export const useReadingRoomSocket = (roomId?: string) => {
   const { user } = useAppAuth();
@@ -13,6 +104,27 @@ export const useReadingRoomSocket = (roomId?: string) => {
   const { getSocket, connectSocket } = useSocket();
   const socket = getSocket('/reading-rooms');
 
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const roomIdRef = useRef(roomId);
+  useEffect(() => {
+    roomIdRef.current = roomId;
+  }, [roomId]);
+
+  const emitJoinRoom = useCallback(() => {
+    const currentUser = userRef.current;
+    const currentRoomCode = roomIdRef.current;
+    if (!currentRoomCode || !currentUser) return;
+    if (useReadingRoomStore.getState().room?.status === 'ended') return;
+    socket.emit(ReadingRoomClientEvent.JOIN_ROOM, {
+      roomCode: currentRoomCode,
+      displayName: currentUser.name || currentUser.username || currentUser.email?.split('@')[0] || 'Người dùng',
+      avatarUrl: currentUser.image || '',
+    });
+  }, [socket]);
 
   const addHighlight = useCallback((data: { chapterSlug: string; paragraphId: string; content: string }) => {
     const store = useReadingRoomStore.getState();
@@ -120,151 +232,120 @@ export const useReadingRoomSocket = (roomId?: string) => {
     }
   }, [socket]);
 
-  useEffect(() => {
-    if (!roomId || !socket || !user) return;
-
-    connectSocket('/reading-rooms');
-
-    socket.off('connect');
-    socket.off(ReadingRoomServerEvent.ROOM_SNAPSHOT);
-    socket.off(ReadingRoomServerEvent.MEMBER_JOINED);
-    socket.off(ReadingRoomServerEvent.MEMBER_LEFT);
-    socket.off(ReadingRoomServerEvent.PRESENCE_UPDATE);
-    socket.off(ReadingRoomServerEvent.HOST_CHANGED);
-    socket.off(ReadingRoomServerEvent.CHAPTER_CHANGED);
-    socket.off(ReadingRoomServerEvent.MODE_CHANGED);
-    socket.off(ReadingRoomServerEvent.ROOM_ENDED);
-    socket.off(ReadingRoomServerEvent.ROOM_REACTIVATED);
-    socket.off(ReadingRoomServerEvent.ROOM_DELETED);
-    socket.off(ReadingRoomServerEvent.NEW_HIGHLIGHT);
-    socket.off(ReadingRoomServerEvent.HIGHLIGHT_REMOVED);
-    socket.off(ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT);
-    socket.off(ReadingRoomServerEvent.NEW_CHAT_MESSAGE);
-    socket.off(ReadingRoomServerEvent.ERROR);
-    socket.off(ReadingRoomServerEvent.COMMENT_ADDED);
-    socket.off(ReadingRoomServerEvent.COMMENT_DELETED);
-    socket.off(ReadingRoomServerEvent.REACTION_ADDED);
-    socket.off(ReadingRoomServerEvent.REACTION_REMOVED);
-    socket.off(ReadingRoomServerEvent.QUOTE_ADDED);
-    socket.off(ReadingRoomServerEvent.QUOTE_VOTED);
-
-    socket.on('connect', () => {
-      if (useReadingRoomStore.getState().room?.status === 'ended') return;
-      socket.emit(ReadingRoomClientEvent.JOIN_ROOM, {
-        roomCode: roomId,
-        displayName: user.name || user.username || user.email?.split('@')[0] || 'Người dùng',
-        avatarUrl: user.image || '',
-      });
-    });
-
-    socket.on(ReadingRoomServerEvent.ROOM_SNAPSHOT, (data) => {
+  useSocketEvents(socket, {
+    connect: () => {
+      emitJoinRoom();
+    },
+    [ReadingRoomServerEvent.ROOM_SNAPSHOT]: (payload: unknown) => {
+      const data = payload as RoomSnapshotPayload;
       const store = useReadingRoomStore.getState();
       store.setRoom(data.room);
       store.setMembers(data.members);
       store.updatePresences(data.presences);
-    });
-
-    socket.on(ReadingRoomServerEvent.MEMBER_JOINED, (data) => {
-      if (data.userId === user.id) return;
+    },
+    [ReadingRoomServerEvent.MEMBER_JOINED]: (payload: unknown) => {
+      const data = payload as MemberJoinedPayload;
+      if (data.userId === userRef.current?.id) return;
       useReadingRoomStore.getState().addMember(data.userId);
       toast.success(`${data.displayName} đã tham gia phòng`);
-    });
-
-    socket.on(ReadingRoomServerEvent.MEMBER_LEFT, (data) => {
+    },
+    [ReadingRoomServerEvent.MEMBER_LEFT]: (payload: unknown) => {
+      const data = payload as MemberLeftPayload;
       useReadingRoomStore.getState().removeMember(data.userId);
-    });
-
-    socket.on(ReadingRoomServerEvent.PRESENCE_UPDATE, (presences) => {
+    },
+    [ReadingRoomServerEvent.PRESENCE_UPDATE]: (payload: unknown) => {
+      const presences = payload as PresenceData[];
       useReadingRoomStore.getState().updatePresences(presences);
-    });
-
-    socket.on(ReadingRoomServerEvent.HOST_CHANGED, (data) => {
+    },
+    [ReadingRoomServerEvent.HOST_CHANGED]: (payload: unknown) => {
+      const data = payload as HostChangedPayload;
       const store = useReadingRoomStore.getState();
       if (store.room) {
         store.setRoom({ ...store.room, hostId: data.newHostId });
       }
-      if (data.newHostId === user.id) {
+      if (data.newHostId === userRef.current?.id) {
         toast.success('Bạn đã trở thành trưởng phòng mới!');
       }
-    });
-
-    socket.on(ReadingRoomServerEvent.CHAPTER_CHANGED, (data) => {
+    },
+    [ReadingRoomServerEvent.CHAPTER_CHANGED]: (payload: unknown) => {
+      const data = payload as ChapterChangedPayload;
       useReadingRoomStore.getState().updateChapter(data.chapterSlug);
-      if (data.byUserId !== user.id) {
+      if (data.byUserId !== userRef.current?.id) {
         toast.info('Trưởng phòng đã chuyển chương');
       }
-    });
-
-    socket.on(ReadingRoomServerEvent.MODE_CHANGED, (data) => {
+    },
+    [ReadingRoomServerEvent.MODE_CHANGED]: (payload: unknown) => {
+      const data = payload as ModeChangedPayload;
       const store = useReadingRoomStore.getState();
       if (store.room) {
         store.setRoom({ ...store.room, mode: data.mode });
-        if (data.changedBy !== user.id) {
+        if (data.changedBy !== userRef.current?.id) {
           toast.info(`Chế độ phòng đã đổi thành: ${data.mode === 'sync' ? 'Đồng bộ' : 'Tự do'}`);
         }
       }
-    });
-
-    socket.on(ReadingRoomServerEvent.ROOM_ENDED, (data) => {
-      if (data.endedBy !== user.id) {
+    },
+    [ReadingRoomServerEvent.ROOM_ENDED]: (payload: unknown) => {
+      const data = payload as RoomEndedPayload;
+      if (data.endedBy !== userRef.current?.id) {
         toast.info('Phòng đọc đã kết thúc');
       }
       useReadingRoomStore.getState().clearRoom();
-      readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]);
+      const currentRoomCode = roomIdRef.current;
+      if (currentRoomCode) invalidateRoomCache(currentRoomCode);
       router.refresh();
-    });
-
-    socket.on(ReadingRoomServerEvent.ROOM_REACTIVATED, (data) => {
-      if (data.reactivatedBy !== user.id) {
+    },
+    [ReadingRoomServerEvent.ROOM_REACTIVATED]: (payload: unknown) => {
+      const data = payload as RoomReactivatedPayload;
+      if (data.reactivatedBy !== userRef.current?.id) {
         toast.info('Phòng đọc đã được mở lại');
       }
       const store = useReadingRoomStore.getState();
       if (store.room) {
         store.setRoom({ ...store.room, status: 'active' });
       }
-      readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]);
+      const currentRoomCode = roomIdRef.current;
+      if (currentRoomCode) invalidateRoomCache(currentRoomCode);
       router.refresh();
-    });
-
-    socket.on(ReadingRoomServerEvent.ROOM_DELETED, () => {
+    },
+    [ReadingRoomServerEvent.ROOM_DELETED]: () => {
       toast.error('Phòng đọc đã bị xoá');
       useReadingRoomStore.getState().clearRoom();
-      readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]);
+      const currentRoomCode = roomIdRef.current;
+      if (currentRoomCode) invalidateRoomCache(currentRoomCode);
       router.refresh();
-    });
-
-    socket.on(ReadingRoomServerEvent.ERROR, (error) => {
+    },
+    [ReadingRoomServerEvent.ERROR]: (payload: unknown) => {
+      const error = payload as { message?: string };
       if (error.message?.includes('ended') && useReadingRoomStore.getState().room?.status === 'ended') return;
       toast.error(error.message || 'Lỗi kết nối phòng đọc');
-    });
-
-    socket.on(ReadingRoomServerEvent.NEW_HIGHLIGHT, (data) => {
+    },
+    [ReadingRoomServerEvent.NEW_HIGHLIGHT]: (payload: unknown) => {
+      const data = payload as RoomHighlight;
       useReadingRoomStore.getState().addHighlight(data);
-    });
-
-    socket.on(ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT, (data) => {
+    },
+    [ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT]: (payload: unknown) => {
+      const data = payload as UpdateHighlightInsightPayload;
       useReadingRoomStore.getState().updateHighlightInsight(data.highlightId, data.insight);
-    });
-
-    socket.on(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, (data) => {
+    },
+    [ReadingRoomServerEvent.HIGHLIGHT_REMOVED]: (payload: unknown) => {
+      const data = payload as { highlightId: string };
       useReadingRoomStore.getState().removeHighlight(data.highlightId);
-    });
-
-    socket.on(ReadingRoomServerEvent.NEW_CHAT_MESSAGE, (message) => {
+    },
+    [ReadingRoomServerEvent.NEW_CHAT_MESSAGE]: (payload: unknown) => {
+      const message = payload as ChatMessage;
       useReadingRoomStore.getState().addChatMessage(message);
-    });
-
-    socket.on(ReadingRoomServerEvent.COMMENT_ADDED, (data) => {
-      const store = useReadingRoomStore;
+    },
+    [ReadingRoomServerEvent.COMMENT_ADDED]: (payload: unknown) => {
+      const data = payload as RoomComment;
       const displayName = data.displayName || data.userId.slice(0, 6);
-      store.getState().addRoomComment({ ...data, displayName });
-    });
-
-    socket.on(ReadingRoomServerEvent.COMMENT_DELETED, (data) => {
+      useReadingRoomStore.getState().addRoomComment({ ...data, displayName });
+    },
+    [ReadingRoomServerEvent.COMMENT_DELETED]: (payload: unknown) => {
+      const data = payload as CommentDeletedPayload;
       useReadingRoomStore.getState().removeRoomComment(data.commentId, data.paragraphId);
-    });
-
-    socket.on(ReadingRoomServerEvent.REACTION_ADDED, (data) => {
+    },
+    [ReadingRoomServerEvent.REACTION_ADDED]: (payload: unknown) => {
+      const data = payload as ReactionAddedPayload;
       const store = useReadingRoomStore;
       store.getState().updateReaction(data.paragraphId, data.reactionType, data.userId, true);
       store.getState().addEmotionEvent({
@@ -277,15 +358,14 @@ export const useReadingRoomSocket = (roomId?: string) => {
         paragraphPreview: data.paragraphPreview,
         timestamp: Date.now(),
       });
-    });
-
-    socket.on(ReadingRoomServerEvent.REACTION_REMOVED, (data) => {
+    },
+    [ReadingRoomServerEvent.REACTION_REMOVED]: (payload: unknown) => {
+      const data = payload as ReactionRemovedPayload;
       useReadingRoomStore.getState().updateReaction(data.paragraphId, data.reactionType, data.userId, false);
-    });
-
-    socket.on(ReadingRoomServerEvent.QUOTE_ADDED, (data) => {
-      const store = useReadingRoomStore.getState();
-      store.addQuote({
+    },
+    [ReadingRoomServerEvent.QUOTE_ADDED]: (payload: unknown) => {
+      const data = payload as QuoteAddedPayload;
+      useReadingRoomStore.getState().addQuote({
         id: data.id,
         content: data.content,
         chapterSlug: data.chapterSlug,
@@ -296,60 +376,41 @@ export const useReadingRoomSocket = (roomId?: string) => {
         voteCount: data.voteCount,
         createdAt: data.createdAt,
       });
-    });
-
-    socket.on(ReadingRoomServerEvent.QUOTE_VOTED, (data) => {
+    },
+    [ReadingRoomServerEvent.QUOTE_VOTED]: (payload: unknown) => {
+      const data = payload as QuoteVotedPayload;
       useReadingRoomStore.getState().updateQuoteVote(
         data.quoteId,
         data.voteCount,
         data.userId,
         data.voteType,
       );
-    });
+    },
+  });
+
+  useEffect(() => {
+    if (!roomId || !socket || !user) return;
+
+    connectSocket('/reading-rooms');
 
     if (socket.connected) {
-      if (useReadingRoomStore.getState().room?.status === 'ended') return;
-      socket.emit(ReadingRoomClientEvent.JOIN_ROOM, {
-        roomCode: roomId,
-        displayName: user.name || user.username || user.email?.split('@')[0] || 'Người dùng',
-        avatarUrl: user.image || '',
-      });
+      emitJoinRoom();
     }
+  }, [roomId, socket, user, connectSocket, emitJoinRoom]);
 
+  useEffect(() => {
     return () => {
       if (socket.connected) {
         const store = useReadingRoomStore.getState();
-        const currentRoomId = store.room?.roomId || roomId;
+        const currentRoomId = store.room?.roomId || roomIdRef.current;
         if (currentRoomId) {
           socket.emit(ReadingRoomClientEvent.LEAVE_ROOM, { roomId: currentRoomId });
         }
         socket.disconnect();
       }
-      socket.off('connect');
-      socket.off(ReadingRoomServerEvent.ROOM_SNAPSHOT);
-      socket.off(ReadingRoomServerEvent.MEMBER_JOINED);
-      socket.off(ReadingRoomServerEvent.MEMBER_LEFT);
-      socket.off(ReadingRoomServerEvent.PRESENCE_UPDATE);
-      socket.off(ReadingRoomServerEvent.HOST_CHANGED);
-      socket.off(ReadingRoomServerEvent.CHAPTER_CHANGED);
-      socket.off(ReadingRoomServerEvent.MODE_CHANGED);
-      socket.off(ReadingRoomServerEvent.ROOM_ENDED);
-      socket.off(ReadingRoomServerEvent.ROOM_REACTIVATED);
-      socket.off(ReadingRoomServerEvent.ROOM_DELETED);
-      socket.off(ReadingRoomServerEvent.NEW_HIGHLIGHT);
-      socket.off(ReadingRoomServerEvent.HIGHLIGHT_REMOVED);
-      socket.off(ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT);
-      socket.off(ReadingRoomServerEvent.NEW_CHAT_MESSAGE);
-      socket.off(ReadingRoomServerEvent.ERROR);
-      socket.off(ReadingRoomServerEvent.COMMENT_ADDED);
-      socket.off(ReadingRoomServerEvent.COMMENT_DELETED);
-      socket.off(ReadingRoomServerEvent.REACTION_ADDED);
-      socket.off(ReadingRoomServerEvent.REACTION_REMOVED);
-      socket.off(ReadingRoomServerEvent.QUOTE_ADDED);
-      socket.off(ReadingRoomServerEvent.QUOTE_VOTED);
       useReadingRoomStore.getState().clearRoom();
     };
-  }, [roomId, socket, user, connectSocket, router]);
+  }, [socket]);
 
   const changeMode = useCallback((newMode: 'sync' | 'free') => {
     const store = useReadingRoomStore.getState();

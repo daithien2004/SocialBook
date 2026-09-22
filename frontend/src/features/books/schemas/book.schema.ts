@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { PaginatedApiResult, PaginationMeta } from '@/lib/api-response';
+import { paginationMetaSchema } from '@/lib/pagination.schema';
 
 export const BOOK_STATUS = {
   DRAFT: 'draft',
@@ -99,14 +100,6 @@ export const bookAdminSchema = z.object({
   updatedAt: z.string(),
 });
 export type BookForAdmin = z.infer<typeof bookAdminSchema>;
-
-export const paginationMetaSchema = z.object({
-  current: z.number(),
-  pageSize: z.number(),
-  total: z.number(),
-  totalPages: z.number(),
-});
-export type PaginationMetaData = z.infer<typeof paginationMetaSchema>;
 
 export const bookSummaryPageSchema = z.object({
   data: z.array(bookSummarySchema),
