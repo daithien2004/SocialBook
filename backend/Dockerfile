@@ -14,6 +14,7 @@ COPY package-lock.json ./package-lock.json
 RUN npm ci
 
 COPY shared ./shared
+RUN npm run build:shared
 COPY backend/src ./backend/src
 COPY backend/tsconfig*.json ./backend/
 COPY backend/nest-cli.json ./backend/
@@ -22,11 +23,14 @@ WORKDIR /app/backend
 RUN npm run build
 
 FROM node:20-alpine
-WORKDIR /app/backend
+WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app/backend/package.json ./
-RUN npm ci --omit=dev --ignore-scripts
-COPY --from=builder /app/backend/dist ./dist
-COPY --from=builder /app/shared ./../shared
+COPY package.json ./package.json
+COPY package-lock.json ./package-lock.json
+COPY backend/package.json ./backend/package.json
+COPY shared/package.json ./shared/package.json
+RUN npm ci --omit=dev --ignore-scripts --workspace=backend
+COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/shared ./shared
 USER node
-CMD ["node", "dist/main.js"]
+CMD ["node", "backend/dist/main.js"]

@@ -18,3 +18,7 @@ shared/node_modules
 # --- npm workspace: dep được hoist lên node_modules ROOT ---
 node_modules
 **/node_modules
+
+# Lockfile duy nhất nằm ở root; bỏ lockfile cũ từ package riêng lẻ
+backend/package-lock.json
+frontend/package-lock.json
