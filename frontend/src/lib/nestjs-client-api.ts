@@ -1,4 +1,3 @@
-import { BaseQueryFn } from '@reduxjs/toolkit/query';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
 import { getAccessToken, setAccessToken } from './token-store';
@@ -8,12 +7,12 @@ import { ErrorResponseDto } from '../types/response';
 const clientApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_NEST_API_URL,
   withCredentials: true,
+  timeout: 20_000,
 });
 
-// Mutex: đảm bảo chỉ 1 lần refresh token chạy tại 1 thời điểm.
-// Các request 401 song song sẽ chờ chung promise này thay vì
-// mỗi cái tự gọi getSession() và gây race condition trên hashedRt.
+// Mutex: đảm bảo chỉ 1 lần refresh token / initial fetch token chạy tại 1 thời điểm.
 let refreshingPromise: Promise<string | null> | null = null;
+let initTokenPromise: Promise<string | null> | null = null;
 
 clientApi.interceptors.request.use(
   async (config) => {
@@ -23,11 +22,20 @@ clientApi.interceptors.request.use(
 
     let accessToken = getAccessToken();
     if (!accessToken) {
-      const session = await getSession();
-      if (session?.accessToken) {
-        accessToken = session.accessToken;
-        setAccessToken(accessToken);
+      if (!initTokenPromise) {
+        initTokenPromise = getSession()
+          .then((session) => {
+            if (session?.accessToken) {
+              setAccessToken(session.accessToken);
+              return session.accessToken;
+            }
+            return null;
+          })
+          .finally(() => {
+            initTokenPromise = null;
+          });
       }
+      accessToken = await initTokenPromise;
     }
 
     if (accessToken && !config.headers.Authorization) {
@@ -36,132 +44,88 @@ clientApi.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
-export const axiosBaseQuery =
-  (): BaseQueryFn<
-    {
-      url: string;
-      method?: AxiosRequestConfig['method'];
-      body?: AxiosRequestConfig['data'];
-      headers?: AxiosRequestConfig['headers'];
-      params?: AxiosRequestConfig['params'];
-    },
-    unknown,
-    { status: number; data: ErrorResponseDto }
-  > =>
-    async ({ url, method = 'GET', body, headers, params }) => {
-      const requestHeaders: Record<string, string> = {
-        ...(headers as Record<string, string>),
-      };
+clientApi.interceptors.response.use(
+  (response) => response,
+  async (axiosError: AxiosError<ErrorResponseDto>) => {
+    const originalRequest = axiosError.config as
+      | (AxiosRequestConfig & { _retry?: boolean })
+      | undefined;
+    const status = axiosError.response?.status || 500;
 
-      try {
-        const accessToken = getAccessToken();
+    if (status === 401 && originalRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const hadToken = !!originalRequest.headers?.Authorization;
 
-        if (accessToken) {
-          requestHeaders.Authorization = `Bearer ${accessToken}`;
-        }
-
-        const result = await clientApi({
-          url,
-          method,
-          data: body,
-          headers: requestHeaders,
-          params,
-        });
-
-        const responseData = result.data;
-
-        if (responseData.meta !== undefined || responseData.warning !== undefined) {
-          return {
-            data: {
-              data: responseData.data,
-              meta: responseData.meta,
-              warning: responseData.warning,
-              message: responseData.message,
-            },
-          };
-        }
-        return { data: responseData.data !== undefined ? responseData.data : responseData };
-      } catch (axiosError) {
-        const err = axiosError as AxiosError<ErrorResponseDto>;
-        const status = err.response?.status || 500;
-
-        if (status === 401) {
-          const hadToken = !!requestHeaders.Authorization;
-
-          if (hadToken) {
-            // Nếu chưa có refresh đang chạy thì khởi tạo, ngược lại dùng chung promise
-            if (!refreshingPromise) {
-              refreshingPromise = getSession()
-                .then((s) => {
-                  if (s?.accessToken) {
-                    setAccessToken(s.accessToken);
-                    return s.accessToken;
-                  }
-                  return null;
-                })
-                .finally(() => {
-                  refreshingPromise = null;
-                });
-            }
-
-            const newToken = await refreshingPromise;
-
-            if (newToken) {
-              try {
-                const retryResult = await clientApi({
-                  url,
-                  method,
-                  data: body,
-                  headers: {
-                    ...requestHeaders,
-                    Authorization: `Bearer ${newToken}`,
-                  },
-                  params,
-                });
-
-                const responseData = retryResult.data;
-                return { data: responseData.data !== undefined ? responseData.data : responseData };
-              } catch {
-                // Retry thất bại
+      if (hadToken) {
+        if (!refreshingPromise) {
+          refreshingPromise = getSession()
+            .then((s) => {
+              if (s?.accessToken) {
+                setAccessToken(s.accessToken);
+                return s.accessToken;
               }
-            }
+              return null;
+            })
+            .finally(() => {
+              refreshingPromise = null;
+            });
+        }
 
-            // Chỉ redirect login nếu request có gửi token (authenticated request)
-            if (typeof window !== 'undefined') {
-              await signOut({ redirect: false });
-              window.location.href = '/login?error=SessionExpired';
-            }
+        const newToken = await refreshingPromise;
+
+        if (newToken) {
+          if (!originalRequest.headers) {
+            originalRequest.headers = {};
           }
-          // Guest không có token → không redirect, chỉ trả error
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return clientApi(originalRequest);
         }
 
-        if (status === 403 && err.response?.data?.error === 'USER_BANNED') {
-          toast.error('Tài khoản đã bị cấm', {
-            id: 'user-banned',
-            description: err.response?.data?.message || 'Tài khoản của bạn đã bị cấm. Vui lòng liên hệ quản trị viên.',
-            duration: 1000,
-          });
-
+        if (typeof window !== 'undefined') {
           await signOut({ redirect: false });
+          window.location.href = '/login?error=SessionExpired';
         }
-
-        return {
-          error: {
-            status,
-            data: err.response?.data || {
-              success: false,
-              statusCode: status,
-              message: err.message,
-              error: 'Client Error',
-              timestamp: new Date().toISOString(),
-              path: url,
-            },
-          },
-        };
       }
-    };
+    }
+
+    if (status === 403 && axiosError.response?.data?.error === 'USER_BANNED') {
+      toast.error('Tài khoản đã bị cấm', {
+        id: 'user-banned',
+        description:
+          axiosError.response?.data?.message ||
+          'Tài khoản của bạn đã bị cấm. Vui lòng liên hệ quản trị viên.',
+        duration: 1000,
+      });
+
+      await signOut({ redirect: false });
+    }
+
+    return Promise.reject(axiosError);
+  },
+);
+
+export async function apiRequest<T = unknown>(
+  config: AxiosRequestConfig,
+): Promise<T> {
+  const result = await clientApi(config);
+  const responseData = result.data;
+  if (responseData && typeof responseData === 'object') {
+    if ('meta' in responseData || 'warning' in responseData) {
+      return {
+        data: responseData.data,
+        meta: responseData.meta,
+        warning: responseData.warning,
+        message: responseData.message,
+      } as T;
+    }
+    if ('data' in responseData && responseData.data !== undefined) {
+      return responseData.data as T;
+    }
+  }
+  return responseData as T;
+}
 
 export default clientApi;

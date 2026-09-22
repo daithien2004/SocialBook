@@ -1,15 +1,19 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
-  useGetGeminiRateLimitQuery,
-  useUpdateGeminiRateLimitMutation,
-} from '../../api/rateLimitApi';
+  rateLimitQueries,
+  useUpdateGeminiRateLimit,
+} from '@/features/admin/api/rateLimitApi';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 
 export function useRateLimitManagement() {
-  const { data: config, isLoading, isFetching, refetch } = useGetGeminiRateLimitQuery();
+  const { data: config, isLoading, isFetching, refetch } = useQuery({
+    ...rateLimitQueries.gemini(),
+  });
 
-  const [updateRateLimit, { isLoading: isSaving }] = useUpdateGeminiRateLimitMutation();
+  const { mutateAsync: updateRateLimit, isPending: isSaving } =
+    useUpdateGeminiRateLimit();
 
   const [guestLimit, setGuestLimit] = useState(2);
   const [userLimit, setUserLimit] = useState(10);
@@ -25,7 +29,7 @@ export function useRateLimitManagement() {
 
   const handleSave = async () => {
     try {
-      await updateRateLimit({ guestLimit, userLimit }).unwrap();
+      await updateRateLimit({ guestLimit, userLimit });
       toast.success('Cập nhật rate limit thành công');
     } catch (error) {
       toast.error(getErrorMessage(error) || 'Có lỗi xảy ra khi cập nhật');

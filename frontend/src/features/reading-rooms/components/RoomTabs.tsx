@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
-import { GlassCard } from '@/components/common/GlassCard';
+import { GlassCard } from '@/components/shared/GlassCard';
 import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import type { PresenceData } from '@/store/useReadingRoomStore';
 

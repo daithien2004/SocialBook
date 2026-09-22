@@ -1,0 +1,22 @@
+# Root .dockerignore — áp dụng cho MỌI build context nhô lên root (/)
+# Mục đích: khi Docker build dùng context = root (để COPY shared/ cho cả backend lẫn frontend),
+# phải chặn node_modules/.git/.env kẻo context phình tới vài GB + rò bí mật.
+
+# --- Không bao giờ lọt vào context ---
+node_modules
+**/node_modules
+.git
+.gitignore
+.env
+**/.env
+*.env
+**/*.env
+dist
+**/dist
+build
+**/build
+.next
+**/.next
+
+# Các dạng sau ĐƯỢC phép vào (không đánh dấu, để Dockerfile con COPY được)
+# shared/, backend/, frontend/ — giữ NGUYÊN (chỉ chặn bên trong bằng **/ phía trên)

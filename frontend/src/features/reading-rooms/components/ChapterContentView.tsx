@@ -1,11 +1,11 @@
 'use client';
 import { Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { ChapterContent } from '@/components/chapter/ChapterContent';
-import ChapterHeader from '@/components/chapter/ChapterHeader';
-import ChapterNavigation from '@/components/chapter/ChapterNavigation';
+import { ChapterContent } from '@/features/chapters/components/ChapterContent';
+import ChapterHeader from '@/features/chapters/components/ChapterHeader';
+import ChapterNavigation from '@/features/chapters/components/ChapterNavigation';
 import { Button } from '@/components/ui/button';
-import { LoadingOverlay } from '@/components/common/LoadingSpinner';
+import { LoadingOverlay } from '@/components/shared/LoadingSpinner';
 
 interface NavItem {
   slug: string;

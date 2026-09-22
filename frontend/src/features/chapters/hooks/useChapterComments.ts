@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useCreatePostMutation } from '@/features/posts/api/postApi';
+import { useCreatePost } from '@/features/posts/api/post.mutations';
 import { useModalStore } from '@/store/useModalStore';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -22,7 +22,7 @@ export function useChapterComments({ bookId, bookTitle }: UseChapterCommentsOpti
     const [activeParagraph, setActiveParagraph] = useState<Paragraph | null>(null);
 
     const { openCreatePost } = useModalStore();
-    const [createPost] = useCreatePostMutation();
+    const createPost = useCreatePost();
 
     const handleToggleComments = useCallback((paragraph: Paragraph) => {
         setActiveParagraphId(paragraph.id);
@@ -49,11 +49,11 @@ export function useChapterComments({ bookId, bookTitle }: UseChapterCommentsOpti
                     return;
                 }
                 try {
-                    const result = await createPost({
+                    const result = await createPost.mutateAsync({
                         bookId: bookId,
                         content: data.content,
                         images: data.images,
-                    }).unwrap();
+                    });
 
                     if (result.warning) {
                         toast.warning('Bài viết đang được xem xét', {

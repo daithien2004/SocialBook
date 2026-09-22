@@ -1,6 +1,6 @@
 import ClientLayout from './ClientLayout';
 import { ReactNode } from 'react';
-import type { FollowStateResponse } from '@/features/follows/api/followApi';
+import type { FollowStateResponse } from '@/features/follows/types/follow.interface';
 import { followServerApi } from '@/features/follows/api/followServerApi';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth.config';

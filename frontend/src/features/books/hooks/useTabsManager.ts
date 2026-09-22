@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { TabType } from "../books.constants";
 import { createInitialTabStates, deduplicateBooks } from "../books.utils";
-import { PaginatedData, Book, TabStates, TabState } from "../types/book.interface";
+import { PaginatedData, BookSummary, TabStates, TabState } from "../types/book.interface";
 
 interface UseTabsManagerProps {
     activeTab: TabType;
@@ -12,7 +12,7 @@ interface UseTabsManagerReturn {
     tabStates: TabStates;
     currentState: TabState;
     loadMoreBooks: () => void;
-    setFetchedData: (data: PaginatedData<Book>) => void;
+    setFetchedData: (data: PaginatedData<BookSummary>) => void;
 }
 
 export function useTabsManager({
@@ -24,7 +24,7 @@ export function useTabsManager({
 
     const currentState = tabStates[activeTab];
 
-    const setFetchedData = useCallback((data: PaginatedData<Book>) => {
+    const setFetchedData = useCallback((data: PaginatedData<BookSummary>) => {
         if (!data?.data || !data?.meta) return;
 
         const newBooks = data.data;

@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - develop
+    paths:
+      - 'backend/**'
+      - 'shared/**'   # ← sửa luật CASL trong shared/ cũng phải build lại image
+      - 'frontend/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/*.yml'
 
 jobs:
   test:
@@ -59,7 +65,8 @@ jobs:
       - name: Build & Push Backend
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: .            # ← root: để COPY shared/ lọt vào image backend
+          file: backend/Dockerfile
           push: true
           tags: daithien/socialbook-be:dev
           cache-from: type=registry,ref=daithien/socialbook-be:cache
@@ -68,7 +75,8 @@ jobs:
       - name: Build & Push Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: .              # ROOT — để Dockerfile COPY shared/ lọt vào image
+          file: frontend/Dockerfile
           push: true
           tags: daithien/socialbook-fe:dev
           build-args: |

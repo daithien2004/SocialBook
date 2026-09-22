@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -12,12 +13,12 @@ import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import { useModalStore } from '@/store/useModalStore';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useReadingView } from '@/features/books/hooks';
-import { useGetRoomQuery, useReactivateRoomMutation } from '@/features/reading-rooms/api/readingRoomsApi';
-import { useGetBookByIdQuery } from '@/features/books/api/bookApi';
-import { useGetChapterQuery, useGetChaptersQuery } from '@/features/chapters/api/chaptersApi';
-import { useGetChapterProgressQuery } from '@/features/library/api/libraryApi';
-import { useGetRoomQuotesQuery } from '@/features/reading-room-interactions/api/roomInteractionsApi';
-import { useCreatePostMutation } from '@/features/posts/api/postApi';
+import { readingRoomQueries, useReactivateRoom } from '@/features/reading-rooms/api/readingRoomsApi';
+import { bookQueries } from '@/features/books/api/books.queries';
+import { chaptersQueries } from '@/features/chapters/api/chaptersApi';
+import { libraryQueries } from '@/features/library/api/libraryApi';
+import { roomInteractionQueries } from '@/features/reading-room-interactions/api/roomInteractionsApi';
+import { useCreatePost } from '@/features/posts/api/post.mutations';
 
 export function useReadingRoomData(roomCode: string) {
   // ── Shared utilities ──
@@ -31,12 +32,16 @@ export function useReadingRoomData(roomCode: string) {
   const { user, isAuthenticated } = useAppAuth();
 
   // ── Room data (RTK Query) ──
-  const { data: initialRoom, isLoading: isLoadingRoom, error } = useGetRoomQuery(roomCode, { skip: !isAuthenticated });
+  const { data: initialRoom, isLoading: isLoadingRoom, error } = useQuery({
+    ...readingRoomQueries.room(roomCode),
+    enabled: isAuthenticated,
+  });
 
   // ── Socket connection ──
   const shouldConnectSocket = isAuthenticated && !!initialRoom;
   const { endRoom, deleteRoom, leaveRoom, changeChapter, changeMode, sendHeartbeat, sendChatMessage } = useReadingRoomSocket(shouldConnectSocket ? roomCode : undefined);
-  const [reactivateRoom, { isLoading: isReactivating }] = useReactivateRoomMutation();
+  const reactivateRoom = useReactivateRoom();
+  const isReactivating = reactivateRoom.isPending;
 
   // ── Derived state ──
   const storeRoom = useReadingRoomStore(state => state.room);
@@ -49,21 +54,33 @@ export function useReadingRoomData(roomCode: string) {
     : (searchParams.get('chapter') || room?.currentChapterSlug || '');
 
   // ── Book / Chapter queries ──
-  const { data: bookData } = useGetBookByIdQuery(room?.bookId || '', { skip: !room?.bookId });
-  const { data: chapterData, isLoading: isLoadingChapter } = useGetChapterQuery(
-    { bookSlug: bookData?.slug || '', chapterSlug: currentChapterSlug },
-    { skip: !bookData?.slug || !currentChapterSlug }
-  );
+  const { data: bookData } = useQuery({
+    ...bookQueries.byId(room?.bookId || ''),
+    enabled: !!room?.bookId,
+  });
+  const { data: chapterData, isLoading: isLoadingChapter } = useQuery({
+    ...chaptersQueries.detail({ bookSlug: bookData?.slug || '', chapterSlug: currentChapterSlug }),
+    enabled: !!bookData?.slug && !!currentChapterSlug,
+  });
   const chapter = chapterData?.chapter;
   const navigation = chapterData?.navigation;
-  const { data: chaptersData } = useGetChaptersQuery({ bookSlug: bookData?.slug || '' }, { skip: !bookData?.slug });
-  const { data: quotesData } = useGetRoomQuotesQuery({ code: roomCode }, { skip: !room });
+  const { data: chaptersData } = useQuery({
+    ...chaptersQueries.list({ bookSlug: bookData?.slug || '' }),
+    enabled: !!bookData?.slug,
+  });
+  const { data: quotesData } = useQuery({
+    ...roomInteractionQueries.quotes({ code: roomCode }),
+    enabled: !!room,
+  });
 
   // ── Progress query ──
-  const { data: progressData } = useGetChapterProgressQuery(
-    { bookId: bookData?.id || '', chapterId: chapter?.id || '' },
-    { skip: !bookData?.id || !chapter?.id },
-  );
+  const { data: progressData } = useQuery({
+    ...libraryQueries.chapterProgress({
+      bookId: bookData?.id || '',
+      chapterId: chapter?.id || '',
+    }),
+    enabled: !!bookData?.id && !!chapter?.id,
+  });
   const savedProgress = progressData?.progress || 0;
 
   // ── UI state ──
@@ -77,11 +94,13 @@ export function useReadingRoomData(roomCode: string) {
   // ── Sub-hooks ──
   const { readingProgress, readingParagraphId, contentRef, onActiveParagraphChange } = useReadingProgress();
   const { navigateChapter } = useReadingRoomNavigation({ roomCode, isEnded, roomMode: room?.mode, isHost });
-  const [createPost] = useCreatePostMutation();
+  const createPost = useCreatePost();
 
   // ── Effects: quotes sync ──
+  const quotesSeededRef = useRef(false);
   useEffect(() => {
-    if (quotesData) {
+    if (quotesData && !quotesSeededRef.current) {
+      quotesSeededRef.current = true;
       useReadingRoomStore.getState().setQuotes(quotesData);
     }
   }, [quotesData]);
@@ -141,7 +160,7 @@ export function useReadingRoomData(roomCode: string) {
       onSubmit: async (data) => {
         if (!bookData?.id) return;
         try {
-          await createPost({ bookId: bookData.id, content: data.content, images: data.images }).unwrap();
+          await createPost.mutateAsync({ bookId: bookData.id, content: data.content, images: data.images });
         } catch { /* silent */ }
       },
     });
@@ -167,7 +186,7 @@ export function useReadingRoomData(roomCode: string) {
   const handleReactivateRoom = useCallback(async () => {
     if (!roomCode) return;
     try {
-      const result = await reactivateRoom(roomCode).unwrap();
+      const result = await reactivateRoom.mutateAsync(roomCode);
       useReadingRoomStore.getState().setRoom(result);
       toast.success('Phòng đã được mở lại!');
       router.refresh();

@@ -1,11 +1,6 @@
-'use client'
-import PostListUser from "@/components/post/PostListByUser";
-import {useParams} from "next/navigation";
+import PostListUser from "@/features/posts/components/PostListByUser";
 
-const UserPostsPage = () => {
-    const { userId } = useParams<{ userId: string }>();
-    return(
-        <PostListUser userId={userId}/>
-    )
+export default async function UserPostsPage({ params }: { params: Promise<{ userId: string }> }) {
+    const { userId } = await params;
+    return <PostListUser userId={userId} />;
 }
-export default UserPostsPage;

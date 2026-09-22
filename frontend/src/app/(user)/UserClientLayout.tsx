@@ -1,12 +1,12 @@
 'use client';
 
-import { Header } from '@/components/header';
+import { Header } from '@/features/core/components/header';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { ReactNode } from 'react';
 
 const ChatWidget = dynamic(
-  () => import('@/components/chatbot/ChatWidget').then((module) => module.ChatWidget),
+  () => import('@/features/chatbot/components/ChatWidget').then((module) => module.ChatWidget),
   { ssr: false }
 );
 

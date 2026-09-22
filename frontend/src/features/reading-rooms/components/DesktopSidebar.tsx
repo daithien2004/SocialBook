@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { store } from '@/store/store';
 import { readingRoomsApi } from '@/features/reading-rooms/api/readingRoomsApi';
 import { useModalStore } from '@/store/useModalStore';
 import { RoomResponse } from '@/features/reading-rooms/api/readingRoomsApi';
@@ -138,7 +137,7 @@ export function DesktopSidebar({
                     onConfirm: () => {
                       endRoom();
                       setTimeout(() => {
-                        store.dispatch(readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory']));
+                        readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory']);
                         router.refresh();
                       }, 300);
                     }
@@ -158,7 +157,7 @@ export function DesktopSidebar({
                     variant: "destructive",
                     onConfirm: () => {
                       deleteRoom();
-                      store.dispatch(readingRoomsApi.util.invalidateTags(['MyRooms']));
+                      readingRoomsApi.util.invalidateTags(['MyRooms']);
                       router.push('/reading-rooms');
                     }
                   })}>

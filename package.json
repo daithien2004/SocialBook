@@ -1,0 +1,13 @@
+{
+  "name": "socialbook",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspace shared"
+  }
+}

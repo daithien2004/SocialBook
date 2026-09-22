@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { MESSAGES } from '@/constants/messages';
-import { useToggleFollowMutation, useUnfollowMutation, useGetFollowStatusQuery } from '@/features/follows/api/followApi';
+import { useToggleFollow, useUnfollow } from '@/features/follows/api/follows.mutations';
+import { followQueries } from '@/features/follows/api/follows.queries';
 import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 
 interface UseFollowUserOptions {
@@ -18,8 +20,9 @@ export function useFollowUser({ userId, initialIsFollowing = false, onFollowChan
     const auth = useAppAuth();
     const router = useRouter();
     
-    const { data: statusData } = useGetFollowStatusQuery(userId, {
-        skip: !auth?.isAuthenticated || auth?.user?.id === userId || !userId,
+    const { data: statusData } = useQuery({
+        ...followQueries.status(userId),
+        enabled: !!userId && !!auth?.isAuthenticated && auth?.user?.id !== userId,
     });
 
     useEffect(() => {
@@ -30,9 +33,9 @@ export function useFollowUser({ userId, initialIsFollowing = false, onFollowChan
         }
     }, [statusData]);
 
-    const [toggleFollow, { isLoading: isFollowLoading }] = useToggleFollowMutation();
-    const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
-    const isLoading = isFollowLoading || isUnfollowLoading;
+    const toggleFollowMutation = useToggleFollow();
+    const unfollowMutation = useUnfollow();
+    const isLoading = toggleFollowMutation.isPending || unfollowMutation.isPending;
 
     const handleToggle = useCallback(async () => {
         if (!auth?.isAuthenticated) {
@@ -43,9 +46,9 @@ export function useFollowUser({ userId, initialIsFollowing = false, onFollowChan
         }
         try {
             if (isFollowing) {
-                await unfollow(userId).unwrap();
+                await unfollowMutation.mutateAsync(userId);
             } else {
-                await toggleFollow(userId).unwrap();
+                await toggleFollowMutation.mutateAsync(userId);
             }
             const newState = !isFollowing;
             setIsFollowing(newState);
@@ -53,7 +56,7 @@ export function useFollowUser({ userId, initialIsFollowing = false, onFollowChan
         } catch {
             toast.error(MESSAGES.FOLLOW_TOGGLE_FAILED);
         }
-    }, [isFollowing, userId, toggleFollow, unfollow, onFollowChange, auth?.isAuthenticated, router]);
+    }, [isFollowing, userId, toggleFollowMutation, unfollowMutation, onFollowChange, auth?.isAuthenticated, router]);
 
     return {
         isFollowing,

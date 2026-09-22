@@ -1,94 +1,21 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/lib/nestjs-client-api';
-import { normalizeArrayResponse, PaginatedApiResult } from '@/lib/api-response';
-
-export interface FlaggedPost {
-    id: string; // Backend TransformInterceptor converts _id → id
-    user: {
-        id: string;
-        username: string;
-        image?: string;
-        violationCount?: number;
-    };
-    book: {
-        id: string;
-        title: string;
-    };
-    content: string;
-    imageUrls: string[];
-    isFlagged: boolean;
-    moderationReason?: string;
-    moderationStatus?: 'pending' | 'approved' | 'rejected';
-    createdAt: string;
-    updatedAt: string;
-}
-
-export type FlaggedPostsResponse = PaginatedApiResult<FlaggedPost>;
-
-export const moderationApi = createApi({
-    reducerPath: 'moderationApi',
-    baseQuery: axiosBaseQuery(),
-    tagTypes: ['FlaggedPosts'],
-    endpoints: (builder) => ({
-        getFlaggedPosts: builder.query<FlaggedPostsResponse, { page?: number; limit?: number; reason?: string; startDate?: string; endDate?: string; sortBy?: string }>({
-            query: ({ page = 1, limit = 10, reason, startDate, endDate, sortBy }) => ({
-                url: '/posts/admin/flagged',
-                method: 'GET',
-                params: { page, limit, reason, startDate, endDate, sortBy },
-            }),
-            transformResponse: normalizeArrayResponse<FlaggedPost>,
-            providesTags: ['FlaggedPosts'],
-        }),
-
-        getModerationStats: builder.query<{ total: number; toxic: number; spoiler: number; other: number }, void>({
-            query: () => ({
-                url: '/posts/admin/moderation/stats',
-                method: 'GET',
-            }),
-            providesTags: ['FlaggedPosts'],
-        }),
-
-        approvePost: builder.mutation<void, string>({
-            query: (postId) => ({
-                url: `/posts/admin/${postId}/approve`,
-                method: 'PATCH',
-            }),
-            invalidatesTags: ['FlaggedPosts'],
-        }),
-
-        rejectPost: builder.mutation<void, string>({
-            query: (postId) => ({
-                url: `/posts/admin/${postId}/reject`,
-                method: 'DELETE',
-            }),
-            invalidatesTags: ['FlaggedPosts'],
-        }),
-
-        bulkApprovePosts: builder.mutation<void, string[]>({
-            query: (postIds) => ({
-                url: '/posts/admin/bulk-approve',
-                method: 'POST',
-                body: { postIds },
-            }),
-            invalidatesTags: ['FlaggedPosts'],
-        }),
-
-        bulkRejectPosts: builder.mutation<void, string[]>({
-            query: (postIds) => ({
-                url: '/posts/admin/bulk-reject',
-                method: 'POST',
-                body: { postIds },
-            }),
-            invalidatesTags: ['FlaggedPosts'],
-        }),
-    }),
-});
-
-export const {
-    useGetFlaggedPostsQuery,
-    useGetModerationStatsQuery,
-    useApprovePostMutation,
-    useRejectPostMutation,
-    useBulkApprovePostsMutation,
-    useBulkRejectPostsMutation,
-} = moderationApi;
+export {
+  approvePost,
+  bulkApprovePosts,
+  bulkRejectPosts,
+  getFlaggedPosts,
+  getModerationStats,
+  rejectPost,
+} from '@/features/admin/api/moderation.api';
+export { moderationQueries } from '@/features/admin/api/moderation.queries';
+export {
+  useApprovePost,
+  useBulkApprovePosts,
+  useBulkRejectPosts,
+  useRejectPost,
+} from '@/features/admin/api/moderation.mutations';
+export type {
+  FlaggedPost,
+  FlaggedPostsResponse,
+  GetFlaggedPostsParams,
+  ModerationStats,
+} from '@/features/admin/api/moderation.api';

@@ -1,9 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
-import {
-  useUpdateReadingProgressMutation,
-  useGetChapterProgressQuery,
-} from '@/features/library/api/libraryApi';
+import { useQuery } from '@tanstack/react-query';
 import throttle from 'lodash/throttle';
+import { libraryQueries, useUpdateReadingProgress } from '@/features/library/api/libraryApi';
 
 function getContentProgress(contentEl: HTMLElement): number {
   const rect = contentEl.getBoundingClientRect();
@@ -41,11 +39,11 @@ export function useReadingProgress(
   enabled: boolean = true,
   contentRef?: React.RefObject<HTMLElement | null>,
 ) {
-  const [updateProgress] = useUpdateReadingProgressMutation();
-  const { data: progressData, isLoading } = useGetChapterProgressQuery(
-    { bookId, chapterId },
-    { skip: !enabled || !bookId || !chapterId },
-  );
+  const updateProgress = useUpdateReadingProgress();
+  const { data: progressData, isLoading } = useQuery({
+    ...libraryQueries.chapterProgress({ bookId, chapterId }),
+    enabled: enabled && !!bookId && !!chapterId,
+  });
 
   const lastProgressRef = useRef(0);
   const savedProgress = progressData?.progress || 0;
@@ -87,7 +85,7 @@ export function useReadingProgress(
         progress === 100
       ) {
         lastProgressRef.current = progress;
-        updateProgress({ bookId, chapterId, progress });
+        updateProgress.mutate({ bookId, chapterId, progress });
       }
     }, 1000);
 

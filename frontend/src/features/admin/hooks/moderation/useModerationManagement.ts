@@ -1,16 +1,16 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { 
-    useGetFlaggedPostsQuery, 
-    useGetModerationStatsQuery,
-    useApprovePostMutation, 
-    useRejectPostMutation,
-    useBulkApprovePostsMutation,
-    useBulkRejectPostsMutation
+    moderationQueries,
+    useApprovePost, 
+    useBulkApprovePosts,
+    useBulkRejectPosts,
+    useRejectPost
 } from '@/features/admin/api/moderationApi';
-import { useBanUserMutation } from '@/features/users/api/usersApi';
+import { useBanUser } from '@/features/users/api/users.mutations';
 import { useModalStore } from '@/store/useModalStore';
 import { getErrorMessage } from '@/lib/utils';
-import { toast } from 'sonner';
 
 function getModerationErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback;
@@ -25,27 +25,29 @@ export function useModerationManagement() {
     const [selectedPostIds, setSelectedPostIds] = useState<string[]>([]);
     const limit = 10;
 
-    const { data, isLoading, isFetching, refetch } = useGetFlaggedPostsQuery({ 
-        page, limit, 
-        reason: reason || undefined, 
-        startDate: startDate || undefined, 
-        endDate: endDate || undefined, 
-        sortBy: sortBy || undefined 
+    const { data, isLoading, isFetching, refetch } = useQuery({ 
+        ...moderationQueries.flaggedPosts({ 
+            page, limit, 
+            reason: reason || undefined, 
+            startDate: startDate || undefined, 
+            endDate: endDate || undefined, 
+            sortBy: sortBy || undefined 
+        })
     });
-    const { data: stats } = useGetModerationStatsQuery();
+    const { data: stats } = useQuery({ ...moderationQueries.stats() });
     const { openConfirm } = useModalStore();
-    const [approvePost, { isLoading: isApproving }] = useApprovePostMutation();
-    const [rejectPost, { isLoading: isRejecting }] = useRejectPostMutation();
-    const [bulkApprove, { isLoading: isBulkApproving }] = useBulkApprovePostsMutation();
-    const [bulkReject, { isLoading: isBulkRejecting }] = useBulkRejectPostsMutation();
-    const [banUser, { isLoading: isBanning }] = useBanUserMutation();
+    const { mutateAsync: approvePost, isPending: isApproving } = useApprovePost();
+    const { mutateAsync: rejectPost, isPending: isRejecting } = useRejectPost();
+    const { mutateAsync: bulkApprove, isPending: isBulkApproving } = useBulkApprovePosts();
+    const { mutateAsync: bulkReject, isPending: isBulkRejecting } = useBulkRejectPosts();
+    const { mutateAsync: banUser, isPending: isBanning } = useBanUser();
 
     const posts = data?.data || [];
     const meta = data?.meta;
 
     const handleApprove = async (postId: string) => {
         try {
-            await approvePost(postId).unwrap();
+            await approvePost(postId);
             toast.success('Bài viết đã được phê duyệt');
             setSelectedPostIds(prev => prev.filter(id => id !== postId));
             refetch();
@@ -56,7 +58,7 @@ export function useModerationManagement() {
 
     const handleReject = async (postId: string) => {
         try {
-            await rejectPost(postId).unwrap();
+            await rejectPost(postId);
             toast.success('Bài viết đã bị từ chối và xóa');
             setSelectedPostIds(prev => prev.filter(id => id !== postId));
             refetch();
@@ -68,7 +70,7 @@ export function useModerationManagement() {
     const handleBulkApprove = async () => {
         if (selectedPostIds.length === 0) return;
         try {
-            await bulkApprove(selectedPostIds).unwrap();
+            await bulkApprove(selectedPostIds);
             toast.success(`Đã phê duyệt ${selectedPostIds.length} bài viết`);
             setSelectedPostIds([]);
             refetch();
@@ -80,7 +82,7 @@ export function useModerationManagement() {
     const handleBulkReject = async () => {
         if (selectedPostIds.length === 0) return;
         try {
-            await bulkReject(selectedPostIds).unwrap();
+            await bulkReject(selectedPostIds);
             toast.success(`Đã từ chối và xóa ${selectedPostIds.length} bài viết`);
             setSelectedPostIds([]);
             refetch();
@@ -92,7 +94,7 @@ export function useModerationManagement() {
 
     const handleBanUser = async (userId: string) => {
         try {
-            await banUser(userId).unwrap();
+            await banUser(userId);
             toast.success('Cập nhật trạng thái người dùng thành công');
         } catch (error: unknown) {
             toast.error(getErrorMessage(error));

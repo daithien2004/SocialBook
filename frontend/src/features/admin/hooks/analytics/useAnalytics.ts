@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-    useGetActiveUsersQuery,
-    useGetChapterEngagementQuery,
-    useGetGeographicDistributionQuery,
-    useGetReadingHeatmapQuery,
-} from '@/features/admin/api/analyticsApi';
+import { useQuery } from '@tanstack/react-query';
+import { analyticsQueries } from '@/features/admin/api/analyticsApi';
 
 export function useActiveUsers() {
-    const { data, isLoading, refetch } = useGetActiveUsersQuery();
+    const { data, isLoading, refetch } = useQuery({
+        ...analyticsQueries.activeUsers(),
+    });
     const [count, setCount] = useState(0);
     const previousCountRef = useRef(0);
 
@@ -47,9 +45,15 @@ export function useActiveUsers() {
 }
 
 export function useAnalyticsData() {
-    const heatmap = useGetReadingHeatmapQuery();
-    const engagement = useGetChapterEngagementQuery({ limit: 5 });
-    const geographic = useGetGeographicDistributionQuery();
+    const heatmap = useQuery({
+        ...analyticsQueries.readingHeatmap(),
+    });
+    const engagement = useQuery({
+        ...analyticsQueries.chapterEngagement(5),
+    });
+    const geographic = useQuery({
+        ...analyticsQueries.geographic(),
+    });
 
     return {
         heatmap: {

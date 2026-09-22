@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 import {
-    useDeleteCommentMutation,
-    useEditCommentMutation,
-    usePostCreateMutation,
-} from '@/features/comments/api/commentApi';
-import { CommentItem } from '@/features/comments/types/comment.interface';
-import { usePostToggleLikeMutation } from '@/features/likes/api/likeApi';
+    useCreateComment,
+    useDeleteComment,
+    useUpdateComment,
+} from '@/features/comments/api/comment.mutations';
+import type { CommentItem } from '@/features/comments/types/comment.interface';
+import { useToggleLike } from '@/features/likes/api/like.mutations';
 import { useOptimisticToggle } from '@/hooks/useOptimisticToggle';
 
 export interface UseCommentActionsOptions {
@@ -69,13 +69,10 @@ export function useCommentActions({
     const isOwner = comment.user.id === userId;
     const hasReplyCount = comment.repliesCount !== undefined;
 
-    const [editComment, { isLoading: isEditingComment }] =
-        useEditCommentMutation();
-    const [deleteComment, { isLoading: isDeletingComment }] =
-        useDeleteCommentMutation();
-    const [postToggleLike] = usePostToggleLikeMutation();
-    const [createComment, { isLoading: isPostingReply }] =
-        usePostCreateMutation();
+    const updateComment = useUpdateComment();
+    const deleteComment = useDeleteComment();
+    const toggleLike = useToggleLike();
+    const createComment = useCreateComment();
 
     const {
         count: optimisticLikeCount,
@@ -84,10 +81,10 @@ export function useCommentActions({
     } = useOptimisticToggle({
         initialCount: comment.likesCount ?? 0,
         initialState: comment.isLiked ?? false,
-        onToggle: () => postToggleLike({
+        onToggle: () => toggleLike.mutateAsync({
             targetId: comment.id,
             targetType: 'comment',
-        }).unwrap(),
+        }),
     });
 
     useEffect(() => {
@@ -111,12 +108,12 @@ export function useCommentActions({
         }
 
         try {
-            await editComment({
+            await updateComment.mutateAsync({
                 id: comment.id,
                 content,
                 targetId,
                 parentId: comment.parentId ?? null,
-            }).unwrap();
+            });
             setIsEditing(false);
         } catch (error: unknown) {
             const apiError = error as {
@@ -130,15 +127,15 @@ export function useCommentActions({
                 toast.error(getErrorMessage(error));
             }
         }
-    }, [editText, comment, targetId, editComment]);
+    }, [editText, comment, targetId, updateComment]);
 
     const handleDeleteComment = useCallback(async () => {
         try {
-            await deleteComment({
+            await deleteComment.mutateAsync({
                 id: comment.id,
                 targetId,
                 parentId: comment.parentId ?? null,
-            }).unwrap();
+            });
 
             if (onReplyRemoved) {
                 onReplyRemoved();
@@ -156,12 +153,12 @@ export function useCommentActions({
         const parentId = isMaxDepth ? comment.parentId : comment.id;
 
         try {
-            await createComment({
+            await createComment.mutateAsync({
                 targetType,
                 targetId,
                 content,
                 parentId,
-            }).unwrap();
+            });
 
             setReplyText('');
             setShowReplies(true);
@@ -195,9 +192,9 @@ export function useCommentActions({
         isReplying,
         replyText,
         showReplies,
-        isEditingComment,
-        isDeletingComment,
-        isPostingReply,
+        isEditingComment: updateComment.isPending,
+        isDeletingComment: deleteComment.isPending,
+        isPostingReply: createComment.isPending,
         effectiveParentId,
         setIsEditing,
         setEditText,

@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
+import { CommentCreatedJobPayload } from '@/application/notifications/jobs/notification-job.payload';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -17,7 +18,8 @@ export class CreateCommentUseCase {
   constructor(
     private readonly commentRepository: ICommentRepository,
     private readonly idGenerator: IIdGenerator,
-    private readonly eventEmitter: EventEmitter2,
+    @Inject(INotificationQueuePort)
+    private readonly notificationQueue: INotificationQueuePort,
   ) {}
 
   async execute(command: CreateCommentCommand): Promise<Comment> {
@@ -56,14 +58,16 @@ export class CreateCommentUseCase {
         `Comment created successfully: ${comment.id.toString()} by user ${command.userId}`,
       );
 
-      this.eventEmitter.emit('comment.created', {
-        commentId: comment.id.toString(),
-        userId: command.userId,
-        targetId: command.targetId,
-        targetType: command.targetType,
-        parentId: comment.parentId?.toString(),
-        content: command.content,
-      });
+      // Push event directly to BullMQ
+      await this.notificationQueue.queueCommentCreated(
+        new CommentCreatedJobPayload(
+          comment.id.toString(),
+          command.userId,
+          command.targetId,
+          command.targetType,
+          comment.parentId?.toString(),
+        ),
+      );
 
       return comment;
     } catch (error) {

@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-    useAddBookToCollectionsMutation,
-    useCreateCollectionMutation,
-    useGetBookLibraryInfoQuery,
-    useGetCollectionsQuery,
-    useUpdateLibraryStatusMutation,
+    libraryQueries,
+    useAddBookToCollections,
+    useCreateCollection,
+    useUpdateLibraryStatus,
 } from '@/features/library/api/libraryApi';
-import { LibraryStatus } from '@/features/library/types/library.interface';
-import { Collection } from '@/features/library/types/library.interface';
+import { LibraryStatus, type Collection } from '@/features/library/types/library.interface';
 
 export interface UseAddToLibraryOptions {
     bookId: string;
@@ -44,17 +43,19 @@ export function useAddToLibrary({
     const [isCreating, setIsCreating] = useState(false);
     const [newCollectionName, setNewCollectionName] = useState('');
 
-    const { data: collectionsData } = useGetCollectionsQuery(userId, {
-        skip: !isAuthenticated,
+    const { data: collectionsData } = useQuery({
+        ...libraryQueries.collections(userId),
+        enabled: isAuthenticated,
     });
 
-    const { data: libraryInfo } = useGetBookLibraryInfoQuery(bookId, {
-        skip: !isOpen || !isAuthenticated || !bookId,
+    const { data: libraryInfo } = useQuery({
+        ...libraryQueries.bookInfo(bookId),
+        enabled: isOpen && isAuthenticated && !!bookId,
     });
 
-    const [updateStatus] = useUpdateLibraryStatusMutation();
-    const [updateCollections] = useAddBookToCollectionsMutation();
-    const [createCollection] = useCreateCollectionMutation();
+    const updateStatus = useUpdateLibraryStatus();
+    const updateCollections = useAddBookToCollections();
+    const createCollection = useCreateCollection();
 
     useEffect(() => {
         if (libraryInfo) {
@@ -81,9 +82,9 @@ export function useAddToLibrary({
 
         try {
             if (isRemove) {
-                await updateStatus({ bookId, status: LibraryStatus.NONE }).unwrap();
+                await updateStatus.mutateAsync({ bookId, status: LibraryStatus.NONE });
             } else {
-                await updateStatus({ bookId, status }).unwrap();
+                await updateStatus.mutateAsync({ bookId, status });
             }
         } catch {
             setSelectedStatus(previousStatus);
@@ -104,7 +105,7 @@ export function useAddToLibrary({
         setSelectedCollections(newIds);
 
         try {
-            await updateCollections({ bookId, collectionIds: newIds }).unwrap();
+            await updateCollections.mutateAsync({ bookId, collectionIds: newIds });
         } catch {
             setSelectedCollections(selectedCollections);
             toast.error('Cập nhật bộ sưu tập thất bại');
@@ -114,7 +115,7 @@ export function useAddToLibrary({
     const handleCreateCollection = useCallback(async () => {
         if (!newCollectionName.trim()) return;
         try {
-            const res = await createCollection({ name: newCollectionName }).unwrap();
+            const res = await createCollection.mutateAsync({ name: newCollectionName });
             const newColId = res.id;
 
             await handleToggleCollection(newColId);

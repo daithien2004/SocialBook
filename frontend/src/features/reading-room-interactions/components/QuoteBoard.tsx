@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { ChevronUp, QuoteIcon, ArrowRightCircle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useDeleteRoomQuoteMutation } from '@/features/reading-room-interactions/api/roomInteractionsApi';
+import { useDeleteRoomQuote } from '@/features/reading-room-interactions/api/roomInteractionsApi';
 import { useModalStore } from '@/store/useModalStore';
 import { toast } from 'sonner';
 import { scrollToHighlight, pollAndScroll } from '@/utils/scroll-to-highlight';
@@ -22,7 +22,8 @@ export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
   const { user } = useAppAuth();
   const { voteQuote, changeChapter } = useReadingRoomSocket();
   const router = useRouter();
-  const [deleteRoomQuote, { isLoading: isDeleting }] = useDeleteRoomQuoteMutation();
+  const deleteRoomQuote = useDeleteRoomQuote();
+  const isDeleting = deleteRoomQuote.isPending;
   const { openConfirm } = useModalStore();
 
   const handleDeleteQuote = (quoteId: string) => {
@@ -33,7 +34,7 @@ export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
       variant: 'destructive',
       onConfirm: async () => {
         try {
-          await deleteRoomQuote({ code: roomCode, quoteId }).unwrap();
+          await deleteRoomQuote.mutateAsync({ code: roomCode, quoteId });
           useReadingRoomStore.getState().removeQuote(quoteId);
           toast.success('Xóa trích dẫn thành công');
         } catch {

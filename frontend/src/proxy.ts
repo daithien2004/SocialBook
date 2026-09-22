@@ -6,11 +6,10 @@ export default withAuth(
         const token = req.nextauth.token;
         const isAdminRoute = req.nextUrl.pathname.startsWith('/admin');
 
-        // Nếu là admin route nhưng user không phải admin → redirect về home
+        // Nếu là admin route nhưng user không phải admin → chặn quyền (403)
         if (isAdminRoute && token?.role !== 'admin') {
-            return NextResponse.redirect(new URL('/', req.url));
+            return NextResponse.redirect(new URL('/403', req.url));
         }
-
 
         return NextResponse.next();
     },
@@ -40,5 +39,5 @@ export default withAuth(
 );
 
 export const config = {
-    matcher: ['/admin/:path*', '/', '/users/:path*/profile',],
+    matcher: ['/admin/:path*', '/users/:path*/profile'],
 };

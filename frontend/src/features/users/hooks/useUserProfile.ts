@@ -13,9 +13,9 @@ interface UseUserProfileOptions {
     userId: string;
     overview?: {
         username?: string;
-        website?: string;
-        location?: string;
-        bio?: string;
+        website?: string | null | undefined;
+        location?: string | null | undefined;
+        bio?: string | null | undefined;
         image?: string | null;
     } | null;
     updateOverview: (params: { userId: string; body: { username?: string; bio?: string; location?: string; website?: string } }) => Promise<void>;

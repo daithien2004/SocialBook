@@ -1,12 +1,10 @@
 'use client';
 
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { MESSAGES } from '@/constants/messages';
-import {
-    useGetFollowStatusQuery,
-    useToggleFollowMutation,
-    useUnfollowMutation,
-} from '@/features/follows/api/followApi';
+import { useToggleFollow, useUnfollow } from '@/features/follows/api/follows.mutations';
+import { followQueries } from '@/features/follows/api/follows.queries';
 import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 import { useModalStore } from '@/store/useModalStore';
 import { useRouter } from 'next/navigation';
@@ -14,12 +12,12 @@ import { useEffect, useState } from 'react';
 
 interface UseFollowerItemOptions {
     userId: string;
-    isFollowedByCurrentUser: boolean;
+    isFollowedByCurrentUser?: boolean;
 }
 
 export const useFollowerItem = ({
     userId,
-    isFollowedByCurrentUser,
+    isFollowedByCurrentUser = false,
 }: UseFollowerItemOptions) => {
     const auth = useAppAuth();
     const router = useRouter();
@@ -27,8 +25,9 @@ export const useFollowerItem = ({
 
     const [isFollowing, setIsFollowing] = useState(isFollowedByCurrentUser);
 
-    const { data: statusData } = useGetFollowStatusQuery(userId, {
-        skip: !auth.isAuthenticated || auth?.user?.id === userId,
+    const { data: statusData } = useQuery({
+        ...followQueries.status(userId),
+        enabled: !!userId && auth.isAuthenticated && auth?.user?.id !== userId,
     });
 
     useEffect(() => {
@@ -39,19 +38,19 @@ export const useFollowerItem = ({
         }
     }, [statusData]);
 
-    const [toggleFollow, { isLoading: isFollowLoading }] =
-        useToggleFollowMutation();
-    const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
+    const toggleFollowMutation = useToggleFollow();
+    const unfollowMutation = useUnfollow();
 
-    const isToggling = isFollowLoading || isUnfollowLoading;
+    const isToggling =
+        toggleFollowMutation.isPending || unfollowMutation.isPending;
     const isCurrentUser = auth?.user?.id === userId;
 
     const handleToggleFollow = async () => {
         try {
             if (isFollowing) {
-                await unfollow(userId).unwrap();
+                await unfollowMutation.mutateAsync(userId);
             } else {
-                await toggleFollow(userId).unwrap();
+                await toggleFollowMutation.mutateAsync(userId);
             }
             setIsFollowing((prev) => !prev);
         } catch {

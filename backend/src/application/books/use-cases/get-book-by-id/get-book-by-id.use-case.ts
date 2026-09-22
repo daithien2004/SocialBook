@@ -11,6 +11,8 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 
+import { BookViewedEvent } from '@/application/analytics/events/book-viewed.event';
+
 @Injectable()
 export class GetBookByIdUseCase {
   constructor(
@@ -40,7 +42,7 @@ export class GetBookByIdUseCase {
       })());
 
     // 4. Emit view event
-    this.eventEmitter.emit('book.viewed', { bookId: query.id });
+    this.eventEmitter.emit('book.viewed', new BookViewedEvent(query.id));
 
     return book;
   }

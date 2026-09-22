@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import {
-    useGetToxicWordsQuery,
-    useAddToxicWordMutation,
-    useDeleteToxicWordMutation,
-    AddToxicWordPayload
-} from '../../api/toxicWordsApi';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import {
+    toxicWordsQueries,
+    useAddToxicWord,
+    useDeleteToxicWord,
+    type AddToxicWordPayload,
+} from '@/features/admin/api/toxicWordsApi';
 import { getErrorMessage } from '@/lib/utils';
 
 export function useToxicWordsManagement() {
@@ -18,14 +19,16 @@ export function useToxicWordsManagement() {
         isLoading,
         isFetching,
         refetch
-    } = useGetToxicWordsQuery({
-        page,
-        limit,
-        search: search || undefined
+    } = useQuery({
+        ...toxicWordsQueries.list({
+            page,
+            limit,
+            search: search || undefined
+        })
     });
 
-    const [addToxicWord, { isLoading: isAdding }] = useAddToxicWordMutation();
-    const [deleteToxicWord, { isLoading: isDeleting }] = useDeleteToxicWordMutation();
+    const { mutateAsync: addToxicWord, isPending: isAdding } = useAddToxicWord();
+    const { mutateAsync: deleteToxicWord, isPending: isDeleting } = useDeleteToxicWord();
 
     const handlePageChange = (newPage: number) => {
         setPage(newPage);
@@ -38,7 +41,7 @@ export function useToxicWordsManagement() {
 
     const handleAdd = async (payload: AddToxicWordPayload) => {
         try {
-            await addToxicWord(payload).unwrap();
+            await addToxicWord(payload);
             toast.success('Thêm từ khoá thành công');
         } catch (error) {
             toast.error(getErrorMessage(error) || 'Có lỗi xảy ra khi thêm từ khoá');
@@ -48,7 +51,7 @@ export function useToxicWordsManagement() {
 
     const handleDelete = async (id: string) => {
         try {
-            await deleteToxicWord(id).unwrap();
+            await deleteToxicWord(id);
             toast.success('Xoá từ khoá thành công');
             
             // Adjust page if we deleted the last item on the current page

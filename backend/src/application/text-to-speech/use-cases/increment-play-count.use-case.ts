@@ -1,15 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AudioPlayedEvent } from '@/application/analytics/events/audio-played.event';
 
 @Injectable()
 export class IncrementPlayCountUseCase {
-  constructor(private readonly ttsRepository: ITextToSpeechRepository) {}
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
-  async execute(chapterId: string): Promise<void> {
-    const audio = await this.ttsRepository.findCompletedByChapterId(chapterId);
-    if (audio) {
-      audio.incrementPlayCount();
-      await this.ttsRepository.save(audio);
-    }
+  execute(chapterId: string): void {
+    this.eventEmitter.emit('audio.played', new AudioPlayedEvent(chapterId));
   }
 }

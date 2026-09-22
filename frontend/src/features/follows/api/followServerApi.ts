@@ -1,5 +1,5 @@
 import { getAuthenticatedServerApi } from "@/lib/auth-server-api";
-import type { FollowStateResponse } from "@/features/follows/api/followApi";
+import type { FollowStateResponse } from "@/features/follows/types/follow.interface";
 import { extractResponseDtoData } from "@/lib/response-dto";
 import type { ResponseDto } from "@/types/response";
 

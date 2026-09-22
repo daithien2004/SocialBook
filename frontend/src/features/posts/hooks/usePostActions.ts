@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useDeletePostImageMutation, useDeletePostMutation } from '@/features/posts/api/postApi';
-import { usePostToggleLikeMutation } from '@/features/likes/api/likeApi';
+import { useDeletePostImage, useDeletePost } from '@/features/posts/api/post.mutations';
+import { useToggleLike } from '@/features/likes/api/like.mutations';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 import { useOptimisticToggle } from '@/hooks/useOptimisticToggle';
@@ -23,12 +23,12 @@ interface UsePostActionsReturn {
 
 export function usePostActions(options: UsePostActionsOptions): UsePostActionsReturn {
   const { postId, initialLikeCount = 0, initialLikeStatus = false } = options;
-  
+
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [deletePostMutation] = useDeletePostMutation();
-  const [deleteImageMutation] = useDeletePostImageMutation();
-  const [toggleLikeMutation] = usePostToggleLikeMutation();
+  const deletePostMutation = useDeletePost();
+  const deleteImageMutation = useDeletePostImage();
+  const toggleLikeMutation = useToggleLike();
 
   const {
     count: likeCount,
@@ -37,13 +37,14 @@ export function usePostActions(options: UsePostActionsOptions): UsePostActionsRe
   } = useOptimisticToggle({
     initialCount: initialLikeCount,
     initialState: initialLikeStatus,
-    onToggle: () => toggleLikeMutation({ targetId: postId, targetType: 'post' }).unwrap(),
+    onToggle: () =>
+      toggleLikeMutation.mutateAsync({ targetId: postId, targetType: 'post' }),
   });
 
   const deletePost = useCallback(async () => {
     setIsDeleting(true);
     try {
-      await deletePostMutation(postId).unwrap();
+      await deletePostMutation.mutateAsync(postId);
       toast.success(MESSAGES.POST_DELETE_SUCCESS);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -56,10 +57,10 @@ export function usePostActions(options: UsePostActionsOptions): UsePostActionsRe
   const deleteImage = useCallback(
     async (imageUrl: string) => {
       try {
-        await deleteImageMutation({
+        await deleteImageMutation.mutateAsync({
           id: postId,
-          data: { imageUrl },
-        }).unwrap();
+          imageUrl,
+        });
         toast.success(MESSAGES.POST_IMAGE_DELETE_SUCCESS);
       } catch (error) {
         toast.error(getErrorMessage(error));

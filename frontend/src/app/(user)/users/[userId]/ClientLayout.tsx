@@ -1,11 +1,12 @@
 "use client"
 
-import { ProfileHeader } from "@/components/user/profile-header";
-import { ProfileNav } from "@/components/user/profile-nav";
+import { ProfileHeader } from "@/features/users/components/profile-header";
+import { ProfileNav } from "@/features/users/components/profile-nav";
 import React, { ReactNode } from "react";
-import { ProfileSidebar } from "@/components/user/profile-sidebar";
-import { FollowStateResponse } from "@/features/follows/api/followApi";
-import { useGetUserOverviewQuery } from "@/features/users/api/usersApi";
+import { ProfileSidebar } from "@/features/users/components/profile-sidebar";
+import { useQuery } from "@tanstack/react-query";
+import { FollowStateResponse } from "@/features/follows/types/follow.interface";
+import { userQueries } from "@/features/users/api/users.queries";
 
 interface ClientLayoutProps {
     children: ReactNode;
@@ -16,8 +17,9 @@ interface ClientLayoutProps {
 export default function ClientLayout(props: ClientLayoutProps) {
     const { children, profileUserId, initialFollowState } = props
     const { data: overview } =
-        useGetUserOverviewQuery(profileUserId, {
-            skip: !profileUserId,
+        useQuery({
+            ...userQueries.overview(profileUserId),
+            enabled: !!profileUserId,
         });
     return (
         <div className="min-h-screen bg-background text-foreground transition-colors duration-300">

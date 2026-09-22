@@ -1,22 +1,20 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { useDispatch } from 'react-redux';
-import { userLoggedOut } from '@/store/actions';
+import { queryClient } from '@/lib/query-client';
 
 export interface UseLogoutResult {
-    handleLogout: () => Promise<void>;
+  handleLogout: () => Promise<void>;
 }
 
 export function useLogout(): UseLogoutResult {
-    const router = useRouter();
-    const dispatch = useDispatch();
+  const router = useRouter();
 
-    const handleLogout = useCallback(async () => {
-        dispatch(userLoggedOut());
-        await signOut({ redirect: false });
-        router.push('/login');
-    }, [dispatch, router]);
+  const handleLogout = useCallback(async () => {
+    queryClient.clear();
+    await signOut({ redirect: false });
+    router.push('/login');
+  }, [router]);
 
-    return { handleLogout };
+  return { handleLogout };
 }

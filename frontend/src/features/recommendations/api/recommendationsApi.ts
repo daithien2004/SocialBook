@@ -1,28 +1,13 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from '@/lib/nestjs-client-api';
-import { NESTJS_RECOMMENDATIONS_ENDPOINTS } from '@/constants/server-endpoints';
-import { GetRecommendationsRequest, RecommendationsResponse } from '../types/recommendation.interface';
+import { queryClient } from '@/lib/query-client';
+import { recommendationsKeys } from '@/lib/query-keys';
 
-export const recommendationsApi = createApi({
-  reducerPath: 'recommendationsApi',
-  baseQuery: axiosBaseQuery(),
-  tagTypes: ['Recommendations'],
-  endpoints: (builder) => ({
-    getPersonalizedRecommendations: builder.query<
-      RecommendationsResponse,
-      GetRecommendationsRequest
-    >({
-      query: (params) => ({
-        url: NESTJS_RECOMMENDATIONS_ENDPOINTS.getPersonalized,
-        method: 'GET',
-        params: {
-          page: params?.page || 1,
-          limit: params?.limit || 10,
-        },
-      }),
-      providesTags: ['Recommendations'],
-    }),
-  }),
-});
+export * from './recommendations.api';
+export * from './recommendations.queries';
 
-export const { useGetPersonalizedRecommendationsQuery } = recommendationsApi;
+export const recommendationsApi = {
+  util: {
+    resetApiState: () => {
+      queryClient.invalidateQueries({ queryKey: recommendationsKeys.all });
+    },
+  },
+};

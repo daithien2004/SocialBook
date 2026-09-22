@@ -1,10 +1,10 @@
 import { TAB_CONFIG } from "./books.constants";
-import { Book, TabState, TabStates } from "./types/book.interface";
+import { BookSummary, TabState, TabStates } from "./types/book.interface";
 
 export function deduplicateBooks(
-    existingBooks: Book[],
-    newBooks: Book[]
-): Book[] {
+    existingBooks: BookSummary[],
+    newBooks: BookSummary[]
+): BookSummary[] {
     const existingIds = new Set(existingBooks.map((b) => b.id));
     return newBooks.filter((book) => !existingIds.has(book.id));
 }

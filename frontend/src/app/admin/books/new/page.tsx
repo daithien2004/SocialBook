@@ -1,4 +1,4 @@
-import CreateBook from '@/components/admin/book/CreateBook';
+import CreateBook from '@/features/admin/components/book/CreateBook';
 
 export default function CreateBookPage() {
     return <CreateBook />;

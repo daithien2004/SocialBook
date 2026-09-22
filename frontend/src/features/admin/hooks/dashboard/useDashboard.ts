@@ -1,12 +1,8 @@
 import { useMemo } from 'react';
-import {
-    useGetOverviewStatsQuery,
-    useGetGrowthStatsQuery,
-    useGetBookStatsQuery,
-    useGetActiveUsersQuery,
-} from '@/features/admin/api/analyticsApi';
-import { GrowthMetric } from '@/features/admin/types/dashboard.types';
-    import { ViewType } from '@/components/admin/dashboard/ViewTypeSelector';
+import { useQuery } from '@tanstack/react-query';
+import { analyticsQueries } from '@/features/admin/api/analyticsApi';
+import type { GrowthMetric } from '@/features/admin/types/dashboard.types';
+import type { ViewType } from '@/features/admin/components/dashboard/ViewTypeSelector';
 
 export function useDashboardData(timeRange: string, viewType: ViewType = 'day') {
     const days = Number(timeRange);
@@ -16,28 +12,36 @@ export function useDashboardData(timeRange: string, viewType: ViewType = 'day') 
         isLoading: isLoadingOverview,
         error: overviewError,
         refetch: refetchOverview,
-    } = useGetOverviewStatsQuery();
+    } = useQuery({
+        ...analyticsQueries.overviewStats(),
+    });
 
     const {
         data: growthData = [],
         isLoading: isLoadingGrowth,
         error: growthError,
         refetch: refetchGrowth,
-    } = useGetGrowthStatsQuery({ days, groupBy: viewType });
+    } = useQuery({
+        ...analyticsQueries.growthStats({ days, groupBy: viewType }),
+    });
 
     const {
         data: bookStats,
         isLoading: isLoadingBooks,
         error: booksError,
         refetch: refetchBooks,
-    } = useGetBookStatsQuery();
+    } = useQuery({
+        ...analyticsQueries.bookStats(),
+    });
 
     const {
         data: activeUsersData,
         isLoading: isLoadingActiveUsers,
         error: activeUsersError,
         refetch: refetchActiveUsers,
-    } = useGetActiveUsersQuery();
+    } = useQuery({
+        ...analyticsQueries.activeUsers(),
+    });
 
     const loading = isLoadingOverview || isLoadingGrowth || isLoadingBooks || isLoadingActiveUsers;
     const error = overviewError || growthError || booksError || activeUsersError
@@ -72,11 +76,12 @@ export function useDashboardData(timeRange: string, viewType: ViewType = 'day') 
 export function useExportStatistics(timeRange: string = '30') {
     const days = Number(timeRange);
 
-    const { data: growthData = [], isLoading: isLoadingGrowth } = useGetGrowthStatsQuery({
-        days,
-        groupBy: 'day',
+    const { data: growthData = [], isLoading: isLoadingGrowth } = useQuery({
+        ...analyticsQueries.growthStats({ days, groupBy: 'day' }),
     });
-    const { data: overviewData, isLoading: isLoadingOverview } = useGetOverviewStatsQuery();
+    const { data: overviewData, isLoading: isLoadingOverview } = useQuery({
+        ...analyticsQueries.overviewStats(),
+    });
 
     const exportCSV = () => {
         if (!growthData || !overviewData) return;

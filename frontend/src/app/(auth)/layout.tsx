@@ -1,7 +1,5 @@
-'use client';
-
 import { ReactNode } from 'react';
-import { ThemeToggle } from '@/components/common';
+import { ThemeToggle } from '@/components/shared';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (

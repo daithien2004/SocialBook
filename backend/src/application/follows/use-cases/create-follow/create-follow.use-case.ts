@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
+import { UserFollowedJobPayload } from '@/application/notifications/jobs/notification-job.payload';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -16,7 +17,8 @@ export class CreateFollowUseCase {
   constructor(
     private readonly followRepository: IFollowRepository,
     private readonly idGenerator: IIdGenerator,
-    private readonly eventEmitter: EventEmitter2,
+    @Inject(INotificationQueuePort)
+    private readonly notificationQueue: INotificationQueuePort,
   ) {}
 
   async execute(command: CreateFollowCommand): Promise<Follow> {
@@ -56,10 +58,9 @@ export class CreateFollowUseCase {
           `Follow created successfully: ${newFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
         );
 
-        this.eventEmitter.emit('user.followed', {
-          userId: command.userId,
-          targetId: command.targetId,
-        });
+        await this.notificationQueue.queueUserFollowed(
+          new UserFollowedJobPayload(command.userId, command.targetId),
+        );
 
         return newFollow;
       }

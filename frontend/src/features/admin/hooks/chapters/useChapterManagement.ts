@@ -1,26 +1,26 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { useGetBookByIdQuery } from "@/features/books/api/bookApi";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { bookQueries } from "@/features/books/api/books.queries";
 import {
-  useGetAdminChaptersQuery,
-  useLazyGetAdminChaptersQuery,
-  useCreateChapterMutation,
-  useUpdateChapterMutation,
-  useDeleteChapterMutation,
-  useLazyGetChapterByIdQuery,
-  useStartChaptersImportMutation,
-  useLazyGetChaptersImportStatusQuery,
+  chaptersQueries,
+  getAdminChapters,
+  getChapterById,
+  getChaptersImportStatus,
+  useCreateChapter,
+  useDeleteChapter,
+  useStartChaptersImport,
+  useUpdateChapter,
 } from "@/features/chapters/api/chaptersApi";
 import {
-  useGenerateChapterAudioMutation,
-  useGenerateBookAudioMutation,
+  useGenerateBookAudio,
+  useGenerateChapterAudio,
 } from "@/features/tts/api/ttsApi";
-import {
+import type {
   Chapter,
   Paragraph,
 } from "@/features/chapters/types/chapter.interface";
-import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 
 export function useChapterManagement() {
@@ -43,48 +43,41 @@ export function useChapterManagement() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const lastProcessedRef = useRef(-1);
 
-  const [triggerGetChapter, { isFetching: isFetchingDetails }] =
-    useLazyGetChapterByIdQuery();
-  const [createChapter, { isLoading: isCreating }] = useCreateChapterMutation();
-  const [updateChapter, { isLoading: isUpdating }] = useUpdateChapterMutation();
-  const [deleteChapter] = useDeleteChapterMutation();
-  const [startChaptersImport, { isLoading: isStartingImport }] =
-    useStartChaptersImportMutation();
-  const [triggerImportStatus] = useLazyGetChaptersImportStatusQuery();
-  const [generateChapterAudio] =
-    useGenerateChapterAudioMutation();
-  const [generateBookAudio, { isLoading: isGeneratingAllAudio }] =
-    useGenerateBookAudioMutation();
+  const { mutateAsync: createChapter, isPending: isCreating } = useCreateChapter();
+  const { mutateAsync: updateChapter, isPending: isUpdating } = useUpdateChapter();
+  const { mutateAsync: deleteChapter } = useDeleteChapter();
+  const { mutateAsync: startChaptersImport, isPending: isStartingImport } =
+    useStartChaptersImport();
+  const { mutateAsync: generateChapterAudio } = useGenerateChapterAudio();
+  const { mutateAsync: generateBookAudio, isPending: isGeneratingAllAudio } =
+    useGenerateBookAudio();
+
 
   const { data: bookData, isLoading: isLoadingBook } =
-    useGetBookByIdQuery(bookId);
+    useQuery(bookQueries.byId(bookId));
 
   const {
     data: chaptersData,
     isFetching: isFetchingChapters,
     isLoading: isLoadingChapters,
     refetch: refetchChaptersQuery,
-  } = useGetAdminChaptersQuery(
-    {
+  } = useQuery({
+    ...chaptersQueries.adminList({
       bookSlug: bookData?.slug || "",
       page,
       limit: 20,
-    },
-    {
-      skip: !bookData?.slug,
-      refetchOnMountOrArgChange: true,
-    },
-  );
-
-  const [triggerFetchChapters] = useLazyGetAdminChaptersQuery();
+    }),
+    enabled: !!bookData?.slug,
+  });
 
   const directFetchChapters = useCallback(async () => {
     if (!bookData?.slug) return;
     try {
-      const result = await triggerFetchChapters(
-        { bookSlug: bookData.slug, page: 1, limit: 20 },
-        false,
-      ).unwrap();
+      const result = await getAdminChapters({
+        bookSlug: bookData.slug,
+        page: 1,
+        limit: 20,
+      });
       if (isMountedRef.current && result?.chapters) {
         setPage(1);
         setChapters(result.chapters);
@@ -94,7 +87,7 @@ export function useChapterManagement() {
     } catch {
       // Silently ignore - chapters may still load via refetchChapters
     }
-  }, [bookData, triggerFetchChapters]);
+  }, [bookData]);
 
   const refetchChapters = () => {
     setChapters([]);
@@ -112,14 +105,11 @@ export function useChapterManagement() {
 
     const poll = async () => {
       try {
-        const result = await triggerImportStatus(
-          {
-            bookSlug: bookData.slug,
-            jobId: activeJobId,
-            timestamp: Date.now(),
-          },
-          false, // preferCacheValue = false -> force fetch fresh
-        ).unwrap();
+        const result = await getChaptersImportStatus({
+          bookSlug: bookData.slug,
+          jobId: activeJobId,
+          timestamp: Date.now(),
+        });
 
         if (isCleared) return;
 
@@ -182,7 +172,7 @@ export function useChapterManagement() {
       isCleared = true;
       clearInterval(pollInterval);
     };
-  }, [activeJobId, bookData?.slug, triggerImportStatus, directFetchChapters]);
+  }, [activeJobId, bookData?.slug, directFetchChapters]);
 
   useEffect(() => {
     if (chaptersData?.chapters && !isFetchingChapters) {
@@ -225,7 +215,7 @@ export function useChapterManagement() {
   const [showNewChapterForm, setShowNewChapterForm] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState("");
   const [newChapterParagraphs, setNewChapterParagraphs] = useState<Paragraph[]>(
-    [{ id: uuidv4(), content: "" }],
+    [{ id: crypto.randomUUID(), content: "" }],
   );
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [chapterToDelete, setChapterToDelete] = useState<Chapter | null>(null);
@@ -259,16 +249,16 @@ export function useChapterManagement() {
     setEditingParagraphs([]);
 
     try {
-      const fullChapter = await triggerGetChapter({
+      const fullChapter = await getChapterById({
         bookSlug: book.slug,
         chapterId: chapter.id,
-      }).unwrap();
+      });
 
       setEditingTitle(fullChapter.title);
       const paras =
         fullChapter.paragraphs && fullChapter.paragraphs.length > 0
           ? fullChapter.paragraphs
-          : [{ id: uuidv4(), content: "" }];
+          : [{ id: crypto.randomUUID(), content: "" }];
       setEditingParagraphs(paras);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -293,9 +283,9 @@ export function useChapterManagement() {
           paragraphs:
             editingParagraphs.filter((p) => p.content.trim()).length > 0
               ? editingParagraphs.filter((p) => p.content.trim())
-              : [{ id: uuidv4(), content: " " }],
+              : [{ id: crypto.randomUUID(), content: " " }],
         },
-      }).unwrap();
+      });
       setEditingChapterId(null);
       setEditingTitle("");
       setEditingParagraphs([]);
@@ -317,7 +307,7 @@ export function useChapterManagement() {
       await deleteChapter({
         bookSlug: book.slug,
         chapterId: chapterToDelete.id,
-      }).unwrap();
+      });
       if (expandedChapterId === chapterToDelete.id) setExpandedChapterId(null);
       toast.success("Xóa chương thành công");
       setChapterToDelete(null);
@@ -344,7 +334,7 @@ export function useChapterManagement() {
         const newParagraphs = paragraphs.map((p) => ({ ...p }));
         newParagraphs[index].content = segments[0];
         const newItems = segments.slice(1).map((line) => ({
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           content: line,
         }));
         newParagraphs.splice(index + 1, 0, ...newItems);
@@ -372,7 +362,7 @@ export function useChapterManagement() {
       const rightPart = content.slice(cursorPosition);
       const newParagraphs = paragraphs.map((p) => ({ ...p }));
       newParagraphs[index].content = leftPart;
-      newParagraphs.splice(index + 1, 0, { id: uuidv4(), content: rightPart });
+      newParagraphs.splice(index + 1, 0, { id: crypto.randomUUID(), content: rightPart });
       setParagraphs(newParagraphs);
 
       setTimeout(() => {
@@ -432,10 +422,10 @@ export function useChapterManagement() {
           bookId,
           paragraphs: newChapterParagraphs.filter((p) => p.content.trim()),
         },
-      }).unwrap();
+      });
       setShowNewChapterForm(false);
       setNewChapterTitle("");
-      setNewChapterParagraphs([{ id: uuidv4(), content: "" }]);
+      setNewChapterParagraphs([{ id: crypto.randomUUID(), content: "" }]);
     } catch (error) {
       toast.error(`Tạo thất bại: ${getErrorMessage(error)}`);
     }
@@ -443,7 +433,7 @@ export function useChapterManagement() {
 
   const handleGenerateAudio = async (chapterId: string) => {
     try {
-      const ttsResult = await generateChapterAudio({ chapterId }).unwrap();
+      const ttsResult = await generateChapterAudio({ chapterId });
       toast.success("Tạo audio thành công!");
       setChapters((prev) =>
         prev.map((ch) =>
@@ -470,7 +460,7 @@ export function useChapterManagement() {
     setShowGenerateAllConfirm(false);
     const toastId = toast.loading("Đang tạo audio cho tất cả các chương...");
     try {
-      const result = await generateBookAudio({ bookId }).unwrap();
+      const result = await generateBookAudio({ bookId });
       toast.success(
         `Hoàn thành! Thành công: ${result.successful}/${result.total}, Thất bại: ${result.failed}`,
         { id: toastId },
@@ -493,7 +483,7 @@ export function useChapterManagement() {
       const { jobId } = await startChaptersImport({
         bookSlug: book.slug,
         data: { bookId, chapters: importedChapters },
-      }).unwrap();
+      });
 
       toast.success(
         `Đã bắt đầu tiến trình nhập ${importedChapters.length} chương ở chế độ nền. Hệ thống sẽ thông báo khi hoàn thành.`,
@@ -512,7 +502,7 @@ export function useChapterManagement() {
     isLoadingBook,
     isLoadingChapters,
     isFetchingChapters,
-    isFetchingDetails,
+    isFetchingDetails: isLoadingBook,
     isCreating,
     isUpdating,
     isGeneratingAllAudio,

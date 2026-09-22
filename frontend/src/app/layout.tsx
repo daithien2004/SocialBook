@@ -1,26 +1,27 @@
 import './globals.css';
 import dynamic from 'next/dynamic';
-import ScrollToTop from '@/components/common/ScrollToTop';
+import { Suspense } from 'react';
+import ScrollToTop from '@/components/shared/ScrollToTop';
 import { Providers } from '../context/Providers';
 import { Toaster } from 'sonner';
-import { inter, merriweather, notoSans } from '@/components/book/Fonts';
-import { FollowersModal } from '@/components/user/FollowersModal';
-import GlobalConfirmModal from '@/components/common/GlobalConfirmModal';
+import { inter, merriweather, notoSans } from '@/features/books/components/Fonts';
+import { FollowersModal } from '@/features/users/components/FollowersModal';
+import GlobalConfirmModal from '@/components/shared/GlobalConfirmModal';
 import { ThemeProvider } from '@/context/ThemeProvider';
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
-const CreatePostModal = dynamic(() => import('@/components/post/CreatePostModal'));
-const EditPostModal = dynamic(() => import('@/components/post/EditPostModal'));
-const SharePostModal = dynamic(() => import('@/components/post/SharePostModal'));
-const ModalPostComment = dynamic(() => import('@/components/post/ModalPostComment'));
-const AddToLibraryModal = dynamic(() => import('@/components/library/AddToLibraryModal'));
-const ChapterSummaryModal = dynamic(() => import('@/components/chapter/ChapterSummaryModal'));
-const DeleteBookModal = dynamic(() => import('@/components/admin/book/DeleteBookModal'));
-const CreateCollectionModal = dynamic(() => import('@/components/library/CreateCollectionModal'));
-const EditCollectionModal = dynamic(() => import('@/components/library/EditCollectionModal'));
-const GenreModal = dynamic(() => import('@/components/admin/genre/GenreModal'));
-const AuthorModal = dynamic(() => import('@/components/admin/author/AuthorModal'));
-const ManageChapterModal = dynamic(() => import('@/components/admin/chapter/ManageChapterModal'));
+const CreatePostModal = dynamic(() => import('@/features/posts/components/CreatePostModal'));
+const EditPostModal = dynamic(() => import('@/features/posts/components/EditPostModal'));
+const SharePostModal = dynamic(() => import('@/features/posts/components/SharePostModal'));
+const ModalPostComment = dynamic(() => import('@/features/posts/components/ModalPostComment'));
+const AddToLibraryModal = dynamic(() => import('@/features/library/components/AddToLibraryModal'));
+const ChapterSummaryModal = dynamic(() => import('@/features/chapters/components/ChapterSummaryModal'));
+const DeleteBookModal = dynamic(() => import('@/features/admin/components/book/DeleteBookModal'));
+const CreateCollectionModal = dynamic(() => import('@/features/library/components/CreateCollectionModal'));
+const EditCollectionModal = dynamic(() => import('@/features/library/components/EditCollectionModal'));
+const GenreModal = dynamic(() => import('@/features/admin/components/genre/GenreModal'));
+const AuthorModal = dynamic(() => import('@/features/admin/components/author/AuthorModal'));
+const ManageChapterModal = dynamic(() => import('@/features/admin/components/chapter/ManageChapterModal'));
 
 export const metadata = {
   title: 'SocialBook',
@@ -41,26 +42,30 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Providers>
-            <ScrollToTop />
-            <ErrorBoundary name="RootLayout">
-              {children}
-            </ErrorBoundary>
-            <CreatePostModal />
-            <EditPostModal />
-            <SharePostModal />
-            <ModalPostComment />
-            <AddToLibraryModal />
-            <FollowersModal />
-            <ChapterSummaryModal />
-            <DeleteBookModal />
-            <CreateCollectionModal />
-            <EditCollectionModal />
-            <GlobalConfirmModal />
-            <GenreModal />
-            <AuthorModal />
-            <ManageChapterModal />
-          </Providers>
+          <Suspense fallback={null}>
+            <Providers>
+              <ScrollToTop />
+              <ErrorBoundary name="RootLayout">
+                {children}
+              </ErrorBoundary>
+              <CreatePostModal />
+              <EditPostModal />
+              <SharePostModal />
+              <ModalPostComment />
+              <AddToLibraryModal />
+              <FollowersModal />
+              <ChapterSummaryModal />
+              <DeleteBookModal />
+              <CreateCollectionModal />
+              <EditCollectionModal />
+              <GlobalConfirmModal />
+              <GenreModal />
+              <AuthorModal />
+              <Suspense fallback={null}>
+                <ManageChapterModal />
+              </Suspense>
+            </Providers>
+          </Suspense>
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>
       </body>

@@ -1,25 +1,12 @@
-import type { PaginatedApiResult } from '@/lib/api-response';
-
-export interface Genre {
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    createdAt: string;
-    updatedAt: string;
-}
-
-export type GenresListResponse = PaginatedApiResult<Genre>;
-
-export interface CreateGenreRequest {
-    name: string;
-    description?: string;
-}
-
-export interface UpdateGenreRequest {
-    id: string;
-    data: {
-        name?: string;
-        description?: string;
-    };
-}
+export {
+  genreSchema,
+  type Genre,
+  genrePageSchema,
+  type GenrePage,
+  type PaginatedData,
+  createGenreSchema,
+  type CreateGenreRequest,
+  updateGenreRequestSchema,
+  type UpdateGenreRequest,
+} from '../schemas/genre.schema';
+export type { PaginationMetaData } from '@/lib/pagination.schema';

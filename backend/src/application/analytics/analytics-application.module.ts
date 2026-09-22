@@ -8,6 +8,9 @@ import { BooksRepositoryModule } from '@/infrastructure/database/repositories/bo
 import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
 import { ScoringService } from './services/scoring.service';
 import { AnalyticsListener } from './listeners/analytics.listener';
+import { BookAnalyticsListener } from './listeners/book-analytics.listener';
+import { TtsAnalyticsListener } from './listeners/tts-analytics.listener';
+import { TextToSpeechRepositoryModule } from '@/infrastructure/database/repositories/text-to-speech/text-to-speech-repository.module';
 import { TargetResolutionModule } from '@/application/target-resolution/target-resolution.module';
 
 @Module({
@@ -16,6 +19,7 @@ import { TargetResolutionModule } from '@/application/target-resolution/target-r
     IdGeneratorModule,
     BooksRepositoryModule,
     GenresRepositoryModule,
+    TextToSpeechRepositoryModule,
     TargetResolutionModule,
   ],
   providers: [
@@ -24,6 +28,8 @@ import { TargetResolutionModule } from '@/application/target-resolution/target-r
     GetTopActiveReadersUseCase,
     ScoringService,
     AnalyticsListener,
+    BookAnalyticsListener,
+    TtsAnalyticsListener,
   ],
   exports: [
     TrackUserEventUseCase,

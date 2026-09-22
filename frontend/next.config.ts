@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 let nextConfig: NextConfig = {
+  cacheComponents: true,
   images: {
     remotePatterns: [
       {

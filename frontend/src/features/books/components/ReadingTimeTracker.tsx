@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useRecordReadingTimeMutation } from '@/features/library/api/libraryApi';
+import { useRecordReadingTime } from '@/features/library/api/libraryApi';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useTracking, UserEventType } from '@/hooks/use-tracking';
 
@@ -13,7 +13,7 @@ interface ReadingTimeTrackerProps {
 
 export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProps) {
   const { isAuthenticated } = useAppAuth();
-  const [recordReadingTime] = useRecordReadingTimeMutation();
+  const recordReadingTime = useRecordReadingTime();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const accumulatedSeconds = useRef(0);
@@ -50,7 +50,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
              accumulatedSeconds.current -= 60;
              
              // Record for library stats
-             recordReadingTimeRef.current({
+             recordReadingTimeRef.current.mutateAsync({
                 bookId,
                 chapterId,
                 durationInSeconds: secondsToRecord

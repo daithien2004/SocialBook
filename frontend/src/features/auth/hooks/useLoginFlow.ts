@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginFormValues } from '@/features/auth/types/auth.type';
+import { queryClient } from '@/lib/query-client';
 
 export interface UseLoginFlowResult {
     isLoading: boolean;
@@ -46,6 +47,7 @@ export function useLoginFlow(): UseLoginFlowResult & {
             });
 
             if (result?.ok) {
+                queryClient.clear();
                 await new Promise((resolve) => setTimeout(resolve, 100));
                 handleAuthRedirect();
             } else {

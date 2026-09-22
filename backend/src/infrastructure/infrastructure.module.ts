@@ -33,6 +33,7 @@ import { ReadingRoomsRepositoryModule } from './database/repositories/reading-ro
 import { AnalyticsRepositoryModule } from './database/repositories/analytics/analytics-repository.module';
 import { BookmarksRepositoryModule } from './database/repositories/bookmarks/bookmarks-repository.module';
 import { UserHighlightsRepositoryModule } from './database/repositories/user-highlights/user-highlights-repository.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     IdGeneratorModule,
     ChaptersImportModule,
     PostModerationQueueModule,
+    QueueModule,
   ],
   exports: [
     CacheInfrastructureModule,
@@ -106,6 +108,7 @@ import { UserHighlightsRepositoryModule } from './database/repositories/user-hig
     IdGeneratorModule,
     ChaptersImportModule,
     PostModerationQueueModule,
+    QueueModule,
   ],
 })
 export class InfrastructureModule {}

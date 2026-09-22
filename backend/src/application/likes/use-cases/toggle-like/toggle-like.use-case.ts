@@ -1,11 +1,12 @@
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Inject, Injectable } from '@nestjs/common';
+import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
+import { LikeToggledJobPayload } from '@/application/notifications/jobs/notification-job.payload';
 import { ILikeRepository } from '@/domain/likes/repositories/like.repository.interface';
 import { UserId } from '@/domain/likes/value-objects/user-id.vo';
 import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { Like } from '@/domain/likes/entities/like.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { Injectable } from '@nestjs/common';
 
 export interface ToggleLikeRequest {
   userId: string;
@@ -23,7 +24,8 @@ export class ToggleLikeUseCase {
   constructor(
     private readonly likeRepository: ILikeRepository,
     private readonly idGenerator: IIdGenerator,
-    private readonly eventEmitter: EventEmitter2,
+    @Inject(INotificationQueuePort)
+    private readonly notificationQueue: INotificationQueuePort,
   ) {}
 
   async execute(request: ToggleLikeRequest): Promise<ToggleLikeResponse> {
@@ -58,12 +60,14 @@ export class ToggleLikeUseCase {
 
       await this.likeRepository.save(newLike);
 
-      this.eventEmitter.emit('like.toggled', {
-        userId: request.userId,
-        targetId: request.targetId,
-        targetType: request.targetType,
-        isLiked: true,
-      });
+      await this.notificationQueue.queueLikeToggled(
+        new LikeToggledJobPayload(
+          request.userId,
+          request.targetId,
+          request.targetType,
+          true,
+        ),
+      );
 
       return {
         isLiked: true,

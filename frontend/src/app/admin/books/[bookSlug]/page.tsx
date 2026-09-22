@@ -1,4 +1,4 @@
-import BookDetailClient from '@/components/book/BookDetailClient';
+import BookDetailClient from '@/features/books/components/BookDetailClient';
 
 interface BookDetailProps {
     params: Promise<{

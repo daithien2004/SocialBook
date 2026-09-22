@@ -4,7 +4,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationsService } from './notifications.service';
 import { NotificationsGateway } from './notifications.gateway';
-import { NotificationEventHandler } from './notification-event.handler';
+import { NotificationWorker } from './notification.worker';
+import { AudioWorker } from './audio.worker';
+import { TtsInfrastructureModule } from '@/infrastructure/text-to-speech/tts-infrastructure.module';
+import { TextToSpeechRepositoryModule } from '@/infrastructure/database/repositories/text-to-speech/text-to-speech-repository.module';
 import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
 import { ReadingRoomInteractionsApplicationModule } from '@/application/reading-room-interactions/reading-room-interactions-application.module';
 import { ReadingRoomGateway } from './reading-room.gateway';
@@ -25,6 +28,8 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
     PostsRepositoryModule,
     CommentsRepositoryModule,
     UsersRepositoryModule,
+    TextToSpeechRepositoryModule,
+    TtsInfrastructureModule,
     TargetResolutionModule,
     ReadingRoomPresenceModule,
     LibraryApplicationModule,
@@ -39,7 +44,8 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
   providers: [
     NotificationsGateway,
     NotificationsService,
-    NotificationEventHandler,
+    NotificationWorker,
+    AudioWorker,
     ReadingRoomGateway,
   ],
   exports: [NotificationsService],

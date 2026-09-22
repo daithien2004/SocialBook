@@ -1,0 +1,59 @@
+import { BookSummary } from '@/features/books/types/book.interface';
+import { BookCard } from './BookCard';
+import {
+  BookGridSkeleton,
+  EmptyBooksState,
+  EndOfListMessage,
+  LoadingMoreIndicator,
+} from './LoadingStates';
+
+interface BookGridProps {
+  books: BookSummary[];
+  isLoading: boolean;
+  isFetching: boolean;
+  hasMore: boolean;
+  isInitialized: boolean;
+  onLastElementVisible: (node: HTMLDivElement | null) => void;
+}
+
+export function BookGrid({
+  books,
+  isLoading,
+  isFetching,
+  hasMore,
+  isInitialized,
+  onLastElementVisible,
+}: BookGridProps) {
+  if (isLoading && !isInitialized) {
+    return <BookGridSkeleton />;
+  }
+
+  // Empty state
+  if (isInitialized && books.length === 0) {
+    return <EmptyBooksState />;
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-20">
+        {books.map((book, index) => {
+          const isLastBook = index === books.length - 1;
+
+          if (isLastBook) {
+            return (
+              <div key={book.id} ref={onLastElementVisible} className="h-full">
+                <BookCard book={book} priority={index < 8} />
+              </div>
+            );
+          }
+
+          return <BookCard key={book.id} book={book} priority={index < 8} />;
+        })}
+      </div>
+
+      {isFetching && isInitialized ? <LoadingMoreIndicator /> : null}
+
+      {!hasMore && books.length > 0 ? <EndOfListMessage /> : null}
+    </>
+  );
+}

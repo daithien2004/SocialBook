@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Send, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import { useAppAuth } from '@/features/auth/hooks';
-import { GlassCard } from '@/components/common/GlassCard';
+import { GlassCard } from '@/components/shared/GlassCard';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface RoomChatProps {

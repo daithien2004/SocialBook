@@ -6,16 +6,17 @@ import { ChatMessage } from '@/store/useReadingRoomStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useGetChapterKnowledgeQuery, useAskChapterAIMutation, useLazyGetChapterKnowledgeQuery } from '@/features/chapters/api/chaptersApi';
 import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { chaptersQueries, getChapterKnowledge, useAskChapterAI } from '@/features/chapters/api/chaptersApi';
 import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 
 import { KnowledgeEntity } from '@/features/chapters/types/chapter.interface';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
-import { GlassCard } from '@/components/common/GlassCard';
-import { MarkdownText } from '@/components/common/MarkdownText';
+import { GlassCard } from '@/components/shared/GlassCard';
+import { MarkdownText } from '@/components/shared/MarkdownText';
 
 
 interface KnowledgeSidebarProps {
@@ -27,21 +28,24 @@ interface KnowledgeSidebarProps {
 export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSidebarProps) => {
   const { isAuthenticated, user } = useAppAuth();
 
-  const { data, isLoading: isQueryLoading, error, refetch } = useGetChapterKnowledgeQuery(
-    { bookSlug, chapterId },
-    { skip: !chapterId || !isAuthenticated }
-  );
+  const { data, isLoading: isQueryLoading, error, refetch } = useQuery({
+    ...chaptersQueries.knowledge({ bookSlug, chapterId }),
+    enabled: !!chapterId && isAuthenticated,
+  });
 
-  const [triggerForceGet, { isLoading: isForceLoading }] = useLazyGetChapterKnowledgeQuery();
+  const [isForcing, setIsForcing] = useState(false);
 
-  const isLoading = isQueryLoading || isForceLoading;
+  const isLoading = isQueryLoading || isForcing;
 
   const handleRefresh = async () => {
     try {
-      await triggerForceGet({ bookSlug, chapterId, force: true }).unwrap();
+      setIsForcing(true);
+      await getChapterKnowledge({ bookSlug, chapterId, force: true });
       refetch();
     } catch {
       toast.error('Không thể tải lại kiến thức. Vui lòng thử lại sau.');
+    } finally {
+      setIsForcing(false);
     }
   };
 
@@ -52,7 +56,8 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSideb
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const [askChapterAI, { isLoading: isSoloPending }] = useAskChapterAIMutation();
+  const askChapterAI = useAskChapterAI();
+  const isSoloPending = askChapterAI.isPending;
 
   const chatMessages = localChatMessages;
   const uid = user?.id || 'guest';
@@ -110,7 +115,7 @@ export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSideb
     setLocalChatMessages(prev => [...prev, userMsg]);
 
     try {
-      const response = await askChapterAI({ bookSlug, chapterId, question: q }).unwrap();
+      const response = await askChapterAI.mutateAsync({ bookSlug, chapterId, question: q });
       const aiMsg: ChatMessage = {
         userId: roomId ? 'gemini-ai' : 'ai',
         role: 'ai',

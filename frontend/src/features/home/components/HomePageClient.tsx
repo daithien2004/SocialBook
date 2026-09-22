@@ -1,25 +1,25 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { useGetBooksQuery } from '@/features/books/api/bookApi';
+import { useMemo, useState } from 'react';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { bookQueries } from '@/features/books/api/books.queries';
 import { TabType, TABS, PAGINATION } from '@/features/books/books.constants';
 import { shouldLoadMore } from '@/features/books/books.utils';
 import { useInfiniteScroll } from '@/features/books/hooks/useInfiniteScroll';
-import { useTabsManager } from '@/features/books/hooks/useTabsManager';
 import { BookOrderField } from '@/features/books/types/book.interface';
 import { useAppAuth } from '@/features/auth/hooks';
-import { useGetLibraryBooksQuery } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/libraryApi';
 import { LibraryItem, LibraryStatus } from '@/features/library/types/library.interface';
-import { BannerSlider } from '@/components/book/BannerSlider';
-import { BookGrid } from '@/components/book/BookGrid';
-import { GenresSection } from '@/components/book/GenresSection';
-import { MobileReadingSection } from '@/components/book/MobileReadingSection';
-import { ReadingSidebar } from '@/components/book/ReadingSidebar';
-import { RecommendedForYouSection } from '@/components/book/RecommendedForYouSection';
-import { TopReadSection } from '@/components/book/TopReadSection';
-import { TrendingKeywordsSection } from '@/components/book/TrendingKeywordsSection';
-import { TabNavigation } from '@/components/book/TabNavigation';
+import { BannerSlider } from '@/features/books/components/BannerSlider';
+import { BookGrid } from '@/features/books/components/BookGrid';
+import { GenresSection } from '@/features/books/components/GenresSection';
+import { MobileReadingSection } from '@/features/books/components/MobileReadingSection';
+import { ReadingSidebar } from '@/features/books/components/ReadingSidebar';
+import { RecommendedForYouSection } from '@/features/books/components/RecommendedForYouSection';
+import { TopReadSection } from '@/features/books/components/TopReadSection';
+import { TrendingKeywordsSection } from '@/features/books/components/TrendingKeywordsSection';
+import { TabNavigation } from '@/features/books/components/TabNavigation';
 
 const EMPTY_BOOKS: LibraryItem[] = [];
 
@@ -27,37 +27,37 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabType>('trending');
 
   const { isAuthenticated, isGuest } = useAppAuth();
-  const { data: readingBooks = EMPTY_BOOKS, isLoading: isReadingLoading } = useGetLibraryBooksQuery(
-    { status: LibraryStatus.READING, limit: 10 },
-    { skip: !isAuthenticated }
-  );
+  const { data: readingBooks = EMPTY_BOOKS, isLoading: isReadingLoading } = useQuery({
+    ...libraryQueries.books({ status: LibraryStatus.READING, limit: 10 }),
+    enabled: isAuthenticated,
+  });
 
   const currentTabConfig = TABS.find((t) => t.id === activeTab)!;
 
-  const { currentState, loadMoreBooks, setFetchedData } = useTabsManager({
-    activeTab,
-  });
+  const { data, isLoading, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery(
+    bookQueries.infiniteList({
+      limit: PAGINATION.BOOKS_PER_PAGE,
+      sortBy: currentTabConfig.sortBy as BookOrderField,
+    }),
+  );
 
-  const { data, isLoading, isFetching } = useGetBooksQuery({
-    page: currentState.page,
-    limit: PAGINATION.BOOKS_PER_PAGE,
-    sortBy: currentTabConfig.sortBy as BookOrderField,
-  });
-
-  useEffect(() => {
-    if (data) {
-      setFetchedData(data);
-    }
-  }, [data, setFetchedData]);
+  const books = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page) => page.data);
+  }, [data]);
 
   const lastBookRef = useInfiniteScroll({
-    onLoadMore: loadMoreBooks,
-    isEnabled: shouldLoadMore(isFetching, currentState.hasMore),
+    onLoadMore: () => {
+      if (hasNextPage && !isFetching) {
+        void fetchNextPage();
+      }
+    },
+    isEnabled: shouldLoadMore(isFetching, !!hasNextPage),
   });
 
-  const featuredBooks = currentState.books.slice(
-    0,
-    PAGINATION.FEATURED_BOOKS_COUNT
+  const featuredBooks = useMemo(
+    () => books.slice(0, PAGINATION.FEATURED_BOOKS_COUNT),
+    [books],
   );
 
   return (
@@ -77,7 +77,7 @@ export default function HomePage() {
               <div className="top-20 space-y-6">
                 <ReadingSidebar books={readingBooks} isLoading={isReadingLoading} isGuest={isGuest} />
                 <TrendingKeywordsSection />
-                <GenresSection books={currentState.books} />
+                <GenresSection books={books} />
               </div>
             </aside>
 
@@ -87,17 +87,17 @@ export default function HomePage() {
                 <TrendingKeywordsSection />
                 <RecommendedForYouSection />
                 <TopReadSection />
-                <GenresSection books={currentState.books} />
+                <GenresSection books={books} />
               </div>
 
               <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
               <BookGrid
-                books={currentState.books}
+                books={books}
                 isLoading={isLoading}
                 isFetching={isFetching}
-                hasMore={currentState.hasMore}
-                isInitialized={currentState.isInitialized}
+                hasMore={!!hasNextPage}
+                isInitialized={!isLoading}
                 onLastElementVisible={lastBookRef}
               />
             </div>

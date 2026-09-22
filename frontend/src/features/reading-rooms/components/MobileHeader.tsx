@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { store } from '@/store/store';
 import { readingRoomsApi } from '@/features/reading-rooms/api/readingRoomsApi';
 import { useModalStore } from '@/store/useModalStore';
 import { RoomResponse } from '@/features/reading-rooms/api/readingRoomsApi';
@@ -169,7 +168,7 @@ export function MobileHeader({
                     onConfirm: () => {
                       endRoom();
                       setTimeout(() => {
-                        store.dispatch(readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory']));
+                        readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory']);
                         router.refresh();
                       }, 300);
                     }
@@ -184,7 +183,7 @@ export function MobileHeader({
                     variant: "destructive",
                     onConfirm: () => {
                       deleteRoom();
-                      store.dispatch(readingRoomsApi.util.invalidateTags(['MyRooms']));
+                      readingRoomsApi.util.invalidateTags(['MyRooms']);
                       router.push('/reading-rooms');
                     }
                   })}>

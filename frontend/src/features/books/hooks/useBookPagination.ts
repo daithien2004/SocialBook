@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, startTransition } from 'react';
-import { useGetBooksQuery } from '@/features/books/api/bookApi';
-import type { Book, BookOrderField } from '@/features/books/types/book.interface';
+import { useQuery } from '@tanstack/react-query';
+import { bookQueries } from '@/features/books/api/books.queries';
+import type { BookOrderField, BookSummary } from '@/features/books/types/book.interface';
 import { useIntersectionPagination } from '@/hooks/useIntersectionPagination';
 
 interface UseBookPaginationProps {
@@ -16,13 +17,13 @@ interface UseBookPaginationProps {
 
 export const useBookPagination = (params: UseBookPaginationProps) => {
     const [page, setPage] = useState(1);
-    const [allBooks, setAllBooks] = useState<Book[]>([]);
+    const [allBooks, setAllBooks] = useState<BookSummary[]>([]);
     const queryKeyRef = useRef('');
 
     const queryKey = JSON.stringify({ ...params });
 
-    const { currentData, data, isLoading, isFetching } = useGetBooksQuery(
-        {
+    const { data, isLoading, isFetching } = useQuery(
+        bookQueries.list({
             page,
             limit: 20,
             search: params.search,
@@ -32,20 +33,18 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
             sortBy: params.sortBy as BookOrderField,
             order: params.order as 'asc' | 'desc',
             status: params.status && params.status !== 'all' ? (params.status as 'draft' | 'published' | 'completed') : undefined,
-        }
+        })
     );
 
-    const { data: semanticData, isLoading: isSemanticLoading, isFetching: isSemanticFetching } = useGetBooksQuery(
-        {
+    const { data: semanticData, isLoading: isSemanticLoading, isFetching: isSemanticFetching } = useQuery({
+        ...bookQueries.list({
             page: 1,
             limit: 5,
             search: params.search,
             mode: 'semantic',
-        },
-        {
-            skip: !params.search || params.search.trim().length < 2,
-        }
-    );
+        }),
+        enabled: !!params.search && params.search.trim().length >= 2,
+    });
 
     // Xử lý logic gộp danh sách Keyword và Semantic
     useEffect(() => {
@@ -55,19 +54,19 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
             startTransition(() => setPage(1));
         }
 
-        if (currentData?.data) {
+        if (data?.data) {
             startTransition(() => {
                 setAllBooks((prev) => {
-                    const aiBooks = (semanticData?.data || []).map((b: Book) => ({ ...b, isSemantic: true }));
+                    const aiBooks = (semanticData?.data || []).map((b: BookSummary) => ({ ...b, isSemantic: true }));
 
-                    const keywordBooks = currentData.data.map((b: Book) => ({
+                    const keywordBooks = data.data.map((b: BookSummary) => ({
                         ...b,
                         // Sách đã tìm thấy bằng Keyword thì không cần gắn mác AI nữa
                         isSemantic: b.isSemantic
                     }));
-                    const keywordBookIds = new Set(keywordBooks.map((b: Book) => b.id));
+                    const keywordBookIds = new Set(keywordBooks.map((b: BookSummary) => b.id));
 
-                    const uniqueAiBooks = aiBooks.filter((b: Book) => !keywordBookIds.has(b.id));
+                    const uniqueAiBooks = aiBooks.filter((b: BookSummary) => !keywordBookIds.has(b.id));
 
                     if (isReset || page === 1) {
                         return [...keywordBooks, ...uniqueAiBooks];
@@ -75,8 +74,8 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
 
                     // Cuộn trang: Thêm vào cuối, tránh trùng lặp
                     const existingIds = new Set(prev.map((b) => b.id));
-                    const uniqueNewKeywordBooks = keywordBooks.filter((b: Book) => !existingIds.has(b.id));
-                    const uniqueNewAiBooks = uniqueAiBooks.filter((b: Book) => !existingIds.has(b.id));
+                    const uniqueNewKeywordBooks = keywordBooks.filter((b: BookSummary) => !existingIds.has(b.id));
+                    const uniqueNewAiBooks = uniqueAiBooks.filter((b: BookSummary) => !existingIds.has(b.id));
 
                     return [...prev, ...uniqueNewKeywordBooks, ...uniqueNewAiBooks];
                 });
@@ -84,7 +83,7 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
         } else if (isReset) {
             startTransition(() => setAllBooks([]));
         }
-    }, [queryKey, currentData, page, semanticData]);
+    }, [queryKey, data, page, semanticData]);
 
     const hasMore = data ? data.meta.current < data.meta.totalPages : true;
 

@@ -1,12 +1,13 @@
 import { getErrorMessage } from '@/common/utils/error.util';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import {
   BadRequestDomainException,
   NotFoundDomainException,
   InternalServerDomainException,
 } from '@/shared/domain/common-exceptions';
 import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
-import { ITextToSpeechPort } from '@/domain/text-to-speech/interfaces/text-to-speech.port';
+import { IAudioQueuePort } from '@/application/ports/audio-queue.port';
+import { GenerateAudioJobPayload } from '@/application/text-to-speech/jobs/tts-job.payload';
 import { LanguageDetectorService } from '@/application/text-to-speech/services/language-detector.service';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import {
@@ -29,7 +30,8 @@ import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 export class GenerateChapterAudioUseCase {
   constructor(
     private readonly ttsRepository: ITextToSpeechRepository,
-    private readonly ttsProvider: ITextToSpeechPort,
+    @Inject(IAudioQueuePort)
+    private readonly audioQueue: IAudioQueuePort,
     private readonly languageDetector: LanguageDetectorService,
     private readonly chapterRepository: IChapterRepository,
     private readonly idGenerator: IIdGenerator,
@@ -99,32 +101,17 @@ export class GenerateChapterAudioUseCase {
     const savedTTS = await this.ttsRepository.save(tts);
 
     try {
-      // 7. Update to Processing
-      await this.ttsRepository.updateStatus(savedTTS.id, TTSStatus.PROCESSING);
-      await this.chapterRepository.updateTtsStatus(
-        chapterId.toString(),
-        'processing',
-      );
-
-      // 8. Generate Audio
-      const { audioUrl, duration } = await this.ttsProvider.generateAudio(
-        text,
-        {
+      // 7. Queue Job
+      await this.audioQueue.queueAudioGeneration(
+        new GenerateAudioJobPayload(
+          savedTTS.id,
+          chapterId.toString(),
+          text,
           voice,
           language,
           speed,
           format,
-        },
-      );
-
-      // 9. Update Success
-      savedTTS.complete(audioUrl, format, duration);
-      await this.ttsRepository.save(savedTTS);
-      // Also update the chapter document with ttsStatus and audioUrl
-      await this.chapterRepository.updateTtsStatus(
-        chapterId.toString(),
-        'completed',
-        audioUrl,
+        ),
       );
 
       return savedTTS;
@@ -137,7 +124,7 @@ export class GenerateChapterAudioUseCase {
         'failed',
       );
       throw new InternalServerDomainException(
-        `Failed to generate audio: ${errorMessage}`,
+        `Failed to queue audio generation: ${errorMessage}`,
       );
     }
   }

@@ -1,7 +1,4 @@
-'use client';
-
-import EditBook from '@/components/admin/book/EditBook';
-import { use } from 'react';
+import EditBook from '@/features/admin/components/book/EditBook';
 
 interface PageProps {
     params: Promise<{
@@ -9,8 +6,8 @@ interface PageProps {
     }>;
 }
 
-export default function EditBookPage({ params }: PageProps) {
-    const { bookId } = use(params);
+export default async function EditBookPage({ params }: PageProps) {
+    const { bookId } = await params;
 
     return <EditBook bookId={bookId} />;
 }

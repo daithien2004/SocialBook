@@ -108,8 +108,8 @@ export class TextToSpeechController {
    */
   @Public()
   @Post('chapter/:chapterId/play')
-  async incrementPlayCount(@Param('chapterId') chapterId: string) {
-    await this.incrementPlayCountUseCase.execute(chapterId);
+  incrementPlayCount(@Param('chapterId') chapterId: string) {
+    this.incrementPlayCountUseCase.execute(chapterId);
     return {
       message: 'Play count incremented',
     };

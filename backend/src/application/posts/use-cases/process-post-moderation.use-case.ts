@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
+import { PostModeratedJobPayload } from '@/application/notifications/jobs/notification-job.payload';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
 
@@ -15,7 +16,8 @@ export class ProcessPostModerationUseCase {
   constructor(
     private readonly checkContentUseCase: CheckContentUseCase,
     private readonly postRepository: IPostRepository,
-    private readonly eventEmitter: EventEmitter2,
+    @Inject(INotificationQueuePort)
+    private readonly notificationQueue: INotificationQueuePort,
   ) {}
 
   async execute(command: ProcessPostModerationCommand): Promise<void> {
@@ -61,12 +63,14 @@ export class ProcessPostModerationUseCase {
         `[AI Moderation] Post ${postId} flagged [${result.action}]: ${reason}`,
       );
 
-      this.eventEmitter.emit('post.moderated', {
-        userId: post.userId.toString(),
-        postId: post.id.toString(),
-        reason,
-        action: result.action,
-      });
+      await this.notificationQueue.queuePostModerated(
+        new PostModeratedJobPayload(
+          post.userId.toString(),
+          post.id.toString(),
+          reason,
+          result.action,
+        ),
+      );
     }
   }
 }

@@ -11,3 +11,10 @@ frontend.env
 
 # Generated
 frontend/src/app/tokens.generated.css
+# --- shared/ published build + deps (npm workspace) ---
+shared/dist
+shared/node_modules
+
+# --- npm workspace: dep được hoist lên node_modules ROOT ---
+node_modules
+**/node_modules

@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useReadingRoomStore } from '@/store/useReadingRoomStore';
-import { store as reduxStore } from '@/store/store';
 import { readingRoomsApi } from '@/features/reading-rooms/api/readingRoomsApi';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -211,7 +210,7 @@ export const useReadingRoomSocket = (roomId?: string) => {
         toast.info('Phòng đọc đã kết thúc');
       }
       useReadingRoomStore.getState().clearRoom();
-      reduxStore.dispatch(readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]));
+      readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]);
       router.refresh();
     });
 
@@ -223,14 +222,14 @@ export const useReadingRoomSocket = (roomId?: string) => {
       if (store.room) {
         store.setRoom({ ...store.room, status: 'active' });
       }
-      reduxStore.dispatch(readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]));
+      readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]);
       router.refresh();
     });
 
     socket.on(ReadingRoomServerEvent.ROOM_DELETED, () => {
       toast.error('Phòng đọc đã bị xoá');
       useReadingRoomStore.getState().clearRoom();
-      reduxStore.dispatch(readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]));
+      readingRoomsApi.util.invalidateTags(['MyRooms', 'MyHistory', { type: 'Room', id: roomId }]);
       router.refresh();
     });
 

@@ -1,26 +1,38 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
+
+# Build context = ROOT repo (xem .github/workflows/deploy.yml: context: .)
+# → COPY shared/ TRƯỚC + riêng biệt để tận dụng layer cache:
+#   sửa file luật CASL (shared/) KHÔNG rebuild lại node_modules/frontend source.
+COPY frontend/package*.json ./frontend/
+COPY shared/package*.json ./shared/
+COPY package.json ./package.json
+COPY package-lock.json ./package-lock.json
+
 RUN npm ci
-COPY . .
 
+COPY shared ./shared
+COPY frontend ./frontend
+
+WORKDIR /app/frontend
 ARG NEXT_PUBLIC_NEST_API_URL
-RUN echo ">>> API URL = $NEXT_PUBLIC_NEST_API_URL"
-ARG NEXT_PUBLIC_SOCKET_URL
 ENV NEXT_PUBLIC_NEST_API_URL=$NEXT_PUBLIC_NEST_API_URL
+ARG NEXT_PUBLIC_SOCKET_URL
 ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
-
 RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package*.json ./ 
-COPY --from=builder /app/next.config.ts ./
+COPY --from=builder /app/frontend/.next /app/frontend/.next
+COPY --from=builder /app/frontend/public /app/frontend/public
+COPY --from=builder /app/frontend/package*.json /app/frontend/
+COPY --from=builder /app/frontend/next.config.ts /app/frontend/
+COPY --from=builder /app/shared /app/shared
 
-RUN npm ci --production --ignore-scripts
+WORKDIR /app/frontend
+RUN npm ci --omit=dev --ignore-scripts
+USER node
 EXPOSE 3000
 CMD ["npm", "start"]
