@@ -14,6 +14,8 @@ import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import type { AppAbility } from '@socialbook/shared';
 
 import {
   CommentResponseDto,
@@ -129,9 +131,10 @@ export class CommentsController {
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
+    @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateCommentDto,
   ) {
-    const command = new UpdateCommentCommand(id, userId, dto.content);
+    const command = new UpdateCommentCommand(id, userId, ability, dto.content);
 
     const comment = await this.updateCommentUseCase.execute(command);
 
@@ -144,10 +147,10 @@ export class CommentsController {
   @Delete(':id')
   async remove(
     @Param('id') id: string,
-    @CurrentUser() user: { id: string; email: string; role: string },
+    @CurrentUser('id') userId: string,
+    @CurrentAbility() ability: AppAbility,
   ) {
-    const isAdmin = user.role === 'admin';
-    const command = new DeleteCommentCommand(id, user.id, isAdmin);
+    const command = new DeleteCommentCommand(id, userId, ability);
 
     await this.deleteCommentUseCase.execute(command);
 

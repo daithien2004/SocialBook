@@ -8,6 +8,9 @@ import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { DeleteCommentCommand } from './delete-comment.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
+
 @Injectable()
 export class DeleteCommentUseCase {
   private readonly logger = new Logger(DeleteCommentUseCase.name);
@@ -24,9 +27,8 @@ export class DeleteCommentUseCase {
         throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
       }
 
-      // Check if user can delete this comment
-      const canDelete = command.isAdmin || comment.canBeDeleted(command.userId);
-      if (!canDelete) {
+      // Check if user can delete this comment via CASL
+      if (!command.ability.can(Action.Delete, subject(Subject.Comment, { userId: comment.userId.toString() }))) {
         throw new ForbiddenDomainException('You cannot delete this comment');
       }
 

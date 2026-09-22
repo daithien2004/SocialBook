@@ -8,6 +8,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import type { AppAbility } from '@socialbook/shared';
 import { AddCommentUseCase } from '@/application/reading-room-interactions/use-cases/add-comment/add-comment.use-case';
 import { AddCommentCommand } from '@/application/reading-room-interactions/use-cases/add-comment/add-comment.command';
 import { DeleteCommentUseCase } from '@/application/reading-room-interactions/use-cases/delete-comment/delete-comment.use-case';
@@ -116,9 +118,10 @@ export class ReadingRoomInteractionsController {
     @Param('code') code: string,
     @Param('commentId') commentId: string,
     @Query('paragraphId') paragraphId: string,
+    @CurrentAbility() ability: AppAbility,
   ) {
     await this.deleteCommentUseCase.execute(
-      new DeleteCommentCommand(userId, commentId, code, paragraphId),
+      new DeleteCommentCommand(userId, commentId, code, paragraphId, ability),
     );
     return { message: 'Comment deleted' };
   }
@@ -171,9 +174,10 @@ export class ReadingRoomInteractionsController {
     @CurrentUser('id') userId: string,
     @Param('code') code: string,
     @Param('quoteId') quoteId: string,
+    @CurrentAbility() ability: AppAbility,
   ) {
     await this.deleteQuoteUseCase.execute(
-      new DeleteQuoteCommand(userId, code, quoteId),
+      new DeleteQuoteCommand(userId, code, quoteId, ability),
     );
     return { message: 'Quote deleted' };
   }

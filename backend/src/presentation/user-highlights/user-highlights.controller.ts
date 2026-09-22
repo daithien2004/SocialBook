@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import type { AppAbility } from '@socialbook/shared';
 import { CreateUserHighlightUseCase } from '@/application/user-highlights/use-cases/create-user-highlight/create-user-highlight.use-case';
 import { UpdateUserHighlightUseCase } from '@/application/user-highlights/use-cases/update-user-highlight/update-user-highlight.use-case';
 import { DeleteUserHighlightUseCase } from '@/application/user-highlights/use-cases/delete-user-highlight/delete-user-highlight.use-case';
@@ -108,11 +110,13 @@ export class UserHighlightsController {
   async updateHighlight(
     @CurrentUser('id') userId: string,
     @Param('id') highlightId: string,
+    @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateUserHighlightDto,
   ) {
     const highlight = await this.updateHighlightUseCase.execute({
       highlightId,
       userId,
+      ability,
       color: dto.color,
       note: dto.note,
     });
@@ -131,8 +135,9 @@ export class UserHighlightsController {
   async deleteHighlight(
     @CurrentUser('id') userId: string,
     @Param('id') highlightId: string,
+    @CurrentAbility() ability: AppAbility,
   ) {
-    await this.deleteHighlightUseCase.execute({ highlightId, userId });
+    await this.deleteHighlightUseCase.execute({ highlightId, userId, ability });
     return { success: true };
   }
 }

@@ -11,6 +11,8 @@ import { CreateReviewDto } from '@/presentation/reviews/dto/create-review.dto';
 import { UpdateReviewDto } from '@/presentation/reviews/dto/update-review.dto';
 import { Public } from '@/common/decorators/custom.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import type { AppAbility } from '@socialbook/shared';
 import { CreateReviewUseCase } from '@/application/reviews/use-cases/create-review.use-case';
 import { GetBookReviewsUseCase } from '@/application/reviews/use-cases/get-book-reviews.use-case';
 import { UpdateReviewUseCase } from '@/application/reviews/use-cases/update-review.use-case';
@@ -65,11 +67,11 @@ export class ReviewsController {
 
   @Patch(':id')
   async update(
-    @CurrentUser('id') userId: string,
     @Param('id') id: string,
+    @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateReviewDto,
   ) {
-    const review = await this.updateReviewUseCase.execute(id, userId, dto);
+    const review = await this.updateReviewUseCase.execute(id, dto, ability);
     return {
       message: 'Review updated successfully',
       data: this.toResponse(review),
@@ -90,8 +92,11 @@ export class ReviewsController {
   }
 
   @Delete(':id')
-  async remove(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    await this.deleteReviewUseCase.execute(id, userId);
+  async remove(
+    @Param('id') id: string,
+    @CurrentAbility() ability: AppAbility,
+  ) {
+    await this.deleteReviewUseCase.execute(id, ability);
     return {
       message: 'Review deleted successfully',
     };

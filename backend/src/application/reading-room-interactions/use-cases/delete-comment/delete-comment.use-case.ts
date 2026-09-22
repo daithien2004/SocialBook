@@ -5,6 +5,8 @@ import {
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
 import { DeleteCommentCommand } from './delete-comment.command';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 @Injectable()
 export class DeleteCommentUseCase {
@@ -16,7 +18,7 @@ export class DeleteCommentUseCase {
       throw new NotFoundDomainException('Không tìm thấy bình luận');
     }
 
-    if (comment.userId !== command.userId) {
+    if (!command.ability.can(Action.Delete, subject(Subject.RoomComment, comment))) {
       throw new ForbiddenDomainException(
         'You can only delete your own comments',
       );

@@ -6,6 +6,8 @@ import {
   NotFoundDomainException,
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 @Injectable()
 export class DeleteQuoteUseCase {
@@ -24,7 +26,7 @@ export class DeleteQuoteUseCase {
       command.roomCode,
     );
 
-    if (quote.userId === command.userId) {
+    if (command.ability.can(Action.Delete, subject(Subject.RoomQuote, quote))) {
       await this.quoteRepository.deleteById(command.quoteId);
       return;
     }

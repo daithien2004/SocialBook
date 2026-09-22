@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { DeleteUserHighlightCommand } from './delete-user-highlight.command';
+import { Action, Subject, AppAbility } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 @Injectable()
 export class DeleteUserHighlightUseCase {
@@ -19,7 +21,7 @@ export class DeleteUserHighlightUseCase {
       throw new NotFoundException('Highlight not found');
     }
 
-    if (highlight.userId !== command.userId) {
+    if (!command.ability.can(Action.Delete, subject(Subject.UserHighlight, highlight))) {
       throw new UnauthorizedException(
         'You can only delete your own highlights',
       );

@@ -25,6 +25,8 @@ import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import type { AppAbility } from '@socialbook/shared';
 
 // Use Cases
 import { ApprovePostCommand } from '@/application/posts/use-cases/approve-post.command';
@@ -188,10 +190,12 @@ export class PostsController {
     )
     files?: Express.Multer.File[],
     @CurrentUser('id') userId?: string,
+    @CurrentAbility() ability?: AppAbility,
   ) {
     const command = new UpdatePostCommand(
       userId || '',
       id,
+      ability!,
       dto.content,
       dto.bookId,
       dto.imageUrls,
@@ -208,8 +212,12 @@ export class PostsController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    const command = new DeletePostCommand(userId, id, false, false);
+  async remove(
+    @Param('id') id: string, 
+    @CurrentUser('id') userId: string,
+    @CurrentAbility() ability: AppAbility,
+  ) {
+    const command = new DeletePostCommand(userId, id, ability, false);
     await this.deletePostUseCase.execute(command);
     return {
       message: 'Delete post successfully',
@@ -219,8 +227,12 @@ export class PostsController {
   @Delete(':id/permanent')
   @UseGuards(RolesGuard)
   @Roles('admin')
-  async removeHard(@Param('id') id: string, @CurrentUser('id') userId: string) {
-    const command = new DeletePostCommand(userId, id, true, true);
+  async removeHard(
+    @Param('id') id: string, 
+    @CurrentUser('id') userId: string,
+    @CurrentAbility() ability: AppAbility,
+  ) {
+    const command = new DeletePostCommand(userId, id, ability, true);
     await this.deletePostUseCase.execute(command);
     return {
       message: 'Permanently deleted post',
@@ -232,10 +244,11 @@ export class PostsController {
     @Param('id') id: string,
     @Body('imageUrl') imageUrl: string,
     @CurrentUser('id') userId: string,
+    @CurrentAbility() ability: AppAbility,
   ) {
     if (!imageUrl) throw new BadRequestException('imageUrl is required');
 
-    const command = new RemovePostImageCommand(userId, id, imageUrl, false);
+    const command = new RemovePostImageCommand(userId, id, ability, imageUrl);
     const data = await this.removePostImageUseCase.execute(command);
     return {
       message: 'Image removed successfully',

@@ -8,6 +8,9 @@ import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
 import { UpdateCommentCommand } from './update-comment.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
+
 @Injectable()
 export class UpdateCommentUseCase {
   private readonly logger = new Logger(UpdateCommentUseCase.name);
@@ -24,8 +27,8 @@ export class UpdateCommentUseCase {
         throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
       }
 
-      // Check if user can edit this comment
-      if (!comment.canBeEdited(command.userId)) {
+      // Check if user can edit this comment via CASL
+      if (!command.ability.can(Action.Update, subject(Subject.Comment, { userId: comment.userId.toString() }))) {
         throw new ForbiddenDomainException('You cannot edit this comment');
       }
 

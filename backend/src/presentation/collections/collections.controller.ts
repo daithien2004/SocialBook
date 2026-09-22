@@ -6,6 +6,8 @@ import { DeleteCollectionUseCase } from '@/application/library/use-cases/delete-
 import { UpdateCollectionCommand } from '@/application/library/use-cases/update-collection/update-collection.command';
 import { Public } from '@/common/decorators/custom.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import type { AppAbility } from '@socialbook/shared';
 import {
   CreateCollectionDto,
   UpdateCollectionDto,
@@ -123,11 +125,13 @@ export class CollectionsController {
   async update(
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
+    @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateCollectionDto,
   ) {
     const command = new UpdateCollectionCommand(
       id,
       req.user.id,
+      ability,
       dto.name,
       dto.description,
       dto.isPublic,
@@ -144,8 +148,9 @@ export class CollectionsController {
   async remove(
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
+    @CurrentAbility() ability: AppAbility,
   ) {
-    await this.deleteCollectionUseCase.execute(id, req.user.id);
+    await this.deleteCollectionUseCase.execute(id, req.user.id, ability);
     return {
       message: 'Collection deleted successfully',
     };

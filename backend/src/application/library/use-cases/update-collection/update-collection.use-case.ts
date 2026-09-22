@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { UpdateCollectionCommand } from './update-collection.command';
 import { Collection } from '@/domain/library/entities/collection.entity';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 @Injectable()
 export class UpdateCollectionUseCase {
@@ -18,7 +20,7 @@ export class UpdateCollectionUseCase {
       throw new NotFoundException('Collection not found');
     }
 
-    if (collection.userId.getValue() !== command.userId) {
+    if (!command.ability.can(Action.Update, subject(Subject.Collection, { userId: collection.userId.getValue() }))) {
       throw new ForbiddenException(
         'You do not have permission to update this collection',
       );

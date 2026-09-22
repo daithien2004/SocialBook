@@ -6,6 +6,8 @@ import {
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
 import { UpdateUserHighlightCommand } from './update-user-highlight.command';
+import { Action, Subject, AppAbility } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 @Injectable()
 export class UpdateUserHighlightUseCase {
@@ -20,7 +22,7 @@ export class UpdateUserHighlightUseCase {
       throw new NotFoundException('Highlight not found');
     }
 
-    if (highlight.userId !== command.userId) {
+    if (!command.ability.can(Action.Update, subject(Subject.UserHighlight, highlight))) {
       throw new UnauthorizedException(
         'You can only update your own highlights',
       );

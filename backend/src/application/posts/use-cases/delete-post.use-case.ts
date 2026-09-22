@@ -7,6 +7,9 @@ import { IPostRepository } from '@/domain/posts/repositories/post.repository.int
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { DeletePostCommand } from './delete-post.command';
 
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
+
 @Injectable()
 export class DeletePostUseCase {
   constructor(private readonly postRepository: IPostRepository) {}
@@ -15,7 +18,7 @@ export class DeletePostUseCase {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
-    if (!command.isAdmin && post.userId !== command.userId) {
+    if (!command.ability.can(Action.Delete, subject(Subject.Post, post))) {
       throw new ForbiddenDomainException(ErrorMessages.POST_DELETE_FORBIDDEN);
     }
 

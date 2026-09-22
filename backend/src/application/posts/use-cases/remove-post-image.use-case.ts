@@ -8,6 +8,9 @@ import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { RemovePostImageCommand } from './remove-post-image.command';
 
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
+
 @Injectable()
 export class RemovePostImageUseCase {
   private readonly logger = new Logger(RemovePostImageUseCase.name);
@@ -21,7 +24,7 @@ export class RemovePostImageUseCase {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
-    if (!command.isAdmin && post.userId !== command.userId) {
+    if (!command.ability.can(Action.Update, subject(Subject.Post, post))) {
       throw new ForbiddenDomainException(ErrorMessages.POST_UPDATE_FORBIDDEN);
     }
 

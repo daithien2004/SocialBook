@@ -11,6 +11,9 @@ import { Post } from '@/domain/posts/entities/post.entity';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { UpdatePostCommand } from './update-post.command';
 
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
+
 @Injectable()
 export class UpdatePostUseCase {
   constructor(
@@ -27,7 +30,7 @@ export class UpdatePostUseCase {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
 
-    if (post.userId !== command.userId) {
+    if (!command.ability.can(Action.Update, subject(Subject.Post, post))) {
       throw new ForbiddenDomainException(ErrorMessages.POST_UPDATE_FORBIDDEN);
     }
 

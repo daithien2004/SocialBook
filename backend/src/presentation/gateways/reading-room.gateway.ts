@@ -51,6 +51,7 @@ import { VoteQuoteCommand } from '@/application/reading-room-interactions/use-ca
 
 interface SocketData {
   userId?: string;
+  role?: string;
   displayName?: string;
   avatarUrl?: string;
   roomId?: string;
@@ -245,7 +246,7 @@ export class ReadingRoomGateway
         return;
       }
 
-      const payload = this.jwt.verify<{ sub?: string; id?: string }>(token, {
+      const payload = this.jwt.verify<{ sub?: string; id?: string, role?: string }>(token, {
         complete: false,
       });
       const userId = payload.sub ?? payload.id;
@@ -254,6 +255,7 @@ export class ReadingRoomGateway
         return;
       }
       (socket.data as SocketData).userId = userId;
+      (socket.data as SocketData).role = payload.role ?? 'user';
       void socket.join(`user:${userId}`);
     } catch {
       // Socket connection error handled by disconnect below
@@ -666,12 +668,16 @@ export class ReadingRoomGateway
     body: { roomId: string; commentId: string; paragraphId: string },
   ) {
     const userId = (socket.data as SocketData).userId ?? '';
+    const role = (socket.data as SocketData).role ?? 'user';
     try {
+      const { defineRulesFor } = await import('@socialbook/shared');
+      const ability = defineRulesFor(role, userId);
       const command = new DeleteCommentCommand(
         userId,
         body.commentId,
         body.roomId,
         body.paragraphId,
+        ability,
       );
       await this.deleteCommentUseCase.execute(command);
 
