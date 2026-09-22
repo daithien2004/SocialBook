@@ -1,5 +1,11 @@
 import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
+import {
+  Action,
+  Subject,
+  canAccess,
+  defineRulesFor,
+} from '@socialbook/shared';
 
 export function useAppAuth() {
   const { data: session, status, update } = useSession();
@@ -8,7 +14,10 @@ export function useAppAuth() {
     const user = session?.user;
     const isAuthenticated = status === 'authenticated' && !!user;
     const isGuest = !isAuthenticated;
-    const isAdmin = isAuthenticated && user?.role === 'admin';
+    const ability = isAuthenticated && user
+      ? defineRulesFor(user.role)
+      : undefined;
+    const isAdmin = !!ability && canAccess(ability, Action.Manage, Subject.All);
 
     return {
       user,

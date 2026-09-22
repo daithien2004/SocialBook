@@ -2,6 +2,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { Action, Subject, canAccess, defineRulesFor } from '@socialbook/shared';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -20,7 +21,7 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<{
       user?: { role?: string };
     }>();
-    const user = request.user;
-    return roles.some((role) => user?.role === role);
+    const ability = defineRulesFor(request.user?.role ?? '');
+    return canAccess(ability, Action.Manage, Subject.All);
   }
 }

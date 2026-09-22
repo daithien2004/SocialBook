@@ -37,6 +37,7 @@
     ]
   },
   "dependencies": {
+    "@socialbook/shared": "0.1.0",
     "@google-cloud/text-to-speech": "^6.4.0",
     "@google/genai": "^1.30.0",
     "@google/generative-ai": "^0.24.1",

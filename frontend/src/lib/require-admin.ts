@@ -1,6 +1,12 @@
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth.config';
+import {
+  Action,
+  Subject,
+  canAccess,
+  defineRulesFor,
+} from '@socialbook/shared';
 
 /**
  * Kiểm tra quyền admin ở tầng server (component/action).
@@ -13,7 +19,8 @@ export async function requireAdmin(): Promise<void> {
     if (!session) {
         redirect('/login');
     }
-    if (session.user.role !== 'admin') {
+    const ability = defineRulesFor(session.user.role);
+    if (!canAccess(ability, Action.Manage, Subject.All)) {
         redirect('/403');
     }
 }
