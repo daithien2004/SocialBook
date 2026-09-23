@@ -11,11 +11,7 @@ import { ChapterId } from '../value-objects/chapter-id.vo';
 import { ChapterTitle } from '../value-objects/chapter-title.vo';
 
 export type ChapterSortField =
-  | 'createdAt'
-  | 'updatedAt'
-  | 'title'
-  | 'orderIndex'
-  | 'viewsCount';
+  'createdAt' | 'updatedAt' | 'title' | 'orderIndex' | 'viewsCount';
 
 export interface ChapterFilter {
   title?: string;

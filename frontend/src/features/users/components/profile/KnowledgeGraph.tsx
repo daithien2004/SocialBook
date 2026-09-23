@@ -79,7 +79,7 @@ export function KnowledgeGraph({ data, isLoading }: KnowledgeGraphProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Clone data to avoid "object is not extensible" error from RTK Query frozen objects
+  // Clone data to avoid "object is not extensible" error
   const graphData = React.useMemo(() => {
     const filteredNodes = showGaps ? data.nodes : data.nodes.filter(n => !n.isGap);
     const nodeIds = new Set(filteredNodes.map(n => n.id));

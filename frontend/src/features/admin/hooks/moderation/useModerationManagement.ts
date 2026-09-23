@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { 
-    moderationQueries,
-    useApprovePost, 
-    useBulkApprovePosts,
-    useBulkRejectPosts,
-    useRejectPost
-} from '@/features/admin/api/moderationApi';
+import { moderationQueries } from '@/features/admin/api/moderation.queries';
+import { useApprovePost, useRejectPost, useBulkApprovePosts, useBulkRejectPosts } from '@/features/admin/api/moderation.mutations';
 import { useBanUser } from '@/features/users/api/users.mutations';
 import { useModalStore } from '@/store/useModalStore';
 import { getErrorMessage } from '@/lib/utils';

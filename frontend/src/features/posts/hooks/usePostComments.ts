@@ -27,6 +27,7 @@ export function usePostComments({ postId, createComment }: UsePostCommentsOption
     const commentInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCommentText('');
     }, [postId]);
 

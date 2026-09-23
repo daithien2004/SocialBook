@@ -10,12 +10,7 @@ import { BookTitle } from '../value-objects/book-title.vo';
 import { GenreId } from '../value-objects/genre-id.vo';
 
 export type BookSortField =
-  | 'createdAt'
-  | 'updatedAt'
-  | 'title'
-  | 'views'
-  | 'likes'
-  | 'publishedYear';
+  'createdAt' | 'updatedAt' | 'title' | 'views' | 'likes' | 'publishedYear';
 
 export interface BookFilter {
   title?: string;

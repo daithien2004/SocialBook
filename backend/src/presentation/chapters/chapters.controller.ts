@@ -220,7 +220,7 @@ export class ChaptersController {
         | 'orderIndex'
         | 'viewsCount'
         | undefined,
-      filter.order as 'asc' | 'desc' | undefined,
+      filter.order,
     );
 
     const result = await this.getChaptersUseCase.execute(query);

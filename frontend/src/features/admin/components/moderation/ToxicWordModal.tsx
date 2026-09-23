@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { AddToxicWordPayload } from '@/features/admin/api/toxicWordsApi';
+import { AddToxicWordPayload } from '@/features/admin/api/toxic-words.api';
 
 const formSchema = z.object({
     pattern: z.string().min(1, 'Vui lòng nhập từ khoá').max(100, 'Từ khoá quá dài'),

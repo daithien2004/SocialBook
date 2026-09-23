@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import throttle from 'lodash/throttle';
-import { libraryQueries, useUpdateReadingProgress } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
+import { useUpdateReadingProgress } from '@/features/library/api/library.mutations';
 
 function getContentProgress(contentEl: HTMLElement): number {
   const rect = contentEl.getBoundingClientRect();

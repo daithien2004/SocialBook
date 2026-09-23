@@ -9,7 +9,7 @@ import { shouldLoadMore } from '@/features/books/books.utils';
 import { useInfiniteScroll } from '@/features/books/hooks/useInfiniteScroll';
 import { BookOrderField } from '@/features/books/types/book.interface';
 import { useAppAuth } from '@/features/auth/hooks';
-import { libraryQueries } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
 import { LibraryItem, LibraryStatus } from '@/features/library/types/library.interface';
 import { BannerSlider } from '@/features/books/components/BannerSlider';
 import { BookGrid } from '@/features/books/components/BookGrid';

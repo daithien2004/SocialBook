@@ -21,11 +21,8 @@ import {
     Keyboard
 } from "lucide-react";
 import { useModalStore } from "@/store/useModalStore";
-import { 
-    getChapterById,
-    useCreateChapter, 
-    useUpdateChapter
-} from "@/features/chapters/api/chaptersApi";
+import { getChapterById } from '@/features/chapters/api/chapters.api';
+import { useCreateChapter, useUpdateChapter } from '@/features/chapters/api/chapters.mutations';
 import { Paragraph } from "@/features/chapters/types/chapter.interface";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";

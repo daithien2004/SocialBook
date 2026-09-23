@@ -4,7 +4,7 @@ import { SafeImage } from "@/components/shared/SafeImage";
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, Globe, Lock } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { libraryQueries } from "@/features/library/api/libraryApi";
+import { libraryQueries } from "@/features/library/api/library.queries";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface ReadingListItemProps {

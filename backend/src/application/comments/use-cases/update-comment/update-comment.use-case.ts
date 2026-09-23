@@ -28,7 +28,12 @@ export class UpdateCommentUseCase {
       }
 
       // Check if user can edit this comment via CASL
-      if (!command.ability.can(Action.Update, subject(Subject.Comment, { userId: comment.userId.toString() }))) {
+      if (
+        !command.ability.can(
+          Action.Update,
+          subject(Subject.Comment, { userId: comment.userId.toString() }),
+        )
+      ) {
         throw new ForbiddenDomainException('You cannot edit this comment');
       }
 

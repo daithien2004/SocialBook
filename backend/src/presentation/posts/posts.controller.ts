@@ -213,7 +213,7 @@ export class PostsController {
 
   @Delete(':id')
   async remove(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentAbility() ability: AppAbility,
   ) {
@@ -228,7 +228,7 @@ export class PostsController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   async removeHard(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @CurrentUser('id') userId: string,
     @CurrentAbility() ability: AppAbility,
   ) {

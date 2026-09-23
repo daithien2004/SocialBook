@@ -1,12 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-    libraryQueries,
-    useAddBookToCollections,
-    useCreateCollection,
-    useUpdateLibraryStatus,
-} from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
+import { useAddBookToCollections, useCreateCollection, useUpdateLibraryStatus } from '@/features/library/api/library.mutations';
 import { LibraryStatus, type Collection } from '@/features/library/types/library.interface';
 
 export interface UseAddToLibraryOptions {

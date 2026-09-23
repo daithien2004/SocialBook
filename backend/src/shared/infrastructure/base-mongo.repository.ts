@@ -107,9 +107,9 @@ export abstract class BaseMongoRepository<
     ];
 
     const [result] = await this.model
-      .aggregate<
-        AggregateFacetResult<Record<string, unknown>>
-      >(aggregatePipeline)
+      .aggregate<AggregateFacetResult<Record<string, unknown>>>(
+        aggregatePipeline,
+      )
       .exec();
 
     const total: number = result.metadata[0]?.total ?? 0;

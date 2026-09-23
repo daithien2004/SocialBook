@@ -22,7 +22,12 @@ export class RemoveReactionUseCase {
       throw new NotFoundDomainException('Không tìm thấy cảm xúc');
     }
 
-    if (!command.ability.can(Action.Delete, subject(Subject.RoomReaction, existing))) {
+    if (
+      !command.ability.can(
+        Action.Delete,
+        subject(Subject.RoomReaction, existing),
+      )
+    ) {
       throw new ForbiddenDomainException(
         'You can only remove your own reactions',
       );

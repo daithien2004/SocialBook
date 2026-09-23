@@ -20,9 +20,10 @@ interface ResponseLike {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ResponseDto<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ResponseDto<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>,
@@ -55,8 +56,7 @@ export class TransformInterceptor<T>
               ? (responseData.data as T)
               : undefined,
           meta: (responseData?.meta || responseData?.metaData) as
-            | PaginationMeta
-            | undefined,
+            PaginationMeta | undefined,
           path: request.url,
         });
       }),

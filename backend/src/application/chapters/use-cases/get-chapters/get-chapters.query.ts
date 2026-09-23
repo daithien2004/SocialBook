@@ -7,11 +7,7 @@ export class GetChaptersQuery {
     public readonly bookSlug?: string,
     public readonly orderIndex?: number,
     public readonly sortBy?:
-      | 'createdAt'
-      | 'updatedAt'
-      | 'title'
-      | 'orderIndex'
-      | 'viewsCount',
+      'createdAt' | 'updatedAt' | 'title' | 'orderIndex' | 'viewsCount',
     public readonly order?: 'asc' | 'desc',
   ) {}
 }

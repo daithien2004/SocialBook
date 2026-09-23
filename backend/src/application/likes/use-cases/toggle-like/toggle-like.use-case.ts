@@ -14,7 +14,7 @@ export interface ToggleLikeRequest {
   targetType: TargetType;
 }
 
-export interface ToggleLikeResponse {
+export interface ToggleLikeResult {
   isLiked: boolean;
   likeId: string;
 }
@@ -28,7 +28,7 @@ export class ToggleLikeUseCase {
     private readonly notificationQueue: INotificationQueuePort,
   ) {}
 
-  async execute(request: ToggleLikeRequest): Promise<ToggleLikeResponse> {
+  async execute(request: ToggleLikeRequest): Promise<ToggleLikeResult> {
     const userId = UserId.create(request.userId);
     const targetId = TargetId.create(request.targetId);
 

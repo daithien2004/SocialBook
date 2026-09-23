@@ -9,12 +9,14 @@ import { UpdateCommentUseCase } from './use-cases/update-comment/update-comment.
 import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
+import { QueueModule } from '@/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
     CommentsRepositoryModule,
     IdGeneratorModule,
     ContentModerationApplicationModule,
+    QueueModule,
   ],
   providers: [
     CreateCommentUseCase,

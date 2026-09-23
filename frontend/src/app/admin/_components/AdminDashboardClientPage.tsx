@@ -10,7 +10,7 @@ import { StatCard } from '@/features/admin/components/dashboard/StatCard';
 import { TimeRangeSelector } from '@/features/admin/components/dashboard/TimeRangeSelector';
 import { ViewTypeSelector, ViewType } from '@/features/admin/components/dashboard/ViewTypeSelector';
 import { useDashboardData, useExportStatistics } from '@/features/admin/hooks/dashboard/useDashboard';
-import { useReindexAll } from '@/features/admin/api/analyticsApi';
+import { useReindexAll } from '@/features/admin/api/analytics.mutations';
 import { PopularBooksTable } from '@/features/admin/components/dashboard/PopularBooksTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

@@ -19,6 +19,7 @@ import { ContentModerationApplicationModule } from '../content-moderation/conten
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { PostModerationQueueModule } from '@/infrastructure/queues/post-moderation/post-moderation.module';
+import { QueueModule } from '@/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PostModerationQueueModule } from '@/infrastructure/queues/post-moderati
     ContentModerationApplicationModule,
     IdGeneratorModule,
     PostModerationQueueModule,
+    QueueModule,
   ],
   providers: [
     ApprovePostUseCase,

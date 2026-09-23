@@ -25,17 +25,11 @@ export class BatchIndexUseCase {
       const result: BatchResult = await (async () => {
         switch (command.contentType) {
           case 'book':
-            return this.vectorRepository.indexBooks(
-              command.contentIds,
-            ) as Promise<BatchResult>;
+            return this.vectorRepository.indexBooks(command.contentIds);
           case 'author':
-            return this.vectorRepository.indexAuthors(
-              command.contentIds,
-            ) as Promise<BatchResult>;
+            return this.vectorRepository.indexAuthors(command.contentIds);
           case 'chapter':
-            return this.vectorRepository.indexChapters(
-              command.contentIds,
-            ) as Promise<BatchResult>;
+            return this.vectorRepository.indexChapters(command.contentIds);
           default:
             throw new BadRequestException(
               `Unsupported content type: ${String(command.contentType)}`,

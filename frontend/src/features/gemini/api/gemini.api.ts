@@ -10,11 +10,9 @@ export interface SummarizeChapterResponse {
 
 export function summarizeChapter(params: {
   chapterId: string;
-  userId?: string;
 }): Promise<SummarizeChapterResponse> {
   return apiRequest<SummarizeChapterResponse>({
     url: NESTJS_GEMINI_ENDPOINTS.summarizeChapter(params.chapterId),
     method: 'POST',
-    data: { userId: params.userId },
   });
 }

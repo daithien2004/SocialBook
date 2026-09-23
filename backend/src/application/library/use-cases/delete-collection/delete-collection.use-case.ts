@@ -11,14 +11,23 @@ import { subject } from '@casl/ability';
 export class DeleteCollectionUseCase {
   constructor(private readonly collectionRepository: ICollectionRepository) {}
 
-  async execute(id: string, userId: string, ability: AppAbility): Promise<void> {
+  async execute(
+    id: string,
+    userId: string,
+    ability: AppAbility,
+  ): Promise<void> {
     const collection = await this.collectionRepository.findById(id);
 
     if (!collection) {
       throw new NotFoundException('Collection not found');
     }
 
-    if (!ability.can(Action.Delete, subject(Subject.Collection, { userId: collection.userId.getValue() }))) {
+    if (
+      !ability.can(
+        Action.Delete,
+        subject(Subject.Collection, { userId: collection.userId.getValue() }),
+      )
+    ) {
       throw new ForbiddenException(
         'You do not have permission to delete this collection',
       );

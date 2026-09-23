@@ -32,7 +32,7 @@ describe('GetPostsUseCase (Unit)', () => {
       data: [],
       nextCursor: null,
       hasMore: false,
-    } as CursorPaginatedResult<Post>);
+    });
 
     await useCase.execute(new GetPostsQuery(10));
 
@@ -46,7 +46,7 @@ describe('GetPostsUseCase (Unit)', () => {
       data: [],
       nextCursor: 'cursor123',
       hasMore: true,
-    } as CursorPaginatedResult<Post>);
+    });
 
     await useCase.execute(new GetPostsQuery(10, 'cursor123'));
 

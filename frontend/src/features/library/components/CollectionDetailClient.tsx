@@ -18,12 +18,8 @@ import { SafeImage } from '@/components/shared/SafeImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import {
-  libraryQueries,
-  useAddBookToCollections,
-  useDeleteCollection,
-  useUpdateCollection,
-} from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
+import { useAddBookToCollections, useDeleteCollection, useUpdateCollection } from '@/features/library/api/library.mutations';
 import { LibraryItem } from '@/features/library/types/library.interface';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';

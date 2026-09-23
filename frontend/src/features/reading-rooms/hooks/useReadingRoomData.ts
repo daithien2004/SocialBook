@@ -13,11 +13,12 @@ import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import { useModalStore } from '@/store/useModalStore';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useReadingView } from '@/features/books/hooks';
-import { readingRoomQueries, useReactivateRoom } from '@/features/reading-rooms/api/readingRoomsApi';
+import { readingRoomQueries } from '@/features/reading-rooms/api/reading-rooms.queries';
+import { useReactivateRoom } from '@/features/reading-rooms/api/reading-rooms.mutations';
 import { bookQueries } from '@/features/books/api/books.queries';
-import { chaptersQueries } from '@/features/chapters/api/chaptersApi';
-import { libraryQueries } from '@/features/library/api/libraryApi';
-import { roomInteractionQueries } from '@/features/reading-room-interactions/api/roomInteractionsApi';
+import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
+import { libraryQueries } from '@/features/library/api/library.queries';
+import { roomInteractionQueries } from '@/features/reading-room-interactions/api/room-interactions.queries';
 import { useCreatePost } from '@/features/posts/api/post.mutations';
 
 export function useReadingRoomData(roomCode: string) {
@@ -31,7 +32,7 @@ export function useReadingRoomData(roomCode: string) {
   // ── Auth ──
   const { user, isAuthenticated } = useAppAuth();
 
-  // ── Room data (RTK Query) ──
+  // ── Room data (React Query) ──
   const { data: initialRoom, isLoading: isLoadingRoom, error } = useQuery({
     ...readingRoomQueries.room(roomCode),
     enabled: isAuthenticated,

@@ -92,10 +92,7 @@ export class ReviewsController {
   }
 
   @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @CurrentAbility() ability: AppAbility,
-  ) {
+  async remove(@Param('id') id: string, @CurrentAbility() ability: AppAbility) {
     await this.deleteReviewUseCase.execute(id, ability);
     return {
       message: 'Review deleted successfully',

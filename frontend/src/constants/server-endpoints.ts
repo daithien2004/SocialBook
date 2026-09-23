@@ -145,7 +145,7 @@ export const NESTJS_TTS_ENDPOINTS = {
 
 export const NESTJS_GEMINI_ENDPOINTS = {
     summarizeChapter: (chapterId: string) =>
-        `/gemini/summarize-chapter/${chapterId}`,
+        `/ai/summarize-chapter/${chapterId}`,
 };
 
 export const NESTJS_RECOMMENDATIONS_ENDPOINTS = {

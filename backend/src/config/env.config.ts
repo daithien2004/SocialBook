@@ -14,35 +14,40 @@ export default registerAs('env', () => ({
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || '',
 
   // JWT
-  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',
-  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
+  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
   ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || '1h',
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
 
-  // Email (legacy SMTP — kept for reference, no longer used)
-  EMAIL_USER: process.env.EMAIL_USER || '',
-  EMAIL_PASS: process.env.EMAIL_PASS || '',
+  // Seed admin (users.seeder) — KO hardcode password o code
+  ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'admin',
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@example.com',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  // Email (legacy SMTP â€” kept for reference, no longer used)
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASS: process.env.EMAIL_PASS,
 
   // Resend (transactional email via HTTPS)
-  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM_EMAIL:
     process.env.RESEND_FROM_EMAIL || 'noreply@socialbook.io.vn',
 
   // Cloudinary
-  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || '',
-  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
-  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 
   // External APIs
-  GOOGLE_API_KEY: process.env.GOOGLE_API_KEY || '',
-  ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY || '',
+  GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
   ELEVENLABS_VOICE_ID:
     process.env.ELEVENLABS_VOICE_ID || 'BYtZrKUsiaR2iHNpf2uV',
   ELEVENLABS_MODEL_ID: process.env.ELEVENLABS_MODEL_ID || 'eleven_v3',
-  HUGGINGFACE_API_KEY: process.env.HUGGINGFACE_API_KEY || '',
+  HUGGINGFACE_API_KEY: process.env.HUGGINGFACE_API_KEY,
 
   // Content Moderation API
-  MODERATION_API_KEY: process.env.MODERATION_API_KEY || '',
+  MODERATION_API_KEY: process.env.MODERATION_API_KEY,
   MODERATION_API_BASE_URL:
     process.env.MODERATION_API_BASE_URL || 'https://platform.beeknoee.com/v1',
   MODERATION_MODEL: process.env.MODERATION_MODEL || 'gemini-2.5-flash-lite',
@@ -53,7 +58,7 @@ export default registerAs('env', () => ({
   AI_PROVIDER: process.env.AI_PROVIDER || 'gemini',
 
   // ChatGPT (OpenAI-compatible provider)
-  CHATGPT_API_KEY: process.env.CHATGPT_API_KEY || '',
+  CHATGPT_API_KEY: process.env.CHATGPT_API_KEY,
   CHATGPT_MODEL: process.env.CHATGPT_MODEL || 'gpt-4o-mini',
   CHATGPT_BASE_URL: process.env.CHATGPT_BASE_URL || 'https://api.openai.com/v1',
   CHATGPT_TIMEOUT: parseInt(process.env.CHATGPT_TIMEOUT ?? '', 10) || 60000,

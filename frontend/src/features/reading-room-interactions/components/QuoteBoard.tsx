@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 import { useRouter } from 'next/navigation';
-import { useDeleteRoomQuote } from '@/features/reading-room-interactions/api/roomInteractionsApi';
+import { useDeleteRoomQuote } from '@/features/reading-room-interactions/api/room-interactions.mutations';
 import { useModalStore } from '@/store/useModalStore';
 import { toast } from 'sonner';
 import { scrollToHighlight, pollAndScroll } from '@/utils/scroll-to-highlight';

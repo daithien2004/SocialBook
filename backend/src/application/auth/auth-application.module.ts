@@ -23,6 +23,8 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
 import { RolesRepositoryModule } from '@/infrastructure/database/repositories/roles/roles-repository.module';
 import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/otp-repository.module';
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
+import { GoogleIdTokenPort } from '@/application/ports/google-id-token.port';
+import { GoogleIdTokenAdapter } from '@/infrastructure/auth/adapters/google-id-token.adapter';
 
 @Module({
   imports: [
@@ -57,6 +59,11 @@ import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.mo
     VerifyOtpUseCase,
     ResendOtpUseCase,
     ValidateUserUseCase,
+    GoogleIdTokenAdapter,
+    {
+      provide: GoogleIdTokenPort,
+      useExisting: GoogleIdTokenAdapter,
+    },
   ],
 
   exports: [
@@ -71,6 +78,7 @@ import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.mo
     ResendOtpUseCase,
     ValidateUserUseCase,
     TokenService,
+    GoogleIdTokenPort,
   ],
 })
 export class AuthApplicationModule {}

@@ -1,8 +1,6 @@
 import { apiRequest } from '@/lib/nestjs-client-api';
 import {
-  createdCommentSchema,
   commentsTargetResponseSchema,
-  type CommentsTargetResponse,
   type CreateCommentRequest,
   type CreatedComment,
   type DeleteCommentRequest,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { analyticsQueries } from '@/features/admin/api/analyticsApi';
+import { analyticsQueries } from '@/features/admin/api/analytics.queries';
 
 export function useActiveUsers() {
     const { data, isLoading, refetch } = useQuery({

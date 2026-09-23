@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { chaptersQueries } from "@/features/chapters/api/chaptersApi";
+import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
 import {
   Plus,
   ChevronDown,

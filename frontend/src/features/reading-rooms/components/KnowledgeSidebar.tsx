@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { chaptersQueries, getChapterKnowledge, useAskChapterAI } from '@/features/chapters/api/chaptersApi';
+import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
+import { getChapterKnowledge } from '@/features/chapters/api/chapters.api';
+import { useAskChapterAI } from '@/features/chapters/api/chapters.mutations';
 import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 
 import { KnowledgeEntity } from '@/features/chapters/types/chapter.interface';

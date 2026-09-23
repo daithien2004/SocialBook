@@ -13,11 +13,7 @@ import {
   ReadingListDocument,
   ReadingList as ReadingListSchemaClass,
 } from '../../schemas/reading-list.schema';
-import {
-  LibraryMapper,
-  PopulatedReadingListDocument,
-  RawReadingListDocument,
-} from './library.mapper';
+import { LibraryMapper, PopulatedReadingListDocument } from './library.mapper';
 
 @Injectable()
 export class ReadingListRepository implements IReadingListRepository {
@@ -49,9 +45,7 @@ export class ReadingListRepository implements IReadingListRepository {
       })
       .exec();
 
-    return doc
-      ? LibraryMapper.toDomain(doc as unknown as RawReadingListDocument)
-      : null;
+    return doc ? LibraryMapper.toDomain(doc) : null;
   }
 
   async remove(userId: UserId, bookId: BookId): Promise<void> {

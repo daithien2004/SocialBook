@@ -9,12 +9,7 @@ export class GetBooksQuery {
   public readonly search?: string;
   public readonly publishedYear?: string;
   public readonly sortBy?:
-    | 'createdAt'
-    | 'updatedAt'
-    | 'title'
-    | 'views'
-    | 'likes'
-    | 'publishedYear';
+    'createdAt' | 'updatedAt' | 'title' | 'views' | 'likes' | 'publishedYear';
   public readonly order?: 'asc' | 'desc';
 
   constructor(props: {

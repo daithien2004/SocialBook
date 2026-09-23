@@ -4,7 +4,6 @@ import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import {
   AI_PROVIDER_NAMES,
   AIProviderName,
-  IAIProviderPort,
 } from '@/domain/ai/interfaces/ai-provider.port';
 import { IAIProviderFactoryPort } from '@/domain/ai/interfaces/ai-provider-factory.port';
 import { AIAdapter } from './ai.adapter';

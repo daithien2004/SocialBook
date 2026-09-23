@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import path from 'path';
+import { withSentryConfig } from '@sentry/nextjs/config';
 import './src/env';
 
 let nextConfig: NextConfig = {
@@ -77,4 +78,8 @@ if (process.env.ANALYZE === 'true') {
   nextConfig = withBundleAnalyzer(nextConfig);
 }
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+});

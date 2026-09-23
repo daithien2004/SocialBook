@@ -2,8 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
-import { useAskChapterAI } from '@/features/chapters/api/chaptersApi'
-import { useCreateHighlight } from '@/features/user-highlights/api/userHighlightsApi'
+import { useAskChapterAI } from '@/features/chapters/api/chapters.mutations';
+import { useCreateHighlight } from '@/features/user-highlights/api/user-highlights.mutations';
 
 export interface Selection {
   text: string

@@ -71,8 +71,8 @@ describe('JwtStrategy (Unit)', () => {
     strategy = new JwtStrategy(
       createMockConfigService() as any,
       userRepository as any,
-      roleRepository as any,
-      cache as any,
+      roleRepository,
+      cache,
     );
   });
 

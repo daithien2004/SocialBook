@@ -34,10 +34,12 @@ jest.mock('socket.io-client', () => {
 });
 
 describe('SocketProvider', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSocket: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const ioMock = require('socket.io-client');
     mockSocket = ioMock.__mockSocket;
     mockSocket.connected = false;

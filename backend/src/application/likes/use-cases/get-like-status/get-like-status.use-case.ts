@@ -10,7 +10,7 @@ export interface GetLikeStatusRequest {
   targetType: TargetType;
 }
 
-export interface GetLikeStatusResponse {
+export interface GetLikeStatusResult {
   isLiked: boolean;
 }
 
@@ -18,7 +18,7 @@ export interface GetLikeStatusResponse {
 export class GetLikeStatusUseCase {
   constructor(private readonly likeRepository: ILikeRepository) {}
 
-  async execute(request: GetLikeStatusRequest): Promise<GetLikeStatusResponse> {
+  async execute(request: GetLikeStatusRequest): Promise<GetLikeStatusResult> {
     const userId = UserId.create(request.userId);
     const targetId = TargetId.create(request.targetId);
 

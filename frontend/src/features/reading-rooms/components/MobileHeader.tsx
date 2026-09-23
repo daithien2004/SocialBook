@@ -16,7 +16,7 @@ import {
 import { useModalStore } from '@/store/useModalStore';
 import { queryClient } from '@/lib/query-client';
 import { readingRoomsKeys } from '@/lib/query-keys';
-import { RoomResponse } from '@/features/reading-rooms/api/readingRoomsApi';
+import { RoomResponse } from '@/features/reading-rooms/api/reading-rooms.api';
 import { PresenceData } from '@/store/useReadingRoomStore';
 
 interface MobileHeaderProps {

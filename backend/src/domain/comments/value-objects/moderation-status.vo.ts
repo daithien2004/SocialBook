@@ -8,10 +8,7 @@ export class ModerationStatus {
   static create(status: string): ModerationStatus {
     const validStatuses = ['pending', 'approved', 'rejected'];
 
-    if (
-      !status ||
-      !validStatuses.includes(status as 'pending' | 'approved' | 'rejected')
-    ) {
+    if (!status || !validStatuses.includes(status)) {
       throw new Error(
         `Moderation status must be one of: ${validStatuses.join(', ')}`,
       );

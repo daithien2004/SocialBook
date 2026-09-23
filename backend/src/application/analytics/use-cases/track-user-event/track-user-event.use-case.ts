@@ -1,38 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { IUserAnalyticsRepository } from '@/domain/analytics/repositories/user-analytics.repository.interface';
-import { UserEvent } from '@/domain/analytics/entities/user-event.entity';
-import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { TrackUserEventCommand } from './track-user-event.command';
 
 @Injectable()
 export class TrackUserEventUseCase {
   constructor(
-    private readonly analyticsRepository: IUserAnalyticsRepository,
-    private readonly idGenerator: IIdGenerator,
-    private readonly eventEmitter: EventEmitter2,
+    @InjectQueue('analytics') private readonly analyticsQueue: Queue,
   ) {}
 
   async execute(command: TrackUserEventCommand): Promise<void> {
-    const event = UserEvent.create({
-      id: this.idGenerator.generate(),
-      userId: command.userId,
-      eventType: command.eventType,
-      bookId: command.bookId,
-      chapterId: command.chapterId,
-      durationSeconds: command.durationSeconds,
-      progressPercent: command.progressPercent,
-      source: command.source,
-      deviceType: command.deviceType,
-      metadata: command.metadata,
-      sessionId: command.sessionId,
-    });
-
-    await this.analyticsRepository.saveEvent(event);
-
-    this.eventEmitter.emit('user-event.tracked', {
-      userId: command.userId,
-      event,
+    await this.analyticsQueue.add('track-event', command, {
+      removeOnComplete: true,
+      removeOnFail: 100, // Keep last 100 failed jobs
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
     });
   }
 }

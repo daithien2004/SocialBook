@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Volume2, Play, Pause, SkipForward, SkipBack, Rewind, FastForward, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { ttsQueries, useIncrementPlayCount } from '@/features/tts/api/ttsApi';
+import { ttsQueries } from '@/features/tts/api/tts.queries';
+import { useIncrementPlayCount } from '@/features/tts/api/tts.mutations';
 
 interface Paragraph {
     id: string;

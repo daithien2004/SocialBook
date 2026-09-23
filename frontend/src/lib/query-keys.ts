@@ -4,8 +4,8 @@ import type {
   CommentRequest,
   GetCommentsRequest,
 } from '@/features/comments/types/comment.interface';
-import type { GetFlaggedPostsParams } from '@/features/admin/api/moderationApi';
-import type { LikeRequest } from '@/features/likes/api/likeApi';
+import type { GetFlaggedPostsParams } from '@/features/admin/api/moderation.api';
+import type { LikeRequest } from '@/features/likes/schemas/like.schema';
 import type { LibraryStatus } from '@/features/library/types/library.interface';
 import type {
   PaginationParams,
@@ -13,7 +13,7 @@ import type {
 } from '@/features/posts/types/post.interface';
 import type { GetRecommendationsRequest } from '@/features/recommendations/types/recommendation.interface';
 import type { SearchUsersParams } from '@/features/users/types/user.types';
-import type { GetToxicWordsParams } from '@/features/admin/api/toxicWordsApi';
+import type { GetToxicWordsParams } from '@/features/admin/api/toxic-words.api';
 
 export const analyticsKeys = {
   all: ['analytics'] as const,

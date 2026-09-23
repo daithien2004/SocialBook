@@ -73,6 +73,7 @@ export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSetting
     useEffect(() => {
         if (userPrefs && !isInitialized) {
             loadUserPreferences(userPrefs);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsInitialized(true);
         }
     }, [userPrefs, loadUserPreferences, isInitialized]);

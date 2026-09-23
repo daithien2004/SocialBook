@@ -3,20 +3,18 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { bookQueries } from "@/features/books/api/books.queries";
+import { chaptersQueries } from "@/features/chapters/api/chapters.queries";
+import { getAdminChapters, getChapterById, getChaptersImportStatus } from "@/features/chapters/api/chapters.api";
 import {
-  chaptersQueries,
-  getAdminChapters,
-  getChapterById,
-  getChaptersImportStatus,
   useCreateChapter,
   useDeleteChapter,
   useStartChaptersImport,
   useUpdateChapter,
-} from "@/features/chapters/api/chaptersApi";
+} from "@/features/chapters/api/chapters.mutations";
 import {
   useGenerateBookAudio,
   useGenerateChapterAudio,
-} from "@/features/tts/api/ttsApi";
+} from "@/features/tts/api/tts.mutations";
 import type {
   Chapter,
   Paragraph,

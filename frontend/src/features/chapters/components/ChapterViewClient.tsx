@@ -23,8 +23,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { chaptersQueries, useRecordChapterView } from "@/features/chapters/api/chaptersApi";
-import { useCreatePost } from "@/features/posts/api/postApi";
+import { chaptersQueries } from "@/features/chapters/api/chapters.queries";
+import { useRecordChapterView } from "@/features/chapters/api/chapters.mutations";
+import { useCreatePost } from "@/features/posts/api/post.mutations";
 import { useModalStore } from "@/store/useModalStore";
 import ChapterNavigation from "@/features/chapters/components/ChapterNavigation";
 import CommentSection from "@/features/chapters/components/CommentSection";

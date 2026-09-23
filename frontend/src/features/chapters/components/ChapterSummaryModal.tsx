@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Sparkles, Loader2, RefreshCw, BookOpen } from 'lucide-react';
-import { useSummarizeChapter } from '@/features/gemini/api/geminiApi';
+import { useSummarizeChapter } from '@/features/gemini/api/gemini.mutations';
 import { toast } from 'sonner';
 import { useModalStore } from '@/store/useModalStore';
 import { useAppAuth } from '@/features/auth/hooks';

@@ -2,12 +2,7 @@ import { Entity } from '@/shared/domain/entity.base';
 import { ChapterId } from '../value-objects/chapter-id.vo';
 
 export type KnowledgeEntityType =
-  | 'character'
-  | 'location'
-  | 'concept'
-  | 'event'
-  | 'vocabulary'
-  | 'reference';
+  'character' | 'location' | 'concept' | 'event' | 'vocabulary' | 'reference';
 
 export interface KnowledgeEntityProps {
   name: string;

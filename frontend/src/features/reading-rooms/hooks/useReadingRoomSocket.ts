@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useReadingRoomStore } from '@/store/useReadingRoomStore';
+import * as Sentry from '@sentry/nextjs';
 import { queryClient } from '@/lib/query-client';
 import { readingRoomsKeys } from '@/lib/query-keys';
 import { toast } from 'sonner';
@@ -8,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useSocket } from '@/context/SocketProvider';
 import { useSocketEvents } from '@/hooks/useSocketEvents';
 import type { PresenceData, RoomHighlight, ChatMessage } from '@/store/useReadingRoomStore';
-import type { RoomResponse } from '@/features/reading-rooms/api/readingRoomsApi';
+import type { RoomResponse } from '@/features/reading-rooms/api/reading-rooms.api';
 import type { RoomComment, ReactionType } from '@/features/reading-room-interactions/types/room-interaction.types';
 import { ReadingRoomServerEvent, ReadingRoomClientEvent } from '../types/reading-room.events';
 
@@ -233,6 +234,14 @@ export const useReadingRoomSocket = (roomId?: string) => {
   }, [socket]);
 
   useSocketEvents(socket, {
+    connect_error: (err: unknown) => {
+      const error = err as Error;
+      Sentry.captureMessage('Socket connect_error', {
+        level: 'warning',
+        tags: { event: 'socket_connect_error', namespace: '/reading-rooms' },
+        extra: { error: error?.message || 'Unknown' },
+      });
+    },
     connect: () => {
       emitJoinRoom();
     },

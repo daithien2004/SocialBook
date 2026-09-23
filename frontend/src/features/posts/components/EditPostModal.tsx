@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState, useReducer } from 'react';
-import { useUpdatePost } from '@/features/posts/api/postApi';
+import { useUpdatePost } from '@/features/posts/api/post.mutations';
 import { X, Image as ImageIcon } from 'lucide-react';
 import { toast } from "sonner";
 import { getErrorMessage, cn } from '@/lib/utils';

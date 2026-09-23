@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from '@/infrastructure/database/schemas/user.schema';
@@ -12,6 +13,7 @@ export class UsersSeed {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Role.name) private roleModel: Model<Role>,
+    private readonly configService: ConfigService,
   ) {}
 
   async run() {
@@ -25,15 +27,27 @@ export class UsersSeed {
     const userRole = await this.roleModel.findOne({ name: 'user' });
 
     if (!adminRole || !userRole) {
-      throw new Error('Roles not found! Hãy chạy RolesSeed trước.');
+      throw new Error('Roles not found! HÃ£y cháº¡y RolesSeed trÆ°á»›c.');
     }
 
-    const hashedPassword = await bcrypt.hash('Admin2004@', 10);
+    const adminPassword = this.configService.get<string>(
+      'env.ADMIN_PASSWORD',
+      '',
+    );
+    if (!adminPassword) {
+      throw new Error(
+        'ADMIN_PASSWORD is not set. Cannot seed admin user — set it in .env (see .env.example).',
+      );
+    }
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
     const users = [
       {
-        username: 'admin',
-        email: 'admin@example.com',
+        username: this.configService.get<string>('env.ADMIN_USERNAME', 'admin'),
+        email: this.configService.get<string>(
+          'env.ADMIN_EMAIL',
+          'admin@example.com',
+        ),
         password: hashedPassword,
         isVerified: true,
         provider: 'local',

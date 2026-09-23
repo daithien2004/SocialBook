@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { recommendationsQueries } from '@/features/recommendations/api/recommendationsApi';
+import { recommendationsQueries } from '@/features/recommendations/api/recommendations.queries';
 import { useAppAuth } from '@/features/auth/hooks';
 import { ChevronRight, LogIn, BookOpen } from 'lucide-react';
 import { SafeImage } from "@/components/shared/SafeImage";

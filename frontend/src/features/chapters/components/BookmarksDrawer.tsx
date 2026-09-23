@@ -8,7 +8,8 @@ import { useParams, useRouter } from 'next/navigation';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { getBookmarksByBook, useDeleteBookmark } from '@/features/bookmarks/api/bookmarkApi';
+import { getBookmarksByBook } from '@/features/bookmarks/api/bookmark.api';
+import { useDeleteBookmark } from '@/features/bookmarks/api/bookmark.mutations';
 import type { Bookmark } from '@/features/bookmarks/types/bookmark.interface';
 import { bookmarkKeys } from '@/lib/query-keys';
 import { scrollToHighlight } from '@/utils/scroll-to-highlight';

@@ -9,7 +9,7 @@ import { useReviewForm } from '@/features/reviews/hooks/useReviewForm';
 import { UserAvatar } from '@/components/shared/UserAvatar';
 import { Heart, Info, Loader2, MessageCircle, Pencil, Trash2, Star } from 'lucide-react';
 import { useAppAuth } from '@/features/auth/hooks';
-import { libraryQueries } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
 import type { Review } from '@/features/reviews/types/review.interface';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';

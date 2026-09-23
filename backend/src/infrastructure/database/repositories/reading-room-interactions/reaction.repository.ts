@@ -160,13 +160,11 @@ export class ReactionRepository implements IReactionRepository {
       ])
       .exec();
 
-    return docs.map(
-      (d): ReactionSummary => ({
-        paragraphId: d.paragraphId || '',
-        reactions: d.reactions || {},
-        userReactions: d.userReactions || {},
-      }),
-    );
+    return docs.map((d): ReactionSummary => ({
+      paragraphId: d.paragraphId || '',
+      reactions: d.reactions || {},
+      userReactions: d.userReactions || {},
+    }));
   }
 
   async deleteByRoom(roomId: string): Promise<void> {

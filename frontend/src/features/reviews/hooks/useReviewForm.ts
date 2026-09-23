@@ -2,13 +2,8 @@ import { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
-import {
-  useCreateReview,
-  useUpdateReview,
-  useDeleteReview,
-  useToggleLikeReview,
-  reviewQueries,
-} from '@/features/reviews/api/reviewApi';
+import { reviewQueries } from '@/features/reviews/api/review.queries';
+import { useCreateReview, useUpdateReview, useDeleteReview, useToggleLikeReview } from '@/features/reviews/api/review.mutations';
 import { bookKeys } from '@/lib/query-keys';
 import { queryClient } from '@/lib/query-client';
 import type { Review } from '../types/review.interface';

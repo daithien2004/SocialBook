@@ -62,7 +62,7 @@ export class PostRepository implements IPostRepository {
 
     if (!updated)
       throw new InternalServerErrorException('Failed to update post');
-    const domain = PostMapper.toDomain(updated as PostDocument);
+    const domain = PostMapper.toDomain(updated);
     if (!domain)
       throw new InternalServerErrorException('Failed to map updated post');
     return domain;

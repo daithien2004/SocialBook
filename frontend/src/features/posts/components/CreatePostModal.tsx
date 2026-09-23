@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
 import { useCreatePost } from '@/features/posts/hooks/useCreatePost';
 import { AppButton } from "@/components/shared/AppButton";
-import { useCreatePost as useCreatePostMutation } from '@/features/posts/api/postApi';
+import { useCreatePost as useCreatePostMutation } from '@/features/posts/api/post.mutations';
 import BookSelector from './BookSelector';
 
 export default function CreatePostModal() {

@@ -2,14 +2,7 @@ import { Identifier } from '@/shared/domain/identifier.base';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 
 export type ReactionTypeValue =
-  | 'cry'
-  | 'angry'
-  | 'laugh'
-  | 'think'
-  | 'shock'
-  | 'heart'
-  | 'fire'
-  | 'calm';
+  'cry' | 'angry' | 'laugh' | 'think' | 'shock' | 'heart' | 'fire' | 'calm';
 
 export const REACTION_TYPES: ReactionTypeValue[] = [
   'cry',

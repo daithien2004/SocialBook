@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { KnowledgeGraph } from '@/features/users/components/profile/KnowledgeGraph';
-import { libraryQueries } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
 import { motion } from 'framer-motion';
 import { useAppAuth } from '@/features/auth/hooks';
 import LoginWall from '@/features/auth/components/LoginWall';

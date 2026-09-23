@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, Users } from 'lucide-react';
-import { postQueries } from '@/features/posts/api/postApi';
+import { postQueries } from '@/features/posts/api/post.queries';
 
 export default function TopActiveReadersWidget() {
     const { data, isLoading } = useQuery({

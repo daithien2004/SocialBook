@@ -13,9 +13,7 @@ import { UserEventMapper } from './user-event.mapper';
 import { UserPreferenceMapper } from './user-preference.mapper';
 
 @Injectable()
-export class MongooseUserAnalyticsRepository
-  implements IUserAnalyticsRepository
-{
+export class MongooseUserAnalyticsRepository implements IUserAnalyticsRepository {
   constructor(
     @InjectModel(UserEvent.name)
     private readonly eventModel: Model<UserEventDocument>,

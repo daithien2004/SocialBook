@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TrackUserEventUseCase } from './use-cases/track-user-event/track-user-event.use-case';
 import { GetTrendingBooksUseCase } from './use-cases/get-trending-books/get-trending-books.use-case';
+import { BullModule } from '@nestjs/bullmq';
+import { AnalyticsProcessor } from './processors/analytics.processor';
 import { GetTopActiveReadersUseCase } from './use-cases/get-top-active-readers/get-top-active-readers.use-case';
 import { AnalyticsRepositoryModule } from '@/infrastructure/database/repositories/analytics/analytics-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
@@ -21,8 +23,12 @@ import { TargetResolutionModule } from '@/application/target-resolution/target-r
     GenresRepositoryModule,
     TextToSpeechRepositoryModule,
     TargetResolutionModule,
+    BullModule.registerQueue({
+      name: 'analytics',
+    }),
   ],
   providers: [
+    AnalyticsProcessor,
     TrackUserEventUseCase,
     GetTrendingBooksUseCase,
     GetTopActiveReadersUseCase,

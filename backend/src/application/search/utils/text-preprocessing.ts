@@ -72,9 +72,7 @@ export function createBookDocument(book: BookDoc): string {
 
   // Author name (high importance)
   const authorName: string | undefined =
-    typeof book.authorId === 'object'
-      ? (book.authorId as { name?: string }).name
-      : book.author;
+    typeof book.authorId === 'object' ? book.authorId.name : book.author;
   if (authorName) {
     parts.push(`Tác giả: ${authorName}`);
     parts.push(authorName);
@@ -88,7 +86,7 @@ export function createBookDocument(book: BookDoc): string {
   // Genres
   if (book.genres && Array.isArray(book.genres)) {
     const genreNames = book.genres
-      .map((g) => (typeof g === 'object' ? (g as { name?: string }).name : g))
+      .map((g) => (typeof g === 'object' ? g.name : g))
       .filter(Boolean)
       .join(', ');
     if (genreNames) {
@@ -194,15 +192,11 @@ export function createChunkedBookDocuments(
 
   const bookId = (book._id?.toString() || book.id) as string;
   const authorName: string | undefined =
-    typeof book.authorId === 'object'
-      ? (book.authorId as { name?: string }).name
-      : book.author;
+    typeof book.authorId === 'object' ? book.authorId.name : book.author;
   const genreNames: string =
     book.genres && Array.isArray(book.genres)
       ? book.genres
-          .map((g) =>
-            typeof g === 'object' ? (g as { name?: string }).name : g,
-          )
+          .map((g) => (typeof g === 'object' ? g.name : g))
           .filter(Boolean)
           .join(', ')
       : '';

@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { IAIRequestRepository } from '@/domain/ai/repositories/ai-request.repository.interface';
@@ -15,7 +15,7 @@ export interface SummarizeChapterRequest {
   userId: string;
 }
 
-export interface SummarizeChapterResponse {
+export interface SummarizeChapterResult {
   summary: string;
   requestId: string;
   chapterId: string;
@@ -33,7 +33,7 @@ export class SummarizeChapterUseCase {
 
   async execute(
     request: SummarizeChapterRequest,
-  ): Promise<SummarizeChapterResponse> {
+  ): Promise<SummarizeChapterResult> {
     const chapter = await this.chapterRepository.findById(
       ChapterId.create(request.chapterId),
     );

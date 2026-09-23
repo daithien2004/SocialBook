@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { Loader2, Upload, Check, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import { useImportChaptersPreview } from '@/features/chapters/api/chaptersApi';
+import { useImportChaptersPreview } from '@/features/chapters/api/chapters.mutations';
 import type { ChapterPreview } from '@/features/chapters/types/chapter.interface';
 
 interface FileImportModalProps {

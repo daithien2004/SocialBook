@@ -22,7 +22,9 @@ describe('RefreshTokenUseCase (Unit)', () => {
   let mockPasswordHasher: jest.Mocked<IPasswordHasher>;
   let mockRotationPort: jest.Mocked<TokenRotationPort>;
 
-  const makeUser = (overrides: Partial<{ roleId: string; hashedRt: string }> = {}) =>
+  const makeUser = (
+    overrides: Partial<{ roleId: string; hashedRt: string }> = {},
+  ) =>
     ({
       id: { toString: () => USER_ID },
       email: { value: EMAIL },

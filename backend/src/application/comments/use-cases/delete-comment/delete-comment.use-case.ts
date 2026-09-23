@@ -28,7 +28,12 @@ export class DeleteCommentUseCase {
       }
 
       // Check if user can delete this comment via CASL
-      if (!command.ability.can(Action.Delete, subject(Subject.Comment, { userId: comment.userId.toString() }))) {
+      if (
+        !command.ability.can(
+          Action.Delete,
+          subject(Subject.Comment, { userId: comment.userId.toString() }),
+        )
+      ) {
         throw new ForbiddenDomainException('You cannot delete this comment');
       }
 

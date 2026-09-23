@@ -66,6 +66,10 @@ export class SignupGoogleDto {
   googleId: string;
 
   @IsString()
+  @IsNotEmpty()
+  idToken: string;
+
+  @IsString()
   @IsOptional()
   image?: string;
 }

@@ -2,7 +2,7 @@
 
 import { ReadingListItem } from '@/features/users/components/reading-list-item';
 import { useQuery } from '@tanstack/react-query';
-import { libraryQueries } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
 import { Collection } from '@/features/library/types/library.interface';
 import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';

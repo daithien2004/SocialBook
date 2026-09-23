@@ -36,17 +36,17 @@ function createMockUserRepository(): jest.Mocked<IUserRepository> {
 function createMockCreateUserUseCase(): jest.Mocked<
   Partial<CreateUserUseCase>
 > {
-  return { execute: jest.fn() } as any;
+  return { execute: jest.fn() };
 }
 
 function createMockGetRoleByNameUseCase(): jest.Mocked<
   Partial<GetRoleByNameUseCase>
 > {
-  return { execute: jest.fn() } as any;
+  return { execute: jest.fn() };
 }
 
 function createMockSendOtpUseCase(): jest.Mocked<Partial<SendOtpUseCase>> {
-  return { execute: jest.fn() } as any;
+  return { execute: jest.fn() };
 }
 
 function createMockPasswordHasher(): jest.Mocked<{
@@ -104,11 +104,11 @@ describe('RegisterUseCase (Unit)', () => {
     mockPasswordHasher = createMockPasswordHasher();
 
     useCase = new RegisterUseCase(
-      mockUserRepo as any,
+      mockUserRepo,
       mockCreateUser as any,
       mockGetRoleByName as any,
       mockSendOtp as any,
-      mockPasswordHasher as any,
+      mockPasswordHasher,
     );
   });
 

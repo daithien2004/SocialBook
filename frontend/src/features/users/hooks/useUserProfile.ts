@@ -59,6 +59,7 @@ export function useUserProfile({
 
     useEffect(() => {
         if (!overview) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setForm({
             displayName: overview.username ?? '',
             website: overview.website ?? '',

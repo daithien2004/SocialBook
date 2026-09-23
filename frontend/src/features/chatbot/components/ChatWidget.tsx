@@ -3,7 +3,7 @@
 import DOMPurify from 'isomorphic-dompurify';
 import { Bot, BookOpen, Send, X } from 'lucide-react';
 import Link from 'next/link';
-import { useAskChatbot } from '@/features/chatbot/api/chatBotApi';
+import { useAskChatbot } from '@/features/chatbot/api/chatBot.mutations';
 import { useChatWidget } from '@/features/chatbot/hooks/useChatWidget';
 import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 import { usePathname } from 'next/navigation';

@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useSocket } from '@/context/SocketProvider';
 import { useSocketEvents } from '@/hooks/useSocketEvents';
+import * as Sentry from '@sentry/nextjs';
 
 export interface NotificationItem {
     id: string;
@@ -66,8 +67,13 @@ export function useNotificationSocket(
                 options.onReadNotificationAll();
             }
         },
-        'connect_error': () => {
-            // Connection failure - socket will auto-retry
+        'connect_error': (err: unknown) => {
+            const error = err as Error;
+            Sentry.captureMessage('Socket connect_error', {
+                level: 'warning',
+                tags: { event: 'socket_connect_error', namespace: '/notifications' },
+                extra: { error: error?.message || 'Unknown' },
+            });
         }
     });
 

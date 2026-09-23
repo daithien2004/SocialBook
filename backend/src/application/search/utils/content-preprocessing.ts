@@ -76,9 +76,7 @@ export function createChapterDocument(chapter: ChapterDoc): string[] {
 
     // Add book context if available
     const bookTitle =
-      typeof chapter.bookId === 'object'
-        ? (chapter.bookId as { title?: string }).title
-        : null;
+      typeof chapter.bookId === 'object' ? chapter.bookId.title : null;
     if (bookTitle && index === 0) {
       contextParts.push(`Sách: ${bookTitle}`);
     }

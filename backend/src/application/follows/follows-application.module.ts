@@ -7,9 +7,10 @@ import { GetFollowingUseCase } from './use-cases/get-following-with-user-info/ge
 import { GetFollowersUseCase } from './use-cases/get-followers-with-user-info/get-followers.use-case';
 import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/follows/follows-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { QueueModule } from '@/infrastructure/queue/queue.module';
 
 @Module({
-  imports: [FollowsRepositoryModule, IdGeneratorModule],
+  imports: [FollowsRepositoryModule, IdGeneratorModule, QueueModule],
   providers: [
     CreateFollowUseCase,
     DeleteFollowUseCase,

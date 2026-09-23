@@ -1,4 +1,4 @@
-﻿import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { GetCollectionStatsUseCase } from './use-cases/get-collection-stats/get-collection-stats.use-case';
 import { ClearCollectionUseCase } from './use-cases/clear-collection/clear-collection.use-case';
 import { BatchIndexUseCase } from './use-cases/batch-index/batch-index.use-case';
@@ -13,6 +13,8 @@ import { AuthorsRepositoryModule } from '../../infrastructure/database/repositor
 import { ChaptersRepositoryModule } from '../../infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
+import { BullModule } from '@nestjs/bullmq';
+import { ChromaProcessor } from './processors/chroma.processor';
 
 @Module({
   imports: [
@@ -22,8 +24,12 @@ import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.mo
     ChaptersRepositoryModule,
     IdGeneratorModule,
     AIInfrastructureModule,
+    BullModule.registerQueue({
+      name: 'chroma',
+    }),
   ],
   providers: [
+    ChromaProcessor,
     GetCollectionStatsUseCase,
     ClearCollectionUseCase,
     BatchIndexUseCase,

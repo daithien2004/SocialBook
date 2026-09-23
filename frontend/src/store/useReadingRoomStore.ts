@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { RoomResponse } from '@/features/reading-rooms/api/readingRoomsApi';
+import { RoomResponse } from '@/features/reading-rooms/api/reading-rooms.api';
 import type { RoomComment, ReactionType, ParagraphReactionSummary, RoomQuote } from '@/features/reading-room-interactions/types/room-interaction.types';
 import { REACTION_META } from '@/features/reading-room-interactions/types/room-interaction.types';
 

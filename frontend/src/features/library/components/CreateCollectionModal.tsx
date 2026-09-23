@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useModalStore } from '@/store/useModalStore';
-import { useCreateCollection } from '@/features/library/api/libraryApi';
+import { useCreateCollection } from '@/features/library/api/library.mutations';
 import { getErrorMessage, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Loader2, Lock, Globe } from 'lucide-react';

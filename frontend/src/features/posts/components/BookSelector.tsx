@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { libraryQueries } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
 import { BookSummary } from '@/features/library/types/library.interface';
 import { ChevronDown, Search, X, Loader2 } from 'lucide-react';
 import { SafeImage } from '@/components/shared/SafeImage';

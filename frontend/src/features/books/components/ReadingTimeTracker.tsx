@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useRecordReadingTime } from '@/features/library/api/libraryApi';
+import { useRecordReadingTime } from '@/features/library/api/library.mutations';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useTracking, UserEventType } from '@/hooks/use-tracking';
 

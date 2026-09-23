@@ -40,11 +40,12 @@ const MAX_AVAILABLE_BOOKS = 100;
 type LeanedReadingList = {
   _id: Types.ObjectId;
   bookId: PopulatedBook | null;
-  status: string;
+  status: ReadingStatus;
 };
 
 type LeanedProgress = FlattenMaps<Progress> & {
   bookId: PopulatedBook | null;
+  status: ChapterStatus;
 };
 
 type LeanedReview = FlattenMaps<Review> & {
@@ -62,9 +63,7 @@ type LeanedPreference = FlattenMaps<UserPreference> & {
 };
 
 @Injectable()
-export class RecommendationDataRepository
-  implements IRecommendationDataRepository
-{
+export class RecommendationDataRepository implements IRecommendationDataRepository {
   constructor(
     @InjectModel(Book.name) private bookModel: Model<BookDocument>,
     @InjectModel(ReadingList.name)

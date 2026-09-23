@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { analyticsQueries } from '@/features/admin/api/analyticsApi';
+import { analyticsQueries } from '@/features/admin/api/analytics.queries';
 import type { GrowthMetric } from '@/features/admin/types/dashboard.types';
 import type { ViewType } from '@/features/admin/components/dashboard/ViewTypeSelector';
 

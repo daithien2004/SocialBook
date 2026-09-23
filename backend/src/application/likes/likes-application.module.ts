@@ -4,9 +4,10 @@ import { GetLikeStatusUseCase } from './use-cases/get-like-status/get-like-statu
 import { ToggleLikeUseCase } from './use-cases/toggle-like/toggle-like.use-case';
 import { LikesRepositoryModule } from '@/infrastructure/database/repositories/likes/likes-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { QueueModule } from '@/infrastructure/queue/queue.module';
 
 @Module({
-  imports: [LikesRepositoryModule, IdGeneratorModule],
+  imports: [LikesRepositoryModule, IdGeneratorModule, QueueModule],
   providers: [GetLikeCountUseCase, GetLikeStatusUseCase, ToggleLikeUseCase],
   exports: [GetLikeCountUseCase, GetLikeStatusUseCase, ToggleLikeUseCase],
 })

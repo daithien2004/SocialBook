@@ -47,7 +47,7 @@ export class ChapterRepository
   }
 
   protected toDomain(doc: ChapterDocument): ChapterEntity {
-    return this.mapToEntity(doc as unknown as RawChapterDocument);
+    return this.mapToEntity(doc);
   }
 
   protected toPersistence(entity: ChapterEntity): RawChapterPersistence {

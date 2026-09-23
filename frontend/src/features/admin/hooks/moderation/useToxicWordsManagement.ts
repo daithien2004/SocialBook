@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-    toxicWordsQueries,
-    useAddToxicWord,
-    useDeleteToxicWord,
-    type AddToxicWordPayload,
-} from '@/features/admin/api/toxicWordsApi';
+import { toxicWordsQueries } from '@/features/admin/api/toxic-words.queries';
+import { AddToxicWordPayload } from '@/features/admin/api/toxic-words.api';
+import { useAddToxicWord, useDeleteToxicWord } from '@/features/admin/api/toxic-words.mutations';
 import { getErrorMessage } from '@/lib/utils';
 
 export function useToxicWordsManagement() {

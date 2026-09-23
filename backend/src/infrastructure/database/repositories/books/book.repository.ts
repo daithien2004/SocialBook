@@ -523,7 +523,7 @@ export class BookRepository
         slug: g.slug,
         count: g.count,
       })),
-      tags: tagsResult as Array<{ name: string; count: number }>,
+      tags: tagsResult,
     };
   }
 }

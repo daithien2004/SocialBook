@@ -14,6 +14,7 @@ import { CreateUserUseCase } from '@/application/users/use-cases/create-user/cre
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
+import { GoogleIdTokenPort } from '@/application/ports/google-id-token.port';
 import { TokenService } from '../../services/token.service';
 import { GoogleAuthCommand } from './google-auth.command';
 
@@ -26,10 +27,33 @@ export class GoogleAuthUseCase {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly rolesRepository: IRoleRepository,
     private readonly tokenService: TokenService,
+    private readonly googleIdTokenPort: GoogleIdTokenPort,
   ) {}
 
   async execute(command: GoogleAuthCommand) {
     try {
+      const verified = await this.googleIdTokenPort.verify(command.idToken);
+      if (!verified) {
+        this.logger.warn(
+          `Google login failed: id_token không hợp lệ cho ${command.email}`,
+        );
+        throw new UnauthorizedDomainException(
+          'Phiên đăng nhập Google không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.',
+        );
+      }
+
+      if (
+        verified.email.toLowerCase() !== command.email.toLowerCase() ||
+        verified.sub !== command.googleId
+      ) {
+        this.logger.warn(
+          `Google login failed: token payload (${verified.email}/${verified.sub}) không khớp body (${command.email}/${command.googleId})`,
+        );
+        throw new UnauthorizedDomainException(
+          'Thông tin đăng nhập Google không khớp. Vui lòng thử lại.',
+        );
+      }
+
       const emailVO = UserEmail.create(command.email);
       const existingUser = await this.userRepository.findByEmail(emailVO);
 

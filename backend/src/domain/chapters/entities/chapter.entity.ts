@@ -118,11 +118,7 @@ export class Chapter extends Entity<ChapterId> {
     return this._props.orderIndex;
   }
   get ttsStatus():
-    | 'pending'
-    | 'processing'
-    | 'completed'
-    | 'failed'
-    | undefined {
+    'pending' | 'processing' | 'completed' | 'failed' | undefined {
     return this._props.ttsStatus;
   }
   get audioUrl(): string | undefined {

@@ -47,8 +47,10 @@ export interface PopulatedChapter {
   orderIndex: number;
 }
 
-export interface PopulatedReadingListDocument
-  extends Omit<RawReadingListDocument, 'bookId' | 'lastReadChapterId'> {
+export interface PopulatedReadingListDocument extends Omit<
+  RawReadingListDocument,
+  'bookId' | 'lastReadChapterId'
+> {
   bookId: PopulatedBook;
   lastReadChapterId: PopulatedChapter | null;
 }

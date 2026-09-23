@@ -8,7 +8,7 @@ export interface GetLikeCountRequest {
   targetType: TargetType;
 }
 
-export interface GetLikeCountResponse {
+export interface GetLikeCountResult {
   count: number;
 }
 
@@ -16,7 +16,7 @@ export interface GetLikeCountResponse {
 export class GetLikeCountUseCase {
   constructor(private readonly likeRepository: ILikeRepository) {}
 
-  async execute(request: GetLikeCountRequest): Promise<GetLikeCountResponse> {
+  async execute(request: GetLikeCountRequest): Promise<GetLikeCountResult> {
     const targetId = TargetId.create(request.targetId);
 
     const count = await this.likeRepository.countByTarget(

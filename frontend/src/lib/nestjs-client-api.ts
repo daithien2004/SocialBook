@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { signOut } from 'next-auth/react';
+import * as Sentry from '@sentry/nextjs';
 import { getAccessToken, setAccessToken } from './token-store';
 import { getSessionSingleton } from './session';
 import { toast } from 'sonner';
@@ -67,6 +68,10 @@ clientApi.interceptors.response.use(
         }
 
         if (typeof window !== 'undefined') {
+          Sentry.captureMessage('RefreshAccessTokenError: Unable to refresh token', {
+            level: 'error',
+            tags: { event: 'RefreshAccessTokenError' },
+          });
           await signOut({ redirect: false });
           window.location.href = '/login?error=SessionExpired';
         }
@@ -74,6 +79,12 @@ clientApi.interceptors.response.use(
     }
 
     if (status === 403 && axiosError.response?.data?.error === 'USER_BANNED') {
+      Sentry.captureMessage('USER_BANNED: User was signed out due to ban', {
+        level: 'warning',
+        tags: { event: 'USER_BANNED' },
+        extra: { message: axiosError.response?.data?.message },
+      });
+
       toast.error('Tài khoản đã bị cấm', {
         id: 'user-banned',
         description:

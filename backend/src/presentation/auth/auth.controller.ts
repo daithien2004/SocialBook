@@ -68,6 +68,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({ global: { limit: 5 } })
   @Post('google/login')
   async handleGoogleLogin(
     @Body() data: SignupGoogleDto,
@@ -75,6 +76,7 @@ export class AuthController {
     const command = new GoogleAuthCommand(
       data.email,
       data.googleId,
+      data.idToken,
       data.name,
       data.image,
       data.name,

@@ -1,4 +1,4 @@
-﻿import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { IAIRequestRepository } from '@/domain/ai/repositories/ai-request.repository.interface';
 import {
@@ -13,7 +13,7 @@ export interface GenerateTextRequest {
   userId: string;
 }
 
-export interface GenerateTextResponse {
+export interface GenerateTextResult {
   response: string;
   requestId: string;
   responseLength: number;
@@ -27,7 +27,7 @@ export class GenerateTextUseCase {
     private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute(request: GenerateTextRequest): Promise<GenerateTextResponse> {
+  async execute(request: GenerateTextRequest): Promise<GenerateTextResult> {
     UserId.create(request.userId);
 
     const aiRequest = AIRequest.create({

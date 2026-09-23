@@ -18,7 +18,7 @@ import {
   Pencil,
 } from 'lucide-react';
 
-import { libraryQueries } from '@/features/library/api/libraryApi';
+import { libraryQueries } from '@/features/library/api/library.queries';
 import { LibraryStatus, Collection } from '@/features/library/types/library.interface';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useModalStore } from '@/store/useModalStore';

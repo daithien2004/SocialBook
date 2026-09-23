@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import PostCard from '@/features/posts/components/PostCard';
-import { postQueries } from '@/features/posts/api/postApi';
+import { postQueries } from '@/features/posts/api/post.queries';
 import type { Post } from '@/features/posts/types/post.interface';
 
 interface PostListProps {

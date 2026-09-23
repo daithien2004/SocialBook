@@ -11,7 +11,7 @@ import { User } from '@/domain/users/entities/user.entity';
 function createMockTokenService(): jest.Mocked<Partial<TokenService>> {
   return {
     signTokens: jest.fn(),
-  } as any;
+  };
 }
 
 function createMockRoleRepository(): jest.Mocked<IRoleRepository> {

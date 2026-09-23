@@ -9,6 +9,7 @@ import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { TtsInfrastructureModule } from '@/infrastructure/text-to-speech/tts-infrastructure.module';
 import { LanguageDetectorService } from './services/language-detector.service';
+import { QueueModule } from '@/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { LanguageDetectorService } from './services/language-detector.service';
     ChaptersRepositoryModule,
     IdGeneratorModule,
     TtsInfrastructureModule,
+    QueueModule,
   ],
   providers: [
     DeleteChapterAudioUseCase,

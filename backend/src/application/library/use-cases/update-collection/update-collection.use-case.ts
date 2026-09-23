@@ -20,7 +20,12 @@ export class UpdateCollectionUseCase {
       throw new NotFoundException('Collection not found');
     }
 
-    if (!command.ability.can(Action.Update, subject(Subject.Collection, { userId: collection.userId.getValue() }))) {
+    if (
+      !command.ability.can(
+        Action.Update,
+        subject(Subject.Collection, { userId: collection.userId.getValue() }),
+      )
+    ) {
       throw new ForbiddenException(
         'You do not have permission to update this collection',
       );

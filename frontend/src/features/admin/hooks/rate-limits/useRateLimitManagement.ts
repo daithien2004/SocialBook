@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  rateLimitQueries,
-  useUpdateGeminiRateLimit,
-} from '@/features/admin/api/rateLimitApi';
+import { rateLimitQueries } from '@/features/admin/api/rate-limit.queries';
+import { useUpdateGeminiRateLimit } from '@/features/admin/api/rate-limit.mutations';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 

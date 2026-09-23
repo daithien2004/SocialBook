@@ -18,7 +18,9 @@ export class DeleteCommentUseCase {
       throw new NotFoundDomainException('Không tìm thấy bình luận');
     }
 
-    if (!command.ability.can(Action.Delete, subject(Subject.RoomComment, comment))) {
+    if (
+      !command.ability.can(Action.Delete, subject(Subject.RoomComment, comment))
+    ) {
       throw new ForbiddenDomainException(
         'You can only delete your own comments',
       );

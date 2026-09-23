@@ -246,7 +246,11 @@ export class ReadingRoomGateway
         return;
       }
 
-      const payload = this.jwt.verify<{ sub?: string; id?: string, role?: string }>(token, {
+      const payload = this.jwt.verify<{
+        sub?: string;
+        id?: string;
+        role?: string;
+      }>(token, {
         complete: false,
       });
       const userId = payload.sub ?? payload.id;

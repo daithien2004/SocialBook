@@ -27,9 +27,7 @@ export class UpdateReviewUseCase {
     }
 
     if (!ability.can(Action.Update, subject(Subject.Review, review))) {
-      throw new ForbiddenDomainException(
-        ErrorMessages.REVIEW_UPDATE_FORBIDDEN,
-      );
+      throw new ForbiddenDomainException(ErrorMessages.REVIEW_UPDATE_FORBIDDEN);
     }
 
     let updated = false;

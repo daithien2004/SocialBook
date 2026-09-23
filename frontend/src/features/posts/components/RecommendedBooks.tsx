@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppAuth } from '@/features/auth/hooks';
-import { recommendationsQueries } from '@/features/recommendations/api/recommendationsApi';
+import { recommendationsQueries } from '@/features/recommendations/api/recommendations.queries';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQuery } from "@tanstack/react-query";

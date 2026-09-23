@@ -5,17 +5,21 @@ import { toast } from "sonner";
 import { bookQueries } from "@/features/books/api/books.queries";
 import {
   chaptersQueries,
+} from "@/features/chapters/api/chapters.queries";
+import {
   getChapterById,
   getChaptersImportStatus,
+} from "@/features/chapters/api/chapters.api";
+import {
   useCreateChapter,
   useDeleteChapter,
   useStartChaptersImport,
   useUpdateChapter,
-} from "@/features/chapters/api/chaptersApi";
+} from "@/features/chapters/api/chapters.mutations";
 import {
   useGenerateBookAudio,
   useGenerateChapterAudio,
-} from "@/features/tts/api/ttsApi";
+} from "@/features/tts/api/tts.mutations";
 import type {
   Chapter,
   Paragraph,

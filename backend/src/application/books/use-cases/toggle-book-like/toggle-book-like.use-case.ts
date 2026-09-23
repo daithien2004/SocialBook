@@ -9,7 +9,7 @@ import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { ToggleBookLikeCommand } from './toggle-book-like.command';
 
-export interface ToggleBookLikeResponse {
+export interface ToggleBookLikeResult {
   isLiked: boolean;
   likes: number;
 }
@@ -26,7 +26,7 @@ export class ToggleBookLikeUseCase {
 
   async execute(
     command: ToggleBookLikeCommand,
-  ): Promise<ToggleBookLikeResponse> {
+  ): Promise<ToggleBookLikeResult> {
     try {
       const bookId = BookId.create(command.bookId);
 

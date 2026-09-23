@@ -10,17 +10,19 @@ import { useQuery } from '@tanstack/react-query';
 import { MESSAGES } from '@/constants/messages';
 
 import { useAppAuth } from '@/features/auth/hooks';
-import { getBookmarksByBook, useCreateBookmark, useDeleteBookmark } from '@/features/bookmarks/api/bookmarkApi';
+import { getBookmarksByBook } from '@/features/bookmarks/api/bookmark.api';
+import { useCreateBookmark, useDeleteBookmark } from '@/features/bookmarks/api/bookmark.mutations';
 import { bookmarkKeys } from '@/lib/query-keys';
 import { useChapterComments } from '@/features/chapters/hooks/useChapterComments';
-import { chaptersQueries } from '@/features/chapters/api/chaptersApi';
+import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
 
 import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
-import { getRoomComments, getRoomReactions } from '@/features/reading-room-interactions/api/roomInteractionsApi';
+import { getRoomComments, getRoomReactions } from '@/features/reading-room-interactions/api/room-interactions.api';
 import { ParagraphAnnotations } from '@/features/reading-room-interactions/components/ParagraphAnnotations';
 import { FloatingReactionBubbles } from '@/features/reading-rooms/components/FloatingReactionBubbles';
 import { ParagraphReactions } from '@/features/reading-room-interactions/components/ParagraphReactions';
-import { userHighlightQueries, useDeleteHighlight, useUpdateHighlight } from '@/features/user-highlights/api/userHighlightsApi';
+import { userHighlightQueries } from '@/features/user-highlights/api/user-highlights.queries';
+import { useDeleteHighlight, useUpdateHighlight } from '@/features/user-highlights/api/user-highlights.mutations';
 import { UserHighlight } from '@/features/user-highlights/types/user-highlight.interface';
 import { useReadingSettings } from '@/store/useReadingSettings';
 import { useReadingRoomStore, RoomHighlight } from '@/store/useReadingRoomStore';

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { UserEventType } from '@/domain/analytics/enums/user-event-type.enum';
 import { ScoringService } from '../services/scoring.service';

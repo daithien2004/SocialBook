@@ -1,8 +1,9 @@
-import {
+﻿import {
   Controller,
   Post,
   Body,
   Param,
+  Req,
   BadRequestException,
   UseGuards,
 } from '@nestjs/common';
@@ -21,13 +22,16 @@ export class AIController {
   @Public()
   @UseGuards(AIThrottleGuard)
   @Post('generate-text')
-  async generateText(@Body() body: { prompt: string; userId?: string }) {
+  async generateText(
+    @Body() body: { prompt: string; userId?: string },
+    @Req() req: { user?: { id: string } },
+  ) {
     if (!body.prompt) {
       throw new BadRequestException('Prompt is required');
     }
     return await this.generateTextUseCase.execute({
       prompt: body.prompt,
-      userId: body.userId || 'GUEST',
+      userId: req.user?.id ?? 'GUEST',
     });
   }
 
@@ -37,14 +41,15 @@ export class AIController {
   async summarizeChapter(
     @Param('chapterId') chapterId: string,
     @Body() body: { userId?: string },
+    @Req() req: { user?: { id: string } },
   ) {
     if (!chapterId) {
       throw new BadRequestException('Chapter ID is required');
     }
     const result = await this.summarizeChapterUseCase.execute({
       chapterId,
-      userId: body?.userId || 'GUEST',
+      userId: req.user?.id ?? 'GUEST',
     });
-    return { data: result, message: 'Tóm tắt chương thành công' };
+    return { data: result, message: 'TÃ³m táº¯t chÆ°Æ¡ng thÃ nh cÃ´ng' };
   }
 }
