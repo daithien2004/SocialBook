@@ -9,8 +9,8 @@ import { withTimeout } from '@/lib/server-prefetch';
 
 interface ChapterPageProps {
   params: Promise<{
-    chapterSlug: string;
     bookSlug: string;
+    chapterSlug: string;
   }>;
 }
 
@@ -41,7 +41,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ChapterPage({ params }: ChapterPageProps) {
+async function ChapterPageContent({ params }: ChapterPageProps) {
   const { bookSlug, chapterSlug } = await params;
 
   const queryClient = getQueryClient();
@@ -54,15 +54,15 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-background flex items-center justify-center transition-colors duration-300">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-          </div>
-        }
-      >
-        <ChapterViewClient bookSlug={bookSlug} chapterSlug={chapterSlug} />
-      </Suspense>
+      <ChapterViewClient bookSlug={bookSlug} chapterSlug={chapterSlug} />
     </HydrationBoundary>
+  );
+}
+
+export default function ChapterPage({ params }: ChapterPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <ChapterPageContent params={params} />
+    </Suspense>
   );
 }

@@ -54,9 +54,10 @@ export async function getCommentCount(request: {
   targetType: string;
   parentId?: string | null;
 }): Promise<number> {
-  return apiRequest<number>({
+  const response = await apiRequest<{ count: number }>({
     url: '/comments/count',
     method: 'GET',
     params: request,
   });
+  return response.count;
 }

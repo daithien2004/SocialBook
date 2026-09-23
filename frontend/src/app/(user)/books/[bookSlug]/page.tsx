@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import type { Metadata } from 'next';
 import BookDetailClient from '@/features/books/components/BookDetailClient';
@@ -37,7 +38,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function BookDetail({ params }: BookDetailProps) {
+async function BookDetailContent({ params }: BookDetailProps) {
   const { bookSlug } = await params;
 
   const queryClient = getQueryClient();
@@ -52,5 +53,13 @@ export default async function BookDetail({ params }: BookDetailProps) {
     <HydrationBoundary state={dehydrate(queryClient)}>
       <BookDetailClient bookSlug={bookSlug} />
     </HydrationBoundary>
+  );
+}
+
+export default function BookDetail({ params }: BookDetailProps) {
+  return (
+    <Suspense fallback={null}>
+      <BookDetailContent params={params} />
+    </Suspense>
   );
 }
