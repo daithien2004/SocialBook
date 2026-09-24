@@ -25,7 +25,10 @@ describe('accessTokenFromSocket', () => {
   });
 
   it('prefers auth token over query token', () => {
-    const socket = makeSocket({ auth: { token: 'auth-token' }, query: { token: 'query-token' } });
+    const socket = makeSocket({
+      auth: { token: 'auth-token' },
+      query: { token: 'query-token' },
+    });
     expect(accessTokenFromSocket(socket)).toBe('auth-token');
   });
 

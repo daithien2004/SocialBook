@@ -29,7 +29,7 @@ export function accessTokenFromRequest(req: {
 }): string | null {
   const cookie = req?.cookies?.['sb_access_token'];
   if (cookie) return cookie;
-  const bearer = ExtractJwt.fromAuthHeaderAsBearerToken()(req as never);
+  const bearer = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
   return bearer;
 }
 

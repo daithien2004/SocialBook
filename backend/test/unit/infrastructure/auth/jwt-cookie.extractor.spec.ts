@@ -16,8 +16,6 @@ describe('accessTokenFromRequest', () => {
     expect(accessTokenFromRequest(req as never)).toBe('header-tok');
   });
   it('null when nothing present', () => {
-    expect(
-      accessTokenFromRequest({ cookies: {}, headers: {} } as never),
-    ).toBeNull();
+    expect(accessTokenFromRequest({ cookies: {}, headers: {} })).toBeNull();
   });
 });

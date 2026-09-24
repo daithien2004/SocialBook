@@ -10,7 +10,7 @@ export function refreshTokenFromRequest(req: {
 }): string | null {
   const cookie = req?.cookies?.['sb_refresh_token'];
   if (cookie) return cookie;
-  const body = ExtractJwt.fromBodyField('refreshToken')(req as never);
+  const body = ExtractJwt.fromBodyField('refreshToken')(req);
   return body;
 }
 

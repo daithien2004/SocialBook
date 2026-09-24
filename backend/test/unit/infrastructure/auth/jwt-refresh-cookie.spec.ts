@@ -13,8 +13,6 @@ describe('refreshTokenFromRequest', () => {
     expect(refreshTokenFromRequest(req as never)).toBe('body-r');
   });
   it('null when nothing present', () => {
-    expect(
-      refreshTokenFromRequest({ cookies: {}, body: {} } as never),
-    ).toBeNull();
+    expect(refreshTokenFromRequest({ cookies: {}, body: {} })).toBeNull();
   });
 });
