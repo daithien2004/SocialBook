@@ -24,9 +24,7 @@ export class ToggleBookLikeUseCase {
     private readonly bookCache: IBookCachePort,
   ) {}
 
-  async execute(
-    command: ToggleBookLikeCommand,
-  ): Promise<ToggleBookLikeResult> {
+  async execute(command: ToggleBookLikeCommand): Promise<ToggleBookLikeResult> {
     try {
       const bookId = BookId.create(command.bookId);
 

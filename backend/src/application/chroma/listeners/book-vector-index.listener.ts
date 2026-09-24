@@ -7,9 +7,7 @@ import { Queue } from 'bullmq';
 export class BookVectorIndexListener {
   private readonly logger = new Logger(BookVectorIndexListener.name);
 
-  constructor(
-    @InjectQueue('chroma') private readonly chromaQueue: Queue,
-  ) {}
+  constructor(@InjectQueue('chroma') private readonly chromaQueue: Queue) {}
 
   @OnEvent('book.created', { async: true })
   @OnEvent('book.updated', { async: true })

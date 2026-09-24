@@ -37,17 +37,24 @@ export class ChromaProcessor extends WorkerHost {
       const book = await this.bookRepository.findById(bookId);
 
       if (!book) {
-        this.logger.warn(`Book ${payload.bookId} not found, skipping indexing.`);
+        this.logger.warn(
+          `Book ${payload.bookId} not found, skipping indexing.`,
+        );
         return;
       }
 
       const contentType = ContentType.create('book');
 
       // 1. Delete old vectors for this book to avoid duplicates on update
-      await this.vectorRepository.deleteByContentId(payload.bookId, contentType);
+      await this.vectorRepository.deleteByContentId(
+        payload.bookId,
+        contentType,
+      );
 
       if (book.status.toString() !== 'published') {
-        this.logger.log(`Book ${payload.bookId} is not published, skipping new vectors.`);
+        this.logger.log(
+          `Book ${payload.bookId} is not published, skipping new vectors.`,
+        );
         return;
       }
 
@@ -87,25 +94,40 @@ export class ChromaProcessor extends WorkerHost {
       if (batchBuffer.length > 0) {
         const result = await this.vectorRepository.saveBatch(batchBuffer);
         if (result.failed > 0) {
-          throw new Error(`Failed to index some chunks for book ${payload.bookId}`);
+          throw new Error(
+            `Failed to index some chunks for book ${payload.bookId}`,
+          );
         } else {
-          this.logger.log(`Successfully updated vector index for book ${payload.bookId} (${chunks.length} chunks)`);
+          this.logger.log(
+            `Successfully updated vector index for book ${payload.bookId} (${chunks.length} chunks)`,
+          );
         }
       }
     } catch (error: unknown) {
-      this.logger.error(`Failed to handle vector index for book ${payload.bookId}: ${getErrorMessage(error)}`);
+      this.logger.error(
+        `Failed to handle vector index for book ${payload.bookId}: ${getErrorMessage(error)}`,
+      );
       throw error;
     }
   }
 
   private async handleBookDeleted(payload: { bookId: string }) {
     try {
-      this.logger.log(`Removing vector index for deleted book: ${payload.bookId}`);
+      this.logger.log(
+        `Removing vector index for deleted book: ${payload.bookId}`,
+      );
       const contentType = ContentType.create('book');
-      await this.vectorRepository.deleteByContentId(payload.bookId, contentType);
-      this.logger.log(`Successfully removed vector index for book ${payload.bookId}`);
+      await this.vectorRepository.deleteByContentId(
+        payload.bookId,
+        contentType,
+      );
+      this.logger.log(
+        `Successfully removed vector index for book ${payload.bookId}`,
+      );
     } catch (error: unknown) {
-      this.logger.error(`Failed to remove vector index for book ${payload.bookId}: ${getErrorMessage(error)}`);
+      this.logger.error(
+        `Failed to remove vector index for book ${payload.bookId}: ${getErrorMessage(error)}`,
+      );
       throw error;
     }
   }
@@ -118,7 +140,11 @@ export class ChromaProcessor extends WorkerHost {
       .trim();
   }
 
-  private chunkText(text: string, size: number, overlap: number = 100): string[] {
+  private chunkText(
+    text: string,
+    size: number,
+    overlap: number = 100,
+  ): string[] {
     if (!text) return [];
     if (text.length <= size) return [text.trim()];
 
