@@ -5,6 +5,7 @@ describe('validateEnv', () => {
     MONGO_URI: 'mongodb://localhost:27017/socialbook',
     JWT_ACCESS_SECRET: 'my-super-secret-access-token-value-1234567890',
     JWT_REFRESH_SECRET: 'my-super-secret-refresh-token-value-123456789',
+    GOOGLE_CLIENT_ID: '1234567890-abcdefghij.apps.googleusercontent.com',
   };
 
   it('accepts a valid environment', () => {
@@ -21,8 +22,14 @@ describe('validateEnv', () => {
   it('throws when JWT_ACCESS_SECRET is missing', () => {
     const { JWT_ACCESS_SECRET, ...withoutSecret } = validEnv;
 
-    expect(() => validateEnv(withoutSecret)).toThrow(
-      /JWT_ACCESS_SECRET/,
+    expect(() => validateEnv(withoutSecret)).toThrow(/JWT_ACCESS_SECRET/);
+  });
+
+  it('throws when GOOGLE_CLIENT_ID is missing', () => {
+    const { GOOGLE_CLIENT_ID, ...withoutGoogleClientId } = validEnv;
+
+    expect(() => validateEnv(withoutGoogleClientId)).toThrow(
+      /GOOGLE_CLIENT_ID/,
     );
   });
 

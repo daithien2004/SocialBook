@@ -31,7 +31,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof MongoServerError) {
       if (exception.code === 11000) {
-        const field = Object.keys(exception.keyPattern || {}).join(', ');
+        const field = Object.keys(
+          (exception.keyPattern as Record<string, unknown>) || {},
+        ).join(', ');
         status = HttpStatus.CONFLICT;
         message = `Giá trị đã tồn tại: ${field}`;
         error = 'Conflict';

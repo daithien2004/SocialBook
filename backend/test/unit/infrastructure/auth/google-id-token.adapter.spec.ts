@@ -85,10 +85,13 @@ describe('GoogleIdTokenAdapter', () => {
     expect(await adapter.verify('bad-token')).toBeNull();
   });
 
-  it('trả null (fail-closed) khi chưa cấu hình GOOGLE_CLIENT_ID', async () => {
-    const adapter = new GoogleIdTokenAdapter(createConfigService(''));
+  it('luôn tạo OAuth2Client từ GOOGLE_CLIENT_ID (env bắt buộc)', () => {
+    new GoogleIdTokenAdapter(
+      createConfigService('client-id.apps.googleusercontent.com'),
+    );
 
-    expect(await adapter.verify('any-token')).toBeNull();
-    expect(MockedOAuth2Client).not.toHaveBeenCalled();
+    expect(MockedOAuth2Client).toHaveBeenCalledWith(
+      'client-id.apps.googleusercontent.com',
+    );
   });
 });

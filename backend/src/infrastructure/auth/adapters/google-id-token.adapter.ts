@@ -11,26 +11,19 @@ import { getErrorMessage } from '@/common/utils/error.util';
 @Injectable()
 export class GoogleIdTokenAdapter implements GoogleIdTokenPort {
   private readonly logger = new Logger(GoogleIdTokenAdapter.name);
-  private readonly client: OAuth2Client | null;
+  private readonly clientId: string;
+  private readonly client: OAuth2Client;
 
   constructor(private readonly config: ConfigService) {
-    const clientId = this.config.get<string>('env.GOOGLE_CLIENT_ID') ?? '';
-    this.client = clientId ? new OAuth2Client(clientId) : null;
-    if (!this.client) {
-      this.logger.warn(
-        'GOOGLE_CLIENT_ID chưa được cấu hình — Google login sẽ bị từ chối (fail-closed).',
-      );
-    }
+    this.clientId = this.config.get<string>('env.GOOGLE_CLIENT_ID') ?? '';
+    this.client = new OAuth2Client(this.clientId);
   }
 
   async verify(idToken: string): Promise<GoogleIdTokenPayload | null> {
-    if (!this.client) return null;
-
     try {
-      const clientId = this.config.get<string>('env.GOOGLE_CLIENT_ID') ?? '';
       const ticket = await this.client.verifyIdToken({
         idToken,
-        audience: clientId,
+        audience: this.clientId,
       });
       const payload = ticket.getPayload();
 

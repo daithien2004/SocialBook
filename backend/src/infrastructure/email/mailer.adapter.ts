@@ -10,6 +10,7 @@ import {
 export class MailerAdapter implements IMailerPort {
   private readonly resend: Resend;
   private readonly fromEmail: string;
+  private readonly devLogMail: boolean;
   private readonly logger = new Logger(MailerAdapter.name);
 
   constructor(private readonly configService: ConfigService) {
@@ -18,10 +19,20 @@ export class MailerAdapter implements IMailerPort {
       'env.RESEND_FROM_EMAIL',
       'noreply@socialbook.io.vn',
     );
+    this.devLogMail =
+      this.configService.get<string>('env.NODE_ENV', 'development') !==
+        'production' && !apiKey;
     this.resend = new Resend(apiKey);
   }
 
   async sendMail(options: SendMailOptions): Promise<void> {
+    if (this.devLogMail) {
+      this.logger.log(
+        `[DEV MAILER] To: ${options.to} | Subject: ${options.subject}\n${options.html}`,
+      );
+      return;
+    }
+
     const { error } = await this.resend.emails.send({
       from: this.fromEmail,
       to: options.to,

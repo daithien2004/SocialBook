@@ -17,16 +17,13 @@ export default registerAs('env', () => ({
   // JWT
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
-  ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || '1h',
+  ACCESS_TOKEN_EXPIRES_IN: process.env.ACCESS_TOKEN_EXPIRES_IN || '15m',
   REFRESH_TOKEN_EXPIRES_IN: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
 
   // Seed admin (users.seeder) — KO hardcode password o code
   ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'admin',
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@example.com',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
-  // Email (legacy SMTP â€” kept for reference, no longer used)
-  EMAIL_USER: process.env.EMAIL_USER,
-  EMAIL_PASS: process.env.EMAIL_PASS,
 
   // Resend (transactional email via HTTPS)
   RESEND_API_KEY: process.env.RESEND_API_KEY,
