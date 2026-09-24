@@ -9,8 +9,11 @@ import {
   HttpStatus,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+
+import type { Response } from 'express';
 
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
@@ -40,6 +43,8 @@ import type { JwtPayload } from '@/infrastructure/auth/strategies/jwt.strategy';
 import type { ApiResponse } from '@/common/interfaces/api-response.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
+import { AuthCookieService } from '@/application/auth/services/auth-cookie.service';
+import type { SetCookieSpec } from '@/application/auth/services/auth-cookie.service';
 import {
   ForgotPasswordDto,
   RefreshTokenDto,
@@ -69,7 +74,18 @@ export class AuthController {
     private readonly verifyOtpUseCase: VerifyOtpUseCase,
     private readonly resendOtpUseCase: ResendOtpUseCase,
     private readonly userRepository: IUserRepository,
+    private readonly cookieService: AuthCookieService,
   ) {}
+
+  private applyCookie(res: Response, spec: SetCookieSpec): void {
+    res.cookie(spec.name, spec.value, {
+      path: spec.path,
+      maxAge: spec.maxAgeSeconds * 1000,
+      httpOnly: spec.httpOnly,
+      secure: spec.secure,
+      sameSite: spec.sameSite,
+    });
+  }
 
   @Public()
   @Throttle({ global: { limit: 5 } })
@@ -97,9 +113,19 @@ export class AuthController {
   @Post('login')
   async login(
     @Req() req: { user: User },
+    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<LoginResponseDto>> {
     const command = new LoginCommand(req.user);
     const result = await this.loginUseCase.execute(command);
+
+    this.applyCookie(
+      res,
+      this.cookieService.accessTokenCookie(result.accessToken),
+    );
+    this.applyCookie(
+      res,
+      this.cookieService.refreshTokenCookie(result.refreshToken),
+    );
 
     return {
       message: 'Đăng nhập thành công',
@@ -142,9 +168,21 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Req() req: { user: { id: string } }): Promise<ApiResponse> {
+  async logout(
+    @Req() req: { user: { id: string } },
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
     const command = new LogoutCommand(req.user.id);
-    return await this.logoutUseCase.execute(command);
+    const result = await this.logoutUseCase.execute(command);
+
+    const access = this.cookieService.clearAccessToken();
+    const refresh = this.cookieService.clearRefreshToken();
+    const oauthState = this.cookieService.clearOauthState();
+    res.clearCookie(access.name, { path: access.path });
+    res.clearCookie(refresh.name, { path: refresh.path });
+    res.clearCookie(oauthState.name, { path: oauthState.path });
+
+    return result;
   }
 
   @Public()
@@ -186,10 +224,12 @@ export class AuthController {
   @Public()
   @Post('refresh')
   async refresh(
-    @Req() req: { user: JwtPayload },
+    @Req()
+    req: { user: JwtPayload; cookies?: Record<string, string> },
     @Body() body: RefreshTokenDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<TokenPairDto>> {
-    const { refreshToken } = body;
+    const refreshToken = body.refreshToken ?? req.cookies?.sb_refresh_token;
     if (!refreshToken) {
       throw new HttpException(
         'Vui lòng cung cấp Refresh token',
@@ -200,6 +240,12 @@ export class AuthController {
     const command = new RefreshTokenCommand(req.user.sub, refreshToken);
     const { accessToken, refreshToken: newRefreshToken } =
       await this.refreshTokenUseCase.execute(command);
+
+    this.applyCookie(res, this.cookieService.accessTokenCookie(accessToken));
+    this.applyCookie(
+      res,
+      this.cookieService.refreshTokenCookie(newRefreshToken),
+    );
 
     return {
       message: 'Làm mới token thành công',
