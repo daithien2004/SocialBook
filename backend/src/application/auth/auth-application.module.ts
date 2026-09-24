@@ -25,6 +25,8 @@ import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 import { GoogleIdTokenPort } from '@/application/ports/google-id-token.port';
 import { GoogleIdTokenAdapter } from '@/infrastructure/auth/adapters/google-id-token.adapter';
+import { OAuthStateStorePort } from '@/application/ports/oauth-state-store.port';
+import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oauth-state.adapter';
 
 @Module({
   imports: [
@@ -64,6 +66,11 @@ import { GoogleIdTokenAdapter } from '@/infrastructure/auth/adapters/google-id-t
       provide: GoogleIdTokenPort,
       useExisting: GoogleIdTokenAdapter,
     },
+    RedisOAuthStateAdapter,
+    {
+      provide: OAuthStateStorePort,
+      useExisting: RedisOAuthStateAdapter,
+    },
   ],
 
   exports: [
@@ -79,6 +86,7 @@ import { GoogleIdTokenAdapter } from '@/infrastructure/auth/adapters/google-id-t
     ValidateUserUseCase,
     TokenService,
     GoogleIdTokenPort,
+    OAuthStateStorePort,
   ],
 })
 export class AuthApplicationModule {}
