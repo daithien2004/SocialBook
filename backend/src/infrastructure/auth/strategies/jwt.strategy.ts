@@ -23,6 +23,16 @@ export interface JwtPayload {
   exp?: number;
 }
 
+export function accessTokenFromRequest(req: {
+  cookies?: Record<string, string | undefined>;
+  headers?: Record<string, string | string[] | undefined>;
+}): string | null {
+  const cookie = req?.cookies?.['sb_access_token'];
+  if (cookie) return cookie;
+  const bearer = ExtractJwt.fromAuthHeaderAsBearerToken()(req as never);
+  return bearer;
+}
+
 interface AuthUserCache {
   role: string;
   isBanned: boolean;
@@ -37,7 +47,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly cache: ICachePort,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: accessTokenFromRequest,
       ignoreExpiration: false,
       secretOrKey: configService.getOrThrow<string>('env.JWT_ACCESS_SECRET'),
     });
