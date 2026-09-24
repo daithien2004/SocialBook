@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 
 import { LoginUseCase } from './use-cases/login/login.use-case';
 import { RegisterUseCase } from './use-cases/register/register.use-case';
+import { OAuthAuthUseCase } from './use-cases/oauth-auth/oauth-auth.use-case';
 import { GoogleAuthUseCase } from './use-cases/google-auth/google-auth.use-case';
 import { RefreshTokenUseCase } from './use-cases/refresh-token/refresh-token.use-case';
 import { LogoutUseCase } from './use-cases/logout/logout.use-case';
@@ -56,6 +57,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     LoginUseCase,
     RegisterUseCase,
     GoogleAuthUseCase,
+    OAuthAuthUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
     ForgotPasswordUseCase,
@@ -81,6 +83,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     LoginUseCase,
     RegisterUseCase,
     GoogleAuthUseCase,
+    OAuthAuthUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
     ForgotPasswordUseCase,
