@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth.config';
 import { redirect } from 'next/navigation';
 import HomePageClient from '@/features/home/components/HomePageClient';
+import { getServerMe } from '@/lib/get-server-me';
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions);
+  const me = await getServerMe();
 
-  if (session?.user?.role === 'admin') {
+  if (me?.role === 'admin') {
     redirect('/admin');
   }
 

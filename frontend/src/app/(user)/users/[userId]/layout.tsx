@@ -2,8 +2,7 @@ import ClientLayout from './ClientLayout';
 import { ReactNode } from 'react';
 import type { FollowStateResponse } from '@/features/follows/types/follow.interface';
 import { followServerApi } from '@/features/follows/api/followServerApi';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth.config';
+import { getServerMe } from '@/lib/get-server-me';
 import { userServerApi } from '@/features/users/api/usersServerApi';
 
 export default async function UserLayout({
@@ -31,14 +30,14 @@ export default async function UserLayout({
     );
   }
 
-  const session = await getServerSession(authOptions);
+  const me = await getServerMe();
 
   let initialFollowState: FollowStateResponse | null = {
     isOwner: false,
     isFollowing: false,
   };
 
-  if (session?.user) {
+  if (me) {
     try {
       const followApi = await followServerApi();
       initialFollowState = await followApi.getFollowState(userId);

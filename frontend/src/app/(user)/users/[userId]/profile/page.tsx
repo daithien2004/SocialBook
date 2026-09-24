@@ -1,16 +1,15 @@
 import { UserProfileClient } from '@/features/users/components/UserProfileClient';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth.config';
 import { redirect } from 'next/navigation';
+import { getServerMe } from '@/lib/get-server-me';
 
 export default async function UserProfilePage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = await params;
-    const session = await getServerSession(authOptions);
+    const me = await getServerMe();
 
-    if (!session?.user) {
+    if (!me) {
         redirect('/login');
     }
-    if (session.user.id !== userId) {
+    if (me.id !== userId) {
         redirect('/403');
     }
 
