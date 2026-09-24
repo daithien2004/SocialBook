@@ -38,6 +38,8 @@ import { VerifyOtpUseCase } from '@/application/auth/use-cases/verify-otp/verify
 import type { JwtValidatedUser } from '@/common/interfaces/jwt-validated-user.interface';
 import type { JwtPayload } from '@/infrastructure/auth/strategies/jwt.strategy';
 import type { ApiResponse } from '@/common/interfaces/api-response.interface';
+import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
+import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import {
   ForgotPasswordDto,
   RefreshTokenDto,
@@ -49,6 +51,7 @@ import {
 } from '@/presentation/auth/dto/auth.dto';
 import {
   LoginResponseDto,
+  MeResponseDto,
   ProfileResponseDto,
   TokenPairDto,
 } from '@/presentation/auth/dto/auth-response.dto';
@@ -65,6 +68,7 @@ export class AuthController {
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly verifyOtpUseCase: VerifyOtpUseCase,
     private readonly resendOtpUseCase: ResendOtpUseCase,
+    private readonly userRepository: IUserRepository,
   ) {}
 
   @Public()
@@ -117,6 +121,22 @@ export class AuthController {
         id,
         email,
         role,
+      },
+    };
+  }
+
+  @Get('me')
+  async getMe(
+    @Req() req: { user: JwtValidatedUser },
+  ): Promise<ApiResponse<MeResponseDto>> {
+    const user = await this.userRepository.findById(UserId.create(req.user.id));
+    return {
+      data: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role,
+        username: user?.username ?? '',
+        image: user?.image,
       },
     };
   }
