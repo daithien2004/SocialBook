@@ -1,8 +1,4 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
-import { signOut } from 'next-auth/react';
-import * as Sentry from '@sentry/nextjs';
-import { getAccessToken, setAccessToken } from './token-store';
-import { getSessionSingleton } from './session';
 import { toast } from 'sonner';
 import { env } from '@/env';
 import { ErrorResponseDto } from '../types/response';
@@ -10,38 +6,32 @@ import { ErrorResponseDto } from '../types/response';
 const clientApi = axios.create({
   baseURL: env.NEXT_PUBLIC_NEST_API_URL,
   timeout: 20_000,
+  withCredentials: true,
 });
 
-// Lấy accessToken từ session qua single-flight + Web Locks (xem lib/session.ts).
-// Chỉ 1 lần fetch session thật sự chạy; tất cả caller chia sẻ dir=1 promise.
-async function getAccessTokenFromSession(): Promise<string | null> {
-  const session = await getSessionSingleton();
-  if (session?.accessToken) {
-    setAccessToken(session.accessToken);
-    return session.accessToken;
-  }
-  return null;
-}
-
 clientApi.interceptors.request.use(
-  async (config) => {
+  (config) => {
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
-
-    let accessToken = getAccessToken();
-    if (!accessToken) {
-      accessToken = await getAccessTokenFromSession();
-    }
-
-    if (accessToken && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-
     return config;
   },
   (error) => Promise.reject(error),
 );
+
+async function refreshAccessToken(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    return res.status < 400;
+  } catch {
+    return false;
+  }
+}
 
 clientApi.interceptors.response.use(
   (response) => response,
@@ -53,39 +43,16 @@ clientApi.interceptors.response.use(
 
     if (status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-      const hadToken = !!originalRequest.headers?.Authorization;
-
-      if (hadToken) {
-        // Refresh qua getSessionSingleton(): nếu token vẫn hết hạn, cookie refresh
-        // được đánh dấu và session trả về null → thoát đăng nhập.
-        const newToken = await getAccessTokenFromSession();
-
-        if (newToken) {
-          if (!originalRequest.headers) {
-            originalRequest.headers = {};
-          }
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return clientApi(originalRequest);
-        }
-
-        if (typeof window !== 'undefined') {
-          Sentry.captureMessage('RefreshAccessTokenError: Unable to refresh token', {
-            level: 'error',
-            tags: { event: 'RefreshAccessTokenError' },
-          });
-          await signOut({ redirect: false });
-          window.location.href = '/login?error=SessionExpired';
-        }
+      const ok = await refreshAccessToken();
+      if (ok) {
+        return clientApi(originalRequest);
+      }
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login?error=SessionExpired';
       }
     }
 
-    if (status === 403 && axiosError.response?.data?.error === 'USER_BANNED') {
-      Sentry.captureMessage('USER_BANNED: User was signed out due to ban', {
-        level: 'warning',
-        tags: { event: 'USER_BANNED' },
-        extra: { message: axiosError.response?.data?.message },
-      });
-
+    if (status === 403 && (axiosError.response?.data as { error?: string })?.error === 'USER_BANNED') {
       toast.error('Tài khoản đã bị cấm', {
         id: 'user-banned',
         description:
@@ -93,8 +60,6 @@ clientApi.interceptors.response.use(
           'Tài khoản của bạn đã bị cấm. Vui lòng liên hệ quản trị viên.',
         duration: 1000,
       });
-
-      await signOut({ redirect: false });
     }
 
     return Promise.reject(axiosError);
