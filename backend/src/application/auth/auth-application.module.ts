@@ -15,6 +15,7 @@ import { ResendOtpUseCase } from './use-cases/resend-otp/resend-otp.use-case';
 import { ValidateUserUseCase } from './use-cases/validate-user/validate-user.use-case';
 
 import { TokenService } from './services/token.service';
+import { OAuthStateService } from './services/oauth-state.service';
 
 import { UsersApplicationModule } from '../users/users-application.module';
 import { RolesApplicationModule } from '../roles/roles-application.module';
@@ -71,6 +72,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
       provide: OAuthStateStorePort,
       useExisting: RedisOAuthStateAdapter,
     },
+    OAuthStateService,
   ],
 
   exports: [
@@ -87,6 +89,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     TokenService,
     GoogleIdTokenPort,
     OAuthStateStorePort,
+    OAuthStateService,
   ],
 })
 export class AuthApplicationModule {}
