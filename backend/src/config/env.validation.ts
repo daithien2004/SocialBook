@@ -6,6 +6,13 @@ const envValidationSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  GOOGLE_CALLBACK_URL: z.string().url(),
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
+  GITHUB_CALLBACK_URL: z.string().url().optional(),
+  AUTH_COOKIE_SECURE: z.string().optional(),
+  AUTH_COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).optional(),
   // Optional — giá trị mặc định nằm ở env.config.ts
   PORT: z.coerce.number().int().positive().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
