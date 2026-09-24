@@ -1,3 +1,8 @@
+// Bắt buộc đặt TRƯỚC khi jest resolve config: next/jest load .env các kiểu
+// nhưng src/env.ts (t3-env) có thể được eval trong giai đoạn downdown config
+// khi thiếu biến -> crash "Invalid environment variables". Test không cần validate.
+process.env.SKIP_ENV_VALIDATION = 'true';
+
 import type { Config } from 'jest';
 import nextJest from 'next/jest.js';
 

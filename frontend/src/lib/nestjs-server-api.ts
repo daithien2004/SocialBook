@@ -1,6 +1,8 @@
 import { cache } from 'react';
 
-const NEST_API_URL = process.env.NEXT_PUBLIC_NEST_API_URL;
+import { env } from '@/env';
+
+const NEST_API_URL = env.NEXT_PUBLIC_NEST_API_URL;
 
 interface RawApiResponse<T> {
   message?: string;

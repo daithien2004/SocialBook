@@ -2,9 +2,10 @@ import { NextAuthOptions } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
+import { jwtDecode } from 'jwt-decode';
+import { env } from '@/env';
 import serverApi from '@/lib/server-api';
 import { getErrorMessage } from '@/lib/utils';
-import { jwtDecode } from 'jwt-decode';
 
 async function refreshAccessToken(token: JWT) {
   try {
@@ -42,8 +43,8 @@ async function refreshAccessToken(token: JWT) {
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
 
     CredentialsProvider({
@@ -166,5 +167,5 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
 };

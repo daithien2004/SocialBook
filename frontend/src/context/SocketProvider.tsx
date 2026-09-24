@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
 import { Manager, Socket } from 'socket.io-client';
+import { env } from '@/env';
 import { getAccessToken } from '@/lib/token-store';
 import { useAppAuth } from '@/features/auth/hooks';
 
@@ -23,7 +24,7 @@ interface SocketContextType {
 
 const SocketContext = createContext<SocketContextType | null>(null);
 
-let SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+let SOCKET_URL = env.NEXT_PUBLIC_SOCKET_URL;
 
 if (typeof window !== 'undefined' && SOCKET_URL === '/') {
   SOCKET_URL = window.location.origin;

@@ -4,10 +4,11 @@ import * as Sentry from '@sentry/nextjs';
 import { getAccessToken, setAccessToken } from './token-store';
 import { getSessionSingleton } from './session';
 import { toast } from 'sonner';
+import { env } from '@/env';
 import { ErrorResponseDto } from '../types/response';
 
 const clientApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_NEST_API_URL,
+  baseURL: env.NEXT_PUBLIC_NEST_API_URL,
   timeout: 20_000,
 });
 

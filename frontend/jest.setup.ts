@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom';
 
+// Bỏ qua validate env của @t3-oss/env-nextjs khi chạy jest
+// (test environment không có .env đầy đủ như thật)
+process.env.SKIP_ENV_VALIDATION = 'true';
+
 // Mock matchMedia for components like Next Themes or Radix UI
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

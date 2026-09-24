@@ -35,7 +35,8 @@ export const env = createEnv({
     NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL,
   },
   // Skip validation when running lint or build
-  // skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  // (jest bật qua jest.setup.ts: process.env.SKIP_ENV_VALIDATION = 'true')
+  skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   // Treat empty strings as undefined
   emptyStringAsUndefined: true,
 });
