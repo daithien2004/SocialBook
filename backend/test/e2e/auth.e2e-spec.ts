@@ -16,7 +16,6 @@ import { TransformInterceptor } from '@/common/interceptors/transform.intercepto
 import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
 import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
 import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
-import { GoogleAuthUseCase } from '@/application/auth/use-cases/google-auth/google-auth.use-case';
 import { RefreshTokenUseCase } from '@/application/auth/use-cases/refresh-token/refresh-token.use-case';
 import { LogoutUseCase } from '@/application/auth/use-cases/logout/logout.use-case';
 import { ForgotPasswordUseCase } from '@/application/auth/use-cases/forgot-password/forgot-password.use-case';
@@ -71,7 +70,6 @@ describe('Auth API (E2E)', () => {
         },
         { provide: LoginUseCase, useValue: { execute: mockExecute } },
         { provide: RegisterUseCase, useValue: { execute: mockExecute } },
-        { provide: GoogleAuthUseCase, useValue: { execute: mockExecute } },
         { provide: RefreshTokenUseCase, useValue: { execute: mockExecute } },
         { provide: LogoutUseCase, useValue: { execute: mockExecute } },
         { provide: ForgotPasswordUseCase, useValue: { execute: mockExecute } },

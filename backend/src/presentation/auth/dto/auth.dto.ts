@@ -50,30 +50,6 @@ export class RefreshTokenDto {
   refreshToken?: string;
 }
 
-export class SignupGoogleDto {
-  @IsString()
-  @IsOptional()
-  username?: string;
-
-  @IsString()
-  @IsOptional()
-  name?: string;
-
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  googleId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  idToken: string;
-
-  @IsString()
-  @IsOptional()
-  image?: string;
-}
-
 export class LoginDto {
   @IsEmail({}, { message: 'Email không hợp lệ' })
   email: string;

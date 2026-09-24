@@ -6,7 +6,6 @@ import { PassportModule } from '@nestjs/passport';
 import { LoginUseCase } from './use-cases/login/login.use-case';
 import { RegisterUseCase } from './use-cases/register/register.use-case';
 import { OAuthAuthUseCase } from './use-cases/oauth-auth/oauth-auth.use-case';
-import { GoogleAuthUseCase } from './use-cases/google-auth/google-auth.use-case';
 import { RefreshTokenUseCase } from './use-cases/refresh-token/refresh-token.use-case';
 import { LogoutUseCase } from './use-cases/logout/logout.use-case';
 import { ForgotPasswordUseCase } from './use-cases/forgot-password/forgot-password.use-case';
@@ -26,8 +25,6 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
 import { RolesRepositoryModule } from '@/infrastructure/database/repositories/roles/roles-repository.module';
 import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/otp-repository.module';
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
-import { GoogleIdTokenPort } from '@/application/ports/google-id-token.port';
-import { GoogleIdTokenAdapter } from '@/infrastructure/auth/adapters/google-id-token.adapter';
 import { OAuthStateStorePort } from '@/application/ports/oauth-state-store.port';
 import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oauth-state.adapter';
 
@@ -56,7 +53,6 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     TokenService,
     LoginUseCase,
     RegisterUseCase,
-    GoogleAuthUseCase,
     OAuthAuthUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
@@ -65,11 +61,6 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     VerifyOtpUseCase,
     ResendOtpUseCase,
     ValidateUserUseCase,
-    GoogleIdTokenAdapter,
-    {
-      provide: GoogleIdTokenPort,
-      useExisting: GoogleIdTokenAdapter,
-    },
     RedisOAuthStateAdapter,
     {
       provide: OAuthStateStorePort,
@@ -82,7 +73,6 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
   exports: [
     LoginUseCase,
     RegisterUseCase,
-    GoogleAuthUseCase,
     OAuthAuthUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
@@ -92,7 +82,6 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     ResendOtpUseCase,
     ValidateUserUseCase,
     TokenService,
-    GoogleIdTokenPort,
     OAuthStateStorePort,
     OAuthStateService,
     AuthCookieService,

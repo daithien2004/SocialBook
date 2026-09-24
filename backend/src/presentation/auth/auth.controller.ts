@@ -21,8 +21,6 @@ import { AuthGuard } from '@nestjs/passport';
 // Use Cases
 import { ForgotPasswordCommand } from '@/application/auth/use-cases/forgot-password/forgot-password.command';
 import { ForgotPasswordUseCase } from '@/application/auth/use-cases/forgot-password/forgot-password.use-case';
-import { GoogleAuthCommand } from '@/application/auth/use-cases/google-auth/google-auth.command';
-import { GoogleAuthUseCase } from '@/application/auth/use-cases/google-auth/google-auth.use-case';
 import { LoginCommand } from '@/application/auth/use-cases/login/login.command';
 import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
 import { LogoutCommand } from '@/application/auth/use-cases/logout/logout.command';
@@ -50,7 +48,6 @@ import {
   RefreshTokenDto,
   ResendOtpDto,
   ResetPasswordDto,
-  SignupGoogleDto,
   SignupLocalDto,
   VerifyOtpDto,
 } from '@/presentation/auth/dto/auth.dto';
@@ -66,7 +63,6 @@ export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
     private readonly registerUseCase: RegisterUseCase,
-    private readonly googleAuthUseCase: GoogleAuthUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly logoutUseCase: LogoutUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
@@ -85,26 +81,6 @@ export class AuthController {
       secure: spec.secure,
       sameSite: spec.sameSite,
     });
-  }
-
-  @Public()
-  @Throttle({ global: { limit: 5 } })
-  @Post('google/login')
-  async handleGoogleLogin(
-    @Body() data: SignupGoogleDto,
-  ): Promise<{ data: unknown }> {
-    const command = new GoogleAuthCommand(
-      data.email,
-      data.googleId,
-      data.idToken,
-      data.name,
-      data.image,
-      data.name,
-    );
-    const result = await this.googleAuthUseCase.execute(command);
-    return {
-      data: result,
-    };
   }
 
   @Public()
