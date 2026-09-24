@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth/auth.controller';
+import { OAuthController } from './auth/oauth.controller';
 import { AuthorsController } from './authors/authors.controller';
 import { BooksController } from './books/books.controller';
 import { ChaptersController } from './chapters/chapters.controller';
@@ -93,6 +94,7 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
   ],
   controllers: [
     AuthController,
+    OAuthController,
     AuthorsController,
     BooksController,
     ChaptersController,
