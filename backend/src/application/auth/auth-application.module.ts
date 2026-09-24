@@ -16,6 +16,7 @@ import { ValidateUserUseCase } from './use-cases/validate-user/validate-user.use
 
 import { TokenService } from './services/token.service';
 import { OAuthStateService } from './services/oauth-state.service';
+import { AuthCookieService } from './services/auth-cookie.service';
 
 import { UsersApplicationModule } from '../users/users-application.module';
 import { RolesApplicationModule } from '../roles/roles-application.module';
@@ -73,6 +74,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
       useExisting: RedisOAuthStateAdapter,
     },
     OAuthStateService,
+    AuthCookieService,
   ],
 
   exports: [
@@ -90,6 +92,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     GoogleIdTokenPort,
     OAuthStateStorePort,
     OAuthStateService,
+    AuthCookieService,
   ],
 })
 export class AuthApplicationModule {}
