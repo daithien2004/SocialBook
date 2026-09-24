@@ -14,6 +14,7 @@ export interface UseLoginFlowResult {
     setShowPassword: (show: boolean) => void;
     handleSubmit: (data: LoginFormValues) => Promise<void>;
     handleGoogleSignin: () => void;
+    handleGithubSignin: () => void;
 }
 
 export function useLoginFlow(): UseLoginFlowResult & {
@@ -75,6 +76,10 @@ const handleGoogleSignin = useCallback(() => {
     router.push('/api/auth/google');
   }, [router]);
 
+  const handleGithubSignin = useCallback(() => {
+    router.push('/api/auth/github');
+  }, [router]);
+
     const handleOAuthSuccess = useCallback(() => {
         if (searchParams.get('oauth') === 'success') {
             router.replace('/');
@@ -89,6 +94,7 @@ const handleGoogleSignin = useCallback(() => {
         setShowPassword,
         handleSubmit,
         handleGoogleSignin,
+        handleGithubSignin,
         handleAuthRedirect,
         handleErrorFromParams,
         handleOAuthSuccess,

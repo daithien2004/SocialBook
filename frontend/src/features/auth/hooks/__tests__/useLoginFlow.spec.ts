@@ -102,6 +102,16 @@ describe('useLoginFlow', () => {
     expect(mockPush).toHaveBeenCalledWith('/api/auth/google');
   });
 
+  it('should navigate to /api/auth/github on github sign in', () => {
+    const { result } = renderHook(() => useLoginFlow());
+
+    act(() => {
+      result.current.handleGithubSignin();
+    });
+
+    expect(mockPush).toHaveBeenCalledWith('/api/auth/github');
+  });
+
   it('should map OAuth error codes from search params', () => {
     mockGetParam.mockReturnValue('EmailNotVerified');
 
