@@ -4,15 +4,21 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Injectable,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { MongoServerError } from 'mongodb';
 import { Request, Response } from 'express';
 import { ErrorResponseDto } from '../dto/response.dto';
 import { DomainException } from '@/shared/domain/domain-exception.base';
 
+@Injectable()
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
+
+  constructor(private readonly configService: ConfigService) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -23,7 +29,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let message: string | string[] = 'Internal server error';
     let error = 'Internal Server Error';
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof MongoServerError) {
+      if (exception.code === 11000) {
+        const field = Object.keys(exception.keyPattern || {}).join(', ');
+        status = HttpStatus.CONFLICT;
+        message = `Giá trị đã tồn tại: ${field}`;
+        error = 'Conflict';
+      } else {
+        this.logger.error(
+          `Unhandled MongoDB error: ${exception.message}`,
+          exception.stack,
+        );
+      }
+    } else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
@@ -57,7 +75,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error,
       timestamp: new Date().toISOString(),
       path: request.url,
-      ...(process.env.NODE_ENV === 'development' &&
+      ...(this.configService.get('env.NODE_ENV') === 'development' &&
         exception instanceof Error && { stack: exception.stack }),
     };
 

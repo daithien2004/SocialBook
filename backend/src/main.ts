@@ -7,29 +7,8 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { RedisIoAdapter } from './presentation/gateways/redis-io.adapter';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { configSwagger } from './config/swagger.config';
-
-const REQUIRED_ENV_VARS = [
-  'JWT_ACCESS_SECRET',
-  'JWT_REFRESH_SECRET',
-  'MONGO_URI',
-];
-
-function validateEnv(configService: ConfigService): void {
-  const missing: string[] = [];
-  for (const key of REQUIRED_ENV_VARS) {
-    const val = configService.get<string>(`env.${key}`);
-    if (!val || val.startsWith('your-')) {
-      missing.push(key);
-    }
-  }
-  if (missing.length > 0) {
-    const logger = new Logger('Bootstrap');
-    logger.warn(`Missing or placeholder env vars: ${missing.join(', ')}`);
-  }
-}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -45,11 +24,9 @@ async function bootstrap() {
   // Get ConfigService from the application context
   const configService = app.get(ConfigService);
 
-  validateEnv(configService);
-
   // Use ConfigService to read environment variables
   const frontendUrl = configService.get<string>(
-    'FRONTEND_URL',
+    'env.FRONTEND_URL',
     'http://localhost:3000',
   );
   const port = configService.get<number>('env.PORT', 5000);
@@ -93,7 +70,6 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis(redisUrl);
   app.useWebSocketAdapter(redisIoAdapter);
 
-  app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
 
   configSwagger(app);

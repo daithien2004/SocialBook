@@ -13,7 +13,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config';
-import { MongoExceptionFilter } from './common/filters/mongo-exception.filter';
+import { validateEnv } from './config/env.validation';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 // Clean Architecture Modules
 import { ApplicationModule } from './application/application.module';
@@ -25,6 +26,8 @@ import { PresentationModule } from './presentation/presentation.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [envConfig],
+      validate:
+        process.env.SKIP_ENV_VALIDATION === 'true' ? undefined : validateEnv,
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -114,7 +117,7 @@ import { PresentationModule } from './presentation/presentation.module';
     AppService,
     {
       provide: APP_FILTER,
-      useClass: MongoExceptionFilter,
+      useClass: HttpExceptionFilter,
     },
     {
       provide: APP_GUARD,

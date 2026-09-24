@@ -13,15 +13,9 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
 
   onModuleInit() {
     cloudinary.config({
-      cloud_name:
-        this.configService.get<string>('env.CLOUDINARY_CLOUD_NAME') ||
-        this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-      api_key:
-        this.configService.get<string>('env.CLOUDINARY_API_KEY') ||
-        this.configService.get<string>('CLOUDINARY_API_KEY'),
-      api_secret:
-        this.configService.get<string>('env.CLOUDINARY_API_SECRET') ||
-        this.configService.get<string>('CLOUDINARY_API_SECRET'),
+      cloud_name: this.configService.get<string>('env.CLOUDINARY_CLOUD_NAME'),
+      api_key: this.configService.get<string>('env.CLOUDINARY_API_KEY'),
+      api_secret: this.configService.get<string>('env.CLOUDINARY_API_SECRET'),
     });
   }
 

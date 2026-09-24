@@ -8,10 +8,10 @@ export const env = createEnv({
    */
   server: {
     NEXTAUTH_SECRET: z.string().min(32),
-    NEXTAUTH_URL: z.string().url().optional(), // optional because Vercel automatically sets this
+    NEXTAUTH_URL: z.url().optional(), // optional because Vercel automatically sets this
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
-    NEST_API_INTERNAL_URL: z.string().url().optional(),
+    NEST_API_INTERNAL_URL: z.url().optional(),
   },
   /*
    * Environment variables available on the client (and server).
