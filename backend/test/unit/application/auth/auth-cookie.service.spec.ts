@@ -13,7 +13,7 @@ describe('AuthCookieService', () => {
               ? 'lax'
               : d,
   } as never;
-  const service = new AuthCookieService(config as never);
+  const service = new AuthCookieService(config);
 
   it('access cookie lives refresh lifetime, httpOnly path=/', () => {
     const c = service.accessTokenCookie('tok');

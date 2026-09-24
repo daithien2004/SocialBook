@@ -6,6 +6,8 @@ describe('validateEnv', () => {
     JWT_ACCESS_SECRET: 'my-super-secret-access-token-value-1234567890',
     JWT_REFRESH_SECRET: 'my-super-secret-refresh-token-value-123456789',
     GOOGLE_CLIENT_ID: '1234567890-abcdefghij.apps.googleusercontent.com',
+    GOOGLE_CLIENT_SECRET: 'google-oauth-client-secret',
+    GOOGLE_CALLBACK_URL: 'http://localhost:3000/api/auth/google/callback',
   };
 
   it('accepts a valid environment', () => {

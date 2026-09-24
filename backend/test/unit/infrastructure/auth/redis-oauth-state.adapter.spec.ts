@@ -5,7 +5,11 @@ describe('RedisOAuthStateAdapter', () => {
   it('creates then consumes state (delete-after-read)', async () => {
     const redis = {
       setex: jest.fn().mockResolvedValue('OK'),
-      get: jest.fn().mockResolvedValue(JSON.stringify(new OAuthFlowState('google', 'v1', '/'))),
+      get: jest
+        .fn()
+        .mockResolvedValue(
+          JSON.stringify(new OAuthFlowState('google', 'v1', '/')),
+        ),
       del: jest.fn().mockResolvedValue(1),
     };
     const adapter = new RedisOAuthStateAdapter(redis as never);

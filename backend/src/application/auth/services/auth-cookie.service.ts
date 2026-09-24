@@ -27,13 +27,10 @@ export class AuthCookieService {
   constructor(private readonly config: ConfigService) {
     const prod = this.config.get<string>('env.NODE_ENV') === 'production';
     const explicit = this.config.get<string>('env.AUTH_COOKIE_SECURE');
-    this.secure =
-      explicit === 'true' || (prod && explicit !== 'false');
+    this.secure = explicit === 'true' || (prod && explicit !== 'false');
     this.sameSite =
-      (this.config.get<string>(
-        'env.AUTH_COOKIE_SAME_SITE',
-        'lax',
-      ) as 'lax' | 'strict' | 'none') ?? 'lax';
+      (this.config.get<string>('env.AUTH_COOKIE_SAME_SITE', 'lax') as
+        'lax' | 'strict' | 'none') ?? 'lax';
   }
 
   accessTokenCookie(token: string): SetCookieSpec {
