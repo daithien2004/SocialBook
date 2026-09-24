@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signOut } from 'next-auth/react';
+import { useLogout } from '@/features/auth/hooks';
 import Link from 'next/link';
 import { X, Home, Users, BookOpen, BarChart2, LogOut, PenLine, Shapes, AlertTriangle, ShieldAlert, Gauge } from 'lucide-react';
 
@@ -19,6 +19,7 @@ const navItems = [
 
 export default function AdminSidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { handleLogout } = useLogout();
 
   return (
     <>
@@ -64,7 +65,7 @@ export default function AdminSidebar() {
 
         <div className="p-4 border-t flex-shrink-0">
           <button
-            onClick={() => signOut({ callbackUrl: '/login' })}
+            onClick={() => void handleLogout()}
             className="flex items-center px-4 py-3 w-full text-gray-700 rounded-lg hover:bg-red-50 hover:text-red-600"
           >
             <LogOut size={20} className="mr-3" />

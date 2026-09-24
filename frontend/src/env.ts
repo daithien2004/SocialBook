@@ -7,10 +7,6 @@ export const env = createEnv({
    * Will throw if you access these variables on the client.
    */
   server: {
-    NEXTAUTH_SECRET: z.string().min(32),
-    NEXTAUTH_URL: z.url().optional(), // optional because Vercel automatically sets this
-    GOOGLE_CLIENT_ID: z.string().min(1),
-    GOOGLE_CLIENT_SECRET: z.string().min(1),
     NEST_API_INTERNAL_URL: z.url().optional(),
   },
   /*
@@ -26,10 +22,6 @@ export const env = createEnv({
    * we need to manually destructure them to make sure all are included in bundle.
    */
   runtimeEnv: {
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     NEST_API_INTERNAL_URL: process.env.NEST_API_INTERNAL_URL,
     NEXT_PUBLIC_NEST_API_URL: process.env.NEXT_PUBLIC_NEST_API_URL,
     NEXT_PUBLIC_SOCKET_URL: process.env.NEXT_PUBLIC_SOCKET_URL,

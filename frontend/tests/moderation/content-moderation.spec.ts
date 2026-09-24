@@ -2,24 +2,22 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Content Moderation UI Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Giả lập trạng thái đã đăng nhập
-    await page.addInitScript(() => {
-      window.localStorage.setItem('nextauth.message', 'logged-in');
-    });
-    
     // Đi tới trang Posts (nơi có chỗ đăng bài)
     await page.goto('/posts');
-    
-    // Mock API lấy thông tin session
-    await page.route('**/api/auth/session', async (route) => {
+
+    // Mock API lấy thông tin session (AppSessionProvider gọi /api/auth/me trên mount)
+    await page.route('**/api/auth/me', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          user: { id: '1', name: 'Test User', role: 'user', email: 'test@example.com' },
-          expires: '2026-01-01T00:00:00.000Z',
-          accessToken: 'mock-token'
-        })
+          data: {
+            id: '1',
+            email: 'test@example.com',
+            role: 'user',
+            username: 'TestUser',
+          },
+        }),
       });
     });
   });
