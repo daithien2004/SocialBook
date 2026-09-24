@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
-import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginFormValues } from '@/features/auth/types/auth.type';
 import { queryClient } from '@/lib/query-client';
-import { waitForSessionRole } from '@/lib/session';
+import { mapOAuthError } from '@/lib/map-oauth-error';
+import { useAppSession } from '@/lib/app-session';
+import { getErrorMessage } from '@/lib/utils';
 
 export interface UseLoginFlowResult {
     isLoading: boolean;
@@ -18,43 +19,45 @@ export interface UseLoginFlowResult {
 export function useLoginFlow(): UseLoginFlowResult & {
     handleAuthRedirect: () => void;
     handleErrorFromParams: () => void;
+    handleOAuthSuccess: () => void;
 } {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { refetch } = useAppSession();
 
     const [isLoading, setIsLoading] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleAuthRedirect = useCallback(async () => {
-        const sessionData = await waitForSessionRole();
-        const userRole = sessionData?.user?.role;
-        if (userRole === 'admin') {
-            router.push('/admin');
-        } else {
-            router.push('/');
-        }
-    }, [router]);
+        const me = await refetch();
+        void me;
+        router.push('/');
+    }, [router, refetch]);
 
     const handleSubmit = useCallback(async (data: LoginFormValues) => {
         setIsLoading(true);
         setServerError(null);
 
         try {
-            const result = await signIn('credentials', {
-                redirect: false,
-                email: data.email,
-                password: data.password,
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: data.email, password: data.password }),
             });
 
-            if (result?.ok) {
-                queryClient.clear();
-                handleAuthRedirect();
-            } else {
-                setServerError(result?.error || 'Invalid email or password.');
+            if (!res.ok) {
+                const payload = (await res.json().catch(() => ({}))) as {
+                    message?: string;
+                };
+                throw new Error(getErrorMessage(payload));
             }
-        } catch {
-            setServerError('An unexpected error occurred.');
+
+            queryClient.clear();
+            await handleAuthRedirect();
+        } catch (error) {
+            setServerError(getErrorMessage(error));
         } finally {
             setIsLoading(false);
         }
@@ -63,14 +66,20 @@ export function useLoginFlow(): UseLoginFlowResult & {
     const handleErrorFromParams = useCallback(() => {
         const error = searchParams.get('error');
         if (error) {
-            setServerError('Sign in failed. Please try again.');
+            setServerError(mapOAuthError(error));
             router.replace('/login');
         }
     }, [searchParams, router]);
 
-    const handleGoogleSignin = useCallback(() => {
-        signIn('google', { redirect: true, callbackUrl: '/' });
-    }, []);
+const handleGoogleSignin = useCallback(() => {
+    router.push('/api/auth/google');
+  }, [router]);
+
+    const handleOAuthSuccess = useCallback(() => {
+        if (searchParams.get('oauth') === 'success') {
+            router.replace('/');
+        }
+    }, [router, searchParams]);
 
     return {
         isLoading,
@@ -82,5 +91,6 @@ export function useLoginFlow(): UseLoginFlowResult & {
         handleGoogleSignin,
         handleAuthRedirect,
         handleErrorFromParams,
+        handleOAuthSuccess,
     };
 }
