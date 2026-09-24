@@ -1,35 +1,27 @@
-import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
-import {
-  Action,
-  Subject,
-  canAccess,
-  defineRulesFor,
-} from '@socialbook/shared';
+import { Action, Subject, canAccess, defineRulesFor } from '@socialbook/shared';
+import { useAppSession } from '@/lib/app-session';
 
 export function useAppAuth() {
-  const { data: session, status, update } = useSession();
+  const { user, isLoading, refetch } = useAppSession();
 
   const authState = useMemo(() => {
-    const user = session?.user;
-    const isAuthenticated = status === 'authenticated' && !!user;
-    const isGuest = !isAuthenticated;
-    const ability = isAuthenticated && user
-      ? defineRulesFor(user.role, user.id)
-      : undefined;
+    const isAuthenticated = !!user && !isLoading;
+    const ability =
+      isAuthenticated && user ? defineRulesFor(user.role, user.id) : undefined;
     const isAdmin = !!ability && canAccess(ability, Action.Manage, Subject.All);
 
     return {
       user,
       isAuthenticated,
-      isGuest,
+      isGuest: !isAuthenticated,
       isAdmin,
       ability,
-      isLoading: status === 'loading',
-      accessToken: session?.accessToken,
-      update,
+      isLoading,
+      refetch,
+      accessToken: null,
     };
-  }, [session, status, update]);
+  }, [user, isLoading, refetch]);
 
   return authState;
 }

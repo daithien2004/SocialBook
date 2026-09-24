@@ -40,7 +40,7 @@ export default function PostsClientSection() {
     const { user, isAuthenticated, isLoading } = useAppAuth();
     const currentUserId = user?.id;
     const router = useRouter();
-    const currentUserName = user?.name || 'Người đọc';
+    const currentUserName = user?.username || 'Người đọc';
     const currentUserImage = user?.image || '/abstract-book-pattern.png';
     const feedRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {

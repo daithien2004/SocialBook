@@ -153,7 +153,7 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
         showBookmarks={showBookmarks} setShowBookmarks={setShowBookmarks}
         showHighlights={showHighlights} setShowHighlights={setShowHighlights}
         showMobileSidebar={showMobileSidebar} setShowMobileSidebar={setShowMobileSidebar}
-        user={user} bookData={bookData} chapter={chapter}
+        user={user ?? undefined} bookData={bookData} chapter={chapter}
         handleChapterNav={handleChapterNav} handleShareRoom={handleShareRoom}
         onAddToLibrary={onAddToLibrary}
       />

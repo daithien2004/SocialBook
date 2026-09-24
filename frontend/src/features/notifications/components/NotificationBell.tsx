@@ -19,7 +19,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export function NotificationBell() {
   const { accessToken } = useAppAuth();
-  const token = accessToken;
+  const token = accessToken ?? undefined;
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(token);

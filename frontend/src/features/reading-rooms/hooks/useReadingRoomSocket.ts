@@ -122,7 +122,7 @@ export const useReadingRoomSocket = (roomId?: string) => {
     if (useReadingRoomStore.getState().room?.status === 'ended') return;
     socket.emit(ReadingRoomClientEvent.JOIN_ROOM, {
       roomCode: currentRoomCode,
-      displayName: currentUser.name || currentUser.username || currentUser.email?.split('@')[0] || 'Người dùng',
+      displayName: currentUser.username || currentUser.email?.split('@')[0] || 'Người dùng',
       avatarUrl: currentUser.image || '',
     });
   }, [socket]);
