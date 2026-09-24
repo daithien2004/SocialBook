@@ -5,7 +5,7 @@ import { useNotificationSocket, NotificationItem } from '@/features/notification
 
 export type { NotificationItem };
 
-export function useNotifications(userToken: string | undefined) {
+export function useNotifications() {
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -31,7 +31,6 @@ export function useNotifications(userToken: string | undefined) {
     }, []);
 
     const { markAsRead, markAllAsRead, refetch, createNotification } = useNotificationSocket(
-        userToken,
         {
             onNotificationList: handleNotificationList,
             onNewNotification: handleNewNotification,

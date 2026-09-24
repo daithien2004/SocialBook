@@ -36,6 +36,7 @@ import {
 } from './reading-room.events';
 import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
 import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
+import { accessTokenFromSocket } from './socket-token.util';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { AddCommentUseCase } from '@/application/reading-room-interactions/use-cases/add-comment/add-comment.use-case';
@@ -236,10 +237,7 @@ export class ReadingRoomGateway
 
   handleConnection(socket: Socket) {
     try {
-      const auth = socket.handshake.auth as { token?: string };
-      const query = socket.handshake.query as { token?: string };
-
-      const token = auth?.token ?? query?.token;
+      const token = accessTokenFromSocket(socket);
 
       if (typeof token !== 'string' || !token) {
         socket.disconnect(true);

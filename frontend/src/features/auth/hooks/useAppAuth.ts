@@ -19,7 +19,6 @@ export function useAppAuth() {
       ability,
       isLoading,
       refetch,
-      accessToken: null,
     };
   }, [user, isLoading, refetch]);
 

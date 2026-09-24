@@ -9,11 +9,6 @@ jest.mock('@/features/auth/hooks', () => ({
   useAppAuth: jest.fn(),
 }));
 
-// Mock token store
-jest.mock('@/lib/token-store', () => ({
-  getAccessToken: jest.fn(() => 'mock-token'),
-}));
-
 // Mock socket.io-client
 jest.mock('socket.io-client', () => {
   const mockSocket = {
@@ -68,14 +63,6 @@ describe('SocketProvider', () => {
     expect(Manager).toHaveBeenCalledTimes(1);
     expect(socket).toBe(mockSocket);
     expect(mockSocket.connect).toHaveBeenCalledTimes(1);
-    
-    // Verify auth function was attached
-    expect(typeof mockSocket.auth).toBe('function');
-    
-    // Verify token retrieval
-    const cb = jest.fn();
-    mockSocket.auth(cb);
-    expect(cb).toHaveBeenCalledWith({ token: 'mock-token' });
   });
 
   it('should not reconnect if already connected', async () => {

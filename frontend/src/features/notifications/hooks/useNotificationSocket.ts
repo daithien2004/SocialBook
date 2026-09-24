@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import { useSocket } from '@/context/SocketProvider';
 import { useSocketEvents } from '@/hooks/useSocketEvents';
+import { useAppAuth } from '@/features/auth/hooks';
 import * as Sentry from '@sentry/nextjs';
 
 export interface NotificationItem {
@@ -41,12 +42,12 @@ interface UseNotificationSocketOptions {
 }
 
 export function useNotificationSocket(
-    userToken: string | undefined,
     options: UseNotificationSocketOptions
 ) {
     const { getSocket, connectSocket } = useSocket();
     const socket = getSocket('/notifications');
     const { onNotificationList, onNewNotification, onReadNotification } = options;
+    const { isAuthenticated } = useAppAuth();
 
     useSocketEvents(socket, {
         'connect': () => {
@@ -78,7 +79,7 @@ export function useNotificationSocket(
     });
 
     useEffect(() => {
-        if (!userToken) return;
+        if (!isAuthenticated) return;
 
         const init = async () => {
             const s = await connectSocket('/notifications');
@@ -90,7 +91,7 @@ export function useNotificationSocket(
         };
 
         init();
-    }, [userToken, connectSocket, onNotificationList]);
+    }, [isAuthenticated, connectSocket, onNotificationList]);
 
     const markAsRead = useCallback((id: string) => {
         if (!socket?.connected) return;

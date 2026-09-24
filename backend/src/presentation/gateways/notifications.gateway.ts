@@ -13,6 +13,7 @@ import { Server, Socket } from 'socket.io';
 import { NotificationsService } from './notifications.service';
 import type { CreateNotificationInput } from './dto/create-notification-input.interface';
 import { JwtService } from '@nestjs/jwt';
+import { accessTokenFromSocket } from './socket-token.util';
 
 interface SocketData {
   userId: string;
@@ -44,10 +45,7 @@ export class NotificationsGateway
 
   handleConnection(socket: Socket) {
     try {
-      const auth = socket.handshake.auth as unknown as { token: string };
-      const query = socket.handshake.query as unknown as { token: string };
-
-      const token = auth?.token ?? query?.token;
+      const token = accessTokenFromSocket(socket);
 
       if (typeof token !== 'string' || !token) {
         this.logger.warn('No token, disconnect');

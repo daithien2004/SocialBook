@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
 import { Manager, Socket } from 'socket.io-client';
 import { env } from '@/env';
-import { getAccessToken } from '@/lib/token-store';
 import { useAppAuth } from '@/features/auth/hooks';
 
 interface SocketContextType {
@@ -44,6 +43,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
+        withCredentials: true,
       });
     }
     return managerRef.current;
@@ -62,18 +62,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [getManager]);
 
   const connectSocket = useCallback(async (namespace: string) => {
-    const token = getAccessToken();
-
-    if (!token) {
-      return null;
-    }
-
     const socket = getSocket(namespace);
-
-    // Dùng function để Socket.IO tự động lấy token mới nhất mỗi lần (re)connect
-    socket.auth = (cb: (data: Record<string, string>) => void) => {
-      cb({ token: getAccessToken() || '' });
-    };
 
     if (!socket.connected) {
       socket.connect();
