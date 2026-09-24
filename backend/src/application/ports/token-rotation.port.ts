@@ -17,4 +17,5 @@ export abstract class TokenRotationPort {
   ): Promise<void>;
   abstract readFreshTokens(userId: string): Promise<FreshTokens | null>;
   abstract releaseLock(userId: string): Promise<void>;
+  abstract revokeAll(userId: string): Promise<void>;
 }

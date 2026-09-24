@@ -83,4 +83,17 @@ export class TokenRotationAdapter implements TokenRotationPort {
       );
     }
   }
+
+  async revokeAll(userId: string): Promise<void> {
+    try {
+      await Promise.all([
+        this.redis.del(this.lockKey(userId)),
+        this.redis.del(this.tokensKey(userId)),
+      ]);
+    } catch (error) {
+      this.logger.error(
+        `Failed to revoke refresh family for user "${userId}": ${getErrorMessage(error)}`,
+      );
+    }
+  }
 }

@@ -21,6 +21,8 @@ export interface UserProps {
   location?: string;
   website?: string;
   hashedRt?: string;
+  previousHashedRt?: string;
+  refreshRotatedAt?: Date;
   favoriteGenres: string[];
   readingPreferences?: ReadingPreferences;
 }
@@ -86,6 +88,8 @@ export class User extends Entity<UserId> {
     location?: string;
     website?: string;
     hashedRt?: string;
+    previousHashedRt?: string;
+    refreshRotatedAt?: Date;
     favoriteGenres: string[];
     readingPreferences?: ReadingPreferencesProps;
     createdAt: Date;
@@ -108,6 +112,8 @@ export class User extends Entity<UserId> {
         location: props.location,
         website: props.website,
         hashedRt: props.hashedRt,
+        previousHashedRt: props.previousHashedRt,
+        refreshRotatedAt: props.refreshRotatedAt,
         favoriteGenres: props.favoriteGenres,
         readingPreferences: props.readingPreferences
           ? ReadingPreferences.create(props.readingPreferences)
@@ -159,6 +165,12 @@ export class User extends Entity<UserId> {
   }
   get hashedRt(): string | undefined {
     return this._props.hashedRt;
+  }
+  get previousHashedRt(): string | undefined {
+    return this._props.previousHashedRt;
+  }
+  get refreshRotatedAt(): Date | undefined {
+    return this._props.refreshRotatedAt;
   }
   get favoriteGenres(): string[] {
     return [...this._props.favoriteGenres];
@@ -222,6 +234,16 @@ export class User extends Entity<UserId> {
 
   updateHashedRt(hashedRt: string | null): void {
     this._props.hashedRt = hashedRt || undefined;
+    this.markAsUpdated();
+  }
+
+  updatePreviousHashedRt(value: string | null): void {
+    this._props.previousHashedRt = value || undefined;
+    this.markAsUpdated();
+  }
+
+  updateRefreshRotatedAt(value: Date | null): void {
+    this._props.refreshRotatedAt = value || undefined;
     this.markAsUpdated();
   }
 

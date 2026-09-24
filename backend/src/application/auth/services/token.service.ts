@@ -64,4 +64,30 @@ export class TokenService {
 
     return { accessToken, refreshToken };
   }
+
+  async signAccessOnly(
+    userId: string,
+    email: string,
+    role: string,
+  ): Promise<string> {
+    const accessSecret = this.configService.get<string>(
+      'env.JWT_ACCESS_SECRET',
+    );
+    if (!accessSecret) {
+      this.logger.error(
+        'JWT access secret not configured - check JWT_ACCESS_SECRET environment variable',
+      );
+      throw new InternalServerErrorException('JWT secrets chưa được cấu hình');
+    }
+    return this.jwtService.signAsync(
+      { sub: userId, email, role },
+      {
+        secret: accessSecret,
+        expiresIn: this.configService.get<string>(
+          'env.ACCESS_TOKEN_EXPIRES_IN',
+          '15m',
+        ),
+      },
+    );
+  }
 }

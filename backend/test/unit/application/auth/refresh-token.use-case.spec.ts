@@ -16,34 +16,57 @@ const ACCESS_TOKEN = 'access-token';
 
 describe('RefreshTokenUseCase (Unit)', () => {
   let useCase: RefreshTokenUseCase;
-  let mockUserRepository: jest.Mocked<Pick<IUserRepository, 'findById'>>;
+  let mockUserRepository: jest.Mocked<
+    Pick<IUserRepository, 'findById' | 'save'>
+  >;
   let mockRolesRepository: jest.Mocked<Pick<IRoleRepository, 'findById'>>;
-  let mockTokenService: jest.Mocked<Pick<TokenService, 'signTokens'>>;
+  let mockTokenService: jest.Mocked<
+    Pick<TokenService, 'signTokens' | 'signAccessOnly'>
+  >;
   let mockPasswordHasher: jest.Mocked<IPasswordHasher>;
   let mockRotationPort: jest.Mocked<TokenRotationPort>;
 
+  type MockUser = User & {
+    updateHashedRt: jest.Mock;
+    updatePreviousHashedRt: jest.Mock;
+    updateRefreshRotatedAt: jest.Mock;
+  };
+
   const makeUser = (
-    overrides: Partial<{ roleId: string; hashedRt: string }> = {},
-  ) =>
+    overrides: Partial<{
+      roleId: string;
+      hashedRt: string;
+      previousHashedRt?: string;
+      refreshRotatedAt?: Date;
+    }> = {},
+    withMutators = true,
+  ): MockUser =>
     ({
       id: { toString: () => USER_ID },
       email: { value: EMAIL },
       roleId: 'role-admin',
       hashedRt: 'hashed-rt',
+      previousHashedRt: undefined,
+      refreshRotatedAt: undefined,
       ...overrides,
-    }) as unknown as User;
+      updateHashedRt: withMutators ? jest.fn() : undefined,
+      updatePreviousHashedRt: withMutators ? jest.fn() : undefined,
+      updateRefreshRotatedAt: withMutators ? jest.fn() : undefined,
+    }) as unknown as MockUser;
 
   const command = () => new RefreshTokenCommand(USER_ID, REFRESH_TOKEN);
 
   beforeEach(() => {
     mockUserRepository = {
       findById: jest.fn(),
+      save: jest.fn(),
     };
     mockRolesRepository = {
       findById: jest.fn(),
     };
     mockTokenService = {
       signTokens: jest.fn(),
+      signAccessOnly: jest.fn(),
     };
     mockPasswordHasher = {
       compare: jest.fn(),
@@ -54,6 +77,7 @@ describe('RefreshTokenUseCase (Unit)', () => {
       writeFreshTokens: jest.fn(),
       readFreshTokens: jest.fn(),
       releaseLock: jest.fn(),
+      revokeAll: jest.fn(),
     };
 
     useCase = new RefreshTokenUseCase(
@@ -95,6 +119,78 @@ describe('RefreshTokenUseCase (Unit)', () => {
     expect(result.accessToken).toBe(ACCESS_TOKEN);
   });
 
+  it('records previous hash + rotation time on successful rotation', async () => {
+    mockRotationPort.tryAcquireLock.mockResolvedValue(true);
+    const mockUser = makeUser();
+    mockUserRepository.findById.mockResolvedValue(mockUser);
+    mockPasswordHasher.compare.mockResolvedValue(true);
+    mockRolesRepository.findById.mockResolvedValue({
+      name: 'user',
+    } as Role);
+    mockTokenService.signTokens.mockResolvedValue({
+      accessToken: ACCESS_TOKEN,
+      refreshToken: 'new-refresh-token',
+    });
+
+    await useCase.execute(command());
+
+    expect(mockUser.updatePreviousHashedRt).toHaveBeenCalledWith('hashed-rt');
+    expect(mockUser.updateRefreshRotatedAt).toHaveBeenCalled();
+    expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
+  });
+
+  it('reuse within grace returns access-only and does not rotate', async () => {
+    mockRotationPort.tryAcquireLock.mockResolvedValue(true);
+    const mockUser = makeUser({
+      previousHashedRt: 'prev-hash',
+      refreshRotatedAt: new Date(),
+    });
+    mockUserRepository.findById.mockResolvedValue(mockUser);
+    mockPasswordHasher.compare
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    mockRolesRepository.findById.mockResolvedValue({
+      name: 'user',
+    } as Role);
+    mockTokenService.signAccessOnly.mockResolvedValue('access-only-token');
+
+    const result = await useCase.execute(command());
+
+    expect(mockTokenService.signAccessOnly).toHaveBeenCalledWith(
+      USER_ID,
+      EMAIL,
+      'user',
+    );
+    expect(mockTokenService.signTokens).not.toHaveBeenCalled();
+    expect(mockRotationPort.writeFreshTokens).not.toHaveBeenCalled();
+    expect(mockUser.updateHashedRt).not.toHaveBeenCalled();
+    expect(result.refreshToken).toBe(REFRESH_TOKEN);
+    expect(result.accessToken).toBe('access-only-token');
+  });
+
+  it('stale reuse beyond grace revokes family', async () => {
+    mockRotationPort.tryAcquireLock.mockResolvedValue(true);
+    const mockUser = makeUser({
+      previousHashedRt: 'prev-hash',
+      refreshRotatedAt: new Date(Date.now() - 60_000),
+    });
+    mockUserRepository.findById.mockResolvedValue(mockUser);
+    mockPasswordHasher.compare
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+
+    await expect(useCase.execute(command())).rejects.toThrow(
+      UnauthorizedDomainException,
+    );
+
+    expect(mockUser.updateHashedRt).toHaveBeenCalledWith(null);
+    expect(mockUser.updatePreviousHashedRt).toHaveBeenCalledWith(null);
+    expect(mockUser.updateRefreshRotatedAt).toHaveBeenCalledWith(null);
+    expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
+    expect(mockRotationPort.revokeAll).toHaveBeenCalledWith(USER_ID);
+    expect(mockRotationPort.releaseLock).toHaveBeenCalledWith(USER_ID);
+  });
+
   it('loser request with fresh tokens in cache returns them without touching db/sign', async () => {
     mockRotationPort.tryAcquireLock.mockResolvedValue(false);
     mockRotationPort.readFreshTokens.mockResolvedValue({
@@ -120,15 +216,17 @@ describe('RefreshTokenUseCase (Unit)', () => {
     expect(mockUserRepository.findById).not.toHaveBeenCalled();
   });
 
-  it('rejects stale refresh token and still releases the lock', async () => {
+  it('rejects stale refresh token, revokes family, and still releases the lock', async () => {
     mockRotationPort.tryAcquireLock.mockResolvedValue(true);
-    mockUserRepository.findById.mockResolvedValue(makeUser());
+    const mockUser = makeUser();
+    mockUserRepository.findById.mockResolvedValue(mockUser);
     mockPasswordHasher.compare.mockResolvedValue(false);
 
     await expect(useCase.execute(command())).rejects.toThrow(
       UnauthorizedDomainException,
     );
     expect(mockTokenService.signTokens).not.toHaveBeenCalled();
+    expect(mockRotationPort.revokeAll).toHaveBeenCalledWith(USER_ID);
     expect(mockRotationPort.releaseLock).toHaveBeenCalledWith(USER_ID);
   });
 

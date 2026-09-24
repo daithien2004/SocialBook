@@ -13,6 +13,8 @@ const FRESH_TOKENS_TTL_SECONDS = 10;
 
 @Injectable()
 export class RefreshTokenUseCase {
+  private readonly GRACE_MS = 30_000;
+
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly rolesRepository: IRoleRepository,
@@ -37,34 +39,66 @@ export class RefreshTokenUseCase {
     try {
       const id = UserId.create(userId);
       const user = await this.userRepository.findById(id);
-
       if (!user || !user.hashedRt) {
         throw new UnauthorizedDomainException('Từ chối truy cập');
       }
-      const rtMatches = await this.passwordHasher.compare(
+
+      const curMatches = await this.passwordHasher.compare(
         refreshToken,
         user.hashedRt,
       );
-      if (!rtMatches) {
-        throw new UnauthorizedDomainException('Từ chối truy cập');
+
+      if (curMatches) {
+        // Xoay vòng hợp lệ: giữ hash cũ làm previous để chống reuse trong grace.
+        const prevHash = user.hashedRt;
+        user.updatePreviousHashedRt(prevHash);
+        user.updateRefreshRotatedAt(new Date());
+        await this.userRepository.save(user);
+
+        let roleName = 'user';
+        if (user.roleId) {
+          const role = await this.rolesRepository.findById(user.roleId);
+          if (role) roleName = role.name;
+        }
+        const tokens = await this.tokenService.signTokens(
+          user.id.toString(),
+          user.email.value,
+          roleName,
+        );
+        await this.rotationPort.writeFreshTokens(
+          userId,
+          tokens,
+          FRESH_TOKENS_TTL_SECONDS,
+        );
+        return tokens;
       }
 
-      let roleName = 'user';
-      if (user.roleId) {
-        const role = await this.rolesRepository.findById(user.roleId);
-        if (role) roleName = role.name;
+      // Grace-path: reuse của request song song — chỉ cấp lại access, KHÔNG xoay refresh.
+      const prevMatches = user.previousHashedRt
+        ? await this.passwordHasher.compare(refreshToken, user.previousHashedRt)
+        : false;
+      const rotatedAt = user.refreshRotatedAt;
+      const withinGrace =
+        !!rotatedAt && Date.now() - rotatedAt.getTime() <= this.GRACE_MS;
+      if (prevMatches && withinGrace) {
+        const roleName = user.roleId
+          ? ((await this.rolesRepository.findById(user.roleId))?.name ?? 'user')
+          : 'user';
+        const accessToken = await this.tokenService.signAccessOnly(
+          user.id.toString(),
+          user.email.value,
+          roleName,
+        );
+        return { accessToken, refreshToken };
       }
-      const tokens = await this.tokenService.signTokens(
-        user.id.toString(),
-        user.email.value,
-        roleName,
-      );
-      await this.rotationPort.writeFreshTokens(
-        userId,
-        tokens,
-        FRESH_TOKENS_TTL_SECONDS,
-      );
-      return tokens;
+
+      // Reuse ngoài grace / token lạ → thu hồi cả family.
+      user.updateHashedRt(null);
+      user.updatePreviousHashedRt(null);
+      user.updateRefreshRotatedAt(null);
+      await this.userRepository.save(user);
+      await this.rotationPort.revokeAll(userId);
+      throw new UnauthorizedDomainException('Từ chối truy cập');
     } finally {
       await this.rotationPort.releaseLock(userId);
     }
