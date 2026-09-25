@@ -51,6 +51,18 @@ export class User extends BaseSchema {
   @Prop()
   hashedRt?: string;
 
+  @Prop()
+  previousHashedRt?: string;
+
+  @Prop()
+  refreshRotatedAt?: Date;
+
+  @Prop()
+  lastLoginIp?: string;
+
+  @Prop()
+  lastLoginUa?: string;
+
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Genre' }], default: [] })
   favoriteGenres: Types.ObjectId[];
 

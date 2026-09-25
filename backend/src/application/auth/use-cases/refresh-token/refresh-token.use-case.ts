@@ -80,7 +80,12 @@ export class RefreshTokenUseCase {
       const rotatedAt = user.refreshRotatedAt;
       const withinGrace =
         !!rotatedAt && Date.now() - rotatedAt.getTime() <= this.GRACE_MS;
-      if (prevMatches && withinGrace) {
+        
+      const isSameContext = 
+        user.lastLoginIp === command.ip && 
+        user.lastLoginUa === command.userAgent;
+
+      if (prevMatches && withinGrace && isSameContext) {
         const roleName = user.roleId
           ? ((await this.rolesRepository.findById(user.roleId))?.name ?? 'user')
           : 'user';

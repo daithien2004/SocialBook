@@ -9,6 +9,7 @@ import { VerifyOtpCommand } from './verify-otp.command';
 
 @Injectable()
 export class VerifyOtpUseCase {
+  private readonly MAX_VERIFY_ATTEMPTS = 5;
   private readonly logger = new Logger(VerifyOtpUseCase.name);
 
   constructor(private readonly otpRepository: IOtpRepository) {}
@@ -24,11 +25,20 @@ export class VerifyOtpUseCase {
       }
 
       if (otp.code !== inputOtp) {
+        const attempts = await this.otpRepository.incrementVerifyAttempts(email);
+        if (attempts >= this.MAX_VERIFY_ATTEMPTS) {
+          await this.otpRepository.deleteByEmail(email);
+          await this.otpRepository.clearVerifyAttempts(email);
+          throw new BadRequestDomainException(
+            'Bạn đã nhập sai quá 5 lần. Mã OTP đã bị hủy để bảo mật.',
+          );
+        }
         throw new BadRequestDomainException('Invalid OTP');
       }
 
       // If valid, delete the OTP to prevent reuse and clear rate limit
       await this.otpRepository.deleteByEmail(email);
+      await this.otpRepository.clearVerifyAttempts(email);
 
       return true;
     } catch (error: unknown) {

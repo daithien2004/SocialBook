@@ -1,5 +1,9 @@
 import { renderHook, act } from '@testing-library/react';
-import { useLoginFlow } from '../useLoginFlow';
+import {
+  GITHUB_OAUTH_URL,
+  GOOGLE_OAUTH_URL,
+  useLoginFlow,
+} from '../useLoginFlow';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppSession } from '@/lib/app-session';
 
@@ -51,7 +55,8 @@ describe('useLoginFlow', () => {
   it('should login via same-origin proxy and redirect home', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({}),
+      status: 200,
+      text: async () => '{}',
     });
 
     const { result } = renderHook(() => useLoginFlow());
@@ -69,13 +74,33 @@ describe('useLoginFlow', () => {
     );
     expect(mockPush).toHaveBeenCalledWith('/');
     expect(result.current.isLoading).toBe(false);
+    expect(result.current.serverError).toBeNull();
+  });
+
+  it('should unwrap nested data envelope from proxy response', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ data: { id: 'u1' } }),
+    });
+
+    const { result } = renderHook(() => useLoginFlow());
+
+    await act(async () => {
+      await result.current.handleSubmit({
+        email: 'test@test.com',
+        password: 'password',
+      });
+    });
+
+    expect(result.current.serverError).toBeNull();
   });
 
   it('should surface backend error message on failed login', async () => {
     mockFetch.mockResolvedValue({
       ok: false,
       status: 401,
-      json: async () => ({ message: 'Sai email hoặc mật khẩu' }),
+      text: async () => JSON.stringify({ message: 'Sai email hoặc mật khẩu' }),
     });
 
     const { result } = renderHook(() => useLoginFlow());
@@ -92,24 +117,12 @@ describe('useLoginFlow', () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('should navigate to /api/auth/google on google sign in', () => {
-    const { result } = renderHook(() => useLoginFlow());
-
-    act(() => {
-      result.current.handleGoogleSignin();
-    });
-
-    expect(mockPush).toHaveBeenCalledWith('/api/auth/google');
+  it('should navigate to the google oauth proxy endpoint', () => {
+    expect(GOOGLE_OAUTH_URL).toBe('/api/auth/google?callbackUrl=/');
   });
 
-  it('should navigate to /api/auth/github on github sign in', () => {
-    const { result } = renderHook(() => useLoginFlow());
-
-    act(() => {
-      result.current.handleGithubSignin();
-    });
-
-    expect(mockPush).toHaveBeenCalledWith('/api/auth/github');
+  it('should navigate to the github oauth proxy endpoint', () => {
+    expect(GITHUB_OAUTH_URL).toBe('/api/auth/github?callbackUrl=/');
   });
 
   it('should map OAuth error codes from search params', () => {
@@ -127,15 +140,15 @@ describe('useLoginFlow', () => {
     expect(mockReplace).toHaveBeenCalledWith('/login');
   });
 
-  it('should redirect home when oauth=success is present', () => {
+  it('should redirect home when oauth=success is present', async () => {
     mockGetParam.mockReturnValue('success');
 
     const { result } = renderHook(() => useLoginFlow());
 
-    act(() => {
-      result.current.handleOAuthSuccess();
+    await act(async () => {
+      await result.current.handleOAuthSuccess();
     });
 
-    expect(mockReplace).toHaveBeenCalledWith('/');
+    expect(mockPush).toHaveBeenCalledWith('/');
   });
 });

@@ -1,9 +1,11 @@
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { LoggerModule } from '@/shared/logger/logger.module';
 import { getRedisConnectionToken, RedisModule } from '@nestjs-modules/ioredis';
-import { Logger, Module } from '@nestjs/common';
+import { Logger, Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { CsrfGuard } from '@/common/guards/csrf.guard';
+import { CsrfMiddleware } from '@/common/middlewares/csrf.middleware';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -127,6 +129,14 @@ import { PresentationModule } from './presentation/presentation.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CsrfMiddleware).forRoutes('{*path}');
+  }
+}

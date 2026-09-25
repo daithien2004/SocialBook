@@ -1,10 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { login } from '@/features/auth/api/auth.api';
 import { LoginFormValues } from '@/features/auth/types/auth.type';
 import { queryClient } from '@/lib/query-client';
 import { mapOAuthError } from '@/lib/map-oauth-error';
 import { useAppSession } from '@/lib/app-session';
 import { getErrorMessage } from '@/lib/utils';
+
+export const GOOGLE_OAUTH_URL = '/api/auth/google?callbackUrl=/';
+export const GITHUB_OAUTH_URL = '/api/auth/github?callbackUrl=/';
 
 export interface UseLoginFlowResult {
     isLoading: boolean;
@@ -39,21 +43,11 @@ export function useLoginFlow(): UseLoginFlowResult & {
     const handleSubmit = useCallback(async (data: LoginFormValues) => {
         setIsLoading(true);
         setServerError(null);
-
         try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: data.email, password: data.password }),
+            await login({
+                email: data.email,
+                password: data.password
             });
-
-            if (!res.ok) {
-                const payload = (await res.json().catch(() => ({}))) as {
-                    message?: string;
-                };
-                throw new Error(getErrorMessage(payload));
-            }
 
             queryClient.clear();
             await handleAuthRedirect();
@@ -72,19 +66,20 @@ export function useLoginFlow(): UseLoginFlowResult & {
         }
     }, [searchParams, router]);
 
-const handleGoogleSignin = useCallback(() => {
-    router.push('/api/auth/google');
-  }, [router]);
+    const handleGoogleSignin = useCallback(() => {
+        window.location.href = GOOGLE_OAUTH_URL;
+    }, []);
 
-  const handleGithubSignin = useCallback(() => {
-    router.push('/api/auth/github');
-  }, [router]);
+    const handleGithubSignin = useCallback(() => {
+        window.location.href = GITHUB_OAUTH_URL;
+    }, []);
 
     const handleOAuthSuccess = useCallback(() => {
         if (searchParams.get('oauth') === 'success') {
-            router.replace('/');
+            queryClient.clear();
+            handleAuthRedirect();
         }
-    }, [router, searchParams]);
+    }, [searchParams, handleAuthRedirect]);
 
     return {
         isLoading,

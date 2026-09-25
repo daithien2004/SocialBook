@@ -7,6 +7,7 @@ import { ICachePort } from '@/shared/domain/cache.port';
 export class OtpRepository implements IOtpRepository {
   private readonly OTP_PREFIX = 'otp:';
   private readonly OTP_COUNT_PREFIX = 'otp_count:';
+  private readonly OTP_VERIFY_ATTEMPTS_PREFIX = 'otp_verify_attempts:';
   private readonly OTP_EXPIRY = 300; // 5 minutes in seconds
   private readonly MAX_OTP_ATTEMPTS = 10;
   private readonly RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds
@@ -59,5 +60,19 @@ export class OtpRepository implements IOtpRepository {
   getTtl(_email: string): Promise<number> {
     void _email;
     return Promise.resolve(this.OTP_EXPIRY);
+  }
+
+  async incrementVerifyAttempts(email: string): Promise<number> {
+    const key = `${this.OTP_VERIFY_ATTEMPTS_PREFIX}${email}`;
+    const current = await this.cacheService.get<number>(key);
+    const newCount = (current ?? 0) + 1;
+    const ttl = current !== null ? undefined : this.OTP_EXPIRY;
+    await this.cacheService.set(key, newCount, ttl);
+    return newCount;
+  }
+
+  async clearVerifyAttempts(email: string): Promise<void> {
+    const key = `${this.OTP_VERIFY_ATTEMPTS_PREFIX}${email}`;
+    await this.cacheService.del(key);
   }
 }

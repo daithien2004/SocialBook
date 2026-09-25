@@ -23,6 +23,8 @@ export interface UserProps {
   hashedRt?: string;
   previousHashedRt?: string;
   refreshRotatedAt?: Date;
+  lastLoginIp?: string;
+  lastLoginUa?: string;
   favoriteGenres: string[];
   readingPreferences?: ReadingPreferences;
 }
@@ -67,6 +69,8 @@ export class User extends Entity<UserId> {
       location: undefined,
       website: undefined,
       hashedRt: undefined,
+      lastLoginIp: undefined,
+      lastLoginUa: undefined,
       favoriteGenres: [],
       readingPreferences: undefined,
     });
@@ -90,6 +94,8 @@ export class User extends Entity<UserId> {
     hashedRt?: string;
     previousHashedRt?: string;
     refreshRotatedAt?: Date;
+    lastLoginIp?: string;
+    lastLoginUa?: string;
     favoriteGenres: string[];
     readingPreferences?: ReadingPreferencesProps;
     createdAt: Date;
@@ -114,6 +120,8 @@ export class User extends Entity<UserId> {
         hashedRt: props.hashedRt,
         previousHashedRt: props.previousHashedRt,
         refreshRotatedAt: props.refreshRotatedAt,
+        lastLoginIp: props.lastLoginIp,
+        lastLoginUa: props.lastLoginUa,
         favoriteGenres: props.favoriteGenres,
         readingPreferences: props.readingPreferences
           ? ReadingPreferences.create(props.readingPreferences)
@@ -171,6 +179,12 @@ export class User extends Entity<UserId> {
   }
   get refreshRotatedAt(): Date | undefined {
     return this._props.refreshRotatedAt;
+  }
+  get lastLoginIp(): string | undefined {
+    return this._props.lastLoginIp;
+  }
+  get lastLoginUa(): string | undefined {
+    return this._props.lastLoginUa;
   }
   get favoriteGenres(): string[] {
     return [...this._props.favoriteGenres];
@@ -244,6 +258,12 @@ export class User extends Entity<UserId> {
 
   updateRefreshRotatedAt(value: Date | null): void {
     this._props.refreshRotatedAt = value || undefined;
+    this.markAsUpdated();
+  }
+
+  updateLastLoginContext(ip?: string, userAgent?: string): void {
+    if (ip) this._props.lastLoginIp = ip;
+    if (userAgent) this._props.lastLoginUa = userAgent;
     this.markAsUpdated();
   }
 

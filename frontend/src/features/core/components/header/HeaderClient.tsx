@@ -288,7 +288,7 @@ function MobileMenu({ isAuthenticated, user, avatarUrl, onLogin, onProfile, onBo
                                 <div className="h-4" />
                             </>
                         )}
-                        
+
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 px-4 mb-2">Khám phá</p>
                         <MobileNavItem onClick={() => handleAction(onBooks)} icon={<Search className="w-5 h-5" />}>Tìm kiếm</MobileNavItem>
                         <MobileNavItem onClick={() => handleAction(onPosts)} icon={<Globe className="w-5 h-5" />}>Bảng tin cộng đồng</MobileNavItem>

@@ -5,9 +5,10 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 import {
   useForgotPassword,
@@ -67,7 +68,10 @@ export function ForgotPasswordPageClient() {
         otp: data.otp,
         newPassword: data.newPassword,
       });
-      setStep('success');
+      toast.success('Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.');
+      setStep('email');
+      form.reset();
+      router.push('/login');
     } catch { }
   };
 
@@ -131,16 +135,12 @@ export function ForgotPasswordPageClient() {
     }
   };
 
-  const handleLoginClick = () => {
-    router.push('/login');
-  };
-
   const apiError =
     forgotPassword.error || resetPassword.error || resendOtp.error;
   const currentError = apiError ? getErrorMessage(apiError) : null;
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-dvh overflow-hidden flex">
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-zinc-900">
         <Image
           src="https://res.cloudinary.com/dajg703uq/image/upload/v1763780207/snapedit_1763780184287_v11fnr.jpg"
@@ -164,8 +164,9 @@ export function ForgotPasswordPageClient() {
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-gray-50 dark:bg-zinc-950">
-        <Card className="w-full max-w-md shadow-xl border-none">
+      <div className="w-full lg:w-1/2 overflow-hidden bg-gray-50 dark:bg-zinc-950">
+        <div className="h-full flex items-center justify-center px-6 py-12">
+          <Card className="w-full max-w-md shadow-xl border-none max-h-full overflow-y-auto scrollbar-hide">
           <CardHeader className="text-center space-y-2">
             <div className="flex justify-start mb-2">
               <Button
@@ -375,39 +376,20 @@ export function ForgotPasswordPageClient() {
               </form>
             </Form>
 
-            {step === 'success' && (
-              <div className="text-center py-8">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500/10 rounded-full mb-6">
-                  <CheckCircle className="w-12 h-12 text-green-500" />
-                </div>
-                <h2 className="text-2xl font-bold tracking-tight mb-2">
-                  Đặt Lại Mật Khẩu Thành Công!
-                </h2>
-                <p className="text-muted-foreground mb-8">
-                  Bạn có thể đăng nhập bằng mật khẩu mới của mình.
-                </p>
-                <AppButton
-                  onClick={handleLoginClick}
-                  className="w-full h-11 text-base font-semibold"
-                >
-                  Đến Trang Đăng Nhập
-                </AppButton>
-              </div>
-            )}
 
-            {step !== 'success' && (
-              <div className="text-center text-sm pt-2">
-                <span className="text-muted-foreground">Đã nhớ mật khẩu? </span>
-                <Link
-                  href="/login"
-                  className="font-semibold text-primary hover:underline underline-offset-4"
-                >
-                  Đăng nhập ngay
-                </Link>
-              </div>
-            )}
+
+            <div className="text-center text-sm pt-2">
+              <span className="text-muted-foreground">Đã nhớ mật khẩu? </span>
+              <Link
+                href="/login"
+                className="font-semibold text-primary hover:underline underline-offset-4"
+              >
+                Đăng nhập ngay
+              </Link>
+            </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

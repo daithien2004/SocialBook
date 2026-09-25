@@ -18,7 +18,13 @@ export class TokenService {
     this.logger.setContext(TokenService.name);
   }
 
-  async signTokens(userId: string, email: string, role: string) {
+  async signTokens(
+    userId: string, 
+    email: string, 
+    role: string, 
+    ip?: string, 
+    userAgent?: string
+  ) {
     const payload = { sub: userId, email, role };
 
     const accessSecret = this.configService.get<string>(
@@ -54,11 +60,12 @@ export class TokenService {
 
     const hashedRt = await this.passwordHasher.hash(refreshToken);
 
-    // Update hashed RT
+    // Update hashed RT and Login Context
     const id = UserId.create(userId);
     const user = await this.userRepository.findById(id);
     if (user) {
       user.updateHashedRt(hashedRt);
+      user.updateLastLoginContext(ip, userAgent);
       await this.userRepository.save(user);
     }
 

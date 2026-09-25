@@ -60,6 +60,12 @@ export const getErrorMessage = (error: unknown): string => {
   return data?.message ?? err?.message ?? 'Đã có lỗi xảy ra. Vui lòng thử lại.';
 };
 
+export const getCsrfToken = (): string | null => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )sb_csrf_token=([^;]+)'));
+  return match ? match[2] : null;
+};
+
 export const NEW_BOOK_DAYS_THRESHOLD = 14;
 
 export function isNewBook(createdAt: string): boolean {

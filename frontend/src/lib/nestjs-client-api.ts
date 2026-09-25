@@ -14,6 +14,14 @@ clientApi.interceptors.request.use(
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
+    
+    if (typeof document !== 'undefined') {
+      const match = document.cookie.match(new RegExp('(^| )sb_csrf_token=([^;]+)'));
+      if (match) {
+        config.headers['x-csrf-token'] = match[2];
+      }
+    }
+    
     return config;
   },
   (error) => Promise.reject(error),
@@ -37,7 +45,7 @@ clientApi.interceptors.response.use(
   (response) => response,
   async (axiosError: AxiosError<ErrorResponseDto>) => {
     const originalRequest = axiosError.config as
-      | (AxiosRequestConfig & { _retry?: boolean })
+      | (AxiosRequestConfig & { _retry?: boolean; skipAuthRedirect?: boolean })
       | undefined;
     const status = axiosError.response?.status || 500;
 
@@ -47,7 +55,7 @@ clientApi.interceptors.response.use(
       if (ok) {
         return clientApi(originalRequest);
       }
-      if (typeof window !== 'undefined') {
+      if (!originalRequest.skipAuthRedirect && typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
         window.location.href = '/login?error=SessionExpired';
       }
     }

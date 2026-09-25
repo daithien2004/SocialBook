@@ -88,10 +88,11 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(
-    @Req() req: { user: User },
+    @Req() req: { user: User; ip: string; headers: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<LoginResponseDto>> {
-    const command = new LoginCommand(req.user);
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const command = new LoginCommand(req.user, req.ip, userAgent);
     const result = await this.loginUseCase.execute(command);
 
     this.applyCookie(
@@ -198,10 +199,11 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt-refresh'))
   @Public()
+  @Throttle({ global: { limit: 10 } })
   @Post('refresh')
   async refresh(
     @Req()
-    req: { user: JwtPayload; cookies?: Record<string, string> },
+    req: { user: JwtPayload; cookies?: Record<string, string>; ip: string; headers: Record<string, string> },
     @Body() body: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<TokenPairDto>> {
@@ -212,8 +214,10 @@ export class AuthController {
         HttpStatus.BAD_REQUEST,
       );
     }
+    
+    const userAgent = req.headers['user-agent'] || 'unknown';
 
-    const command = new RefreshTokenCommand(req.user.sub, refreshToken);
+    const command = new RefreshTokenCommand(req.user.sub, refreshToken, req.ip, userAgent);
     const { accessToken, refreshToken: newRefreshToken } =
       await this.refreshTokenUseCase.execute(command);
 

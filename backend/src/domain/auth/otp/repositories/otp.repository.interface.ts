@@ -6,4 +6,6 @@ export abstract class IOtpRepository {
   abstract deleteByEmail(email: string): Promise<void>;
   abstract checkRateLimit(email: string): Promise<void>;
   abstract getTtl(email: string): Promise<number>;
+  abstract incrementVerifyAttempts(email: string): Promise<number>;
+  abstract clearVerifyAttempts(email: string): Promise<void>;
 }

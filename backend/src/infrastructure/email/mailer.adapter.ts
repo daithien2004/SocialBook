@@ -22,7 +22,7 @@ export class MailerAdapter implements IMailerPort {
     this.devLogMail =
       this.configService.get<string>('env.NODE_ENV', 'development') !==
         'production' && !apiKey;
-    this.resend = new Resend(apiKey);
+    this.resend = new Resend(apiKey || 're_dummy_key_to_bypass_constructor');
   }
 
   async sendMail(options: SendMailOptions): Promise<void> {
