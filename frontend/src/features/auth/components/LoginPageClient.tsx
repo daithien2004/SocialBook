@@ -35,13 +35,11 @@ function LoginPageContent() {
     handleGoogleSignin,
     handleGithubSignin,
     handleErrorFromParams,
-    handleOAuthSuccess,
   } = useLoginFlow();
 
   useEffect(() => {
     handleErrorFromParams();
-    handleOAuthSuccess();
-  }, [handleErrorFromParams, handleOAuthSuccess]);
+  }, [handleErrorFromParams]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),

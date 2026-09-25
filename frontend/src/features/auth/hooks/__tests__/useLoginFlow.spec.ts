@@ -6,6 +6,7 @@ import {
 } from '../useLoginFlow';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppSession } from '@/lib/app-session';
+import { login } from '@/features/auth/api/auth.api';
 
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
@@ -22,12 +23,25 @@ jest.mock('@/lib/query-client', () => ({
   },
 }));
 
+jest.mock('@/features/auth/api/auth.api', () => ({
+  login: jest.fn(),
+}));
+
+const mockedLogin = login as jest.MockedFunction<typeof login>;
+
+function axiosError(message: string | string[]): unknown {
+  return {
+    isAxiosError: true,
+    message: 'Request failed with status code 401',
+    response: { status: 401, data: { message } },
+  };
+}
+
 describe('useLoginFlow', () => {
   let mockPush: jest.Mock;
   let mockReplace: jest.Mock;
   let mockGetParam: jest.Mock;
   let mockRefetch: jest.Mock;
-  let mockFetch: jest.Mock;
 
   beforeEach(() => {
     mockPush = jest.fn();
@@ -46,18 +60,13 @@ describe('useLoginFlow', () => {
 
     (useAppSession as jest.Mock).mockReturnValue({ refetch: mockRefetch });
 
-    mockFetch = jest.fn();
-    global.fetch = mockFetch as unknown as typeof fetch;
+    mockedLogin.mockReset();
 
     jest.clearAllMocks();
   });
 
-  it('should login via same-origin proxy and redirect home', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '{}',
-    });
+  it('should login against the backend directly and redirect home', async () => {
+    mockedLogin.mockResolvedValue({ message: 'Đăng nhập thành công' });
 
     const { result } = renderHook(() => useLoginFlow());
 
@@ -68,40 +77,17 @@ describe('useLoginFlow', () => {
       });
     });
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/auth/login',
-      expect.objectContaining({ method: 'POST', credentials: 'same-origin' }),
-    );
+    expect(mockedLogin).toHaveBeenCalledWith({
+      email: 'test@test.com',
+      password: 'password',
+    });
     expect(mockPush).toHaveBeenCalledWith('/');
     expect(result.current.isLoading).toBe(false);
     expect(result.current.serverError).toBeNull();
   });
 
-  it('should unwrap nested data envelope from proxy response', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { id: 'u1' } }),
-    });
-
-    const { result } = renderHook(() => useLoginFlow());
-
-    await act(async () => {
-      await result.current.handleSubmit({
-        email: 'test@test.com',
-        password: 'password',
-      });
-    });
-
-    expect(result.current.serverError).toBeNull();
-  });
-
   it('should surface backend error message on failed login', async () => {
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 401,
-      text: async () => JSON.stringify({ message: 'Sai email hoặc mật khẩu' }),
-    });
+    mockedLogin.mockRejectedValue(axiosError('Sai email hoặc mật khẩu'));
 
     const { result } = renderHook(() => useLoginFlow());
 
@@ -115,6 +101,25 @@ describe('useLoginFlow', () => {
     expect(result.current.serverError).toBe('Sai email hoặc mật khẩu');
     expect(mockPush).not.toHaveBeenCalled();
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it('should join multiple validation messages from the backend', async () => {
+    mockedLogin.mockRejectedValue(
+      axiosError(['Email không hợp lệ', 'Mật khẩu quá ngắn']),
+    );
+
+    const { result } = renderHook(() => useLoginFlow());
+
+    await act(async () => {
+      await result.current.handleSubmit({
+        email: 'test@test.com',
+        password: 'pw',
+      });
+    });
+
+    expect(result.current.serverError).toBe(
+      'Email không hợp lệ, Mật khẩu quá ngắn',
+    );
   });
 
   it('should navigate to the google oauth proxy endpoint', () => {
@@ -138,17 +143,5 @@ describe('useLoginFlow', () => {
       'Email chưa được xác thực bởi nhà cung cấp.',
     );
     expect(mockReplace).toHaveBeenCalledWith('/login');
-  });
-
-  it('should redirect home when oauth=success is present', async () => {
-    mockGetParam.mockReturnValue('success');
-
-    const { result } = renderHook(() => useLoginFlow());
-
-    await act(async () => {
-      await result.current.handleOAuthSuccess();
-    });
-
-    expect(mockPush).toHaveBeenCalledWith('/');
   });
 });

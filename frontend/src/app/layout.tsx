@@ -9,6 +9,7 @@ import { FollowersModal } from '@/features/users/components/FollowersModal';
 import GlobalConfirmModal from '@/components/shared/GlobalConfirmModal';
 import { ThemeProvider } from '@/context/ThemeProvider';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { OAuthCallbackHandler } from '@/features/auth/components/OAuthCallbackHandler';
 
 const CreatePostModal = dynamic(() => import('@/features/posts/components/CreatePostModal'));
 const EditPostModal = dynamic(() => import('@/features/posts/components/EditPostModal'));
@@ -45,6 +46,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <Providers>
               <ScrollToTop />
+              <OAuthCallbackHandler />
               <ErrorBoundary name="RootLayout">
                 {children}
               </ErrorBoundary>

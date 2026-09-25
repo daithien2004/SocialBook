@@ -9,6 +9,7 @@ import {
   useState,
   ReactNode,
 } from 'react';
+import { apiRequest } from '@/lib/api-client';
 
 export interface AppUser {
   id: string;
@@ -36,13 +37,12 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
 
   const refetch = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
-      if (res.ok) {
-        const json = (await res.json()) as { data?: AppUser };
-        setUser(json.data ?? null);
-      } else {
-        setUser(null);
-      }
+      const me = await apiRequest<AppUser>({
+        url: '/auth/me',
+        method: 'GET',
+        skipAuthRedirect: true,
+      });
+      setUser(me ?? null);
     } catch {
       setUser(null);
     } finally {

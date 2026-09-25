@@ -1,4 +1,4 @@
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 import { z } from 'zod';
 import { paginationMetaSchema } from '@/lib/pagination.schema';
 

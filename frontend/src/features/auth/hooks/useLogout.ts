@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { queryClient } from '@/lib/query-client';
 import { useAppSession } from '@/lib/app-session';
-import { getCsrfToken } from '@/lib/utils';
+import { apiRequest } from '@/lib/api-client';
 
 export interface UseLogoutResult {
   handleLogout: () => Promise<void>;
@@ -15,11 +15,10 @@ export function useLogout(): UseLogoutResult {
   const handleLogout = useCallback(async () => {
     queryClient.clear();
     try {
-      const csrfToken = getCsrfToken();
-      await fetch('/api/auth/logout', {
+      await apiRequest({
+        url: '/auth/logout',
         method: 'POST',
-        credentials: 'same-origin',
-        headers: csrfToken ? { 'x-csrf-token': csrfToken } : undefined,
+        skipAuthRedirect: true,
       });
     } catch {
     } finally {

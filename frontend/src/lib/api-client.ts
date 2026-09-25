@@ -1,7 +1,10 @@
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 import { env } from '@/env';
+import { refreshAuthSession } from '@/lib/auth-refresh';
+import { getCsrfToken } from '@/lib/utils';
 import { ErrorResponseDto } from '../types/response';
+import { unwrapApiResponse } from './api-response';
 
 const clientApi = axios.create({
   baseURL: env.NEXT_PUBLIC_NEST_API_URL,
@@ -14,32 +17,16 @@ clientApi.interceptors.request.use(
     if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
-    
-    if (typeof document !== 'undefined') {
-      const match = document.cookie.match(new RegExp('(^| )sb_csrf_token=([^;]+)'));
-      if (match) {
-        config.headers['x-csrf-token'] = match[2];
-      }
+
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      config.headers['x-csrf-token'] = csrfToken;
     }
-    
+
     return config;
   },
   (error) => Promise.reject(error),
 );
-
-async function refreshAccessToken(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/auth/refresh', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{}',
-    });
-    return res.status < 400;
-  } catch {
-    return false;
-  }
-}
 
 clientApi.interceptors.response.use(
   (response) => response,
@@ -51,7 +38,7 @@ clientApi.interceptors.response.use(
 
     if (status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-      const ok = await refreshAccessToken();
+      const ok = await refreshAuthSession();
       if (ok) {
         return clientApi(originalRequest);
       }
@@ -74,25 +61,15 @@ clientApi.interceptors.response.use(
   },
 );
 
+export type ApiRequestConfig = AxiosRequestConfig & {
+  skipAuthRedirect?: boolean;
+};
+
 export async function apiRequest<T = unknown>(
-  config: AxiosRequestConfig,
+  config: ApiRequestConfig,
 ): Promise<T> {
   const result = await clientApi(config);
-  const responseData = result.data;
-  if (responseData && typeof responseData === 'object') {
-    if ('meta' in responseData || 'warning' in responseData) {
-      return {
-        data: responseData.data,
-        meta: responseData.meta,
-        warning: responseData.warning,
-        message: responseData.message,
-      } as T;
-    }
-    if ('data' in responseData && responseData.data !== undefined) {
-      return responseData.data as T;
-    }
-  }
-  return responseData as T;
+  return unwrapApiResponse<T>(result.data);
 }
 
 export default clientApi;

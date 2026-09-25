@@ -1,6 +1,5 @@
 /** @jest-environment jsdom */
 import {
-  bffAuthPost,
   forgotPassword,
   login,
   resendOtp,
@@ -8,165 +7,84 @@ import {
   signup,
   verifyOtp,
 } from '@/features/auth/api/auth.api';
+import { apiRequest } from '@/lib/api-client';
 
-describe('bffAuthPost', () => {
-  let mockFetch: jest.Mock;
+jest.mock('@/lib/api-client', () => ({
+  apiRequest: jest.fn(),
+}));
 
-  beforeEach(() => {
-    mockFetch = jest.fn();
-    global.fetch = mockFetch as unknown as typeof fetch;
-    document.cookie = 'sb_csrf_token=csrf-123';
-    jest.clearAllMocks();
-  });
-
-  afterEach(() => {
-    document.cookie = 'sb_csrf_token=; Max-Age=0';
-  });
-
-  it('posts to the same-origin proxy with credentials and csrf header', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { id: 'u1' } }),
-    });
-
-    await bffAuthPost('/login', { email: 'a@b.co' });
-
-    expect(mockFetch).toHaveBeenCalledWith('/api/auth/login', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-csrf-token': 'csrf-123',
-      },
-      body: JSON.stringify({ email: 'a@b.co' }),
-    });
-  });
-
-  it('unwraps the data envelope', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { id: 'u1', email: 'a@b.co' } }),
-    });
-
-    await expect(bffAuthPost('/login', {})).resolves.toEqual({
-      id: 'u1',
-      email: 'a@b.co',
-    });
-  });
-
-  it('returns undefined for empty bodies', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '',
-    });
-
-    await expect(bffAuthPost('/logout', {})).resolves.toBeUndefined();
-  });
-
-  it('throws an error carrying backend message on failure', async () => {
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 400,
-      text: async () =>
-        JSON.stringify({ message: ['Email không hợp lệ', 'Mật khẩu quá ngắn'] }),
-    });
-
-    await expect(bffAuthPost('/signup', {})).rejects.toMatchObject({
-      status: 400,
-      message: 'Email không hợp lệ,Mật khẩu quá ngắn',
-    });
-  });
-
-  it('omits csrf header when cookie is absent', async () => {
-    document.cookie = 'sb_csrf_token=; Max-Age=0';
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '{}',
-    });
-
-    await bffAuthPost('/login', {});
-
-    const [, init] = mockFetch.mock.calls[0];
-    expect(init.headers).toEqual({ 'Content-Type': 'application/json' });
-  });
-});
+const mockedApiRequest = apiRequest as jest.MockedFunction<typeof apiRequest>;
 
 describe('auth api functions', () => {
-  let mockFetch: jest.Mock;
-
   beforeEach(() => {
-    mockFetch = jest.fn();
-    global.fetch = mockFetch as unknown as typeof fetch;
     jest.clearAllMocks();
   });
 
-  it('signup routes through the proxy', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 201,
-      text: async () => JSON.stringify({ data: { message: 'Đăng ký thành công' } }),
+  it('signup posts directly to the backend', async () => {
+    mockedApiRequest.mockResolvedValue({
+      message: 'Mã OTP đã được gửi đến email của bạn',
     });
+
+    const payload = {
+      username: 'u',
+      email: 'a@b.co',
+      password: 'password',
+      confirmPassword: 'password',
+    };
+
+    await expect(signup(payload)).resolves.toEqual({
+      message: 'Mã OTP đã được gửi đến email của bạn',
+    });
+    expect(mockedApiRequest).toHaveBeenCalledWith({
+      url: '/auth/signup',
+      method: 'POST',
+      data: payload,
+    });
+  });
+
+  it('verifyOtp posts directly to the backend', async () => {
+    mockedApiRequest.mockResolvedValue({ message: 'Xác thực thành công' });
 
     await expect(
-      signup({
-        username: 'u',
-        email: 'a@b.co',
-        password: 'password',
-        confirmPassword: 'password',
-      }),
-    ).resolves.toEqual({ message: 'Đăng ký thành công' });
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/auth/signup');
+      verifyOtp({ email: 'a@b.co', otp: '123456' }),
+    ).resolves.toEqual({ message: 'Xác thực thành công' });
+    expect(mockedApiRequest).toHaveBeenCalledWith({
+      url: '/auth/verify-otp',
+      method: 'POST',
+      data: { email: 'a@b.co', otp: '123456' },
+    });
   });
 
-  it('verifyOtp routes through the proxy', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { message: 'Xác thực thành công' } }),
-    });
-
-    await expect(verifyOtp({ email: 'a@b.co', otp: '123456' })).resolves.toEqual({
-      message: 'Xác thực thành công',
-    });
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/auth/verify-otp');
-  });
-
-  it('resendOtp returns cooldown value', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { resendCooldown: 60 } }),
-    });
+  it('resendOtp returns the unwrapped cooldown value', async () => {
+    mockedApiRequest.mockResolvedValue({ resendCooldown: 60 });
 
     await expect(resendOtp({ email: 'a@b.co' })).resolves.toEqual({
       resendCooldown: 60,
     });
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/auth/resend-otp');
+    expect(mockedApiRequest).toHaveBeenCalledWith({
+      url: '/auth/resend-otp',
+      method: 'POST',
+      data: { email: 'a@b.co' },
+    });
   });
 
-  it('forgotPassword routes through the proxy', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { message: 'Đã gửi email' } }),
+  it('forgotPassword posts directly to the backend', async () => {
+    mockedApiRequest.mockResolvedValue({
+      message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
     });
 
     await expect(forgotPassword({ email: 'a@b.co' })).resolves.toEqual({
-      message: 'Đã gửi email',
+      message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
     });
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/auth/forgot-password');
+    expect(mockedApiRequest).toHaveBeenCalledWith({
+      url: '/auth/forgot-password',
+      method: 'POST',
+      data: { email: 'a@b.co' },
+    });
   });
 
-  it('resetPassword routes through the proxy', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { message: 'Đổi mật khẩu thành công' } }),
-    });
+  it('resetPassword posts directly to the backend', async () => {
+    mockedApiRequest.mockResolvedValue({ message: 'Đổi mật khẩu thành công' });
 
     await expect(
       resetPassword({
@@ -175,19 +93,39 @@ describe('auth api functions', () => {
         newPassword: 'newpassword',
       }),
     ).resolves.toEqual({ message: 'Đổi mật khẩu thành công' });
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/auth/reset-password');
+    expect(mockedApiRequest).toHaveBeenCalledWith({
+      url: '/auth/reset-password',
+      method: 'POST',
+      data: {
+        email: 'a@b.co',
+        otp: '123456',
+        newPassword: 'newpassword',
+      },
+    });
   });
 
-  it('login routes through the proxy', async () => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => JSON.stringify({ data: { message: 'Đăng nhập thành công' } }),
-    });
+  it('login posts directly to the backend', async () => {
+    mockedApiRequest.mockResolvedValue({ message: 'Đăng nhập thành công' });
 
-    await expect(login({ email: 'a@b.co', password: 'password' })).resolves.toEqual(
-      { message: 'Đăng nhập thành công' },
-    );
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/auth/login');
+    await expect(
+      login({ email: 'a@b.co', password: 'password' }),
+    ).resolves.toEqual({ message: 'Đăng nhập thành công' });
+    expect(mockedApiRequest).toHaveBeenCalledWith({
+      url: '/auth/login',
+      method: 'POST',
+      data: { email: 'a@b.co', password: 'password' },
+    });
+  });
+
+  it('propagates the backend rejection', async () => {
+    const rejection = {
+      isAxiosError: true,
+      response: { status: 401, data: { message: 'Sai email hoặc mật khẩu' } },
+    };
+    mockedApiRequest.mockRejectedValue(rejection);
+
+    await expect(
+      login({ email: 'a@b.co', password: 'wrong' }),
+    ).rejects.toBe(rejection);
   });
 });

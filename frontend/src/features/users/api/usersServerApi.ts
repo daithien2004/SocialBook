@@ -1,16 +1,14 @@
-import serverApi from "@/lib/server-api";
-import { extractResponseDtoData } from "@/lib/response-dto";
-import type { ResponseDto } from "@/types/response";
+import { serverApiRequest } from '@/lib/api-server';
 
-export async function userServerApi(){
-    return {
-        async getIsUserExist(userId: string): Promise<boolean> {
-            try {
-                const res = await serverApi.get<ResponseDto<boolean>>(`/users/${userId}/exist`);
-                return extractResponseDtoData(res.data) ?? false;
-            } catch {
-                return false;
-            }
-        },
-    };
+export async function userServerApi() {
+  return {
+    async getIsUserExist(userId: string): Promise<boolean> {
+      try {
+        const res = await serverApiRequest<boolean>(`/users/${userId}/exist`);
+        return res ?? false;
+      } catch {
+        return false;
+      }
+    },
+  };
 }

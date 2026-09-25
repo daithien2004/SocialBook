@@ -1,6 +1,6 @@
 import { cacheLife } from 'next/cache';
 import { NESTJS_CHAPTERS_ENDPOINTS } from '@/constants/server-endpoints';
-import { serverApiRequest } from '@/lib/nestjs-server-api';
+import { serverApiRequest } from '@/lib/api-server';
 import type { ChapterDetailData } from '../types/chapter.interface';
 
 export async function fetchChapterDetailServer(

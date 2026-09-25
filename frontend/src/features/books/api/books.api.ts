@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { NESTJS_BOOKS_ENDPOINTS } from '@/constants/server-endpoints';
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 import {
   bookAdminPageSchema,
   bookAdminSchema,

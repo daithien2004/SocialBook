@@ -1,5 +1,5 @@
 import { NESTJS_CHAPTERS_ENDPOINTS } from '@/constants/server-endpoints';
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 import type { PaginationMeta } from '@/lib/api-response';
 import type {
   Chapter,

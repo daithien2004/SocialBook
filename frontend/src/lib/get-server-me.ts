@@ -5,7 +5,7 @@ export interface ServerMe {
   id: string;
   email: string;
   role: string;
-  username: string;
+  username?: string;
   image?: string;
 }
 

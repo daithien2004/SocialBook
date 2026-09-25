@@ -2,16 +2,23 @@
 import { NextRequest } from 'next/server';
 import { relayAuthRequest } from '@/lib/auth-proxy';
 
-jest.mock('@/lib/server-api', () => {
-  const axios = { request: jest.fn() };
-  return { __esModule: true, default: axios };
+import axios from 'axios';
+
+jest.mock('axios', () => {
+  const mockInstance = { request: jest.fn() };
+  return {
+    __esModule: true,
+    default: {
+      create: jest.fn(() => mockInstance),
+    },
+  };
 });
 
-import serverApi from '@/lib/server-api';
+const mockRequest = axios.create().request as jest.Mock;
 
 describe('relayAuthRequest', () => {
   beforeEach(() => {
-    (serverApi.request as jest.Mock).mockReset();
+    mockRequest.mockReset();
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
@@ -20,7 +27,7 @@ describe('relayAuthRequest', () => {
   });
 
   it('forwards cookie header and uses maxRedirects 0 + tolerant validateStatus', async () => {
-    (serverApi.request as jest.Mock).mockResolvedValue({
+    mockRequest.mockResolvedValue({
       status: 302,
       headers: {
         location: 'https://accounts.google.com/...',
@@ -35,7 +42,7 @@ describe('relayAuthRequest', () => {
 
     const res = await relayAuthRequest(req, { url: '/auth/google' });
 
-    const args = (serverApi.request as jest.Mock).mock.calls[0][0];
+    const args = mockRequest.mock.calls[0][0];
     expect(args.method).toBe('GET');
     expect(args.maxRedirects).toBe(0);
     expect(args.validateStatus(302)).toBe(true);
@@ -49,7 +56,7 @@ describe('relayAuthRequest', () => {
   });
 
   it('forwards POST body as JSON', async () => {
-    (serverApi.request as jest.Mock).mockResolvedValue({
+    mockRequest.mockResolvedValue({
       status: 200,
       headers: {},
       data: {},
@@ -63,7 +70,7 @@ describe('relayAuthRequest', () => {
 
     const res = await relayAuthRequest(req, { url: '/auth/login' });
 
-    const args = (serverApi.request as jest.Mock).mock.calls[0][0];
+    const args = mockRequest.mock.calls[0][0];
     expect(args.method).toBe('POST');
     expect(args.data).toBe('{"email":"a@b.co"}');
     expect(args.headers['content-type']).toBe('application/json');
@@ -72,7 +79,7 @@ describe('relayAuthRequest', () => {
   });
 
   it('relays JSON response body so clients can parse it', async () => {
-    (serverApi.request as jest.Mock).mockResolvedValue({
+    mockRequest.mockResolvedValue({
       status: 200,
       headers: { 'content-type': 'application/json' },
       data: { data: { id: 'u1', email: 'a@b.co' } },
@@ -92,7 +99,7 @@ describe('relayAuthRequest', () => {
   });
 
   it('relays plain text response bodies untouched', async () => {
-    (serverApi.request as jest.Mock).mockResolvedValue({
+    mockRequest.mockResolvedValue({
       status: 200,
       headers: { 'content-type': 'text/plain' },
       data: 'pong',
@@ -108,7 +115,7 @@ describe('relayAuthRequest', () => {
   });
 
   it('returns 4xx statuses with body intact instead of throwing', async () => {
-    (serverApi.request as jest.Mock).mockResolvedValue({
+    mockRequest.mockResolvedValue({
       status: 401,
       headers: {},
       data: { message: 'Unauthorized' },
@@ -120,7 +127,7 @@ describe('relayAuthRequest', () => {
 
     const res = await relayAuthRequest(req, { url: '/auth/me' });
 
-    const args = (serverApi.request as jest.Mock).mock.calls[0][0];
+    const args = mockRequest.mock.calls[0][0];
     expect(args.validateStatus(401)).toBe(true);
     expect(args.validateStatus(302)).toBe(true);
     expect(res.status).toBe(401);
@@ -128,7 +135,7 @@ describe('relayAuthRequest', () => {
   });
 
   it('returns 503 when backend is unreachable', async () => {
-    (serverApi.request as jest.Mock).mockRejectedValue(
+    mockRequest.mockRejectedValue(
       new Error('connect ECONNREFUSED'),
     );
 

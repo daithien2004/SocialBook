@@ -1,4 +1,4 @@
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 import {
   CreateUserHighlightPayload,
   UpdateUserHighlightPayload,

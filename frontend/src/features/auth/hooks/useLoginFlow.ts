@@ -24,7 +24,6 @@ export interface UseLoginFlowResult {
 export function useLoginFlow(): UseLoginFlowResult & {
     handleAuthRedirect: () => void;
     handleErrorFromParams: () => void;
-    handleOAuthSuccess: () => void;
 } {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -74,13 +73,6 @@ export function useLoginFlow(): UseLoginFlowResult & {
         window.location.href = GITHUB_OAUTH_URL;
     }, []);
 
-    const handleOAuthSuccess = useCallback(() => {
-        if (searchParams.get('oauth') === 'success') {
-            queryClient.clear();
-            handleAuthRedirect();
-        }
-    }, [searchParams, handleAuthRedirect]);
-
     return {
         isLoading,
         serverError,
@@ -92,6 +84,5 @@ export function useLoginFlow(): UseLoginFlowResult & {
         handleGithubSignin,
         handleAuthRedirect,
         handleErrorFromParams,
-        handleOAuthSuccess,
     };
 }

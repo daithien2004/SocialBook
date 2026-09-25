@@ -1,5 +1,5 @@
 import { NESTJS_TTS_ENDPOINTS } from '@/constants/server-endpoints';
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 
 export interface TTSAudio {
   id: string;

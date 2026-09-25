@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import clientApi from '@/lib/nestjs-client-api';
+import clientApi from '@/lib/api-client';
 
 export enum UserEventType {
   OPEN_BOOK = 'open_book',

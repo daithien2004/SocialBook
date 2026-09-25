@@ -1,5 +1,5 @@
 import { NESTJS_GEMINI_ENDPOINTS } from '@/constants/server-endpoints';
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 
 export interface SummarizeChapterResponse {
   summary: string;

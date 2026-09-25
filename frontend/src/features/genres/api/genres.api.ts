@@ -1,4 +1,4 @@
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 import { NESTJS_GENRES_ENDPOINTS } from '@/constants/server-endpoints';
 import {
   genrePageSchema,

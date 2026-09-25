@@ -52,10 +52,8 @@ import {
   VerifyOtpDto,
 } from '@/presentation/auth/dto/auth.dto';
 import {
-  LoginResponseDto,
   MeResponseDto,
   ProfileResponseDto,
-  TokenPairDto,
 } from '@/presentation/auth/dto/auth-response.dto';
 
 @Controller('auth')
@@ -90,7 +88,7 @@ export class AuthController {
   async login(
     @Req() req: { user: User; ip: string; headers: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse<LoginResponseDto>> {
+  ): Promise<ApiResponse<void>> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const command = new LoginCommand(req.user, req.ip, userAgent);
     const result = await this.loginUseCase.execute(command);
@@ -106,11 +104,6 @@ export class AuthController {
 
     return {
       message: 'Đăng nhập thành công',
-      data: {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        user: result.user,
-      },
     };
   }
 
@@ -206,7 +199,7 @@ export class AuthController {
     req: { user: JwtPayload; cookies?: Record<string, string>; ip: string; headers: Record<string, string> },
     @Body() body: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse<TokenPairDto>> {
+  ): Promise<ApiResponse<void>> {
     const refreshToken = body.refreshToken ?? req.cookies?.sb_refresh_token;
     if (!refreshToken) {
       throw new HttpException(
@@ -229,10 +222,6 @@ export class AuthController {
 
     return {
       message: 'Làm mới token thành công',
-      data: {
-        accessToken,
-        refreshToken: newRefreshToken,
-      },
     };
   }
 

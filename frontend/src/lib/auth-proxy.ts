@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import serverApi from '@/lib/server-api';
+import axios from 'axios';
+import { env } from '@/env';
+
+const authAxios = axios.create({
+  baseURL: env.NEST_API_INTERNAL_URL || env.NEXT_PUBLIC_NEST_API_URL,
+});
 
 export interface RelayTarget {
   method?: 'GET' | 'POST';
@@ -29,7 +34,7 @@ export async function relayAuthRequest(
   const body = isBodyless ? undefined : await request.text();
 
   try {
-    const response = await serverApi.request({
+    const response = await authAxios.request({
       method,
       url: target.url,
       data: body,

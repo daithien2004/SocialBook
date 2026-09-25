@@ -1,4 +1,4 @@
-import { apiRequest } from '@/lib/nestjs-client-api';
+import { apiRequest } from '@/lib/api-client';
 import { NESTJS_AUTHORS_ENDPOINTS } from '@/constants/server-endpoints';
 import {
   authorPageSchema,
