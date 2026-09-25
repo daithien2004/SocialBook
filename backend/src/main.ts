@@ -74,6 +74,9 @@ async function bootstrap() {
 
   configSwagger(app);
 
+  // Enable graceful shutdown hooks (important for BullMQ and database connections)
+  app.enableShutdownHooks();
+
   // Start the server
   await app.listen(port, '0.0.0.0');
   const logger = app.get(Logger);

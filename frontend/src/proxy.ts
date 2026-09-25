@@ -53,6 +53,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
         process.env.NEST_API_INTERNAL_URL ||
         process.env.NEXT_PUBLIC_NEST_API_URL ||
         'http://localhost:5000/api';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+
       const refreshRes = await fetch(`${backendUrl}/auth/refresh`, {
         method: 'POST',
         headers: {
@@ -61,7 +64,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
           'x-csrf-token': csrfToken ?? '',
         },
         body: JSON.stringify({ refreshToken }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeout);
 
       setCookies = refreshRes.headers.getSetCookie();
 

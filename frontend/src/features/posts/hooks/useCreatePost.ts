@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
@@ -57,8 +57,8 @@ export function useCreatePost(
     },
   });
 
-  const { watch, setValue, reset, getValues } = form;
-  const currentImages = watch("images") || [];
+  const { setValue, reset, getValues } = form;
+  const currentImages = useWatch({ control: form.control, name: "images" }) || [];
   const totalImages = currentImages.length;
   const canAddMore = totalImages < maxImages;
 

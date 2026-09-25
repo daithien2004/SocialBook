@@ -43,6 +43,8 @@ clientApi.interceptors.response.use(
         return clientApi(originalRequest);
       }
       if (!originalRequest.skipAuthRedirect && typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        // Full page reload is intentional here to clear out React Query cache and Zustand stores on logout
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/login?error=SessionExpired';
       }
     }

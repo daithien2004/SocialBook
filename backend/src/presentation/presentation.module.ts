@@ -60,6 +60,7 @@ import { ReadingRoomInteractionsApplicationModule } from '@/application/reading-
 import { AnalyticsApplicationModule } from '@/application/analytics/analytics-application.module';
 
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
     AnalyticsApplicationModule,
     GatewaysModule,
     InfrastructureModule,
+    HealthModule,
   ],
   controllers: [
     AuthController,

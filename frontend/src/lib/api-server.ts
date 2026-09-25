@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { redirect } from 'next/navigation';
 
 import { env } from '@/env';
 
@@ -14,15 +15,27 @@ export const serverApiRequest = cache(async <T>(path: string, init?: RequestInit
     .map((c) => `${c.name}=${c.value}`)
     .join('; ');
 
-  const res = await fetch(`${NEST_API_URL}${path}`, {
-    ...init,
-    headers: {
-      ...init?.headers,
-      Cookie: cookieHeader,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  let res: Response;
+  try {
+    res = await fetch(`${NEST_API_URL}${path}`, {
+      ...init,
+      headers: {
+        ...init?.headers,
+        Cookie: cookieHeader,
+      },
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!res.ok) {
+    if (res.status === 401) {
+      redirect('/login?error=SessionExpired');
+    }
     throw new Error(`Server fetch failed: ${res.status} ${path}`);
   }
   const body = await res.json();
