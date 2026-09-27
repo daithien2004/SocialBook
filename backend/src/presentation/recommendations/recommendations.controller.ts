@@ -17,23 +17,16 @@ export class RecommendationsController {
     const userId = (req as unknown as { user: { id: string } }).user.id;
     const result = await this.getPersonalizedRecommendationsUseCase.execute({
       userId,
-      page: filter.page,
-      limit: filter.limit,
+      page: filter.actualPage,
+      limit: filter.actualLimit,
     });
 
     return {
       message: 'Recommendations generated successfully',
       data: {
         recommendations: result.recommendations,
-        pagination: {
-          currentPage: result.currentPage,
-          limit: result.limit,
-          totalItems: result.totalItems,
-          totalPages: result.totalPages,
-          hasNextPage: result.hasNextPage,
-          hasPrevPage: result.hasPrevPage,
-        },
         analysis: result.analysis,
+        meta: result.meta,
       },
     };
   }

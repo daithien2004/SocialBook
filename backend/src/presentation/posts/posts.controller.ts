@@ -275,12 +275,7 @@ export class PostsController {
     return {
       message: 'Get flagged posts successfully',
       data: PostResponseDto.fromArray(result.data),
-      meta: {
-        page: query.actualPage,
-        limit,
-        total: result.total,
-        totalPages: Math.ceil(result.total / limit),
-      },
+      meta: result.meta,
     };
   }
 

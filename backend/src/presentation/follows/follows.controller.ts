@@ -133,8 +133,8 @@ export class FollowsController {
     const query = new GetFollowsQuery(
       filter.userId,
       filter.targetId,
-      filter.page,
-      filter.limit,
+      filter.actualPage,
+      filter.actualLimit,
     );
     const result = await this.getFollowsUseCase.execute(query);
 

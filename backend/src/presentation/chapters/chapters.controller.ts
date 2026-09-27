@@ -174,8 +174,8 @@ export class ChaptersController {
     @Query() filter: PaginationQueryDto,
   ) {
     const query = new GetChaptersQuery(
-      filter.page,
-      filter.limit,
+      filter.actualPage,
+      filter.actualLimit,
       undefined,
       undefined,
       bookSlug,
@@ -207,8 +207,8 @@ export class ChaptersController {
   @Get('admin/list')
   async getAllChaptersAdmin(@Query() filter: FilterChapterDto) {
     const query = new GetChaptersQuery(
-      filter.page,
-      filter.limit,
+      filter.actualPage,
+      filter.actualLimit,
       filter.title,
       filter.bookId,
       undefined,

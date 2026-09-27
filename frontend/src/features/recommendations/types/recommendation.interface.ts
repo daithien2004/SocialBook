@@ -1,4 +1,4 @@
-// recommendation.interface.ts
+import { PaginationMetaData } from '@/lib/pagination.schema';
 import { Book } from '../../books/types/book.interface';
 
 export interface RecommendationAnalysis {
@@ -17,18 +17,10 @@ export interface BookRecommendation {
   book: Book;
 }
 
-export interface RecommendationPaginationMeta {
-  currentPage: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
-
-export interface RecommendationsResponse extends RecommendationPaginationMeta {
+export interface RecommendationsResponse {
   recommendations: BookRecommendation[];
   analysis: RecommendationAnalysis;
+  meta: PaginationMetaData;
 }
 
 export interface GetRecommendationsRequest {

@@ -1,4 +1,7 @@
-import { CursorPaginatedResult } from '@/shared/domain/pagination.types';
+import {
+  CursorPaginatedResult,
+  PaginatedResult,
+} from '@/shared/domain/pagination.types';
 import { Post } from '../entities/post.entity';
 
 export interface FindAllOptions {
@@ -16,16 +19,6 @@ export interface FindFlaggedOptions {
   startDate?: Date;
   endDate?: Date;
   sortBy?: 'newest' | 'oldest' | 'violations';
-}
-
-export interface PaginatedResult<T> {
-  data: T[];
-  total: number;
-}
-
-export interface PaginatedResult<T> {
-  data: T[];
-  total: number;
 }
 
 export abstract class IPostRepository {

@@ -1,10 +1,13 @@
-import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
+import {
+  buildPaginationMeta,
+  CursorPaginatedResult,
+  PaginatedResult,
+} from '@/common/interfaces/pagination.interface';
 import { Post as PostEntity } from '@/domain/posts/entities/post.entity';
 import {
   FindAllOptions,
   FindFlaggedOptions,
   IPostRepository,
-  PaginatedResult,
 } from '@/domain/posts/repositories/post.repository.interface';
 import { PostMapper } from '@/infrastructure/database/repositories/posts/post.mapper';
 import {
@@ -443,7 +446,7 @@ export class PostRepository implements IPostRepository {
       data: documents
         .map((doc: PostDocument) => PostMapper.toDomain(doc))
         .filter((p: PostEntity | null): p is PostEntity => p !== null),
-      total,
+      meta: buildPaginationMeta(options.page, options.limit, total),
     };
   }
 

@@ -254,7 +254,11 @@ export class UsersController {
   @Get('search')
   async searchUsers(@Query() filter: FilterUserDto) {
     const keyword = filter.username || filter.email || '';
-    const query = new SearchUsersQuery(keyword, filter.page, filter.limit);
+    const query = new SearchUsersQuery(
+      keyword,
+      filter.actualPage,
+      filter.actualLimit,
+    );
     const result = await this.searchUsersUseCase.execute(query);
 
     return {

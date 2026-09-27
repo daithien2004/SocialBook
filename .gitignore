@@ -22,3 +22,6 @@ node_modules
 # Lockfile duy nhất nằm ở root; bỏ lockfile cũ từ package riêng lẻ
 backend/package-lock.json
 frontend/package-lock.json
+
+# --- Claude Code: personal config overrides (không commit) ---
+.claude/settings.local.json

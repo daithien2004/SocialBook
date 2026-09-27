@@ -42,8 +42,8 @@ export class NotificationController {
   ) {
     const query = new GetUserNotificationsQuery(
       userId,
-      filter.page,
-      filter.limit,
+      filter.actualPage,
+      filter.actualLimit,
       filter.isRead,
     );
 

@@ -1,3 +1,4 @@
+import { PaginationMeta } from '@/shared/domain/pagination.types';
 import {
   EnrichedRecommendation,
   RecommendationAnalysis,
@@ -8,13 +9,6 @@ export interface RecommendationResult {
   recommendations: EnrichedRecommendation[];
 }
 
-export interface PaginatedRecommendationResult {
-  analysis: RecommendationAnalysis;
-  recommendations: EnrichedRecommendation[];
-  currentPage: number;
-  limit: number;
-  totalItems: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
+export interface PaginatedRecommendationResult extends RecommendationResult {
+  meta: PaginationMeta;
 }

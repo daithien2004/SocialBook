@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(npm test*)",
+      "Bash(npm run build*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run typecheck*)",
+      "Bash(npm run format*)",
+      "Bash(npm run build:shared)",
+      "Bash(npm run seed*)",
+      "Bash(npm run start:dev*)",
+      "Bash(npm run dev*)",
+      "Bash(docker compose up -d)",
+      "Bash(docker-compose up -d)"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/format.sh",
+            "timeout": 30,
+            "statusMessage": "Prettier: formatting..."
+          }
+        ]
+      }
+    ]
+  }
+}

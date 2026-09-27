@@ -5,6 +5,7 @@ import {
   RecommendationResult,
   PaginatedRecommendationResult,
 } from '@/domain/recommendations/interfaces/recommendation-result';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 
 export interface GetPersonalizedRecommendationsQuery {
   userId: string;
@@ -43,18 +44,14 @@ export class GetPersonalizedRecommendationsUseCase {
     const paginatedRecommendations =
       recommendationsResponse.recommendations.slice(startIndex, endIndex);
 
-    const totalItems = recommendationsResponse.recommendations.length;
-    const totalPages = Math.ceil(totalItems / limit);
-
     return {
       analysis: recommendationsResponse.analysis,
       recommendations: paginatedRecommendations,
-      currentPage: page,
-      limit,
-      totalItems,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
+      meta: buildPaginationMeta(
+        page,
+        limit,
+        recommendationsResponse.recommendations.length,
+      ),
     };
   }
 }

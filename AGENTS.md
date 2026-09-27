@@ -3,8 +3,8 @@ Never use the `any` type in TypeScript. Always define an Interface, Type, or use
 Ensuring write code lint 
 ## Quick Reference
 
-- Before any task, read `.opencode/agents/CRAFTSMAN.md`
-- Apply guidance from `.opencode/agents/CRAFTSMAN.md` across planning, implementation, testing, and review
+- Before any task, read `.claude/rules/craftsman.md`
+- Apply guidance from `.claude/rules/craftsman.md` across planning, implementation, testing, and review
 - Prefer repo-specific instructions over generic habits
 - Keep changes scoped. Do not rewrite unrelated areas
 
@@ -171,9 +171,9 @@ export const getErrorMessage = (error: any): string => {
 
 ## Local Skills
 
-- `.opencode/skills/vercel-react-best-practices/SKILL.md`: Next.js, React, rendering, data flow (index + rules)
-- `.opencode/skills/mongodb/SKILLS.md`: MongoDB queries, aggregation, index strategy
-- `.opencode/skills/shadcnui/SKILLS.md`: shadcn/ui components and theming
+- `.claude/skills/vercel-react-best-practices/SKILL.md`: Next.js, React, rendering, data flow (index + rules)
+- `.claude/skills/mongodb-query-optimizer/SKILL.md`: MongoDB queries, aggregation, index strategy
+- `.claude/skills/shadcnui/SKILL.md`: shadcn/ui components and theming
 
 ## Environment Notes
 

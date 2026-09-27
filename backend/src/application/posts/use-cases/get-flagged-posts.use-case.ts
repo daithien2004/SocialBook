@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import {
-  IPostRepository,
-  PaginatedResult,
-} from '@/domain/posts/repositories/post.repository.interface';
+import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { GetFlaggedPostsQuery } from './get-flagged-posts.query';
 
 @Injectable()
