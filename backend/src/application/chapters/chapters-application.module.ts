@@ -22,6 +22,7 @@ import {
   SingleChapterProcessor,
   CREATE_SINGLE_CHAPTER_QUEUE,
 } from './processors/single-chapter.processor';
+import { isWorkerProcess } from '@/common/utils/process-role.util';
 
 @Module({
   imports: [
@@ -49,7 +50,7 @@ import {
     AskChapterAIUseCase,
     StartChaptersImportUseCase,
     GetChaptersImportStatusUseCase,
-    SingleChapterProcessor,
+    ...(isWorkerProcess() ? [SingleChapterProcessor] : []),
   ],
 
   exports: [

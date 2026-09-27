@@ -87,9 +87,9 @@ export class NotificationSeed {
           'Cảm ơn bạn đã tham gia SocialBook. Hãy khám phá thư viện sách và kết nối với những người yêu sách nhé!',
         type: 'system',
         isRead: Math.random() > 0.5,
-        sentAt: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000),
+        sentAt: new Date(Date.now() - Math.random() * 25 * 24 * 60 * 60 * 1000),
         actionUrl: '/books',
-        createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
         updatedAt: new Date(),
       });
 
@@ -108,11 +108,12 @@ export class NotificationSeed {
           image: randomFollower.image,
         },
         actionUrl: `/users/${randomFollower._id.toString()}`,
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
         updatedAt: new Date(),
       });
 
       // 3. Like notification — someone liked user's post
+      if (posts.length === 0) continue;
       const userPosts = posts.filter(
         (p) => p.userId && p.userId.toString() === user._id.toString(),
       );

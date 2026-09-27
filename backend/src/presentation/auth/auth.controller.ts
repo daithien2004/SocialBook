@@ -17,6 +17,7 @@ import type { Response } from 'express';
 
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
+import { LoginGuard } from './guards/login.guard';
 
 // Use Cases
 import { ForgotPasswordCommand } from '@/application/auth/use-cases/forgot-password/forgot-password.command';
@@ -83,7 +84,7 @@ export class AuthController {
 
   @Public()
   @Throttle({ global: { limit: 5 } })
-  @UseGuards(AuthGuard('local'))
+  @UseGuards(LoginGuard)
   @Post('login')
   async login(
     @Req() req: { user: User; ip: string; headers: Record<string, string> },
@@ -196,7 +197,12 @@ export class AuthController {
   @Post('refresh')
   async refresh(
     @Req()
-    req: { user: JwtPayload; cookies?: Record<string, string>; ip: string; headers: Record<string, string> },
+    req: {
+      user: JwtPayload;
+      cookies?: Record<string, string>;
+      ip: string;
+      headers: Record<string, string>;
+    },
     @Body() body: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<void>> {
@@ -207,10 +213,15 @@ export class AuthController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    
+
     const userAgent = req.headers['user-agent'] || 'unknown';
 
-    const command = new RefreshTokenCommand(req.user.sub, refreshToken, req.ip, userAgent);
+    const command = new RefreshTokenCommand(
+      req.user.sub,
+      refreshToken,
+      req.ip,
+      userAgent,
+    );
     const { accessToken, refreshToken: newRefreshToken } =
       await this.refreshTokenUseCase.execute(command);
 

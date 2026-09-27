@@ -47,6 +47,13 @@ export class PaginationQueryDto {
   @IsEnum(['asc', 'desc'])
   order: 'asc' | 'desc' = 'desc';
 
+  @ApiPropertyOptional({
+    description: 'Con trỏ trang kế tiếp (pagination dạng cursor)',
+  })
+  @IsOptional()
+  @IsString()
+  cursor?: string;
+
   // Getter helpers
   get actualPage(): number {
     return this.page ?? this.current ?? 1;

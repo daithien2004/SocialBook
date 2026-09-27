@@ -15,6 +15,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
 import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ChromaProcessor } from './processors/chroma.processor';
+import { isWorkerProcess } from '@/common/utils/process-role.util';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { ChromaProcessor } from './processors/chroma.processor';
     }),
   ],
   providers: [
-    ChromaProcessor,
+    ...(isWorkerProcess() ? [ChromaProcessor] : []),
     GetCollectionStatsUseCase,
     ClearCollectionUseCase,
     BatchIndexUseCase,

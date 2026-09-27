@@ -70,20 +70,34 @@ export class AudioWorker extends WorkerHost {
         'processing',
       );
 
-      this.logger.log(
-        `Generating audio for chapter ${payload.chapterId} using voice ${payload.voice}`,
-      );
+      const existingAudioUrl = ttsRecord.audioUrl;
+      let audioUrl: string;
+      let duration: number | undefined;
 
-      // 3. Generate Audio
-      const { audioUrl, duration } = await this.ttsProvider.generateAudio(
-        payload.text,
-        {
+      if (existingAudioUrl) {
+        audioUrl = existingAudioUrl;
+        duration = ttsRecord.audioDuration;
+        this.logger.warn(
+          `Audio already generated for chapter ${payload.chapterId}, resuming finalization without re-billing the provider.`,
+        );
+      } else {
+        this.logger.log(
+          `Generating audio for chapter ${payload.chapterId} using voice ${payload.voice}`,
+        );
+
+        const generated = await this.ttsProvider.generateAudio(payload.text, {
           voice: payload.voice,
           language: payload.language,
           speed: payload.speed,
           format: payload.format,
-        },
-      );
+        });
+
+        audioUrl = generated.audioUrl;
+        duration = generated.duration;
+
+        ttsRecord.markGenerated(audioUrl, payload.format, duration);
+        await this.ttsRepository.save(ttsRecord);
+      }
 
       // 4. Update Success
       ttsRecord.complete(audioUrl, payload.format, duration);

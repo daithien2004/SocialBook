@@ -56,7 +56,11 @@ export abstract class BaseMongoRepository<
   protected async baseSoftDelete(id: TId): Promise<void> {
     await this.model
       .findByIdAndUpdate(id.toString(), {
-        $set: { isDeleted: true, updatedAt: new Date() },
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        },
       })
       .exec();
   }

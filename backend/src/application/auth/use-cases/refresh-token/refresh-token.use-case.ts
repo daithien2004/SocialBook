@@ -80,9 +80,9 @@ export class RefreshTokenUseCase {
       const rotatedAt = user.refreshRotatedAt;
       const withinGrace =
         !!rotatedAt && Date.now() - rotatedAt.getTime() <= this.GRACE_MS;
-        
-      const isSameContext = 
-        user.lastLoginIp === command.ip && 
+
+      const isSameContext =
+        user.lastLoginIp === command.ip &&
         user.lastLoginUa === command.userAgent;
 
       if (prevMatches && withinGrace && isSameContext) {

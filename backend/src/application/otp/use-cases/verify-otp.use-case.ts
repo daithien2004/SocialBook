@@ -25,7 +25,8 @@ export class VerifyOtpUseCase {
       }
 
       if (otp.code !== inputOtp) {
-        const attempts = await this.otpRepository.incrementVerifyAttempts(email);
+        const attempts =
+          await this.otpRepository.incrementVerifyAttempts(email);
         if (attempts >= this.MAX_VERIFY_ATTEMPTS) {
           await this.otpRepository.deleteByEmail(email);
           await this.otpRepository.clearVerifyAttempts(email);

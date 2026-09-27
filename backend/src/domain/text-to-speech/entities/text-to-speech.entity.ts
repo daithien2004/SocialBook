@@ -183,11 +183,23 @@ export class TextToSpeech extends Entity<string> {
     return this._props.provider;
   }
 
+  public markGenerated(
+    audioUrl: string,
+    format: string,
+    duration?: number,
+  ): void {
+    this._props.audioUrl = audioUrl;
+    this._props.audioFormat = format;
+    this._props.audioDuration = duration;
+    this.markAsUpdated();
+  }
+
   public complete(audioUrl: string, format: string, duration?: number): void {
     this._props.status = TTSStatus.COMPLETED;
     this._props.audioUrl = audioUrl;
     this._props.audioFormat = format;
     this._props.audioDuration = duration;
+    this._props.errorMessage = undefined;
     this._props.processedAt = new Date();
     this.markAsUpdated();
   }

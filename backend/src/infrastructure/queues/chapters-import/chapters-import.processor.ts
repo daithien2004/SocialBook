@@ -95,11 +95,14 @@ export class ChaptersImportProcessor extends WorkerHost {
       }
 
       try {
-        await this.chapterCreationQueue.add(CREATE_SINGLE_CHAPTER_JOB, {
-          bookId,
-          title: title || `Chapter ${i + 1}`,
-          paragraphs,
-        });
+        await this.chapterCreationQueue.add(
+          CREATE_SINGLE_CHAPTER_JOB,
+          {
+            bookId,
+            title: title || `Chapter ${i + 1}`,
+            paragraphs,
+          },
+        );
         successful++;
       } catch (error: unknown) {
         failed++;

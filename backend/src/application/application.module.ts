@@ -24,6 +24,7 @@ import { AIApplicationModule } from './ai/ai-application.module';
 import { RecommendationsApplicationModule } from './recommendations/recommendations-application.module';
 import { AnalyticsApplicationModule } from './analytics/analytics-application.module';
 import { ReadingRoomInteractionsApplicationModule } from './reading-room-interactions/reading-room-interactions-application.module';
+import { PostModerationApplicationModule } from './posts/post-moderation.application.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ReadingRoomInteractionsApplicationModule } from './reading-room-interac
     RecommendationsApplicationModule,
     AnalyticsApplicationModule,
     ReadingRoomInteractionsApplicationModule,
+    PostModerationApplicationModule,
   ],
   exports: [
     UsersApplicationModule,
@@ -79,6 +81,7 @@ import { ReadingRoomInteractionsApplicationModule } from './reading-room-interac
     RecommendationsApplicationModule,
     AnalyticsApplicationModule,
     ReadingRoomInteractionsApplicationModule,
+    PostModerationApplicationModule,
   ],
 })
 export class ApplicationModule {}

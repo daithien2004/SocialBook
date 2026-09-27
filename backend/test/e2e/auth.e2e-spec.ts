@@ -8,7 +8,11 @@ import {
 } from '@nestjs/common';
 import request from 'supertest';
 import { ConfigModule } from '@nestjs/config';
-import { PassportModule } from '@nestjs/passport';
+import { AuthGuard, PassportModule } from '@nestjs/passport';
+import { APP_FILTER } from '@nestjs/core';
+import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
+import { AuthCookieService } from '@/application/auth/services/auth-cookie.service';
+import { LoginGuard } from '@/presentation/auth/guards/login.guard';
 import { Reflector } from '@nestjs/core';
 
 import { AuthController } from '@/presentation/auth/auth.controller';
@@ -22,8 +26,6 @@ import { ForgotPasswordUseCase } from '@/application/auth/use-cases/forgot-passw
 import { ResetPasswordUseCase } from '@/application/auth/use-cases/reset-password/reset-password.use-case';
 import { VerifyOtpUseCase } from '@/application/auth/use-cases/verify-otp/verify-otp.use-case';
 import { ResendOtpUseCase } from '@/application/auth/use-cases/resend-otp/resend-otp.use-case';
-import { LocalAuthGuard } from '@/common/guards/local-auth.guard';
-import { JwtRefreshAuthGuard } from '@/common/guards/jwt-refresh-auth.guard';
 
 @Injectable()
 class MockGuard implements CanActivate {
@@ -59,6 +61,9 @@ describe('Auth API (E2E)', () => {
       controllers: [AuthController],
       providers: [
         Reflector,
+        AuthCookieService,
+        LoginGuard,
+        { provide: APP_FILTER, useClass: HttpExceptionFilter },
         {
           provide: 'CACHE_SERVICE',
           useValue: {
@@ -76,11 +81,22 @@ describe('Auth API (E2E)', () => {
         { provide: ResetPasswordUseCase, useValue: { execute: mockExecute } },
         { provide: VerifyOtpUseCase, useValue: { execute: mockExecute } },
         { provide: ResendOtpUseCase, useValue: { execute: mockExecute } },
+        {
+          provide: IUserRepository,
+          useValue: {
+            findById: jest.fn().mockResolvedValue(null),
+            findByEmail: jest.fn().mockResolvedValue(null),
+            findByUsername: jest.fn().mockResolvedValue(null),
+            existsByEmail: jest.fn().mockResolvedValue(false),
+            existsByUsername: jest.fn().mockResolvedValue(false),
+            existsById: jest.fn().mockResolvedValue(false),
+            save: jest.fn().mockResolvedValue(undefined),
+            delete: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     })
-      .overrideGuard(LocalAuthGuard)
-      .useClass(MockGuard)
-      .overrideGuard(JwtRefreshAuthGuard)
+      .overrideGuard(AuthGuard('jwt-refresh'))
       .useClass(MockGuard)
       .compile();
 
@@ -94,7 +110,6 @@ describe('Auth API (E2E)', () => {
     );
     app.setGlobalPrefix('api');
     app.useGlobalInterceptors(new TransformInterceptor());
-    app.useGlobalFilters(new HttpExceptionFilter());
     await app.init();
   });
 

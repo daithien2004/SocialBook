@@ -14,6 +14,11 @@ export default registerAs('env', () => ({
   REDIS_PORT: parseInt(process.env.REDIS_PORT ?? '', 10) || 6379,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || '',
 
+  // Redis dành riêng cho BullMQ — tách khỏi Redis cache
+  BULL_REDIS_HOST: process.env.BULL_REDIS_HOST || 'localhost',
+  BULL_REDIS_PORT: parseInt(process.env.BULL_REDIS_PORT ?? '', 10) || 6379,
+  BULL_REDIS_PASSWORD: process.env.BULL_REDIS_PASSWORD || '',
+
   // JWT
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,

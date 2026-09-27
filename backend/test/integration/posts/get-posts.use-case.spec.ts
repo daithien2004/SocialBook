@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseModule, getModelToken } from '@nestjs/mongoose';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { Model, Types } from 'mongoose';
 import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
 import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
@@ -25,23 +27,46 @@ import {
   Role,
   RoleSchema,
 } from '@/infrastructure/database/schemas/role.schema';
+import {
+  Comment,
+  CommentSchema,
+} from '@/infrastructure/database/schemas/comment.schema';
+import {
+  Like,
+  LikeSchema,
+} from '@/infrastructure/database/schemas/like.schema';
 
-const MONGO_URI = 'mongodb://localhost:27017/socialbook?authSource=admin';
+const ROLE_ID = new Types.ObjectId();
+const AUTHOR_ID = new Types.ObjectId();
 
-describe('GetPostsUseCase (Integration - Real DB)', () => {
+/** Số bài KHÔNG bị xoá mềm — dùng để khẳng định soft-delete thật sự bị lọc. */
+const VISIBLE_POST_COUNT = 4;
+
+describe('GetPostsUseCase (Integration)', () => {
   let module: TestingModule;
   let useCase: GetPostsUseCase;
+  let mongod: MongoMemoryReplSet;
+  let postModel: Model<Post>;
+  let userModel: Model<User>;
+  let roleModel: Model<Role>;
 
   beforeAll(async () => {
+    // Replica set chứ không phải standalone: transaction không chạy trên
+    // standalone (xem A6).
+    mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
+
     module = await Test.createTestingModule({
       imports: [
-        MongooseModule.forRoot(MONGO_URI),
+        MongooseModule.forRoot(mongod.getUri()),
         MongooseModule.forFeature([
           { name: Post.name, schema: PostSchema },
           { name: User.name, schema: UserSchema },
           { name: Book.name, schema: BookSchema },
           { name: Author.name, schema: AuthorSchema },
           { name: Role.name, schema: RoleSchema },
+          // PostRepository inject 'Comment'/'Like' bằng string token.
+          { name: Comment.name, schema: CommentSchema },
+          { name: Like.name, schema: LikeSchema },
         ]),
       ],
       providers: [
@@ -54,40 +79,67 @@ describe('GetPostsUseCase (Integration - Real DB)', () => {
     }).compile();
 
     useCase = module.get<GetPostsUseCase>(GetPostsUseCase);
-  });
+    postModel = module.get<Model<Post>>(getModelToken(Post.name));
+    userModel = module.get<Model<User>>(getModelToken(User.name));
+    roleModel = module.get<Model<Role>>(getModelToken(Role.name));
+
+    // Seed tối thiểu: không có dữ liệu thì mọi assertion bên dưới đều đúng một
+    // cách vô nghĩa (mảng rỗng) — test xanh mà không kiểm tra gì cả.
+    await roleModel.create({ _id: ROLE_ID, name: 'user' });
+    await userModel.create({
+      _id: AUTHOR_ID,
+      roleId: ROLE_ID,
+      username: 'post_author',
+      email: 'post_author@example.com',
+    });
+
+    for (let i = 0; i < VISIBLE_POST_COUNT; i++) {
+      await postModel.create({
+        userId: AUTHOR_ID,
+        content: `Bài viết số ${i}`,
+      });
+    }
+
+    // Tạo sau cùng để bài xoá mềm không nằm ở đầu danh sách.
+    await postModel.create({
+      userId: AUTHOR_ID,
+      content: 'Bài viết đã bị xoá mềm',
+      isDeleted: true,
+    });
+  }, 60_000);
 
   afterAll(async () => {
-    await module.close();
+    await module?.close();
+    await mongod?.stop();
   });
 
   it('should retrieve correctly mapped PostEntities with populated author', async () => {
-    const result = await useCase.execute(new GetPostsQuery(1));
+    const result = await useCase.execute(new GetPostsQuery(50));
 
-    expect(result).toHaveProperty('data');
-    expect(result).toHaveProperty('nextCursor');
-    expect(result).toHaveProperty('hasMore');
+    expect(result.data.length).toBe(VISIBLE_POST_COUNT);
 
-    if (result.data.length > 0) {
-      const post = result.data[0];
+    const post = result.data[0];
 
-      expect(post).toBeInstanceOf(PostEntity);
-      expect(post.id).toBeDefined();
-      expect(typeof post.id).toBe('string');
-      expect(post.author).toBeDefined();
-      expect(post.author?.username).toBeDefined();
-    }
+    expect(post).toBeInstanceOf(PostEntity);
+    expect(post.id).toBeDefined();
+    expect(typeof post.id).toBe('string');
+    expect(post.author).toBeDefined();
+    expect(post.author?.username).toBe('post_author');
   });
 
   it('should NOT include soft-deleted posts', async () => {
     const result = await useCase.execute(new GetPostsQuery(50));
 
+    expect(result.data.length).toBe(VISIBLE_POST_COUNT);
     result.data.forEach((post) => {
       expect(post.isDeleted).toBe(false);
     });
   });
 
   it('should sort posts by createdAt descending', async () => {
-    const result = await useCase.execute(new GetPostsQuery(10));
+    const result = await useCase.execute(new GetPostsQuery(50));
+
+    expect(result.data.length).toBeGreaterThan(1);
 
     for (let i = 0; i < result.data.length - 1; i++) {
       expect(result.data[i].createdAt.getTime()).toBeGreaterThanOrEqual(
@@ -99,16 +151,21 @@ describe('GetPostsUseCase (Integration - Real DB)', () => {
   it('should calculate pagination correctly across pages', async () => {
     const limit = 2;
     const page1 = await useCase.execute(new GetPostsQuery(limit));
-    const page2 = page1.nextCursor
-      ? await useCase.execute(new GetPostsQuery(limit, page1.nextCursor))
-      : null;
 
-    expect(page1.data.length).toBeLessThanOrEqual(limit);
+    expect(page1.data).toHaveLength(limit);
+    expect(page1.hasMore).toBe(true);
+    // `not.toBeNull` chứ không phải `toBeDefined`: null cũng "defined", mà cursor
+    // null thì trang 2 quay lại từ đầu và test bên dưới vẫn xanh vô nghĩa.
+    expect(page1.nextCursor).not.toBeNull();
 
-    if (page1.data.length === limit && page2 && page2.data.length > 0) {
-      const page1Ids = page1.data.map((p) => p.id);
-      const overlap = page2.data.filter((p) => page1Ids.includes(p.id));
-      expect(overlap).toHaveLength(0);
-    }
+    const page2 = await useCase.execute(
+      new GetPostsQuery(limit, page1.nextCursor ?? undefined),
+    );
+
+    expect(page2.data.length).toBeGreaterThan(0);
+
+    const page1Ids = page1.data.map((p) => p.id);
+    const overlap = page2.data.filter((p) => page1Ids.includes(p.id));
+    expect(overlap).toHaveLength(0);
   });
 });

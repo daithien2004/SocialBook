@@ -91,7 +91,7 @@ export class PostsController {
   @Get()
   async findAll(
     @CurrentUser('id') userId: string,
-    @Query() query: PaginationQueryDto & { cursor?: string },
+    @Query() query: PaginationQueryDto,
   ) {
     const limit = Math.min(query.actualLimit || 10, 100);
     const postsQuery = new GetPostsQuery(limit, query.cursor, userId);
@@ -111,7 +111,7 @@ export class PostsController {
   @Get('user')
   async findAllByUser(
     @CurrentUser('id') currentUserId: string,
-    @Query() query: PaginationUserDto & { cursor?: string },
+    @Query() query: PaginationUserDto,
   ) {
     const limit = Math.min(query.actualLimit || 10, 100);
     const postsQuery = new GetPostsByUserQuery(

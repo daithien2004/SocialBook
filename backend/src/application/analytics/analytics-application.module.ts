@@ -14,6 +14,7 @@ import { BookAnalyticsListener } from './listeners/book-analytics.listener';
 import { TtsAnalyticsListener } from './listeners/tts-analytics.listener';
 import { TextToSpeechRepositoryModule } from '@/infrastructure/database/repositories/text-to-speech/text-to-speech-repository.module';
 import { TargetResolutionModule } from '@/application/target-resolution/target-resolution.module';
+import { isWorkerProcess } from '@/common/utils/process-role.util';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { TargetResolutionModule } from '@/application/target-resolution/target-r
     }),
   ],
   providers: [
-    AnalyticsProcessor,
+    ...(isWorkerProcess() ? [AnalyticsProcessor] : []),
     TrackUserEventUseCase,
     GetTrendingBooksUseCase,
     GetTopActiveReadersUseCase,

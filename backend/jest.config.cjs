@@ -80,6 +80,9 @@ const config = {
     collectCoverageFrom: [
         'src/**/*.(t|j)s',
         '!src/main.ts',
+        // Entry point của worker: bootstrap, không có nhánh nào để test.
+        '!src/worker.ts',
+        '!src/worker-mode.ts',
         '!src/**/*.module.ts',
         '!src/**/*.dto.ts',
         '!src/**/index.ts',

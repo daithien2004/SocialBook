@@ -20,7 +20,10 @@ COPY backend/tsconfig*.json ./backend/
 COPY backend/nest-cli.json ./backend/
 
 WORKDIR /app/backend
-RUN npm run build
+# Assert luôn entry point của worker: thiếu file này thì container `worker`
+# crashloop và toàn bộ job nặng (TTS trả phí, import chương, chroma, moderation)
+# ngừng được tiêu thụ — mà deploy vẫn báo thành công. Fail ở build time.
+RUN npm run build && test -f dist/worker.js
 
 FROM node:20-alpine
 WORKDIR /app

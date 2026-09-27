@@ -20,17 +20,21 @@ export class HealthController {
   @Get('liveness')
   @HealthCheck()
   checkLiveness() {
-    return this.health.check([
-      () => this.mongoose.pingCheck('mongodb'),
-    ]);
+    return this.health.check([() => this.mongoose.pingCheck('mongodb')]);
   }
 
   @Get('readiness')
   @HealthCheck()
   checkReadiness() {
-    const redisHost = this.configService.get<string>('env.REDIS_HOST', 'localhost');
+    const redisHost = this.configService.get<string>(
+      'env.REDIS_HOST',
+      'localhost',
+    );
     const redisPort = this.configService.get<number>('env.REDIS_PORT', 6379);
-    const redisPassword = this.configService.get<string>('env.REDIS_PASSWORD', '');
+    const redisPassword = this.configService.get<string>(
+      'env.REDIS_PASSWORD',
+      '',
+    );
 
     return this.health.check([
       () => this.mongoose.pingCheck('mongodb'),

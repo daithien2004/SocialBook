@@ -7,6 +7,7 @@ import {
 } from './chapters-import.processor';
 import { ChaptersImportAdapter } from './chapters-import.adapter';
 import { CREATE_SINGLE_CHAPTER_QUEUE } from '@/application/chapters/processors/single-chapter.processor';
+import { isWorkerProcess } from '@/common/utils/process-role.util';
 
 @Module({
   imports: [
@@ -15,10 +16,16 @@ import { CREATE_SINGLE_CHAPTER_QUEUE } from '@/application/chapters/processors/s
     }),
     BullModule.registerQueue({
       name: CREATE_SINGLE_CHAPTER_QUEUE,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+        removeOnComplete: true,
+        removeOnFail: 100,
+      },
     }),
   ],
   providers: [
-    ChaptersImportProcessor,
+    ...(isWorkerProcess() ? [ChaptersImportProcessor] : []),
     {
       provide: IChaptersImportPort,
       useClass: ChaptersImportAdapter,

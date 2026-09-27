@@ -6,10 +6,18 @@ x-backend-common: &backend-common
     - '5000'
   env_file:
     - backend.env
+  environment:
+    BULL_REDIS_HOST: redis-queue
+    BULL_REDIS_PORT: '6379'
+    # A7: `environment` thắng `env_file`, nên API replica miễn nhiễm với một
+    # WORKER_MODE lạc trong backend.env. Service worker override lại thành 'true'.
+    WORKER_MODE: 'false'
   depends_on:
-    mongo:
-      condition: service_started
+    mongo-init-replica:
+      condition: service_completed_successfully
     redis:
+      condition: service_started
+    redis-queue:
       condition: service_started
     chroma:
       condition: service_started
@@ -38,6 +46,20 @@ services:
     <<: *backend-common
     container_name: socialbook-backend2
 
+  # Worker: cùng image với API, chỉ khác entry point (backend/dist/worker.js).
+  # Chạy ĐÚNG 1 replica để các job nặng (TTS trả phí, import chương, chroma,
+  # analytics, moderation) không tăng theo số replica API và không tranh CPU
+  # với event loop phục vụ request.
+  worker:
+    <<: *backend-common
+    container_name: socialbook-worker
+    command: ['node', 'backend/dist/worker.js']
+    environment:
+      WORKER_MODE: 'true'
+    # Mặc định compose là 10s. Một call TTS trả phí có thể chạy vài phút; bị
+    # SIGKILL giữa chừng thì job bỏ dở và lần retry sẽ tính tiền lại.
+    stop_grace_period: 5m
+
   frontend:
     image: daithien/socialbook-fe:dev
     container_name: socialbook-frontend
@@ -57,8 +79,42 @@ services:
       - '27017:27017'
     volumes:
       - mongo_data:/data/db
+      - mongo_keyfile:/data/keyfile
+      - ./mongo/docker-entrypoint.sh:/usr/local/bin/with-keyfile.sh:ro
     env_file:
       - mongo.env
+    entrypoint:
+      - bash
+      - /usr/local/bin/with-keyfile.sh
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/data/keyfile/keyfile"]
+
+  mongo-init-replica:
+    image: mongo:7
+    container_name: socialbook-mongo-init
+    restart: "no"
+    env_file:
+      - mongo.env
+    depends_on:
+      mongo:
+        condition: service_started
+    entrypoint:
+      - bash
+      - -c
+      - |
+        URI="mongodb://mongo:27017/?authSource=admin"
+        until mongosh "$$URI" --username "$$MONGO_INITDB_ROOT_USERNAME" --password "$$MONGO_INITDB_ROOT_PASSWORD" --quiet --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+          echo "waiting for mongo to accept connections..."
+          sleep 2
+        done
+        mongosh "$$URI" --username "$$MONGO_INITDB_ROOT_USERNAME" --password "$$MONGO_INITDB_ROOT_PASSWORD" --quiet --eval "
+          try {
+            rs.status();
+            print('replica set already initiated');
+          } catch (e) {
+            rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]});
+            print('replica set initiated');
+          }
+        "
 
 
   redis:
@@ -70,6 +126,21 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --save 60 1 --loglevel warning
+
+  redis-queue:
+    image: redis:7-alpine
+    container_name: socialbook-redis-queue
+    restart: unless-stopped
+    expose:
+      - '6379'
+    volumes:
+      - redis_queue_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory-policy noeviction
+      --loglevel warning
 
   chroma:
     image: chromadb/chroma:latest
@@ -87,5 +158,7 @@ services:
 
 volumes:
   mongo_data:
+  mongo_keyfile:
   redis_data:
+  redis_queue_data:
   chroma_data:

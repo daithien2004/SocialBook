@@ -9,8 +9,19 @@ import { AppModule } from './app.module';
 import { RedisIoAdapter } from './presentation/gateways/redis-io.adapter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { configSwagger } from './config/swagger.config';
+import { isWorkerProcess } from './common/utils/process-role.util';
 
 async function bootstrap() {
+  // A7: entry point của API không bao giờ được chạy ở worker mode. Nếu không có
+  // chốt này, một biến WORKER_MODE lạc trong env dùng chung sẽ biến mọi replica
+  // API thành worker: mất NotificationWorker (realtime chết im lặng) và đăng ký
+  // trùng các consumer trả phí. Ở đây nó nổ to thay vì hỏng âm thầm.
+  if (isWorkerProcess()) {
+    throw new Error(
+      'main.ts (API entry) must not run with WORKER_MODE=true — use dist/worker.js',
+    );
+  }
+
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });

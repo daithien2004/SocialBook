@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { envConfig } from '@/config';
 import {
   User,
   UserSchema,
@@ -87,6 +88,7 @@ import { ReadingRoomsSeed } from './reading-rooms.seeder';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [envConfig],
       envFilePath: '.env',
     }),
     MongooseModule.forRootAsync({

@@ -19,11 +19,11 @@ export class TokenService {
   }
 
   async signTokens(
-    userId: string, 
-    email: string, 
-    role: string, 
-    ip?: string, 
-    userAgent?: string
+    userId: string,
+    email: string,
+    role: string,
+    ip?: string,
+    userAgent?: string,
   ) {
     const payload = { sub: userId, email, role };
 

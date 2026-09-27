@@ -18,6 +18,7 @@ import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
+import { isWorkerProcess } from '@/common/utils/process-role.util';
 
 @Module({
   imports: [
@@ -44,8 +45,8 @@ import { UsersRepositoryModule } from '@/infrastructure/database/repositories/us
   providers: [
     NotificationsGateway,
     NotificationsService,
-    NotificationWorker,
-    AudioWorker,
+    ...(!isWorkerProcess() ? [NotificationWorker] : []),
+    ...(isWorkerProcess() ? [AudioWorker] : []),
     ReadingRoomGateway,
   ],
   exports: [NotificationsService],

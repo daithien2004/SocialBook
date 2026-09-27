@@ -12,6 +12,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import Redis from 'ioredis';
 import { BullModule } from '@nestjs/bullmq';
+import { ScheduleModule } from '@nestjs/schedule';
+import { isWorkerProcess } from '@/common/utils/process-role.util';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config';
@@ -87,10 +89,11 @@ import { PresentationModule } from './presentation/presentation.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         connection: {
-          host: configService.get<string>('env.REDIS_HOST', 'localhost'),
-          port: configService.get<number>('env.REDIS_PORT', 6379),
-          password: configService.get<string>('env.REDIS_PASSWORD'),
+          host: configService.get<string>('env.BULL_REDIS_HOST', 'localhost'),
+          port: configService.get<number>('env.BULL_REDIS_PORT', 6379),
+          password: configService.get<string>('env.BULL_REDIS_PASSWORD'),
           db: 1,
+          maxRetriesPerRequest: null,
         },
       }),
     }),
@@ -108,6 +111,9 @@ import { PresentationModule } from './presentation/presentation.module';
       }),
     }),
     EventEmitterModule.forRoot(),
+    // A8: cron chỉ chạy ở tiến trình worker (đúng 1 replica). Nếu đăng ký ở mọi
+    // replica API thì mỗi @Cron sẽ bắn N lần — đối soát đơn hàng sẽ chạy trùng.
+    ...(isWorkerProcess() ? [ScheduleModule.forRoot()] : []),
     LoggerModule,
     // Clean Architecture - 3 layers
     InfrastructureModule,

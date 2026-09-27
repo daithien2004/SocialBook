@@ -26,7 +26,7 @@ This is an npm-workspace monorepo (`"workspaces": ["backend", "frontend", "share
 
 ```bash
 npm run build:shared --workspace shared   # Build shared/ (required before backend/frontend) 
-npm run dev                                # Runs backend + frontend together via concurrently
+npm run dev                                # API + worker + frontend, together via concurrently
 ```
 
 `frontend` and `backend` import the shared package as `@socialbook/shared` (prebuilt to `shared/dist`). After changing `shared/`, rebuild it (`npm run build:shared`) and restart the consumer.
@@ -42,7 +42,8 @@ docker-compose up -d  # Start Redis, MongoDB, ChromaDB, Nginx
 ```bash
 cd backend
 npm install
-npm run start:dev
+npm run start:dev      # API only — BullMQ consumers will NOT run
+npm run start:worker   # Worker only (dist/worker.js) — consumes BullMQ jobs, no HTTP port
 
 # Build & lint
 npm run build && npm run lint
@@ -91,6 +92,23 @@ backend/src/
 ├── presentation/      # Delivery Mechanism (REST Controllers, WebSocket Gateways)
 └── shared/            # Cross-cutting Concerns (Logger, Base Classes, Decorators)
 ```
+
+### Two Processes, One Image
+
+The API (`main.ts` → `dist/main.js`) and the worker (`worker.ts` → `dist/worker.js`) share
+one Docker image and differ only by entry point. `WORKER_MODE=true` decides which BullMQ
+consumers get registered:
+
+- **Worker only** — expensive/isolated jobs: TTS (paid per call), chapter import, chroma, analytics, moderation.
+- **API only** — `NotificationWorker`, because realtime push needs the Socket.IO server
+  (`NotificationsGateway.afterInit` → `setServer`). Moving it to the worker still writes to the
+  DB but silently drops the push.
+- `@Cron` jobs run in the worker too, so a schedule fires once rather than once per API replica.
+
+The gate lives in `src/common/utils/process-role.util.ts` (`isWorkerProcess()`), and the modules
+that use it are pinned by `test/unit/module-graph/process-role.spec.ts` — **a new `@Processor`
+that isn't listed there fails that test**, which is deliberate. `main.ts` throws if started with
+`WORKER_MODE=true`; `npm run dev` starts both processes.
 
 ### Domain Modules (29 bounded contexts)
 `ai`, `analytics`, `auth`, `authors`, `bookmarks`, `books`, `chapters`, `chroma`, `cloudinary`, `comments`, `content-moderation`, `follows`, `genres`, `library`, `likes`, `notifications`, `posts`, `progress`, `reading-room-interactions`, `reading-rooms`, `recommendations`, `reviews`, `roles`, `scraper`, `search`, `statistics`, `text-to-speech`, `user-highlights`, `users`

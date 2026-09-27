@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import { Model } from 'mongoose';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import { Model, Types } from 'mongoose';
 import { BookRepository } from '@/infrastructure/database/repositories/books/book.repository';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import {
@@ -24,16 +24,25 @@ import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 
+const AUTHOR_ID = new Types.ObjectId();
+const GENRE_1_ID = new Types.ObjectId();
+const GENRE_2_ID = new Types.ObjectId();
+const BOOK_1_ID = new Types.ObjectId();
+const BOOK_2_ID = new Types.ObjectId();
+const BOOK_3_ID = new Types.ObjectId();
+const USER_1_ID = new Types.ObjectId();
+const USER_2_ID = new Types.ObjectId();
+
 describe('BookRepository (Integration)', () => {
   let module: TestingModule;
   let bookRepository: IBookRepository;
-  let mongod: MongoMemoryServer;
+  let mongod: MongoMemoryReplSet;
   let bookModel: Model<any>;
   let genreModel: Model<any>;
   let authorModel: Model<any>;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
+    mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     const uri = mongod.getUri();
 
     module = await Test.createTestingModule({
@@ -62,25 +71,25 @@ describe('BookRepository (Integration)', () => {
 
     // Seed data
     const author = await authorModel.create({
-      _id: 'author-1',
+      _id: AUTHOR_ID,
       name: 'Dale Carnegie',
       slug: 'dale-carnegie',
     });
 
     const genreDoc = await genreModel.create({
-      _id: 'genre-1',
+      _id: GENRE_1_ID,
       name: 'Self-help',
       slug: 'self-help',
     });
     const genreDoc2 = await genreModel.create({
-      _id: 'genre-2',
+      _id: GENRE_2_ID,
       name: 'Fiction',
       slug: 'fiction',
     });
 
     await bookModel.create([
       {
-        _id: 'book-1',
+        _id: BOOK_1_ID,
         title: 'Đắc Nhân Tâm',
         slug: 'dac-nhan-tam',
         authorId: author._id,
@@ -92,11 +101,11 @@ describe('BookRepository (Integration)', () => {
         tags: ['self-help', 'communication'],
         views: 100,
         likes: 20,
-        likedBy: ['user-1'],
+        likedBy: [USER_1_ID],
         isDeleted: false,
       },
       {
-        _id: 'book-2',
+        _id: BOOK_2_ID,
         title: 'Nhà Giả Kim',
         slug: 'nha-gia-kim',
         authorId: author._id,
@@ -108,11 +117,11 @@ describe('BookRepository (Integration)', () => {
         tags: ['fiction', 'philosophy'],
         views: 200,
         likes: 50,
-        likedBy: ['user-1', 'user-2'],
+        likedBy: [USER_1_ID, USER_2_ID],
         isDeleted: false,
       },
       {
-        _id: 'book-3',
+        _id: BOOK_3_ID,
         title: 'Deleted Book',
         slug: 'deleted-book',
         authorId: author._id,
@@ -153,7 +162,7 @@ describe('BookRepository (Integration)', () => {
     it('should return false when excluding the only match', async () => {
       const result = await bookRepository.existsByTitle(
         BookTitle.create('Đắc Nhân Tâm'),
-        BookId.create('book-1'),
+        BookId.create(BOOK_1_ID.toString()),
       );
       expect(result).toBe(false);
     });
@@ -161,14 +170,14 @@ describe('BookRepository (Integration)', () => {
 
   describe('softDelete', () => {
     it('should mark book as deleted', async () => {
-      await bookRepository.softDelete(BookId.create('book-2'));
+      await bookRepository.softDelete(BookId.create(BOOK_2_ID.toString()));
 
-      const deleted = await bookModel.findById('book-2');
+      const deleted = await bookModel.findById(BOOK_2_ID);
       expect(deleted.isDeleted).toBe(true);
       expect(deleted.deletedAt).toBeInstanceOf(Date);
 
       // Restore for other tests
-      await bookModel.findByIdAndUpdate('book-2', {
+      await bookModel.findByIdAndUpdate(BOOK_2_ID, {
         isDeleted: false,
         deletedAt: null,
       });
@@ -184,14 +193,14 @@ describe('BookRepository (Integration)', () => {
       );
 
       const deletedIds = result.data
-        .filter((b) => b.id.toString() === 'book-3')
+        .filter((b) => b.id.toString() === BOOK_3_ID.toString())
         .map((b) => b.id.toString());
-      expect(deletedIds).not.toContain('book-3');
+      expect(deletedIds).not.toContain(BOOK_3_ID.toString());
     });
 
     it('should filter by genre', async () => {
       const result = await bookRepository.findAll(
-        { genres: ['genre-1'] },
+        { genres: [GENRE_1_ID.toString()] },
         { page: 1, limit: 10 },
       );
 

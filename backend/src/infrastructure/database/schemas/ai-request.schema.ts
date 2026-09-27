@@ -14,7 +14,7 @@ export class AIRequest extends BaseSchema {
   @Prop({ type: String, default: null })
   response: string;
 
-  @Prop({ required: true, enum: AIRequestType })
+  @Prop({ required: true, type: String, enum: AIRequestType })
   type: AIRequestType;
 
   @Prop({ required: true })
