@@ -30,7 +30,7 @@ export function useModerationManagement() {
         })
     });
     const { data: stats } = useQuery({ ...moderationQueries.stats() });
-    const { openConfirm } = useModalStore();
+    const openConfirm = useModalStore(s => s.openConfirm);
     const { mutateAsync: approvePost, isPending: isApproving } = useApprovePost();
     const { mutateAsync: rejectPost, isPending: isRejecting } = useRejectPost();
     const { mutateAsync: bulkApprove, isPending: isBulkApproving } = useBulkApprovePosts();

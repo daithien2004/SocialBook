@@ -45,6 +45,9 @@ export class Book extends BaseSoftDeleteSchema {
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   likedBy: Types.ObjectId[];
+
+  @Prop({ type: Date, default: null })
+  vectorIndexedAt: Date | null;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);

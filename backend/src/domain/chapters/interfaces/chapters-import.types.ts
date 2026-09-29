@@ -5,7 +5,8 @@ export interface ImportChaptersChapterInput {
 
 export interface ImportChaptersJobData {
   bookId: string;
-  chapters: ImportChaptersChapterInput[];
+  chapters?: ImportChaptersChapterInput[];
+  redisKey?: string;
 }
 
 export interface ImportChaptersJobProgress {

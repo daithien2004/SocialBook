@@ -17,7 +17,8 @@ import { useModalStore } from "@/store/useModalStore";
 const EMPTY_FOLLOWERS: FollowingUser[] = [];
 
 export function FollowersModal() {
-    const { modals, closeFollowers } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closeFollowers = useModalStore(s => s.closeFollowers);
     const { isOpen: isFollowersOpen, data: followersData } = modals.followers;
     const userId = followersData?.userId || "";
 

@@ -9,9 +9,17 @@ x-backend-common: &backend-common
   environment:
     BULL_REDIS_HOST: redis-queue
     BULL_REDIS_PORT: '6379'
+    BULL_REDIS_PASSWORD: ${BULL_REDIS_PASSWORD}
+    REDIS_HOST: redis
+    REDIS_PORT: '6379'
+    REDIS_PASSWORD: ${REDIS_PASSWORD}
     # A7: `environment` thắng `env_file`, nên API replica miễn nhiễm với một
     # WORKER_MODE lạc trong backend.env. Service worker override lại thành 'true'.
     WORKER_MODE: 'false'
+  ulimits:
+    nofile:
+      soft: 65535
+      hard: 65535
   depends_on:
     mongo-init-replica:
       condition: service_completed_successfully
@@ -56,9 +64,21 @@ services:
     command: ['node', 'backend/dist/worker.js']
     environment:
       WORKER_MODE: 'true'
+    # init: true — dùng tini làm PID 1 thay cho Node.js.
+    # tini đảm bảo SIGTERM được chuyển tiếp đúng vào Node.js và zombie
+    # processes (từ native addons) được dọn sạch — Node.js không làm điều này.
+    init: true
     # Mặc định compose là 10s. Một call TTS trả phí có thể chạy vài phút; bị
     # SIGKILL giữa chừng thì job bỏ dở và lần retry sẽ tính tiền lại.
-    stop_grace_period: 5m
+    stop_grace_period: 330s
+    # Docker không biết Worker còn sống hay đã treo vì Worker không mở HTTP port.
+    # healthcheck.js ping redis-queue mỗi 30s để báo tình trạng.
+    healthcheck:
+      test: ['CMD', 'node', 'backend/healthcheck.js']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   frontend:
     image: daithien/socialbook-fe:dev
@@ -118,32 +138,51 @@ services:
 
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2.4-alpine
     container_name: socialbook-redis
     restart: unless-stopped
-    ports:
-      - '6379:6379'
+    # Dùng expose thay vì ports: cổng 6379 chỉ mở trong mạng nội bộ Docker,
+    # không bao giờ lộ ra internet (tránh kẻ tấn công gõ FLUSHALL từ xa).
+    expose:
+      - '6379'
     volumes:
       - redis_data:/data
-    command: redis-server --save 60 1 --loglevel warning
+    # mem_limit: buffer 50% so với maxmemory để COW fork khi RDB snapshot
+    # không bị Docker OOM-kill container giữa chừng.
+    mem_limit: 384m
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD}
 
   redis-queue:
-    image: redis:7-alpine
+    image: redis:7.2.4-alpine
     container_name: socialbook-redis-queue
     restart: unless-stopped
     expose:
       - '6379'
     volumes:
       - redis_queue_data:/data
+    # mem_limit: buffer 50% so với maxmemory để COW fork khi BGREWRITEAOF
+    # không bị Docker OOM-kill container giữa chừng.
+    mem_limit: 768m
     command: >
       redis-server
       --appendonly yes
       --appendfsync everysec
+      --auto-aof-rewrite-percentage 100
+      --auto-aof-rewrite-min-size 64mb
+      --aof-use-rdb-preamble yes
+      --maxmemory 512mb
       --maxmemory-policy noeviction
       --loglevel warning
+      --requirepass ${BULL_REDIS_PASSWORD}
 
   chroma:
-    image: chromadb/chroma:latest
+    image: chromadb/chroma:0.5.20
     container_name: socialbook-chroma
     restart: unless-stopped
     ports:

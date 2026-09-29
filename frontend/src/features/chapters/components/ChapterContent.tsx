@@ -65,7 +65,7 @@ export const ChapterContent = memo(function ChapterContent({
     bookTitle,
     onActiveParagraphChange,
 }: ChapterContentProps) {
-    const { settings } = useReadingSettings();
+    const settings = useReadingSettings(s => s.settings);
     const {
         activeParagraphId,
         commentDrawerOpen,

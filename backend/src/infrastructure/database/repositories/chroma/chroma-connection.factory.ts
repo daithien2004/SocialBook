@@ -18,7 +18,7 @@ export class ChromaConnectionFactory {
   getCollectionName(): string {
     return this.config.get<string>(
       'env.CHROMA_COLLECTION',
-      'socialbook_vectors_v2',
+      'socialbook_vectors_v3',
     );
   }
 

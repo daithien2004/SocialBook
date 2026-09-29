@@ -10,6 +10,7 @@ import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 import { ReactivateRoomCommand } from './reactivate-room.command';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class ReactivateRoomUseCase {
@@ -41,7 +42,7 @@ export class ReactivateRoomUseCase {
       'active',
     );
 
-    this.eventEmitter.emit('reading-room.reactivated', {
+    this.eventEmitter.emit(EventNames.READING_ROOM_REACTIVATED, {
       roomId: command.roomId,
       reactivatedBy: command.userId,
     });

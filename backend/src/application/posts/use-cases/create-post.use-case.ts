@@ -13,6 +13,7 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { CreatePostCommand } from './create-post.command';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
 import { IPostModerationPort } from '@/domain/posts/interfaces/post-moderation.port';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class CreatePostUseCase {
@@ -59,7 +60,7 @@ export class CreatePostUseCase {
 
     const createdPost = await this.postRepository.create(post);
 
-    this.eventEmitter.emit('post.created', {
+    this.eventEmitter.emit(EventNames.POST_CREATED, {
       postId: createdPost.id,
       userId: command.userId,
       bookId: command.bookId,

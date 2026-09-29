@@ -44,7 +44,7 @@ export function DesktopSidebar({
   onTransferHost,
 }: DesktopSidebarProps) {
   const router = useRouter();
-  const { openConfirm } = useModalStore();
+  const openConfirm = useModalStore(s => s.openConfirm);
 
   return (
     <TooltipProvider delayDuration={0}>

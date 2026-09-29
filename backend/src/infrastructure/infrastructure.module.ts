@@ -34,6 +34,7 @@ import { AnalyticsRepositoryModule } from './database/repositories/analytics/ana
 import { BookmarksRepositoryModule } from './database/repositories/bookmarks/bookmarks-repository.module';
 import { UserHighlightsRepositoryModule } from './database/repositories/user-highlights/user-highlights-repository.module';
 import { QueueModule } from './queue/queue.module';
+import { RealtimeInfrastructureModule } from './realtime/realtime-infrastructure.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { QueueModule } from './queue/queue.module';
     ChaptersImportModule,
     PostModerationQueueModule,
     QueueModule,
+    RealtimeInfrastructureModule,
   ],
   exports: [
     CacheInfrastructureModule,

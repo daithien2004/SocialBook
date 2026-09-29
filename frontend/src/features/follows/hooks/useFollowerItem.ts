@@ -21,7 +21,7 @@ export const useFollowerItem = ({
 }: UseFollowerItemOptions) => {
     const auth = useAppAuth();
     const router = useRouter();
-    const { closeFollowers } = useModalStore();
+    const closeFollowers = useModalStore(s => s.closeFollowers);
 
     const [isFollowing, setIsFollowing] = useState(isFollowedByCurrentUser);
 

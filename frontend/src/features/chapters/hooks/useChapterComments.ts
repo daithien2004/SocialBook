@@ -21,7 +21,7 @@ export function useChapterComments({ bookId, bookTitle }: UseChapterCommentsOpti
     const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
     const [activeParagraph, setActiveParagraph] = useState<Paragraph | null>(null);
 
-    const { openCreatePost } = useModalStore();
+    const openCreatePost = useModalStore(s => s.openCreatePost);
     const createPost = useCreatePost();
 
     const handleToggleComments = useCallback((paragraph: Paragraph) => {

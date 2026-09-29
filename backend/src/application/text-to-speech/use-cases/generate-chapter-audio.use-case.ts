@@ -106,7 +106,6 @@ export class GenerateChapterAudioUseCase {
         new GenerateAudioJobPayload(
           savedTTS.id,
           chapterId.toString(),
-          text,
           voice,
           language,
           speed,

@@ -10,7 +10,7 @@ import { memo } from "react";
 const FollowingItem = memo(function FollowingItem(props: FollowingUser) {
     const auth = useAppAuth();
     const router = useRouter();
-    const { closeFollowers } = useModalStore();
+    const closeFollowers = useModalStore(s => s.closeFollowers);
 
     return (
         <div

@@ -33,7 +33,7 @@ export default function LibraryClientSection() {
     LibraryStatus.READING
   );
   const { user, isAuthenticated, isLoading } = useAppAuth();
-  const { openCreateCollection } = useModalStore();
+  const openCreateCollection = useModalStore(s => s.openCreateCollection);
 
   const {
     data: libraryData,
@@ -314,7 +314,7 @@ function CollectionCard({ col }: { col: Collection }) {
   const router = useRouter();
   const { data: detail } = useQuery({ ...libraryQueries.collectionDetail(col.id) });
   const books = detail?.books || [];
-  const { openEditCollection } = useModalStore();
+  const openEditCollection = useModalStore(s => s.openEditCollection);
 
   const covers = books.slice(0, 3).map((b) => b.bookId.coverUrl);
 

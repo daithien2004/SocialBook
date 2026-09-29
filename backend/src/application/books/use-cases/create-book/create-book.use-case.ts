@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { EventNames } from '@/common/constants/event-names.constant';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
@@ -112,7 +113,7 @@ export class CreateBookUseCase {
     await this.bookCache.setDetail(book);
 
     // Emit event để ChromaDB listener (và các listener khác) bắt và xử lý
-    this.eventEmitter.emit('book.created', { bookId: book.id.toString() });
+    this.eventEmitter.emit(EventNames.BOOK_CREATED, { bookId: book.id.toString() });
 
     return book;
   }

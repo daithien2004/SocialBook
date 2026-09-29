@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 import { Loader2, Lock, Globe } from 'lucide-react';
 
 export default function EditCollectionModal() {
-  const { modals, closeEditCollection } = useModalStore();
+  const modals = useModalStore(s => s.modals);
+  const closeEditCollection = useModalStore(s => s.closeEditCollection);
   const { isOpen: isEditCollectionOpen, data: editCollectionData } = modals.editCollection;
   const [name, setName] = useState(editCollectionData?.currentName || '');
   const [isPublic, setIsPublic] = useState(editCollectionData?.currentIsPublic ?? false);

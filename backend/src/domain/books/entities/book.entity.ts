@@ -23,6 +23,7 @@ export interface BookProps {
   authorName?: string;
   author?: { id: string; name: string };
   chapterCount?: number;
+  vectorIndexedAt?: Date | null;
 }
 
 export class Book extends Entity<BookId> {
@@ -74,6 +75,7 @@ export class Book extends Entity<BookId> {
       authorName: undefined,
       author: undefined,
       chapterCount: 0,
+      vectorIndexedAt: null,
     });
   }
 
@@ -97,6 +99,7 @@ export class Book extends Entity<BookId> {
     authorName?: string;
     author?: { id: string; name: string };
     chapterCount?: number;
+    vectorIndexedAt?: Date | null;
   }): Book {
     return new Book(
       BookId.create(props.id),
@@ -117,6 +120,7 @@ export class Book extends Entity<BookId> {
         authorName: props.authorName,
         author: props.author,
         chapterCount: props.chapterCount,
+        vectorIndexedAt: props.vectorIndexedAt ?? null,
       },
       props.createdAt,
       props.updatedAt,
@@ -171,6 +175,9 @@ export class Book extends Entity<BookId> {
   }
   get author(): { id: string; name: string } | undefined {
     return this._props.author;
+  }
+  get vectorIndexedAt(): Date | null {
+    return this._props.vectorIndexedAt ?? null;
   }
 
   // Business methods
@@ -252,6 +259,11 @@ export class Book extends Entity<BookId> {
       this._props.likedBy.splice(index, 1);
       this.decrementLikes();
     }
+  }
+
+  markVectorIndexed(): void {
+    this._props.vectorIndexedAt = new Date();
+    this.markAsUpdated();
   }
 
   private static generateSlug(title: string): string {

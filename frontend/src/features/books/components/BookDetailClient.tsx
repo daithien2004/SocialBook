@@ -29,7 +29,8 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
     defaultShareContent,
   } = useBookDetail(bookSlug);
 
-  const { openCreatePost, openAddToLibrary } = useModalStore();
+  const openCreatePost = useModalStore(s => s.openCreatePost);
+  const openAddToLibrary = useModalStore(s => s.openAddToLibrary);
   const { trackEvent } = useTracking();
 
   useEffect(() => {

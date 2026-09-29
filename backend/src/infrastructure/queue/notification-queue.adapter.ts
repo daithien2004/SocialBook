@@ -8,6 +8,8 @@ import {
   UserFollowedJobPayload,
   PostModeratedJobPayload,
 } from '@/application/notifications/jobs/notification-job.payload';
+import { DEFAULT_JOB_OPTIONS } from '@/shared/queue/default-job-options';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class NotificationQueueAdapter implements INotificationQueuePort {
@@ -19,14 +21,10 @@ export class NotificationQueueAdapter implements INotificationQueuePort {
 
   async queueCommentCreated(payload: CommentCreatedJobPayload): Promise<void> {
     try {
-      await this.notificationQueue.add('comment.created', payload, {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-        removeOnComplete: true,
-        removeOnFail: 100, // keep last 100 failed jobs for debugging
+      await this.notificationQueue.add(EventNames.COMMENT_CREATED, payload, {
+        ...DEFAULT_JOB_OPTIONS,
+        // jobId: comment cụ thể chỉ tạo 1 thông báo duy nhất dù retry bao nhiêu lần.
+        jobId: `notify-comment-${payload.commentId}`,
       });
       this.logger.debug(
         `Queued comment.created job for user ${payload.userId}`,
@@ -39,14 +37,11 @@ export class NotificationQueueAdapter implements INotificationQueuePort {
 
   async queueLikeToggled(payload: LikeToggledJobPayload): Promise<void> {
     try {
-      await this.notificationQueue.add('like.toggled', payload, {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-        removeOnComplete: true,
-        removeOnFail: 100,
+      await this.notificationQueue.add(EventNames.LIKE_TOGGLED, payload, {
+        ...DEFAULT_JOB_OPTIONS,
+        // jobId: mỗi lượt like/unlike trên cùng target chỉ gửi 1 thông báo.
+        // Dùng timestamp để phân biệt nếu cùng user like lại sau khi đã unlike.
+        jobId: `notify-like-${payload.userId}-${payload.targetId}-${Date.now()}`,
       });
       this.logger.debug(`Queued like.toggled job for user ${payload.userId}`);
     } catch (error) {
@@ -58,13 +53,8 @@ export class NotificationQueueAdapter implements INotificationQueuePort {
   async queueUserFollowed(payload: UserFollowedJobPayload): Promise<void> {
     try {
       await this.notificationQueue.add('user.followed', payload, {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-        removeOnComplete: true,
-        removeOnFail: 100,
+        ...DEFAULT_JOB_OPTIONS,
+        jobId: `notify-follow-${payload.userId}-${payload.targetId}`,
       });
       this.logger.debug(`Queued user.followed job for user ${payload.userId}`);
     } catch (error) {
@@ -76,13 +66,8 @@ export class NotificationQueueAdapter implements INotificationQueuePort {
   async queuePostModerated(payload: PostModeratedJobPayload): Promise<void> {
     try {
       await this.notificationQueue.add('post.moderated', payload, {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-        removeOnComplete: true,
-        removeOnFail: 100,
+        ...DEFAULT_JOB_OPTIONS,
+        jobId: `notify-moderated-${payload.postId}`,
       });
       this.logger.debug(`Queued post.moderated job for user ${payload.userId}`);
     } catch (error) {

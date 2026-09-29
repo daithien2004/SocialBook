@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
+import { Job, UnrecoverableError } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
@@ -8,8 +8,23 @@ import { VectorDocument } from '@/domain/chroma/entities/vector-document.entity'
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { getErrorMessage } from '@/common/utils/error.util';
 import { ContentType } from '@/domain/chroma/value-objects/content-type.vo';
+import { ChromaBookJobSchema } from '@/shared/queue/job-payload.schemas';
 
-@Processor('chroma')
+interface ChromaIndexBookJobData {
+  bookId: string;
+}
+
+interface ChromaDeleteBookJobData {
+  bookId: string;
+}
+
+type ChromaJobData = ChromaIndexBookJobData | ChromaDeleteBookJobData;
+
+@Processor('chroma', {
+  // concurrency: 3 — thử nghiệm theo khả năng của Chroma và embedding API.
+  // Tăng lên nếu Chroma không phản hồi lậu.
+  concurrency: 3,
+})
 export class ChromaProcessor extends WorkerHost {
   private readonly logger = new Logger(ChromaProcessor.name);
 
@@ -21,11 +36,18 @@ export class ChromaProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<any, void, string>): Promise<void> {
+  async process(job: Job<ChromaJobData, void, string>): Promise<void> {
+    const parsed = ChromaBookJobSchema.safeParse(job.data);
+    if (!parsed.success) {
+      throw new UnrecoverableError(
+        `Invalid chroma payload: ${parsed.error.message}`,
+      );
+    }
+
     if (job.name === 'index-book') {
-      await this.handleBookUpserted(job.data);
+      await this.handleBookUpserted(parsed.data);
     } else if (job.name === 'delete-book-index') {
-      await this.handleBookDeleted(job.data);
+      await this.handleBookDeleted(parsed.data);
     }
   }
 
@@ -37,9 +59,11 @@ export class ChromaProcessor extends WorkerHost {
       const book = await this.bookRepository.findById(bookId);
 
       if (!book) {
+        // Sách đã bị xóa trong lúc job đang chờ — dọn index mồ côi thay vì tạo mới.
         this.logger.warn(
-          `Book ${payload.bookId} not found, skipping indexing.`,
+          `Book ${payload.bookId} no longer exists — cleaning up orphan index instead of creating new one.`,
         );
+        await this.handleBookDeleted(payload);
         return;
       }
 
@@ -98,6 +122,9 @@ export class ChromaProcessor extends WorkerHost {
             `Failed to index some chunks for book ${payload.bookId}`,
           );
         } else {
+          book.markVectorIndexed();
+          await this.bookRepository.save(book);
+
           this.logger.log(
             `Successfully updated vector index for book ${payload.bookId} (${chunks.length} chunks)`,
           );

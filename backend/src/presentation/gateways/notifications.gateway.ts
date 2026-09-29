@@ -1,9 +1,10 @@
 // notifications/notifications.gateway.ts
-import { Logger } from '@nestjs/common';
+import { Logger, UseFilters } from '@nestjs/common';
 import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayConnection,
+  OnGatewayInit,
   OnGatewayDisconnect,
   ConnectedSocket,
   SubscribeMessage,
@@ -13,11 +14,15 @@ import { Server, Socket } from 'socket.io';
 import { NotificationsService } from './notifications.service';
 import type { CreateNotificationInput } from './dto/create-notification-input.interface';
 import { JwtService } from '@nestjs/jwt';
-import { accessTokenFromSocket } from './socket-token.util';
+import { OnEvent } from '@nestjs/event-emitter';
+import { EventNames } from '@/common/constants/event-names.constant';
+import { UserRoleChangedEvent } from '@/application/users/events/user-role-changed.event';
 
 interface SocketData {
   userId: string;
 }
+
+import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 
 @WebSocketGateway({
   namespace: '/notifications',
@@ -26,9 +31,13 @@ interface SocketData {
     credentials: true,
   },
   maxHttpBufferSize: 1e6,
+  transports: ['websocket'],
+  pingInterval: 25000,
+  pingTimeout: 20000,
 })
+@UseFilters(WsExceptionFilter)
 export class NotificationsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(NotificationsGateway.name);
 
@@ -39,39 +48,52 @@ export class NotificationsGateway
     private readonly jwt: JwtService,
   ) {}
 
-  afterInit() {
+  afterInit(server: Server) {
     this.notificationsService.setServer(this.server);
+    server.use(async (socket, next) => {
+      try {
+        const token =
+          socket.handshake.auth?.token ??
+          socket.handshake.headers.authorization?.split(' ')[1];
+
+        if (!token) {
+          return next(new Error('unauthorized'));
+        }
+
+        const payload = await this.jwt.verifyAsync<{ sub?: string; id?: string }>(
+          token,
+        );
+
+        const userId = payload.sub ?? payload.id;
+        if (!userId) {
+          return next(new Error('unauthorized'));
+        }
+
+        const sockets = await server.in(`user:${userId}`).fetchSockets();
+        if (sockets.length >= 5) {
+          return next(new Error('too_many_connections'));
+        }
+
+        (socket.data as SocketData).userId = userId;
+        next();
+      } catch {
+        next(new Error('unauthorized'));
+      }
+    });
+  }
+
+  @OnEvent(EventNames.USER_ROLE_CHANGED)
+  handleUserRoleChanged(event: UserRoleChangedEvent) {
+    this.logger.debug(
+      `User ${event.userId} role changed, forcing socket disconnect.`,
+    );
+    this.server.in(`user:${event.userId}`).disconnectSockets(true);
   }
 
   handleConnection(socket: Socket) {
-    try {
-      const token = accessTokenFromSocket(socket);
-
-      if (typeof token !== 'string' || !token) {
-        this.logger.warn('No token, disconnect');
-        socket.disconnect(true);
-        return;
-      }
-
-      const payload = this.jwt.verify<{ sub?: string; id?: string }>(token, {
-        complete: false,
-      });
-      const userId = payload.sub ?? payload.id;
-      if (!userId) {
-        socket.disconnect(true);
-        return;
-      }
-      (socket.data as SocketData).userId = userId;
+    const userId = (socket.data as SocketData).userId;
+    if (userId) {
       void socket.join(`user:${userId}`);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      // Token expired hoặc invalid là expected — dùng warn thay vì error
-      if (message.includes('expired') || message.includes('invalid')) {
-        this.logger.warn(`WS connection rejected (token issue): ${message}`);
-      } else {
-        this.logger.error(`WS error in handleConnection: ${message}`);
-      }
-      socket.disconnect(true);
     }
   }
 

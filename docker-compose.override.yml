@@ -1,0 +1,8 @@
+services:
+  redis:
+    ports:
+      - "6379:6379"
+  
+  redis-queue:
+    ports:
+      - "6380:6379"

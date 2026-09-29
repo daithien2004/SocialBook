@@ -51,6 +51,24 @@ export class BookRepository
     return this.textSimilarityService.calculate(query, targetText);
   }
 
+  async findUnindexedBooks(limit: number): Promise<BookEntity[]> {
+    const documents = (await this.bookModel
+      .find({
+        status: 'published',
+        $or: [
+          { vectorIndexedAt: null },
+          { vectorIndexedAt: { $exists: false } },
+        ],
+      })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('genres')
+      .lean()
+      .exec()) as unknown as RawBookDocument[];
+    
+    return documents.map(doc => BookMapper.toDomain(doc));
+  }
+
   async findById(id: BookId): Promise<BookEntity | null> {
     const document = (await this.bookModel
       .findById(id.toString())

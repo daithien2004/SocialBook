@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/input';
 export function CollectionDetailClient({ collectionId }: { collectionId: string }) {
   const router = useRouter();
   const { isAuthenticated, user } = useAppAuth();
-  const { openConfirm } = useModalStore();
+  const openConfirm = useModalStore(s => s.openConfirm);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');

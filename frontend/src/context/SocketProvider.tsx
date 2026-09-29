@@ -41,8 +41,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         autoConnect: false,
         transports: ['websocket', 'polling'],
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        randomizationFactor: 0.5, // Chống bão Reconnect khi server deploy
         withCredentials: true,
       });
     }

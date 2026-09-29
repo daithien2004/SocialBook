@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { EventNames } from '@/common/constants/event-names.constant';
 import { UserEventType } from '@/domain/analytics/enums/user-event-type.enum';
 import { ScoringService } from '../services/scoring.service';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
@@ -21,7 +22,7 @@ export class AnalyticsListener {
     private readonly targetResolverRegistry: TargetResolverRegistry,
   ) {}
 
-  @OnEvent('user-event.tracked')
+  @OnEvent(EventNames.USER_EVENT_TRACKED)
   async handleUserEventTracked(payload: { userId: string; event: UserEvent }) {
     const { userId, event } = payload;
 
@@ -63,7 +64,7 @@ export class AnalyticsListener {
     }
   }
 
-  @OnEvent('like.toggled')
+  @OnEvent(EventNames.LIKE_TOGGLED)
   async handleLikeToggled(payload: {
     userId: string;
     targetId: string;
@@ -85,7 +86,7 @@ export class AnalyticsListener {
     }
   }
 
-  @OnEvent('comment.created')
+  @OnEvent(EventNames.COMMENT_CREATED)
   async handleCommentCreated(payload: {
     userId: string;
     targetId: string;
@@ -104,7 +105,7 @@ export class AnalyticsListener {
     }
   }
 
-  @OnEvent('post.created')
+  @OnEvent(EventNames.POST_CREATED)
   async handlePostCreated(payload: { userId: string; bookId?: string }) {
     if (payload.bookId) {
       await this.logInternalEvent(

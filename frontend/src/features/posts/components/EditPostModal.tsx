@@ -85,7 +85,8 @@ const initialState: PostEditState = {
 };
 
 export default function EditPostModal() {
-    const { modals, closeEditPost } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closeEditPost = useModalStore(s => s.closeEditPost);
     const { isOpen: isEditPostOpen, data: editPostData } = modals.editPost;
     const fileInputRef = useRef<HTMLInputElement>(null);
     const updatePost = useUpdatePost();

@@ -11,6 +11,7 @@ import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class UpdateBookUseCase {
@@ -84,7 +85,7 @@ export class UpdateBookUseCase {
     await this.bookCache.setDetail(book);
     await this.bookCache.invalidateDetail(book.id.toString(), book.slug);
 
-    this.eventEmitter.emit('book.updated', { bookId: book.id.toString() });
+    this.eventEmitter.emit(EventNames.BOOK_UPDATED, { bookId: book.id.toString() });
 
     return book;
   }

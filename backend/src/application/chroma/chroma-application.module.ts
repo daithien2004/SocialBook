@@ -16,6 +16,7 @@ import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.mo
 import { BullModule } from '@nestjs/bullmq';
 import { ChromaProcessor } from './processors/chroma.processor';
 import { isWorkerProcess } from '@/common/utils/process-role.util';
+import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { isWorkerProcess } from '@/common/utils/process-role.util';
     }),
   ],
   providers: [
-    ...(isWorkerProcess() ? [ChromaProcessor] : []),
+    ...(isWorkerProcess() ? [ChromaProcessor, ChromaReconciliationCron] : []),
     GetCollectionStatsUseCase,
     ClearCollectionUseCase,
     BatchIndexUseCase,

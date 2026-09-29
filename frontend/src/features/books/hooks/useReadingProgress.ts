@@ -40,7 +40,7 @@ export function useReadingProgress(
   enabled: boolean = true,
   contentRef?: React.RefObject<HTMLElement | null>,
 ) {
-  const updateProgress = useUpdateReadingProgress();
+  const { mutate: updateProgressMutate } = useUpdateReadingProgress();
   const { data: progressData, isLoading } = useQuery({
     ...libraryQueries.chapterProgress({ bookId, chapterId }),
     enabled: enabled && !!bookId && !!chapterId,
@@ -86,7 +86,7 @@ export function useReadingProgress(
         progress === 100
       ) {
         lastProgressRef.current = progress;
-        updateProgress.mutate({ bookId, chapterId, progress });
+        updateProgressMutate({ bookId, chapterId, progress });
       }
     }, 1000);
 
@@ -95,7 +95,7 @@ export function useReadingProgress(
       window.removeEventListener('scroll', handleScroll);
       handleScroll.cancel();
     };
-  }, [bookId, chapterId, enabled, updateProgress, contentRef]);
+  }, [bookId, chapterId, enabled, updateProgressMutate, contentRef]);
 
   return {
     savedProgress,

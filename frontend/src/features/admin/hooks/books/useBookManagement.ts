@@ -15,7 +15,7 @@ export function useBookManagement() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);
-  const { openDeleteBook } = useModalStore();
+  const openDeleteBook = useModalStore(s => s.openDeleteBook);
 
   const listQuery = useQuery({
     ...bookQueries.adminList({

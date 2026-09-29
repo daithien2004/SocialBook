@@ -36,7 +36,7 @@ const RecommendedBooks = dynamic(
 );
 
 export default function PostsClientSection() {
-    const { openCreatePost } = useModalStore();
+    const openCreatePost = useModalStore(s => s.openCreatePost);
     const { user, isAuthenticated, isLoading } = useAppAuth();
     const currentUserId = user?.id;
     const router = useRouter();

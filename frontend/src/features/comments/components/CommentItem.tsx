@@ -44,7 +44,7 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
     onReplyRemoved,
 }) {
     const router = useRouter();
-    const { closePostComment } = useModalStore();
+    const closePostComment = useModalStore(s => s.closePostComment);
 
     const {
         isOwner,

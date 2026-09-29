@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
 import { AudioPlayedEvent } from '../events/audio-played.event';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class TtsAnalyticsListener {
@@ -9,7 +10,7 @@ export class TtsAnalyticsListener {
 
   constructor(private readonly ttsRepository: ITextToSpeechRepository) {}
 
-  @OnEvent('audio.played', { async: true })
+  @OnEvent(EventNames.AUDIO_PLAYED, { async: true })
   async handleAudioPlayedEvent(event: AudioPlayedEvent) {
     try {
       this.logger.debug(

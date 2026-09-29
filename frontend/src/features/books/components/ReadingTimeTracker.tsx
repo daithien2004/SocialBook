@@ -13,16 +13,10 @@ interface ReadingTimeTrackerProps {
 
 export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProps) {
   const { isAuthenticated } = useAppAuth();
-  const recordReadingTime = useRecordReadingTime();
+  const { mutateAsync: recordReadingTimeMutate } = useRecordReadingTime();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const accumulatedSeconds = useRef(0);
-
-  const recordReadingTimeRef = useRef(recordReadingTime);
-
-  useEffect(() => {
-    recordReadingTimeRef.current = recordReadingTime;
-  }, [recordReadingTime]);
 
   const { trackEvent } = useTracking();
 
@@ -50,7 +44,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
              accumulatedSeconds.current -= 60;
              
              // Record for library stats
-             recordReadingTimeRef.current.mutateAsync({
+             recordReadingTimeMutate({
                 bookId,
                 chapterId,
                 durationInSeconds: secondsToRecord

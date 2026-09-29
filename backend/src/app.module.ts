@@ -87,15 +87,21 @@ import { PresentationModule } from './presentation/presentation.module';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          host: configService.get<string>('env.BULL_REDIS_HOST', 'localhost'),
-          port: configService.get<number>('env.BULL_REDIS_PORT', 6379),
-          password: configService.get<string>('env.BULL_REDIS_PASSWORD'),
-          db: 1,
-          maxRetriesPerRequest: null,
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        // Worker cần null để BLPOP blocking hoạt động đúng.
+        // API phải fail-fast (2 lần) khi redis-queue sập — tránh treo vô hạn làm chết API.
+        const isWorker = process.env.WORKER_MODE === 'true';
+        return {
+          connection: {
+            host: configService.get<string>('env.BULL_REDIS_HOST', 'localhost'),
+            port: configService.get<number>('env.BULL_REDIS_PORT', 6379),
+            password: configService.get<string>('env.BULL_REDIS_PASSWORD'),
+            maxRetriesPerRequest: isWorker ? null : 2,
+            // API không tích trữ lệnh trong RAM khi Redis sập — trả 503 ngay lập tức.
+            enableOfflineQueue: isWorker,
+          },
+        };
+      },
     }),
     ThrottlerModule.forRootAsync({
       inject: [getRedisConnectionToken()],
@@ -110,7 +116,7 @@ import { PresentationModule } from './presentation/presentation.module';
         storage: new ThrottlerStorageRedisService(redis),
       }),
     }),
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({ verboseMemoryLeak: true }),
     // A8: cron chỉ chạy ở tiến trình worker (đúng 1 replica). Nếu đăng ký ở mọi
     // replica API thì mỗi @Cron sẽ bắn N lần — đối soát đơn hàng sẽ chạy trùng.
     ...(isWorkerProcess() ? [ScheduleModule.forRoot()] : []),

@@ -26,7 +26,8 @@ const FIELDS: FormField[] = [
 ];
 
 export default function GenreModal() {
-    const { modals, closeGenreModal } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closeGenreModal = useModalStore(s => s.closeGenreModal);
     const { isOpen: isGenreModalOpen, data: genreModalData } = modals.genre;
     const isEdit = !!genreModalData?.genre;
 

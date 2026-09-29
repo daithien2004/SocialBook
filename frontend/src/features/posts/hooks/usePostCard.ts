@@ -16,7 +16,10 @@ interface UsePostCardOptions {
 }
 
 export function usePostCard({ post }: UsePostCardOptions) {
-    const { openEditPost, openSharePost, openPostComment, openConfirm } = useModalStore();
+    const openEditPost = useModalStore(s => s.openEditPost);
+    const openSharePost = useModalStore(s => s.openSharePost);
+    const openPostComment = useModalStore(s => s.openPostComment);
+    const openConfirm = useModalStore(s => s.openConfirm);
     const { user, isAuthenticated, ability } = useAppAuth();
     const router = useRouter();
 

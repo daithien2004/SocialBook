@@ -6,10 +6,14 @@ import { ITextToSpeechPort } from '@/domain/text-to-speech/interfaces/text-to-sp
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { TTSStatus } from '@/domain/text-to-speech/entities/text-to-speech.entity';
 import { getErrorMessage } from '@/common/utils/error.util';
+import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { GenerateAudioJobPayload } from '@/application/text-to-speech/jobs/tts-job.payload';
 
 @Processor('audio-generation', {
-  concurrency: 2, // Limit concurrency to prevent rate-limiting from TTS Provider
+  concurrency: 2,
+  // limiter: Dù concurrency cho phép 2 job song song, vẫn giới hạn tối đa
+  // 10 lần gọi TTS provider / phút để không bị ban do rate-limit.
+  limiter: { max: 10, duration: 60_000 },
 })
 @Injectable()
 export class AudioWorker extends WorkerHost {
@@ -85,7 +89,16 @@ export class AudioWorker extends WorkerHost {
           `Generating audio for chapter ${payload.chapterId} using voice ${payload.voice}`,
         );
 
-        const generated = await this.ttsProvider.generateAudio(payload.text, {
+        const chapter = await this.chapterRepository.findById(
+          ChapterId.create(payload.chapterId),
+        );
+        if (!chapter) {
+          throw new Error(`Chapter ${payload.chapterId} not found`);
+        }
+        
+        const text = chapter.paragraphs.map((p) => p.content).join('\n\n');
+
+        const generated = await this.ttsProvider.generateAudio(text, {
           voice: payload.voice,
           language: payload.language,
           speed: payload.speed,

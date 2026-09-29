@@ -12,6 +12,7 @@ import {
 } from '@/shared/domain/common-exceptions';
 
 import { BookViewedEvent } from '@/application/analytics/events/book-viewed.event';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class GetBookByIdUseCase {
@@ -42,7 +43,7 @@ export class GetBookByIdUseCase {
       })());
 
     // 4. Emit view event
-    this.eventEmitter.emit('book.viewed', new BookViewedEvent(query.id));
+    this.eventEmitter.emit(EventNames.BOOK_VIEWED, new BookViewedEvent(query.id));
 
     return book;
   }

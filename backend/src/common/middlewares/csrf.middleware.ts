@@ -5,7 +5,7 @@ import * as crypto from 'crypto';
 @Injectable()
 export class CsrfMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    let secret = req.cookies['sb_csrf_secret'];
+    let secret = String(req.cookies['sb_csrf_secret'] ?? '');
     if (!secret) {
       secret = crypto.randomBytes(32).toString('hex');
       res.cookie('sb_csrf_secret', secret, {
@@ -18,7 +18,10 @@ export class CsrfMiddleware implements NestMiddleware {
 
     // Hash secret thành token để JS đọc
     const token = crypto
-      .createHmac('sha256', process.env.JWT_ACCESS_SECRET || 'fallback_secret')
+      .createHmac(
+        'sha256',
+        String(process.env.JWT_ACCESS_SECRET ?? 'fallback_secret'),
+      )
       .update(secret)
       .digest('hex');
 

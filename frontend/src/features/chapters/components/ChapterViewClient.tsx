@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo, useCallback, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useShallow } from 'zustand/react/shallow';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MESSAGES } from "@/constants/messages";
@@ -87,20 +88,17 @@ export default function ChapterViewClient({
   const totalChapters = chaptersData?.total || 0;
   const paragraphs = useMemo(() => chapter?.paragraphs || [], [chapter?.paragraphs]);
 
-  const {
-    viewMode,
-    isControlsVisible,
-    showTOC,
-    showSettings,
-    setViewMode,
-    setShowTOC,
-    setShowSettings,
-  } = useReadingView();
+  const { isControlsVisible } = useReadingView();
 
+  const [viewMode, setViewMode] = useState<"read" | "listen">("read");
+  const [showTOC, setShowTOC] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showAISidebar, setShowAISidebar] = useState(false);
   const [showHighlights, setShowHighlights] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
-  const { settings, updateSettings } = useReadingSettings();
+  const { settings, updateSettings } = useReadingSettings(
+    useShallow((s) => ({ settings: s.settings, updateSettings: s.updateSettings }))
+  );
   const contentRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
@@ -111,8 +109,11 @@ export default function ChapterViewClient({
     contentRef,
   );
 
+  const hasShownToast = useRef(false);
+
   useEffect(() => {
-    if (savedProgress > 5 && savedProgress < 100) {
+    if (savedProgress > 5 && savedProgress < 100 && !hasShownToast.current) {
+      hasShownToast.current = true;
       setTimeout(() => {
         toast("Bạn đang đọc dở chương này", {
           description: `Tiếp tục tại vị trí ${Math.floor(savedProgress)}%?`,

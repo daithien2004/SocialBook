@@ -8,7 +8,8 @@ import { genreQueries } from '@/features/genres/api/genres.queries';
 import { useModalStore } from '@/store/useModalStore';
 
 export function useGenreManagement() {
-  const { openConfirm, openGenreModal } = useModalStore();
+  const openConfirm = useModalStore(s => s.openConfirm);
+  const openGenreModal = useModalStore(s => s.openGenreModal);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);

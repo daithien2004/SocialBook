@@ -8,7 +8,8 @@ import { authorQueries } from '@/features/authors/api/authors.queries';
 import { useModalStore } from '@/store/useModalStore';
 
 export function useAuthorManagement() {
-  const { openConfirm, openAuthorModal } = useModalStore();
+  const openConfirm = useModalStore(s => s.openConfirm);
+  const openAuthorModal = useModalStore(s => s.openAuthorModal);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 500);

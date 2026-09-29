@@ -15,7 +15,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { useModalStore } from '@/store/useModalStore';
 
 export default function DeleteBookModal() {
-    const { modals, closeDeleteBook } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closeDeleteBook = useModalStore(s => s.closeDeleteBook);
     const { isOpen: isDeleteBookOpen, data: deleteBookData } = modals.deleteBook;
 
     if (!deleteBookData) return null;

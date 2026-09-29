@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 import { Loader2, Lock, Globe } from 'lucide-react';
 
 export default function CreateCollectionModal() {
-  const { modals, closeCreateCollection } = useModalStore();
+  const modals = useModalStore(s => s.modals);
+  const closeCreateCollection = useModalStore(s => s.closeCreateCollection);
   const { isOpen: isCreateCollectionOpen, data: createCollectionData } = modals.createCollection;
   const [name, setName] = useState('');
   const [isPublic, setIsPublic] = useState(false);

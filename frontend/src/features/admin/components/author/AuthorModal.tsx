@@ -29,7 +29,8 @@ const FIELDS: FormField[] = [
 ];
 
 export default function AuthorModal() {
-    const { modals, closeAuthorModal } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closeAuthorModal = useModalStore(s => s.closeAuthorModal);
     const { isOpen: isAuthorModalOpen, data: authorModalData } = modals.author;
     const isEdit = !!authorModalData?.author;
 

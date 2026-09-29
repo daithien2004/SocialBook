@@ -1,23 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+import { Injectable, Logger } from '@nestjs/common';
 import { TrackUserEventCommand } from './track-user-event.command';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 @Injectable()
 export class TrackUserEventUseCase {
+  private readonly logger = new Logger(TrackUserEventUseCase.name);
+
   constructor(
-    @InjectQueue('analytics') private readonly analyticsQueue: Queue,
+    @InjectRedis() private readonly redis: Redis,
   ) {}
 
   async execute(command: TrackUserEventCommand): Promise<void> {
-    await this.analyticsQueue.add('track-event', command, {
-      removeOnComplete: true,
-      removeOnFail: 100, // Keep last 100 failed jobs
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 1000,
-      },
-    });
+    try {
+      await this.redis.rpush('analytics:events:buffer', JSON.stringify(command));
+    } catch (error) {
+      this.logger.error('Failed to buffer analytics event in Redis', error);
+    }
   }
 }

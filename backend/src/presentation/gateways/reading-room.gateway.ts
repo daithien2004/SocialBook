@@ -2,14 +2,17 @@ import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayConnection,
+  OnGatewayInit,
   OnGatewayDisconnect,
   ConnectedSocket,
   SubscribeMessage,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, UseFilters } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 import { GenerateHighlightInsightUseCase } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
 import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.command';
 import { ReadingRoomPresenceService } from '@/application/reading-rooms/presence/reading-room-presence.service';
@@ -34,9 +37,9 @@ import {
   ReadingRoomServerEvent,
   ReadingRoomClientEvent,
 } from './reading-room.events';
+import { UserRoleChangedEvent } from '@/application/users/events/user-role-changed.event';
 import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
 import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
-import { accessTokenFromSocket } from './socket-token.util';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { AddCommentUseCase } from '@/application/reading-room-interactions/use-cases/add-comment/add-comment.use-case';
@@ -49,6 +52,7 @@ import { AddQuoteUseCase } from '@/application/reading-room-interactions/use-cas
 import { AddQuoteCommand } from '@/application/reading-room-interactions/use-cases/add-quote/add-quote.command';
 import { VoteQuoteUseCase } from '@/application/reading-room-interactions/use-cases/vote-quote/vote-quote.use-case';
 import { VoteQuoteCommand } from '@/application/reading-room-interactions/use-cases/vote-quote/vote-quote.command';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 interface SocketData {
   userId?: string;
@@ -56,22 +60,31 @@ interface SocketData {
   displayName?: string;
   avatarUrl?: string;
   roomId?: string;
+  pendingProgress?: {
+    bookId: string;
+    chapterId: string;
+    chapterSlug: string;
+    progress: number;
+  };
+  progressTimer?: NodeJS.Timeout;
 }
+
+import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 
 @WebSocketGateway({
   namespace: '/reading-rooms',
   cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000' },
-  maxHttpBufferSize: 1e6,
+  maxHttpBufferSize: 1e5,
+  connectTimeout: 10_000,
+  transports: ['websocket'],
+  pingInterval: 25000,
+  pingTimeout: 20000,
 })
+@UseFilters(WsExceptionFilter)
 export class ReadingRoomGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(ReadingRoomGateway.name);
-  private readonly eventTimestamps = new Map<string, number>();
-
-  // Track last saved progress per userId:chapterSlug to avoid spamming DB
-  private readonly lastSavedProgress = new Map<string, number>();
-
   // Batch presence broadcasts — only emit every 3s per room
   private readonly presenceBroadcastPending = new Map<string, NodeJS.Timeout>();
 
@@ -96,7 +109,44 @@ export class ReadingRoomGateway
     private readonly generateHighlightInsightUseCase: GenerateHighlightInsightUseCase,
     private readonly updateProgressUseCase: UpdateProgressUseCase,
     private readonly chapterRepository: IChapterRepository,
+    @InjectRedis() private readonly redis: Redis,
   ) {}
+
+  afterInit(server: Server) {
+    server.use(async (socket, next) => {
+      try {
+        const token =
+          socket.handshake.auth?.token ??
+          socket.handshake.headers.authorization?.split(' ')[1];
+
+        if (!token) {
+          return next(new Error('unauthorized'));
+        }
+
+        const payload = await this.jwt.verifyAsync<{
+          sub?: string;
+          id?: string;
+          role?: string;
+        }>(token);
+
+        const userId = payload.sub ?? payload.id;
+        if (!userId) {
+          return next(new Error('unauthorized'));
+        }
+
+        const sockets = await server.in(`user:${userId}`).fetchSockets();
+        if (sockets.length >= 5) {
+          return next(new Error('too_many_connections'));
+        }
+
+        (socket.data as SocketData).userId = userId;
+        (socket.data as SocketData).role = payload.role ?? 'user';
+        next();
+      } catch {
+        next(new Error('unauthorized'));
+      }
+    });
+  }
 
   private async saveReadingProgress(
     userId: string,
@@ -128,7 +178,27 @@ export class ReadingRoomGateway
     }
   }
 
-  @OnEvent('reading-room.highlight_insight_updated')
+  private async flushProgress(socket: Socket) {
+    const sd = socket.data as SocketData;
+    if (sd.progressTimer) {
+      clearTimeout(sd.progressTimer);
+      sd.progressTimer = undefined;
+    }
+    
+    const pending = sd.pendingProgress;
+    if (pending && sd.userId) {
+      sd.pendingProgress = undefined;
+      await this.saveReadingProgress(
+        sd.userId,
+        pending.bookId,
+        pending.chapterId,
+        pending.chapterSlug,
+        pending.progress,
+      ).catch((e) => this.logger.warn(`Flush progress error: ${e}`));
+    }
+  }
+
+  @OnEvent(EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED)
   handleHighlightInsightUpdated(payload: {
     roomId: string;
     highlightId: string;
@@ -155,6 +225,11 @@ export class ReadingRoomGateway
   ) {
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
+    
+    if (await this.isRateLimited(userId, 'add_highlight', 30)) {
+      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for adding highlights');
+      return;
+    }
     try {
       const command = new AddHighlightCommand(
         body.roomId,
@@ -222,7 +297,7 @@ export class ReadingRoomGateway
         body.roomId,
         body.highlightId,
       );
-      // Generate AI Insight. The use-case will emit 'reading-room.highlight_insight_updated'
+      // Generate AI Insight. The use-case will emit EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED
       // which will then be broadcasted to the room.
       await this.generateHighlightInsightUseCase.execute(command);
     } catch (error: unknown) {
@@ -235,37 +310,23 @@ export class ReadingRoomGateway
     }
   }
 
+  @OnEvent(EventNames.USER_ROLE_CHANGED)
+  handleUserRoleChanged(event: UserRoleChangedEvent) {
+    this.logger.debug(
+      `User ${event.userId} role changed, forcing socket disconnect.`,
+    );
+    this.server.in(`user:${event.userId}`).disconnectSockets(true);
+  }
+
   handleConnection(socket: Socket) {
-    try {
-      const token = accessTokenFromSocket(socket);
-
-      if (typeof token !== 'string' || !token) {
-        socket.disconnect(true);
-        return;
-      }
-
-      const payload = this.jwt.verify<{
-        sub?: string;
-        id?: string;
-        role?: string;
-      }>(token, {
-        complete: false,
-      });
-      const userId = payload.sub ?? payload.id;
-      if (!userId) {
-        socket.disconnect(true);
-        return;
-      }
-      (socket.data as SocketData).userId = userId;
-      (socket.data as SocketData).role = payload.role ?? 'user';
+    const userId = (socket.data as SocketData).userId;
+    if (userId) {
       void socket.join(`user:${userId}`);
-    } catch {
-      // Socket connection error handled by disconnect below
-      socket.disconnect(true);
     }
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
+    await this.flushProgress(socket);
     const sd = socket.data as SocketData;
     const userId = sd.userId;
     const roomId = sd.roomId;
@@ -402,11 +463,6 @@ export class ReadingRoomGateway
       );
       await this.changeChapterUseCase.execute(command);
 
-      // Reset debounce cache so heartbeat saves naturally as user reads
-      if (body.bookId) {
-        this.lastSavedProgress.set(`${userId}:${body.chapterSlug}`, 0);
-      }
-
       this.server
         .to(`room:${body.roomId}`)
         .emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
@@ -490,7 +546,7 @@ export class ReadingRoomGateway
     socket: Socket,
     code: string,
     defaultMsg: string,
-    error: unknown,
+    error?: unknown,
   ) {
     socket.emit(ReadingRoomServerEvent.ERROR, {
       code,
@@ -498,20 +554,22 @@ export class ReadingRoomGateway
     });
   }
 
-  private isRateLimited(
-    socket: Socket,
+  private async isRateLimited(
+    userId: string,
     event: string,
     maxPerMinute = 30,
-  ): boolean {
-    const key = `${socket.id}:${event}`;
-    const now = Date.now();
-    const last = this.eventTimestamps.get(key) || 0;
-    const minInterval = 60_000 / maxPerMinute;
-    if (now - last < minInterval) {
-      return true;
+  ): Promise<boolean> {
+    if (!userId) return false;
+    const key = `rl:ws:${event}:${userId}`;
+    try {
+      const current = await this.redis.incr(key);
+      if (current === 1) {
+        await this.redis.expire(key, 60);
+      }
+      return current > maxPerMinute;
+    } catch {
+      return false; // Fallback allow on Redis failure
     }
-    this.eventTimestamps.set(key, now);
-    return false;
   }
 
   private schedulePresenceBroadcast(roomId: string): void {
@@ -547,11 +605,12 @@ export class ReadingRoomGateway
       chapterId?: string;
     },
   ) {
-    if (this.isRateLimited(socket, 'heartbeat', 30)) return;
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
     const displayName = sd.displayName ?? '';
     const avatarUrl = sd.avatarUrl ?? '';
+
+    if (await this.isRateLimited(userId, 'heartbeat', 30)) return;
 
     if (userId && displayName && body.roomId) {
       await this.presenceService.upsertPresence(body.roomId, userId, {
@@ -563,20 +622,15 @@ export class ReadingRoomGateway
         progress: body.progress,
       });
 
-      // Save reading progress when threshold met
+      // Save reading progress to buffer, flush every 10 seconds
       if (body.bookId && body.chapterId && body.progress !== undefined) {
-        const cacheKey = `${userId}:${body.chapterSlug}`;
-        const lastSaved = this.lastSavedProgress.get(cacheKey) ?? -1;
-        if (body.progress - lastSaved > 5 || body.progress === 100) {
-          this.lastSavedProgress.set(cacheKey, body.progress);
-          await this.saveReadingProgress(
-            userId,
-            body.bookId,
-            body.chapterId,
-            body.chapterSlug,
-            body.progress,
-          );
-        }
+        sd.pendingProgress = {
+          bookId: body.bookId,
+          chapterId: body.chapterId,
+          chapterSlug: body.chapterSlug,
+          progress: body.progress,
+        };
+        sd.progressTimer ??= setTimeout(() => this.flushProgress(socket), 10_000);
       }
 
       this.schedulePresenceBroadcast(body.roomId);
@@ -584,19 +638,20 @@ export class ReadingRoomGateway
   }
 
   @SubscribeMessage('send_chat_message')
-  handleSendChatMessage(
+  async handleSendChatMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { roomId: string; content: string },
   ) {
-    if (this.isRateLimited(socket, 'send_chat_message', 30)) {
+    const sd = socket.data as SocketData;
+    const userId = sd.userId ?? '';
+    
+    if (await this.isRateLimited(userId, 'send_chat_message', 30)) {
       socket.emit(ReadingRoomServerEvent.ERROR, {
         code: 'RATE_LIMITED',
         message: 'Bạn đang gửi tin nhắn quá nhanh, vui lòng chậm lại.',
       });
       return;
     }
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
     const displayName = sd.displayName || 'User';
     const avatarUrl = sd.avatarUrl || '';
     this.server
@@ -611,7 +666,7 @@ export class ReadingRoomGateway
       });
   }
 
-  @OnEvent('reading-room.reactivated')
+  @OnEvent(EventNames.READING_ROOM_REACTIVATED)
   handleRoomReactivated(payload: { roomId: string; reactivatedBy: string }) {
     this.server
       .to(`room:${payload.roomId}`)
@@ -634,6 +689,10 @@ export class ReadingRoomGateway
   ) {
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
+    if (await this.isRateLimited(userId, 'add_comment', 30)) {
+      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for adding comments');
+      return;
+    }
     try {
       const command = new AddCommentCommand(
         userId,
@@ -713,6 +772,10 @@ export class ReadingRoomGateway
   ) {
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
+    if (await this.isRateLimited(userId, 'add_reaction', 60)) {
+      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for reactions');
+      return;
+    }
     try {
       const command = new AddReactionCommand(
         userId,
@@ -765,6 +828,10 @@ export class ReadingRoomGateway
   ) {
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
+    if (await this.isRateLimited(userId, 'add_quote', 30)) {
+      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for quotes');
+      return;
+    }
     try {
       const command = new AddQuoteCommand(
         userId,

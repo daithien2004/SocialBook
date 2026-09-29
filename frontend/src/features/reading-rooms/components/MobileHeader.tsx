@@ -53,7 +53,7 @@ export function MobileHeader({
   setTransferHostOpen,
 }: MobileHeaderProps) {
   const router = useRouter();
-  const { openConfirm } = useModalStore();
+  const openConfirm = useModalStore(s => s.openConfirm);
 
   return (
     <header className="sticky top-16 z-50 w-full border-b border-border bg-background transition-all sm:hidden">

@@ -5,6 +5,7 @@ import { ToxicWord } from '@/domain/content-moderation/entities/toxic-word.entit
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { VietnameseRegexBuilder } from '@/domain/content-moderation/utils/vietnamese-regex-builder';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 export interface AddToxicWordCommand {
   pattern: string;
@@ -42,7 +43,7 @@ export class AddToxicWordUseCase {
     const savedWord = await this.toxicWordRepository.create(toxicWord);
 
     // Notify listeners to update cache
-    this.eventEmitter.emit('toxic-words.updated');
+    this.eventEmitter.emit(EventNames.TOXIC_WORDS_UPDATED);
 
     return savedWord;
   }

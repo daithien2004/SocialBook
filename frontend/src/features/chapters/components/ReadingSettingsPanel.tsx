@@ -57,7 +57,10 @@ const THEME_PRESETS = [
 ];
 
 export default function ReadingSettingsPanel({ isOpen, onClose }: ReadingSettingsPanelProps) {
-    const { settings, updateSettings, resetToDefaults, loadUserPreferences } = useReadingSettings();
+    const settings = useReadingSettings(s => s.settings);
+    const updateSettings = useReadingSettings(s => s.updateSettings);
+    const resetToDefaults = useReadingSettings(s => s.resetToDefaults);
+    const loadUserPreferences = useReadingSettings(s => s.loadUserPreferences);
     const { isAuthenticated } = useAppAuth();
     const { setTheme: setAppTheme } = useTheme();
     const { data: userPrefs } = useQuery({

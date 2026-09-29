@@ -38,7 +38,9 @@ interface ModalPostCommentProps {
 }
 
 export default function ModalPostComment({ postData, isOpenOverride, onCloseOverride }: ModalPostCommentProps = {}) {
-    const { modals, closePostComment, openSharePost } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closePostComment = useModalStore(s => s.closePostComment);
+    const openSharePost = useModalStore(s => s.openSharePost);
     const storeData = modals.postComment;
     const isPostCommentOpen = isOpenOverride !== undefined ? isOpenOverride : storeData.isOpen;
     const postCommentData = postData ? { 

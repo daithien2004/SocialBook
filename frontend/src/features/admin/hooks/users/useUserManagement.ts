@@ -12,7 +12,7 @@ export function useUserManagement() {
     const { data, isLoading, isFetching, refetch } = useQuery(
         userQueries.adminList(`current=${page}&pageSize=${pageSize}`)
     );
-    const { openConfirm } = useModalStore();
+    const openConfirm = useModalStore(s => s.openConfirm);
     const { mutateAsync: banUser, isPending: isBanning } = useBanUser();
     const users = data?.data || [];
     const total = data?.meta?.total || 0;

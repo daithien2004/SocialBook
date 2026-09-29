@@ -15,7 +15,8 @@ interface BookCardProps {
 }
 
 export const BookCard = memo(function BookCard({ book, priority }: BookCardProps) {
-    const { modals, openAddToLibrary } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const openAddToLibrary = useModalStore(s => s.openAddToLibrary);
     const { isOpen: isAddToLibraryOpen, data: addToLibraryData } = modals.addToLibrary;
     const isCurrentBookOpen = isAddToLibraryOpen && addToLibraryData?.bookId === book.id;
 

@@ -32,7 +32,8 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
 export default function AddToLibraryModal() {
-  const { modals, closeAddToLibrary } = useModalStore();
+  const modals = useModalStore(s => s.modals);
+  const closeAddToLibrary = useModalStore(s => s.closeAddToLibrary);
   const { isOpen: isAddToLibraryOpen, data: addToLibraryData } = modals.addToLibrary;
   const bookId = addToLibraryData?.bookId || '';
 

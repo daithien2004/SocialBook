@@ -9,6 +9,7 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { DeleteBookCommand } from './delete-book.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { ICachePort } from '@/shared/domain/cache.port';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class DeleteBookUseCase {
@@ -36,6 +37,6 @@ export class DeleteBookUseCase {
     await this.cache.del(`books:detail:${command.id}`);
     await this.cache.del(`books:slug:${book.slug.toString()}`);
 
-    this.eventEmitter.emit('book.deleted', { bookId: command.id });
+    this.eventEmitter.emit(EventNames.BOOK_DELETED, { bookId: command.id });
   }
 }

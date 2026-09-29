@@ -1,6 +1,8 @@
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { BadRequestException } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
 
 import type {
   ImportChaptersJobData,
@@ -16,11 +18,18 @@ import {
 const JOB_NAME = 'import-chapters';
 const QUEUE_NAME = 'chapters-import';
 
-@Processor(QUEUE_NAME)
+@Processor(QUEUE_NAME, {
+  // lockDuration: 2 phút — tránh BullMQ tưởng Worker chết khi đang parse file lớn (CPU-bound > 30s).
+  lockDuration: 120_000,
+  // maxStalledCount: 1 — lỡ Worker chết thật thì chỉ cho làm lại 1 lần,
+  // tránh vòng lặp vô hạn nếu file bị lỗi cấu trúc.
+  maxStalledCount: 1,
+})
 export class ChaptersImportProcessor extends WorkerHost {
   constructor(
     @InjectQueue(CREATE_SINGLE_CHAPTER_QUEUE)
     private readonly chapterCreationQueue: Queue<CreateSingleChapterJobData>,
+    @InjectRedis() private readonly redis: Redis,
   ) {
     super();
   }
@@ -37,7 +46,15 @@ export class ChaptersImportProcessor extends WorkerHost {
       };
     }
 
-    const { bookId, chapters } = job.data;
+    const { bookId, redisKey } = job.data;
+    let chapters = job.data.chapters;
+
+    if (redisKey) {
+      const redisData = await this.redis.get(redisKey);
+      if (redisData) {
+        chapters = JSON.parse(redisData);
+      }
+    }
 
     if (!Array.isArray(chapters)) {
       throw new BadRequestException('Invalid import payload: expected array');
@@ -95,6 +112,8 @@ export class ChaptersImportProcessor extends WorkerHost {
       }
 
       try {
+        // jobId tất định = nếu job cha bị stalled và chạy lại,
+        // BullMQ sẽ tự từ chối job con trùng ID — chống tạo chương trùng lặp.
         await this.chapterCreationQueue.add(
           CREATE_SINGLE_CHAPTER_JOB,
           {
@@ -102,6 +121,7 @@ export class ChaptersImportProcessor extends WorkerHost {
             title: title || `Chapter ${i + 1}`,
             paragraphs,
           },
+          { jobId: `chapter-${bookId}-${i}` },
         );
         successful++;
       } catch (error: unknown) {

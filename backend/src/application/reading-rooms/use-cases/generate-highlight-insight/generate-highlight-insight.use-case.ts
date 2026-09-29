@@ -9,6 +9,7 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { getChapterContext } from '@/application/shared/utils/chapter-context-extractor';
 import { GenerateHighlightInsightCommand } from './generate-highlight-insight.command';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class GenerateHighlightInsightUseCase {
@@ -87,7 +88,7 @@ export class GenerateHighlightInsightUseCase {
     await this.readingRoomRepository.save(room);
 
     // Notify gateway via local event
-    this.eventEmitter.emit('reading-room.highlight_insight_updated', {
+    this.eventEmitter.emit(EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED, {
       roomId: command.roomId,
       highlightId: highlight.id,
       insight,

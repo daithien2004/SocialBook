@@ -19,6 +19,10 @@ export default registerAs('env', () => ({
   BULL_REDIS_PORT: parseInt(process.env.BULL_REDIS_PORT ?? '', 10) || 6379,
   BULL_REDIS_PASSWORD: process.env.BULL_REDIS_PASSWORD || '',
 
+  // Bull Board — BasicAuth cho giao diện giám sát queue nội bộ
+  BULL_BOARD_USER: process.env.BULL_BOARD_USER || 'admin',
+  BULL_BOARD_PASSWORD: process.env.BULL_BOARD_PASSWORD || '',
+
   // JWT
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,

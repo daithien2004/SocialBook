@@ -29,7 +29,8 @@ import { getErrorMessage } from "@/lib/utils";
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function ManageChapterModal() {
-    const { modals, closeManageChapter } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closeManageChapter = useModalStore(s => s.closeManageChapter);
     const { isOpen: isManageChapterOpen, data: manageChapterData } = modals.manageChapter;
     const isEdit = !!manageChapterData?.chapter;
     

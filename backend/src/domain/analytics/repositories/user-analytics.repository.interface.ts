@@ -3,6 +3,7 @@ import { UserPreference } from '../entities/user-preference.entity';
 
 export abstract class IUserAnalyticsRepository {
   abstract saveEvent(event: UserEvent): Promise<void>;
+  abstract insertManyEvents(events: UserEvent[]): Promise<void>;
 
   abstract updatePreferenceScore(
     userId: string,

@@ -7,6 +7,8 @@ ports.env
 mongo.env
 backend.env
 frontend.env
+# Root .env dùng cho Docker Compose (chứa password Redis, không commit)
+.env
 *.env.local
 
 # Generated

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
+import { Job, UnrecoverableError } from 'bullmq';
 import { NotificationsService } from './notifications.service';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
@@ -14,6 +14,13 @@ import {
   UserFollowedJobPayload,
   PostModeratedJobPayload,
 } from '@/application/notifications/jobs/notification-job.payload';
+import { EventNames } from '@/common/constants/event-names.constant';
+import {
+  LikeToggledJobSchema,
+  CommentCreatedJobSchema,
+  UserFollowedJobSchema,
+  PostModeratedJobSchema,
+} from '@/shared/queue/job-payload.schemas';
 
 @Processor('notifications', {
   concurrency: 5,
@@ -37,20 +44,42 @@ export class NotificationWorker extends WorkerHost {
 
     try {
       switch (job.name) {
-        case 'like.toggled':
-          await this.handleLikeEvent(job.data as LikeToggledJobPayload);
+        case EventNames.LIKE_TOGGLED: {
+          const parsed = LikeToggledJobSchema.safeParse(job.data);
+          if (!parsed.success)
+            throw new UnrecoverableError(
+              `Invalid like.toggled payload: ${parsed.error.message}`,
+            );
+          await this.handleLikeEvent(parsed.data);
           break;
-        case 'comment.created':
-          await this.handleCommentEvent(job.data as CommentCreatedJobPayload);
+        }
+        case EventNames.COMMENT_CREATED: {
+          const parsed = CommentCreatedJobSchema.safeParse(job.data);
+          if (!parsed.success)
+            throw new UnrecoverableError(
+              `Invalid comment.created payload: ${parsed.error.message}`,
+            );
+          await this.handleCommentEvent(parsed.data);
           break;
-        case 'user.followed':
-          await this.handleFollowEvent(job.data as UserFollowedJobPayload);
+        }
+        case 'user.followed': {
+          const parsed = UserFollowedJobSchema.safeParse(job.data);
+          if (!parsed.success)
+            throw new UnrecoverableError(
+              `Invalid user.followed payload: ${parsed.error.message}`,
+            );
+          await this.handleFollowEvent(parsed.data);
           break;
-        case 'post.moderated':
-          await this.handlePostModeratedEvent(
-            job.data as PostModeratedJobPayload,
-          );
+        }
+        case 'post.moderated': {
+          const parsed = PostModeratedJobSchema.safeParse(job.data);
+          if (!parsed.success)
+            throw new UnrecoverableError(
+              `Invalid post.moderated payload: ${parsed.error.message}`,
+            );
+          await this.handlePostModeratedEvent(parsed.data);
           break;
+        }
         default:
           this.logger.warn(`Unknown job name: ${job.name}`);
       }
@@ -59,7 +88,7 @@ export class NotificationWorker extends WorkerHost {
         `Error processing job ${job.id} of type ${job.name}`,
         error,
       );
-      throw error; // Let BullMQ handle retries
+      throw error;
     }
   }
 

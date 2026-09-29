@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { BookViewedEvent } from '../events/book-viewed.event';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class BookAnalyticsListener {
@@ -10,7 +11,7 @@ export class BookAnalyticsListener {
 
   constructor(private readonly bookRepository: IBookRepository) {}
 
-  @OnEvent('book.viewed', { async: true })
+  @OnEvent(EventNames.BOOK_VIEWED, { async: true })
   async handleBookViewedEvent(event: BookViewedEvent) {
     try {
       this.logger.debug(`Incrementing view count for book: ${event.bookId}`);

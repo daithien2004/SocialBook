@@ -49,9 +49,9 @@ export function useAddToLibrary({
         enabled: isOpen && isAuthenticated && !!bookId,
     });
 
-    const updateStatus = useUpdateLibraryStatus();
-    const updateCollections = useAddBookToCollections();
-    const createCollection = useCreateCollection();
+    const { mutateAsync: updateStatusMutate } = useUpdateLibraryStatus();
+    const { mutateAsync: updateCollectionsMutate } = useAddBookToCollections();
+    const { mutateAsync: createCollectionMutate } = useCreateCollection();
 
     useEffect(() => {
         if (libraryInfo) {
@@ -78,15 +78,15 @@ export function useAddToLibrary({
 
         try {
             if (isRemove) {
-                await updateStatus.mutateAsync({ bookId, status: LibraryStatus.NONE });
+                await updateStatusMutate({ bookId, status: LibraryStatus.NONE });
             } else {
-                await updateStatus.mutateAsync({ bookId, status });
+                await updateStatusMutate({ bookId, status });
             }
         } catch {
             setSelectedStatus(previousStatus);
             toast.error('Cập nhật trạng thái thất bại');
         }
-    }, [bookId, selectedStatus, updateStatus]);
+    }, [bookId, selectedStatus, updateStatusMutate]);
 
     const handleToggleCollection = useCallback(async (collectionId: string) => {
         const isSelected = selectedCollections.includes(collectionId);
@@ -101,17 +101,17 @@ export function useAddToLibrary({
         setSelectedCollections(newIds);
 
         try {
-            await updateCollections.mutateAsync({ bookId, collectionIds: newIds });
+            await updateCollectionsMutate({ bookId, collectionIds: newIds });
         } catch {
             setSelectedCollections(selectedCollections);
             toast.error('Cập nhật bộ sưu tập thất bại');
         }
-    }, [bookId, selectedCollections, updateCollections]);
+    }, [bookId, selectedCollections, updateCollectionsMutate]);
 
     const handleCreateCollection = useCallback(async () => {
         if (!newCollectionName.trim()) return;
         try {
-            const res = await createCollection.mutateAsync({ name: newCollectionName });
+            const res = await createCollectionMutate({ name: newCollectionName });
             const newColId = res.id;
 
             await handleToggleCollection(newColId);
@@ -121,7 +121,7 @@ export function useAddToLibrary({
         } catch {
             toast.error('Tạo danh sách thất bại');
         }
-    }, [newCollectionName, handleToggleCollection, createCollection]);
+    }, [newCollectionName, handleToggleCollection, createCollectionMutate]);
 
     const resetForm = useCallback(() => {
         setIsCreating(false);

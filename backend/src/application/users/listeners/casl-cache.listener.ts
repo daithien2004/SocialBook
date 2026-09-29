@@ -4,6 +4,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
 import { getAuthUserCacheKey } from '@/shared/domain/auth-cache.keys';
 import { UserRoleChangedEvent } from '../events/user-role-changed.event';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 @Injectable()
 export class CaslCacheListener {
@@ -11,7 +12,7 @@ export class CaslCacheListener {
 
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
-  @OnEvent('user.role.changed', { async: true })
+  @OnEvent(EventNames.USER_ROLE_CHANGED, { async: true })
   async handleUserRoleChangedEvent(event: UserRoleChangedEvent) {
     try {
       this.logger.debug(`Clearing authz caches for user: ${event.userId}`);

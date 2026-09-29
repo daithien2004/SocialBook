@@ -26,7 +26,7 @@ export function QuoteBoard({ currentChapterSlug, roomCode }: QuoteBoardProps) {
   const router = useRouter();
   const deleteRoomQuote = useDeleteRoomQuote();
   const isDeleting = deleteRoomQuote.isPending;
-  const { openConfirm } = useModalStore();
+  const openConfirm = useModalStore(s => s.openConfirm);
 
   const handleDeleteQuote = (quoteId: string) => {
     openConfirm({

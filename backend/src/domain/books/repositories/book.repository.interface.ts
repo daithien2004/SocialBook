@@ -40,6 +40,7 @@ export abstract class IBookRepository {
   abstract findById(id: BookId): Promise<Book | null>;
   abstract findBySlug(slug: string): Promise<Book | null>;
   abstract findByTitle(title: BookTitle): Promise<Book | null>;
+  abstract findUnindexedBooks(limit: number): Promise<Book[]>;
   abstract findAll(
     filter: BookFilter,
     pagination: PaginationOptions,

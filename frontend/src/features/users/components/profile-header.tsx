@@ -14,7 +14,7 @@ interface PropsProfileHeader {
 }
 
 export function ProfileHeader(props: PropsProfileHeader) {
-    const { openFollowers } = useModalStore();
+    const openFollowers = useModalStore(s => s.openFollowers);
 
     return (
         <div className="relative w-full overflow-hidden border-b border-border">

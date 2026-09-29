@@ -30,6 +30,12 @@ export class MongooseUserAnalyticsRepository implements IUserAnalyticsRepository
     );
   }
 
+  async insertManyEvents(events: UserEventEntity[]): Promise<void> {
+    if (events.length === 0) return;
+    const persistences = events.map((e) => UserEventMapper.toPersistence(e));
+    await this.eventModel.insertMany(persistences, { ordered: false });
+  }
+
   async updatePreferenceScore(
     userId: string,
     genreId: string,

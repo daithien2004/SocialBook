@@ -36,8 +36,9 @@ export function useUpdateReadingProgress() {
   const queryClient = useQueryClient();
   return useMutation<UpdateReadingProgressResult, Error, UpdateProgressRequest>({
     mutationFn: updateReadingProgress,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: libraryKeys.all });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: libraryKeys.chapterProgress(variables.bookId, variables.chapterId) });
+      queryClient.invalidateQueries({ queryKey: libraryKeys.bookInfo(variables.bookId) });
     },
   });
 }

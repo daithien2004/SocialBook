@@ -17,6 +17,8 @@ export class PostModerationAdapter implements IPostModerationPort {
   ) {}
 
   async enqueue(input: PostModerationJobInput): Promise<void> {
+    // Không chặn 503 ở đây — bài viết luôn được nhận vào DB ở trạng thái PENDING.
+    // Nếu queue bận, bài viết chỉ được duyệt chậm hơn, không trả lỗi cho User.
     await this.queue.add(
       POST_MODERATION_JOB,
       {
@@ -24,10 +26,12 @@ export class PostModerationAdapter implements IPostModerationPort {
         content: input.content,
       },
       {
-        attempts: 2,
-        backoff: { type: 'fixed', delay: 5000 },
+        // Sử dụng jobId tất định để tránh tạo job trùng nếu API bị gọi 2 lần.
+        jobId: `moderate-${input.postId}`,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
         removeOnComplete: true,
-        removeOnFail: 100,
+        removeOnFail: 200,
       },
     );
   }

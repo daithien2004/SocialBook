@@ -17,7 +17,8 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 export default function GlobalConfirmModal() {
-    const { modals, closeConfirm } = useModalStore();
+    const modals = useModalStore(s => s.modals);
+    const closeConfirm = useModalStore(s => s.closeConfirm);
     const { isOpen: isConfirmOpen, data: confirmData } = modals.confirm;
     const [isLoading, setIsLoading] = useState(false);
 

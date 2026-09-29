@@ -11,6 +11,7 @@ import { useReadingProgress } from '@/features/reading-rooms/hooks/useReadingPro
 import { useReadingRoomNavigation } from '@/features/reading-rooms/hooks/useReadingRoomNavigation';
 import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import { useModalStore } from '@/store/useModalStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useReadingView } from '@/features/books/hooks';
 import { readingRoomQueries } from '@/features/reading-rooms/api/reading-rooms.queries';
@@ -27,7 +28,13 @@ export function useReadingRoomData(roomCode: string) {
   const searchParams = useSearchParams();
   const { copy, copiedText } = useCopyToClipboard();
   const copied = !!copiedText;
-  const { openConfirm, openAddToLibrary, openCreatePost } = useModalStore();
+  const { openConfirm, openAddToLibrary, openCreatePost } = useModalStore(
+    useShallow((s) => ({
+      openConfirm: s.openConfirm,
+      openAddToLibrary: s.openAddToLibrary,
+      openCreatePost: s.openCreatePost,
+    }))
+  );
 
   // ── Auth ──
   const { user, isAuthenticated } = useAppAuth();
@@ -90,7 +97,8 @@ export function useReadingRoomData(roomCode: string) {
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showTOC, setShowTOC] = useState(false);
   const [showHighlights, setShowHighlights] = useState(false);
-  const { isControlsVisible, showSettings, setShowSettings } = useReadingView();
+  const [showSettings, setShowSettings] = useState(false);
+  const { isControlsVisible } = useReadingView();
 
   // ── Sub-hooks ──
   const { readingProgress, readingParagraphId, contentRef, onActiveParagraphChange } = useReadingProgress();

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IToxicWordRepository } from '@/domain/content-moderation/repositories/toxic-word.repository.interface';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { EventNames } from '@/common/constants/event-names.constant';
 
 export interface DeleteToxicWordCommand {
   id: string;
@@ -24,6 +25,6 @@ export class DeleteToxicWordUseCase {
     }
 
     // Notify listeners to update cache
-    this.eventEmitter.emit('toxic-words.updated');
+    this.eventEmitter.emit(EventNames.TOXIC_WORDS_UPDATED);
   }
 }
