@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -10,8 +10,9 @@ import { useCreateComment } from '@/features/comments/api/comment.mutations';
 import { cn } from '@/lib/utils';
 import { ShieldAlert, Info } from 'lucide-react';
 import { useModalStore } from '@/store/useModalStore';
-import { usePostComments } from '@/features/posts/hooks/usePostComments';
-import { usePostActions } from '@/features/posts/hooks/usePostActions';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
+import { usePostLike } from '@/features/posts/hooks/usePostLike';
 import { useAppAuth } from '@/features/auth/hooks';
 
 import { UserAvatarWithInfo } from "@/components/shared/UserAvatar";
@@ -64,25 +65,48 @@ export default function ModalPostComment({ postData, isOpenOverride, onCloseOver
         setCurrentImageIndex(0);
     }
 
-    const { isLiked, likeCount, toggleLike } = usePostActions({
+    const { isLiked, likeCount, toggleLike } = usePostLike({
         postId: post?.id ?? '',
         initialLikeCount: postCommentData?.likeCount ?? 0,
         initialLikeStatus: postCommentData?.likeStatus ?? false,
     });
 
-    const {
-        commentText,
-        isSubmitting,
-        commentInputRef,
-        setCommentText,
-        handleSubmitComment,
-        handleKeyDown,
-    } = usePostComments({
-        postId: post?.id ?? '',
-        createComment: async (params) => {
-            await createComment.mutateAsync(params);
-        },
-    });
+    const [commentText, setCommentText] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const commentInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCommentText('');
+    }, [post?.id]);
+
+    const handleSubmitComment = async () => {
+        const content = commentText.trim();
+        if (!content || !post?.id) return;
+
+        try {
+            setIsSubmitting(true);
+            await createComment.mutateAsync({
+                targetType: 'post',
+                targetId: post.id,
+                content,
+                parentId: null,
+            });
+            setCommentText('');
+            setTimeout(() => commentInputRef.current?.focus(), 0);
+        } catch (e) {
+            toast.error(getErrorMessage(e));
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmitComment();
+        }
+    };
 
     if (!post) return null;
 

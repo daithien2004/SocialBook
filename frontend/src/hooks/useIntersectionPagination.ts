@@ -12,6 +12,13 @@ export function useIntersectionPagination({
   threshold = '100px',
 }: UseIntersectionPaginationProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
+  // Caller thường truyền arrow function inline, nên `onLoadMore` đổi identity mỗi
+  // render. Nếu để nó trong deps thì ref callback cũng đổi mỗi render, React gọi
+  // lại với null rồi với node → huỷ và tạo IntersectionObserver liên tục.
+  const onLoadMoreRef = useRef(onLoadMore);
+  useEffect(() => {
+    onLoadMoreRef.current = onLoadMore;
+  }, [onLoadMore]);
 
   const lastElementRef = useCallback(
     (node: HTMLElement | null) => {
@@ -24,7 +31,7 @@ export function useIntersectionPagination({
       observerRef.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting) {
-            void onLoadMore();
+            void onLoadMoreRef.current();
           }
         },
         { 
@@ -36,7 +43,7 @@ export function useIntersectionPagination({
         observerRef.current.observe(node);
       }
     },
-    [isEnabled, onLoadMore, threshold]
+    [isEnabled, threshold]
   );
 
   useEffect(() => {

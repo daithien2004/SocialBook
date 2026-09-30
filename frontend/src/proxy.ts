@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as jose from 'jose';
+import { env } from '@/env';
 
 const ACCESS_COOKIE = 'sb_access_token';
 const REFRESH_COOKIE = 'sb_refresh_token';
@@ -7,7 +8,7 @@ const CSRF_SECRET_COOKIE = 'sb_csrf_secret';
 const CSRF_TOKEN_COOKIE = 'sb_csrf_token';
 
 const getAccessSecret = (): Uint8Array =>
-  new TextEncoder().encode(process.env.JWT_ACCESS_SECRET || 'secret');
+  new TextEncoder().encode(env.JWT_ACCESS_SECRET);
 
 const extractSetCookie = (
   setCookies: readonly string[],
@@ -60,7 +61,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cookie': `${REFRESH_COOKIE}=${refreshToken}; ${CSRF_SECRET_COOKIE}=${csrfSecret ?? ''}`,
+          Cookie: `${REFRESH_COOKIE}=${refreshToken}; ${CSRF_SECRET_COOKIE}=${csrfSecret ?? ''}`,
           'x-csrf-token': csrfToken ?? '',
         },
         body: JSON.stringify({ refreshToken }),
@@ -89,6 +90,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   const requestHeaders = new Headers(request.headers);
+  // x-user-data là danh tính do proxy tự sinh, không bao giờ được tin bản do
+  // client gửi. Xoá trước khi inject, nếu không request chưa xác thực vẫn mang
+  // được danh tính giả tới RSC (getServerMe đọc thẳng header này).
+  requestHeaders.delete('x-user-data');
 
   // 3. Inject User Payload for RSC
   if (jwtPayload) {

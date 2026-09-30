@@ -51,7 +51,7 @@ async function BookDetailContent({ params }: BookDetailProps) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <BookDetailClient bookSlug={bookSlug} />
+      <BookDetailClient key={bookSlug} bookSlug={bookSlug} />
     </HydrationBoundary>
   );
 }

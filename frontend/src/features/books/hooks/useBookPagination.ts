@@ -22,6 +22,15 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
 
     const queryKey = JSON.stringify({ ...params });
 
+    // Đổi bộ lọc phải quay về trang 1 NGAY trong lượt render này. Nếu để effect
+    // làm việc đó thì query đã kịp chạy một lần với bộ lọc mới + số trang cũ,
+    // rồi chạy lại lần nữa khi page về 1 — hai request cho một lần đổi filter.
+    const [prevQueryKey, setPrevQueryKey] = useState(queryKey);
+    if (queryKey !== prevQueryKey) {
+        setPrevQueryKey(queryKey);
+        setPage(1);
+    }
+
     const { data, isLoading, isFetching } = useQuery(
         bookQueries.list({
             page,
@@ -51,7 +60,6 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
         const isReset = queryKey !== queryKeyRef.current;
         if (isReset) {
             queryKeyRef.current = queryKey;
-            startTransition(() => setPage(1));
         }
 
         if (data?.data) {

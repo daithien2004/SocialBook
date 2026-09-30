@@ -9,8 +9,9 @@ export async function followServerApi() {
           `/follows/status?targetId=${targetUserId}`
         );
         return res;
-      } catch (err: unknown) {
-        console.log('getFollowState error:', err);
+      } catch {
+        // Không có trạng thái theo dõi chỉ là "chưa theo dõi" — không phải lỗi
+        // đáng làm ồn ào log production.
         return null;
       }
     },

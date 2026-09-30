@@ -13,7 +13,7 @@ import { useAppAuth } from '@/features/auth/hooks';
 import { getBookmarksByBook } from '@/features/bookmarks/api/bookmark.api';
 import { useCreateBookmark, useDeleteBookmark } from '@/features/bookmarks/api/bookmark.mutations';
 import { bookmarkKeys } from '@/lib/query-keys';
-import { useChapterComments } from '@/features/chapters/hooks/useChapterComments';
+import { useQuoteShare } from '@/features/chapters/hooks/useQuoteShare';
 import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
 
 import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
@@ -66,14 +66,23 @@ export const ChapterContent = memo(function ChapterContent({
     onActiveParagraphChange,
 }: ChapterContentProps) {
     const settings = useReadingSettings(s => s.settings);
-    const {
-        activeParagraphId,
-        commentDrawerOpen,
-        activeParagraph,
-        handleToggleComments,
-        handleCloseDrawer,
-        handleOpenPostModal,
-    } = useChapterComments({ bookId, bookTitle });
+    const [activeParagraphId, setActiveParagraphId] = useState<string | null>(null);
+    const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
+    const [activeParagraph, setActiveParagraph] = useState<Paragraph | null>(null);
+
+    const { shareQuote } = useQuoteShare(bookId, bookTitle);
+
+    const handleToggleComments = (paragraph: Paragraph) => {
+        setActiveParagraphId(paragraph.id);
+        setActiveParagraph(paragraph);
+        setCommentDrawerOpen(true);
+    };
+
+    const handleCloseDrawer = () => {
+        setCommentDrawerOpen(false);
+        setActiveParagraphId(null);
+        setActiveParagraph(null);
+    };
 
     const { user } = useAppAuth();
     const router = useRouter();
@@ -303,7 +312,7 @@ export const ChapterContent = memo(function ChapterContent({
                                     <Button
                                         variant="secondary"
                                         size="icon"
-                                        onClick={() => handleOpenPostModal(para)}
+                                        onClick={() => shareQuote(para)}
                                         title="Chia sẻ"
                                         className="h-7 w-7 rounded-md hover:scale-110 transition-transform"
                                         aria-label="Chia sẻ"

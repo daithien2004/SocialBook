@@ -28,7 +28,12 @@ export const libraryQueries = {
   chapterProgress: (params: { bookId: string; chapterId: string }) => ({
     queryKey: libraryKeys.chapterProgress(params.bookId, params.chapterId),
     queryFn: (): Promise<{ progress: number }> => getChapterProgress(params),
-    gcTime: 0,
+    // Cache được setQueryData cập nhật ngay sau mỗi lần lưu, và gcTime giữ
+    // cache lại để mở lại chương vừa đọc không phải gọi API. staleTime chặn
+    // refetch mỗi lần focus tab; 1 phút là mức tối đa mà vẫn thấy được
+    // tiến độ từ thiết bị/tab khác.
+    staleTime: STALE_TIME.DEFAULT,
+    gcTime: GC_TIME.DEFAULT,
   }),
   bookInfo: (bookId: string) => ({
     queryKey: libraryKeys.bookInfo(bookId),

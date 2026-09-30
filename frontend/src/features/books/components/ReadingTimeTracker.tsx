@@ -67,7 +67,7 @@ export function ReadingTimeTracker({ bookId, chapterId }: ReadingTimeTrackerProp
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [bookId, chapterId, isAuthenticated, trackEvent]);
+  }, [bookId, chapterId, isAuthenticated, trackEvent, recordReadingTimeMutate]);
 
   return null;
 }

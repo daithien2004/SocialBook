@@ -37,7 +37,11 @@ export function useUpdateReadingProgress() {
   return useMutation<UpdateReadingProgressResult, Error, UpdateProgressRequest>({
     mutationFn: updateReadingProgress,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: libraryKeys.chapterProgress(variables.bookId, variables.chapterId) });
+      // Client vừa gửi progress lên, server chắc chắn nhận đúng giá trị đó
+      // nên ghi thẳng vào cache thay vì invalidate để refetch lại.
+      queryClient.setQueryData(libraryKeys.chapterProgress(variables.bookId, variables.chapterId), {
+        progress: variables.progress,
+      });
       queryClient.invalidateQueries({ queryKey: libraryKeys.bookInfo(variables.bookId) });
     },
   });

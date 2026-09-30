@@ -78,10 +78,11 @@ export function FloatingDock({
 
   return (
     <div
+      inert={!isControlsVisible}
       className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 ${
         isControlsVisible
           ? 'translate-y-0 opacity-100'
-          : 'translate-y-24 opacity-0'
+          : 'translate-y-24 opacity-0 pointer-events-none'
       }`}
     >
       <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-background/90 backdrop-blur-xl border border-border shadow-2xl max-w-[95vw] overflow-x-auto scrollbar-hide">

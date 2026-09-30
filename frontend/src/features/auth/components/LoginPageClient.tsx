@@ -4,12 +4,14 @@ import {
   LoginFormValues,
   loginSchema,
 } from '@/features/auth/types/auth.type';
-import { useLoginFlow } from '@/features/auth/hooks/useLoginFlow';
+import { useLogin } from '@/features/auth/hooks/useLogin';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { mapOAuthError } from '@/lib/map-oauth-error';
 
 import { AppButton } from '@/components/shared/AppButton';
 import { Button } from '@/components/ui/button';
@@ -25,21 +27,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 
+export const GOOGLE_OAUTH_URL = '/api/auth/google?callbackUrl=/';
+export const GITHUB_OAUTH_URL = '/api/auth/github?callbackUrl=/';
+
 function LoginPageContent() {
-  const {
-    isLoading,
-    serverError,
-    showPassword,
-    setShowPassword,
-    handleSubmit,
-    handleGoogleSignin,
-    handleGithubSignin,
-    handleErrorFromParams,
-  } = useLoginFlow();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showPassword, setShowPassword] = useState(false);
+  const { serverError, setServerError, handleLogin } = useLogin();
 
   useEffect(() => {
-    handleErrorFromParams();
-  }, [handleErrorFromParams]);
+    const error = searchParams.get('error');
+    if (error) {
+      setServerError(mapOAuthError(error));
+      router.replace('/login');
+    }
+  }, [searchParams, router, setServerError]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -50,16 +53,18 @@ function LoginPageContent() {
     },
   });
 
+  const isLoading = form.formState.isSubmitting;
+
   const onSubmit = (data: LoginFormValues) => {
-    handleSubmit(data);
+    return handleLogin(data);
   };
 
-  const handleGoogleSigninWrapper = () => {
-    handleGoogleSignin();
+  const handleGoogleSignin = () => {
+    router.push(GOOGLE_OAUTH_URL);
   };
 
-  const handleGithubSigninWrapper = () => {
-    handleGithubSignin();
+  const handleGithubSignin = () => {
+    router.push(GITHUB_OAUTH_URL);
   };
 
   return (
@@ -106,7 +111,7 @@ function LoginPageContent() {
             <AppButton
               variant="outline"
               type="button"
-              onClick={handleGoogleSigninWrapper}
+              onClick={handleGoogleSignin}
               disabled={isLoading}
               loading={false}
               className="w-full py-6 text-base font-medium relative"
@@ -138,7 +143,7 @@ function LoginPageContent() {
             <AppButton
               variant="outline"
               type="button"
-              onClick={handleGithubSigninWrapper}
+              onClick={handleGithubSignin}
               disabled={isLoading}
               loading={false}
               className="w-full py-6 text-base font-medium relative"

@@ -1,8 +1,9 @@
 'use client';
+import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
+import { useSearchParams, useRouter } from 'next/navigation';
 
-import { useReadingRoomData } from '@/features/reading-rooms/hooks/useReadingRoomData';
 import { MobileHeader } from '@/features/reading-rooms/components/MobileHeader';
 import { DesktopSidebar } from '@/features/reading-rooms/components/DesktopSidebar';
 import { RoomTabs } from '@/features/reading-rooms/components/RoomTabs';
@@ -21,25 +22,127 @@ import { LoadingOverlay } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import LoginWall from '@/features/auth/components/LoginWall';
 
+import { useAppAuth } from '@/features/auth/hooks';
+import { useReadingRoomStore } from '@/store/useReadingRoomStore';
+import { useAutoHideDock } from '@/features/books/hooks';
+
+import { useReadingRoomQueries } from '@/features/reading-rooms/hooks/useReadingRoomQueries';
+import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
+import { useReadingRoomActions } from '@/features/reading-rooms/hooks/useReadingRoomActions';
+import { useReadingRoomEffects } from '@/features/reading-rooms/hooks/useReadingRoomEffects';
+import { useRoomPresence } from '@/features/reading-rooms/hooks/useRoomPresence';
+import { useReadingProgress } from '@/features/reading-rooms/hooks/useReadingProgress';
+import { useReadingRoomNavigation } from '@/features/reading-rooms/hooks/useReadingRoomNavigation';
+
 interface ReadingRoomPageClientProps {
   roomCode: string;
 }
 
 export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, isAuthenticated } = useAppAuth();
+
+  const storeRoom = useReadingRoomStore((state) => state.room);
+  const presences = useReadingRoomStore((state) => state.presences);
+  
+  const currentChapterSlug =
+    storeRoom?.status !== 'ended' && storeRoom?.mode === 'sync'
+      ? storeRoom?.currentChapterSlug || ''
+      : searchParams.get('chapter') || storeRoom?.currentChapterSlug || '';
+
   const {
-    isAuthenticated, isLoadingRoom, error, room, initialRoom, isEnded, isHost, presences, user,
-    copied, currentChapterSlug, bookData, chapter, navigation, chaptersData,
-    isLoadingChapter, handleReactivateRoom, isReactivating,
-    contentRef, onActiveParagraphChange,
-    isControlsVisible, showSettings, setShowSettings,
-    showBookmarks, setShowBookmarks, showTOC, setShowTOC,
-    showHighlights, setShowHighlights,
-    showMobileSidebar, setShowMobileSidebar,
-    transferHostOpen, setTransferHostOpen,
-    sendChatMessage, changeMode, endRoom, deleteRoom,
-    handleTransferHost, handleTransferHostClick,
-    handleChapterNav, handleShareRoom, handleCopyCode, onAddToLibrary,
-  } = useReadingRoomData(roomCode);
+    initialRoom,
+    isLoadingRoom,
+    error,
+    bookData,
+    chapterData,
+    isLoadingChapter,
+    chaptersData,
+    quotesData,
+    progressData,
+  } = useReadingRoomQueries({
+    roomCode,
+    currentChapterSlug,
+    isAuthenticated,
+    isRoomLoaded: !!storeRoom,
+  });
+
+  const room = storeRoom || initialRoom;
+  const isEnded = room?.status === 'ended';
+  const isHost = room?.hostId === user?.id;
+  const chapter = chapterData?.chapter;
+  const navigation = chapterData?.navigation;
+  const savedProgress = progressData?.progress || 0;
+
+  const shouldConnectSocket = isAuthenticated && !!initialRoom;
+  const {
+    endRoom,
+    deleteRoom,
+    leaveRoom,
+    changeChapter,
+    changeMode,
+    sendHeartbeat,
+    sendChatMessage,
+  } = useReadingRoomSocket(shouldConnectSocket ? roomCode : undefined);
+
+  const {
+    copied,
+    isReactivating,
+    handleCopyCode,
+    handleShareRoom,
+    handleTransferHost,
+    handleTransferHostClick,
+    handleReactivateRoom,
+    onAddToLibrary,
+  } = useReadingRoomActions({
+    roomCode,
+    bookData,
+    chapter,
+    leaveRoom,
+  });
+
+  useReadingRoomEffects({
+    quotesData,
+    isEnded,
+    initialRoom,
+    chapterId: chapter?.id,
+    savedProgress,
+  });
+
+  const {
+    readingProgress,
+    readingParagraphId,
+    contentRef,
+    onActiveParagraphChange,
+  } = useReadingProgress();
+
+  useRoomPresence(
+    currentChapterSlug || 'unknown',
+    sendHeartbeat,
+    readingParagraphId,
+    readingProgress,
+    bookData?.id,
+    chapter?.id,
+  );
+
+  const { navigateChapter } = useReadingRoomNavigation({
+    roomCode,
+    isEnded,
+    roomMode: room?.mode,
+    isHost,
+  });
+
+  const handleChapterNav = (slug: string) => navigateChapter(slug, bookData?.id, changeChapter);
+
+  // UI state
+  const [transferHostOpen, setTransferHostOpen] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showTOC, setShowTOC] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const isControlsVisible = useAutoHideDock();
 
   if (!isAuthenticated) {
     return (
@@ -67,7 +170,7 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
           icon={AlertTriangle}
           title="Không tìm thấy phòng"
           description="Phòng không tồn tại hoặc đã kết thúc."
-          action={<Button onClick={() => window.location.href = '/reading-rooms'}>Quay lại</Button>}
+          action={<Button onClick={() => router.push('/reading-rooms')}>Quay lại</Button>}
           iconClassName="text-destructive"
         />
       </div>

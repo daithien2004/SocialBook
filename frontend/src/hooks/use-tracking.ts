@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import clientApi from '@/lib/api-client';
 
 export enum UserEventType {
@@ -39,34 +39,5 @@ export const useTracking = () => {
     }
   }, []);
 
-  const useReadingHeartbeat = (bookId: string, chapterId?: string, intervalSeconds = 60) => {
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-    useEffect(() => {
-      if (!bookId) return;
-
-      trackEvent({
-        eventType: UserEventType.START_READING,
-        bookId,
-        chapterId,
-      });
-
-      timerRef.current = setInterval(() => {
-        trackEvent({
-          eventType: UserEventType.READING_PROGRESS,
-          bookId,
-          chapterId,
-          durationSeconds: intervalSeconds,
-        });
-      }, intervalSeconds * 1000);
-
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-      };
-    }, [bookId, chapterId, intervalSeconds]);
-  };
-
-  return { trackEvent, useReadingHeartbeat };
+  return { trackEvent };
 };

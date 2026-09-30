@@ -1,8 +1,12 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { MESSAGES } from '@/constants/messages';
 import { ShieldAlert, Info } from 'lucide-react';
-import { usePostCard } from '@/features/posts/hooks/usePostCard';
+import { usePostLike } from '@/features/posts/hooks/usePostLike';
+import { useDeletePost } from '@/features/posts/api/post.mutations';
 import { Post } from '@/features/posts/types/post.interface';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -10,19 +14,76 @@ import { PostAuthorHeader } from './PostAuthorHeader';
 import { PostActions } from './PostActions';
 import { PostImageGallery } from './PostImageGallery';
 import { PostBookSection } from './PostBookSection';
+import { useAppAuth } from '@/features/auth/hooks';
+import { useModalStore } from '@/store/useModalStore';
+import { Action, Subject } from '@socialbook/shared';
+import { subject } from '@casl/ability';
 
 interface PostCardProps {
     post: Post;
 }
 
 const PostCard = memo(function PostCard({ post }: PostCardProps) {
-    const {
-        isOwner,
-        displayedCommentCount,
-        isLiked,
-        likeCount,
-        actions,
-    } = usePostCard({ post });
+    const { isAuthenticated, ability } = useAppAuth();
+    const router = useRouter();
+    
+    const openEditPost = useModalStore(s => s.openEditPost);
+    const openSharePost = useModalStore(s => s.openSharePost);
+    const openPostComment = useModalStore(s => s.openPostComment);
+    const openConfirm = useModalStore(s => s.openConfirm);
+
+    const deletePostMutation = useDeletePost();
+
+    const { likeCount, isLiked, toggleLike } = usePostLike({
+        postId: post.id,
+        initialLikeCount: post.likesCount ?? 0,
+        initialLikeStatus: post.likedByCurrentUser ?? false,
+    });
+
+    const isOwner = ability?.can(Action.Update, subject(Subject.Post, { userId: post.user?.id || '' })) ?? false;
+    const displayedCommentCount = post.commentsCount ?? 0;
+    const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/posts/${post.id}`;
+    const shareTitle = post.content?.slice(0, 100) || 'Xem bài viết này';
+    const shareMedia = post.imageUrls?.[0] || '/abstract-book-pattern.png';
+
+    const handleLike = useCallback(async () => {
+        if (!isAuthenticated) {
+            toast.info(MESSAGES.REQUIRE_LOGIN, {
+                action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
+            });
+            return;
+        }
+        await toggleLike();
+    }, [isAuthenticated, toggleLike, router]);
+
+    const handleOpenShare = useCallback(() => {
+        openSharePost({ postUrl, shareTitle, shareMedia });
+    }, [openSharePost, postUrl, shareTitle, shareMedia]);
+
+    const handleOpenComment = useCallback(() => {
+        openPostComment({
+            post,
+            handleLike,
+            commentCount: displayedCommentCount,
+            likeStatus: isLiked,
+            likeCount,
+        });
+    }, [openPostComment, post, handleLike, displayedCommentCount, isLiked, likeCount]);
+
+    const handleOpenEdit = useCallback(() => openEditPost({ post }), [openEditPost, post]);
+    
+    const openDeleteConfirm = useCallback(() => {
+        openConfirm({
+            title: "Xóa bài viết?",
+            description: "Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa bài viết này chứ?",
+            confirmText: "Xóa",
+            variant: "destructive",
+            onConfirm: async () => {
+                await deletePostMutation.mutateAsync(post.id);
+                toast.success(MESSAGES.POST_DELETE_SUCCESS);
+            }
+        });
+    }, [openConfirm, deletePostMutation, post.id]);
 
     return (
         <>
@@ -31,8 +92,8 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
                     <PostAuthorHeader
                         post={post}
                         isOwner={isOwner}
-                        onEdit={actions.handleOpenEdit}
-                        onDelete={actions.openDeleteConfirm}
+                        onEdit={handleOpenEdit}
+                        onDelete={openDeleteConfirm}
                     />
                 </CardHeader>
 
@@ -84,9 +145,9 @@ const PostCard = memo(function PostCard({ post }: PostCardProps) {
                     isLiked={isLiked}
                     likeCount={likeCount}
                     commentCount={displayedCommentCount}
-                    onLike={actions.toggleLike}
-                    onComment={actions.handleOpenComment}
-                    onShare={actions.handleOpenShare}
+                    onLike={handleLike}
+                    onComment={handleOpenComment}
+                    onShare={handleOpenShare}
                 />
             </Card>
         </>

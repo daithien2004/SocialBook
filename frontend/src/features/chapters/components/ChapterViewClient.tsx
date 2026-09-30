@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { useMemo, useCallback, useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Image from 'next/image';
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useShallow } from 'zustand/react/shallow';
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { MESSAGES } from "@/constants/messages";
-import { getErrorMessage } from "@/lib/utils";
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { MESSAGES } from '@/constants/messages';
+import { getErrorMessage } from '@/lib/utils';
 import { BookmarksDrawer } from '@/features/chapters/components/BookmarksDrawer';
 import {
   Bookmark,
@@ -22,28 +22,29 @@ import {
   Bot,
   Library,
   Sparkles,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { chaptersQueries } from "@/features/chapters/api/chapters.queries";
-import { useRecordChapterView } from "@/features/chapters/api/chapters.mutations";
-import { useCreatePost } from "@/features/posts/api/post.mutations";
-import { useModalStore } from "@/store/useModalStore";
-import ChapterNavigation from "@/features/chapters/components/ChapterNavigation";
-import CommentSection from "@/features/chapters/components/CommentSection";
-import ChapterHeader from "@/features/chapters/components/ChapterHeader";
-import { ChapterContent } from "@/features/chapters/components/ChapterContent";
-import { PersonalHighlightsDrawer } from "@/features/chapters/components/PersonalHighlightsDrawer";
-import ContentProtection from "@/features/chapters/components/ContentProtection";
-import { useReadingProgress, useReadingView } from "@/features/books/hooks";
-import { useReadingSettings } from "@/store/useReadingSettings";
-import { useAppAuth } from "@/features/auth/hooks";
-import { ReadingTimeTracker } from "@/features/books/components/ReadingTimeTracker";
-import AudiobookView from "@/features/chapters/components/AudiobookView";
-import ChapterListDrawer from "@/features/books/components/ChapterListDrawer";
-import ReadingSettingsPanel from "@/features/chapters/components/ReadingSettingsPanel";
-import { KnowledgeSidebar } from "@/features/reading-rooms/components/KnowledgeSidebar";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
+import { useRecordChapterView } from '@/features/chapters/api/chapters.mutations';
+import { useCreatePost } from '@/features/posts/api/post.mutations';
+import { useModalStore } from '@/store/useModalStore';
+import ChapterNavigation from '@/features/chapters/components/ChapterNavigation';
+import CommentSection from '@/features/chapters/components/CommentSection';
+import ChapterHeader from '@/features/chapters/components/ChapterHeader';
+import { ChapterContent } from '@/features/chapters/components/ChapterContent';
+import { PersonalHighlightsDrawer } from '@/features/chapters/components/PersonalHighlightsDrawer';
+import ContentProtection from '@/features/chapters/components/ContentProtection';
+import { useReadingProgress, useAutoHideDock } from '@/features/books/hooks';
+import { useReadingSettings } from '@/store/useReadingSettings';
+import { useAppAuth } from '@/features/auth/hooks';
+import { ReadingTimeTracker } from '@/features/books/components/ReadingTimeTracker';
+import AudiobookView from '@/features/chapters/components/AudiobookView';
+import ChapterListDrawer from '@/features/books/components/ChapterListDrawer';
+import ReadingSettingsPanel from '@/features/chapters/components/ReadingSettingsPanel';
+import { ReadingProgressBar } from '@/features/books/components/ReadingProgressBar';
+import { KnowledgeSidebar } from '@/features/reading-rooms/components/KnowledgeSidebar';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface ChapterViewClientProps {
   bookSlug: string;
@@ -60,9 +61,9 @@ export default function ChapterViewClient({
 
   const { isAuthenticated: isLoggedIn } = useAppAuth();
 
-  const openCreatePost = useModalStore(s => s.openCreatePost);
-  const openAddToLibrary = useModalStore(s => s.openAddToLibrary);
-  const openChapterSummary = useModalStore(s => s.openChapterSummary);
+  const openCreatePost = useModalStore((s) => s.openCreatePost);
+  const openAddToLibrary = useModalStore((s) => s.openAddToLibrary);
+  const openChapterSummary = useModalStore((s) => s.openChapterSummary);
 
   const {
     data: chapterData,
@@ -70,7 +71,9 @@ export default function ChapterViewClient({
     error,
   } = useQuery({ ...chaptersQueries.detail({ bookSlug, chapterSlug }) });
 
-  const { data: chaptersData } = useQuery({ ...chaptersQueries.list({ bookSlug, limit: 1000 }) });
+  const { data: chaptersData } = useQuery({
+    ...chaptersQueries.list({ bookSlug, limit: 1000 }),
+  });
   const { mutate: recordChapterView } = useRecordChapterView();
   const createPost = useCreatePost();
 
@@ -86,67 +89,81 @@ export default function ChapterViewClient({
 
   const chapters = chaptersData?.chapters || [];
   const totalChapters = chaptersData?.total || 0;
-  const paragraphs = useMemo(() => chapter?.paragraphs || [], [chapter?.paragraphs]);
+  const paragraphs = useMemo(
+    () => chapter?.paragraphs || [],
+    [chapter?.paragraphs],
+  );
 
-  const { isControlsVisible } = useReadingView();
+  const isControlsVisible = useAutoHideDock();
 
-  const [viewMode, setViewMode] = useState<"read" | "listen">("read");
+  const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
   const [showTOC, setShowTOC] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAISidebar, setShowAISidebar] = useState(false);
   const [showHighlights, setShowHighlights] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const { settings, updateSettings } = useReadingSettings(
-    useShallow((s) => ({ settings: s.settings, updateSettings: s.updateSettings }))
+    useShallow((s) => ({
+      settings: s.settings,
+      updateSettings: s.updateSettings,
+    })),
   );
-  const contentRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-
-  const { savedProgress, restoreScroll } = useReadingProgress(
-    book?.id || "",
-    chapter?.id || "",
-    !isLoading && !!chapter && viewMode === "read" && isLoggedIn,
-    contentRef,
-  );
-
-  const hasShownToast = useRef(false);
 
   useEffect(() => {
-    if (savedProgress > 5 && savedProgress < 100 && !hasShownToast.current) {
-      hasShownToast.current = true;
-      setTimeout(() => {
-        toast("Bạn đang đọc dở chương này", {
+    useReadingSettings.persist.rehydrate();
+  }, []);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  // savedProgress đổi liên tục trong lúc cuộn, nên nếu không chốt lại thì mỗi
+  // lần lưu tiến độ lại bắn thêm một toast "đọc tiếp" chồng lên màn hình.
+  const resumeToastShownRef = useRef<string | null>(null);
+
+  const { savedProgress, restoreScroll } = useReadingProgress(
+    book?.id || '',
+    chapter?.id || '',
+    contentRef,
+    !isLoading && !!chapter && viewMode === 'read' && isLoggedIn,
+  );
+
+  useEffect(() => {
+    if (!chapter?.id || resumeToastShownRef.current === chapter.id) return;
+    if (savedProgress > 5 && savedProgress < 100) {
+      resumeToastShownRef.current = chapter.id;
+      const t = setTimeout(() => {
+        toast('Bạn đang đọc dở chương này', {
           description: `Tiếp tục tại vị trí ${Math.floor(savedProgress)}%?`,
           action: {
-            label: "Đọc tiếp",
+            label: 'Đọc tiếp',
             onClick: restoreScroll,
           },
           duration: 8000,
         });
       }, 1000);
+      return () => clearTimeout(t);
     }
-  }, [savedProgress, restoreScroll]);
+  }, [chapter?.id, savedProgress, restoreScroll]);
 
   const goToPreviousChapter = useCallback(() => {
     if (navigation?.previous) {
-      router.push(
-        `/books/${bookSlug}/chapters/${navigation.previous.slug}`,
-      );
+      router.push(`/books/${bookSlug}/chapters/${navigation.previous.slug}`);
     }
   }, [navigation, bookSlug, router]);
 
-  const goToNextChapter = useCallback((autoplayNext = false) => {
-    if (navigation?.next) {
-      router.push(
-        `/books/${bookSlug}/chapters/${navigation.next.slug}${autoplayNext === true ? '?autoplay=true' : ''}`,
-      );
-    }
-  }, [navigation, bookSlug, router]);
+  const goToNextChapter = useCallback(
+    (autoplayNext = false) => {
+      if (navigation?.next) {
+        router.push(
+          `/books/${bookSlug}/chapters/${navigation.next.slug}${autoplayNext === true ? '?autoplay=true' : ''}`,
+        );
+      }
+    },
+    [navigation, bookSlug, router],
+  );
 
   const defaultShareContent = useMemo(() => {
-    if (!book || !chapter) return "";
+    if (!book || !chapter) return '';
     return `📖 Đang đọc: ${book.title} - ${chapter.title}
-✍️ Tác giả: ${book.authorName || "Không rõ"}
+✍️ Tác giả: ${book.authorName || 'Không rõ'}
 
 ${book.description?.slice(0, 100)}...`;
   }, [book, chapter]);
@@ -154,13 +171,13 @@ ${book.description?.slice(0, 100)}...`;
   const handleOpenShareModal = () => {
     openCreatePost({
       title: `Chia sẻ "${chapter?.title}"`,
-      contentPlaceholder: "Chia sẻ cảm nghĩ của bạn về chương này...",
+      contentPlaceholder: 'Chia sẻ cảm nghĩ của bạn về chương này...',
       defaultContent: defaultShareContent,
       defaultBookId: book?.id,
       defaultBookTitle: book?.title,
       onSubmit: async (data) => {
         if (!book?.id) {
-          toast.error("Không tìm thấy thông tin sách");
+          toast.error('Không tìm thấy thông tin sách');
           return;
         }
 
@@ -172,12 +189,12 @@ ${book.description?.slice(0, 100)}...`;
           });
 
           if (result.warning) {
-            toast.warning("Bài viết đang được xem xét", {
+            toast.warning('Bài viết đang được xem xét', {
               description: result.warning,
               duration: 5000,
             });
           } else {
-            toast.success("Chia sẻ thành công!");
+            toast.success('Chia sẻ thành công!');
           }
         } catch (error) {
           toast.error(getErrorMessage(error));
@@ -210,12 +227,12 @@ ${book.description?.slice(0, 100)}...`;
     );
   }
 
-  if (viewMode === "listen") {
+  if (viewMode === 'listen') {
     return (
       <div className="h-screen bg-background flex flex-col overflow-hidden animate-in fade-in duration-300">
         <div className="h-16 px-4 flex items-center justify-between border-b border-border bg-background shrink-0 z-50 transition-colors duration-300">
           <button
-            onClick={() => setViewMode("read")}
+            onClick={() => setViewMode('read')}
             className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
           >
             <ChevronLeft size={20} />
@@ -224,7 +241,7 @@ ${book.description?.slice(0, 100)}...`;
 
           <div className="flex bg-muted p-1 rounded-lg border border-border">
             <button
-              onClick={() => setViewMode("read")}
+              onClick={() => setViewMode('read')}
               className="px-4 py-1.5 rounded-md text-sm font-medium text-muted-foreground hover:text-primary transition-all"
             >
               Đọc
@@ -270,21 +287,22 @@ ${book.description?.slice(0, 100)}...`;
         <div className="absolute inset-0 bg-background/80 dark:bg-background/90"></div>
       </div>
 
-      <ReadingTimeTracker bookId={book.id} chapterId={chapter.id} />
-
-      <div
-        className="fixed top-0 left-0 h-1 bg-primary z-[60] transition-all duration-300 ease-out"
-        style={{
-          width: `${savedProgress}%`,
-          opacity: isControlsVisible ? 1 : 0,
-        }}
+      <ReadingTimeTracker
+        key={chapter.id}
+        bookId={book.id}
+        chapterId={chapter.id}
+      />
+      <ReadingProgressBar
+        chapterId={chapter.id}
+        isControlsVisible={isControlsVisible}
+        contentRef={contentRef}
       />
 
       <main className="relative z-10 pt-20 px-4 sm:px-6 lg:px-8 mx-auto transition-all duration-500 max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
           {/* Main Content */}
           <div
-            className={`flex-1 w-full max-w-3xl transition-all duration-500 ${showAISidebar ? "lg:mr-0" : "mx-auto"}`}
+            className={`flex-1 w-full max-w-3xl transition-all duration-500 ${showAISidebar ? 'lg:mr-0' : 'mx-auto'}`}
           >
             <ChapterHeader
               bookTitle={book.title}
@@ -339,9 +357,17 @@ ${book.description?.slice(0, 100)}...`;
           )}
 
           {/* Mobile AI Sidebar (Sheet) */}
-          <Sheet open={showAISidebar && isMobile} onOpenChange={setShowAISidebar}>
-            <SheetContent side="bottom" className="h-[85vh] p-0 rounded-t-3xl border-t border-border overflow-hidden flex flex-col z-50">
-              <SheetTitle className="sr-only">Trợ lý AI phân tích nội dung</SheetTitle>
+          <Sheet
+            open={showAISidebar && isMobile}
+            onOpenChange={setShowAISidebar}
+          >
+            <SheetContent
+              side="bottom"
+              className="h-[85vh] p-0 rounded-t-3xl border-t border-border overflow-hidden flex flex-col z-50"
+            >
+              <SheetTitle className="sr-only">
+                Trợ lý AI phân tích nội dung
+              </SheetTitle>
               <KnowledgeSidebar bookSlug={bookSlug} chapterId={chapter.id} />
             </SheetContent>
           </Sheet>
@@ -349,10 +375,11 @@ ${book.description?.slice(0, 100)}...`;
       </main>
 
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${
+        inert={!isControlsVisible}
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-500 ease-out ${
           isControlsVisible
-            ? "translate-y-0 opacity-100"
-            : "translate-y-24 opacity-0"
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-24 opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex items-center gap-1 p-1.5 rounded-2xl bg-background/90 backdrop-blur-xl border border-border shadow-2xl max-w-[95vw] overflow-x-auto scrollbar-hide">
@@ -383,7 +410,10 @@ ${book.description?.slice(0, 100)}...`;
             onClick={() => {
               if (!isLoggedIn) {
                 toast.info(MESSAGES.REQUIRE_LOGIN, {
-                  action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
+                  action: {
+                    label: 'Đăng nhập',
+                    onClick: () => router.push('/login'),
+                  },
                 });
                 return;
               }
@@ -395,13 +425,13 @@ ${book.description?.slice(0, 100)}...`;
 
           <div className="flex bg-muted rounded-xl p-1 shrink-0">
             <button
-              onClick={() => setViewMode("read")}
+              onClick={() => setViewMode('read')}
               className="p-2 rounded-lg bg-background text-foreground shadow-sm transition-all"
             >
               <BookOpen size={18} />
             </button>
             <button
-              onClick={() => setViewMode("listen")}
+              onClick={() => setViewMode('listen')}
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all"
             >
               <Headphones size={18} />
@@ -426,7 +456,12 @@ ${book.description?.slice(0, 100)}...`;
             <DockButton
               icon={<Sparkles size={20} />}
               label="Tóm tắt AI"
-              onClick={() => openChapterSummary({ chapterId: chapter.id, chapterTitle: chapter.title })}
+              onClick={() =>
+                openChapterSummary({
+                  chapterId: chapter.id,
+                  chapterTitle: chapter.title,
+                })
+              }
             />
           )}
 
@@ -447,7 +482,10 @@ ${book.description?.slice(0, 100)}...`;
             onClick={() => {
               if (!isLoggedIn) {
                 toast.info(MESSAGES.REQUIRE_LOGIN, {
-                  action: { label: 'Đăng nhập', onClick: () => router.push('/login') },
+                  action: {
+                    label: 'Đăng nhập',
+                    onClick: () => router.push('/login'),
+                  },
                 });
                 return;
               }
@@ -460,15 +498,25 @@ ${book.description?.slice(0, 100)}...`;
           {/* Quick: Font size A-/A+ */}
           <div className="flex items-center bg-muted rounded-xl p-1 shrink-0 gap-0.5">
             <button
-              onClick={() => updateSettings({ fontSize: Math.max(13, settings.fontSize - 1) })}
+              onClick={() =>
+                updateSettings({
+                  fontSize: Math.max(13, settings.fontSize - 1),
+                })
+              }
               className="w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all flex items-center justify-center text-sm font-bold"
               title="Giảm cỡ chữ"
             >
               A-
             </button>
-            <span className="text-[10px] text-muted-foreground px-1 tabular-nums">{settings.fontSize}</span>
+            <span className="text-[10px] text-muted-foreground px-1 tabular-nums">
+              {settings.fontSize}
+            </span>
             <button
-              onClick={() => updateSettings({ fontSize: Math.min(26, settings.fontSize + 1) })}
+              onClick={() =>
+                updateSettings({
+                  fontSize: Math.min(26, settings.fontSize + 1),
+                })
+              }
               className="w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all flex items-center justify-center text-sm font-bold"
               title="Tăng cỡ chữ"
             >
@@ -501,7 +549,7 @@ ${book.description?.slice(0, 100)}...`;
         bookId={book.id}
         bookSlug={bookSlug}
         currentChapterId={chapter.id}
-        chapters={chapters.map(c => ({ id: c.id, slug: c.slug }))}
+        chapters={chapters.map((c) => ({ id: c.id, slug: c.slug }))}
       />
 
       <BookmarksDrawer
@@ -533,8 +581,13 @@ function DockButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
+      // Nút chỉ có icon, không có chữ nào cho screen reader đọc — tooltip bên
+      // dưới là span scale-0 nên không tính là tên.
+      aria-label={label}
+      title={label}
       className={`relative flex flex-col shrink-0 items-center justify-center w-12 h-12 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-all group ${className || ''}`}
     >
       {icon}

@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from '@/lib/query-client';
+import { getQueryClient } from '@/lib/query-client';
 import { AppSessionProvider } from '@/lib/app-session';
 import { SocketProvider } from './SocketProvider';
 
@@ -16,6 +16,8 @@ const ReactQueryDevtools = dynamic(
 );
 
 export function Providers({ children }: { children: ReactNode }) {
+  const queryClient = getQueryClient();
+
   return (
     <AppSessionProvider>
       <QueryClientProvider client={queryClient}>

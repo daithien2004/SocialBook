@@ -125,6 +125,7 @@ export const useReadingSettings = create<ReadingSettingsStore>()(
         {
             name: 'reading-settings',
             storage: createJSONStorage(() => localStorage),
+            skipHydration: true,
         }
     )
 );

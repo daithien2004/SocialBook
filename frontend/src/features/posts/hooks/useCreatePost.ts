@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useCallback } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useImageUpload } from "./useImageUpload";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -22,20 +23,7 @@ interface UseCreatePostOptions {
   onSubmit: (values: CreatePostFormValues) => Promise<void>;
 }
 
-interface UseCreatePostReturn {
-  form: ReturnType<typeof useForm<CreatePostFormValues>>;
-  previewUrls: string[];
-  isSubmitting: boolean;
-  handleFileSelect: (files: FileList | null) => void;
-  handleRemoveImage: (index: number) => void;
-  canAddMore: boolean;
-  totalImages: number;
-  onSubmit: (values: CreatePostFormValues) => Promise<void>;
-}
-
-export function useCreatePost(
-  options: UseCreatePostOptions,
-): UseCreatePostReturn {
+export function useCreatePost(options: UseCreatePostOptions) {
   const {
     defaultContent = "",
     defaultBookId = "",
@@ -43,9 +31,6 @@ export function useCreatePost(
     maxImages = 10,
     onSubmit: externalOnSubmit,
   } = options;
-
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreatePostFormValues>({
     resolver: zodResolver(createPostSchema),
@@ -57,10 +42,8 @@ export function useCreatePost(
     },
   });
 
-  const { setValue, reset, getValues } = form;
-  const currentImages = useWatch({ control: form.control, name: "images" }) || [];
-  const totalImages = currentImages.length;
-  const canAddMore = totalImages < maxImages;
+  const { reset } = form;
+  const currentImages = useWatch({ control: form.control, name: "images" }) ?? [];
 
   useEffect(() => {
     reset({
@@ -69,63 +52,20 @@ export function useCreatePost(
       bookTitle: defaultBookTitle,
       images: [],
     });
-    setPreviewUrls([]);
   }, [defaultContent, defaultBookId, defaultBookTitle, reset]);
 
-  const handleFileSelect = useCallback(
-    (files: FileList | null) => {
-      if (!files || files.length === 0) return;
-
-      const filesArray = Array.from(files);
-      const currentImagesVal = getValues("images") || [];
-      const totalImagesVal = currentImagesVal.length + filesArray.length;
-
-      if (totalImagesVal > maxImages) {
-        toast.error(`Chỉ có thể thêm tối đa ${maxImages} ảnh`);
-        return;
-      }
-
-      const validFiles = filesArray.filter((file) => {
-        const isValid = file.type.startsWith("image/");
-        if (!isValid) {
-          toast.error(`File ${file.name} không phải là hình ảnh`);
-        }
-        return isValid;
-      });
-
-      if (validFiles.length > 0) {
-        const updatedImages = [...currentImagesVal, ...validFiles];
-        setValue("images", updatedImages);
-        const newPreviewUrls = validFiles.map((file) =>
-          URL.createObjectURL(file),
-        );
-        setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
-      }
-    },
-    [maxImages, setValue, getValues],
-  );
-
-  const handleRemoveImage = useCallback(
-    (index: number) => {
-      const currentImagesVal = getValues("images") || [];
-      URL.revokeObjectURL(previewUrls[index]);
-      const updatedImages = currentImagesVal.filter((_, i) => i !== index);
-      const updatedPreviews = previewUrls.filter((_, i) => i !== index);
-      setValue("images", updatedImages);
-      setPreviewUrls(updatedPreviews);
-    },
-    [previewUrls, setValue, getValues],
-  );
+  const imageUpload = useImageUpload({
+    maxImages,
+    currentImages,
+    onChange: (images) => form.setValue("images", images),
+  });
 
   const onSubmit = useCallback(
     async (values: CreatePostFormValues) => {
-      setIsSubmitting(true);
       try {
         await externalOnSubmit(values);
       } catch (error) {
         toast.error(getErrorMessage(error));
-      } finally {
-        setIsSubmitting(false);
       }
     },
     [externalOnSubmit],
@@ -133,12 +73,8 @@ export function useCreatePost(
 
   return {
     form,
-    previewUrls,
-    isSubmitting,
-    handleFileSelect,
-    handleRemoveImage,
-    canAddMore,
-    totalImages,
+    isSubmitting: form.formState.isSubmitting,
     onSubmit,
+    ...imageUpload,
   };
 }

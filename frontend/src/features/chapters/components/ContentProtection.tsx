@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import React, { useEffect, useRef } from "react";
-import { toast } from "sonner";
+import React, { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { env } from '@/env';
 
 interface ContentProtectionProps {
   children: React.ReactNode;
@@ -10,12 +11,12 @@ interface ContentProtectionProps {
 
 export default function ContentProtection({
   children,
-  className = "",
+  className = '',
 }: ContentProtectionProps) {
+  const protectionFlag = env.NEXT_PUBLIC_ENABLE_CONTENT_PROTECTION;
   const isProtectionEnabled =
-    process.env.NEXT_PUBLIC_ENABLE_CONTENT_PROTECTION === "true" ||
-    (process.env.NODE_ENV === "production" &&
-      process.env.NEXT_PUBLIC_ENABLE_CONTENT_PROTECTION !== "false");
+    protectionFlag === 'true' ||
+    (process.env.NODE_ENV === 'production' && protectionFlag !== 'false');
 
   const protectedRef = useRef<HTMLDivElement>(null);
 
@@ -24,14 +25,16 @@ export default function ContentProtection({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Chặn lệnh In (Ctrl+P / Cmd+P) — áp dụng toàn trang
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
-        toast.warning("Hành động in tài liệu bị vô hiệu hóa để bảo vệ bản quyền.");
+        toast.warning(
+          'Hành động in tài liệu bị vô hiệu hóa để bảo vệ bản quyền.',
+        );
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isProtectionEnabled]);
 
   if (!isProtectionEnabled) {
@@ -46,18 +49,16 @@ export default function ContentProtection({
   const handleContextMenu = (e: React.MouseEvent) => {
     if (!isInsideProtectedArea(e.nativeEvent.target)) return;
     e.preventDefault();
-    toast.warning("Bạn không thể sử dụng chuột phải ở khu vực này.");
+    toast.warning('Bạn không thể sử dụng chuột phải ở khu vực này.');
   };
 
   const preventCopyEvent = (e: React.ClipboardEvent | React.KeyboardEvent) => {
     if (!isInsideProtectedArea(e.nativeEvent.target)) return;
+    // preventDefault là đủ để chặn copy. Trước đây còn gọi
+    // navigator.clipboard.writeText('') — việc đó xoá luôn clipboard của người
+    // dùng, làm mất dữ liệu họ đã copy ở nơi khác.
     e.preventDefault();
-    try {
-      navigator.clipboard.writeText("");
-    } catch {
-      // ignore
-    }
-    toast.warning("Hành động sao chép bị vô hiệu hóa để bảo vệ bản quyền.");
+    toast.warning('Hành động sao chép bị vô hiệu hóa để bảo vệ bản quyền.');
   };
 
   return (
@@ -71,7 +72,7 @@ export default function ContentProtection({
       onKeyDown={(e) => {
         if (
           (e.ctrlKey || e.metaKey) &&
-          (e.key.toLowerCase() === "c" || e.key.toLowerCase() === "x")
+          (e.key.toLowerCase() === 'c' || e.key.toLowerCase() === 'x')
         ) {
           preventCopyEvent(e);
         }

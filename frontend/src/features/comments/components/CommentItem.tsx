@@ -8,10 +8,17 @@ import {
     MoreVertical,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import ListComments from './ListComments';
-import { useCommentActions } from '@/features/comments/hooks/useCommentActions';
+import { useCommentEdit } from '@/features/comments/hooks/useCommentEdit';
+import { useCommentReply } from '@/features/comments/hooks/useCommentReply';
+import { useCommentDelete } from '@/features/comments/hooks/useCommentDelete';
+import { useAppAuth } from '@/features/auth/hooks';
+import { subject } from '@casl/ability';
+import { Action, Subject } from '@socialbook/shared';
+import { useToggleLike } from '@/features/likes/api/like.mutations';
+import { useOptimisticToggle } from '@/hooks/useOptimisticToggle';
 
 import { UserAvatar } from '@/components/shared/UserAvatar';
 import { Button } from '@/components/ui/button';
@@ -45,39 +52,63 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
 }) {
     const router = useRouter();
     const closePostComment = useModalStore(s => s.closePostComment);
+    const { ability } = useAppAuth();
 
+    const [showReplies, setShowReplies] = useState(false);
+    const [isReplying, setIsReplying] = useState(false);
+    const [replyText, setReplyText] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [editText, setEditText] = useState(comment.content);
+    const [optimisticReplyCount, setOptimisticReplyCount] = useState(comment.repliesCount ?? 0);
+
+    const isOwner = ability?.can(Action.Update, subject(Subject.Comment, { userId: comment.user.id })) ?? false;
+    const hasReplyCount = comment.repliesCount !== undefined;
+    const effectiveParentId = depth === 3 ? (comment.parentId ?? comment.id) : comment.id;
+
+    useEffect(() => {
+        if (hasReplyCount) {
+            queueMicrotask(() => {
+                setOptimisticReplyCount(comment.repliesCount ?? 0);
+            });
+        }
+    }, [comment.repliesCount, hasReplyCount]);
+
+    const { handleEditComment, isEditingComment } = useCommentEdit(comment, targetId, () => setIsEditing(false));
+    const { handleDeleteComment, isDeletingComment } = useCommentDelete(comment, targetId, onReplyRemoved);
+    const { handleSubmitReply, isPostingReply } = useCommentReply(
+        comment, 
+        targetId, 
+        targetType, 
+        depth, 
+        (isMaxDepth) => {
+            setReplyText('');
+            setShowReplies(true);
+            setIsReplying(false);
+            if (!isMaxDepth && hasReplyCount) {
+                setOptimisticReplyCount((prev) => prev + 1);
+            }
+        },
+        onReplyAdded
+    );
+
+    const toggleLike = useToggleLike();
     const {
-        isOwner,
-        optimisticIsLiked,
-        optimisticReplyCount,
-        isEditing,
-        editText,
-        setEditText,
-        isReplying,
-        replyText,
-        setReplyText,
-        showReplies,
-        isEditingComment,
-        isDeletingComment,
-        isPostingReply,
-        effectiveParentId,
-        setIsEditing,
-        handleEditComment,
-        handleDeleteComment,
-        handleSubmitReply,
-        handleLikeComment,
-        handleReplyClick,
-        setOptimisticReplyCount,
-    } = useCommentActions({
-        comment,
-        targetId,
-        targetType,
-        depth,
-        onReplyAdded,
-        onReplyRemoved,
+        isActive: optimisticIsLiked,
+        toggle: handleLikeComment,
+    } = useOptimisticToggle({
+        initialCount: comment.likesCount ?? 0,
+        initialState: comment.isLiked ?? false,
+        onToggle: () => toggleLike.mutateAsync({
+            targetId: comment.id,
+            targetType: 'comment',
+        }),
     });
 
-    const hasReplyCount = comment.repliesCount !== undefined;
+    const handleReplyClick = () => {
+        setShowReplies(true);
+        setIsReplying((prev) => !prev);
+    };
+
     const displayedReplyCount = hasReplyCount ? optimisticReplyCount : null;
 
     return (
@@ -121,7 +152,7 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
                                                 !e.shiftKey
                                             ) {
                                                 e.preventDefault();
-                                                handleEditComment();
+                                                handleEditComment(editText);
                                             }
                                             if (e.key === 'Escape') {
                                                 setIsEditing(false);
@@ -134,7 +165,7 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
 
                                     <Button
                                         disabled={isEditingComment}
-                                        onClick={handleEditComment}
+                                        onClick={() => handleEditComment(editText)}
                                         size="icon"
                                         variant="ghost"
                                         className="h-8 w-8 bg-primary/10 text-primary hover:bg-primary/20"
@@ -261,7 +292,7 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
                                                 !e.shiftKey
                                             ) {
                                                 e.preventDefault();
-                                                handleSubmitReply();
+                                                handleSubmitReply(replyText);
                                             }
                                         }}
                                         className="h-9 flex-1 text-sm"
@@ -272,7 +303,7 @@ const CommentItemCard: React.FC<CommentItemProps> = React.memo(function CommentI
                                         disabled={
                                             isPostingReply || !replyText.trim()
                                         }
-                                        onClick={handleSubmitReply}
+                                        onClick={() => handleSubmitReply(replyText)}
                                         size="icon"
                                         className="h-9 w-9 bg-primary hover:bg-primary/90"
                                         aria-label="Gửi phản hồi"

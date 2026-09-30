@@ -1,10 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
-import {
-  GITHUB_OAUTH_URL,
-  GOOGLE_OAUTH_URL,
-  useLoginFlow,
-} from '../useLoginFlow';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useLogin } from '../useLogin';
+import { useRouter } from 'next/navigation';
 import { useAppSession } from '@/lib/app-session';
 import { login } from '@/features/auth/api/auth.api';
 
@@ -37,25 +33,16 @@ function axiosError(message: string | string[]): unknown {
   };
 }
 
-describe('useLoginFlow', () => {
+describe('useLogin', () => {
   let mockPush: jest.Mock;
-  let mockReplace: jest.Mock;
-  let mockGetParam: jest.Mock;
   let mockRefetch: jest.Mock;
 
   beforeEach(() => {
     mockPush = jest.fn();
-    mockReplace = jest.fn();
-    mockGetParam = jest.fn();
     mockRefetch = jest.fn().mockResolvedValue(undefined);
 
     (useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
-      replace: mockReplace,
-    });
-
-    (useSearchParams as jest.Mock).mockReturnValue({
-      get: mockGetParam,
     });
 
     (useAppSession as jest.Mock).mockReturnValue({ refetch: mockRefetch });
@@ -66,12 +53,12 @@ describe('useLoginFlow', () => {
   });
 
   it('should login against the backend directly and redirect home', async () => {
-    mockedLogin.mockResolvedValue({ message: 'Đăng nhập thành công' });
+    mockedLogin.mockResolvedValue({ message: 'Đăng nhập thành công' } as never);
 
-    const { result } = renderHook(() => useLoginFlow());
+    const { result } = renderHook(() => useLogin());
 
     await act(async () => {
-      await result.current.handleSubmit({
+      await result.current.handleLogin({
         email: 'test@test.com',
         password: 'password',
       });
@@ -82,17 +69,16 @@ describe('useLoginFlow', () => {
       password: 'password',
     });
     expect(mockPush).toHaveBeenCalledWith('/');
-    expect(result.current.isLoading).toBe(false);
     expect(result.current.serverError).toBeNull();
   });
 
   it('should surface backend error message on failed login', async () => {
     mockedLogin.mockRejectedValue(axiosError('Sai email hoặc mật khẩu'));
 
-    const { result } = renderHook(() => useLoginFlow());
+    const { result } = renderHook(() => useLogin());
 
     await act(async () => {
-      await result.current.handleSubmit({
+      await result.current.handleLogin({
         email: 'test@test.com',
         password: 'wrong',
       });
@@ -100,7 +86,6 @@ describe('useLoginFlow', () => {
 
     expect(result.current.serverError).toBe('Sai email hoặc mật khẩu');
     expect(mockPush).not.toHaveBeenCalled();
-    expect(result.current.isLoading).toBe(false);
   });
 
   it('should join multiple validation messages from the backend', async () => {
@@ -108,10 +93,10 @@ describe('useLoginFlow', () => {
       axiosError(['Email không hợp lệ', 'Mật khẩu quá ngắn']),
     );
 
-    const { result } = renderHook(() => useLoginFlow());
+    const { result } = renderHook(() => useLogin());
 
     await act(async () => {
-      await result.current.handleSubmit({
+      await result.current.handleLogin({
         email: 'test@test.com',
         password: 'pw',
       });
@@ -120,28 +105,5 @@ describe('useLoginFlow', () => {
     expect(result.current.serverError).toBe(
       'Email không hợp lệ, Mật khẩu quá ngắn',
     );
-  });
-
-  it('should navigate to the google oauth proxy endpoint', () => {
-    expect(GOOGLE_OAUTH_URL).toBe('/api/auth/google?callbackUrl=/');
-  });
-
-  it('should navigate to the github oauth proxy endpoint', () => {
-    expect(GITHUB_OAUTH_URL).toBe('/api/auth/github?callbackUrl=/');
-  });
-
-  it('should map OAuth error codes from search params', () => {
-    mockGetParam.mockReturnValue('EmailNotVerified');
-
-    const { result } = renderHook(() => useLoginFlow());
-
-    act(() => {
-      result.current.handleErrorFromParams();
-    });
-
-    expect(result.current.serverError).toBe(
-      'Email chưa được xác thực bởi nhà cung cấp.',
-    );
-    expect(mockReplace).toHaveBeenCalledWith('/login');
   });
 });

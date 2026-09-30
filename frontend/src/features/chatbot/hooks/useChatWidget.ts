@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface ChatbotSource {
     title: string;
@@ -58,6 +59,7 @@ export interface UseChatWidgetResult {
 }
 
 export function useChatWidget({ askChatbot, isAuthenticated, userId }: UseChatWidgetOptions): UseChatWidgetResult {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<ChatMessage[]>(() => loadMessages(userId));
@@ -133,7 +135,7 @@ export function useChatWidget({ askChatbot, isAuthenticated, userId }: UseChatWi
                 toast('Bạn đã hết lượt chat. Đăng nhập để chat không giới hạn!', {
                     action: {
                         label: 'Đăng nhập',
-                        onClick: () => window.location.href = '/login',
+                        onClick: () => router.push('/login'),
                     },
                     duration: 5000,
                 });
@@ -155,7 +157,7 @@ export function useChatWidget({ askChatbot, isAuthenticated, userId }: UseChatWi
         } finally {
             setIsLoading(false);
         }
-    }, [input, askChatbot, formatAIResponse, isAuthenticated]);
+    }, [input, askChatbot, formatAIResponse, isAuthenticated, router]);
 
     return {
         messages,

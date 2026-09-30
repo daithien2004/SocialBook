@@ -4,7 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useModalStore } from '@/store/useModalStore';
 
-import { useBookDetail } from '@/features/books/hooks/useBookDetail';
+import { useQuery } from '@tanstack/react-query';
+import { bookQueries } from '@/features/books/api/books.queries';
+import { useBookLike } from '@/features/books/hooks/useBookLike';
+import { useTrackBookView } from '@/features/books/hooks/useTrackBookView';
+import { useBookShare } from '@/features/books/hooks/useBookShare';
 import { BookHero } from './BookHero';
 import { BookDescription } from './BookDescription';
 import { BookSidebar } from './BookSidebar';
@@ -18,16 +22,11 @@ interface BookDetailClientProps {
 }
 
 export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
-  const {
-    book,
-    isLoading,
-    error,
-    isLiked,
-    isLiking,
-    handleToggleLike,
-    handleSharePost,
-    defaultShareContent,
-  } = useBookDetail(bookSlug);
+  const { data: book, isLoading, error } = useQuery(bookQueries.detail(bookSlug));
+
+  useTrackBookView(book?.slug);
+  const { isLiked, isLiking, handleToggleLike } = useBookLike(book);
+  const { handleSharePost, defaultShareContent } = useBookShare(book);
 
   const openCreatePost = useModalStore(s => s.openCreatePost);
   const openAddToLibrary = useModalStore(s => s.openAddToLibrary);

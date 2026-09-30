@@ -1,4 +1,4 @@
 export { usePostsFeed } from './usePostsFeed';
-export { usePostActions } from './usePostActions';
+export { usePostLike } from './usePostLike';
 export { useCreatePost, createPostSchema } from './useCreatePost';
 export type { CreatePostFormValues } from './useCreatePost';

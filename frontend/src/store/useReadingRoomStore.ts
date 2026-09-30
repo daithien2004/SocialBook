@@ -219,14 +219,17 @@ export const useReadingRoomStore = create<ReadingRoomState>((set) => ({
 
   // Room interaction actions
   setReactions: (reactions) => set({ reactions }),
-  setRoomComments: (comments) => set((state) => {
+  setRoomComments: (comments) => set(() => {
     const annotations: Record<string, number> = {};
     for (const c of comments) {
       if (c.paragraphId) {
         annotations[c.paragraphId] = (annotations[c.paragraphId] || 0) + 1;
       }
     }
-    return { roomComments: comments, annotations: { ...state.annotations, ...annotations } };
+    // Thay hẳn chứ không trộn với state cũ: hàm này chạy khi nạp bình luận của
+    // một phòng, trộn vào sẽ giữ lại số đếm của phòng trước ở các paragraph
+    // trùng id, và không bao giờ xoá được đếm của paragraph đã hết bình luận.
+    return { roomComments: comments, annotations };
   }),
   addRoomComment: (comment) => set((state) => ({
     roomComments: [...state.roomComments, comment],

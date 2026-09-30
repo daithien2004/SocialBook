@@ -1,44 +1,19 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
+import type { RefObject } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import throttle from 'lodash/throttle';
 import { libraryQueries } from '@/features/library/api/library.queries';
 import { useUpdateReadingProgress } from '@/features/library/api/library.mutations';
+import { getContentProgress, getContentTargetScroll } from '../utils/reading-progress';
 
-function getContentProgress(contentEl: HTMLElement): number {
-  const rect = contentEl.getBoundingClientRect();
-  const contentTop = rect.top + window.scrollY;
-  const contentHeight = contentEl.offsetHeight;
-  const viewportHeight = window.innerHeight;
-
-  const scrolledPast = Math.max(0, window.scrollY - contentTop);
-  const totalScrollable = contentHeight - viewportHeight;
-
-  if (totalScrollable <= 0) {
-    return window.scrollY >= contentTop ? 100 : 0;
-  }
-  return Math.min(100, Math.round((scrolledPast / totalScrollable) * 100));
-}
-
-function getContentTargetScroll(
-  savedProgress: number,
-  contentEl: HTMLElement,
-): number {
-  const rect = contentEl.getBoundingClientRect();
-  const contentTop = rect.top + window.scrollY;
-  const contentHeight = contentEl.offsetHeight;
-  const viewportHeight = window.innerHeight;
-
-  const totalScrollable = contentHeight - viewportHeight;
-  if (totalScrollable <= 0) return contentTop;
-
-  return contentTop + (savedProgress / 100) * totalScrollable;
-}
+const SAVE_PROGRESS_DELTA = 5;
+const SAVE_PROGRESS_THROTTLE_MS = 1000;
 
 export function useReadingProgress(
   bookId: string,
   chapterId: string,
+  contentRef: RefObject<HTMLElement | null>,
   enabled: boolean = true,
-  contentRef?: React.RefObject<HTMLElement | null>,
 ) {
   const { mutate: updateProgressMutate } = useUpdateReadingProgress();
   const { data: progressData, isLoading } = useQuery({
@@ -46,60 +21,62 @@ export function useReadingProgress(
     enabled: enabled && !!bookId && !!chapterId,
   });
 
-  const lastProgressRef = useRef(0);
   const savedProgress = progressData?.progress || 0;
 
-  const restoreScroll = useCallback(() => {
-    if (savedProgress > 0) {
-      if (contentRef?.current) {
-        const targetScrollY = getContentTargetScroll(savedProgress, contentRef.current);
-        window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
-      } else {
-        const docHeight =
-          document.documentElement.scrollHeight - window.innerHeight;
-        const targetScrollY = (savedProgress / 100) * docHeight;
-        window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
-      }
+  // Baseline là mốc đã lưu lúc mới mở chương. Chốt đúng 1 lần mỗi chương
+  // để refetch không làm đổi baseline (nếu không, mở lại chương sẽ ghi đè mốc cũ).
+  const [baselineProgress, setBaselineProgress] = useState(0);
+  const baselineChapterRef = useRef<string | null>(null);
 
-      lastProgressRef.current = savedProgress;
-    }
+  useEffect(() => {
+    if (isLoading || !chapterId) return;
+    if (baselineChapterRef.current === chapterId) return;
+    baselineChapterRef.current = chapterId;
+    setBaselineProgress(savedProgress);
+  }, [chapterId, isLoading, savedProgress]);
+
+  const restoreScroll = useCallback(() => {
+    const contentEl = contentRef.current;
+    if (savedProgress <= 0 || !contentEl) return;
+
+    window.scrollTo({
+      top: getContentTargetScroll(savedProgress, contentEl),
+      behavior: 'smooth',
+    });
   }, [savedProgress, contentRef]);
 
   useEffect(() => {
-    if (!enabled || !bookId || !chapterId) return;
+    if (!enabled || !bookId || !chapterId || isLoading) return;
+
+    let lastProgress = baselineProgress;
 
     const handleScroll = throttle(() => {
-      let progress: number;
+      const contentEl = contentRef.current;
+      if (!contentEl) return;
 
-      if (contentRef?.current) {
-        progress = getContentProgress(contentRef.current);
-      } else {
-        const scrollTop = window.scrollY;
-        const docHeight =
-          document.documentElement.scrollHeight - window.innerHeight;
-        if (docHeight <= 0) return;
-        progress = Math.round((scrollTop / docHeight) * 100);
-      }
+      const progress = getContentProgress(contentEl);
 
-      if (
-        Math.abs(progress - lastProgressRef.current) > 5 ||
-        progress === 100
-      ) {
-        lastProgressRef.current = progress;
-        updateProgressMutate({ bookId, chapterId, progress });
-      }
-    }, 1000);
+      const movedFarEnough = Math.abs(progress - lastProgress) > SAVE_PROGRESS_DELTA;
+      const justFinished = progress === 100 && lastProgress !== 100;
+      if (!movedFarEnough && !justFinished) return;
 
-    window.addEventListener('scroll', handleScroll);
+      lastProgress = progress;
+      updateProgressMutate({ bookId, chapterId, progress });
+    }, SAVE_PROGRESS_THROTTLE_MS);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') handleScroll.flush();
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('visibilitychange', handleVisibility);
       handleScroll.cancel();
     };
-  }, [bookId, chapterId, enabled, updateProgressMutate, contentRef]);
+  }, [bookId, chapterId, enabled, isLoading, baselineProgress, updateProgressMutate, contentRef]);
 
-  return {
-    savedProgress,
-    isLoadingProgress: isLoading,
-    restoreScroll,
-  };
+  return { savedProgress, restoreScroll };
 }
