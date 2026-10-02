@@ -74,9 +74,13 @@ export class UpdateProgressUseCase {
       });
     } else {
       wasCompleted = readingProgress.isCompleted();
-      // Only increase progress unless it's a reset (e.g., progress === 0)
-      if (command.progress === 0 || command.progress > readingProgress.progress) {
-        readingProgress.updateProgress(command.progress);
+      if (command.monotonic) {
+        readingProgress.updateProgress(command.progress, { monotonic: true });
+      } else {
+        // Only increase progress unless it's a reset (e.g., progress === 0)
+        if (command.progress === 0 || command.progress > readingProgress.progress) {
+          readingProgress.updateProgress(command.progress);
+        }
       }
     }
 

@@ -52,9 +52,9 @@ interface SocketData {
   avatarUrl?: string;
   roomId?: string;
   bookId?: string;
+  chapterSlugToId?: Record<string, string>;
   pendingProgress?: {
     bookId: string;
-    chapterId: string;
     chapterSlug: string;
     progress: number;
   };
@@ -152,12 +152,18 @@ export class ReadingRoomGateway
   }
 
   private async saveReadingProgress(
-    userId: string,
+    socket: Socket,
     bookId: string,
-    chapterId: string | undefined,
     chapterSlug: string,
     progress: number,
   ): Promise<void> {
+    const sd = socket.data as SocketData;
+    const userId = sd.userId;
+    if (!userId) return;
+
+    sd.chapterSlugToId = sd.chapterSlugToId || {};
+    let chapterId = sd.chapterSlugToId[chapterSlug];
+
     if (!chapterId) {
       try {
         const chapter = await this.chapterRepository.findBySlug(
@@ -166,13 +172,14 @@ export class ReadingRoomGateway
         );
         if (!chapter) return;
         chapterId = chapter.id.toString();
+        sd.chapterSlugToId[chapterSlug] = chapterId;
       } catch {
         return;
       }
     }
     try {
       await this.updateProgressUseCase.execute(
-        new UpdateProgressCommand(userId, bookId, chapterId, progress),
+        new UpdateProgressCommand(userId, bookId, chapterId, progress, true),
       );
     } catch (error: unknown) {
       this.logger.error(
@@ -192,9 +199,8 @@ export class ReadingRoomGateway
     if (pending && sd.userId) {
       sd.pendingProgress = undefined;
       await this.saveReadingProgress(
-        sd.userId,
+        socket,
         pending.bookId,
-        pending.chapterId,
         pending.chapterSlug,
         pending.progress,
       ).catch((e) => this.logger.warn(`Flush progress error: ${e}`));
@@ -683,7 +689,6 @@ export class ReadingRoomGateway
       paragraphId?: string;
       progress?: number;
       bookId?: string;
-      chapterId?: string;
     },
   ) {
     if (!this.isInRoom(socket, body.roomId)) {
@@ -704,7 +709,7 @@ export class ReadingRoomGateway
       : undefined;
     const progress =
       body.progress !== undefined
-        ? Math.max(0, Math.min(1, Number(body.progress) || 0))
+        ? Math.max(0, Math.min(100, Math.round(Number(body.progress) || 0)))
         : undefined;
 
     if (userId && displayName && sd.roomId) {
@@ -717,10 +722,9 @@ export class ReadingRoomGateway
         progress: progress,
       });
 
-      if (sd.bookId && body.chapterId && progress !== undefined) {
+      if (sd.bookId && progress !== undefined) {
         sd.pendingProgress = {
           bookId: sd.bookId,
-          chapterId: String(body.chapterId),
           chapterSlug: chapterSlug,
           progress: progress,
         };

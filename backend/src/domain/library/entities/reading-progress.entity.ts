@@ -101,8 +101,11 @@ export class ReadingProgress extends Entity<string> {
     return this._props.lastReadAt;
   }
 
-  updateProgress(progress: number): void {
-    this._props.progress = Math.max(0, Math.min(100, progress));
+  updateProgress(progress: number, opts: { monotonic?: boolean } = {}): void {
+    const next = Math.max(0, Math.min(100, progress));
+    this._props.progress = opts.monotonic
+      ? Math.max(this._props.progress, next)
+      : next;
     this._props.status =
       this._props.progress >= 100
         ? ChapterStatus.COMPLETED

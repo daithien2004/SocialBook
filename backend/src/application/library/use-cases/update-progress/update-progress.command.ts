@@ -4,5 +4,6 @@ export class UpdateProgressCommand {
     public readonly bookId: string,
     public readonly chapterId: string,
     public readonly progress: number,
+    public readonly monotonic: boolean = false,
   ) {}
 }
