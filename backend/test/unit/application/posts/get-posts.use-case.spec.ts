@@ -17,6 +17,7 @@ describe('GetPostsUseCase (Unit)', () => {
       delete: jest.fn(),
       softDelete: jest.fn(),
       findFlagged: jest.fn(),
+      getModerationStats: jest.fn(),
       countByUser: jest.fn(),
       exists: jest.fn(),
       countTotal: jest.fn(),

@@ -152,6 +152,8 @@ describe('OAuthAuthUseCase', () => {
       'new-1',
       'a@b.co',
       'user',
+      'a',
+      undefined,
     );
     expect(result.accessToken).toBe('access-token');
   });
@@ -217,6 +219,8 @@ describe('OAuthAuthUseCase', () => {
       'u-existing',
       'a@b.co',
       'user',
+      'a',
+      undefined,
     );
     expect(result.refreshToken).toBe('refresh-token');
   });

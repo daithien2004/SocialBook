@@ -45,6 +45,10 @@ describe('RefreshTokenUseCase (Unit)', () => {
       id: { toString: () => USER_ID },
       email: { value: EMAIL },
       roleId: 'role-admin',
+      username: 'user',
+      image: null,
+      lastLoginIp: '127.0.0.1',
+      lastLoginUa: 'jest',
       hashedRt: 'hashed-rt',
       previousHashedRt: undefined,
       refreshRotatedAt: undefined,
@@ -54,7 +58,8 @@ describe('RefreshTokenUseCase (Unit)', () => {
       updateRefreshRotatedAt: withMutators ? jest.fn() : undefined,
     }) as unknown as MockUser;
 
-  const command = () => new RefreshTokenCommand(USER_ID, REFRESH_TOKEN);
+  const command = () =>
+    new RefreshTokenCommand(USER_ID, REFRESH_TOKEN, '127.0.0.1', 'jest');
 
   beforeEach(() => {
     mockUserRepository = {
@@ -113,6 +118,8 @@ describe('RefreshTokenUseCase (Unit)', () => {
       USER_ID,
       EMAIL,
       'admin',
+      'user',
+      null,
     );
     expect(mockRotationPort.writeFreshTokens).toHaveBeenCalled();
     expect(mockRotationPort.releaseLock).toHaveBeenCalledWith(USER_ID);
@@ -160,6 +167,8 @@ describe('RefreshTokenUseCase (Unit)', () => {
       USER_ID,
       EMAIL,
       'user',
+      'user',
+      null,
     );
     expect(mockTokenService.signTokens).not.toHaveBeenCalled();
     expect(mockRotationPort.writeFreshTokens).not.toHaveBeenCalled();

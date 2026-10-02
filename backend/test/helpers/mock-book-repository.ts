@@ -5,6 +5,7 @@ export function createMockBookRepository(): jest.Mocked<IBookRepository> {
     findById: jest.fn(),
     findBySlug: jest.fn(),
     findByTitle: jest.fn(),
+    findUnindexedBooks: jest.fn(),
     findAll: jest.fn(),
     findByAuthor: jest.fn(),
     findByGenre: jest.fn(),

@@ -16,7 +16,8 @@ describe('ReadingRoomGateway Authentication & Origin Check (T6)', () => {
     };
     mockConfigService = {
       get: jest.fn().mockImplementation((key: string, def?: unknown) => {
-        if (key === 'env.FRONTEND_URL') return 'http://localhost:3000,https://socialbook.io.vn';
+        if (key === 'env.FRONTEND_URL')
+          return 'http://localhost:3000,https://socialbook.io.vn';
         return def;
       }),
     };
@@ -67,10 +68,15 @@ describe('ReadingRoomGateway Authentication & Origin Check (T6)', () => {
       data: {},
     };
 
-    const next = jest.fn();
-    await middlewareFn(socket, next);
+    const runMiddleware = (s: unknown) =>
+      new Promise<Error | undefined>((resolve) => {
+        middlewareFn(s, (err) => resolve(err));
+      });
 
-    expect(next).toHaveBeenCalledWith(expect.objectContaining({ message: 'forbidden_origin' }));
+    const err = await runMiddleware(socket);
+    expect(err).toEqual(
+      expect.objectContaining({ message: 'forbidden_origin' }),
+    );
     expect(mockJwtService.verifyAsync).not.toHaveBeenCalled();
   });
 
@@ -100,7 +106,7 @@ describe('ReadingRoomGateway Authentication & Origin Check (T6)', () => {
 
     const err = await runMiddleware(socket);
     expect(err).toBeUndefined();
-    expect(socket.data.userId).toBe('user-123');
+    expect((socket.data as { userId?: string }).userId).toBe('user-123');
     expect(mockJwtService.verifyAsync).toHaveBeenCalledWith(
       'valid-cookie-token',
       expect.objectContaining({ algorithms: ['HS256'] }),

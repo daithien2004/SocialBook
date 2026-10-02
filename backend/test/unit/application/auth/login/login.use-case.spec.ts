@@ -1,6 +1,5 @@
 import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
 import { LoginCommand } from '@/application/auth/use-cases/login/login.command';
-import { TokenService } from '@/application/auth/services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import {
   UnauthorizedDomainException,
@@ -8,7 +7,7 @@ import {
 } from '@/domain/auth/exceptions/auth-exceptions';
 import { User } from '@/domain/users/entities/user.entity';
 
-function createMockTokenService(): jest.Mocked<Partial<TokenService>> {
+function createMockTokenService(): { signTokens: jest.Mock } {
   return {
     signTokens: jest.fn(),
   };
@@ -144,9 +143,9 @@ describe('LoginUseCase (Unit)', () => {
   });
 
   it('should throw UnauthorizedDomainException when user is null', async () => {
-    await expect(useCase.execute(new LoginCommand(null))).rejects.toThrow(
-      UnauthorizedDomainException,
-    );
+    await expect(
+      useCase.execute(new LoginCommand(null as unknown as User)),
+    ).rejects.toThrow(UnauthorizedDomainException);
   });
 
   it('should throw UnauthorizedDomainException when user is not verified', async () => {

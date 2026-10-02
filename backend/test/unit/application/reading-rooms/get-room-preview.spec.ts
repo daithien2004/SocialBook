@@ -78,9 +78,15 @@ describe('GetRoomByCodeUseCase (T3: Information Exposure & Room Preview)', () =>
     expect(result.isFull).toBe(false);
 
     // MUST NOT expose private details to outsiders
-    expect((result as Record<string, unknown>).highlights).toBeUndefined();
-    expect((result as Record<string, unknown>).members).toBeUndefined();
-    expect((result as Record<string, unknown>).hostId).toBeUndefined();
+    expect(
+      (result as unknown as Record<string, unknown>).highlights,
+    ).toBeUndefined();
+    expect(
+      (result as unknown as Record<string, unknown>).members,
+    ).toBeUndefined();
+    expect(
+      (result as unknown as Record<string, unknown>).hostId,
+    ).toBeUndefined();
   });
 
   it('throws NotFoundException when room code does not exist', async () => {

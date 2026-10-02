@@ -1,6 +1,5 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { JwtStrategy } from '@/infrastructure/auth/strategies/jwt.strategy';
-import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { ICachePort } from '@/shared/domain/cache.port';
 import {
@@ -15,7 +14,7 @@ function createMockConfigService(): { getOrThrow: jest.Mock } {
   };
 }
 
-function createMockUserRepository(): jest.Mocked<Partial<IUserRepository>> {
+function createMockUserRepository(): { findById: jest.Mock } {
   return {
     findById: jest.fn(),
   };

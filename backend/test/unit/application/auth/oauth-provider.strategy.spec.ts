@@ -6,7 +6,7 @@ describe('OAuthProviderError', () => {
       'google',
       new Error('token exchange 400'),
     );
-    expect(err.cause.message).toContain('exchange');
+    expect((err.cause as Error).message).toContain('exchange');
     expect(err.provider).toBe('google');
   });
 });

@@ -4,6 +4,7 @@ export function createMockChapterRepository(): jest.Mocked<IChapterRepository> {
   return {
     findById: jest.fn(),
     findByParagraphId: jest.fn(),
+    findBySlug: jest.fn(),
     findAll: jest.fn(),
     findByBook: jest.fn(),
     findListByBookSlug: jest.fn(),

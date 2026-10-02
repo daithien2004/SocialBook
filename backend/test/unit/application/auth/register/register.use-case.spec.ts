@@ -5,9 +5,6 @@ import {
 import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
 import { RegisterCommand } from '@/application/auth/use-cases/register/register.command';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
-import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
-import { GetRoleByNameUseCase } from '@/application/roles/use-cases/get-role-by-name.use-case';
-import { SendOtpUseCase } from '@/application/otp/use-cases/send-otp.use-case';
 import { User } from '@/domain/users/entities/user.entity';
 
 function createMockUserRepository(): jest.Mocked<IUserRepository> {
@@ -33,19 +30,15 @@ function createMockUserRepository(): jest.Mocked<IUserRepository> {
   };
 }
 
-function createMockCreateUserUseCase(): jest.Mocked<
-  Partial<CreateUserUseCase>
-> {
+function createMockCreateUserUseCase(): { execute: jest.Mock } {
   return { execute: jest.fn() };
 }
 
-function createMockGetRoleByNameUseCase(): jest.Mocked<
-  Partial<GetRoleByNameUseCase>
-> {
+function createMockGetRoleByNameUseCase(): { execute: jest.Mock } {
   return { execute: jest.fn() };
 }
 
-function createMockSendOtpUseCase(): jest.Mocked<Partial<SendOtpUseCase>> {
+function createMockSendOtpUseCase(): { execute: jest.Mock } {
   return { execute: jest.fn() };
 }
 
