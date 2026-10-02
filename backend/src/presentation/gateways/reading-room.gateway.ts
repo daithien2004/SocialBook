@@ -43,6 +43,13 @@ import { UpdateProgressUseCase } from '@/application/library/use-cases/update-pr
 import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
+import {
+  DomainException,
+  NotFoundDomainException,
+  ForbiddenDomainException,
+  RoomFullDomainException,
+  ConcurrencyException,
+} from '@/shared/domain/common-exceptions';
 
 import { EventNames } from '@/common/constants/event-names.constant';
 
@@ -514,24 +521,40 @@ export class ReadingRoomGateway
       };
     } catch (error: unknown) {
       let code = 'JOIN_FAILED';
-      if (error && typeof error === 'object' && 'name' in error) {
-        if (error.name === 'NotFoundDomainException') {
-          code = 'NOT_FOUND';
-          this.logger.warn(
-            `Failed join attempt: room ${body.roomCode} not found for user ${userId}`,
-          );
-        } else if (error.name === 'ForbiddenDomainException') {
-          code = 'FORBIDDEN';
-        } else if (error.name === 'RoomFullDomainException') {
-          code = 'FULL';
-        } else if (error.name === 'UnauthorizedDomainException') {
-          code = 'UNAUTHORIZED';
-        }
+      let message = 'Tham gia phòng thất bại';
+
+      if (
+        error instanceof RoomFullDomainException ||
+        (error && typeof error === 'object' && 'code' in error && error.code === 'ROOM_FULL')
+      ) {
+        code = 'FULL';
+        message = 'Phòng đã đầy';
+      } else if (
+        error instanceof NotFoundDomainException ||
+        (error && typeof error === 'object' && 'code' in error && error.code === 'NOT_FOUND')
+      ) {
+        code = 'NOT_FOUND';
+        message = 'Phòng không tồn tại';
+        this.logger.warn(
+          `Failed join attempt: room ${body.roomCode} not found for user ${userId}`,
+        );
+      } else if (
+        error instanceof ForbiddenDomainException ||
+        (error && typeof error === 'object' && 'code' in error && error.code === 'FORBIDDEN')
+      ) {
+        code = 'FORBIDDEN';
+        message = 'Bạn không có quyền tham gia phòng này';
+      } else if (error instanceof ConcurrencyException) {
+        code = 'CONCURRENCY_CONFLICT';
+        message = 'Dữ liệu vừa thay đổi từ người dùng khác, vui lòng thử lại';
+      } else if (error instanceof DomainException) {
+        message = error.message;
       }
+
       this.logger.warn(
         `Join failed for ${userId}: ${error instanceof Error ? error.message : String(error)}`,
       );
-      return { ok: false, code };
+      return { ok: false, code, message };
     }
   }
 
@@ -696,7 +719,11 @@ export class ReadingRoomGateway
     error?: unknown,
   ) {
     let message = defaultMsg;
-    if (
+    if (error instanceof ConcurrencyException) {
+      message = 'Dữ liệu vừa thay đổi từ người dùng khác, vui lòng thử lại';
+    } else if (error instanceof DomainException) {
+      message = error.message;
+    } else if (
       error &&
       typeof error === 'object' &&
       'name' in error &&

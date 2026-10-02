@@ -21,7 +21,27 @@ const presenceSchema = z.object({
 });
 const presenceListSchema = z.array(presenceSchema).max(500);
 
-type JoinAck = { ok: true; snapshot: { presences: PresenceData[]; room?: RoomResponse; members?: { userId: string; role: string }[] } } | { ok: false; code: 'NOT_FOUND' | 'FULL' | 'FORBIDDEN' | 'UNAUTHORIZED' };
+type JoinAck =
+  | {
+      ok: true;
+      snapshot: {
+        presences: PresenceData[];
+        room?: RoomResponse;
+        members?: { userId: string; role: string }[];
+      };
+    }
+  | {
+      ok: false;
+      code:
+        | 'NOT_FOUND'
+        | 'FULL'
+        | 'FORBIDDEN'
+        | 'UNAUTHORIZED'
+        | 'RATE_LIMITED'
+        | 'JOIN_FAILED'
+        | 'CONCURRENCY_CONFLICT';
+      message?: string;
+    };
 
 type ReadingRoomServerEvents = {
   'connect': void;
@@ -131,7 +151,10 @@ export function useReadingRoomSocket(roomCode?: string) {
       if (err || !ack) {
         return store.setConnection('error', 'TIMEOUT');
       }
-      if (!ack.ok) return store.setConnection('error', ack.code);
+      if (!ack.ok) {
+        if (ack.message) toast.error(ack.message);
+        return store.setConnection('error', ack.code);
+      }
       store.hydrate(ack.snapshot);
       if (ack.snapshot.room) store.setRoom(ack.snapshot.room);
       if (ack.snapshot.members) store.setMembers(ack.snapshot.members);

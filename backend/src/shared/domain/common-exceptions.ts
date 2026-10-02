@@ -1,3 +1,4 @@
+export { DomainException } from './domain-exception.base';
 import { DomainException } from './domain-exception.base';
 
 export class NotFoundDomainException extends DomainException {
@@ -33,6 +34,12 @@ export class InternalServerDomainException extends DomainException {
 export class ConcurrencyException extends DomainException {
   constructor(message: string = 'Dữ liệu vừa thay đổi, vui lòng thử lại') {
     super(message, 'CONCURRENCY_CONFLICT', 409);
+  }
+}
+
+export class RoomFullDomainException extends DomainException {
+  constructor(message: string = 'Phòng đã đầy') {
+    super(message, 'ROOM_FULL', 409);
   }
 }
 

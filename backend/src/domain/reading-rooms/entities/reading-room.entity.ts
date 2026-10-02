@@ -1,5 +1,9 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { BadRequestDomainException, ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import {
+  BadRequestDomainException,
+  ForbiddenDomainException,
+  RoomFullDomainException,
+} from '@/shared/domain/common-exceptions';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { RoomId } from '../value-objects/room-id.vo';
@@ -304,7 +308,7 @@ export class ReadingRoom extends Entity<RoomId> {
       this.activeMembers.length >= this._props.maxMembers &&
       !this.isMember(userId)
     ) {
-      throw new BadRequestDomainException('Phòng đã đầy');
+      throw new RoomFullDomainException('Phòng đã đầy');
     }
 
     const existingMember = this._props.members.find((m) => m.userId === userId);
