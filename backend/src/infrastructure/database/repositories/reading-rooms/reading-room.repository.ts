@@ -127,16 +127,18 @@ export class ReadingRoomRepository implements IReadingRoomRepository {
     highlightId: string,
     insight: string,
   ): Promise<boolean> {
-    const result = await this.roomModel.updateOne(
-      {
-        _id: roomId.toString(),
-        'highlights.id': highlightId,
-        'highlights.aiInsight': { $exists: false },
-      },
-      {
-        $set: { 'highlights.$.aiInsight': insight },
-      }
-    ).exec();
+    const result = await this.roomModel
+      .updateOne(
+        {
+          _id: roomId.toString(),
+          highlights: { $elemMatch: { id: highlightId, aiInsight: null } },
+        },
+        {
+          $set: { 'highlights.$.aiInsight': insight },
+          $inc: { version: 1 },
+        },
+      )
+      .exec();
 
     return result.modifiedCount > 0;
   }
