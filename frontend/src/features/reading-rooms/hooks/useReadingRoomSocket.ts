@@ -32,7 +32,7 @@ type ReadingRoomServerEvents = {
   [ReadingRoomServerEvent.MEMBER_LEFT]: { userId: string };
   [ReadingRoomServerEvent.HOST_CHANGED]: { newHostId: string };
   [ReadingRoomServerEvent.CHAPTER_CHANGED]: { chapterSlug: string };
-  [ReadingRoomServerEvent.MODE_CHANGED]: { mode: 'sync' | 'free' };
+  [ReadingRoomServerEvent.MODE_CHANGED]: { mode: 'sync' | 'free'; changedBy?: string };
   [ReadingRoomServerEvent.ROOM_ENDED]: { endedBy: string };
   [ReadingRoomServerEvent.ERROR]: { message?: string };
   [ReadingRoomServerEvent.NEW_HIGHLIGHT]: RoomHighlight;
@@ -169,6 +169,13 @@ export function useReadingRoomSocket(roomCode?: string) {
     [ReadingRoomServerEvent.MODE_CHANGED]: (payload) => {
       const s = useReadingRoomStore.getState();
       if (s.room) s.setRoom({ ...s.room, mode: payload.mode });
+      if (payload.changedBy === 'system') {
+        toast.info(
+          payload.mode === 'free'
+            ? 'Phòng đã chuyển sang chế độ tự do do trưởng phòng rời đi'
+            : 'Chế độ phòng đã thay đổi',
+        );
+      }
     },
     [ReadingRoomServerEvent.ROOM_ENDED]: (payload) => {
       if (payload.endedBy !== userId) toast.info('Phòng đọc đã kết thúc');

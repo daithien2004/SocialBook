@@ -552,11 +552,28 @@ export class ReadingRoomGateway
       void socket.leave(`room:${roomId}`);
       delete sd.roomId;
 
-      if (result.hostId) {
+      if (result.hostChanged && result.hostId) {
         this.server
           .to(`room:${roomId}`)
           .emit(ReadingRoomServerEvent.HOST_CHANGED, {
             newHostId: result.hostId,
+          });
+      }
+
+      if (result.modeChanged) {
+        this.server
+          .to(`room:${roomId}`)
+          .emit(ReadingRoomServerEvent.MODE_CHANGED, {
+            mode: result.mode as 'sync' | 'free',
+            changedBy: 'system',
+          });
+      }
+
+      if (result.roomEnded) {
+        this.server
+          .to(`room:${roomId}`)
+          .emit(ReadingRoomServerEvent.ROOM_ENDED, {
+            endedBy: userId,
           });
       }
 

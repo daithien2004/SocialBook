@@ -26,3 +26,9 @@ export interface ReadingRoomResult {
     createdAt: Date;
   }>;
 }
+
+export interface LeaveRoomResult extends ReadingRoomResult {
+  hostChanged: boolean;
+  modeChanged: boolean;
+  roomEnded: boolean;
+}
