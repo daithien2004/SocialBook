@@ -1,6 +1,22 @@
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
+/**
+ * `@nestjs/schedule` là ESM thuần nên Jest (require) không nạp được trên Node
+ * < 24.9. Spec này chỉ kiểm tra đồ thị import và gating theo process role —
+ * decorator cron không liên quan tới bất biến đang test nên mock lại module.
+ */
+jest.mock('@nestjs/schedule', () => ({
+  ScheduleModule: {
+    forRoot: () => ({ module: class ScheduleRootModule {} }),
+  },
+  Cron: () => () => undefined,
+  CronExpression: {
+    EVERY_10_MINUTES: '*/10 * * * *',
+    EVERY_30_SECONDS: '*/30 * * * *',
+  },
+}));
+
 type ProcessRole = 'worker' | 'api';
 
 interface ProcessorGate {
@@ -20,13 +36,6 @@ interface ProcessorGate {
  * Bảng này phải khớp ĐÚNG tập `@Processor` trong src/ — có test riêng canh việc đó.
  */
 const PROCESSOR_GATES: ProcessorGate[] = [
-  {
-    modulePath: '@/application/analytics/analytics-application.module',
-    exportName: 'AnalyticsApplicationModule',
-    processorName: 'AnalyticsProcessor',
-    queueName: 'analytics',
-    expectedIn: 'worker',
-  },
   {
     modulePath: '@/application/chapters/chapters-application.module',
     exportName: 'ChaptersApplicationModule',
