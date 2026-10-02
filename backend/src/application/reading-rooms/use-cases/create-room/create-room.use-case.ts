@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
+  ConflictDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
@@ -49,15 +50,27 @@ export class CreateRoomUseCase {
       );
     }
 
-    const room = ReadingRoom.create({
-      bookId: command.bookId,
-      hostId: command.hostId,
-      mode: command.mode,
-      maxMembers: command.maxMembers || 10,
-      currentChapterSlug: firstChapter.slug,
-    });
+    const maxRetries = 5;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const room = ReadingRoom.create({
+          bookId: command.bookId,
+          hostId: command.hostId,
+          mode: command.mode,
+          maxMembers: command.maxMembers || 10,
+          currentChapterSlug: firstChapter.slug,
+        });
 
-    await this.roomRepository.save(room);
-    return ReadingRoomApplicationMapper.toResult(room);
+        await this.roomRepository.save(room);
+        return ReadingRoomApplicationMapper.toResult(room);
+      } catch (error: unknown) {
+        if (error instanceof ConflictDomainException && attempt < maxRetries) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new ConflictDomainException('Không thể tạo mã phòng sau nhiều lần thử');
   }
 }
