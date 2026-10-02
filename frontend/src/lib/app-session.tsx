@@ -43,8 +43,21 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
         skipAuthRedirect: true,
       });
       setUser(me ?? null);
-    } catch {
-      setUser(null);
+    } catch (err: unknown) {
+      const errorObj = err as {
+        response?: { status?: number };
+        status?: number;
+        code?: string;
+      };
+      const statusCode = errorObj?.response?.status ?? errorObj?.status;
+      const isNetworkError =
+        errorObj?.code === 'ERR_NETWORK' ||
+        errorObj?.code === 'ECONNABORTED' ||
+        (statusCode !== undefined && statusCode >= 500);
+
+      if (!isNetworkError) {
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }

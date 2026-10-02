@@ -104,4 +104,26 @@ describe('AppSessionProvider', () => {
     expect(screen.getByTestId('user')).toHaveTextContent('u1');
     expect(mockedApiRequest).toHaveBeenCalledTimes(2);
   });
+
+  it('preserves existing user on transient network errors during refetch', async () => {
+    mockedApiRequest.mockResolvedValue(CURRENT_USER);
+
+    render(
+      <AppSessionProvider>
+        <SessionProbe />
+      </AppSessionProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('u1');
+    });
+
+    mockedApiRequest.mockRejectedValueOnce({ code: 'ERR_NETWORK' });
+
+    await act(async () => {
+      screen.getByRole('button', { name: 'refetch' }).click();
+    });
+
+    expect(screen.getByTestId('user')).toHaveTextContent('u1');
+  });
 });
