@@ -1,4 +1,5 @@
 import type { Job, Queue } from 'bullmq';
+import type { Redis } from 'ioredis';
 
 import { AudioWorker } from '@/presentation/gateways/audio.worker';
 import {
@@ -7,6 +8,7 @@ import {
   type PostModerationJobData,
 } from '@/infrastructure/queues/post-moderation/post-moderation.processor';
 import { ChaptersImportProcessor } from '@/infrastructure/queues/chapters-import/chapters-import.processor';
+import { CREATE_SINGLE_CHAPTER_JOB_OPTIONS } from '@/infrastructure/queues/chapters-import/chapters-import.module';
 import { GenerateAudioJobPayload } from '@/application/text-to-speech/jobs/tts-job.payload';
 import { TTSStatus } from '@/domain/text-to-speech/entities/text-to-speech.entity';
 import type { ImportChaptersJobData } from '@/domain/chapters/interfaces/chapters-import.types';
@@ -15,6 +17,7 @@ import type { ITextToSpeechRepository } from '@/domain/text-to-speech/repositori
 import type { ITextToSpeechPort } from '@/domain/text-to-speech/interfaces/text-to-speech.port';
 import type { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import type { ProcessPostModerationUseCase } from '@/application/posts/use-cases/process-post-moderation.use-case';
+import type { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 
 /**
  * Regression test cho A1–A3 của docs/ecommerce_production_standard.md §11.
@@ -79,6 +82,11 @@ const makeAudioWorker = (ttsRecord: TtsRecordStub, calls: CallLog) => {
   };
 
   const chapterRepository = {
+    findById: jest.fn(() =>
+      Promise.resolve({
+        paragraphs: [{ content: 'Câu một. Câu hai.' }],
+      }),
+    ),
     updateTtsStatus: jest.fn((_id: string, status: string) => {
       calls.push(`chapter.update:${status}`);
       return Promise.resolve();
@@ -101,7 +109,6 @@ const audioJob = (): Job =>
     data: new GenerateAudioJobPayload(
       'tts-1',
       'ch-1',
-      'Nội dung chương.',
       'vi-VN-Standard-A',
       'vi',
       1,
@@ -159,44 +166,70 @@ describe('A3 — moderation thất bại thì giữ PENDING cho Admin, không th
       data: { postId: 'post-1', content: 'nội dung' },
     }) as unknown as Job<PostModerationJobData>;
 
-  const buildProcessor = (execute: jest.Mock) =>
-    new PostModerationProcessor({
-      execute,
-    } as unknown as ProcessPostModerationUseCase);
+  const buildProcessor = (
+    execute: jest.Mock,
+    postRepository: unknown = { findById: jest.fn(), update: jest.fn() },
+  ) =>
+    new PostModerationProcessor(
+      {
+        execute,
+      } as unknown as ProcessPostModerationUseCase,
+      postRepository as IPostRepository,
+    );
 
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
+  const makePostRepository = () => {
+    const post = { flag: jest.fn() };
+    return {
+      post,
+      postRepository: {
+        findById: jest.fn().mockResolvedValue(post),
+        update: jest.fn(),
+      },
+    };
+  };
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it('thử lại 3 lần rồi bỏ qua mà KHÔNG ném lỗi', async () => {
+  it('process chỉ gọi 1 lần rồi ném lỗi để BullMQ tự retry (không retry nội bộ)', async () => {
     const execute = jest.fn().mockRejectedValue(new Error('AI provider down'));
     const processor = buildProcessor(execute);
 
-    const pending = processor.process(moderationJob());
-    await jest.advanceTimersByTimeAsync(20_000);
-
-    // Ném lỗi ở đây sẽ khiến BullMQ đánh dấu job failed và bài viết kẹt ở
-    // trạng thái không ai kiểm duyệt. Bỏ qua + log mới đẩy được sang Admin.
-    await expect(pending).resolves.toBeUndefined();
-    expect(execute).toHaveBeenCalledTimes(3);
+    // Ném lỗi ở đây là ĐÚNG: BullMQ mới là nơi retry với exponential backoff,
+    // processor không được nuốt lỗi vì job bị kẹt mà không ai biết.
+    await expect(processor.process(moderationJob())).rejects.toThrow(
+      'AI provider down',
+    );
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
-  it('thành công ở lần thử thứ hai thì dừng, không thử thêm', async () => {
-    const execute = jest
-      .fn()
-      .mockRejectedValueOnce(new Error('transient'))
-      .mockResolvedValueOnce(undefined);
-    const processor = buildProcessor(execute);
+  it('hết lượt retry thì gắn cờ bài viết cho Admin duyệt tay, KHÔNG ném lỗi', async () => {
+    const { post, postRepository } = makePostRepository();
+    const processor = buildProcessor(jest.fn(), postRepository);
 
-    const pending = processor.process(moderationJob());
-    await jest.advanceTimersByTimeAsync(20_000);
+    const job = {
+      ...moderationJob(),
+      opts: { attempts: 3 },
+      attemptsMade: 3,
+    } as unknown as Job<PostModerationJobData>;
 
-    await expect(pending).resolves.toBeUndefined();
-    expect(execute).toHaveBeenCalledTimes(2);
+    await expect(
+      processor.onFailed(job, new Error('AI provider down')),
+    ).resolves.toBeUndefined();
+    expect(post.flag).toHaveBeenCalled();
+    expect(postRepository.update).toHaveBeenCalledWith(post);
+  });
+
+  it('còn lượt retry thì KHÔNG đánh dấu bài viết', async () => {
+    const { post, postRepository } = makePostRepository();
+    const processor = buildProcessor(jest.fn(), postRepository);
+
+    const job = {
+      ...moderationJob(),
+      opts: { attempts: 3 },
+      attemptsMade: 1,
+    } as unknown as Job<PostModerationJobData>;
+
+    await processor.onFailed(job, new Error('transient'));
+    expect(postRepository.findById).not.toHaveBeenCalled();
+    expect(post.flag).not.toHaveBeenCalled();
   });
 });
 
@@ -206,9 +239,12 @@ describe('A1 — job tạo chương con phải được enqueue kèm retry', () 
       Promise.resolve({ id: 'child-1' }),
     );
 
-    const processor = new ChaptersImportProcessor({
-      add,
-    } as unknown as Queue<CreateSingleChapterJobData>);
+    const processor = new ChaptersImportProcessor(
+      {
+        add,
+      } as unknown as Queue<CreateSingleChapterJobData>,
+      {} as unknown as Redis,
+    );
 
     const job = {
       id: 'job-1',
@@ -223,13 +259,18 @@ describe('A1 — job tạo chương con phải được enqueue kèm retry', () 
     await processor.process(job);
 
     // Không có retry thì một lần nghẽn mạng thoáng qua cũng đủ làm mất chương
-    // khỏi sách đã import, mà job cha vẫn báo thành công.
+    // khỏi sách đã import, mà job cha vẫn báo thành công. Retry policy khai
+    // báo ở cấp queue (defaultJobOptions), từng job chỉ đóng góp jobId dedup
+    // để job cha chạy lại không enqueue trùng.
     expect(add).toHaveBeenCalledTimes(1);
-    expect(add.mock.calls[0][2]).toMatchObject({
+    expect(CREATE_SINGLE_CHAPTER_JOB_OPTIONS).toMatchObject({
       attempts: 3,
       backoff: { type: 'exponential', delay: 5000 },
       removeOnComplete: true,
       removeOnFail: 100,
+    });
+    expect(add.mock.calls[0][2]).toMatchObject({
+      jobId: 'chapter-book-1-0',
     });
   });
 });
