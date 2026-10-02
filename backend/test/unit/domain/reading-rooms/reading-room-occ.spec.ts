@@ -30,7 +30,11 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
         currentChapterSlug: 'chapter-1',
         maxMembers: 10,
         members: [
-          { userId: '507f1f77bcf86cd799439012', role: 'host', joinedAt: new Date() },
+          {
+            userId: '507f1f77bcf86cd799439012',
+            role: 'host',
+            joinedAt: new Date(),
+          },
         ],
         highlights: [],
         chatMessages: [],
@@ -55,7 +59,11 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
         currentChapterSlug: 'chapter-1',
         maxMembers: 10,
         members: [
-          { userId: '507f1f77bcf86cd799439012', role: 'host', joinedAt: new Date() },
+          {
+            userId: '507f1f77bcf86cd799439012',
+            role: 'host',
+            joinedAt: new Date(),
+          },
         ],
         highlights: [],
         chatMessages: [],
@@ -81,8 +89,16 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
         currentChapterSlug: 'chapter-1',
         maxMembers: 10,
         members: [
-          { userId: '507f1f77bcf86cd799439012', role: 'host', joinedAt: new Date(1000) },
-          { userId: '507f1f77bcf86cd799439013', role: 'member', joinedAt: new Date(2000) },
+          {
+            userId: '507f1f77bcf86cd799439012',
+            role: 'host',
+            joinedAt: new Date(1000),
+          },
+          {
+            userId: '507f1f77bcf86cd799439013',
+            role: 'member',
+            joinedAt: new Date(2000),
+          },
         ],
         highlights: [],
         chatMessages: [],
@@ -117,7 +133,11 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
         currentChapterSlug: 'chapter-1',
         maxMembers: 10,
         members: [
-          { userId: '507f1f77bcf86cd799439012', role: 'host', joinedAt: new Date() },
+          {
+            userId: '507f1f77bcf86cd799439012',
+            role: 'host',
+            joinedAt: new Date(),
+          },
         ],
         highlights: [],
         chatMessages: [],
@@ -164,7 +184,11 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
         currentChapterSlug: 'chapter-1',
         maxMembers: 10,
         members: [
-          { userId: '507f1f77bcf86cd799439012', role: 'host', joinedAt: new Date() },
+          {
+            userId: '507f1f77bcf86cd799439012',
+            role: 'host',
+            joinedAt: new Date(),
+          },
         ],
         highlights: [],
         chatMessages: [],
@@ -189,7 +213,11 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
         currentChapterSlug: 'chapter-1',
         maxMembers: 10,
         members: [
-          { userId: '507f1f77bcf86cd799439012', role: 'host', joinedAt: new Date() },
+          {
+            userId: '507f1f77bcf86cd799439012',
+            role: 'host',
+            joinedAt: new Date(),
+          },
         ],
         highlights: [],
         chatMessages: [],
@@ -201,7 +229,9 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
       room.addMember('507f1f77bcf86cd799439099');
 
       mockRoomModel.updateOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ matchedCount: 1, modifiedCount: 1 }),
+        exec: jest
+          .fn()
+          .mockResolvedValue({ matchedCount: 1, modifiedCount: 1 }),
       });
 
       await repository.save(room);
@@ -228,7 +258,11 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
         currentChapterSlug: 'chapter-1',
         maxMembers: 10,
         members: [
-          { userId: '507f1f77bcf86cd799439012', role: 'host', joinedAt: new Date() },
+          {
+            userId: '507f1f77bcf86cd799439012',
+            role: 'host',
+            joinedAt: new Date(),
+          },
         ],
         highlights: [],
         chatMessages: [],
@@ -240,7 +274,9 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
       room.addMember('507f1f77bcf86cd799439099');
 
       mockRoomModel.updateOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ matchedCount: 0, modifiedCount: 0 }),
+        exec: jest
+          .fn()
+          .mockResolvedValue({ matchedCount: 0, modifiedCount: 0 }),
       });
 
       await expect(repository.save(room)).rejects.toThrow(ConcurrencyException);
@@ -254,6 +290,7 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
     it('retries on ConcurrencyException and succeeds when second attempt passes', async () => {
       let attempts = 0;
       const fn = jest.fn(async () => {
+        await Promise.resolve();
         attempts++;
         if (attempts === 1) {
           throw new ConcurrencyException('Conflict on attempt 1');
@@ -269,11 +306,14 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
     it('throws ConcurrencyException after exceeding max attempts', async () => {
       let attempts = 0;
       const fn = jest.fn(async () => {
+        await Promise.resolve();
         attempts++;
         throw new ConcurrencyException('Persistent conflict');
       });
 
-      await expect(withOptimisticRetry(fn, 3)).rejects.toThrow(ConcurrencyException);
+      await expect(withOptimisticRetry(fn, 3)).rejects.toThrow(
+        ConcurrencyException,
+      );
       expect(attempts).toBe(3);
     });
 

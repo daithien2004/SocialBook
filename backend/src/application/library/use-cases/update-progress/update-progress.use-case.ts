@@ -43,7 +43,9 @@ export class UpdateProgressUseCase {
     const bookId = BookId.create(command.bookId);
     const chapterId = ChapterId.create(command.chapterId);
 
-    const book = await this.bookRepository.findById(DomainBookId.create(command.bookId));
+    const book = await this.bookRepository.findById(
+      DomainBookId.create(command.bookId),
+    );
     if (!book) {
       throw new NotFoundDomainException('Sách không tồn tại');
     }
@@ -61,9 +63,13 @@ export class UpdateProgressUseCase {
       });
     }
 
-    let readingProgress = await this.readingProgressRepository.findByUserIdAndChapterId(userId, chapterId);
+    let readingProgress =
+      await this.readingProgressRepository.findByUserIdAndChapterId(
+        userId,
+        chapterId,
+      );
     let wasCompleted = false;
-    
+
     if (!readingProgress) {
       readingProgress = ReadingProgress.create({
         id: this.idGenerator.generate(),
@@ -78,7 +84,10 @@ export class UpdateProgressUseCase {
         readingProgress.updateProgress(command.progress, { monotonic: true });
       } else {
         // Only increase progress unless it's a reset (e.g., progress === 0)
-        if (command.progress === 0 || command.progress > readingProgress.progress) {
+        if (
+          command.progress === 0 ||
+          command.progress > readingProgress.progress
+        ) {
           readingProgress.updateProgress(command.progress);
         }
       }
@@ -86,7 +95,7 @@ export class UpdateProgressUseCase {
 
     const oldStatus = readingList.status;
     readingList.updateLastReadChapter(command.chapterId);
-    
+
     const isCompletedNow = readingProgress.isCompleted();
 
     if (!wasCompleted && isCompletedNow) {

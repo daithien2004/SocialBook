@@ -1,5 +1,8 @@
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
-import { BadRequestDomainException, ConflictDomainException } from '@/shared/domain/common-exceptions';
+import {
+  BadRequestDomainException,
+  ConflictDomainException,
+} from '@/shared/domain/common-exceptions';
 import { CreateRoomUseCase } from '@/application/reading-rooms/use-cases/create-room/create-room.use-case';
 import { CreateRoomCommand } from '@/application/reading-rooms/use-cases/create-room/create-room.command';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
@@ -32,7 +35,9 @@ describe('RoomId & Collision Retries (T4)', () => {
 
     it('rejects codes shorter than 6 characters or longer than 10 characters', () => {
       expect(() => RoomId.create('ABCDE')).toThrow(BadRequestDomainException);
-      expect(() => RoomId.create('ABCDEFGHIJK')).toThrow(BadRequestDomainException);
+      expect(() => RoomId.create('ABCDEFGHIJK')).toThrow(
+        BadRequestDomainException,
+      );
       expect(() => RoomId.create('ABC!@#')).toThrow(BadRequestDomainException);
     });
   });
@@ -43,6 +48,7 @@ describe('RoomId & Collision Retries (T4)', () => {
       const mockRoomRepo = {
         findActiveByUser: jest.fn().mockResolvedValue([]),
         save: jest.fn(async () => {
+          await Promise.resolve();
           attempts++;
           if (attempts < 3) {
             throw new ConflictDomainException('Mã phòng đã tồn tại');
@@ -51,7 +57,9 @@ describe('RoomId & Collision Retries (T4)', () => {
       } as unknown as IReadingRoomRepository;
 
       const mockBookRepo = {
-        findById: jest.fn().mockResolvedValue({ id: '507f1f77bcf86cd799439011' }),
+        findById: jest
+          .fn()
+          .mockResolvedValue({ id: '507f1f77bcf86cd799439011' }),
       } as unknown as IBookRepository;
 
       const mockChapterRepo = {

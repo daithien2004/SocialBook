@@ -23,7 +23,12 @@ describe('RedisIoAdapter (T1: Admin UI Auth)', () => {
   it('does NOT initialize Admin UI when SOCKET_ADMIN_UI is unset', () => {
     const adapter = new RedisIoAdapter();
     const mockServer = { adapter: jest.fn() };
-    jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(adapter)), 'createIOServer').mockReturnValue(mockServer);
+    jest
+      .spyOn(
+        Object.getPrototypeOf(Object.getPrototypeOf(adapter)),
+        'createIOServer',
+      )
+      .mockReturnValue(mockServer);
 
     adapter.createIOServer(5000);
 
@@ -34,7 +39,12 @@ describe('RedisIoAdapter (T1: Admin UI Auth)', () => {
     process.env.SOCKET_ADMIN_UI = 'true';
     const adapter = new RedisIoAdapter();
     const mockServer = { adapter: jest.fn() };
-    jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(adapter)), 'createIOServer').mockReturnValue(mockServer);
+    jest
+      .spyOn(
+        Object.getPrototypeOf(Object.getPrototypeOf(adapter)),
+        'createIOServer',
+      )
+      .mockReturnValue(mockServer);
 
     adapter.createIOServer(5000);
 
@@ -44,12 +54,18 @@ describe('RedisIoAdapter (T1: Admin UI Auth)', () => {
   it('initializes Admin UI with basic auth and readonly=true when enabled with credentials', () => {
     process.env.SOCKET_ADMIN_UI = 'true';
     process.env.SOCKET_ADMIN_USER = 'admin';
-    process.env.SOCKET_ADMIN_PASSWORD_BCRYPT = '$2b$10$hashedpasswordvalue12345';
+    process.env.SOCKET_ADMIN_PASSWORD_BCRYPT =
+      '$2b$10$hashedpasswordvalue12345';
     process.env.NODE_ENV = 'production';
 
     const adapter = new RedisIoAdapter();
     const mockServer = { adapter: jest.fn() };
-    jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(adapter)), 'createIOServer').mockReturnValue(mockServer);
+    jest
+      .spyOn(
+        Object.getPrototypeOf(Object.getPrototypeOf(adapter)),
+        'createIOServer',
+      )
+      .mockReturnValue(mockServer);
 
     adapter.createIOServer(5000);
 

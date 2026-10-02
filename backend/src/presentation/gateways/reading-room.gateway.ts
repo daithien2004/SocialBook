@@ -305,7 +305,8 @@ export class ReadingRoomGateway
       const room = await this.addHighlightUseCase.execute(command);
 
       const newHighlight = room.highlights[room.highlights.length - 1];
-      const authorName = newHighlight.displayName || displayName || 'Thành viên';
+      const authorName =
+        newHighlight.displayName || displayName || 'Thành viên';
       const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
 
       this.server
@@ -542,13 +543,19 @@ export class ReadingRoomGateway
 
       if (
         error instanceof RoomFullDomainException ||
-        (error && typeof error === 'object' && 'code' in error && error.code === 'ROOM_FULL')
+        (error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'ROOM_FULL')
       ) {
         code = 'FULL';
         message = 'Phòng đã đầy';
       } else if (
         error instanceof NotFoundDomainException ||
-        (error && typeof error === 'object' && 'code' in error && error.code === 'NOT_FOUND')
+        (error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'NOT_FOUND')
       ) {
         code = 'NOT_FOUND';
         message = 'Phòng không tồn tại';
@@ -557,7 +564,10 @@ export class ReadingRoomGateway
         );
       } else if (
         error instanceof ForbiddenDomainException ||
-        (error && typeof error === 'object' && 'code' in error && error.code === 'FORBIDDEN')
+        (error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'FORBIDDEN')
       ) {
         code = 'FORBIDDEN';
         message = 'Bạn không có quyền tham gia phòng này';

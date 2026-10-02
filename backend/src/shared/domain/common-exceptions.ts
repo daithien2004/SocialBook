@@ -42,4 +42,3 @@ export class RoomFullDomainException extends DomainException {
     super(message, 'ROOM_FULL', 409);
   }
 }
-

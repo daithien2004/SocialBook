@@ -19,8 +19,7 @@ export interface ReadingRoomPreviewResult {
 }
 
 export type GetRoomByCodeResult =
-  | (ReadingRoomResult & { isMember: true })
-  | ReadingRoomPreviewResult;
+  (ReadingRoomResult & { isMember: true }) | ReadingRoomPreviewResult;
 
 @Injectable()
 export class GetRoomByCodeUseCase {

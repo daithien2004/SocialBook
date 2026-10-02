@@ -71,6 +71,8 @@ export class CreateRoomUseCase {
       }
     }
 
-    throw new ConflictDomainException('Không thể tạo mã phòng sau nhiều lần thử');
+    throw new ConflictDomainException(
+      'Không thể tạo mã phòng sau nhiều lần thử',
+    );
   }
 }

@@ -21,6 +21,7 @@ import { RedisIoAdapter } from './presentation/gateways/redis-io.adapter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { configSwagger } from './config/swagger.config';
 import { isWorkerProcess } from './common/utils/process-role.util';
+import { timingSafeEqual } from 'crypto';
 import { POST_MODERATION_QUEUE } from './infrastructure/queues/post-moderation/post-moderation.processor';
 import { CHAPTERS_IMPORT_QUEUE } from './infrastructure/queues/chapters-import/chapters-import.processor';
 
@@ -137,9 +138,9 @@ async function bootstrap() {
     throw new Error('BULL_BOARD_PASSWORD phải được cấu hình (>= 12 ký tự)');
   }
 
-  const { timingSafeEqual } = require('crypto');
-  const safeEq = (a: string, b: string) => {
-    const x = Buffer.from(a), y = Buffer.from(b);
+  const safeEq = (a: string, b: string): boolean => {
+    const x = Buffer.from(a);
+    const y = Buffer.from(b);
     return x.length === y.length && timingSafeEqual(x, y);
   };
 
@@ -156,7 +157,7 @@ async function bootstrap() {
       const colonIndex = decoded.indexOf(':');
       const user = decoded.slice(0, colonIndex);
       const pass = decoded.slice(colonIndex + 1);
-      
+
       if (!safeEq(user, bullBoardUser) || !safeEq(pass, bullBoardPass)) {
         res.setHeader('WWW-Authenticate', 'Basic realm="Bull Board"');
         res.sendStatus(401);

@@ -27,4 +27,3 @@ export enum ReadingRoomClientEvent {
   ADD_HIGHLIGHT = 'add_highlight',
   REMOVE_HIGHLIGHT = 'remove_highlight',
 }
-

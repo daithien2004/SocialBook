@@ -129,13 +129,15 @@ describe('ReadingRoom Limits & Constraints (T12)', () => {
   describe('CreateRoomUseCase host active rooms limit', () => {
     it('throws BadRequestDomainException when user already hosts 5 active rooms', async () => {
       const mockRoomRepo = {
-        findActiveByUser: jest.fn().mockResolvedValue([
-          { hostId: 'user-host' },
-          { hostId: 'user-host' },
-          { hostId: 'user-host' },
-          { hostId: 'user-host' },
-          { hostId: 'user-host' },
-        ]),
+        findActiveByUser: jest
+          .fn()
+          .mockResolvedValue([
+            { hostId: 'user-host' },
+            { hostId: 'user-host' },
+            { hostId: 'user-host' },
+            { hostId: 'user-host' },
+            { hostId: 'user-host' },
+          ]),
         save: jest.fn(),
       } as unknown as IReadingRoomRepository;
 

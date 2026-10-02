@@ -39,7 +39,9 @@ describe('ReadingRoomMapper & Highlight Denormalization (T10)', () => {
     // Highlight has displayName and avatarUrl
     expect(result.highlights.length).toBe(1);
     expect(result.highlights[0].displayName).toBe('Alice In Wonderland');
-    expect(result.highlights[0].avatarUrl).toBe('https://example.com/alice.png');
+    expect(result.highlights[0].avatarUrl).toBe(
+      'https://example.com/alice.png',
+    );
   });
 
   it('infrastructure ReadingRoomMapper preserves displayName and avatarUrl', () => {
@@ -51,9 +53,7 @@ describe('ReadingRoomMapper & Highlight Denormalization (T10)', () => {
       status: 'active',
       currentChapterSlug: 'chap-1',
       maxMembers: 5,
-      members: [
-        { userId: 'host-1', role: 'host', joinedAt: new Date() },
-      ],
+      members: [{ userId: 'host-1', role: 'host', joinedAt: new Date() }],
       highlights: [
         {
           id: 'hl-1',

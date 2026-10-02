@@ -332,10 +332,14 @@ export class ReadingRoom extends Entity<RoomId> {
 
   transferHost(callerId: string, newHostId: string): void {
     if (callerId !== this.hostId) {
-      throw new ForbiddenDomainException('Chỉ chủ phòng mới được chỉ định chủ phòng mới');
+      throw new ForbiddenDomainException(
+        'Chỉ chủ phòng mới được chỉ định chủ phòng mới',
+      );
     }
     if (callerId === newHostId) {
-      throw new BadRequestDomainException('Không thể chuyển quyền cho chính mình');
+      throw new BadRequestDomainException(
+        'Không thể chuyển quyền cho chính mình',
+      );
     }
 
     const newHost = this._props.members.find(
@@ -368,16 +372,16 @@ export class ReadingRoom extends Entity<RoomId> {
         if (member.role === 'host') {
           member.changeRole('member');
         }
-        
+
         const remainingMembers = this.activeMembers.sort(
-          (a, b) => a.joinedAt.getTime() - b.joinedAt.getTime()
+          (a, b) => a.joinedAt.getTime() - b.joinedAt.getTime(),
         );
 
         if (remainingMembers.length > 0) {
           const nextHost = remainingMembers[0];
           nextHost.changeRole('host');
           this._props.hostId = UserId.create(nextHost.userId);
-          
+
           if (this._props.mode.toString() === 'sync') {
             this._props.mode = RoomMode.create('free');
           }

@@ -120,7 +120,12 @@ export const ReadingRoomSchema = SchemaFactory.createForClass(ReadingRoom);
 
 // Optimize performance with indexes following ESR rule (Equality, Sort, Range)
 ReadingRoomSchema.index({ 'members.userId': 1, status: 1, updatedAt: -1 });
-ReadingRoomSchema.index({ 'members.userId': 1, 'members.leftAt': 1, status: 1, updatedAt: -1 });
+ReadingRoomSchema.index({
+  'members.userId': 1,
+  'members.leftAt': 1,
+  status: 1,
+  updatedAt: -1,
+});
 ReadingRoomSchema.index({ 'members.userId': 1, status: 1, endedAt: -1 });
 ReadingRoomSchema.index({ bookId: 1, status: 1 });
 ReadingRoomSchema.index({ status: 1 });

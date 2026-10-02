@@ -23,11 +23,8 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
       reject(new Error(`Timeout after ${ms}ms`));
     }, ms);
   });
-  
-  return Promise.race([
-    promise,
-    timeoutPromise
-  ]).finally(() => {
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
   });
 }
@@ -78,7 +75,13 @@ export class GenerateHighlightInsightUseCase {
     }
 
     const lockKey = `insight:lock:${command.highlightId}`;
-    const gotLock = await this.redis.set(lockKey, command.userId, 'EX', 60, 'NX');
+    const gotLock = await this.redis.set(
+      lockKey,
+      command.userId,
+      'EX',
+      60,
+      'NX',
+    );
     if (!gotLock) {
       return room; // Đang sinh bởi người khác, bỏ qua
     }
@@ -117,8 +120,11 @@ ${content}
 """
 `;
 
-      const insight = await withTimeout(this.aiService.generateText(prompt), 15_000);
-      
+      const insight = await withTimeout(
+        this.aiService.generateText(prompt),
+        15_000,
+      );
+
       const saved = await this.readingRoomRepository.setHighlightInsightIfEmpty(
         RoomId.create(command.roomId),
         command.highlightId,
@@ -127,12 +133,15 @@ ${content}
 
       if (saved) {
         // Notify gateway via local event
-        this.eventEmitter.emit(EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED, {
-          roomId: command.roomId,
-          highlightId: highlight.id,
-          insight,
-        });
-        
+        this.eventEmitter.emit(
+          EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED,
+          {
+            roomId: command.roomId,
+            highlightId: highlight.id,
+            insight,
+          },
+        );
+
         // Cập nhật memory object để trả về kết quả mới nhất cho caller (tuy caller không bắt buộc dùng insight từ returned room)
         room.updateHighlightInsight(highlightIndex, insight);
       }
