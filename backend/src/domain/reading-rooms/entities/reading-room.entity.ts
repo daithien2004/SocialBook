@@ -435,6 +435,29 @@ export class ReadingRoom extends Entity<RoomId> {
     }
   }
 
+  reactivate(userId: string): void {
+    if (this._props.status !== 'ended') {
+      throw new BadRequestDomainException('Phòng chưa kết thúc');
+    }
+
+    if (this.hostId !== userId) {
+      throw new ForbiddenDomainException(
+        'Chỉ chủ phòng mới có thể mở lại phòng',
+      );
+    }
+
+    this._props.status = 'active';
+    this._props.endedAt = undefined;
+
+    const hostMember = this._props.members.find((m) => m.userId === userId);
+    if (hostMember && !hostMember.isActive) {
+      hostMember.rejoin();
+      hostMember.changeRole('host');
+    }
+
+    this.markAsUpdated();
+  }
+
   isMember(userId: string): boolean {
     return this._props.members.some((m) => m.userId === userId && m.isActive);
   }

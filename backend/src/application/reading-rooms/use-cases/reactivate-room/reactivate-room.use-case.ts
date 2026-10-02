@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  NotFoundDomainException,
-  BadRequestDomainException,
-  ForbiddenDomainException,
-} from '@/shared/domain/common-exceptions';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 import { ReactivateRoomCommand } from './reactivate-room.command';
 import { EventNames } from '@/common/constants/event-names.constant';
+import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
 
 @Injectable()
 export class ReactivateRoomUseCase {
@@ -20,36 +17,23 @@ export class ReactivateRoomUseCase {
   ) {}
 
   async execute(command: ReactivateRoomCommand): Promise<ReadingRoomResult> {
-    const room = await this.roomRepository.findById(
-      RoomId.create(command.roomId),
-    );
-    if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
-    }
-
-    if (room.status !== 'ended') {
-      throw new BadRequestDomainException('Phòng chưa kết thúc');
-    }
-
-    if (room.hostId !== command.userId) {
-      throw new ForbiddenDomainException(
-        'Chỉ chủ phòng mới có thể mở lại phòng',
+    return withOptimisticRetry(async () => {
+      const room = await this.roomRepository.findById(
+        RoomId.create(command.roomId),
       );
-    }
+      if (!room) {
+        throw new NotFoundDomainException('Phòng không tồn tại');
+      }
 
-    await this.roomRepository.updateStatus(
-      RoomId.create(command.roomId),
-      'active',
-    );
+      room.reactivate(command.userId);
+      await this.roomRepository.save(room);
 
-    this.eventEmitter.emit(EventNames.READING_ROOM_REACTIVATED, {
-      roomId: command.roomId,
-      reactivatedBy: command.userId,
+      this.eventEmitter.emit(EventNames.READING_ROOM_REACTIVATED, {
+        roomId: command.roomId,
+        reactivatedBy: command.userId,
+      });
+
+      return ReadingRoomApplicationMapper.toResult(room);
     });
-
-    const updated = await this.roomRepository.findById(
-      RoomId.create(command.roomId),
-    );
-    return ReadingRoomApplicationMapper.toResult(updated!);
   }
 }
