@@ -21,6 +21,18 @@ export class CreateRoomUseCase {
   ) {}
 
   async execute(command: CreateRoomCommand): Promise<ReadingRoomResult> {
+    const activeRooms = await this.roomRepository.findActiveByUser(
+      command.hostId,
+    );
+    const activeHostRooms = activeRooms.filter(
+      (r) => r.hostId === command.hostId,
+    );
+    if (activeHostRooms.length >= 5) {
+      throw new BadRequestDomainException(
+        'Bạn chỉ có thể tạo tối đa 5 phòng đọc đang hoạt động',
+      );
+    }
+
     const book = await this.bookRepository.findById(
       BookId.create(command.bookId),
     );

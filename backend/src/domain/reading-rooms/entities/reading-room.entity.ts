@@ -67,7 +67,12 @@ export class ReadingRoom extends Entity<RoomId> {
   }): ReadingRoom {
     const roomId = RoomId.create();
     const mode = RoomMode.create(props.mode);
-    const maxMembers = props.maxMembers || DEFAULT_MAX_MEMBERS;
+    const maxMembers = props.maxMembers ?? DEFAULT_MAX_MEMBERS;
+    if (!Number.isInteger(maxMembers) || maxMembers < 2 || maxMembers > 50) {
+      throw new BadRequestDomainException(
+        'Số lượng thành viên tối đa phải là số nguyên từ 2 đến 50',
+      );
+    }
 
     const hostMember = RoomMember.create({
       userId: props.hostId,
@@ -214,9 +219,44 @@ export class ReadingRoom extends Entity<RoomId> {
       );
     }
 
+    const trimmedContent = (props.content || '').trim();
+    if (!trimmedContent || trimmedContent.length > 1000) {
+      throw new BadRequestDomainException(
+        'Nội dung highlight phải từ 1 đến 1000 ký tự',
+      );
+    }
+
+    if (!props.paragraphId || props.paragraphId.length > 100) {
+      throw new BadRequestDomainException(
+        'paragraphId không hợp lệ (tối đa 100 ký tự)',
+      );
+    }
+
+    if (!/^[a-z0-9-]{1,200}$/.test(props.chapterSlug)) {
+      throw new BadRequestDomainException('chapterSlug không hợp lệ');
+    }
+
+    if (this._props.highlights.length >= 500) {
+      throw new BadRequestDomainException(
+        'Phòng đọc đã đạt giới hạn tối đa 500 highlight',
+      );
+    }
+
+    const userHighlightCount = this._props.highlights.filter(
+      (h) => h.userId === props.userId,
+    ).length;
+    if (userHighlightCount >= 100) {
+      throw new BadRequestDomainException(
+        'Bạn đã đạt giới hạn tối đa 100 highlight trong phòng này',
+      );
+    }
+
     this._props.highlights.push({
       id: crypto.randomUUID(),
-      ...props,
+      userId: props.userId,
+      chapterSlug: props.chapterSlug,
+      paragraphId: props.paragraphId,
+      content: trimmedContent,
       createdAt: new Date(),
     });
     this.markAsUpdated();

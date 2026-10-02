@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 
 import { CreateRoomCommand } from '@/application/reading-rooms/use-cases/create-room/create-room.command';
 import { CreateRoomUseCase } from '@/application/reading-rooms/use-cases/create-room/create-room.use-case';
@@ -36,6 +37,7 @@ export class ReadingRoomsController {
     private readonly reactivateRoomUseCase: ReactivateRoomUseCase,
   ) {}
 
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post()
   async createRoom(
     @CurrentUser('id') userId: string,

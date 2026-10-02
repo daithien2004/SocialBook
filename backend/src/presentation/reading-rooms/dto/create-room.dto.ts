@@ -23,7 +23,7 @@ export class CreateRoomDto {
 
   @IsInt()
   @Min(2)
-  @Max(20)
+  @Max(50)
   @IsOptional()
   maxMembers?: number;
 }
