@@ -38,7 +38,15 @@ export class ReadingRoomRepository implements IReadingRoomRepository {
 
   async findActiveByUser(userId: string): Promise<DomainReadingRoom[]> {
     const docs = await this.roomModel
-      .find({ 'members.userId': userId, status: 'active' })
+      .find({
+        status: 'active',
+        members: {
+          $elemMatch: {
+            userId,
+            $or: [{ leftAt: { $exists: false } }, { leftAt: null }],
+          },
+        },
+      })
       .sort({ updatedAt: -1 })
       .lean()
       .exec();
