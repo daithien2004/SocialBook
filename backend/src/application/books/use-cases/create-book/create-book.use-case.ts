@@ -113,7 +113,9 @@ export class CreateBookUseCase {
     await this.bookCache.setDetail(book);
 
     // Emit event để ChromaDB listener (và các listener khác) bắt và xử lý
-    this.eventEmitter.emit(EventNames.BOOK_CREATED, { bookId: book.id.toString() });
+    this.eventEmitter.emit(EventNames.BOOK_CREATED, {
+      bookId: book.id.toString(),
+    });
 
     return book;
   }

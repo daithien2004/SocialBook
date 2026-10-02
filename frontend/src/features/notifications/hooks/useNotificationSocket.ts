@@ -44,7 +44,7 @@ interface UseNotificationSocketOptions {
 export function useNotificationSocket(
     options: UseNotificationSocketOptions
 ) {
-    const { getSocket, connectSocket } = useSocket();
+    const { getSocket, acquireSocket, releaseSocket } = useSocket();
     const socket = getSocket('/notifications');
     const { onNotificationList, onNewNotification, onReadNotification } = options;
     const { isAuthenticated } = useAppAuth();
@@ -81,17 +81,17 @@ export function useNotificationSocket(
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        const init = async () => {
-            const s = await connectSocket('/notifications');
-            if (s && s.connected) {
-                s.emit('notification:list', (data: NotificationItem[]) => {
-                    onNotificationList(data);
-                });
-            }
+        acquireSocket('/notifications');
+        if (socket && socket.connected) {
+            socket.emit('notification:list', (data: NotificationItem[]) => {
+                onNotificationList(data);
+            });
+        }
+        
+        return () => {
+            releaseSocket('/notifications');
         };
-
-        init();
-    }, [isAuthenticated, connectSocket, onNotificationList]);
+    }, [isAuthenticated, acquireSocket, releaseSocket, onNotificationList, socket]);
 
     const markAsRead = useCallback((id: string) => {
         if (!socket?.connected) return;

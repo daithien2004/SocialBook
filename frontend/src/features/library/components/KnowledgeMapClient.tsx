@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useAppAuth } from '@/features/auth/hooks';
 import LoginWall from '@/features/auth/components/LoginWall';
 import { BrainCircuit, Sparkles } from 'lucide-react';
+import { FullScreenSpinner } from '@/components/shared/AppLoading';
 
 export function KnowledgeMapClient() {
   const { isAuthenticated, isLoading: isAuthLoading } = useAppAuth();
@@ -16,11 +17,7 @@ export function KnowledgeMapClient() {
     enabled: isAuthenticated,
   });
   if (isAuthLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-4 border-brand border-t-transparent animate-spin"></div>
-      </div>
-    );
+    return <FullScreenSpinner />;
   }
   if (!isAuthenticated) {
     return (

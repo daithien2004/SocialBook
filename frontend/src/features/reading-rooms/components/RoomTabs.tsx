@@ -1,9 +1,7 @@
 'use client';
-import { Info, Users, BrainCircuit, User, BookOpen, Crown } from 'lucide-react';
+import { Users, BrainCircuit, User, BookOpen, Crown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { RoomChat } from '@/features/reading-room-interactions/components/RoomChat';
 import { ReadingProgress } from '@/features/reading-room-interactions/components/ReadingProgress';
-import { QuoteBoard } from '@/features/reading-room-interactions/components/QuoteBoard';
 import { KnowledgeSidebar } from '@/features/reading-rooms/components/KnowledgeSidebar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,9 +13,7 @@ import type { PresenceData } from '@/store/useReadingRoomStore';
 
 interface RoomTabsProps {
   variant: 'desktop' | 'mobile';
-  sendChatMessage: (content: string) => void;
   isEnded: boolean;
-  currentChapterSlug: string;
   roomCode: string;
   isHost: boolean;
   currentUserId?: string;
@@ -28,9 +24,7 @@ interface RoomTabsProps {
 
 export function RoomTabs({
   variant,
-  sendChatMessage,
   isEnded,
-  currentChapterSlug,
   roomCode,
   isHost,
   currentUserId,
@@ -44,13 +38,11 @@ export function RoomTabs({
   const isDesktop = variant === 'desktop';
 
   return (
-    <Tabs defaultValue="activity" className={isDesktop ? 'w-full' : 'w-full flex flex-col h-full overflow-hidden'}>
-      <TabsList variant="glass" className="grid grid-cols-4 mb-4 shrink-0">
+    <Tabs defaultValue="members" className={isDesktop ? 'w-full' : 'w-full flex flex-col h-full overflow-hidden'}>
+      <TabsList variant="glass" className="grid grid-cols-2 mb-4 shrink-0">
         {[
-          { value: 'activity', icon: <Info className="w-3.5 h-3.5" />, label: 'HĐ' },
-          { value: 'members', icon: <Users className="w-3.5 h-3.5" />, label: 'TV' },
-          { value: 'quotes', icon: <span className="text-sm leading-none">&ldquo;</span>, label: 'TD' },
-          { value: 'knowledge', icon: <BrainCircuit className="w-3.5 h-3.5" />, label: 'KT' },
+          { value: 'members', icon: <Users className="w-3.5 h-3.5" />, label: 'Thành viên' },
+          { value: 'knowledge', icon: <BrainCircuit className="w-3.5 h-3.5" />, label: 'Kiến thức' },
         ].map(tab => (
           <TabsTrigger
             key={tab.value}
@@ -63,12 +55,7 @@ export function RoomTabs({
         ))}
       </TabsList>
 
-      <TabsContent
-        value="activity"
-        className={`mt-0 outline-none${!isDesktop ? ' flex-1 overflow-hidden flex flex-col' : ''}`}
-      >
-        <RoomChat sendChatMessage={sendChatMessage} disabled={isEnded} />
-      </TabsContent>
+
 
       <TabsContent
         value="members"
@@ -96,7 +83,7 @@ export function RoomTabs({
               <div className="space-y-1">
                 {Object.values(presences).map(p => (
                   <div key={p.userId} className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-black/[0.03] dark:hover:bg-white/5 transition-colors group relative">
-                    <ReadingProgress userId={p.userId} displayName={p.displayName} avatarUrl={p.avatarUrl} />
+                    <ReadingProgress userId={p.userId} displayName={p.displayName} avatarUrl={p.avatarUrl || undefined} />
                     <div className="flex-1 overflow-hidden">
                       <p className="text-xs font-bold truncate group-hover:text-primary transition-colors">{p.displayName}</p>
                       <p className="text-[10px] text-muted-foreground truncate opacity-70">Chương: {p.currentChapterSlug}</p>
@@ -146,18 +133,7 @@ export function RoomTabs({
         </GlassCard>
       </TabsContent>
 
-      <TabsContent value="quotes" className={`mt-0 outline-none${!isDesktop ? ' flex-1 overflow-hidden' : ''}`}>
-        <GlassCard header={
-          <div className="flex items-center gap-2">
-            <span className="text-sm leading-none text-primary">&ldquo;</span>
-            <h3 className="text-sm font-bold tracking-tight uppercase">Trích dẫn</h3>
-          </div>
-        } className={!isDesktop ? 'h-full flex flex-col' : ''}>
-          <div className={`p-3 ${isDesktop ? 'max-h-[60vh]' : 'flex-1'} overflow-y-auto custom-scrollbar`}>
-            <QuoteBoard currentChapterSlug={currentChapterSlug} roomCode={roomCode} />
-          </div>
-        </GlassCard>
-      </TabsContent>
+
 
       <TabsContent value="knowledge" className={`mt-0 outline-none${!isDesktop ? ' flex-1 overflow-hidden' : ''}`}>
         <KnowledgeSidebar bookSlug={bookSlug} chapterId={chapterId} roomId={roomCode} />

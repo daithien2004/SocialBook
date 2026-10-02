@@ -1,7 +1,5 @@
-'use client';
-
-import { useState, useEffect, useRef, startTransition } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { bookQueries } from '@/features/books/api/books.queries';
 import type { BookOrderField, BookSummary } from '@/features/books/types/book.interface';
 import { useIntersectionPagination } from '@/hooks/useIntersectionPagination';
@@ -16,25 +14,14 @@ interface UseBookPaginationProps {
 }
 
 export const useBookPagination = (params: UseBookPaginationProps) => {
-    const [page, setPage] = useState(1);
-    const [allBooks, setAllBooks] = useState<BookSummary[]>([]);
-    const queryKeyRef = useRef('');
-
-    const queryKey = JSON.stringify({ ...params });
-
-    // Đổi bộ lọc phải quay về trang 1 NGAY trong lượt render này. Nếu để effect
-    // làm việc đó thì query đã kịp chạy một lần với bộ lọc mới + số trang cũ,
-    // rồi chạy lại lần nữa khi page về 1 — hai request cho một lần đổi filter.
-    const [prevQueryKey, setPrevQueryKey] = useState(queryKey);
-    if (queryKey !== prevQueryKey) {
-        setPrevQueryKey(queryKey);
-        setPage(1);
-    }
-
-    const { data, isLoading, isFetching } = useQuery(
-        bookQueries.list({
-            page,
-            limit: 20,
+    const { 
+        data, 
+        isLoading: isKeywordLoading, 
+        isFetchingNextPage, 
+        hasNextPage, 
+        fetchNextPage 
+    } = useInfiniteQuery({
+        ...bookQueries.infiniteList({
             search: params.search,
             mode: 'keyword',
             genres: params.genres.join(','),
@@ -43,7 +30,7 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
             order: params.order as 'asc' | 'desc',
             status: params.status && params.status !== 'all' ? (params.status as 'draft' | 'published' | 'completed') : undefined,
         })
-    );
+    });
 
     const { data: semanticData, isLoading: isSemanticLoading, isFetching: isSemanticFetching } = useQuery({
         ...bookQueries.list({
@@ -55,63 +42,59 @@ export const useBookPagination = (params: UseBookPaginationProps) => {
         enabled: !!params.search && params.search.trim().length >= 2,
     });
 
-    // Xử lý logic gộp danh sách Keyword và Semantic
-    useEffect(() => {
-        const isReset = queryKey !== queryKeyRef.current;
-        if (isReset) {
-            queryKeyRef.current = queryKey;
-        }
+    const allBooks = useMemo(() => {
+        if (!data || data.pages.length === 0) return [];
 
-        if (data?.data) {
-            startTransition(() => {
-                setAllBooks((prev) => {
-                    const aiBooks = (semanticData?.data || []).map((b: BookSummary) => ({ ...b, isSemantic: true }));
+        const aiBooks = (semanticData?.data || []).map((b: BookSummary) => ({ ...b, isSemantic: true }));
+        const result: BookSummary[] = [];
+        const seenIds = new Set<string>();
 
-                    const keywordBooks = data.data.map((b: BookSummary) => ({
-                        ...b,
-                        // Sách đã tìm thấy bằng Keyword thì không cần gắn mác AI nữa
-                        isSemantic: b.isSemantic
-                    }));
-                    const keywordBookIds = new Set(keywordBooks.map((b: BookSummary) => b.id));
+        // Process page 1
+        const page1Keyword = data.pages[0].data.map(b => ({ ...b }));
+        page1Keyword.forEach(b => {
+            result.push(b);
+            seenIds.add(b.id);
+        });
 
-                    const uniqueAiBooks = aiBooks.filter((b: BookSummary) => !keywordBookIds.has(b.id));
+        // Insert AI books immediately after page 1
+        aiBooks.forEach(b => {
+            if (!seenIds.has(b.id)) {
+                result.push(b);
+                seenIds.add(b.id);
+            }
+        });
 
-                    if (isReset || page === 1) {
-                        return [...keywordBooks, ...uniqueAiBooks];
-                    }
-
-                    // Cuộn trang: Thêm vào cuối, tránh trùng lặp
-                    const existingIds = new Set(prev.map((b) => b.id));
-                    const uniqueNewKeywordBooks = keywordBooks.filter((b: BookSummary) => !existingIds.has(b.id));
-                    const uniqueNewAiBooks = uniqueAiBooks.filter((b: BookSummary) => !existingIds.has(b.id));
-
-                    return [...prev, ...uniqueNewKeywordBooks, ...uniqueNewAiBooks];
-                });
+        // Process remaining pages
+        for (let i = 1; i < data.pages.length; i++) {
+            const pageKeyword = data.pages[i].data.map(b => ({ ...b }));
+            pageKeyword.forEach(b => {
+                if (!seenIds.has(b.id)) {
+                    result.push(b);
+                    seenIds.add(b.id);
+                }
             });
-        } else if (isReset) {
-            startTransition(() => setAllBooks([]));
         }
-    }, [queryKey, data, page, semanticData]);
-
-    const hasMore = data ? data.meta.current < data.meta.totalPages : true;
+        
+        return result;
+    }, [data, semanticData]);
 
     const lastBookRef = useIntersectionPagination({
-        onLoadMore: () => setPage((prev) => prev + 1),
-        isEnabled: !isFetching && hasMore,
+        onLoadMore: () => { void fetchNextPage(); },
+        isEnabled: !isFetchingNextPage && hasNextPage,
     });
 
-    const hasDataGap = !!data?.data?.length && allBooks.length === 0 && page === 1;
+    const totalFromApi = data?.pages[0]?.meta?.total || 0;
+    const metaData = {
+        total: Math.max(totalFromApi, allBooks.length)
+    };
 
     return {
         books: allBooks,
-        isLoading: ((isLoading || isFetching) && page === 1) || hasDataGap,
-        isFetchingMore: isFetching && page > 1,
+        isLoading: isKeywordLoading,
+        isFetchingMore: isFetchingNextPage,
         isSemanticLoading: isSemanticLoading || isSemanticFetching,
-        hasMore,
+        hasMore: hasNextPage,
         lastBookRef,
-        metaData: data?.meta ? {
-            ...data.meta,
-            total: Math.max(data.meta.total, allBooks.length)
-        } : undefined
+        metaData
     };
 };

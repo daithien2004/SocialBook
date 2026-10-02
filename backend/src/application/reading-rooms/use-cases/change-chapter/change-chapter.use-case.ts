@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   BadRequestDomainException,
   NotFoundDomainException,
+  ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
@@ -24,6 +25,12 @@ export class ChangeChapterUseCase {
     if (room.status === 'ended') {
       throw new BadRequestDomainException(
         'Không thể đổi chương trong phòng đã kết thúc',
+      );
+    }
+
+    if (!room.isMember(command.userId)) {
+      throw new ForbiddenDomainException(
+        'Bạn không phải là thành viên của phòng này',
       );
     }
 

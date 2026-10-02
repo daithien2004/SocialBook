@@ -12,4 +12,9 @@ export abstract class IReadingRoomRepository {
   abstract save(room: ReadingRoom): Promise<void>;
   abstract updateStatus(id: RoomId, status: 'active' | 'ended'): Promise<void>;
   abstract delete(id: RoomId): Promise<void>;
+  abstract setHighlightInsightIfEmpty(
+    roomId: RoomId,
+    highlightId: string,
+    insight: string,
+  ): Promise<boolean>;
 }

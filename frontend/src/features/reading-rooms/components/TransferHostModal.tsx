@@ -79,7 +79,7 @@ export function TransferHostModal({
                 >
                   <RadioGroupItem value={m.userId} id={m.userId} />
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={avatarUrl} />
+                    <AvatarImage src={avatarUrl || undefined} />
                     <AvatarFallback className="text-xs">
                       <User size={14} />
                     </AvatarFallback>

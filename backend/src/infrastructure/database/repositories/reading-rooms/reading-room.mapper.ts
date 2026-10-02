@@ -35,6 +35,7 @@ export class ReadingRoomMapper {
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
       endedAt: doc.endedAt,
+      version: doc.version,
     });
   }
 
@@ -72,6 +73,7 @@ export class ReadingRoomMapper {
         createdAt: m.createdAt,
       })),
       endedAt: domain.endedAt,
+      version: domain.version,
     };
   }
 }

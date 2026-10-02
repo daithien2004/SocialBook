@@ -5,9 +5,6 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
-import { ICommentRepository } from '@/domain/reading-room-interactions/repositories/comment.repository.interface';
-import { IReactionRepository } from '@/domain/reading-room-interactions/repositories/reaction.repository.interface';
-import { IQuoteRepository } from '@/domain/reading-room-interactions/repositories/quote.repository.interface';
 import { IPresencePort } from '@/domain/reading-rooms/interfaces/presence.port';
 import { DeleteRoomCommand } from './delete-room.command';
 
@@ -18,9 +15,6 @@ export class DeleteRoomUseCase {
   constructor(
     private readonly roomRepository: IReadingRoomRepository,
     private readonly presencePort: IPresencePort,
-    private readonly commentRepository: ICommentRepository,
-    private readonly reactionRepository: IReactionRepository,
-    private readonly quoteRepository: IQuoteRepository,
   ) {}
 
   async execute(command: DeleteRoomCommand): Promise<void> {
@@ -39,9 +33,7 @@ export class DeleteRoomUseCase {
 
     await Promise.all([
       this.roomRepository.delete(RoomId.create(roomId)),
-      this.commentRepository.deleteByRoom(roomId),
-      this.reactionRepository.deleteByRoom(roomId),
-      this.quoteRepository.deleteByRoom(roomId),
+
       this.presencePort.removeRoomPresences(roomId),
     ]);
 

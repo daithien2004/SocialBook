@@ -7,18 +7,7 @@ import {
   RoomMemberSchema,
   RoomHighlight,
 } from '@/infrastructure/database/schemas/reading-room.schema';
-import {
-  RoomCommentSchema,
-  RoomCommentDocument,
-} from '@/infrastructure/database/schemas/reading-room-interactions/room-comment.schema';
-import {
-  RoomReactionSchema,
-  RoomReactionDocument,
-} from '@/infrastructure/database/schemas/reading-room-interactions/room-reaction.schema';
-import {
-  RoomQuoteSchema,
-  RoomQuoteDocument,
-} from '@/infrastructure/database/schemas/reading-room-interactions/room-quote.schema';
+
 import {
   Chapter,
   ChapterDocument,
@@ -48,12 +37,7 @@ export class ReadingRoomsSeed {
   constructor(
     @InjectModel(ReadingRoom.name)
     private roomModel: Model<ReadingRoomDocument>,
-    @InjectModel(RoomCommentSchema.name)
-    private roomCommentModel: Model<RoomCommentDocument>,
-    @InjectModel(RoomReactionSchema.name)
-    private roomReactionModel: Model<RoomReactionDocument>,
-    @InjectModel(RoomQuoteSchema.name)
-    private roomQuoteModel: Model<RoomQuoteDocument>,
+
     @InjectModel(Chapter.name)
     private chapterModel: Model<ChapterDocument>,
     @InjectModel(Book.name)
@@ -66,9 +50,6 @@ export class ReadingRoomsSeed {
     this.logger.log('🏠 Seeding reading rooms for demo...');
 
     await this.roomModel.deleteMany({ _id: /^DEMO/ });
-    await this.roomCommentModel.deleteMany({ roomId: /^DEMO/ });
-    await this.roomReactionModel.deleteMany({ roomId: /^DEMO/ });
-    await this.roomQuoteModel.deleteMany({ roomId: /^DEMO/ });
 
     const users = await this.userModel.find();
     const books = await this.bookModel.find().exec();
@@ -139,26 +120,11 @@ export class ReadingRoomsSeed {
       return;
     }
 
-    const allMembers = [...users];
-    const randomUser = () =>
-      allMembers[Math.floor(Math.random() * allMembers.length)];
-
     const highlightTemplates = [
       (c: string) =>
         `Đoạn văn miêu tả thật tinh tế: "${c.substring(0, 80)}..."`,
       (c: string) => `Chi tiết này rất quan trọng: "${c.substring(0, 60)}..."`,
       (c: string) => `Câu văn hay nhất chương: "${c.substring(0, 100)}..."`,
-    ];
-
-    const reactionTypes = [
-      'cry',
-      'angry',
-      'laugh',
-      'think',
-      'shock',
-      'heart',
-      'fire',
-      'calm',
     ];
 
     for (const rc of roomConfigs) {
@@ -212,88 +178,8 @@ export class ReadingRoomsSeed {
         createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
         updatedAt: new Date(),
       });
-
-      const commentsCount = rc.mode === 'free' ? 6 : 3;
-      const commentIds: string[] = [];
-      for (let i = 0; i < commentsCount; i++) {
-        const pid = paraIds[Math.floor(Math.random() * paraIds.length)];
-        const cid = `${roomId}-cmt-${i + 1}`;
-        commentIds.push(cid);
-
-        await this.roomCommentModel.create({
-          _id: cid,
-          roomId,
-          chapterSlug: rc.chapter.slug,
-          paragraphId: pid,
-          content: [
-            'Đoạn này viết rất cảm xúc, mình đọc mà xúc động.',
-            'Mình thích cách miêu tả ở đoạn này, rất sống động.',
-            'Tác giả dùng từ ngữ tinh tế quá!',
-            'Đây là đoạn hay nhất chương này đó mọi người.',
-            'Đọc đoạn này mình nhớ đến một kỷ niệm cũ.',
-            'Ẩn dụ trong đoạn văn thật sự sâu sắc.',
-            'Cách dùng hình ảnh ở đây rất độc đáo.',
-            'Mình đã đọc đi đọc lại đoạn này nhiều lần.',
-          ][Math.floor(Math.random() * 8)],
-          userId: randomUser()._id.toString(),
-          createdAt: new Date(
-            Date.now() - Math.random() * 5 * 24 * 60 * 60 * 1000,
-          ),
-        });
-      }
-
-      const reactionCount = rc.mode === 'free' ? 15 : 8;
-      const reactionPairs = new Set<string>();
-      for (let i = 0; i < reactionCount; i++) {
-        const pid = paraIds[Math.floor(Math.random() * paraIds.length)];
-        const uid = allUserIds[Math.floor(Math.random() * allUserIds.length)];
-        const rtype =
-          reactionTypes[Math.floor(Math.random() * reactionTypes.length)];
-        const key = `${pid}:${uid}:${rtype}`;
-        if (reactionPairs.has(key)) continue;
-        reactionPairs.add(key);
-
-        await this.roomReactionModel.create({
-          _id: `${roomId}-rct-${i + 1}`,
-          roomId,
-          chapterSlug: rc.chapter.slug,
-          paragraphId: pid,
-          userId: uid,
-          reactionType: rtype,
-          createdAt: new Date(
-            Date.now() - Math.random() * 5 * 24 * 60 * 60 * 1000,
-          ),
-        });
-      }
-
-      const quoteCount = 2;
-      for (let i = 0; i < quoteCount; i++) {
-        const paraIdx = Math.floor(Math.random() * paraContents.length);
-        const excerpt = (paraContents[paraIdx] || '').substring(0, 120);
-
-        const votes = [
-          { userId: allUserIds[0], type: 'up' as const },
-          { userId: allUserIds[1], type: 'up' as const },
-          { userId: allUserIds[2], type: 'down' as const },
-        ].slice(0, Math.floor(Math.random() * 3) + 1);
-
-        await this.roomQuoteModel.create({
-          _id: `${roomId}-qte-${i + 1}`,
-          roomId,
-          content: `"${excerpt}..."`,
-          userId: randomUser()._id.toString(),
-          chapterSlug: rc.chapter.slug,
-          paragraphId: paraIds[paraIdx],
-          votes,
-          createdAt: new Date(
-            Date.now() - Math.random() * 5 * 24 * 60 * 60 * 1000,
-          ),
-        });
-      }
     }
 
-    this.logger.log(
-      `✅ Seeded ${roomConfigs.length} reading rooms with interactions`,
-    );
+    this.logger.log(`✅ Seeded ${roomConfigs.length} reading rooms`);
   }
 }

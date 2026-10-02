@@ -10,7 +10,8 @@ export const EventNames = {
 
   // Reading room events
   READING_ROOM_REACTIVATED: 'reading-room.reactivated',
-  READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED: 'reading-room.highlight_insight_updated',
+  READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED:
+    'reading-room.highlight_insight_updated',
 
   // User events
   USER_ROLE_CHANGED: 'user.role.changed',

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
@@ -68,12 +69,24 @@ export class ReadingRoomRepository implements IReadingRoomRepository {
 
   async save(room: DomainReadingRoom): Promise<void> {
     const persistenceData = ReadingRoomMapper.toPersistence(room);
-    await this.roomModel
-      .findByIdAndUpdate(persistenceData._id, persistenceData, {
-        upsert: true,
-        new: true,
-      })
+    
+    if (persistenceData.version === 0) {
+      // New room
+      await this.roomModel.create(persistenceData);
+      return;
+    }
+
+    const expectedVersion = persistenceData.version! - 1;
+    const result = await this.roomModel
+      .updateOne(
+        { _id: persistenceData._id, version: expectedVersion },
+        { $set: persistenceData },
+      )
       .exec();
+      
+    if (result.matchedCount === 0) {
+      throw new ConflictDomainException('ConcurrencyException: Room was modified by another transaction');
+    }
   }
 
   async updateStatus(id: RoomId, status: 'active' | 'ended'): Promise<void> {
@@ -82,5 +95,24 @@ export class ReadingRoomRepository implements IReadingRoomRepository {
 
   async delete(id: RoomId): Promise<void> {
     await this.roomModel.findByIdAndDelete(id.toString()).exec();
+  }
+
+  async setHighlightInsightIfEmpty(
+    roomId: RoomId,
+    highlightId: string,
+    insight: string,
+  ): Promise<boolean> {
+    const result = await this.roomModel.updateOne(
+      {
+        _id: roomId.toString(),
+        'highlights.id': highlightId,
+        'highlights.aiInsight': { $exists: false },
+      },
+      {
+        $set: { 'highlights.$.aiInsight': insight },
+      }
+    ).exec();
+
+    return result.modifiedCount > 0;
   }
 }

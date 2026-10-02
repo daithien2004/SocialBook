@@ -1,4 +1,4 @@
-﻿import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { CreateRoomUseCase } from './use-cases/create-room/create-room.use-case';
 import { JoinRoomUseCase } from './use-cases/join-room/join-room.use-case';
 import { LeaveRoomUseCase } from './use-cases/leave-room/leave-room.use-case';
@@ -18,7 +18,7 @@ import { GenerateHighlightInsightUseCase } from './use-cases/generate-highlight-
 import { RemoveHighlightUseCase } from './use-cases/remove-highlight/remove-highlight.use-case';
 import { AIApplicationModule } from '../ai/ai-application.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
-import { ReadingRoomInteractionsRepositoryModule } from '@/infrastructure/database/repositories/reading-room-interactions/reading-room-interactions-repository.module';
+
 import { IPresencePort } from '@/domain/reading-rooms/interfaces/presence.port';
 import { ReadingRoomPresenceService } from './presence/reading-room-presence.service';
 
@@ -28,7 +28,6 @@ import { ReadingRoomPresenceService } from './presence/reading-room-presence.ser
     BooksRepositoryModule,
     ChaptersRepositoryModule,
     AIApplicationModule,
-    ReadingRoomInteractionsRepositoryModule,
   ],
   providers: [
     CreateRoomUseCase,

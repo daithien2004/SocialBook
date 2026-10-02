@@ -15,6 +15,7 @@ import { useTracking, UserEventType } from '@/hooks/use-tracking';
 import { useEffect } from 'react';
 import { HorizontalFilters } from '@/features/books/components/HorizontalFilters';
 import { ActiveFilters } from '@/features/books/components/ActiveFilters';
+import { BookGridSkeleton, LoadingMoreIndicator } from '@/features/books/components/LoadingStates';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function BooksClientPage() {
@@ -158,9 +159,7 @@ export default function BooksClientPage() {
 
             {/* Books Grid */}
             {isBooksLoading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
-              </div>
+              <BookGridSkeleton />
             ) : books.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-5">
                 {books.map((book, index) => (
@@ -206,10 +205,7 @@ export default function BooksClientPage() {
               )}
 
             {isFetchingMore && (
-              <div className="flex justify-center py-8 gap-2 text-muted-foreground">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
-                <span className="text-sm font-medium">Đang tải thêm sách...</span>
-              </div>
+              <LoadingMoreIndicator />
             )}
 
             {books.length > 0 && isSemanticLoading && (

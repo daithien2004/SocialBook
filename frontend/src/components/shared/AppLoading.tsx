@@ -20,3 +20,11 @@ export function AppLoading({ className, size = 20, text }: AppLoadingProps) {
     </div>
   );
 }
+
+export function FullScreenSpinner({ className = "min-h-screen" }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center justify-center", className)}>
+      <div className="size-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+    </div>
+  );
+}

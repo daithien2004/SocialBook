@@ -13,7 +13,7 @@ import ChapterListDrawer from '@/features/books/components/ChapterListDrawer';
 import { BookmarksDrawer } from '@/features/chapters/components/BookmarksDrawer';
 import ReadingSettingsPanel from '@/features/chapters/components/ReadingSettingsPanel';
 import { TransferHostModal } from '@/features/reading-rooms/components/TransferHostModal';
-import { EmotionStream } from '@/features/reading-rooms/components/EmotionStream';
+
 import { ProgressRadar } from '@/features/reading-rooms/components/ProgressRadar';
 import { RoomHighlightsDrawer } from '@/features/reading-rooms/components/RoomHighlightsDrawer';
 import { Button } from '@/components/ui/button';
@@ -59,13 +59,12 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
     chapterData,
     isLoadingChapter,
     chaptersData,
-    quotesData,
+
     progressData,
   } = useReadingRoomQueries({
     roomCode,
     currentChapterSlug,
     isAuthenticated,
-    isRoomLoaded: !!storeRoom,
   });
 
   const room = storeRoom || initialRoom;
@@ -78,12 +77,10 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
   const shouldConnectSocket = isAuthenticated && !!initialRoom;
   const {
     endRoom,
-    deleteRoom,
     leaveRoom,
     changeChapter,
     changeMode,
     sendHeartbeat,
-    sendChatMessage,
   } = useReadingRoomSocket(shouldConnectSocket ? roomCode : undefined);
 
   const {
@@ -103,7 +100,6 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
   });
 
   useReadingRoomEffects({
-    quotesData,
     isEnded,
     initialRoom,
     chapterId: chapter?.id,
@@ -115,7 +111,7 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
     readingParagraphId,
     contentRef,
     onActiveParagraphChange,
-  } = useReadingProgress();
+  } = useReadingProgress(currentChapterSlug);
 
   useRoomPresence(
     currentChapterSlug || 'unknown',
@@ -144,6 +140,9 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
   const [showSettings, setShowSettings] = useState(false);
   const isControlsVisible = useAutoHideDock();
 
+  const connection = useReadingRoomStore((state) => state.connection);
+  const errorCode = useReadingRoomStore((state) => state.errorCode);
+
   if (!isAuthenticated) {
     return (
       <LoginWall
@@ -155,7 +154,7 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
     );
   }
 
-  if (isLoadingRoom) {
+  if (isLoadingRoom || connection === 'connecting' || connection === 'joining') {
     return (
       <div className="min-h-[60vh]">
         <LoadingOverlay>Đang kết nối vào phòng...</LoadingOverlay>
@@ -163,13 +162,18 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
     );
   }
 
-  if (error || !initialRoom) {
+  if (error || !initialRoom || connection === 'error') {
+    let errDesc = "Phòng không tồn tại hoặc đã kết thúc.";
+    if (errorCode === 'FULL') errDesc = "Phòng đã đầy.";
+    else if (errorCode === 'FORBIDDEN') errDesc = "Bạn không có quyền vào phòng này.";
+    else if (errorCode === 'UNAUTHORIZED') errDesc = "Bạn cần đăng nhập lại để vào phòng.";
+
     return (
       <div className="min-h-[60vh]">
         <EmptyState
           icon={AlertTriangle}
-          title="Không tìm thấy phòng"
-          description="Phòng không tồn tại hoặc đã kết thúc."
+          title="Không thể vào phòng"
+          description={errDesc}
           action={<Button onClick={() => router.push('/reading-rooms')}>Quay lại</Button>}
           iconClassName="text-destructive"
         />
@@ -185,12 +189,16 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        <EmotionStream />
+        {connection === 'reconnecting' && (
+          <div className="bg-warning text-warning-foreground text-center text-sm py-1 font-medium shadow-sm">
+            Mất kết nối, đang kết nối lại...
+          </div>
+        )}
 
         <MobileHeader
           roomCode={roomCode} room={room} bookData={bookData} presences={presences}
           isHost={isHost} isEnded={isEnded} copied={copied} handleCopyCode={handleCopyCode}
-          changeMode={changeMode} endRoom={endRoom} deleteRoom={deleteRoom}
+          changeMode={changeMode} endRoom={endRoom}
           isReactivating={isReactivating} onReactivateRoom={handleReactivateRoom}
           setTransferHostOpen={setTransferHostOpen}
         />
@@ -198,7 +206,7 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
         <DesktopSidebar
           roomCode={roomCode} room={room} bookData={bookData} presences={presences}
           isHost={isHost} isEnded={isEnded} copied={copied} handleCopyCode={handleCopyCode}
-          changeMode={changeMode} endRoom={endRoom} deleteRoom={deleteRoom}
+          changeMode={changeMode} endRoom={endRoom}
           isReactivating={isReactivating} onReactivateRoom={handleReactivateRoom}
           onTransferHost={() => setTransferHostOpen(true)}
         />
@@ -219,8 +227,8 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
 
               <aside className="w-full lg:w-80 sticky top-28 shrink-0 space-y-6 hidden sm:block">
                 <RoomTabs
-                  variant="desktop" sendChatMessage={sendChatMessage} isEnded={isEnded}
-                  currentChapterSlug={currentChapterSlug} roomCode={roomCode}
+                  variant="desktop" isEnded={isEnded}
+                  roomCode={roomCode}
                   isHost={isHost} currentUserId={user?.id}
                   bookSlug={bookData?.slug || ''} chapterId={chapter?.id || ''}
                   onTransferHost={handleTransferHostClick}
@@ -290,8 +298,8 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
         <SheetContent side="bottom" className="h-[85vh] p-4 pt-6 rounded-t-3xl border-t border-border overflow-hidden flex flex-col z-50">
           <SheetTitle className="sr-only">Hoạt động phòng</SheetTitle>
           <RoomTabs
-            variant="mobile" sendChatMessage={sendChatMessage} isEnded={isEnded}
-            currentChapterSlug={currentChapterSlug} roomCode={roomCode}
+            variant="mobile" isEnded={isEnded}
+            roomCode={roomCode}
             isHost={isHost} currentUserId={user?.id}
             bookSlug={bookData?.slug || ''} chapterId={chapter?.id || ''}
             onTransferHost={handleTransferHostClick}

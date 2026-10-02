@@ -9,7 +9,7 @@ import { AudioWorker } from './audio.worker';
 import { TtsInfrastructureModule } from '@/infrastructure/text-to-speech/tts-infrastructure.module';
 import { TextToSpeechRepositoryModule } from '@/infrastructure/database/repositories/text-to-speech/text-to-speech-repository.module';
 import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
-import { ReadingRoomInteractionsApplicationModule } from '@/application/reading-room-interactions/reading-room-interactions-application.module';
+
 import { ReadingRoomGateway } from './reading-room.gateway';
 import { ReadingRoomPresenceModule } from '@/application/reading-rooms/presence/reading-room-presence.module';
 import { LibraryApplicationModule } from '@/application/library/library-application.module';
@@ -24,7 +24,7 @@ import { isWorkerProcess } from '@/common/utils/process-role.util';
   imports: [
     NotificationsApplicationModule,
     ReadingRoomsApplicationModule,
-    ReadingRoomInteractionsApplicationModule,
+
     ChaptersRepositoryModule,
     PostsRepositoryModule,
     CommentsRepositoryModule,

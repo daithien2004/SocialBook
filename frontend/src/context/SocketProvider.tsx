@@ -11,13 +11,8 @@ interface SocketContextType {
    * Namespace phải bắt đầu bằng dấu / (ví dụ: '/notifications')
    */
   getSocket: (namespace: string) => Socket;
-  /**
-   * Kết nối một namespace cụ thể với token hiện tại
-   */
-  connectSocket: (namespace: string) => Promise<Socket | null>;
-  /**
-   * Ngắt kết nối tất cả các socket và manager
-   */
+  acquireSocket: (namespace: string) => void;
+  releaseSocket: (namespace: string) => void;
   disconnectAll: () => void;
 }
 
@@ -32,6 +27,7 @@ if (typeof window !== 'undefined' && SOCKET_URL === '/') {
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const managerRef = useRef<Manager | null>(null);
   const socketsRef = useRef<Record<string, Socket>>({});
+  const refCountRef = useRef<Record<string, number>>({});
   const { isAuthenticated } = useAppAuth();
 
   // Khởi tạo Manager nếu chưa có
@@ -39,7 +35,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!managerRef.current) {
       managerRef.current = new Manager(SOCKET_URL, {
         autoConnect: false,
-        transports: ['websocket', 'polling'],
+        transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
@@ -63,21 +59,30 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return socket;
   }, [getManager]);
 
-  const connectSocket = useCallback(async (namespace: string) => {
+  const acquireSocket = useCallback((namespace: string) => {
     const socket = getSocket(namespace);
-
+    refCountRef.current[namespace] = (refCountRef.current[namespace] || 0) + 1;
     if (!socket.connected) {
       socket.connect();
     }
-
-    return socket;
   }, [getSocket]);
+
+  const releaseSocket = useCallback((namespace: string) => {
+    if (refCountRef.current[namespace] > 0) {
+      refCountRef.current[namespace] -= 1;
+    }
+    if (refCountRef.current[namespace] === 0 && socketsRef.current[namespace]) {
+      socketsRef.current[namespace].disconnect();
+      delete socketsRef.current[namespace];
+    }
+  }, []);
 
   const disconnectAll = useCallback(() => {
     Object.values(socketsRef.current).forEach((socket) => {
       socket.disconnect();
     });
     socketsRef.current = {};
+    refCountRef.current = {};
     managerRef.current = null;
   }, []);
 
@@ -89,7 +94,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [isAuthenticated, disconnectAll]);
 
   return (
-    <SocketContext.Provider value={{ getSocket, connectSocket, disconnectAll }}>
+    <SocketContext.Provider value={{ getSocket, acquireSocket, releaseSocket, disconnectAll }}>
       {children}
     </SocketContext.Provider>
   );

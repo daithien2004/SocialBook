@@ -3,20 +3,18 @@ import { readingRoomQueries } from '@/features/reading-rooms/api/reading-rooms.q
 import { bookQueries } from '@/features/books/api/books.queries';
 import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
 import { libraryQueries } from '@/features/library/api/library.queries';
-import { roomInteractionQueries } from '@/features/reading-room-interactions/api/room-interactions.queries';
+
 
 interface UseReadingRoomQueriesOptions {
   roomCode: string;
   currentChapterSlug: string;
   isAuthenticated: boolean;
-  isRoomLoaded: boolean;
 }
 
 export function useReadingRoomQueries({
   roomCode,
   currentChapterSlug,
   isAuthenticated,
-  isRoomLoaded,
 }: UseReadingRoomQueriesOptions) {
   const { data: initialRoom, isLoading: isLoadingRoom, error } = useQuery({
     ...readingRoomQueries.room(roomCode),
@@ -43,10 +41,7 @@ export function useReadingRoomQueries({
     enabled: !!bookData?.slug,
   });
 
-  const { data: quotesData } = useQuery({
-    ...roomInteractionQueries.quotes({ code: roomCode }),
-    enabled: isRoomLoaded,
-  });
+
 
   const { data: progressData } = useQuery({
     ...libraryQueries.chapterProgress({
@@ -64,7 +59,6 @@ export function useReadingRoomQueries({
     chapterData,
     isLoadingChapter,
     chaptersData,
-    quotesData,
     progressData,
   };
 }

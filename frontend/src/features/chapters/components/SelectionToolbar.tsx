@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Sparkles, Highlighter, QuoteIcon } from 'lucide-react'
+import { Sparkles, Highlighter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { MarkdownText } from '@/components/shared/MarkdownText'
@@ -20,7 +20,6 @@ interface SelectionToolbarProps {
   onAI: (type: 'explain' | 'summarize' | 'character' | 'translate') => void
   onHighlightRoom: () => void
   onHighlightPersonal: () => void
-  onQuote: () => void
 }
 
 export function SelectionToolbar({
@@ -34,7 +33,6 @@ export function SelectionToolbar({
   onAI,
   onHighlightRoom,
   onHighlightPersonal,
-  onQuote,
 }: SelectionToolbarProps) {
   const isMounted = useSyncExternalStore(
     () => () => {},
@@ -98,16 +96,7 @@ export function SelectionToolbar({
                 <Highlighter className="w-3.5 h-3.5" />
               </Button>
 
-              <Button
-                title="Trích dẫn"
-                size="sm"
-                variant="ghost"
-                className="h-8 rounded-md gap-1.5 px-2 text-foreground hover:bg-accent"
-                onClick={onQuote}
-              >
-                <QuoteIcon className="w-3 h-3" />
-                <span className="text-[10px] font-bold">Trích dẫn</span>
-              </Button>
+
             </>
           )}
         </motion.div>

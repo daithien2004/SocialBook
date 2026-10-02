@@ -65,8 +65,8 @@ export class BookRepository
       .populate('genres')
       .lean()
       .exec()) as unknown as RawBookDocument[];
-    
-    return documents.map(doc => BookMapper.toDomain(doc));
+
+    return documents.map((doc) => BookMapper.toDomain(doc));
   }
 
   async findById(id: BookId): Promise<BookEntity | null> {

@@ -42,16 +42,7 @@ import { UpdateProgressUseCase } from '@/application/library/use-cases/update-pr
 import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
-import { AddCommentUseCase } from '@/application/reading-room-interactions/use-cases/add-comment/add-comment.use-case';
-import { AddCommentCommand } from '@/application/reading-room-interactions/use-cases/add-comment/add-comment.command';
-import { DeleteCommentUseCase } from '@/application/reading-room-interactions/use-cases/delete-comment/delete-comment.use-case';
-import { DeleteCommentCommand } from '@/application/reading-room-interactions/use-cases/delete-comment/delete-comment.command';
-import { AddReactionUseCase } from '@/application/reading-room-interactions/use-cases/add-reaction/add-reaction.use-case';
-import { AddReactionCommand } from '@/application/reading-room-interactions/use-cases/add-reaction/add-reaction.command';
-import { AddQuoteUseCase } from '@/application/reading-room-interactions/use-cases/add-quote/add-quote.use-case';
-import { AddQuoteCommand } from '@/application/reading-room-interactions/use-cases/add-quote/add-quote.command';
-import { VoteQuoteUseCase } from '@/application/reading-room-interactions/use-cases/vote-quote/vote-quote.use-case';
-import { VoteQuoteCommand } from '@/application/reading-room-interactions/use-cases/vote-quote/vote-quote.command';
+
 import { EventNames } from '@/common/constants/event-names.constant';
 
 interface SocketData {
@@ -60,6 +51,7 @@ interface SocketData {
   displayName?: string;
   avatarUrl?: string;
   roomId?: string;
+  bookId?: string;
   pendingProgress?: {
     bookId: string;
     chapterId: string;
@@ -101,11 +93,7 @@ export class ReadingRoomGateway
     private readonly deleteRoomUseCase: DeleteRoomUseCase,
     private readonly addHighlightUseCase: AddHighlightUseCase,
     private readonly removeHighlightUseCase: RemoveHighlightUseCase,
-    private readonly addCommentUseCase: AddCommentUseCase,
-    private readonly deleteCommentUseCase: DeleteCommentUseCase,
-    private readonly addReactionUseCase: AddReactionUseCase,
-    private readonly addQuoteUseCase: AddQuoteUseCase,
-    private readonly voteQuoteUseCase: VoteQuoteUseCase,
+
     private readonly generateHighlightInsightUseCase: GenerateHighlightInsightUseCase,
     private readonly updateProgressUseCase: UpdateProgressUseCase,
     private readonly chapterRepository: IChapterRepository,
@@ -113,38 +101,53 @@ export class ReadingRoomGateway
   ) {}
 
   afterInit(server: Server) {
-    server.use(async (socket, next) => {
-      try {
-        const token =
-          socket.handshake.auth?.token ??
-          socket.handshake.headers.authorization?.split(' ')[1];
+    server.use((socket, next) => {
+      (async () => {
+        try {
+          let token =
+            (socket.handshake.auth?.token as string | undefined) ??
+            socket.handshake.headers.authorization?.split(' ')[1];
 
-        if (!token) {
-          return next(new Error('unauthorized'));
+          if (!token && socket.handshake.headers.cookie) {
+            const match = socket.handshake.headers.cookie.match(
+              /(?:^|;\s*)sb_access_token=([^;]+)/,
+            );
+            if (match) token = match[1];
+          }
+
+          if (!token) {
+            return next(new Error('unauthorized'));
+          }
+
+          const payload = await this.jwt.verifyAsync<{
+            sub?: string;
+            id?: string;
+            role?: string;
+            displayName?: string;
+            avatarUrl?: string;
+          }>(token);
+
+          const userId = (payload.sub ?? payload.id) as string;
+          if (!userId) {
+            return next(new Error('unauthorized'));
+          }
+
+          const sockets = await server.in(`user:${userId}`).fetchSockets();
+          if (sockets.length >= 5) {
+            return next(new Error('too_many_connections'));
+          }
+
+          (socket.data as SocketData).userId = userId;
+          (socket.data as SocketData).role = payload.role ?? 'user';
+          (socket.data as SocketData).displayName = payload.displayName;
+          (socket.data as SocketData).avatarUrl = payload.avatarUrl;
+          next();
+        } catch {
+          next(new Error('unauthorized'));
         }
-
-        const payload = await this.jwt.verifyAsync<{
-          sub?: string;
-          id?: string;
-          role?: string;
-        }>(token);
-
-        const userId = payload.sub ?? payload.id;
-        if (!userId) {
-          return next(new Error('unauthorized'));
-        }
-
-        const sockets = await server.in(`user:${userId}`).fetchSockets();
-        if (sockets.length >= 5) {
-          return next(new Error('too_many_connections'));
-        }
-
-        (socket.data as SocketData).userId = userId;
-        (socket.data as SocketData).role = payload.role ?? 'user';
-        next();
-      } catch {
-        next(new Error('unauthorized'));
-      }
+      })().catch((err) =>
+        next(err instanceof Error ? err : new Error(String(err))),
+      );
     });
   }
 
@@ -184,7 +187,7 @@ export class ReadingRoomGateway
       clearTimeout(sd.progressTimer);
       sd.progressTimer = undefined;
     }
-    
+
     const pending = sd.pendingProgress;
     if (pending && sd.userId) {
       sd.pendingProgress = undefined;
@@ -225,9 +228,13 @@ export class ReadingRoomGateway
   ) {
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
-    
+
     if (await this.isRateLimited(userId, 'add_highlight', 30)) {
-      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for adding highlights');
+      this.emitError(
+        socket,
+        'RATE_LIMITED',
+        'Rate limit exceeded for adding highlights',
+      );
       return;
     }
     try {
@@ -292,8 +299,26 @@ export class ReadingRoomGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() body: { roomId: string; highlightId: string },
   ) {
+    if (!this.isInRoom(socket, body.roomId)) {
+      this.emitError(socket, 'NOT_IN_ROOM', 'Bạn chưa tham gia phòng này');
+      return;
+    }
+
+    const userId = (socket.data as SocketData).userId ?? '';
+
+    // B3: Rate limit max 5/min cho insight
+    if (await this.isRateLimited(userId, 'generate_insight', 5)) {
+      this.emitError(
+        socket,
+        'RATE_LIMITED',
+        'Rate limit exceeded for generating insights',
+      );
+      return;
+    }
+
     try {
       const command = new GenerateHighlightInsightCommand(
+        userId,
         body.roomId,
         body.highlightId,
       );
@@ -353,16 +378,25 @@ export class ReadingRoomGateway
       const room = await this.joinRoomUseCase.execute(command);
       const roomId = room.roomId;
 
+      if (sd.roomId && sd.roomId !== roomId) {
+        void socket.leave(`room:${sd.roomId}`);
+        await this.presenceService.removePresence(sd.roomId, userId);
+      }
+
+      const displayName = sd.displayName || 'Unknown';
+      const avatarUrl = sd.avatarUrl || '';
+
       sd.roomId = roomId;
-      sd.displayName = body.displayName;
-      sd.avatarUrl = body.avatarUrl;
+      sd.bookId = room.bookId;
+      sd.displayName = displayName;
+      sd.avatarUrl = avatarUrl;
 
       void socket.join(`room:${roomId}`);
 
       await this.presenceService.upsertPresence(roomId, userId, {
         userId,
-        displayName: body.displayName,
-        avatarUrl: body.avatarUrl,
+        displayName,
+        avatarUrl,
         currentChapterSlug: room.currentChapterSlug,
       });
 
@@ -370,38 +404,65 @@ export class ReadingRoomGateway
 
       const snapshotHighlights = room.highlights;
 
-      socket.emit(ReadingRoomServerEvent.ROOM_SNAPSHOT, {
-        room: {
-          roomId: room.roomId,
-          bookId: room.bookId,
-          hostId: room.hostId,
-          mode: room.mode,
-          currentChapterSlug: room.currentChapterSlug,
-          status: room.status,
-          highlights: snapshotHighlights.map((h) => ({
-            id: h.id,
-            userId: h.userId,
-            chapterSlug: h.chapterSlug,
-            paragraphId: h.paragraphId,
-            content: h.content,
-            aiInsight: h.aiInsight,
-            createdAt: h.createdAt,
-          })),
-          chatMessages: [],
-        },
-        members: room.members.map((m) => ({ userId: m.userId, role: m.role })),
-        presences,
-      });
-
       socket.to(`room:${roomId}`).emit(ReadingRoomServerEvent.MEMBER_JOINED, {
         userId,
-        displayName: body.displayName,
+        displayName,
       });
       this.server
         .to(`room:${roomId}`)
         .emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
+
+      return {
+        ok: true,
+        snapshot: {
+          room: {
+            roomId: room.roomId,
+            bookId: room.bookId,
+            hostId: room.hostId,
+            mode: room.mode,
+            currentChapterSlug: room.currentChapterSlug,
+            status: room.status,
+            highlights: snapshotHighlights.map((h) => {
+              const presence = presences.find((p) => p.userId === h.userId);
+              return {
+                id: h.id,
+                userId: h.userId,
+                user: presence
+                  ? {
+                      id: h.userId,
+                      username: presence.displayName,
+                      image: presence.avatarUrl,
+                    }
+                  : { id: h.userId, username: 'Thành viên' },
+                chapterSlug: h.chapterSlug,
+                paragraphId: h.paragraphId,
+                content: h.content,
+                aiInsight: h.aiInsight,
+                createdAt: h.createdAt,
+              };
+            }),
+            chatMessages: [],
+          },
+          members: room.members.map((m) => ({
+            userId: m.userId,
+            role: m.role,
+          })),
+          presences,
+        },
+      };
     } catch (error: unknown) {
-      this.emitError(socket, 'JOIN_FAILED', 'Join failed', error);
+      let code = 'JOIN_FAILED';
+      if (error && typeof error === 'object' && 'name' in error) {
+        if (error.name === 'NotFoundDomainException') code = 'NOT_FOUND';
+        else if (error.name === 'ForbiddenDomainException') code = 'FORBIDDEN';
+        else if (error.name === 'RoomFullDomainException') code = 'FULL';
+        else if (error.name === 'UnauthorizedDomainException')
+          code = 'UNAUTHORIZED';
+      }
+      this.logger.warn(
+        `Join failed for ${userId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return { ok: false, code };
     }
   }
 
@@ -416,17 +477,17 @@ export class ReadingRoomGateway
 
     try {
       const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
-      await this.leaveRoomUseCase.execute(command);
+      const result = await this.leaveRoomUseCase.execute(command);
       await this.presenceService.removePresence(roomId, userId);
 
       void socket.leave(`room:${roomId}`);
       delete sd.roomId;
 
-      if (body.newHostId) {
+      if (result.hostId) {
         this.server
           .to(`room:${roomId}`)
           .emit(ReadingRoomServerEvent.HOST_CHANGED, {
-            newHostId: body.newHostId,
+            newHostId: result.hostId,
           });
       }
 
@@ -548,10 +609,28 @@ export class ReadingRoomGateway
     defaultMsg: string,
     error?: unknown,
   ) {
-    socket.emit(ReadingRoomServerEvent.ERROR, {
-      code,
-      message: error instanceof Error ? error.message : defaultMsg,
-    });
+    let message = defaultMsg;
+    if (
+      error &&
+      typeof error === 'object' &&
+      'name' in error &&
+      String(error.name).endsWith('DomainException')
+    ) {
+      message = (error as Error).message;
+    } else if (error) {
+      this.logger.error(
+        `WS Error [${code}]`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
+    socket.emit(ReadingRoomServerEvent.ERROR, { code, message });
+  }
+
+  private isInRoom(socket: Socket, roomId?: string): roomId is string {
+    const sd = socket.data as SocketData;
+    return (
+      !!roomId && sd.roomId === roomId && socket.rooms.has(`room:${roomId}`)
+    );
   }
 
   private async isRateLimited(
@@ -562,10 +641,12 @@ export class ReadingRoomGateway
     if (!userId) return false;
     const key = `rl:ws:${event}:${userId}`;
     try {
-      const current = await this.redis.incr(key);
-      if (current === 1) {
-        await this.redis.expire(key, 60);
-      }
+      const res = await this.redis
+        .multi()
+        .set(key, 0, 'EX', 60, 'NX')
+        .incr(key)
+        .exec();
+      const current = Number(res?.[1]?.[1] ?? 0);
       return current > maxPerMinute;
     } catch {
       return false; // Fallback allow on Redis failure
@@ -605,65 +686,53 @@ export class ReadingRoomGateway
       chapterId?: string;
     },
   ) {
+    if (!this.isInRoom(socket, body.roomId)) {
+      this.emitError(socket, 'NOT_IN_ROOM', 'Bạn chưa tham gia phòng này');
+      return;
+    }
+
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
     const displayName = sd.displayName ?? '';
     const avatarUrl = sd.avatarUrl ?? '';
 
-    if (await this.isRateLimited(userId, 'heartbeat', 30)) return;
+    if (await this.isRateLimited(userId, 'heartbeat', 90)) return;
 
-    if (userId && displayName && body.roomId) {
-      await this.presenceService.upsertPresence(body.roomId, userId, {
+    const chapterSlug = String(body.chapterSlug || '').slice(0, 200);
+    const paragraphId = body.paragraphId
+      ? String(body.paragraphId).slice(0, 100)
+      : undefined;
+    const progress =
+      body.progress !== undefined
+        ? Math.max(0, Math.min(1, Number(body.progress) || 0))
+        : undefined;
+
+    if (userId && displayName && sd.roomId) {
+      await this.presenceService.upsertPresence(sd.roomId, userId, {
         userId,
         displayName,
         avatarUrl,
-        currentChapterSlug: body.chapterSlug,
-        paragraphId: body.paragraphId,
-        progress: body.progress,
+        currentChapterSlug: chapterSlug,
+        paragraphId: paragraphId,
+        progress: progress,
       });
 
-      // Save reading progress to buffer, flush every 10 seconds
-      if (body.bookId && body.chapterId && body.progress !== undefined) {
+      if (sd.bookId && body.chapterId && progress !== undefined) {
         sd.pendingProgress = {
-          bookId: body.bookId,
-          chapterId: body.chapterId,
-          chapterSlug: body.chapterSlug,
-          progress: body.progress,
+          bookId: sd.bookId,
+          chapterId: String(body.chapterId),
+          chapterSlug: chapterSlug,
+          progress: progress,
         };
-        sd.progressTimer ??= setTimeout(() => this.flushProgress(socket), 10_000);
+        sd.progressTimer ??= setTimeout(() => {
+          this.flushProgress(socket).catch((err: unknown) => {
+            this.logger.error('Failed to flush progress', err);
+          });
+        }, 10_000);
       }
 
-      this.schedulePresenceBroadcast(body.roomId);
+      this.schedulePresenceBroadcast(sd.roomId);
     }
-  }
-
-  @SubscribeMessage('send_chat_message')
-  async handleSendChatMessage(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() data: { roomId: string; content: string },
-  ) {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
-    
-    if (await this.isRateLimited(userId, 'send_chat_message', 30)) {
-      socket.emit(ReadingRoomServerEvent.ERROR, {
-        code: 'RATE_LIMITED',
-        message: 'Bạn đang gửi tin nhắn quá nhanh, vui lòng chậm lại.',
-      });
-      return;
-    }
-    const displayName = sd.displayName || 'User';
-    const avatarUrl = sd.avatarUrl || '';
-    this.server
-      .to(`room:${data.roomId}`)
-      .emit(ReadingRoomServerEvent.NEW_CHAT_MESSAGE, {
-        userId,
-        displayName,
-        avatarUrl,
-        role: 'user',
-        content: data.content,
-        createdAt: new Date(),
-      });
   }
 
   @OnEvent(EventNames.READING_ROOM_REACTIVATED)
@@ -673,218 +742,5 @@ export class ReadingRoomGateway
       .emit(ReadingRoomServerEvent.ROOM_REACTIVATED, {
         reactivatedBy: payload.reactivatedBy,
       });
-  }
-
-  @SubscribeMessage(ReadingRoomClientEvent.ADD_COMMENT)
-  async handleAddComment(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody()
-    body: {
-      roomId: string;
-      chapterSlug: string;
-      paragraphId: string;
-      content: string;
-      parentCommentId?: string;
-    },
-  ) {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
-    if (await this.isRateLimited(userId, 'add_comment', 30)) {
-      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for adding comments');
-      return;
-    }
-    try {
-      const command = new AddCommentCommand(
-        userId,
-        body.roomId,
-        body.chapterSlug,
-        body.paragraphId,
-        body.content,
-        body.parentCommentId,
-      );
-      const comment = await this.addCommentUseCase.execute(command);
-      const displayName = sd.displayName || 'User';
-
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.COMMENT_ADDED, {
-          id: comment.id,
-          paragraphId: comment.paragraphId,
-          chapterSlug: comment.chapterSlug,
-          content: comment.content,
-          parentCommentId: comment.parentCommentId,
-          userId,
-          displayName,
-          createdAt: comment.createdAt,
-        });
-    } catch (error: unknown) {
-      this.emitError(socket, 'COMMENT_FAILED', 'Add comment failed', error);
-    }
-  }
-
-  @SubscribeMessage(ReadingRoomClientEvent.DELETE_COMMENT)
-  async handleDeleteComment(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody()
-    body: { roomId: string; commentId: string; paragraphId: string },
-  ) {
-    const userId = (socket.data as SocketData).userId ?? '';
-    const role = (socket.data as SocketData).role ?? 'user';
-    try {
-      const { defineRulesFor } = await import('@socialbook/shared');
-      const ability = defineRulesFor(role, userId);
-      const command = new DeleteCommentCommand(
-        userId,
-        body.commentId,
-        body.roomId,
-        body.paragraphId,
-        ability,
-      );
-      await this.deleteCommentUseCase.execute(command);
-
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.COMMENT_DELETED, {
-          commentId: body.commentId,
-          paragraphId: body.paragraphId,
-        });
-    } catch (error: unknown) {
-      this.emitError(
-        socket,
-        'COMMENT_DELETE_FAILED',
-        'Delete comment failed',
-        error,
-      );
-    }
-  }
-
-  @SubscribeMessage(ReadingRoomClientEvent.ADD_REACTION)
-  async handleAddReaction(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody()
-    body: {
-      roomId: string;
-      chapterSlug: string;
-      paragraphId: string;
-      reactionType: string;
-      paragraphPreview?: string;
-    },
-  ) {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
-    if (await this.isRateLimited(userId, 'add_reaction', 60)) {
-      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for reactions');
-      return;
-    }
-    try {
-      const command = new AddReactionCommand(
-        userId,
-        body.roomId,
-        body.chapterSlug,
-        body.paragraphId,
-        body.reactionType,
-      );
-      const { action, reaction } =
-        await this.addReactionUseCase.execute(command);
-      const displayName = sd.displayName || 'User';
-
-      if (action === 'deleted') {
-        this.server
-          .to(`room:${body.roomId}`)
-          .emit(ReadingRoomServerEvent.REACTION_REMOVED, {
-            paragraphId: reaction.paragraphId,
-            reactionType: reaction.reactionType,
-            userId,
-          });
-      } else {
-        this.server
-          .to(`room:${body.roomId}`)
-          .emit(ReadingRoomServerEvent.REACTION_ADDED, {
-            id: reaction.id,
-            paragraphId: reaction.paragraphId,
-            reactionType: reaction.reactionType,
-            chapterSlug: reaction.chapterSlug,
-            userId,
-            displayName,
-            paragraphPreview: body.paragraphPreview,
-            createdAt: reaction.createdAt,
-          });
-      }
-    } catch (error: unknown) {
-      this.emitError(socket, 'REACTION_FAILED', 'Add reaction failed', error);
-    }
-  }
-
-  @SubscribeMessage(ReadingRoomClientEvent.ADD_QUOTE)
-  async handleAddQuote(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody()
-    body: {
-      roomId: string;
-      chapterSlug: string;
-      paragraphId: string;
-      content: string;
-    },
-  ) {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
-    if (await this.isRateLimited(userId, 'add_quote', 30)) {
-      this.emitError(socket, 'RATE_LIMITED', 'Rate limit exceeded for quotes');
-      return;
-    }
-    try {
-      const command = new AddQuoteCommand(
-        userId,
-        body.roomId,
-        body.chapterSlug,
-        body.paragraphId,
-        body.content,
-      );
-      const quote = await this.addQuoteUseCase.execute(command);
-
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.QUOTE_ADDED, {
-          id: quote.id,
-          content: quote.content,
-          chapterSlug: quote.chapterSlug,
-          paragraphId: quote.paragraphId,
-          userId,
-          displayName: sd.displayName ?? '',
-          voteCount: 0,
-          createdAt: quote.createdAt,
-        });
-    } catch (error: unknown) {
-      this.emitError(socket, 'QUOTE_FAILED', 'Add quote failed', error);
-    }
-  }
-
-  @SubscribeMessage(ReadingRoomClientEvent.VOTE_QUOTE)
-  async handleVoteQuote(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody()
-    body: { roomId: string; quoteId: string; voteType: 'up' | 'down' },
-  ) {
-    const userId = (socket.data as SocketData).userId ?? '';
-    try {
-      const command = new VoteQuoteCommand(
-        userId,
-        body.roomId,
-        body.quoteId,
-        body.voteType,
-      );
-      const result = await this.voteQuoteUseCase.execute(command);
-
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.QUOTE_VOTED, {
-          quoteId: body.quoteId,
-          voteCount: result.voteCount,
-          userId,
-          voteType: result.userVoteType,
-        });
-    } catch (error: unknown) {
-      this.emitError(socket, 'QUOTE_VOTE_FAILED', 'Vote quote failed', error);
-    }
   }
 }

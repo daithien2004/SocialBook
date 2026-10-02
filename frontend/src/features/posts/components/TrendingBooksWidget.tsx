@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { postQueries } from '@/features/posts/api/post.queries';
 
 export default function TrendingBooksWidget() {
@@ -14,14 +15,14 @@ export default function TrendingBooksWidget() {
 
     if (isLoading) {
         return (
-            <div className="h-48 rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-gray-800 dark:bg-neutral-900 animate-pulse" />
+            <Skeleton className="h-48 rounded-2xl w-full" />
         );
     }
 
     const trendingBooks = data || [];
 
     return (
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-card text-card-foreground rounded-2xl shadow-md border border-border p-4">
             <div className="flex items-center gap-2 mb-4">
                 <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     Sách Hot Trong Tháng
@@ -30,12 +31,12 @@ export default function TrendingBooksWidget() {
 
             <div className="max-h-[340px] overflow-y-auto thin-scrollbar pr-1">
                 {trendingBooks.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center bg-slate-50 dark:bg-neutral-800/50 rounded-xl border border-dashed border-slate-200 dark:border-neutral-700">
-                        <div className="w-12 h-12 rounded-full bg-white dark:bg-neutral-900 flex items-center justify-center mb-3 shadow-sm border border-slate-100 dark:border-neutral-800">
-                            <TrendingUp className="w-6 h-6 text-slate-300 dark:text-neutral-600" />
+                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center bg-muted/50 rounded-xl border border-dashed border-border">
+                        <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center mb-3 shadow-sm border border-border">
+                            <TrendingUp className="w-6 h-6 text-muted-foreground" />
                         </div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-neutral-300">Chưa có dữ liệu</p>
-                        <p className="text-xs text-slate-500 dark:text-neutral-500 mt-1">
+                        <p className="text-sm font-medium text-foreground">Chưa có dữ liệu</p>
+                        <p className="text-xs text-muted-foreground mt-1">
                             Hãy là người đầu tiên tương tác với các cuốn sách tuần này!
                         </p>
                     </div>

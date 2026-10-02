@@ -5,9 +5,11 @@ interface SocketLike {
   off(event: string, handler: (...args: unknown[]) => void): void;
 }
 
-export function useSocketEvents(
+export function useSocketEvents<T extends Record<string, unknown>>(
   socket: SocketLike | null | undefined,
-  events: Record<string, (...args: unknown[]) => void>,
+  events: {
+    [K in keyof T]?: (payload: T[K]) => void;
+  },
 ) {
   const eventsRef = useRef(events);
 

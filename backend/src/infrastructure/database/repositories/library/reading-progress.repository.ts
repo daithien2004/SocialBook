@@ -65,8 +65,11 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
 
     await this.progressModel
       .findOneAndUpdate(
-        { _id },
-        { $set: updateData },
+        {
+          userId: persistenceData.userId,
+          chapterId: persistenceData.chapterId,
+        },
+        { $set: updateData, $setOnInsert: { _id } },
         { upsert: true, new: true },
       )
       .exec();

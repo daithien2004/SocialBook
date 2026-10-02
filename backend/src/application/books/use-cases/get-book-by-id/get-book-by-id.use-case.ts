@@ -43,7 +43,10 @@ export class GetBookByIdUseCase {
       })());
 
     // 4. Emit view event
-    this.eventEmitter.emit(EventNames.BOOK_VIEWED, new BookViewedEvent(query.id));
+    this.eventEmitter.emit(
+      EventNames.BOOK_VIEWED,
+      new BookViewedEvent(query.id),
+    );
 
     return book;
   }

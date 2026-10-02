@@ -23,12 +23,11 @@ interface UseSelectionToolbarOptions {
   bookSlug: string
   room: { currentChapterSlug: string } | null
   addHighlight: (data: { chapterSlug: string; paragraphId: string; content: string }) => void
-  addQuote: (chapterSlug: string, paraId: string, text: string) => void
 }
 
 export function useSelectionToolbar({
   bookId, chapterId, bookSlug,
-  room, addHighlight, addQuote,
+  room, addHighlight,
 }: UseSelectionToolbarOptions) {
   const [selection, setSelection] = useState<Selection | null>(null)
   const [aiAnalysis, setAiAnalysis] = useState<AiState | null>(null)
@@ -113,13 +112,6 @@ export function useSelectionToolbar({
     window.getSelection()?.removeAllRanges()
   }, [selection, room, addHighlight, isMultiParagraphSelection, rejectMultiParagraph])
 
-  const handleAddQuote = useCallback(() => {
-    if (!selection || !room) return
-    addQuote(room.currentChapterSlug, selection.paraId, selection.text)
-    toast.success('Đã thêm trích dẫn!')
-    setSelection(null)
-    window.getSelection()?.removeAllRanges()
-  }, [selection, room, addQuote])
 
   const handleAddPersonalHighlight = useCallback(async () => {
     if (!selection) return
@@ -146,6 +138,5 @@ export function useSelectionToolbar({
     handleAIAction,
     handleAddHighlight,
     handleAddPersonalHighlight,
-    handleAddQuote,
   }
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useRef, useCallback, useEffect } from 'react'
-import { useReadingRoomStore } from '@/store/useReadingRoomStore'
 import { scrollToHighlight } from '@/utils/scroll-to-highlight'
 
 interface Paragraph {
@@ -11,43 +10,68 @@ interface Paragraph {
 
 export function useScrollTracking(
   paragraphs: Paragraph[],
-  onActiveParagraphChange?: (paragraphId: string | null) => void,
+  onActiveParagraphChange?: (paragraphId: string) => void,
+  resetKey?: string,
 ) {
-  const paraRefsMap = useRef<Map<string, HTMLElement>>(new Map())
+  const elById = useRef(new Map<string, HTMLElement>());
+  const idByEl = useRef(new WeakMap<Element, string>());
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const activeRef = useRef<string | null>(null);
+  const cbRef = useRef(onActiveParagraphChange);
+  
+  useEffect(() => { 
+    cbRef.current = onActiveParagraphChange; 
+  });
 
-  const registerParaRef = useCallback((id: string, el: HTMLElement | null) => {
-    if (el) {
-      paraRefsMap.current.set(id, el)
-    } else {
-      paraRefsMap.current.delete(id)
-    }
-  }, [])
-
-  // IntersectionObserver — active paragraph tracking
   useEffect(() => {
-    if (!onActiveParagraphChange) return
-    const ratios = new Map<string, number>()
-    const observer = new IntersectionObserver(
+    activeRef.current = null;
+    const obs = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          const id = (e.target as HTMLElement).dataset.paraId
-          if (id) ratios.set(id, e.intersectionRatio)
-        })
-        let bestId: string | null = null
-        let bestRatio = 0
-        ratios.forEach((ratio, id) => {
-          if (ratio > bestRatio) {
-            bestRatio = ratio
-            bestId = id
-          }
-        })
-        onActiveParagraphChange(bestRatio > 0.1 ? bestId : null)
+        let best: { id: string; top: number } | null = null;
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const id = idByEl.current.get(e.target);
+          if (!id) continue;
+          const top = e.boundingClientRect.top;
+          if (!best || top < best.top) best = { id, top };
+        }
+        if (best && best.id !== activeRef.current) {
+          activeRef.current = best.id;
+          if (cbRef.current) cbRef.current(best.id);
+        }
       },
-      { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0] },
-    )
-    paraRefsMap.current.forEach((el) => observer.observe(el))
-    return () => observer.disconnect()
-  }, [onActiveParagraphChange, paragraphs])
+      { rootMargin: '-35% 0px -64% 0px', threshold: 0 },
+    );
+    observerRef.current = obs;
+    elById.current.forEach((el) => obs.observe(el));
+    return () => { 
+      obs.disconnect(); 
+      observerRef.current = null; 
+    };
+  }, [resetKey]);
+
+  const refCallbacks = useRef<Map<string, (el: HTMLElement | null) => void>>(new Map());
+
+  const getParaRef = useCallback((id: string) => {
+    let cb = refCallbacks.current.get(id);
+    if (!cb) {
+      cb = (el: HTMLElement | null) => {
+        const prev = elById.current.get(id);
+        if (prev && prev !== el) {
+          observerRef.current?.unobserve(prev);
+          idByEl.current.delete(prev);
+          elById.current.delete(id);
+        }
+        if (el) {
+          elById.current.set(id, el);
+          idByEl.current.set(el, id);
+          observerRef.current?.observe(el);
+        }
+      };
+      refCallbacks.current.set(id, cb);
+    }
+    return cb;
+  }, []);
 
   // Hash scroll on mount (#paragraph-xxx)
   useEffect(() => {
@@ -61,26 +85,5 @@ export function useScrollTracking(
     }
   }, [paragraphs.length])
 
-  // Paragraph content map for EmotionStream excerpt previews
-  useEffect(() => {
-    if (!paragraphs || paragraphs.length === 0) return
-    const map: Record<string, string> = {}
-    for (const p of paragraphs) {
-      map[p.id] = p.content
-    }
-    useReadingRoomStore.getState().setParagraphContentMap(map)
-  }, [paragraphs])
-
-  // Scroll to paragraph from EmotionStream click
-  const scrollTargetId = useReadingRoomStore((state) => state.scrollTargetParagraphId)
-  useEffect(() => {
-    if (!scrollTargetId) return
-    const el = paraRefsMap.current.get(scrollTargetId)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      useReadingRoomStore.getState().setScrollTargetParagraphId(null)
-    }
-  }, [scrollTargetId])
-
-  return { paraRefsMap, registerParaRef }
+  return { getParaRef }
 }

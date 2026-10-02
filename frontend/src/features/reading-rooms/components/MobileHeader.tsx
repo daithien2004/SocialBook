@@ -1,5 +1,5 @@
 'use client';
-import { ChevronLeft, Check, Copy, Lock, LockOpen, MoreVertical, LogOut, Trash2, DoorOpen, Loader2 } from 'lucide-react';
+import { ChevronLeft, Check, Copy, Lock, LockOpen, MoreVertical, LogOut, DoorOpen, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,6 @@ interface MobileHeaderProps {
   handleCopyCode: () => void;
   changeMode: (mode: 'sync' | 'free') => void;
   endRoom: () => void;
-  deleteRoom: () => void;
   isReactivating: boolean;
   onReactivateRoom: () => Promise<void>;
   setTransferHostOpen: (open: boolean) => void;
@@ -47,7 +46,6 @@ export function MobileHeader({
   handleCopyCode,
   changeMode,
   endRoom,
-  deleteRoom,
   isReactivating,
   onReactivateRoom,
   setTransferHostOpen,
@@ -177,20 +175,6 @@ export function MobileHeader({
                   })}>
                     <LogOut className="w-4 h-4 mr-2" />
                     <span className="text-xs font-medium">Kết thúc phòng</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => openConfirm({
-                    title: "Xoá phòng đọc?",
-                    description: "Hành động này sẽ xoá vĩnh viễn phòng đọc và tất cả dữ liệu liên quan. Không thể hoàn tác!",
-                    confirmText: "Xác nhận xoá",
-                    variant: "destructive",
-                    onConfirm: () => {
-                      deleteRoom();
-                      void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myActive() });
-                      router.push('/reading-rooms');
-                    }
-                  })}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    <span className="text-xs font-medium">Xoá phòng</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

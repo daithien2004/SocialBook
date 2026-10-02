@@ -9,6 +9,7 @@ import { bookQueries } from "@/features/books/api/books.queries";
 import { PAGINATION } from "@/features/books/books.constants";
 import type { BookRecommendation } from '@/features/recommendations/types/recommendation.interface';
 import type { BookSummary } from '@/features/books/types/book.interface';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface BookRenderItem {
     id: string;
@@ -47,12 +48,12 @@ export default function RecommendedBooks() {
 
                 <div className="p-4 space-y-3">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="flex gap-3 animate-pulse">
-                            <div className="w-20 h-28 bg-slate-200 dark:bg-white/5 rounded-lg" />
-                            <div className="flex-1 space-y-2">
-                                <div className="h-4 bg-slate-200 dark:bg-white/5 rounded w-3/4" />
-                                <div className="h-3 bg-slate-200 dark:bg-white/5 rounded w-1/2" />
-                                <div className="h-3 bg-slate-200 dark:bg-white/5 rounded w-full" />
+                        <div key={i} className="flex gap-3">
+                            <Skeleton className="w-20 h-28 rounded-lg" />
+                            <div className="flex-1 space-y-2 py-1">
+                                <Skeleton className="h-4 rounded w-3/4" />
+                                <Skeleton className="h-3 rounded w-1/2" />
+                                <Skeleton className="h-3 rounded w-full" />
                             </div>
                         </div>
                     ))}

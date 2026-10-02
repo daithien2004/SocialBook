@@ -1,8 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, Send, Bot, BookOpen, Users, MapPin, Lightbulb, ChevronDown, ChevronRight, Info, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-
-import { ChatMessage } from '@/store/useReadingRoomStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +18,13 @@ import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { MarkdownText } from '@/components/shared/MarkdownText';
 
+
+export interface ChatMessage {
+  userId: string;
+  role: 'user' | 'ai';
+  content: string;
+  createdAt: string;
+}
 
 interface KnowledgeSidebarProps {
   bookSlug: string;

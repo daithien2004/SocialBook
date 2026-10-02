@@ -6,12 +6,13 @@ import { libraryQueries } from '@/features/library/api/library.queries';
 import { Collection } from '@/features/library/types/library.interface';
 import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const EMPTY_COLLECTIONS: Collection[] = [];
 
 export function ReadingLists() {
     const { userId } = useParams<{ userId: string }>();
-    const { data: collectionsData = EMPTY_COLLECTIONS } = useQuery({
+    const { data: collectionsData = EMPTY_COLLECTIONS, isLoading } = useQuery({
         ...libraryQueries.collections(userId),
     });
 
@@ -27,7 +28,13 @@ export function ReadingLists() {
                     </span>
                 </div>
 
-                {collectionsData.length > 0 ? (
+                {isLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <Skeleton key={i} className="h-24 w-full rounded-xl" />
+                        ))}
+                    </div>
+                ) : collectionsData.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {collectionsData.map((c) => (
                             <ReadingListItem {...c} key={c.id} />

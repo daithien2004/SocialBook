@@ -5,10 +5,15 @@ import {
   resendOtp,
   forgotPassword,
   resetPassword,
+  login,
 } from './auth.api';
 
 export function useSignup() {
   return useMutation({ mutationFn: signup });
+}
+
+export function useLoginMutation() {
+  return useMutation({ mutationFn: login });
 }
 
 export function useVerifyOtp() {

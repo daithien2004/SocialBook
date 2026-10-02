@@ -28,7 +28,7 @@ export class LeaveRoomUseCase {
     }
 
     if (command.newHostId) {
-      room.transferHost(command.newHostId);
+      room.transferHost(command.userId, command.newHostId);
     }
 
     room.removeMember(command.userId);

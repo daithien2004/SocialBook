@@ -105,6 +105,9 @@ export class ReadingRoom {
 
   createdAt: Date;
   updatedAt: Date;
+
+  @Prop({ type: Number, default: 0 })
+  version: number;
 }
 
 export const ReadingRoomSchema = SchemaFactory.createForClass(ReadingRoom);

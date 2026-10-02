@@ -33,7 +33,7 @@ export const forgotPasswordSchema = z
     confirmPassword: z.string().min(1, 'Vui lòng nhập lại mật khẩu'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'Mật khẩu nhập lại không khớp',
     path: ['confirmPassword'],
   });
 

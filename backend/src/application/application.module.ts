@@ -23,7 +23,7 @@ import { TextToSpeechApplicationModule } from './text-to-speech/text-to-speech-a
 import { AIApplicationModule } from './ai/ai-application.module';
 import { RecommendationsApplicationModule } from './recommendations/recommendations-application.module';
 import { AnalyticsApplicationModule } from './analytics/analytics-application.module';
-import { ReadingRoomInteractionsApplicationModule } from './reading-room-interactions/reading-room-interactions-application.module';
+
 import { PostModerationApplicationModule } from './posts/post-moderation.application.module';
 
 @Module({
@@ -52,7 +52,7 @@ import { PostModerationApplicationModule } from './posts/post-moderation.applica
     AIApplicationModule,
     RecommendationsApplicationModule,
     AnalyticsApplicationModule,
-    ReadingRoomInteractionsApplicationModule,
+
     PostModerationApplicationModule,
   ],
   exports: [
@@ -80,7 +80,7 @@ import { PostModerationApplicationModule } from './posts/post-moderation.applica
     AIApplicationModule,
     RecommendationsApplicationModule,
     AnalyticsApplicationModule,
-    ReadingRoomInteractionsApplicationModule,
+
     PostModerationApplicationModule,
   ],
 })

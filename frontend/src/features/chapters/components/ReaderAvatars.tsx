@@ -3,22 +3,26 @@
 import { memo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { PresenceData } from '@/store/useReadingRoomStore';
+import { selectUsersAtParagraph, useReadingRoomStore } from '@/store/useReadingRoomStore';
+import { useShallow } from 'zustand/react/shallow';
 
 interface ReaderAvatarsProps {
+  chapterSlug: string;
   paragraphId: string;
-  presences: Record<string, PresenceData>;
   currentUserId?: string;
 }
 
 export const ReaderAvatars = memo(function ReaderAvatars({
+  chapterSlug,
   paragraphId,
-  presences,
   currentUserId,
 }: ReaderAvatarsProps) {
-  const readers = Object.values(presences).filter(
-    (p) => p.paragraphId === paragraphId && p.userId !== currentUserId,
-  );
+  const allUserIds = useReadingRoomStore(selectUsersAtParagraph(chapterSlug, paragraphId));
+  const otherUserIds = allUserIds.filter(id => id !== currentUserId);
+  
+  const readers = useReadingRoomStore(useShallow(s => 
+    otherUserIds.map(id => s.presences[id]).filter(Boolean)
+  ));
 
   if (readers.length === 0) return null;
 

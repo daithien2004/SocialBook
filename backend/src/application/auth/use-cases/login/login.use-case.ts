@@ -41,6 +41,8 @@ export class LoginUseCase {
       user.id.toString(),
       user.email.value,
       roleName,
+      user.username,
+      user.image,
       command.ip,
       command.userAgent,
     );

@@ -26,7 +26,7 @@ import { AdminRateLimitController } from './admin/rate-limit.controller';
 import { BookmarkController } from './bookmarks/bookmark.controller';
 import { UserHighlightsController } from './user-highlights/user-highlights.controller';
 import { ReadingRoomsController } from './reading-rooms/reading-rooms.controller';
-import { ReadingRoomInteractionsController } from './reading-room-interactions/reading-room-interactions.controller';
+
 import { AnalyticsController } from './analytics/analytics.controller';
 
 import { RateLimitConfigService } from '@/shared/infrastructure/rate-limit-config.service';
@@ -56,7 +56,7 @@ import { ContentModerationApplicationModule } from '@/application/content-modera
 import { BookmarksApplicationModule } from '@/application/bookmarks/bookmarks-application.module';
 import { UserHighlightsApplicationModule } from '@/application/user-highlights/user-highlights-application.module';
 import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
-import { ReadingRoomInteractionsApplicationModule } from '@/application/reading-room-interactions/reading-room-interactions-application.module';
+
 import { AnalyticsApplicationModule } from '@/application/analytics/analytics-application.module';
 
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
@@ -88,7 +88,7 @@ import { HealthModule } from './health/health.module';
     BookmarksApplicationModule,
     UserHighlightsApplicationModule,
     ReadingRoomsApplicationModule,
-    ReadingRoomInteractionsApplicationModule,
+
     AnalyticsApplicationModule,
     GatewaysModule,
     InfrastructureModule,
@@ -122,7 +122,7 @@ import { HealthModule } from './health/health.module';
     BookmarkController,
     UserHighlightsController,
     ReadingRoomsController,
-    ReadingRoomInteractionsController,
+
     AnalyticsController,
   ],
   providers: [RateLimitConfigService],

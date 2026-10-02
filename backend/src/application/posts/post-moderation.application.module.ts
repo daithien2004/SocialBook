@@ -7,7 +7,11 @@ import { PostsApplicationModule } from './posts-application.module';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 
 @Module({
-  imports: [PostsApplicationModule, PostModerationQueueModule, PostsRepositoryModule],
+  imports: [
+    PostsApplicationModule,
+    PostModerationQueueModule,
+    PostsRepositoryModule,
+  ],
   providers: [...(isWorkerProcess() ? [PostModerationProcessor] : [])],
 })
 export class PostModerationApplicationModule {}

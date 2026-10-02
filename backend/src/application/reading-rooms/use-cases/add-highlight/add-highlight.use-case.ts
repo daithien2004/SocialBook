@@ -1,8 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import {
+  NotFoundDomainException,
+  ForbiddenDomainException,
+  BadRequestDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 
+import { withRetries } from '@/application/shared/utils/with-retries.util';
 import { AddHighlightCommand } from './add-highlight.command';
 
 @Injectable()
@@ -10,23 +15,37 @@ export class AddHighlightUseCase {
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(command: AddHighlightCommand) {
-    const room = await this.readingRoomRepository.findById(
-      RoomId.create(command.roomId),
-    );
+    return withRetries(async () => {
+      const room = await this.readingRoomRepository.findById(
+        RoomId.create(command.roomId),
+      );
 
-    if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
-    }
+      if (!room) {
+        throw new NotFoundDomainException('Phòng không tồn tại');
+      }
 
-    room.addHighlight({
-      userId: command.userId,
-      chapterSlug: command.chapterSlug,
-      paragraphId: command.paragraphId,
-      content: command.content,
-    });
+      if (room.status === 'ended') {
+        throw new BadRequestDomainException(
+          'Phòng đã kết thúc, không thể thêm highlight',
+        );
+      }
 
-    await this.readingRoomRepository.save(room);
+      if (!room.isMember(command.userId)) {
+        throw new ForbiddenDomainException(
+          'Bạn không phải là thành viên của phòng này',
+        );
+      }
 
-    return room;
+      room.addHighlight({
+        userId: command.userId,
+        chapterSlug: command.chapterSlug,
+        paragraphId: command.paragraphId,
+        content: command.content,
+      });
+
+      await this.readingRoomRepository.save(room);
+
+      return room;
+    }, 3);
   }
 }

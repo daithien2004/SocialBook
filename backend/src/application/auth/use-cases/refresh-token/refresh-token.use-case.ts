@@ -64,6 +64,8 @@ export class RefreshTokenUseCase {
           user.id.toString(),
           user.email.value,
           roleName,
+          user.username,
+          user.image,
         );
         await this.rotationPort.writeFreshTokens(
           userId,
@@ -93,6 +95,8 @@ export class RefreshTokenUseCase {
           user.id.toString(),
           user.email.value,
           roleName,
+          user.username,
+          user.image,
         );
         return { accessToken, refreshToken };
       }

@@ -1,7 +1,17 @@
 'use client';
 
 import { memo } from 'react';
-import { useReadingRoomStore, PARTY_COLORS } from '@/store/useReadingRoomStore';
+import { useReadingRoomStore } from '@/store/useReadingRoomStore';
+
+const PARTY_COLORS = [
+  { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },
+  { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
+  { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+  { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+  { bg: '#f3e8ff', border: '#a855f7', text: '#6b21a8' },
+  { bg: '#ffe4e6', border: '#f43f5e', text: '#9f1239' },
+  { bg: '#e0f2fe', border: '#0ea5e9', text: '#075985' },
+];
 import { useShallow } from 'zustand/react/shallow';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 

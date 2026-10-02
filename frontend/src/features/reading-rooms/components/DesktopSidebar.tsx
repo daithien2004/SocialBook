@@ -1,5 +1,5 @@
 'use client';
-import { ChevronLeft, Check, Copy, Lock, LockOpen, LogOut, Trash2, DoorOpen, Loader2 } from 'lucide-react';
+import { ChevronLeft, Check, Copy, Lock, LockOpen, LogOut, DoorOpen, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,6 @@ interface DesktopSidebarProps {
   handleCopyCode: () => void;
   changeMode: (mode: 'sync' | 'free') => void;
   endRoom: () => void;
-  deleteRoom: () => void;
   isReactivating: boolean;
   onReactivateRoom: () => Promise<void>;
   onTransferHost: () => void;
@@ -38,7 +37,6 @@ export function DesktopSidebar({
   handleCopyCode,
   changeMode,
   endRoom,
-  deleteRoom,
   isReactivating,
   onReactivateRoom,
   onTransferHost,
@@ -148,25 +146,6 @@ export function DesktopSidebar({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">Kết thúc phòng</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full hover:bg-destructive/10 hover:text-destructive" onClick={() => openConfirm({
-                    title: "Xoá phòng đọc?",
-                    description: "Hành động này sẽ xoá vĩnh viễn phòng đọc. Không thể hoàn tác!",
-                    confirmText: "Xác nhận xoá",
-                    variant: "destructive",
-                    onConfirm: () => {
-                      deleteRoom();
-                      void queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myActive() });
-                      router.push('/reading-rooms');
-                    }
-                  })}>
-                    <Trash2 size={18} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">Xoá phòng</TooltipContent>
               </Tooltip>
             </>
           )}

@@ -8,6 +8,9 @@ export class IncrementPlayCountUseCase {
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
   execute(chapterId: string): void {
-    this.eventEmitter.emit(EventNames.AUDIO_PLAYED, new AudioPlayedEvent(chapterId));
+    this.eventEmitter.emit(
+      EventNames.AUDIO_PLAYED,
+      new AudioPlayedEvent(chapterId),
+    );
   }
 }

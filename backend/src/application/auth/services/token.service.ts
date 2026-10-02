@@ -22,10 +22,18 @@ export class TokenService {
     userId: string,
     email: string,
     role: string,
+    username: string,
+    image?: string | null,
     ip?: string,
     userAgent?: string,
   ) {
-    const payload = { sub: userId, email, role };
+    const payload = {
+      sub: userId,
+      email,
+      role,
+      displayName: username,
+      avatarUrl: image,
+    };
 
     const accessSecret = this.configService.get<string>(
       'env.JWT_ACCESS_SECRET',
@@ -76,6 +84,8 @@ export class TokenService {
     userId: string,
     email: string,
     role: string,
+    username: string,
+    image?: string | null,
   ): Promise<string> {
     const accessSecret = this.configService.get<string>(
       'env.JWT_ACCESS_SECRET',
@@ -87,7 +97,7 @@ export class TokenService {
       throw new InternalServerErrorException('JWT secrets chưa được cấu hình');
     }
     return this.jwtService.signAsync(
-      { sub: userId, email, role },
+      { sub: userId, email, role, displayName: username, avatarUrl: image },
       {
         secret: accessSecret,
         expiresIn: this.configService.get<string>(

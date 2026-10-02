@@ -14,7 +14,11 @@ export class RedisIoAdapter extends IoAdapter {
     const logger = new Logger('RedisIoAdapter');
 
     for (const c of [pubClient, subClient]) {
-      c.on('error', (e) => logger.error(`Socket Redis Error: ${e.message}`));
+      c.on('error', (e: unknown) =>
+        logger.error(
+          `Socket Redis Error: ${e instanceof Error ? e.message : String(e)}`,
+        ),
+      );
     }
 
     await Promise.all([pubClient.connect(), subClient.connect()]);
@@ -31,14 +35,28 @@ export class RedisIoAdapter extends IoAdapter {
 
     const server = super.createIOServer(port, serverOptions) as Server;
     server.adapter(this.adapterConstructor);
-    
-    // Instrument the socket server for Admin UI
-    // @ts-expect-error Type mismatch between duplicate socket.io instances in node_modules
-    instrument(server, {
-      auth: false,
-      mode: 'development',
-    });
-    
+
+    // Instrument the socket server for Admin UI only when explicitly enabled
+    if (process.env.SOCKET_ADMIN_UI === 'true') {
+      const username = process.env.SOCKET_ADMIN_USER;
+      const password = process.env.SOCKET_ADMIN_PASSWORD_BCRYPT;
+      if (username && password) {
+        // @ts-expect-error Type mismatch between duplicate socket.io instances in node_modules
+        instrument(server, {
+          auth: {
+            type: 'basic',
+            username,
+            password,
+          },
+          mode:
+            process.env.NODE_ENV === 'production'
+              ? 'production'
+              : 'development',
+          readonly: true,
+        });
+      }
+    }
+
     return server;
   }
 }

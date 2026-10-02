@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import type { RoomResponse } from '@/features/reading-rooms/api/reading-rooms.api';
 
 interface UseReadingRoomEffectsOptions {
-  quotesData: unknown;
+
   isEnded: boolean;
   initialRoom: RoomResponse | undefined;
   chapterId: string | undefined;
@@ -12,27 +12,19 @@ interface UseReadingRoomEffectsOptions {
 }
 
 export function useReadingRoomEffects({
-  quotesData,
+
   isEnded,
   initialRoom,
   chapterId,
   savedProgress,
 }: UseReadingRoomEffectsOptions) {
-  const quotesSeededRef = useRef(false);
-  
-  useEffect(() => {
-    if (quotesData && !quotesSeededRef.current) {
-      quotesSeededRef.current = true;
-      useReadingRoomStore.getState().setQuotes(quotesData as never);
-    }
-  }, [quotesData]);
+
 
   useEffect(() => {
     if (isEnded && initialRoom) {
       useReadingRoomStore.getState().setRoom({
         ...initialRoom,
         highlights: initialRoom.highlights || [],
-        chatMessages: initialRoom.chatMessages || [],
       });
     }
   }, [isEnded, initialRoom]);

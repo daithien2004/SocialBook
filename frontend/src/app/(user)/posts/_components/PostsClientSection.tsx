@@ -12,8 +12,7 @@ import TopActiveReadersWidget from '@/features/posts/components/TopActiveReaders
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Compass } from 'lucide-react';
-
-import { AppLoading } from '@/components/shared/AppLoading';
+import { FullScreenSpinner } from '@/components/shared/AppLoading';
 
 const UserSearchSidebar = dynamic(
     () => import('@/features/posts/components/UserSearchSidebar'),
@@ -50,11 +49,7 @@ export default function PostsClientSection() {
     }, []);
 
     if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <AppLoading size={32} text="Đang tải..." />
-            </div>
-        );
+        return <FullScreenSpinner />;
     }
 
     return (

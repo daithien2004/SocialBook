@@ -15,6 +15,7 @@ import { BookSidebar } from './BookSidebar';
 import { ReviewSection } from './ReviewSection';
 import { useTracking, UserEventType } from '@/hooks/use-tracking';
 import { useEffect } from 'react';
+import { FullScreenSpinner } from '@/components/shared/AppLoading';
 
 
 interface BookDetailClientProps {
@@ -42,11 +43,7 @@ export default function BookDetailClient({ bookSlug }: BookDetailClientProps) {
   }, [book?.id, trackEvent]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-[#161515] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <FullScreenSpinner />;
   }
 
   if (error || !book) {

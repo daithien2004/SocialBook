@@ -50,35 +50,40 @@ export class NotificationsGateway
 
   afterInit(server: Server) {
     this.notificationsService.setServer(this.server);
-    server.use(async (socket, next) => {
-      try {
-        const token =
-          socket.handshake.auth?.token ??
-          socket.handshake.headers.authorization?.split(' ')[1];
+    server.use((socket, next) => {
+      (async () => {
+        try {
+          const token =
+            (socket.handshake.auth?.token as string | undefined) ??
+            socket.handshake.headers.authorization?.split(' ')[1];
 
-        if (!token) {
-          return next(new Error('unauthorized'));
+          if (!token) {
+            return next(new Error('unauthorized'));
+          }
+
+          const payload = await this.jwt.verifyAsync<{
+            sub?: string;
+            id?: string;
+          }>(token);
+
+          const userId = (payload.sub ?? payload.id) as string;
+          if (!userId) {
+            return next(new Error('unauthorized'));
+          }
+
+          const sockets = await server.in(`user:${userId}`).fetchSockets();
+          if (sockets.length >= 5) {
+            return next(new Error('too_many_connections'));
+          }
+
+          (socket.data as SocketData).userId = userId;
+          next();
+        } catch {
+          next(new Error('unauthorized'));
         }
-
-        const payload = await this.jwt.verifyAsync<{ sub?: string; id?: string }>(
-          token,
-        );
-
-        const userId = payload.sub ?? payload.id;
-        if (!userId) {
-          return next(new Error('unauthorized'));
-        }
-
-        const sockets = await server.in(`user:${userId}`).fetchSockets();
-        if (sockets.length >= 5) {
-          return next(new Error('too_many_connections'));
-        }
-
-        (socket.data as SocketData).userId = userId;
-        next();
-      } catch {
-        next(new Error('unauthorized'));
-      }
+      })().catch((err) =>
+        next(err instanceof Error ? err : new Error(String(err))),
+      );
     });
   }
 

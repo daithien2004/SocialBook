@@ -1,5 +1,5 @@
 import { Entity } from '@/shared/domain/entity.base';
-import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+import { BadRequestDomainException, ForbiddenDomainException } from '@/shared/domain/common-exceptions';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { RoomId } from '../value-objects/room-id.vo';
@@ -35,6 +35,7 @@ export interface ReadingRoomProps {
   highlights: RoomHighlightProps[];
   chatMessages: ChatMessageProps[];
   endedAt?: Date;
+  version: number;
 }
 
 export class ReadingRoom extends Entity<RoomId> {
@@ -76,6 +77,7 @@ export class ReadingRoom extends Entity<RoomId> {
       members: [hostMember],
       highlights: [],
       chatMessages: [],
+      version: 0,
     });
   }
 
@@ -98,6 +100,7 @@ export class ReadingRoom extends Entity<RoomId> {
     createdAt: Date;
     updatedAt: Date;
     endedAt?: Date;
+    version: number;
   }): ReadingRoom {
     return new ReadingRoom(
       RoomId.create(props.id),
@@ -112,6 +115,7 @@ export class ReadingRoom extends Entity<RoomId> {
         highlights: props.highlights,
         chatMessages: props.chatMessages,
         endedAt: props.endedAt,
+        version: props.version ?? 0,
       },
       props.createdAt,
       props.updatedAt,
@@ -154,6 +158,14 @@ export class ReadingRoom extends Entity<RoomId> {
   }
   get endedAt(): Date | undefined {
     return this._props.endedAt;
+  }
+  get version(): number {
+    return this._props.version;
+  }
+
+  protected markAsUpdated(): void {
+    super.markAsUpdated();
+    this._props.version += 1;
   }
 
   // Business logic
@@ -235,13 +247,20 @@ export class ReadingRoom extends Entity<RoomId> {
     this.markAsUpdated();
   }
 
-  transferHost(newHostId: string): void {
+  transferHost(callerId: string, newHostId: string): void {
+    if (callerId !== this.hostId) {
+      throw new ForbiddenDomainException('Chỉ chủ phòng mới được chỉ định chủ phòng mới');
+    }
+    if (callerId === newHostId) {
+      throw new BadRequestDomainException('Không thể chuyển quyền cho chính mình');
+    }
+
     const newHost = this._props.members.find(
       (m) => m.userId === newHostId && m.isActive,
     );
     if (!newHost) {
       throw new BadRequestDomainException(
-        'Người dùng không phải thành viên đang hoạt động',
+        'Người nhận quyền không phải thành viên đang hoạt động',
       );
     }
 
@@ -262,8 +281,26 @@ export class ReadingRoom extends Entity<RoomId> {
     if (member && member.isActive) {
       member.markAsLeft();
 
-      if (member.role === 'host' && this._props.mode.toString() === 'sync') {
-        this._props.mode = RoomMode.create('free');
+      if (userId === this.hostId) {
+        if (member.role === 'host') {
+          member.changeRole('member');
+        }
+        
+        const remainingMembers = this.activeMembers.sort(
+          (a, b) => a.joinedAt.getTime() - b.joinedAt.getTime()
+        );
+
+        if (remainingMembers.length > 0) {
+          const nextHost = remainingMembers[0];
+          nextHost.changeRole('host');
+          this._props.hostId = UserId.create(nextHost.userId);
+          
+          if (this._props.mode.toString() === 'sync') {
+            this._props.mode = RoomMode.create('free');
+          }
+        } else {
+          this.end();
+        }
       }
 
       this.markAsUpdated();

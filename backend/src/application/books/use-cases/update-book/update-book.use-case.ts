@@ -85,7 +85,9 @@ export class UpdateBookUseCase {
     await this.bookCache.setDetail(book);
     await this.bookCache.invalidateDetail(book.id.toString(), book.slug);
 
-    this.eventEmitter.emit(EventNames.BOOK_UPDATED, { bookId: book.id.toString() });
+    this.eventEmitter.emit(EventNames.BOOK_UPDATED, {
+      bookId: book.id.toString(),
+    });
 
     return book;
   }

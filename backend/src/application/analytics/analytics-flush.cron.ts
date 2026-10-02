@@ -31,24 +31,33 @@ export class AnalyticsFlushCron {
 
     try {
       // Dùng transaction (multi/exec) để lấy toàn bộ List ra và xóa List atomic
-      const [results] = await this.redis.multi().lrange(this.BUFFER_KEY, 0, -1).del(this.BUFFER_KEY).exec() || [];
-      
+      const [results] =
+        (await this.redis
+          .multi()
+          .lrange(this.BUFFER_KEY, 0, -1)
+          .del(this.BUFFER_KEY)
+          .exec()) || [];
+
       const rawEvents = (results?.[1] as string[]) || [];
-      
+
       if (!rawEvents || rawEvents.length === 0) {
         return;
       }
 
-      this.logger.log(`Flushing ${rawEvents.length} analytics events to MongoDB...`);
+      this.logger.log(
+        `Flushing ${rawEvents.length} analytics events to MongoDB...`,
+      );
 
       const entitiesToInsert: UserEvent[] = [];
 
       for (const raw of rawEvents) {
         try {
-          const parsedCommand = JSON.parse(raw);
+          const parsedCommand = JSON.parse(raw) as unknown;
           const parsed = TrackEventPayloadSchema.safeParse(parsedCommand);
           if (!parsed.success) {
-            this.logger.warn(`Invalid event in buffer: ${parsed.error.message}`);
+            this.logger.warn(
+              `Invalid event in buffer: ${parsed.error.message}`,
+            );
             continue;
           }
           const command = parsed.data;
@@ -81,10 +90,15 @@ export class AnalyticsFlushCron {
 
       if (entitiesToInsert.length > 0) {
         await this.analyticsRepository.insertManyEvents(entitiesToInsert);
-        this.logger.log(`Successfully flushed ${entitiesToInsert.length} events.`);
+        this.logger.log(
+          `Successfully flushed ${entitiesToInsert.length} events.`,
+        );
       }
     } catch (error) {
-      this.logger.error('Failed to flush analytics events from Redis to MongoDB', error);
+      this.logger.error(
+        'Failed to flush analytics events from Redis to MongoDB',
+        error,
+      );
     }
   }
 }

@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { SafeImage } from '@/components/shared/SafeImage';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -13,20 +11,20 @@ import {
   FolderPlus,
   Folder,
   ChevronRight,
-  Lock,
-  Globe,
-  Pencil,
 } from 'lucide-react';
 
 import { libraryQueries } from '@/features/library/api/library.queries';
-import { LibraryStatus, Collection } from '@/features/library/types/library.interface';
+import { LibraryStatus } from '@/features/library/types/library.interface';
 import { useAppAuth } from '@/features/auth/hooks';
 import { useModalStore } from '@/store/useModalStore';
+import { LibraryBookCard } from '@/features/library/components/LibraryBookCard';
+import { CollectionCard } from '@/features/library/components/CollectionCard';
+import { LibrarySkeleton } from '@/features/library/components/LibrarySkeleton';
 import LoginWall from '@/features/auth/components/LoginWall';
-import { formatDate } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FullScreenSpinner } from '@/components/shared/AppLoading';
 
 export default function LibraryClientSection() {
   const [activeTab, setActiveTab] = useState<LibraryStatus>(
@@ -55,11 +53,7 @@ export default function LibraryClientSection() {
   const books = libraryData || [];
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-4 border-brand border-t-transparent animate-spin"></div>
-      </div>
-    );
+    return <FullScreenSpinner />;
   }
 
   if (!isAuthenticated) {
@@ -166,92 +160,11 @@ export default function LibraryClientSection() {
                 )}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
                   {books?.map((item) => (
-                    <Card
+                    <LibraryBookCard
                       key={item.id}
-                      className="group flex flex-col h-full overflow-hidden border-border/85 transition-all duration-500 hover:border-brand/40 hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] bg-card text-foreground"
-                    >
-                      {/* Book Cover */}
-                      <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted">
-                        <SafeImage
-                          src={item.bookId.coverUrl}
-                          alt={item.bookId.title}
-                          fill
-                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                          className="object-cover transition-all duration-700 group-hover:scale-105 group-hover:opacity-95"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-85" />
-
-                        {/* Hover Action Overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 backdrop-blur-[1px]">
-                          <Link
-                            href={`/books/${item.bookId.slug}`}
-                            className="px-4 py-2 bg-background text-foreground font-semibold text-xs rounded-full hover:bg-brand hover:text-brand-foreground shadow-md transition-all duration-300 scale-90 group-hover:scale-100"
-                          >
-                            Chi tiết truyện
-                          </Link>
-                        </div>
-                      </div>
-
-                      {/* Book Details */}
-                      <CardContent className="flex flex-col flex-1 p-4 pt-3 gap-1">
-                        <p className="text-[10px] font-medium tracking-[0.15em] uppercase text-muted-foreground truncate">
-                          {item.bookId.authorName || 'Tác giả'}
-                        </p>
-                        <Link href={`/books/${item.bookId.slug}`}>
-                          <h3 className="font-semibold text-sm line-clamp-2 hover:text-brand transition-colors mb-2 min-h-[40px] leading-tight text-foreground">
-                            {item.bookId.title}
-                          </h3>
-                        </Link>
-
-                        {/* Reading Progress */}
-                        <div className="mt-auto border-t border-border pt-3 w-full">
-                          {activeTab === LibraryStatus.READING && item.lastReadChapterId ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>Đang đọc</span>
-                                <span className="font-semibold text-foreground">
-                                  Chương {item.lastReadChapterId.orderIndex}
-                                </span>
-                              </div>
-                              <Link
-                                href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
-                                className="w-full flex items-center justify-center gap-1.5 bg-brand/10 hover:bg-brand/20 text-brand border border-brand/20 text-xs font-bold py-2 rounded-full transition-all duration-300"
-                              >
-                                <BookOpen size={13} />
-                                Đọc tiếp
-                              </Link>
-                            </div>
-                          ) : activeTab === LibraryStatus.COMPLETED &&
-                            item.totalChapters !== undefined &&
-                            item.completedChapters !== undefined &&
-                            item.totalChapters > item.completedChapters ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-red-500 font-semibold flex items-center gap-1">
-                                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                                  Có chương mới
-                                </span>
-                                <span className="font-semibold text-foreground">
-                                  {item.completedChapters} / {item.totalChapters} chương
-                                </span>
-                              </div>
-                              <Link
-                                href={`/books/${item.bookId.slug}`}
-                                className="w-full flex items-center justify-center gap-1.5 bg-brand/10 hover:bg-brand/20 text-brand border border-brand/20 text-xs font-bold py-2 rounded-full transition-all duration-300"
-                              >
-                                <BookOpen size={13} />
-                                Đọc tiếp
-                              </Link>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
-                              <span>Cập nhật</span>
-                              <span>{new Date(item.updatedAt).toLocaleDateString('vi-VN')}</span>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                      item={item}
+                      activeTab={activeTab}
+                    />
                   ))}
                 </div>
               </div>
@@ -288,126 +201,4 @@ export default function LibraryClientSection() {
   );
 }
 
-function LibrarySkeleton() {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-      {[...Array(10)].map((_, i) => (
-        <Card key={`skeleton-book-${i}`} className="flex flex-col h-full overflow-hidden border-border/80">
-          <Skeleton className="aspect-[2/3] w-full rounded-none" />
-          <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-1/3" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-            <div className="space-y-2 pt-2 border-t border-border mt-auto">
-              <Skeleton className="h-3 w-1/2" />
-              <Skeleton className="h-8 w-full rounded-full" />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
 
-function CollectionCard({ col }: { col: Collection }) {
-  const router = useRouter();
-  const { data: detail } = useQuery({ ...libraryQueries.collectionDetail(col.id) });
-  const books = detail?.books || [];
-  const openEditCollection = useModalStore(s => s.openEditCollection);
-
-  const covers = books.slice(0, 3).map((b) => b.bookId.coverUrl);
-
-  return (
-    <div
-      onClick={() => router.push(`/collections/${col.id}`)}
-      className="group relative flex flex-col justify-between h-36 bg-card rounded-2xl border border-border p-5 hover:border-brand/40 hover:shadow-lg dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.02)] transition-all duration-300 cursor-pointer overflow-hidden"
-    >
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-gradient-start to-brand-gradient-end opacity-80 group-hover:opacity-100 transition-opacity z-10" />
-
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          openEditCollection({
-            collectionId: col.id,
-            currentName: col.name,
-            currentIsPublic: col.isPublic,
-          });
-        }}
-        className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm border border-border/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted cursor-pointer"
-        title="Chỉnh sửa bộ sưu tập"
-      >
-        <Pencil size={12} className="text-muted-foreground" />
-      </button>
-
-      <div className="flex gap-4 items-start justify-between h-full min-w-0 z-10">
-        <div className="flex flex-col justify-between h-full min-w-0 flex-1">
-          <div className="space-y-1">
-            <h3 className="font-bold text-base text-foreground truncate group-hover:text-brand transition-colors">
-              {col.name}
-            </h3>
-            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-              {col.description || 'Chưa có mô tả bộ sưu tập.'}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between border-t border-border/60 pt-3 text-[11px] text-muted-foreground font-medium mt-auto">
-            <span className="flex items-center text-muted-foreground" title={col.isPublic ? "Công khai" : "Chỉ mình tôi"}>
-              {col.isPublic ? (
-                <Globe size={13.5} className="text-muted-foreground" />
-              ) : (
-                <Lock size={13.5} className="text-muted-foreground" />
-              )}
-            </span>
-            <span>{formatDate(col.createdAt)}</span>
-          </div>
-        </div>
-
-        <div className="relative w-20 h-24 flex items-center justify-center shrink-0 self-center">
-          {covers.length > 0 ? (
-            <div className="relative w-full h-full flex items-center justify-end">
-              {covers[2] && (
-                <div className="absolute w-[40px] h-[56px] right-7 top-4 -rotate-12 z-0 opacity-40 shadow-sm rounded-sm overflow-hidden border border-white/10 dark:border-black/20">
-                  <SafeImage
-                    src={covers[2]}
-                    alt=""
-                    fill
-                    sizes="40px"
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              {covers[1] && (
-                <div className="absolute w-[44px] h-[62px] right-3.5 top-2 -rotate-6 z-10 opacity-75 shadow-md rounded-sm overflow-hidden border border-white/10 dark:border-black/20">
-                  <SafeImage
-                    src={covers[1]}
-                    alt=""
-                    fill
-                    sizes="44px"
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              {covers[0] && (
-                <div className="absolute w-[48px] h-[68px] right-0 top-1.5 rotate-3 z-20 shadow-lg rounded-sm overflow-hidden border border-white/20 dark:border-black/40 group-hover:scale-105 group-hover:rotate-0 transition-all duration-300">
-                  <SafeImage
-                    src={covers[0]}
-                    alt=""
-                    fill
-                    preload
-                    sizes="48px"
-                    className="object-cover"
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="p-3 bg-yellow-500/10 dark:bg-yellow-500/5 text-yellow-500 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-              <Folder className="w-6 h-6" />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}

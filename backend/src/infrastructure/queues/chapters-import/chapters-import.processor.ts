@@ -52,7 +52,7 @@ export class ChaptersImportProcessor extends WorkerHost {
     if (redisKey) {
       const redisData = await this.redis.get(redisKey);
       if (redisData) {
-        chapters = JSON.parse(redisData);
+        chapters = JSON.parse(redisData) as typeof job.data.chapters;
       }
     }
 

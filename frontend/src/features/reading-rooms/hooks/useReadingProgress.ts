@@ -1,14 +1,23 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import throttle from 'lodash/throttle';
 import { getContentProgress } from '@/features/books/utils/reading-progress';
 
-export function useReadingProgress() {
-  const [readingParagraphId, setReadingParagraphId] = useState<string | null>(
-    null,
-  );
+export function useReadingProgress(chapterSlug?: string) {
+  const [readingParagraphId, setReadingParagraphId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [readingProgress, setReadingProgress] = useState(0);
+
+  const onActiveParagraphChange = useCallback((id: string) => {
+    setReadingParagraphId((prev) => (prev === id ? prev : id));
+  }, []);
+
+  const [prevSlug, setPrevSlug] = useState(chapterSlug);
+  if (chapterSlug !== prevSlug) {
+    setPrevSlug(chapterSlug);
+    setReadingParagraphId(null);
+    setReadingProgress(0);
+  }
 
   useEffect(() => {
     const handleScroll = throttle(() => {
@@ -28,6 +37,6 @@ export function useReadingProgress() {
     readingProgress,
     readingParagraphId,
     contentRef,
-    onActiveParagraphChange: setReadingParagraphId,
+    onActiveParagraphChange,
   };
 }

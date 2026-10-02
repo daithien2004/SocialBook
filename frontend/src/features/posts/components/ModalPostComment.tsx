@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 interface ModalPostCommentProps {
     postData?: Post;
@@ -321,7 +322,7 @@ export default function ModalPostComment({ postData, isOpenOverride, onCloseOver
                                             variant="ghost"
                                             className="font-bold text-sky-600 hover:text-sky-700 hover:bg-transparent px-2"
                                         >
-                                            {isSubmitting ? <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" /> : 'Đăng'}
+                                            {isSubmitting ? <LoadingSpinner size="sm" /> : 'Đăng'}
                                         </Button>
                                     </div>
                                 </div>

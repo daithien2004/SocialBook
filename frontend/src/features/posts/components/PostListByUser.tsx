@@ -5,6 +5,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import PostCard from '@/features/posts/components/PostCard';
 import { postQueries } from '@/features/posts/api/post.queries';
 import type { Post } from '@/features/posts/types/post.interface';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 interface PostListProps {
   userId: string;
@@ -53,7 +54,7 @@ const PostListUser: React.FC<PostListProps> = ({ userId }) => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -88,7 +89,7 @@ const PostListUser: React.FC<PostListProps> = ({ userId }) => {
 
       {isFetching && hasNextPage ? (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <LoadingSpinner size="md" />
         </div>
       ) : null}
 

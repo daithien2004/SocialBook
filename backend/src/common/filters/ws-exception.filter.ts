@@ -10,7 +10,7 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     const client = host.switchToWs().getClient<Socket>();
-    const data = host.switchToWs().getData();
+    const data = host.switchToWs().getData<unknown>();
 
     let errorMessage = 'Lỗi không xác định từ Server';
     let errorCode = 'INTERNAL_ERROR';
@@ -20,7 +20,10 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
       errorCode = 'WS_ERROR';
     } else if (exception instanceof HttpException) {
       const response = exception.getResponse();
-      errorMessage = typeof response === 'string' ? response : (response as any).message || exception.message;
+      errorMessage =
+        typeof response === 'string'
+          ? response
+          : (response as { message?: string }).message || exception.message;
       errorCode = exception.name;
     } else if (exception instanceof DomainException) {
       errorMessage = exception.message;
@@ -37,7 +40,9 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
     }
 
     // Log the error centrally
-    this.logger.warn(`WS Error for client ${client.id}: [${errorCode}] ${errorMessage}`);
+    this.logger.warn(
+      `WS Error for client ${client.id}: [${errorCode}] ${errorMessage}`,
+    );
 
     // Emit the error back to the client
     client.emit(ReadingRoomServerEvent.ERROR, {

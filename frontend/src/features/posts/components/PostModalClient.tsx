@@ -5,6 +5,7 @@ import ModalPostComment from '@/features/posts/components/ModalPostComment';
 import { postQueries } from '@/features/posts/api/post.queries';
 import { useRouter } from 'next/navigation';
 import { useAppAuth } from '@/features/auth/hooks';
+import { FullScreenSpinner } from '@/components/shared/AppLoading';
 
 export function PostModalClient({ id }: { id: string }) {
     const router = useRouter();
@@ -18,14 +19,7 @@ export function PostModalClient({ id }: { id: string }) {
     const showLoading = isAuthLoading || isLoading;
 
     if (showLoading) {
-        return (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin" />
-                    <div className="text-white font-medium">Đang tải bài viết...</div>
-                </div>
-            </div>
-        );
+        return <FullScreenSpinner className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm text-white" />;
     }
 
     if (!post) {

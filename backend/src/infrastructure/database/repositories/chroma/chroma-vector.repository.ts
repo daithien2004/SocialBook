@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { Chroma } from '@langchain/community/vectorstores/chroma';
-import { ChromaClient, type Where, type Collection, type EmbeddingFunction } from 'chromadb';
+import { ChromaClient, type Where, type Collection } from 'chromadb';
 import { HuggingFaceInferenceEmbeddings } from '@langchain/community/embeddings/hf';
 import { Document } from '@langchain/core/documents';
 

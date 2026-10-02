@@ -95,7 +95,7 @@ export class AudioWorker extends WorkerHost {
         if (!chapter) {
           throw new Error(`Chapter ${payload.chapterId} not found`);
         }
-        
+
         const text = chapter.paragraphs.map((p) => p.content).join('\n\n');
 
         const generated = await this.ttsProvider.generateAudio(text, {

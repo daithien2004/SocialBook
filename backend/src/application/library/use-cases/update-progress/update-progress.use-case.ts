@@ -20,6 +20,7 @@ import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repos
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
 import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
 export interface UpdateProgressResult {
   readingList: LibraryItemReadModel;
@@ -42,6 +43,11 @@ export class UpdateProgressUseCase {
     const bookId = BookId.create(command.bookId);
     const chapterId = ChapterId.create(command.chapterId);
 
+    const book = await this.bookRepository.findById(DomainBookId.create(command.bookId));
+    if (!book) {
+      throw new NotFoundDomainException('Sách không tồn tại');
+    }
+
     let readingList = await this.readingListRepository.findByUserIdAndBookId(
       userId,
       bookId,
@@ -55,30 +61,31 @@ export class UpdateProgressUseCase {
       });
     }
 
-    const [readingProgress, book] = await Promise.all([
-      this.readingProgressRepository
-        .findByUserIdAndChapterId(userId, chapterId)
-        .then((rp) => {
-          if (!rp) {
-            return ReadingProgress.create({
-              id: this.idGenerator.generate(),
-              userId: command.userId,
-              bookId: command.bookId,
-              chapterId: command.chapterId,
-              progress: command.progress,
-            });
-          }
-          rp.updateProgress(command.progress);
-          return rp;
-        }),
-      this.bookRepository.findById(DomainBookId.create(command.bookId)),
-    ]);
+    let readingProgress = await this.readingProgressRepository.findByUserIdAndChapterId(userId, chapterId);
+    let wasCompleted = false;
+    
+    if (!readingProgress) {
+      readingProgress = ReadingProgress.create({
+        id: this.idGenerator.generate(),
+        userId: command.userId,
+        bookId: command.bookId,
+        chapterId: command.chapterId,
+        progress: command.progress,
+      });
+    } else {
+      wasCompleted = readingProgress.isCompleted();
+      // Only increase progress unless it's a reset (e.g., progress === 0)
+      if (command.progress === 0 || command.progress > readingProgress.progress) {
+        readingProgress.updateProgress(command.progress);
+      }
+    }
 
     const oldStatus = readingList.status;
-
     readingList.updateLastReadChapter(command.chapterId);
+    
+    const isCompletedNow = readingProgress.isCompleted();
 
-    if (book) {
+    if (!wasCompleted && isCompletedNow) {
       const [totalChapters, allProgresses] = await Promise.all([
         this.chapterRepository.countByBook(
           ChapterBookId.create(command.bookId),
@@ -91,10 +98,7 @@ export class UpdateProgressUseCase {
           .filter((p) => p.status === ChapterStatus.COMPLETED)
           .map((p) => p.chapterId.toString()),
       );
-
-      if (readingProgress.isCompleted()) {
-        completedChapterIds.add(command.chapterId);
-      }
+      completedChapterIds.add(command.chapterId);
 
       if (totalChapters > 0 && completedChapterIds.size >= totalChapters) {
         readingList.updateStatus(ReadingStatus.COMPLETED);

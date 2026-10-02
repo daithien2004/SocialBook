@@ -66,6 +66,8 @@ export class OAuthAuthUseCase {
         newUser.id.toString(),
         newUser.email.value,
         'user',
+        newUser.username,
+        newUser.image,
       );
 
       return {
@@ -112,6 +114,8 @@ export class OAuthAuthUseCase {
       existingUser.id.toString(),
       existingUser.email.value,
       roleName,
+      existingUser.username,
+      existingUser.image,
     );
 
     return {

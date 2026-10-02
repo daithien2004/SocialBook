@@ -70,18 +70,7 @@ import {
   ReadingRoom,
   ReadingRoomSchema,
 } from '@/infrastructure/database/schemas/reading-room.schema';
-import {
-  RoomCommentSchema,
-  RoomCommentSchemaFactory,
-} from '@/infrastructure/database/schemas/reading-room-interactions/room-comment.schema';
-import {
-  RoomReactionSchema,
-  RoomReactionSchemaFactory,
-} from '@/infrastructure/database/schemas/reading-room-interactions/room-reaction.schema';
-import {
-  RoomQuoteSchema,
-  RoomQuoteSchemaFactory,
-} from '@/infrastructure/database/schemas/reading-room-interactions/room-quote.schema';
+
 import { ReadingRoomsSeed } from './reading-rooms.seeder';
 
 @Module({
@@ -115,9 +104,6 @@ import { ReadingRoomsSeed } from './reading-rooms.seeder';
       { name: Notification.name, schema: NotificationSchema },
       { name: ToxicWord.name, schema: ToxicWordSchema },
       { name: ReadingRoom.name, schema: ReadingRoomSchema },
-      { name: RoomCommentSchema.name, schema: RoomCommentSchemaFactory },
-      { name: RoomReactionSchema.name, schema: RoomReactionSchemaFactory },
-      { name: RoomQuoteSchema.name, schema: RoomQuoteSchemaFactory },
     ]),
   ],
   providers: [

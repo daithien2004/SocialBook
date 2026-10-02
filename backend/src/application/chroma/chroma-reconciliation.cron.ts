@@ -26,13 +26,15 @@ export class ChromaReconciliationCron {
     try {
       // Giới hạn 50 cuốn mỗi lần chạy để tránh tạo quá nhiều job cùng lúc
       const unindexedBooks = await this.bookRepository.findUnindexedBooks(50);
-      
+
       if (unindexedBooks.length === 0) {
         this.logger.log('No unindexed books found.');
         return;
       }
 
-      this.logger.log(`Found ${unindexedBooks.length} unindexed books. Enqueueing them for index...`);
+      this.logger.log(
+        `Found ${unindexedBooks.length} unindexed books. Enqueueing them for index...`,
+      );
 
       for (const book of unindexedBooks) {
         // Enqueue với jobId để dedup
@@ -46,9 +48,14 @@ export class ChromaReconciliationCron {
         );
       }
 
-      this.logger.log(`Successfully enqueued ${unindexedBooks.length} books for vector indexing.`);
+      this.logger.log(
+        `Successfully enqueued ${unindexedBooks.length} books for vector indexing.`,
+      );
     } catch (error) {
-      this.logger.error('Error during Chroma vector index reconciliation', error);
+      this.logger.error(
+        'Error during Chroma vector index reconciliation',
+        error,
+      );
     }
   }
 }

@@ -7,13 +7,14 @@ import Redis from 'ioredis';
 export class TrackUserEventUseCase {
   private readonly logger = new Logger(TrackUserEventUseCase.name);
 
-  constructor(
-    @InjectRedis() private readonly redis: Redis,
-  ) {}
+  constructor(@InjectRedis() private readonly redis: Redis) {}
 
   async execute(command: TrackUserEventCommand): Promise<void> {
     try {
-      await this.redis.rpush('analytics:events:buffer', JSON.stringify(command));
+      await this.redis.rpush(
+        'analytics:events:buffer',
+        JSON.stringify(command),
+      );
     } catch (error) {
       this.logger.error('Failed to buffer analytics event in Redis', error);
     }

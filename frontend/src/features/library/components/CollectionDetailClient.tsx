@@ -8,13 +8,11 @@ import {
   FolderOpen,
   Pencil,
   Trash2,
-  X,
   Lock,
   Globe,
   Check,
   Loader2,
 } from 'lucide-react';
-import { SafeImage } from '@/components/shared/SafeImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -24,13 +22,12 @@ import { LibraryItem } from '@/features/library/types/library.interface';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 import { useModalStore } from '@/store/useModalStore';
+import { LibraryBookCard } from '@/features/library/components/LibraryBookCard';
+import { CollectionDetailSkeleton } from '@/features/library/components/CollectionDetailSkeleton';
 import { useAppAuth } from '@/features/auth/hooks';
 import LoginWall from '@/features/auth/components/LoginWall';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
-import { formatDate } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 
 export function CollectionDetailClient({ collectionId }: { collectionId: string }) {
@@ -296,80 +293,12 @@ export function CollectionDetailClient({ collectionId }: { collectionId: string 
         {books.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {books.map((item) => (
-              <Card
+              <LibraryBookCard
                 key={item.id}
-                className="group flex flex-col h-full overflow-hidden border-border/85 transition-all duration-500 hover:border-brand/40 hover:shadow-xl dark:hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] bg-card text-foreground"
-              >
-                {/* Book Cover */}
-                <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted">
-                  <SafeImage
-                    src={item.bookId.coverUrl}
-                    alt={item.bookId.title}
-                    fill
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                    className="object-cover transition-all duration-700 group-hover:scale-105 group-hover:opacity-95"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-85" />
-
-                  {isOwner && (
-                     <button
-                      onClick={(e) => handleRemoveBookFromCollection(e, item)}
-                      title="Gỡ khỏi bộ sưu tập này"
-                      className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-brand border border-white/10 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 duration-200 z-20 cursor-pointer shadow-md"
-                    >
-                      <X size={13} />
-                    </button>
-                  )}
-
-                  {/* Hover Action Overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20 backdrop-blur-[1px]">
-                    <Link
-                      href={`/books/${item.bookId.slug}`}
-                      className="px-4 py-2 bg-background text-foreground font-semibold text-xs rounded-full hover:bg-brand hover:text-brand-foreground shadow-md transition-all duration-300 scale-90 group-hover:scale-100"
-                    >
-                      Chi tiết truyện
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Book Details */}
-                <CardContent className="flex flex-col flex-1 p-4 pt-3 gap-1">
-                  <p className="text-[10px] font-medium tracking-[0.15em] uppercase text-muted-foreground truncate">
-                    {item.bookId.authorName || 'Tác giả'}
-                  </p>
-                  <Link href={`/books/${item.bookId.slug}`}>
-                    <h3 className="font-semibold text-sm line-clamp-2 hover:text-brand transition-colors mb-2 min-h-[40px] leading-tight text-foreground">
-                      {item.bookId.title}
-                    </h3>
-                  </Link>
-
-                  {/* Reading Progress */}
-                  <div className="mt-auto border-t border-border pt-3 w-full">
-                    {item.status === 'READING' && item.lastReadChapterId ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Đang đọc</span>
-                          <span className="font-semibold text-foreground">
-                            Chương {item.lastReadChapterId.orderIndex}
-                          </span>
-                        </div>
-                        <Link
-                          href={`/books/${item.bookId.slug}/chapters/${item.lastReadChapterId.slug}`}
-                          className="w-full flex items-center justify-center gap-1.5 bg-brand/10 hover:bg-brand/20 text-brand border border-brand/20 text-xs font-bold py-2 rounded-full transition-all duration-300"
-                        >
-                          <BookOpen size={13} />
-                          Đọc tiếp
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
-                        <span>Đã thêm</span>
-                        <span>{formatDate(item.updatedAt)}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                item={item}
+                dateLabel="Đã thêm"
+                onRemove={isOwner ? handleRemoveBookFromCollection : undefined}
+              />
             ))}
           </div>
         ) : (
@@ -403,32 +332,4 @@ export function CollectionDetailClient({ collectionId }: { collectionId: string 
   );
 }
 
-function CollectionDetailSkeleton() {
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8">
-        <div className="h-4 w-28 bg-muted rounded animate-pulse mb-6" />
-        <div className="h-32 bg-card border border-border rounded-2xl animate-pulse" />
-      </div>
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-          {[...Array(5)].map((_, i) => (
-            <Card key={`skeleton-collection-detail-${i}`} className="flex flex-col h-full overflow-hidden border-border/80">
-              <Skeleton className="aspect-[2/3] w-full rounded-none" />
-              <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                <div className="space-y-2">
-                  <Skeleton className="h-3 w-1/3" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
-                <div className="space-y-2 pt-2 border-t border-border mt-auto">
-                  <Skeleton className="h-3 w-1/2" />
-                  <Skeleton className="h-8 w-full rounded-full" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+

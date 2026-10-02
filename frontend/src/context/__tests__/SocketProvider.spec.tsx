@@ -48,20 +48,19 @@ describe('SocketProvider', () => {
   it('should initialize context correctly', () => {
     const { result } = renderHook(() => useSocket(), { wrapper });
     expect(result.current).toHaveProperty('getSocket');
-    expect(result.current).toHaveProperty('connectSocket');
+    expect(result.current).toHaveProperty('acquireSocket');
+    expect(result.current).toHaveProperty('releaseSocket');
     expect(result.current).toHaveProperty('disconnectAll');
   });
 
-  it('should connect a socket for a specific namespace', async () => {
+  it('should acquire a socket for a specific namespace', async () => {
     const { result } = renderHook(() => useSocket(), { wrapper });
 
-    let socket;
     await act(async () => {
-      socket = await result.current.connectSocket('/test-namespace');
+      result.current.acquireSocket('/test-namespace');
     });
 
     expect(Manager).toHaveBeenCalledTimes(1);
-    expect(socket).toBe(mockSocket);
     expect(mockSocket.connect).toHaveBeenCalledTimes(1);
   });
 
@@ -70,7 +69,7 @@ describe('SocketProvider', () => {
     const { result } = renderHook(() => useSocket(), { wrapper });
 
     await act(async () => {
-      await result.current.connectSocket('/test-namespace');
+      result.current.acquireSocket('/test-namespace');
     });
 
     expect(mockSocket.connect).not.toHaveBeenCalled();

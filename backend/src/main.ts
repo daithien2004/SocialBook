@@ -41,9 +41,10 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   app.use(helmet());
 
-  // Increase payload size limits for JSON and URL-encoded bodies (e.g., for large book imports)
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ limit: '50mb', extended: true }));
+  // Tăng giới hạn payload riêng cho endpoint import, mặc định các API khác là 1mb (S11)
+  app.use('/api/chapters/import', json({ limit: '50mb' }));
+  app.use(json({ limit: '1mb' }));
+  app.use(urlencoded({ limit: '1mb', extended: true }));
 
   // Get ConfigService from the application context
   const configService = app.get(ConfigService);
@@ -76,9 +77,8 @@ async function bootstrap() {
   const origin = frontendUrl.includes(',')
     ? frontendUrl.split(',').map((url) => url.trim())
     : frontendUrl;
-  
+
   const origins = Array.isArray(origin) ? origin : [origin];
-  origins.push('https://admin.socket.io'); // Phục vụ Mục 10: Giám sát Socket
 
   app.enableCors({
     origin: origins,
@@ -133,6 +133,16 @@ async function bootstrap() {
     '',
   );
 
+  if (!bullBoardPass || bullBoardPass.length < 12) {
+    throw new Error('BULL_BOARD_PASSWORD phải được cấu hình (>= 12 ký tự)');
+  }
+
+  const { timingSafeEqual } = require('crypto');
+  const safeEq = (a: string, b: string) => {
+    const x = Buffer.from(a), y = Buffer.from(b);
+    return x.length === y.length && timingSafeEqual(x, y);
+  };
+
   expressApp.use(
     '/queues',
     (req: Request, res: Response, next: NextFunction) => {
@@ -146,7 +156,8 @@ async function bootstrap() {
       const colonIndex = decoded.indexOf(':');
       const user = decoded.slice(0, colonIndex);
       const pass = decoded.slice(colonIndex + 1);
-      if (user !== bullBoardUser || pass !== bullBoardPass) {
+      
+      if (!safeEq(user, bullBoardUser) || !safeEq(pass, bullBoardPass)) {
         res.setHeader('WWW-Authenticate', 'Basic realm="Bull Board"');
         res.sendStatus(401);
         return;

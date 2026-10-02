@@ -35,7 +35,7 @@ interface ChapterContentViewProps {
   navigation?: NavigationData;
   currentChapterSlug: string;
   contentRef: React.RefObject<HTMLDivElement | null>;
-  onActiveParagraphChange: (id: string | null) => void;
+  onActiveParagraphChange: (id: string) => void;
   handleChapterNav: (slug: string) => void;
 }
 
@@ -98,7 +98,6 @@ export function ChapterContentView({
           bookId={bookData.id}
           bookSlug={bookData.slug}
           bookCoverImage={bookData.coverUrl}
-          bookTitle={bookData.title}
           onActiveParagraphChange={onActiveParagraphChange}
         />
       </div>
