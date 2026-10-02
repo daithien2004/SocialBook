@@ -5,6 +5,8 @@ import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { RemoveHighlightCommand } from './remove-highlight.command';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 
+import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
+
 @Injectable()
 export class RemoveHighlightUseCase {
   private readonly logger = new Logger(RemoveHighlightUseCase.name);
@@ -12,21 +14,23 @@ export class RemoveHighlightUseCase {
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(command: RemoveHighlightCommand): Promise<ReadingRoom> {
-    const room = await this.readingRoomRepository.findById(
-      RoomId.create(command.roomId),
-    );
+    return withOptimisticRetry(async () => {
+      const room = await this.readingRoomRepository.findById(
+        RoomId.create(command.roomId),
+      );
 
-    if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
-    }
+      if (!room) {
+        throw new NotFoundDomainException('Phòng không tồn tại');
+      }
 
-    room.removeHighlight(command.highlightId, command.userId);
-    await this.readingRoomRepository.save(room);
+      room.removeHighlight(command.highlightId, command.userId);
+      await this.readingRoomRepository.save(room);
 
-    this.logger.log(
-      `Highlight ${command.highlightId} removed from room ${command.roomId} by user ${command.userId}`,
-    );
+      this.logger.log(
+        `Highlight ${command.highlightId} removed from room ${command.roomId} by user ${command.userId}`,
+      );
 
-    return room;
+      return room;
+    });
   }
 }

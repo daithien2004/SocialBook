@@ -1,19 +1,19 @@
-import { ConflictDomainException } from '@/shared/domain/common-exceptions';
+import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 
-export async function withRetries<T>(
-  operation: () => Promise<T>,
-  maxRetries = 3,
+export async function withOptimisticRetry<T>(
+  fn: () => Promise<T>,
+  attempts = 3,
 ): Promise<T> {
-  let attempt = 0;
-  while (true) {
+  for (let i = 1; ; i++) {
     try {
-      return await operation();
-    } catch (error) {
-      if (error instanceof ConflictDomainException && attempt < maxRetries) {
-        attempt++;
-        continue;
+      return await fn();
+    } catch (e: unknown) {
+      if (!(e instanceof ConcurrencyException) || i >= attempts) {
+        throw e;
       }
-      throw error;
+      await new Promise((r) => setTimeout(r, 20 * i + Math.random() * 30));
     }
   }
 }
+
+export const withRetries = withOptimisticRetry;

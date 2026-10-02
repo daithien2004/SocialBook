@@ -40,15 +40,22 @@ export interface ReadingRoomProps {
 
 export class ReadingRoom extends Entity<RoomId> {
   private _props: ReadingRoomProps;
+  private _loadedVersion = 0;
+  private _isNew = true;
+  private _dirty = false;
 
   private constructor(
     id: RoomId,
     props: ReadingRoomProps,
     createdAt?: Date,
     updatedAt?: Date,
+    isNew = true,
+    loadedVersion = 0,
   ) {
     super(id, createdAt, updatedAt);
     this._props = props;
+    this._isNew = isNew;
+    this._loadedVersion = loadedVersion;
   }
 
   static create(props: {
@@ -67,18 +74,25 @@ export class ReadingRoom extends Entity<RoomId> {
       role: 'host',
     });
 
-    return new ReadingRoom(roomId, {
-      bookId: BookId.create(props.bookId),
-      hostId: UserId.create(props.hostId),
-      mode,
-      status: 'active',
-      currentChapterSlug: props.currentChapterSlug,
-      maxMembers,
-      members: [hostMember],
-      highlights: [],
-      chatMessages: [],
-      version: 0,
-    });
+    return new ReadingRoom(
+      roomId,
+      {
+        bookId: BookId.create(props.bookId),
+        hostId: UserId.create(props.hostId),
+        mode,
+        status: 'active',
+        currentChapterSlug: props.currentChapterSlug,
+        maxMembers,
+        members: [hostMember],
+        highlights: [],
+        chatMessages: [],
+        version: 0,
+      },
+      undefined,
+      undefined,
+      true,
+      0,
+    );
   }
 
   static reconstitute(props: {
@@ -102,6 +116,7 @@ export class ReadingRoom extends Entity<RoomId> {
     endedAt?: Date;
     version: number;
   }): ReadingRoom {
+    const loadedVer = props.version ?? 0;
     return new ReadingRoom(
       RoomId.create(props.id),
       {
@@ -115,10 +130,12 @@ export class ReadingRoom extends Entity<RoomId> {
         highlights: props.highlights,
         chatMessages: props.chatMessages,
         endedAt: props.endedAt,
-        version: props.version ?? 0,
+        version: loadedVer,
       },
       props.createdAt,
       props.updatedAt,
+      false,
+      loadedVer,
     );
   }
 
@@ -159,13 +176,29 @@ export class ReadingRoom extends Entity<RoomId> {
   get endedAt(): Date | undefined {
     return this._props.endedAt;
   }
+  get loadedVersion(): number {
+    return this._loadedVersion;
+  }
+  get isNew(): boolean {
+    return this._isNew;
+  }
+  get isDirty(): boolean {
+    return this._dirty;
+  }
   get version(): number {
-    return this._props.version;
+    return this._loadedVersion;
+  }
+
+  markPersisted(): void {
+    this._loadedVersion += 1;
+    this._props.version = this._loadedVersion;
+    this._isNew = false;
+    this._dirty = false;
   }
 
   protected markAsUpdated(): void {
     super.markAsUpdated();
-    this._props.version += 1;
+    this._dirty = true;
   }
 
   // Business logic

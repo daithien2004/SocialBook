@@ -10,30 +10,34 @@ import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 import { ChangeRoomModeCommand } from './change-room-mode.command';
 
+import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
+
 @Injectable()
 export class ChangeRoomModeUseCase {
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: ChangeRoomModeCommand): Promise<ReadingRoomResult> {
-    const room = await this.roomRepository.findById(
-      RoomId.create(command.roomId),
-    );
-    if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
-    }
-
-    if (room.status === 'ended') {
-      throw new BadRequestDomainException(
-        'Không thể đổi chế độ trong phòng đã kết thúc',
+    return withOptimisticRetry(async () => {
+      const room = await this.roomRepository.findById(
+        RoomId.create(command.roomId),
       );
-    }
+      if (!room) {
+        throw new NotFoundDomainException('Phòng không tồn tại');
+      }
 
-    if (command.userId !== room.hostId) {
-      throw new ForbiddenDomainException('Chỉ chủ phòng mới được đổi chế độ');
-    }
+      if (room.status === 'ended') {
+        throw new BadRequestDomainException(
+          'Không thể đổi chế độ trong phòng đã kết thúc',
+        );
+      }
 
-    room.changeMode(command.userId, command.mode);
-    await this.roomRepository.save(room);
-    return ReadingRoomApplicationMapper.toResult(room);
+      if (command.userId !== room.hostId) {
+        throw new ForbiddenDomainException('Chỉ chủ phòng mới được đổi chế độ');
+      }
+
+      room.changeMode(command.userId, command.mode);
+      await this.roomRepository.save(room);
+      return ReadingRoomApplicationMapper.toResult(room);
+    });
   }
 }

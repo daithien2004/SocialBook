@@ -9,26 +9,30 @@ import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 import { EndRoomCommand } from './end-room.command';
 
+import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
+
 @Injectable()
 export class EndRoomUseCase {
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: EndRoomCommand): Promise<ReadingRoomResult> {
-    const room = await this.roomRepository.findById(
-      RoomId.create(command.roomId),
-    );
-    if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
-    }
-
-    if (!room.isHost(command.userId)) {
-      throw new ForbiddenDomainException(
-        'Chỉ chủ phòng mới có thể kết thúc phòng',
+    return withOptimisticRetry(async () => {
+      const room = await this.roomRepository.findById(
+        RoomId.create(command.roomId),
       );
-    }
+      if (!room) {
+        throw new NotFoundDomainException('Phòng không tồn tại');
+      }
 
-    room.end();
-    await this.roomRepository.save(room);
-    return ReadingRoomApplicationMapper.toResult(room);
+      if (!room.isHost(command.userId)) {
+        throw new ForbiddenDomainException(
+          'Chỉ chủ phòng mới có thể kết thúc phòng',
+        );
+      }
+
+      room.end();
+      await this.roomRepository.save(room);
+      return ReadingRoomApplicationMapper.toResult(room);
+    });
   }
 }

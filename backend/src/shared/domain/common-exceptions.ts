@@ -29,3 +29,10 @@ export class InternalServerDomainException extends DomainException {
     super(message, 'INTERNAL_SERVER_ERROR', 500);
   }
 }
+
+export class ConcurrencyException extends DomainException {
+  constructor(message: string = 'Dữ liệu vừa thay đổi, vui lòng thử lại') {
+    super(message, 'CONCURRENCY_CONFLICT', 409);
+  }
+}
+

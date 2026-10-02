@@ -10,38 +10,42 @@ import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 import { ChangeChapterCommand } from './change-chapter.command';
 
+import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
+
 @Injectable()
 export class ChangeChapterUseCase {
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: ChangeChapterCommand): Promise<ReadingRoomResult> {
-    const room = await this.roomRepository.findById(
-      RoomId.create(command.roomId),
-    );
-    if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
-    }
-
-    if (room.status === 'ended') {
-      throw new BadRequestDomainException(
-        'Không thể đổi chương trong phòng đã kết thúc',
+    return withOptimisticRetry(async () => {
+      const room = await this.roomRepository.findById(
+        RoomId.create(command.roomId),
       );
-    }
+      if (!room) {
+        throw new NotFoundDomainException('Phòng không tồn tại');
+      }
 
-    if (!room.isMember(command.userId)) {
-      throw new ForbiddenDomainException(
-        'Bạn không phải là thành viên của phòng này',
-      );
-    }
+      if (room.status === 'ended') {
+        throw new BadRequestDomainException(
+          'Không thể đổi chương trong phòng đã kết thúc',
+        );
+      }
 
-    if (room.mode === 'sync' && command.userId !== room.hostId) {
-      throw new BadRequestDomainException(
-        'Chỉ chủ phòng mới được đổi chương ở chế độ đồng bộ',
-      );
-    }
+      if (!room.isMember(command.userId)) {
+        throw new ForbiddenDomainException(
+          'Bạn không phải là thành viên của phòng này',
+        );
+      }
 
-    room.changeChapter(command.userId, command.chapterSlug);
-    await this.roomRepository.save(room);
-    return ReadingRoomApplicationMapper.toResult(room);
+      if (room.mode === 'sync' && command.userId !== room.hostId) {
+        throw new BadRequestDomainException(
+          'Chỉ chủ phòng mới được đổi chương ở chế độ đồng bộ',
+        );
+      }
+
+      room.changeChapter(command.userId, command.chapterSlug);
+      await this.roomRepository.save(room);
+      return ReadingRoomApplicationMapper.toResult(room);
+    });
   }
 }

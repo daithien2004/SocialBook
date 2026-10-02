@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { ConflictDomainException } from '@/shared/domain/common-exceptions';
+import {
+  ConflictDomainException,
+  ConcurrencyException,
+} from '@/shared/domain/common-exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
@@ -68,25 +71,47 @@ export class ReadingRoomRepository implements IReadingRoomRepository {
   }
 
   async save(room: DomainReadingRoom): Promise<void> {
-    const persistenceData = ReadingRoomMapper.toPersistence(room);
-    
-    if (persistenceData.version === 0) {
-      // New room
-      await this.roomModel.create(persistenceData);
+    if (room.isNew) {
+      try {
+        const persistenceData = ReadingRoomMapper.toPersistence(room);
+        await this.roomModel.create({
+          ...persistenceData,
+          version: 0,
+        });
+      } catch (e: unknown) {
+        if (
+          e &&
+          typeof e === 'object' &&
+          'code' in e &&
+          (e as { code: number }).code === 11000
+        ) {
+          throw new ConflictDomainException('Mã phòng đã tồn tại');
+        }
+        throw e;
+      }
+      room.markPersisted();
       return;
     }
 
-    const expectedVersion = persistenceData.version! - 1;
+    if (!room.isDirty) {
+      return; // Không có thay đổi thì không ghi
+    }
+
+    const { _id, ...data } = ReadingRoomMapper.toPersistence(room);
+    const newVersion = room.loadedVersion + 1;
     const result = await this.roomModel
       .updateOne(
-        { _id: persistenceData._id, version: expectedVersion },
-        { $set: persistenceData },
+        { _id, version: room.loadedVersion },
+        { $set: { ...data, version: newVersion } },
       )
       .exec();
-      
+
     if (result.matchedCount === 0) {
-      throw new ConflictDomainException('ConcurrencyException: Room was modified by another transaction');
+      throw new ConcurrencyException(
+        'Room was modified by another transaction',
+      );
     }
+    room.markPersisted();
   }
 
   async updateStatus(id: RoomId, status: 'active' | 'ended'): Promise<void> {

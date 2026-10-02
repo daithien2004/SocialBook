@@ -9,30 +9,34 @@ import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 import { LeaveRoomCommand } from './leave-room.command';
 
+import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
+
 @Injectable()
 export class LeaveRoomUseCase {
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: LeaveRoomCommand): Promise<ReadingRoomResult> {
-    const room = await this.roomRepository.findById(
-      RoomId.create(command.roomId),
-    );
-    if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
-    }
-
-    if (!room.isMember(command.userId)) {
-      throw new BadRequestDomainException(
-        'Bạn không phải thành viên của phòng này',
+    return withOptimisticRetry(async () => {
+      const room = await this.roomRepository.findById(
+        RoomId.create(command.roomId),
       );
-    }
+      if (!room) {
+        throw new NotFoundDomainException('Phòng không tồn tại');
+      }
 
-    if (command.newHostId) {
-      room.transferHost(command.userId, command.newHostId);
-    }
+      if (!room.isMember(command.userId)) {
+        throw new BadRequestDomainException(
+          'Bạn không phải thành viên của phòng này',
+        );
+      }
 
-    room.removeMember(command.userId);
-    await this.roomRepository.save(room);
-    return ReadingRoomApplicationMapper.toResult(room);
+      if (command.newHostId) {
+        room.transferHost(command.userId, command.newHostId);
+      }
+
+      room.removeMember(command.userId);
+      await this.roomRepository.save(room);
+      return ReadingRoomApplicationMapper.toResult(room);
+    });
   }
 }
