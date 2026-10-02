@@ -13,6 +13,8 @@ export interface ReadingRoomResult {
   highlights: Array<{
     id: string;
     userId: string;
+    displayName?: string;
+    avatarUrl?: string;
     chapterSlug: string;
     paragraphId: string;
     content: string;

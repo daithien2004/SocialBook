@@ -14,6 +14,8 @@ import { DEFAULT_MAX_MEMBERS } from '../enums/constants';
 export interface RoomHighlightProps {
   id?: string;
   userId: string;
+  displayName?: string;
+  avatarUrl?: string;
   chapterSlug: string;
   paragraphId: string;
   content: string;
@@ -213,6 +215,8 @@ export class ReadingRoom extends Entity<RoomId> {
   // Business logic
   addHighlight(props: {
     userId: string;
+    displayName?: string;
+    avatarUrl?: string;
     chapterSlug: string;
     paragraphId: string;
     content: string;
@@ -258,6 +262,8 @@ export class ReadingRoom extends Entity<RoomId> {
     this._props.highlights.push({
       id: crypto.randomUUID(),
       userId: props.userId,
+      displayName: props.displayName,
+      avatarUrl: props.avatarUrl,
       chapterSlug: props.chapterSlug,
       paragraphId: props.paragraphId,
       content: trimmedContent,

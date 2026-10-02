@@ -291,25 +291,39 @@ export class ReadingRoomGateway
       return;
     }
     try {
+      const displayName = sd.displayName ?? '';
+      const avatarUrl = sd.avatarUrl ?? '';
       const command = new AddHighlightCommand(
         body.roomId,
         userId,
         body.chapterSlug,
         body.paragraphId,
         body.content,
+        displayName,
+        avatarUrl,
       );
       const room = await this.addHighlightUseCase.execute(command);
 
       const newHighlight = room.highlights[room.highlights.length - 1];
+      const authorName = newHighlight.displayName || displayName || 'Thành viên';
+      const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
 
       this.server
         .to(`room:${body.roomId}`)
         .emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
-          ...newHighlight,
+          id: newHighlight.id,
+          userId: newHighlight.userId,
+          displayName: authorName,
+          avatarUrl: authorAvatar,
+          chapterSlug: newHighlight.chapterSlug,
+          paragraphId: newHighlight.paragraphId,
+          content: newHighlight.content,
+          aiInsight: newHighlight.aiInsight,
+          createdAt: newHighlight.createdAt,
           user: {
-            userId,
-            displayName: sd.displayName ?? '',
-            avatarUrl: sd.avatarUrl ?? '',
+            userId: newHighlight.userId,
+            displayName: authorName,
+            avatarUrl: authorAvatar,
           },
         });
     } catch (error: unknown) {
@@ -493,21 +507,24 @@ export class ReadingRoomGateway
             status: room.status,
             highlights: snapshotHighlights.map((h) => {
               const presence = presences.find((p) => p.userId === h.userId);
+              const displayName =
+                h.displayName || presence?.displayName || 'Thành viên';
+              const avatarUrl = h.avatarUrl || presence?.avatarUrl || '';
               return {
                 id: h.id,
                 userId: h.userId,
-                user: presence
-                  ? {
-                      id: h.userId,
-                      username: presence.displayName,
-                      image: presence.avatarUrl,
-                    }
-                  : { id: h.userId, username: 'Thành viên' },
+                displayName,
+                avatarUrl,
                 chapterSlug: h.chapterSlug,
                 paragraphId: h.paragraphId,
                 content: h.content,
                 aiInsight: h.aiInsight,
                 createdAt: h.createdAt,
+                user: {
+                  userId: h.userId,
+                  displayName,
+                  avatarUrl,
+                },
               };
             }),
             chatMessages: [],

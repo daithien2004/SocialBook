@@ -5,5 +5,7 @@ export class AddHighlightCommand {
     public readonly chapterSlug: string,
     public readonly paragraphId: string,
     public readonly content: string,
+    public readonly displayName?: string,
+    public readonly avatarUrl?: string,
   ) {}
 }

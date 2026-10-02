@@ -20,6 +20,8 @@ export class ReadingRoomMapper {
       highlights: (doc.highlights || []).map((h) => ({
         id: h.id,
         userId: h.userId,
+        displayName: h.displayName,
+        avatarUrl: h.avatarUrl,
         chapterSlug: h.chapterSlug,
         paragraphId: h.paragraphId,
         content: h.content,
@@ -59,6 +61,8 @@ export class ReadingRoomMapper {
       highlights: domain.highlights.map((h) => ({
         id: h.id!,
         userId: h.userId,
+        displayName: h.displayName,
+        avatarUrl: h.avatarUrl,
         chapterSlug: h.chapterSlug,
         paragraphId: h.paragraphId,
         content: h.content,

@@ -27,6 +27,8 @@ const samePresence = (a: PresenceData, b: PresenceData) =>
 export interface RoomHighlight {
   id: string;
   userId: string;
+  displayName?: string;
+  avatarUrl?: string;
   chapterSlug: string;
   paragraphId: string;
   content: string;

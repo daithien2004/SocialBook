@@ -38,6 +38,8 @@ export class AddHighlightUseCase {
 
       room.addHighlight({
         userId: command.userId,
+        displayName: command.displayName,
+        avatarUrl: command.avatarUrl,
         chapterSlug: command.chapterSlug,
         paragraphId: command.paragraphId,
         content: command.content,

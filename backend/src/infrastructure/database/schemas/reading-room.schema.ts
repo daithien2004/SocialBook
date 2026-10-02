@@ -36,6 +36,12 @@ export class RoomHighlight {
   content: string;
 
   @Prop({ type: String })
+  displayName?: string;
+
+  @Prop({ type: String })
+  avatarUrl?: string;
+
+  @Prop({ type: String })
   aiInsight?: string;
 
   @Prop({ type: Date, default: Date.now })

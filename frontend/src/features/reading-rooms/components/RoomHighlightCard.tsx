@@ -38,7 +38,7 @@ export function RoomHighlightCard({ highlight: h, onJump, className = '' }: Room
       <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-2 border-t border-border/50 pt-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-bold text-foreground truncate max-w-[100px]">
-            {h.user?.displayName || h.userId.slice(0, 6)}
+            {h.displayName || h.user?.displayName || h.userId.slice(0, 6)}
           </span>
           <span className="opacity-50">·</span>
           <span className="truncate">{h.chapterSlug}</span>
