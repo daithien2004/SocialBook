@@ -104,11 +104,21 @@ export class ReadingRoomsController {
     return { message: 'Xoá phòng đọc thành công' };
   }
 
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Get(':code')
-  async getRoom(@Param('code') code: string) {
+  async getRoom(
+    @CurrentUser('id') userId: string,
+    @Param('code') code: string,
+  ) {
     const result = await this.getRoomByCodeUseCase.execute(
-      new GetRoomByCodeQuery(code),
+      new GetRoomByCodeQuery(code, userId),
     );
+    if (!result.isMember) {
+      return {
+        message: 'Lấy thông tin xem trước phòng thành công',
+        data: result,
+      };
+    }
     return {
       message: 'Lấy thông tin phòng thành công',
       data: ReadingRoomResponseDto.fromResult(result),

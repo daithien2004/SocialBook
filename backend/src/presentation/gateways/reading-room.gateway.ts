@@ -379,6 +379,12 @@ export class ReadingRoomGateway
   ) {
     const sd = socket.data as SocketData;
     const userId = sd.userId ?? '';
+
+    if (await this.isRateLimited(userId, 'join_room', 10)) {
+      this.logger.warn(`Rate limit exceeded for join_room by ${userId}`);
+      return { ok: false, code: 'RATE_LIMITED' };
+    }
+
     try {
       const command = new JoinRoomCommand(userId, body.roomCode);
       const room = await this.joinRoomUseCase.execute(command);
@@ -459,11 +465,18 @@ export class ReadingRoomGateway
     } catch (error: unknown) {
       let code = 'JOIN_FAILED';
       if (error && typeof error === 'object' && 'name' in error) {
-        if (error.name === 'NotFoundDomainException') code = 'NOT_FOUND';
-        else if (error.name === 'ForbiddenDomainException') code = 'FORBIDDEN';
-        else if (error.name === 'RoomFullDomainException') code = 'FULL';
-        else if (error.name === 'UnauthorizedDomainException')
+        if (error.name === 'NotFoundDomainException') {
+          code = 'NOT_FOUND';
+          this.logger.warn(
+            `Failed join attempt: room ${body.roomCode} not found for user ${userId}`,
+          );
+        } else if (error.name === 'ForbiddenDomainException') {
+          code = 'FORBIDDEN';
+        } else if (error.name === 'RoomFullDomainException') {
+          code = 'FULL';
+        } else if (error.name === 'UnauthorizedDomainException') {
           code = 'UNAUTHORIZED';
+        }
       }
       this.logger.warn(
         `Join failed for ${userId}: ${error instanceof Error ? error.message : String(error)}`,
