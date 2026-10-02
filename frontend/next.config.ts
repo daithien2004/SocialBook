@@ -33,40 +33,77 @@ let nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 't4.ftcdn.net',
+        port: '',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'www.shutterstock.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 't4.ftcdn.net',
+        port: '',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'encrypted-tbn0.gstatic.com',
+        port: '',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'cellphones.com.vn',
+        port: '',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'edit.org',
+        port: '',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'cdn-icons-png.flaticon.com',
+        port: '',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
   },
 };
 
