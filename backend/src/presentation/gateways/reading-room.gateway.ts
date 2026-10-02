@@ -9,6 +9,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Logger, UseFilters } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRedis } from '@nestjs-modules/ioredis';
@@ -84,6 +85,7 @@ export class ReadingRoomGateway
 
   constructor(
     private readonly jwt: JwtService,
+    private readonly configService: ConfigService,
     private readonly presenceService: ReadingRoomPresenceService,
     private readonly joinRoomUseCase: JoinRoomUseCase,
     private readonly leaveRoomUseCase: LeaveRoomUseCase,
@@ -101,9 +103,32 @@ export class ReadingRoomGateway
   ) {}
 
   afterInit(server: Server) {
+    const frontendUrl = this.configService.get<string>(
+      'env.FRONTEND_URL',
+      'http://localhost:3000',
+    );
+    const allowedOrigins = frontendUrl.includes(',')
+      ? frontendUrl.split(',').map((url) => url.trim())
+      : [frontendUrl.trim()];
+
     server.use((socket, next) => {
       (async () => {
         try {
+          const isExplicitAuth =
+            !!socket.handshake.auth?.token ||
+            !!socket.handshake.headers.authorization;
+          const usingCookie = !isExplicitAuth;
+          const origin = socket.handshake.headers.origin;
+
+          if (usingCookie) {
+            if (!origin || !allowedOrigins.includes(origin)) {
+              this.logger.warn(
+                `WS handshake rejected: forbidden origin "${origin}" with cookie authentication`,
+              );
+              return next(new Error('forbidden_origin'));
+            }
+          }
+
           let token =
             (socket.handshake.auth?.token as string | undefined) ??
             socket.handshake.headers.authorization?.split(' ')[1];
@@ -125,11 +150,26 @@ export class ReadingRoomGateway
             role?: string;
             displayName?: string;
             avatarUrl?: string;
-          }>(token);
+            iat?: number;
+          }>(token, {
+            algorithms: ['HS256'],
+          });
 
           const userId = (payload.sub ?? payload.id) as string;
           if (!userId) {
             return next(new Error('unauthorized'));
+          }
+
+          const revokedAt = await this.redis.get(`auth:revoked:${userId}`);
+          if (
+            revokedAt &&
+            payload.iat &&
+            payload.iat * 1000 < Number(revokedAt)
+          ) {
+            this.logger.warn(
+              `WS handshake rejected: token revoked for user ${userId}`,
+            );
+            return next(new Error('token_revoked'));
           }
 
           const sockets = await server.in(`user:${userId}`).fetchSockets();
@@ -342,10 +382,20 @@ export class ReadingRoomGateway
   }
 
   @OnEvent(EventNames.USER_ROLE_CHANGED)
-  handleUserRoleChanged(event: UserRoleChangedEvent) {
+  async handleUserRoleChanged(event: UserRoleChangedEvent) {
     this.logger.debug(
-      `User ${event.userId} role changed, forcing socket disconnect.`,
+      `User ${event.userId} role changed, revoking tokens and forcing socket disconnect.`,
     );
+    try {
+      await this.redis.set(
+        `auth:revoked:${event.userId}`,
+        Date.now(),
+        'EX',
+        7 * 24 * 3600,
+      );
+    } catch (e: unknown) {
+      this.logger.error('Failed to set token revocation timestamp', e);
+    }
     this.server.in(`user:${event.userId}`).disconnectSockets(true);
   }
 
