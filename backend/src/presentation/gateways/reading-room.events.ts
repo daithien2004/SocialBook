@@ -12,16 +12,7 @@ export enum ReadingRoomServerEvent {
   NEW_HIGHLIGHT = 'new_highlight',
   HIGHLIGHT_REMOVED = 'highlight_removed',
   UPDATE_HIGHLIGHT_INSIGHT = 'update_highlight_insight',
-  NEW_CHAT_MESSAGE = 'new_chat_message',
   ERROR = 'error',
-
-  COMMENT_ADDED = 'room:comment_added',
-  COMMENT_DELETED = 'room:comment_deleted',
-  REACTION_ADDED = 'room:reaction_added',
-  REACTION_REMOVED = 'room:reaction_removed',
-
-  QUOTE_ADDED = 'room:quote_added',
-  QUOTE_VOTED = 'room:quote_voted',
 }
 
 export enum ReadingRoomClientEvent {
@@ -35,12 +26,5 @@ export enum ReadingRoomClientEvent {
   HEARTBEAT = 'heartbeat',
   ADD_HIGHLIGHT = 'add_highlight',
   REMOVE_HIGHLIGHT = 'remove_highlight',
-  SEND_CHAT_MESSAGE = 'send_chat_message',
-
-  ADD_COMMENT = 'room:add_comment',
-  DELETE_COMMENT = 'room:delete_comment',
-  ADD_REACTION = 'room:add_reaction',
-
-  ADD_QUOTE = 'room:add_quote',
-  VOTE_QUOTE = 'room:vote_quote',
 }
+
