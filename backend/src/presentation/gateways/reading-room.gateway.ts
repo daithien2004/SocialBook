@@ -60,7 +60,7 @@ interface SocketData {
   avatarUrl?: string;
   roomId?: string;
   bookId?: string;
-  chapterSlugToId?: Record<string, string>;
+  chapterSlugToId?: Map<string, string | null>;
   pendingProgress?: {
     bookId: string;
     chapterSlug: string;
@@ -208,22 +208,28 @@ export class ReadingRoomGateway
     const userId = sd.userId;
     if (!userId) return;
 
-    sd.chapterSlugToId = sd.chapterSlugToId || {};
-    let chapterId = sd.chapterSlugToId[chapterSlug];
+    sd.chapterSlugToId ??= new Map<string, string | null>();
+    const cache = sd.chapterSlugToId;
+    let chapterId: string | null | undefined;
 
-    if (!chapterId) {
+    if (cache.has(chapterSlug)) {
+      // Đã từng hỏi: cả kết quả "không tồn tại" (cache âm) cũng được nhớ lại
+      chapterId = cache.get(chapterSlug);
+    } else {
       try {
         const chapter = await this.chapterRepository.findBySlug(
           chapterSlug,
           ChapterBookId.create(bookId),
         );
-        if (!chapter) return;
-        chapterId = chapter.id.toString();
-        sd.chapterSlugToId[chapterSlug] = chapterId;
+        chapterId = chapter ? chapter.id.toString() : null;
+        cache.set(chapterSlug, chapterId);
       } catch {
+        // Lỗi DB là tạm thời — không cache để lần flush sau thử lại
         return;
       }
     }
+
+    if (!chapterId) return;
     try {
       await this.updateProgressUseCase.execute(
         new UpdateProgressCommand(userId, bookId, chapterId, progress, true),
