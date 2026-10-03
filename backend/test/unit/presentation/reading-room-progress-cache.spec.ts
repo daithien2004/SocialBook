@@ -24,7 +24,7 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
   let socket: FakeSocket;
 
   const heartbeat = async (chapterSlug: string): Promise<void> => {
-    await gateway.handleHeartbeat(socket as never, {
+    await gateway.handleHeartbeat(socket as never, socket.data as never, {
       roomId: 'room-1',
       chapterSlug,
       progress: 50,

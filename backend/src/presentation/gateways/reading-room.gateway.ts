@@ -10,7 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger, UseFilters } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
@@ -38,6 +38,8 @@ import {
   ReadingRoomServerEvent,
   ReadingRoomClientEvent,
 } from './reading-room.events';
+import type { RoomSocket, SocketData } from './reading-room.types';
+import { WsUser } from './ws-user.decorator';
 import { UserRoleChangedEvent } from '@/application/users/events/user-role-changed.event';
 import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
 import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
@@ -52,22 +54,6 @@ import {
 } from '@/shared/domain/common-exceptions';
 
 import { EventNames } from '@/common/constants/event-names.constant';
-
-interface SocketData {
-  userId?: string;
-  role?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  roomId?: string;
-  bookId?: string;
-  chapterSlugToId?: Map<string, string | null>;
-  pendingProgress?: {
-    bookId: string;
-    chapterSlug: string;
-    progress: number;
-  };
-  progressTimer?: NodeJS.Timeout;
-}
 
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 
@@ -184,10 +170,12 @@ export class ReadingRoomGateway
             return next(new Error('too_many_connections'));
           }
 
-          (socket.data as SocketData).userId = userId;
-          (socket.data as SocketData).role = payload.role ?? 'user';
-          (socket.data as SocketData).displayName = payload.displayName;
-          (socket.data as SocketData).avatarUrl = payload.avatarUrl;
+          Object.assign(socket.data, {
+            userId,
+            role: payload.role ?? 'user',
+            displayName: payload.displayName,
+            avatarUrl: payload.avatarUrl,
+          });
           next();
         } catch {
           next(new Error('unauthorized'));
@@ -199,14 +187,13 @@ export class ReadingRoomGateway
   }
 
   private async saveReadingProgress(
-    socket: Socket,
+    socket: RoomSocket,
     bookId: string,
     chapterSlug: string,
     progress: number,
   ): Promise<void> {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId;
-    if (!userId) return;
+    const sd = socket.data;
+    const { userId } = sd;
 
     sd.chapterSlugToId ??= new Map<string, string | null>();
     const cache = sd.chapterSlugToId;
@@ -241,8 +228,8 @@ export class ReadingRoomGateway
     }
   }
 
-  private async flushProgress(socket: Socket) {
-    const sd = socket.data as SocketData;
+  private async flushProgress(socket: RoomSocket) {
+    const sd = socket.data;
     if (sd.progressTimer) {
       clearTimeout(sd.progressTimer);
       sd.progressTimer = undefined;
@@ -276,7 +263,8 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('add_highlight')
   async handleAddHighlight(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser() sd: SocketData,
     @MessageBody()
     body: {
       roomId: string;
@@ -285,8 +273,7 @@ export class ReadingRoomGateway
       content: string;
     },
   ) {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
+    const { userId, displayName = '', avatarUrl = '' } = sd;
 
     if (await this.isRateLimited(userId, 'add_highlight', 30)) {
       this.emitError(
@@ -297,8 +284,6 @@ export class ReadingRoomGateway
       return;
     }
     try {
-      const displayName = sd.displayName ?? '';
-      const avatarUrl = sd.avatarUrl ?? '';
       const command = new AddHighlightCommand(
         body.roomId,
         userId,
@@ -340,10 +325,10 @@ export class ReadingRoomGateway
 
   @SubscribeMessage(ReadingRoomClientEvent.REMOVE_HIGHLIGHT)
   async handleRemoveHighlight(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
     @MessageBody() body: { roomId: string; highlightId: string },
   ) {
-    const userId = (socket.data as SocketData).userId ?? '';
     try {
       const command = new RemoveHighlightCommand(
         body.roomId,
@@ -370,15 +355,14 @@ export class ReadingRoomGateway
 
   @SubscribeMessage(ReadingRoomClientEvent.GENERATE_HIGHLIGHT_INSIGHT)
   async handleGenerateHighlightInsight(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
     @MessageBody() body: { roomId: string; highlightId: string },
   ) {
     if (!this.isInRoom(socket, body.roomId)) {
       this.emitError(socket, 'NOT_IN_ROOM', 'Bạn chưa tham gia phòng này');
       return;
     }
-
-    const userId = (socket.data as SocketData).userId ?? '';
 
     // B3: Rate limit max 5/min cho insight
     if (await this.isRateLimited(userId, 'generate_insight', 5)) {
@@ -427,20 +411,15 @@ export class ReadingRoomGateway
     this.server.in(`user:${event.userId}`).disconnectSockets(true);
   }
 
-  handleConnection(socket: Socket) {
-    const userId = (socket.data as SocketData).userId;
-    if (userId) {
-      void socket.join(`user:${userId}`);
-    }
+  handleConnection(socket: RoomSocket) {
+    void socket.join(`user:${socket.data.userId}`);
   }
 
-  async handleDisconnect(@ConnectedSocket() socket: Socket) {
+  async handleDisconnect(@ConnectedSocket() socket: RoomSocket) {
     await this.flushProgress(socket);
-    const sd = socket.data as SocketData;
-    const userId = sd.userId;
-    const roomId = sd.roomId;
+    const { userId, roomId } = socket.data;
 
-    if (userId && roomId) {
+    if (roomId) {
       await this.presenceService.removePresence(roomId, userId);
       const roomPresences = await this.presenceService.getRoomPresences(roomId);
       this.server
@@ -451,12 +430,12 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('join_room')
   async handleJoinRoom(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser() sd: SocketData,
     @MessageBody()
     body: { roomCode: string; displayName: string; avatarUrl: string },
   ) {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
+    const userId = sd.userId;
 
     if (await this.isRateLimited(userId, 'join_room', 10)) {
       this.logger.warn(`Rate limit exceeded for join_room by ${userId}`);
@@ -593,11 +572,11 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('leave_room')
   async handleLeaveRoom(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser() sd: SocketData,
     @MessageBody() body: { roomId: string; newHostId?: string },
   ) {
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
+    const userId = sd.userId;
     const roomId = body.roomId;
 
     try {
@@ -648,7 +627,7 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('chapter_change')
   async handleChapterChange(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
     @MessageBody()
     body: {
       roomId: string;
@@ -657,7 +636,7 @@ export class ReadingRoomGateway
       chapterId?: string;
     },
   ) {
-    const userId = (socket.data as SocketData).userId ?? '';
+    const userId = socket.data.userId;
     try {
       const command = new ChangeChapterCommand(
         userId,
@@ -684,10 +663,10 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('change_mode')
   async handleChangeMode(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
     @MessageBody() body: { roomId: string; mode: 'sync' | 'free' },
   ) {
-    const userId = (socket.data as SocketData).userId ?? '';
+    const userId = socket.data.userId;
     try {
       const command = new ChangeRoomModeCommand(userId, body.roomId, body.mode);
       await this.changeRoomModeUseCase.execute(command);
@@ -704,10 +683,10 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('end_room')
   async handleEndRoom(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
     @MessageBody() body: { roomId: string },
   ) {
-    const userId = (socket.data as SocketData).userId ?? '';
+    const userId = socket.data.userId;
     try {
       const command = new EndRoomCommand(userId, body.roomId);
       await this.endRoomUseCase.execute(command);
@@ -730,10 +709,10 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('delete_room')
   async handleDeleteRoom(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
     @MessageBody() body: { roomId: string },
   ) {
-    const userId = (socket.data as SocketData).userId ?? '';
+    const userId = socket.data.userId;
     try {
       const command = new DeleteRoomCommand(userId, body.roomId);
       await this.deleteRoomUseCase.execute(command);
@@ -746,7 +725,7 @@ export class ReadingRoomGateway
   }
 
   private emitError(
-    socket: Socket,
+    socket: RoomSocket,
     code: string,
     defaultMsg: string,
     error?: unknown,
@@ -772,8 +751,8 @@ export class ReadingRoomGateway
     socket.emit(ReadingRoomServerEvent.ERROR, { code, message });
   }
 
-  private isInRoom(socket: Socket, roomId?: string): roomId is string {
-    const sd = socket.data as SocketData;
+  private isInRoom(socket: RoomSocket, roomId?: string): roomId is string {
+    const sd = socket.data;
     return (
       !!roomId && sd.roomId === roomId && socket.rooms.has(`room:${roomId}`)
     );
@@ -821,7 +800,8 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('heartbeat')
   async handleHeartbeat(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser() sd: SocketData,
     @MessageBody()
     body: {
       roomId: string;
@@ -836,10 +816,7 @@ export class ReadingRoomGateway
       return;
     }
 
-    const sd = socket.data as SocketData;
-    const userId = sd.userId ?? '';
-    const displayName = sd.displayName ?? '';
-    const avatarUrl = sd.avatarUrl ?? '';
+    const { userId, displayName = '', avatarUrl = '' } = sd;
 
     if (await this.isRateLimited(userId, 'heartbeat', 90)) return;
 
@@ -852,7 +829,7 @@ export class ReadingRoomGateway
         ? Math.max(0, Math.min(100, Math.round(Number(body.progress) || 0)))
         : undefined;
 
-    if (userId && displayName && sd.roomId) {
+    if (displayName && sd.roomId) {
       await this.presenceService.upsertPresence(sd.roomId, userId, {
         userId,
         displayName,
