@@ -284,70 +284,55 @@ export class ReadingRoomGateway
       );
       return;
     }
-    try {
-      const command = new AddHighlightCommand(
-        body.roomId,
-        userId,
-        body.chapterSlug,
-        body.paragraphId,
-        body.content,
-        displayName,
-        avatarUrl,
-      );
-      const room = await this.addHighlightUseCase.execute(command);
+    const command = new AddHighlightCommand(
+      body.roomId,
+      userId,
+      body.chapterSlug,
+      body.paragraphId,
+      body.content,
+      displayName,
+      avatarUrl,
+    );
+    const room = await this.addHighlightUseCase.execute(command);
 
-      const newHighlight = room.highlights[room.highlights.length - 1];
-      const authorName =
-        newHighlight.displayName || displayName || 'Thành viên';
-      const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
+    const newHighlight = room.highlights[room.highlights.length - 1];
+    const authorName = newHighlight.displayName || displayName || 'Thành viên';
+    const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
 
-      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
-        id: newHighlight.id,
+    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
+      id: newHighlight.id,
+      userId: newHighlight.userId,
+      displayName: authorName,
+      avatarUrl: authorAvatar,
+      chapterSlug: newHighlight.chapterSlug,
+      paragraphId: newHighlight.paragraphId,
+      content: newHighlight.content,
+      aiInsight: newHighlight.aiInsight,
+      createdAt: newHighlight.createdAt,
+      user: {
         userId: newHighlight.userId,
         displayName: authorName,
         avatarUrl: authorAvatar,
-        chapterSlug: newHighlight.chapterSlug,
-        paragraphId: newHighlight.paragraphId,
-        content: newHighlight.content,
-        aiInsight: newHighlight.aiInsight,
-        createdAt: newHighlight.createdAt,
-        user: {
-          userId: newHighlight.userId,
-          displayName: authorName,
-          avatarUrl: authorAvatar,
-        },
-      });
-    } catch (error: unknown) {
-      this.emitError(socket, 'HIGHLIGHT_FAILED', 'Highlight failed', error);
-    }
+      },
+    });
   }
 
   @SubscribeMessage(ReadingRoomClientEvent.REMOVE_HIGHLIGHT)
   async handleRemoveHighlight(
-    @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
     @MessageBody() body: { roomId: string; highlightId: string },
   ) {
-    try {
-      const command = new RemoveHighlightCommand(
-        body.roomId,
-        userId,
-        body.highlightId,
-      );
-      await this.removeHighlightUseCase.execute(command);
+    const command = new RemoveHighlightCommand(
+      body.roomId,
+      userId,
+      body.highlightId,
+    );
+    await this.removeHighlightUseCase.execute(command);
 
-      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, {
-        highlightId: body.highlightId,
-        removedBy: userId,
-      });
-    } catch (error: unknown) {
-      this.emitError(
-        socket,
-        'HIGHLIGHT_REMOVE_FAILED',
-        'Remove highlight failed',
-        error,
-      );
-    }
+    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, {
+      highlightId: body.highlightId,
+      removedBy: userId,
+    });
   }
 
   @SubscribeMessage(ReadingRoomClientEvent.GENERATE_HIGHLIGHT_INSIGHT)
@@ -371,23 +356,14 @@ export class ReadingRoomGateway
       return;
     }
 
-    try {
-      const command = new GenerateHighlightInsightCommand(
-        userId,
-        body.roomId,
-        body.highlightId,
-      );
-      // Generate AI Insight. The use-case will emit EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED
-      // which will then be broadcasted to the room.
-      await this.generateHighlightInsightUseCase.execute(command);
-    } catch (error: unknown) {
-      this.emitError(
-        socket,
-        'GENERATE_INSIGHT_FAILED',
-        'Generate insight failed',
-        error,
-      );
-    }
+    const command = new GenerateHighlightInsightCommand(
+      userId,
+      body.roomId,
+      body.highlightId,
+    );
+    // Generate AI Insight. The use-case will emit EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED
+    // which will then be broadcasted to the room.
+    await this.generateHighlightInsightUseCase.execute(command);
   }
 
   @OnEvent(EventNames.USER_ROLE_CHANGED)
@@ -578,48 +554,41 @@ export class ReadingRoomGateway
     const userId = sd.userId;
     const roomId = body.roomId;
 
-    try {
-      const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
-      const result = await this.leaveRoomUseCase.execute(command);
-      await this.presenceService.removePresence(roomId, userId);
+    const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
+    const result = await this.leaveRoomUseCase.execute(command);
+    await this.presenceService.removePresence(roomId, userId);
 
-      void socket.leave(`room:${roomId}`);
-      delete sd.roomId;
+    void socket.leave(`room:${roomId}`);
+    delete sd.roomId;
 
-      if (result.hostChanged && result.hostId) {
-        this.toRoom(roomId).emit(ReadingRoomServerEvent.HOST_CHANGED, {
-          newHostId: result.hostId,
-        });
-      }
-
-      if (result.modeChanged) {
-        this.toRoom(roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
-          mode: result.mode as 'sync' | 'free',
-          changedBy: 'system',
-        });
-      }
-
-      if (result.roomEnded) {
-        this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
-          endedBy: userId,
-        });
-      }
-
-      this.toRoom(roomId).emit(ReadingRoomServerEvent.MEMBER_LEFT, { userId });
-
-      const presences = await this.presenceService.getRoomPresences(roomId);
-      this.toRoom(roomId).emit(
-        ReadingRoomServerEvent.PRESENCE_UPDATE,
-        presences,
-      );
-    } catch (error: unknown) {
-      this.emitError(socket, 'LEAVE_FAILED', 'Leave failed', error);
+    if (result.hostChanged && result.hostId) {
+      this.toRoom(roomId).emit(ReadingRoomServerEvent.HOST_CHANGED, {
+        newHostId: result.hostId,
+      });
     }
+
+    if (result.modeChanged) {
+      this.toRoom(roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
+        mode: result.mode as 'sync' | 'free',
+        changedBy: 'system',
+      });
+    }
+
+    if (result.roomEnded) {
+      this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
+        endedBy: userId,
+      });
+    }
+
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.MEMBER_LEFT, { userId });
+
+    const presences = await this.presenceService.getRoomPresences(roomId);
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
   }
 
   @SubscribeMessage('chapter_change')
   async handleChapterChange(
-    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
     @MessageBody()
     body: {
       roomId: string;
@@ -628,88 +597,61 @@ export class ReadingRoomGateway
       chapterId?: string;
     },
   ) {
-    const userId = socket.data.userId;
-    try {
-      const command = new ChangeChapterCommand(
-        userId,
-        body.roomId,
-        body.chapterSlug,
-      );
-      await this.changeChapterUseCase.execute(command);
+    const command = new ChangeChapterCommand(
+      userId,
+      body.roomId,
+      body.chapterSlug,
+    );
+    await this.changeChapterUseCase.execute(command);
 
-      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
-        chapterSlug: body.chapterSlug,
-        byUserId: userId,
-      });
-    } catch (error: unknown) {
-      this.emitError(
-        socket,
-        'CHAPTER_CHANGE_FAILED',
-        'Chapter change failed',
-        error,
-      );
-    }
+    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
+      chapterSlug: body.chapterSlug,
+      byUserId: userId,
+    });
   }
 
   @SubscribeMessage('change_mode')
   async handleChangeMode(
-    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
     @MessageBody() body: { roomId: string; mode: 'sync' | 'free' },
   ) {
-    const userId = socket.data.userId;
-    try {
-      const command = new ChangeRoomModeCommand(userId, body.roomId, body.mode);
-      await this.changeRoomModeUseCase.execute(command);
-      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
-        mode: body.mode,
-        changedBy: userId,
-      });
-    } catch (error: unknown) {
-      this.emitError(socket, 'MODE_CHANGE_FAILED', 'Mode change failed', error);
-    }
+    const command = new ChangeRoomModeCommand(userId, body.roomId, body.mode);
+    await this.changeRoomModeUseCase.execute(command);
+    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
+      mode: body.mode,
+      changedBy: userId,
+    });
   }
 
   @SubscribeMessage('end_room')
   async handleEndRoom(
-    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
     @MessageBody() body: { roomId: string },
   ) {
-    const userId = socket.data.userId;
-    try {
-      const command = new EndRoomCommand(userId, body.roomId);
-      await this.endRoomUseCase.execute(command);
-      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
-        endedBy: userId,
-      });
+    const command = new EndRoomCommand(userId, body.roomId);
+    await this.endRoomUseCase.execute(command);
+    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
+      endedBy: userId,
+    });
 
-      const presences = await this.presenceService.getRoomPresences(
-        body.roomId,
-      );
-      await Promise.all(
-        presences.map((p) =>
-          this.presenceService.removePresence(body.roomId, p.userId),
-        ),
-      );
-    } catch (error: unknown) {
-      this.emitError(socket, 'END_ROOM_FAILED', 'End room failed', error);
-    }
+    const presences = await this.presenceService.getRoomPresences(body.roomId);
+    await Promise.all(
+      presences.map((p) =>
+        this.presenceService.removePresence(body.roomId, p.userId),
+      ),
+    );
   }
 
   @SubscribeMessage('delete_room')
   async handleDeleteRoom(
-    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
     @MessageBody() body: { roomId: string },
   ) {
-    const userId = socket.data.userId;
-    try {
-      const command = new DeleteRoomCommand(userId, body.roomId);
-      await this.deleteRoomUseCase.execute(command);
-      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_DELETED, {
-        deletedBy: userId,
-      });
-    } catch (error: unknown) {
-      this.emitError(socket, 'DELETE_ROOM_FAILED', 'Delete room failed', error);
-    }
+    const command = new DeleteRoomCommand(userId, body.roomId);
+    await this.deleteRoomUseCase.execute(command);
+    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_DELETED, {
+      deletedBy: userId,
+    });
   }
 
   /** Broadcast tới mọi socket trong phòng (kể cả người gửi). */
@@ -717,30 +659,7 @@ export class ReadingRoomGateway
     return this.server.to(`room:${roomId}`);
   }
 
-  private emitError(
-    socket: RoomSocket,
-    code: string,
-    defaultMsg: string,
-    error?: unknown,
-  ) {
-    let message = defaultMsg;
-    if (error instanceof ConcurrencyException) {
-      message = 'Dữ liệu vừa thay đổi từ người dùng khác, vui lòng thử lại';
-    } else if (error instanceof DomainException) {
-      message = error.message;
-    } else if (
-      error &&
-      typeof error === 'object' &&
-      'name' in error &&
-      String(error.name).endsWith('DomainException')
-    ) {
-      message = (error as Error).message;
-    } else if (error) {
-      this.logger.error(
-        `WS Error [${code}]`,
-        error instanceof Error ? error.stack : error,
-      );
-    }
+  private emitError(socket: RoomSocket, code: string, message: string) {
     socket.emit(ReadingRoomServerEvent.ERROR, { code, message });
   }
 

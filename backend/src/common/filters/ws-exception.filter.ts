@@ -3,6 +3,7 @@ import { BaseWsExceptionFilter, WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { ReadingRoomServerEvent } from '@/presentation/gateways/reading-room.events';
 import { DomainException } from '@/shared/domain/domain-exception.base';
+import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 
 @Catch()
 export class WsExceptionFilter extends BaseWsExceptionFilter {
@@ -25,9 +26,29 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
           ? response
           : (response as { message?: string }).message || exception.message;
       errorCode = exception.name;
+    } else if (exception instanceof ConcurrencyException) {
+      // Giữ nguyên văn bản OCC mà client từng thấy trên kênh error
+      errorMessage =
+        'Dữ liệu vừa thay đổi từ người dùng khác, vui lòng thử lại';
+      errorCode = exception.code;
     } else if (exception instanceof DomainException) {
       errorMessage = exception.message;
       errorCode = exception.code;
+    } else if (
+      exception &&
+      typeof exception === 'object' &&
+      'name' in exception &&
+      String(exception.name).endsWith('DomainException')
+    ) {
+      // Đối tượng domain "vịt" (không qua instanceof được, ví dụ qua allocation)
+      errorMessage =
+        'message' in exception && typeof exception.message === 'string'
+          ? exception.message
+          : errorMessage;
+      errorCode =
+        'code' in exception && typeof exception.code === 'string'
+          ? exception.code
+          : 'DOMAIN_ERROR';
     } else if (exception instanceof Error) {
       errorMessage = exception.message;
       errorCode = 'SERVER_ERROR';
