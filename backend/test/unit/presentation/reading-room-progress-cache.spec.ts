@@ -48,7 +48,10 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
       multi: jest.fn(() => ({
         set: jest.fn().mockReturnThis(),
         incr: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([['OK'], [1]]),
+        exec: jest.fn().mockResolvedValue([
+          [null, 'OK'],
+          [null, 1],
+        ]),
       })),
     };
 

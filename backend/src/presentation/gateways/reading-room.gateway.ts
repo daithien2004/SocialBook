@@ -763,7 +763,6 @@ export class ReadingRoomGateway
     event: string,
     maxPerMinute = 30,
   ): Promise<boolean> {
-    if (!userId) return false;
     const key = `rl:ws:${event}:${userId}`;
     try {
       const res = await this.redis
