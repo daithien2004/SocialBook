@@ -253,12 +253,13 @@ export class ReadingRoomGateway
     highlightId: string;
     insight: string;
   }) {
-    this.server
-      .to(`room:${payload.roomId}`)
-      .emit(ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT, {
+    this.toRoom(payload.roomId).emit(
+      ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT,
+      {
         highlightId: payload.highlightId,
         insight: payload.insight,
-      });
+      },
+    );
   }
 
   @SubscribeMessage('add_highlight')
@@ -300,24 +301,22 @@ export class ReadingRoomGateway
         newHighlight.displayName || displayName || 'Thành viên';
       const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
 
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
-          id: newHighlight.id,
+      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
+        id: newHighlight.id,
+        userId: newHighlight.userId,
+        displayName: authorName,
+        avatarUrl: authorAvatar,
+        chapterSlug: newHighlight.chapterSlug,
+        paragraphId: newHighlight.paragraphId,
+        content: newHighlight.content,
+        aiInsight: newHighlight.aiInsight,
+        createdAt: newHighlight.createdAt,
+        user: {
           userId: newHighlight.userId,
           displayName: authorName,
           avatarUrl: authorAvatar,
-          chapterSlug: newHighlight.chapterSlug,
-          paragraphId: newHighlight.paragraphId,
-          content: newHighlight.content,
-          aiInsight: newHighlight.aiInsight,
-          createdAt: newHighlight.createdAt,
-          user: {
-            userId: newHighlight.userId,
-            displayName: authorName,
-            avatarUrl: authorAvatar,
-          },
-        });
+        },
+      });
     } catch (error: unknown) {
       this.emitError(socket, 'HIGHLIGHT_FAILED', 'Highlight failed', error);
     }
@@ -337,12 +336,10 @@ export class ReadingRoomGateway
       );
       await this.removeHighlightUseCase.execute(command);
 
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, {
-          highlightId: body.highlightId,
-          removedBy: userId,
-        });
+      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, {
+        highlightId: body.highlightId,
+        removedBy: userId,
+      });
     } catch (error: unknown) {
       this.emitError(
         socket,
@@ -422,9 +419,10 @@ export class ReadingRoomGateway
     if (roomId) {
       await this.presenceService.removePresence(roomId, userId);
       const roomPresences = await this.presenceService.getRoomPresences(roomId);
-      this.server
-        .to(`room:${roomId}`)
-        .emit(ReadingRoomServerEvent.PRESENCE_UPDATE, roomPresences);
+      this.toRoom(roomId).emit(
+        ReadingRoomServerEvent.PRESENCE_UPDATE,
+        roomPresences,
+      );
     }
   }
 
@@ -477,9 +475,10 @@ export class ReadingRoomGateway
         userId,
         displayName,
       });
-      this.server
-        .to(`room:${roomId}`)
-        .emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
+      this.toRoom(roomId).emit(
+        ReadingRoomServerEvent.PRESENCE_UPDATE,
+        presences,
+      );
 
       return {
         ok: true,
@@ -588,38 +587,31 @@ export class ReadingRoomGateway
       delete sd.roomId;
 
       if (result.hostChanged && result.hostId) {
-        this.server
-          .to(`room:${roomId}`)
-          .emit(ReadingRoomServerEvent.HOST_CHANGED, {
-            newHostId: result.hostId,
-          });
+        this.toRoom(roomId).emit(ReadingRoomServerEvent.HOST_CHANGED, {
+          newHostId: result.hostId,
+        });
       }
 
       if (result.modeChanged) {
-        this.server
-          .to(`room:${roomId}`)
-          .emit(ReadingRoomServerEvent.MODE_CHANGED, {
-            mode: result.mode as 'sync' | 'free',
-            changedBy: 'system',
-          });
+        this.toRoom(roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
+          mode: result.mode as 'sync' | 'free',
+          changedBy: 'system',
+        });
       }
 
       if (result.roomEnded) {
-        this.server
-          .to(`room:${roomId}`)
-          .emit(ReadingRoomServerEvent.ROOM_ENDED, {
-            endedBy: userId,
-          });
+        this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
+          endedBy: userId,
+        });
       }
 
-      this.server
-        .to(`room:${roomId}`)
-        .emit(ReadingRoomServerEvent.MEMBER_LEFT, { userId });
+      this.toRoom(roomId).emit(ReadingRoomServerEvent.MEMBER_LEFT, { userId });
 
       const presences = await this.presenceService.getRoomPresences(roomId);
-      this.server
-        .to(`room:${roomId}`)
-        .emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
+      this.toRoom(roomId).emit(
+        ReadingRoomServerEvent.PRESENCE_UPDATE,
+        presences,
+      );
     } catch (error: unknown) {
       this.emitError(socket, 'LEAVE_FAILED', 'Leave failed', error);
     }
@@ -645,12 +637,10 @@ export class ReadingRoomGateway
       );
       await this.changeChapterUseCase.execute(command);
 
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
-          chapterSlug: body.chapterSlug,
-          byUserId: userId,
-        });
+      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
+        chapterSlug: body.chapterSlug,
+        byUserId: userId,
+      });
     } catch (error: unknown) {
       this.emitError(
         socket,
@@ -670,12 +660,10 @@ export class ReadingRoomGateway
     try {
       const command = new ChangeRoomModeCommand(userId, body.roomId, body.mode);
       await this.changeRoomModeUseCase.execute(command);
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.MODE_CHANGED, {
-          mode: body.mode,
-          changedBy: userId,
-        });
+      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
+        mode: body.mode,
+        changedBy: userId,
+      });
     } catch (error: unknown) {
       this.emitError(socket, 'MODE_CHANGE_FAILED', 'Mode change failed', error);
     }
@@ -690,9 +678,9 @@ export class ReadingRoomGateway
     try {
       const command = new EndRoomCommand(userId, body.roomId);
       await this.endRoomUseCase.execute(command);
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.ROOM_ENDED, { endedBy: userId });
+      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
+        endedBy: userId,
+      });
 
       const presences = await this.presenceService.getRoomPresences(
         body.roomId,
@@ -716,12 +704,17 @@ export class ReadingRoomGateway
     try {
       const command = new DeleteRoomCommand(userId, body.roomId);
       await this.deleteRoomUseCase.execute(command);
-      this.server
-        .to(`room:${body.roomId}`)
-        .emit(ReadingRoomServerEvent.ROOM_DELETED, { deletedBy: userId });
+      this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_DELETED, {
+        deletedBy: userId,
+      });
     } catch (error: unknown) {
       this.emitError(socket, 'DELETE_ROOM_FAILED', 'Delete room failed', error);
     }
+  }
+
+  /** Broadcast tới mọi socket trong phòng (kể cả người gửi). */
+  private toRoom(roomId: string) {
+    return this.server.to(`room:${roomId}`);
   }
 
   private emitError(
@@ -784,9 +777,10 @@ export class ReadingRoomGateway
       this.presenceService
         .getRoomPresences(roomId)
         .then((presences) => {
-          this.server
-            .to(`room:${roomId}`)
-            .emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
+          this.toRoom(roomId).emit(
+            ReadingRoomServerEvent.PRESENCE_UPDATE,
+            presences,
+          );
         })
         .catch((error: unknown) => {
           this.logger.error(
@@ -857,10 +851,8 @@ export class ReadingRoomGateway
 
   @OnEvent(EventNames.READING_ROOM_REACTIVATED)
   handleRoomReactivated(payload: { roomId: string; reactivatedBy: string }) {
-    this.server
-      .to(`room:${payload.roomId}`)
-      .emit(ReadingRoomServerEvent.ROOM_REACTIVATED, {
-        reactivatedBy: payload.reactivatedBy,
-      });
+    this.toRoom(payload.roomId).emit(ReadingRoomServerEvent.ROOM_REACTIVATED, {
+      reactivatedBy: payload.reactivatedBy,
+    });
   }
 }
