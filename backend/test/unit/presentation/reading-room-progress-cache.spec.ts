@@ -11,15 +11,21 @@ type SocketDataLike = {
   progressTimer?: NodeJS.Timeout;
 };
 
-type FakeSocket = { data: SocketDataLike; rooms: Set<string> };
+type FakeSocket = {
+  data: SocketDataLike;
+  rooms: Set<string>;
+  leave: jest.Mock;
+};
 
 describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
   let gateway: ReadingRoomGateway;
   let chapterRepository: { findBySlug: jest.Mock };
   let updateProgress: { execute: jest.Mock };
+  let leaveRoom: { execute: jest.Mock };
   let presenceService: {
     upsertPresence: jest.Mock;
     getRoomPresences: jest.Mock;
+    removePresence: jest.Mock;
   };
   let socket: FakeSocket;
 
@@ -38,9 +44,17 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
 
     chapterRepository = { findBySlug: jest.fn() };
     updateProgress = { execute: jest.fn().mockResolvedValue({}) };
+    leaveRoom = {
+      execute: jest.fn().mockResolvedValue({
+        hostChanged: false,
+        modeChanged: false,
+        roomEnded: false,
+      }),
+    };
     presenceService = {
       upsertPresence: jest.fn().mockResolvedValue(undefined),
       getRoomPresences: jest.fn().mockResolvedValue([]),
+      removePresence: jest.fn().mockResolvedValue(undefined),
     };
 
     const redis = {
@@ -60,7 +74,7 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
       {} as never, // ConfigService
       presenceService as never,
       {} as never, // JoinRoomUseCase
-      {} as never, // LeaveRoomUseCase
+      leaveRoom as never, // LeaveRoomUseCase
       {} as never, // ChangeChapterUseCase
       {} as never, // ChangeRoomModeUseCase
       {} as never, // EndRoomUseCase
@@ -85,6 +99,7 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
         bookId: 'book-1',
       },
       rooms: new Set(['room:room-1']),
+      leave: jest.fn(),
     };
   });
 
@@ -158,6 +173,35 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
     expect(cache?.get('__proto__')).toBeNull();
     // Không ghi nhầm vào prototype của bất kỳ object nào
     expect(Object.getPrototypeOf(cache as object)).toBe(Map.prototype);
+  });
+
+  it('flushes pending progress when the user leaves the room', async () => {
+    chapterRepository.findBySlug.mockResolvedValue({
+      id: { toString: () => 'chapter-1' },
+    });
+
+    await gateway.handleHeartbeat(socket as never, socket.data as never, {
+      roomId: 'room-1',
+      chapterSlug: 'chuong-1',
+      progress: 55,
+    });
+    // Timer 10s chưa bắn → chưa lưu
+    expect(updateProgress.execute).not.toHaveBeenCalled();
+
+    await gateway.handleLeaveRoom(socket as never, socket.data as never, {
+      roomId: 'room-1',
+    });
+
+    // flush ngay khi rời phòng, không để mất tiến độ
+    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
+    expect(updateProgress.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ progress: 55, monotonic: true }),
+    );
+
+    // Timer đã được dọn — advance thêm cũng không lưu thêm lần nữa
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
+    expect(leaveRoom.execute).toHaveBeenCalledTimes(1);
   });
 
   it('keeps per-slug lookups independent (bad slug does not poison a good one)', async () => {

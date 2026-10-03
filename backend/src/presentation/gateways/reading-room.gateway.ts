@@ -554,6 +554,9 @@ export class ReadingRoomGateway
     const userId = sd.userId;
     const roomId = body.roomId;
 
+    // Lưu ngay tiến độ đọc dở (không để timer 10s chạy sau khi đã rời phòng)
+    await this.flushProgress(socket);
+
     const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
     const result = await this.leaveRoomUseCase.execute(command);
     await this.presenceService.removePresence(roomId, userId);
