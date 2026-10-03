@@ -319,9 +319,15 @@ export class ReadingRoomGateway
 
   @SubscribeMessage(ReadingRoomClientEvent.REMOVE_HIGHLIGHT)
   async handleRemoveHighlight(
+    @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
     @MessageBody() body: { roomId: string; highlightId: string },
   ) {
+    if (!this.isInRoom(socket, body.roomId)) {
+      this.emitError(socket, 'NOT_IN_ROOM', 'Bạn chưa tham gia phòng này');
+      return;
+    }
+
     const command = new RemoveHighlightCommand(
       body.roomId,
       userId,
