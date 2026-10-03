@@ -14,10 +14,14 @@ export interface SocketData {
   avatarUrl?: string;
   roomId?: string;
   bookId?: string;
-  chapterSlugToId?: Map<string, string | null>;
+  /**
+   * chapterId → bookId đã xác minh. Lưu kèm bookId chứ không lưu chapterId
+   * đơn thuần để không dùng nhầm khi user đổi sang phòng của sách khác.
+   */
+  verifiedChapters?: Map<string, string>;
   pendingProgress?: {
     bookId: string;
-    chapterSlug: string;
+    chapterId: string;
     progress: number;
   };
   progressTimer?: NodeJS.Timeout;

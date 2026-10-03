@@ -44,7 +44,7 @@ import { UserRoleChangedEvent } from '@/application/users/events/user-role-chang
 import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
 import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
+import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import {
   DomainException,
   NotFoundDomainException,
@@ -56,6 +56,13 @@ import {
 import { EventNames } from '@/common/constants/event-names.constant';
 
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
+
+const OBJECT_ID_PATTERN = /^[0-9a-f]{24}$/i;
+
+// Chặn ở biên trước khi chạm vào Mongoose: `findById` ném CastError khi
+// gặp chuỗi không phải ObjectId.
+const isObjectId = (value: unknown): value is string =>
+  typeof value === 'string' && OBJECT_ID_PATTERN.test(value);
 
 @WebSocketGateway({
   namespace: '/reading-rooms',
@@ -189,34 +196,35 @@ export class ReadingRoomGateway
   private async saveReadingProgress(
     socket: RoomSocket,
     bookId: string,
-    chapterSlug: string,
+    chapterId: string,
     progress: number,
   ): Promise<void> {
     const sd = socket.data;
     const { userId } = sd;
 
-    sd.chapterSlugToId ??= new Map<string, string | null>();
-    const cache = sd.chapterSlugToId;
-    let chapterId: string | null | undefined;
-
-    if (cache.has(chapterSlug)) {
-      // Đã từng hỏi: cả kết quả "không tồn tại" (cache âm) cũng được nhớ lại
-      chapterId = cache.get(chapterSlug);
-    } else {
-      try {
-        const chapter = await this.chapterRepository.findBySlug(
-          chapterSlug,
-          ChapterBookId.create(bookId),
+    // chapterId là dữ liệu client gửi lên, không phải giá trị server tự sinh ra.
+    // Phải xác minh nó thuộc đúng cuốn sách của phòng trước khi ghi, nếu không
+    // user có thể ghi progress của mình sang chương thuộc sách khác.
+    sd.verifiedChapters ??= new Map<string, string>();
+    if (sd.verifiedChapters.get(chapterId) !== bookId) {
+      const chapter = await this.chapterRepository.findById(
+        ChapterId.create(chapterId),
+      );
+      if (!chapter) {
+        this.logger.warn(
+          `Skip progress: chapter ${chapterId} not found (user ${userId}, book ${bookId})`,
         );
-        chapterId = chapter ? chapter.id.toString() : null;
-        cache.set(chapterSlug, chapterId);
-      } catch {
-        // Lỗi DB là tạm thời — không cache để lần flush sau thử lại
         return;
       }
+      if (chapter.bookId.toString() !== bookId) {
+        this.logger.warn(
+          `Skip progress: chapter ${chapterId} does not belong to book ${bookId} (user ${userId})`,
+        );
+        return;
+      }
+      sd.verifiedChapters.set(chapterId, bookId);
     }
 
-    if (!chapterId) return;
     try {
       await this.updateProgressUseCase.execute(
         new UpdateProgressCommand(userId, bookId, chapterId, progress, true),
@@ -241,7 +249,7 @@ export class ReadingRoomGateway
       await this.saveReadingProgress(
         socket,
         pending.bookId,
-        pending.chapterSlug,
+        pending.chapterId,
         pending.progress,
       ).catch((e) => this.logger.warn(`Flush progress error: ${e}`));
     }
@@ -727,9 +735,9 @@ export class ReadingRoomGateway
     body: {
       roomId: string;
       chapterSlug: string;
+      chapterId?: string;
       paragraphId?: string;
       progress?: number;
-      bookId?: string;
     },
   ) {
     if (!this.isInRoom(socket, body.roomId)) {
@@ -742,6 +750,7 @@ export class ReadingRoomGateway
     if (await this.isRateLimited(userId, 'heartbeat', 90)) return;
 
     const chapterSlug = String(body.chapterSlug || '').slice(0, 200);
+    const chapterId = isObjectId(body.chapterId) ? body.chapterId : undefined;
     const paragraphId = body.paragraphId
       ? String(body.paragraphId).slice(0, 100)
       : undefined;
@@ -760,10 +769,10 @@ export class ReadingRoomGateway
         progress: progress,
       });
 
-      if (sd.bookId && progress !== undefined) {
+      if (sd.bookId && chapterId && progress !== undefined) {
         sd.pendingProgress = {
           bookId: sd.bookId,
-          chapterSlug: chapterSlug,
+          chapterId: chapterId,
           progress: progress,
         };
         sd.progressTimer ??= setTimeout(() => {

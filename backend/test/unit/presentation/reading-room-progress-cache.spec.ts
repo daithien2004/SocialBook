@@ -1,25 +1,18 @@
 import { ReadingRoomGateway } from '@/presentation/gateways/reading-room.gateway';
+import type { SocketData } from '@/presentation/gateways/reading-room.types';
 
-type SocketDataLike = {
-  userId?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  roomId?: string;
-  bookId?: string;
-  chapterSlugToId?: Map<string, string | null>;
-  pendingProgress?: unknown;
-  progressTimer?: NodeJS.Timeout;
-};
+const CHAPTER_ID = '66f1a2b3c4d5e6f7a8b9c0d1';
+const OTHER_BOOK_ID = '66f1a2b3c4d5e6f7a8b9c0d2';
 
 type FakeSocket = {
-  data: SocketDataLike;
+  data: SocketData;
   rooms: Set<string>;
   leave: jest.Mock;
 };
 
-describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
+describe('ReadingRoomGateway reading progress (chapterId path)', () => {
   let gateway: ReadingRoomGateway;
-  let chapterRepository: { findBySlug: jest.Mock };
+  let chapterRepository: { findById: jest.Mock };
   let updateProgress: { execute: jest.Mock };
   let leaveRoom: { execute: jest.Mock };
   let presenceService: {
@@ -28,21 +21,23 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
     removePresence: jest.Mock;
   };
   let socket: FakeSocket;
+  let warn: jest.SpyInstance;
 
-  const heartbeat = async (chapterSlug: string): Promise<void> => {
-    await gateway.handleHeartbeat(socket as never, socket.data as never, {
+  const heartbeat = async (overrides: Record<string, unknown> = {}) => {
+    await gateway.handleHeartbeat(socket as never, socket.data, {
       roomId: 'room-1',
-      chapterSlug,
+      chapterSlug: 'chuong-1',
+      chapterId: CHAPTER_ID,
       progress: 50,
+      ...overrides,
     });
-    // Chờ debounce 10s của progress timer
     await jest.advanceTimersByTimeAsync(10_000);
   };
 
   beforeEach(() => {
     jest.useFakeTimers();
 
-    chapterRepository = { findBySlug: jest.fn() };
+    chapterRepository = { findById: jest.fn() };
     updateProgress = { execute: jest.fn().mockResolvedValue({}) };
     leaveRoom = {
       execute: jest.fn().mockResolvedValue({
@@ -90,9 +85,14 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
       to: jest.fn(() => ({ emit: jest.fn() })),
     } as never;
 
+    warn = jest
+      .spyOn(gateway['logger'], 'warn')
+      .mockImplementation(() => undefined);
+
     socket = {
       data: {
         userId: 'user-1',
+        role: 'user',
         displayName: 'User One',
         avatarUrl: '',
         roomId: 'room-1',
@@ -104,98 +104,183 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
   });
 
   afterEach(() => {
+    warn.mockRestore();
     jest.useRealTimers();
   });
 
-  it('queries the DB only once for a slug that does not exist (negative cache)', async () => {
-    chapterRepository.findBySlug.mockResolvedValue(null);
-
-    await heartbeat('chuong-khong-ton-tai');
-    await heartbeat('chuong-khong-ton-tai');
-    await heartbeat('chuong-khong-ton-tai');
-
-    expect(chapterRepository.findBySlug).toHaveBeenCalledTimes(1);
-    // Không có chapterId → không được gọi lưu tiến độ
-    expect(updateProgress.execute).not.toHaveBeenCalled();
-  });
-
-  it('still resolves a valid slug only once while saving progress on every flush', async () => {
-    chapterRepository.findBySlug.mockResolvedValue({
-      id: { toString: () => 'chapter-1' },
+  it('saves progress using the chapterId the client sent', async () => {
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => 'book-1' },
     });
 
-    await heartbeat('chuong-1');
-    await heartbeat('chuong-1');
+    await heartbeat();
 
-    expect(chapterRepository.findBySlug).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).toHaveBeenCalledTimes(2);
+    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
+    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
     expect(updateProgress.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'user-1',
         bookId: 'book-1',
-        chapterId: 'chapter-1',
+        chapterId: CHAPTER_ID,
         progress: 50,
         monotonic: true,
       }),
     );
   });
 
-  it('does not cache a transient DB error — the next flush must retry', async () => {
-    chapterRepository.findBySlug
-      .mockRejectedValueOnce(new Error('db down'))
-      .mockResolvedValueOnce({ id: { toString: () => 'chapter-2' } });
+  it('verifies the chapter once and reuses the cache on later flushes', async () => {
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => 'book-1' },
+    });
 
-    await heartbeat('chuong-2');
-    // Lỗi DB: không lưu tiến độ, không cache
-    expect(chapterRepository.findBySlug).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).not.toHaveBeenCalled();
+    await heartbeat();
+    await heartbeat();
+    await heartbeat();
 
-    await heartbeat('chuong-2');
-    expect(chapterRepository.findBySlug).toHaveBeenCalledTimes(2);
+    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
+    expect(updateProgress.execute).toHaveBeenCalledTimes(3);
+  });
+
+  it('re-verifies when the socket moves to a room holding another book', async () => {
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => 'book-1' },
+    });
+
+    await heartbeat();
+    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
+
+    socket.data.bookId = 'book-2';
+    await heartbeat();
+
+    // Cache lưu chapterId → book-1, nên book-2 phải được xác minh lại
+    expect(chapterRepository.findById).toHaveBeenCalledTimes(2);
     expect(updateProgress.execute).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ chapterId: 'chapter-2' }),
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('does not belong to book book-2'),
     );
   });
 
-  it('treats the reserved key "__proto__" as a plain slug (Map, not object literal)', async () => {
-    chapterRepository.findBySlug.mockResolvedValue(null);
+  it('does not cache a failed verification — the next flush retries', async () => {
+    chapterRepository.findById
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: { toString: () => CHAPTER_ID },
+        bookId: { toString: () => 'book-1' },
+      });
 
-    await heartbeat('__proto__');
-    await heartbeat('__proto__');
-
-    expect(chapterRepository.findBySlug).toHaveBeenCalledTimes(1);
+    await heartbeat();
+    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
     expect(updateProgress.execute).not.toHaveBeenCalled();
 
-    const cache = socket.data.chapterSlugToId;
-    expect(cache).toBeInstanceOf(Map);
-    expect(cache?.size).toBe(1);
-    expect(cache?.get('__proto__')).toBeNull();
-    // Không ghi nhầm vào prototype của bất kỳ object nào
-    expect(Object.getPrototypeOf(cache as object)).toBe(Map.prototype);
+    await heartbeat();
+    expect(chapterRepository.findById).toHaveBeenCalledTimes(2);
+    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses a chapterId that belongs to another book', async () => {
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => OTHER_BOOK_ID },
+    });
+
+    await heartbeat();
+
+    expect(updateProgress.execute).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('does not belong to book book-1'),
+    );
+  });
+
+  it('refuses a chapterId that does not exist', async () => {
+    chapterRepository.findById.mockResolvedValue(null);
+
+    await heartbeat();
+
+    expect(updateProgress.execute).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('not found'));
+  });
+
+  it('never queries the DB for a chapterId that is not a valid ObjectId', async () => {
+    await heartbeat({ chapterId: 'chuong-1' });
+    expect(chapterRepository.findById).not.toHaveBeenCalled();
+    expect(updateProgress.execute).not.toHaveBeenCalled();
+
+    await heartbeat({ chapterId: undefined });
+    expect(chapterRepository.findById).not.toHaveBeenCalled();
+    expect(updateProgress.execute).not.toHaveBeenCalled();
+
+    await heartbeat({ chapterId: '__proto__' });
+    expect(chapterRepository.findById).not.toHaveBeenCalled();
+    expect(updateProgress.execute).not.toHaveBeenCalled();
+  });
+
+  it('still broadcasts presence when chapterId is unusable', async () => {
+    await heartbeat({ chapterId: 'not-an-object-id' });
+
+    expect(presenceService.upsertPresence).toHaveBeenCalledWith(
+      'room-1',
+      'user-1',
+      expect.objectContaining({ currentChapterSlug: 'chuong-1' }),
+    );
+  });
+
+  it('logs but does not throw when the progress write fails', async () => {
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => 'book-1' },
+    });
+    updateProgress.execute.mockRejectedValue(new Error('write failed'));
+    const error = jest
+      .spyOn(gateway['logger'], 'error')
+      .mockImplementation(() => undefined);
+
+    await expect(
+      gateway.handleHeartbeat(socket as never, socket.data as never, {
+        roomId: 'room-1',
+        chapterSlug: 'chuong-1',
+        chapterId: CHAPTER_ID,
+        progress: 50,
+      }),
+    ).resolves.toBeUndefined();
+
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to save reading progress'),
+    );
+
+    error.mockRestore();
   });
 
   it('flushes pending progress when the user leaves the room', async () => {
-    chapterRepository.findBySlug.mockResolvedValue({
-      id: { toString: () => 'chapter-1' },
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => 'book-1' },
     });
 
-    await gateway.handleHeartbeat(socket as never, socket.data as never, {
+    await gateway.handleHeartbeat(socket as never, socket.data, {
       roomId: 'room-1',
       chapterSlug: 'chuong-1',
+      chapterId: CHAPTER_ID,
       progress: 55,
     });
     // Timer 10s chưa bắn → chưa lưu
     expect(updateProgress.execute).not.toHaveBeenCalled();
 
-    await gateway.handleLeaveRoom(socket as never, socket.data as never, {
+    await gateway.handleLeaveRoom(socket as never, socket.data, {
       roomId: 'room-1',
     });
 
     // flush ngay khi rời phòng, không để mất tiến độ
     expect(updateProgress.execute).toHaveBeenCalledTimes(1);
     expect(updateProgress.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ progress: 55, monotonic: true }),
+      expect.objectContaining({
+        chapterId: CHAPTER_ID,
+        progress: 55,
+        monotonic: true,
+      }),
     );
 
     // Timer đã được dọn — advance thêm cũng không lưu thêm lần nữa
@@ -204,20 +289,38 @@ describe('ReadingRoomGateway progress slug cache (negative cache)', () => {
     expect(leaveRoom.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps per-slug lookups independent (bad slug does not poison a good one)', async () => {
-    chapterRepository.findBySlug.mockImplementation((slug: string) =>
-      Promise.resolve(
-        slug === 'chuong-1' ? { id: { toString: () => 'chapter-1' } } : null,
-      ),
-    );
+  it('flushes pending progress on disconnect', async () => {
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => 'book-1' },
+    });
 
-    await heartbeat('chuong-xo');
-    await heartbeat('chuong-1');
+    await gateway.handleHeartbeat(socket as never, socket.data, {
+      roomId: 'room-1',
+      chapterSlug: 'chuong-1',
+      chapterId: CHAPTER_ID,
+      progress: 70,
+    });
+    expect(updateProgress.execute).not.toHaveBeenCalled();
 
-    expect(chapterRepository.findBySlug).toHaveBeenCalledTimes(2);
+    await gateway.handleDisconnect(socket as never);
+
     expect(updateProgress.execute).toHaveBeenCalledTimes(1);
     expect(updateProgress.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ chapterId: 'chapter-1' }),
+      expect.objectContaining({ chapterId: CHAPTER_ID, progress: 70 }),
     );
+  });
+
+  it('does not leave the old slug cache on socket data', async () => {
+    chapterRepository.findById.mockResolvedValue({
+      id: { toString: () => CHAPTER_ID },
+      bookId: { toString: () => 'book-1' },
+    });
+
+    await heartbeat();
+
+    expect(socket.data).not.toHaveProperty('chapterSlugToId');
+    expect(socket.data.verifiedChapters).toBeInstanceOf(Map);
+    expect(socket.data.verifiedChapters?.get(CHAPTER_ID)).toBe('book-1');
   });
 });
