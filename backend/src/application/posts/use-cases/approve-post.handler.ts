@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -7,8 +7,8 @@ import { IPostRepository } from '@/domain/posts/repositories/post.repository.int
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { ApprovePostCommand } from './approve-post.command';
 
-@Injectable()
-export class ApprovePostUseCase {
+@CommandHandler(ApprovePostCommand)
+export class ApprovePostHandler implements ICommandHandler<ApprovePostCommand, { success: boolean; message: string; }> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(command: ApprovePostCommand) {

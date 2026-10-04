@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   ForbiddenDomainException,
@@ -11,9 +12,9 @@ import { RemovePostImageCommand } from './remove-post-image.command';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class RemovePostImageUseCase {
-  private readonly logger = new Logger(RemovePostImageUseCase.name);
+@CommandHandler(RemovePostImageCommand)
+export class RemovePostImageHandler implements ICommandHandler<RemovePostImageCommand, { imageUrls: string[]; }> {
+  private readonly logger = new Logger(RemovePostImageHandler.name);
 
   constructor(
     private readonly postRepository: IPostRepository,

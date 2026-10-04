@@ -1,11 +1,11 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { Injectable } from '@nestjs/common';
 import { GetPostsQuery } from './get-posts.query';
 
-@Injectable()
-export class GetPostsUseCase {
+@QueryHandler(GetPostsQuery)
+export class GetPostsHandler implements IQueryHandler<GetPostsQuery, CursorPaginatedResult<Post>> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(query: GetPostsQuery): Promise<CursorPaginatedResult<Post>> {

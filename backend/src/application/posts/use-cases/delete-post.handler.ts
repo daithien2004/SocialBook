@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   ForbiddenDomainException,
   NotFoundDomainException,
@@ -10,8 +10,8 @@ import { DeletePostCommand } from './delete-post.command';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class DeletePostUseCase {
+@CommandHandler(DeletePostCommand)
+export class DeletePostHandler implements ICommandHandler<DeletePostCommand, void> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(command: DeletePostCommand): Promise<void> {

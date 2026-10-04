@@ -2,7 +2,8 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { UnrecoverableError } from 'bullmq';
-import { ProcessPostModerationUseCase } from '@/application/posts/use-cases/process-post-moderation.use-case';
+import { CommandBus } from '@nestjs/cqrs';
+import { ProcessPostModerationCommand } from '@/application/posts/use-cases/process-post-moderation.handler';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { getErrorMessage } from '@/common/utils/error.util';
 
@@ -23,7 +24,7 @@ export class PostModerationProcessor extends WorkerHost {
   private readonly logger = new Logger(PostModerationProcessor.name);
 
   constructor(
-    private readonly processPostModerationUseCase: ProcessPostModerationUseCase,
+    private readonly commandBus: CommandBus,
     private readonly postRepository: IPostRepository,
   ) {
     super();
@@ -43,7 +44,7 @@ export class PostModerationProcessor extends WorkerHost {
 
     // Một lần gọi duy nhất. Nếu lỗi mạng/timeout → throw → BullMQ tự retry
     // với exponential backoff (tránh dội thêm lần vào AI provider đang bận).
-    await this.processPostModerationUseCase.execute({ postId, content });
+    await this.commandBus.execute(new ProcessPostModerationCommand(postId, content));
   }
 
   /**

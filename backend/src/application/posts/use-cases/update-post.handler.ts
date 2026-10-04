@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   ForbiddenDomainException,
   NotFoundDomainException,
@@ -14,8 +14,8 @@ import { UpdatePostCommand } from './update-post.command';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class UpdatePostUseCase {
+@CommandHandler(UpdatePostCommand)
+export class UpdatePostHandler implements ICommandHandler<UpdatePostCommand, { post: Post; moderationMessage?: string }> {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly mediaService: IMediaPort,
@@ -25,7 +25,6 @@ export class UpdatePostUseCase {
 
   async execute(
     command: UpdatePostCommand,
-    files?: Express.Multer.File[],
   ): Promise<{ post: Post; moderationMessage?: string }> {
     const post = await this.postRepository.findById(command.postId);
     if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
@@ -64,8 +63,8 @@ export class UpdatePostUseCase {
       post.updateImages(urls);
     }
 
-    if (files && files.length > 0) {
-      const newImageUrls = await this.mediaService.uploadMultipleImages(files);
+    if (command.files && command.files.length > 0) {
+      const newImageUrls = await this.mediaService.uploadMultipleImages(command.files);
       post.updateImages([...post.imageUrls, ...newImageUrls]);
     }
 

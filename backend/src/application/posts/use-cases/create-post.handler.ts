@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   NotFoundDomainException,
@@ -15,8 +15,8 @@ import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/
 import { IPostModerationPort } from '@/domain/posts/interfaces/post-moderation.port';
 import { EventNames } from '@/common/constants/event-names.constant';
 
-@Injectable()
-export class CreatePostUseCase {
+@CommandHandler(CreatePostCommand)
+export class CreatePostHandler implements ICommandHandler<CreatePostCommand, { post: Post; moderationMessage?: string }> {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly mediaService: IMediaPort,
@@ -28,7 +28,6 @@ export class CreatePostUseCase {
 
   async execute(
     command: CreatePostCommand,
-    files?: Express.Multer.File[],
   ): Promise<{ post: Post; moderationMessage?: string }> {
     // Validate Book
     const bookExists = await this.bookRepository.existsById(command.bookId);
@@ -45,8 +44,8 @@ export class CreatePostUseCase {
 
     // Upload Images
     let imageUrls: string[] = [];
-    if (files && files.length > 0) {
-      imageUrls = await this.mediaService.uploadMultipleImages(files);
+    if (command.files && command.files.length > 0) {
+      imageUrls = await this.mediaService.uploadMultipleImages(command.files);
     }
 
     // Create and save the post immediately (PENDING status — visible to user)

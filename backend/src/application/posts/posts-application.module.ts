@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ApprovePostUseCase } from './use-cases/approve-post.use-case';
-import { CreatePostUseCase } from './use-cases/create-post.use-case';
-import { DeletePostUseCase } from './use-cases/delete-post.use-case';
-import { GetFlaggedPostsUseCase } from './use-cases/get-flagged-posts.use-case';
-import { GetPostUseCase } from './use-cases/get-post.use-case';
-import { GetModerationStatsUseCase } from './use-cases/get-moderation-stats.use-case';
-import { GetPostsByUserUseCase } from './use-cases/get-posts-by-user.use-case';
-import { GetPostsUseCase } from './use-cases/get-posts.use-case';
-import { RejectPostUseCase } from './use-cases/reject-post.use-case';
-import { RemovePostImageUseCase } from './use-cases/remove-post-image.use-case';
-import { UpdatePostUseCase } from './use-cases/update-post.use-case';
-import { ProcessPostModerationUseCase } from './use-cases/process-post-moderation.use-case';
+import { ApprovePostHandler } from './use-cases/approve-post.handler';
+import { CreatePostHandler } from './use-cases/create-post.handler';
+import { DeletePostHandler } from './use-cases/delete-post.handler';
+import { GetFlaggedPostsHandler } from './use-cases/get-flagged-posts.handler';
+import { GetPostHandler } from './use-cases/get-post.handler';
+import { GetModerationStatsHandler } from './use-cases/get-moderation-stats.handler';
+import { GetPostsByUserHandler } from './use-cases/get-posts-by-user.handler';
+import { GetPostsHandler } from './use-cases/get-posts.handler';
+import { RejectPostHandler } from './use-cases/reject-post.handler';
+import { RemovePostImageHandler } from './use-cases/remove-post-image.handler';
+import { UpdatePostHandler } from './use-cases/update-post.handler';
+import { ProcessPostModerationHandler } from './use-cases/process-post-moderation.handler';
 import { PostModerationService } from './services/post-moderation.service';
 import { PostsRepositoryModule } from '@/infrastructure/database/repositories/posts/posts-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
@@ -33,33 +33,33 @@ import { QueueModule } from '@/infrastructure/queue/queue.module';
     QueueModule,
   ],
   providers: [
-    ApprovePostUseCase,
-    CreatePostUseCase,
-    DeletePostUseCase,
-    GetFlaggedPostsUseCase,
-    GetModerationStatsUseCase,
-    GetPostUseCase,
-    GetPostsByUserUseCase,
-    GetPostsUseCase,
-    RejectPostUseCase,
-    RemovePostImageUseCase,
-    UpdatePostUseCase,
-    ProcessPostModerationUseCase,
+    ApprovePostHandler,
+    CreatePostHandler,
+    DeletePostHandler,
+    GetFlaggedPostsHandler,
+    GetModerationStatsHandler,
+    GetPostHandler,
+    GetPostsByUserHandler,
+    GetPostsHandler,
+    RejectPostHandler,
+    RemovePostImageHandler,
+    UpdatePostHandler,
+    ProcessPostModerationHandler,
     PostModerationService,
   ],
   exports: [
-    ApprovePostUseCase,
-    CreatePostUseCase,
-    DeletePostUseCase,
-    GetFlaggedPostsUseCase,
-    GetModerationStatsUseCase,
-    GetPostUseCase,
-    GetPostsByUserUseCase,
-    GetPostsUseCase,
-    RejectPostUseCase,
-    RemovePostImageUseCase,
-    UpdatePostUseCase,
-    ProcessPostModerationUseCase,
+    ApprovePostHandler,
+    CreatePostHandler,
+    DeletePostHandler,
+    GetFlaggedPostsHandler,
+    GetModerationStatsHandler,
+    GetPostHandler,
+    GetPostsByUserHandler,
+    GetPostsHandler,
+    RejectPostHandler,
+    RemovePostImageHandler,
+    UpdatePostHandler,
+    ProcessPostModerationHandler,
     PostModerationService,
   ],
 })

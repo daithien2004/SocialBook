@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -6,8 +6,8 @@ import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { RejectPostCommand } from './reject-post.command';
 
-@Injectable()
-export class RejectPostUseCase {
+@CommandHandler(RejectPostCommand)
+export class RejectPostHandler implements ICommandHandler<RejectPostCommand, { success: boolean; message: string; }> {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly userRepository: IUserRepository,

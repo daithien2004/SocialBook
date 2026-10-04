@@ -1,3 +1,5 @@
+import { GetModerationStatsQuery } from '@/application/posts/use-cases/get-moderation-stats.query';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   BadRequestException,
   Body,
@@ -30,26 +32,15 @@ import type { AppAbility } from '@socialbook/shared';
 
 // Use Cases
 import { ApprovePostCommand } from '@/application/posts/use-cases/approve-post.command';
-import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
 import { CreatePostCommand } from '@/application/posts/use-cases/create-post.command';
-import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
 import { DeletePostCommand } from '@/application/posts/use-cases/delete-post.command';
-import { DeletePostUseCase } from '@/application/posts/use-cases/delete-post.use-case';
 import { GetFlaggedPostsQuery } from '@/application/posts/use-cases/get-flagged-posts.query';
-import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
-import { GetModerationStatsUseCase } from '@/application/posts/use-cases/get-moderation-stats.use-case';
 import { GetPostQuery } from '@/application/posts/use-cases/get-post.query';
-import { GetPostUseCase } from '@/application/posts/use-cases/get-post.use-case';
 import { GetPostsByUserQuery } from '@/application/posts/use-cases/get-posts-by-user.query';
-import { GetPostsByUserUseCase } from '@/application/posts/use-cases/get-posts-by-user.use-case';
 import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
-import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
 import { RejectPostCommand } from '@/application/posts/use-cases/reject-post.command';
-import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
 import { RemovePostImageCommand } from '@/application/posts/use-cases/remove-post-image.command';
-import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-post-image.use-case';
 import { UpdatePostCommand } from '@/application/posts/use-cases/update-post.command';
-import { UpdatePostUseCase } from '@/application/posts/use-cases/update-post.use-case';
 import { PostResponseDto } from '@/presentation/posts/dto/post.response.dto';
 import { IsOptional, IsString, IsEnum, IsDateString } from 'class-validator';
 
@@ -74,17 +65,8 @@ export class FlaggedPostsQueryDto extends PaginationQueryDto {
 @Controller('posts')
 export class PostsController {
   constructor(
-    private readonly createPostUseCase: CreatePostUseCase,
-    private readonly getPostsUseCase: GetPostsUseCase,
-    private readonly getPostsByUserUseCase: GetPostsByUserUseCase,
-    private readonly getPostUseCase: GetPostUseCase,
-    private readonly updatePostUseCase: UpdatePostUseCase,
-    private readonly deletePostUseCase: DeletePostUseCase,
-    private readonly removePostImageUseCase: RemovePostImageUseCase,
-    private readonly getFlaggedPostsUseCase: GetFlaggedPostsUseCase,
-    private readonly getModerationStatsUseCase: GetModerationStatsUseCase,
-    private readonly approvePostUseCase: ApprovePostUseCase,
-    private readonly rejectPostUseCase: RejectPostUseCase,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Public()
@@ -95,7 +77,7 @@ export class PostsController {
   ) {
     const limit = Math.min(query.actualLimit || 10, 100);
     const postsQuery = new GetPostsQuery(limit, query.cursor, userId);
-    const result = await this.getPostsUseCase.execute(postsQuery);
+    const result = await this.queryBus.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
@@ -120,7 +102,7 @@ export class PostsController {
       query.cursor,
       currentUserId,
     );
-    const result = await this.getPostsByUserUseCase.execute(postsQuery);
+    const result = await this.queryBus.execute(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
@@ -139,7 +121,7 @@ export class PostsController {
     @Param('id') id: string,
   ) {
     const query = new GetPostQuery(id, userId);
-    const data = await this.getPostUseCase.execute(query);
+    const data = await this.queryBus.execute(query);
     return {
       message: 'Get post detail successfully',
       data: new PostResponseDto(data),
@@ -161,11 +143,8 @@ export class PostsController {
     )
     files?: Express.Multer.File[],
   ) {
-    const command = new CreatePostCommand(userId, dto.bookId, dto.content);
-    const { post, moderationMessage } = await this.createPostUseCase.execute(
-      command,
-      files,
-    );
+    const command = new CreatePostCommand(userId, dto.bookId, dto.content, files);
+    const { post, moderationMessage } = await this.commandBus.execute(command);
 
     const responseDto = new PostResponseDto(post);
     return {
@@ -200,10 +179,7 @@ export class PostsController {
       dto.bookId,
       dto.imageUrls,
     );
-    const { post, moderationMessage } = await this.updatePostUseCase.execute(
-      command,
-      files,
-    );
+    const { post, moderationMessage } = await this.commandBus.execute(command);
     return {
       message: moderationMessage ? undefined : 'Cập nhật bài viết thành công',
       data: new PostResponseDto(post),
@@ -218,7 +194,7 @@ export class PostsController {
     @CurrentAbility() ability: AppAbility,
   ) {
     const command = new DeletePostCommand(userId, id, ability, false);
-    await this.deletePostUseCase.execute(command);
+    await this.commandBus.execute(command);
     return {
       message: 'Delete post successfully',
     };
@@ -233,7 +209,7 @@ export class PostsController {
     @CurrentAbility() ability: AppAbility,
   ) {
     const command = new DeletePostCommand(userId, id, ability, true);
-    await this.deletePostUseCase.execute(command);
+    await this.commandBus.execute(command);
     return {
       message: 'Permanently deleted post',
     };
@@ -249,7 +225,7 @@ export class PostsController {
     if (!imageUrl) throw new BadRequestException('imageUrl is required');
 
     const command = new RemovePostImageCommand(userId, id, ability, imageUrl);
-    const data = await this.removePostImageUseCase.execute(command);
+    const data = await this.commandBus.execute(command);
     return {
       message: 'Image removed successfully',
       data,
@@ -271,7 +247,7 @@ export class PostsController {
       query.endDate ? new Date(query.endDate) : undefined,
       query.sortBy,
     );
-    const result = await this.getFlaggedPostsUseCase.execute(flaggedQuery);
+    const result = await this.queryBus.execute(flaggedQuery);
     return {
       message: 'Get flagged posts successfully',
       data: PostResponseDto.fromArray(result.data),
@@ -283,7 +259,7 @@ export class PostsController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   async getModerationStats() {
-    const data = await this.getModerationStatsUseCase.execute();
+    const data = await this.queryBus.execute(new GetModerationStatsQuery());
     return {
       message: 'Get moderation stats successfully',
       data,
@@ -295,7 +271,7 @@ export class PostsController {
   @Roles('admin')
   async approvePost(@Param('id') id: string) {
     const command = new ApprovePostCommand(id);
-    const result = await this.approvePostUseCase.execute(command);
+    const result = await this.commandBus.execute(command);
     return {
       message: result.message,
     };
@@ -306,7 +282,7 @@ export class PostsController {
   @Roles('admin')
   async rejectPost(@Param('id') id: string) {
     const command = new RejectPostCommand(id, 'Rejected by admin');
-    const result = await this.rejectPostUseCase.execute(command);
+    const result = await this.commandBus.execute(command);
     return {
       message: result.message,
     };
@@ -321,7 +297,7 @@ export class PostsController {
 
     const results = await Promise.allSettled(
       postIds.map((id) =>
-        this.approvePostUseCase.execute(new ApprovePostCommand(id)),
+        this.commandBus.execute(new ApprovePostCommand(id)),
       ),
     );
 
@@ -340,7 +316,7 @@ export class PostsController {
 
     const results = await Promise.allSettled(
       postIds.map((id) =>
-        this.rejectPostUseCase.execute(
+        this.commandBus.execute(
           new RejectPostCommand(id, 'Rejected by admin'),
         ),
       ),
