@@ -32,9 +32,9 @@ describe('ReadingRoomGateway remove_highlight room guard', () => {
       {} as never, // AddHighlightUseCase
       removeHighlight as never,
       {} as never, // GenerateHighlightInsightUseCase
-      {} as never, // UpdateProgressUseCase
-      {} as never, // IChapterRepository
-      {} as never, // Redis
+      {}, // UpdateProgressUseCase
+      {}, // IChapterRepository
+      {}, // Redis
     );
     gateway.server = {
       to: jest.fn(() => ({ emit: jest.fn() })),

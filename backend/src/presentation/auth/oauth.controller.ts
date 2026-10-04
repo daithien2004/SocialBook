@@ -190,10 +190,7 @@ export class OAuthController {
       const result = await this.oauthAuthUseCase.execute(
         new OAuthAuthCommand(profile),
       );
-      this.applyCookie(
-        res,
-        this.cookieService.accessTokenCookie(result.accessToken),
-      );
+
       this.applyCookie(
         res,
         this.cookieService.refreshTokenCookie(result.refreshToken),

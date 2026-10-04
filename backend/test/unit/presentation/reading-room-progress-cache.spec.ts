@@ -77,9 +77,9 @@ describe('ReadingRoomGateway reading progress (chapterId path)', () => {
       {} as never, // AddHighlightUseCase
       {} as never, // RemoveHighlightUseCase
       {} as never, // GenerateHighlightInsightUseCase
-      updateProgress as never,
-      chapterRepository as never,
-      redis as never,
+      updateProgress,
+      chapterRepository,
+      redis,
     );
     gateway.server = {
       to: jest.fn(() => ({ emit: jest.fn() })),
@@ -303,7 +303,7 @@ describe('ReadingRoomGateway reading progress (chapterId path)', () => {
     });
     expect(updateProgress.execute).not.toHaveBeenCalled();
 
-    await gateway.handleDisconnect(socket as never);
+    await gateway.handleDisconnect(socket);
 
     expect(updateProgress.execute).toHaveBeenCalledTimes(1);
     expect(updateProgress.execute).toHaveBeenCalledWith(

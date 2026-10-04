@@ -23,9 +23,9 @@ export class TrendingKeywordCacheAdapter implements ITrendingKeywordCachePort {
       pipeline.expire(bucketKey, TTL_SECONDS, 'NX');
       await pipeline.exec();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to increment trending search for keyword: ${cleanKeyword} - ${errorMessage}`,
+        `Failed to increment trending search for keyword: ${cleanKeyword}`,
+        err instanceof Error ? err.stack : String(err),
       );
     }
   }
@@ -62,9 +62,9 @@ export class TrendingKeywordCacheAdapter implements ITrendingKeywordCachePort {
         await this.redis.del(tempKey).catch(() => undefined);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to fetch trending keywords from Redis: ${errorMessage}`,
+        'Failed to fetch trending keywords from Redis',
+        err instanceof Error ? err.stack : String(err),
       );
       return [];
     }

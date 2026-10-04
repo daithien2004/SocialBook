@@ -32,14 +32,7 @@ type JoinAck =
     }
   | {
       ok: false;
-      code:
-        | 'NOT_FOUND'
-        | 'FULL'
-        | 'FORBIDDEN'
-        | 'UNAUTHORIZED'
-        | 'RATE_LIMITED'
-        | 'JOIN_FAILED'
-        | 'CONCURRENCY_CONFLICT';
+      code: string;
       message?: string;
     };
 
@@ -51,9 +44,6 @@ type ReadingRoomServerEvents = {
   [ReadingRoomServerEvent.MEMBER_JOINED]: { userId: string };
   [ReadingRoomServerEvent.MEMBER_LEFT]: { userId: string };
   [ReadingRoomServerEvent.HOST_CHANGED]: { newHostId: string };
-  [ReadingRoomServerEvent.CHAPTER_CHANGED]: { chapterSlug: string };
-  [ReadingRoomServerEvent.MODE_CHANGED]: { mode: 'sync' | 'free'; changedBy?: string };
-  [ReadingRoomServerEvent.ROOM_ENDED]: { endedBy: string };
   [ReadingRoomServerEvent.ERROR]: { message?: string };
   [ReadingRoomServerEvent.NEW_HIGHLIGHT]: RoomHighlight;
   [ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT]: { highlightId: string; insight: string };
@@ -102,19 +92,7 @@ export function useReadingRoomSocket(roomCode?: string) {
     }
   }, [socket]);
 
-  const changeChapter = useCallback((chapterSlug: string, bookId?: string, chapterId?: string) => {
-    const store = useReadingRoomStore.getState();
-    if (socket && store.room) {
-      socket.emit(ReadingRoomClientEvent.CHAPTER_CHANGE, { roomId: store.room.roomId, chapterSlug, bookId, chapterId });
-    }
-  }, [socket]);
 
-  const endRoom = useCallback(() => {
-    const store = useReadingRoomStore.getState();
-    if (socket && store.room) {
-      socket.emit(ReadingRoomClientEvent.END_ROOM, { roomId: store.room.roomId });
-    }
-  }, [socket]);
 
   const leaveRoom = useCallback((newHostId?: string) => {
     const store = useReadingRoomStore.getState();
@@ -133,12 +111,7 @@ export function useReadingRoomSocket(roomCode?: string) {
     }
   }, [socket]);
 
-  const changeMode = useCallback((newMode: 'sync' | 'free') => {
-    const store = useReadingRoomStore.getState();
-    if (socket?.connected && store.room) {
-      socket.emit(ReadingRoomClientEvent.CHANGE_MODE, { roomId: store.room.roomId, mode: newMode });
-    }
-  }, [socket]);
+
 
   const activeRef = useRef(true);
 
@@ -186,26 +159,7 @@ export function useReadingRoomSocket(roomCode?: string) {
       if (s.room) s.setRoom({ ...s.room, hostId: payload.newHostId });
       if (payload.newHostId === userId) toast.success('Bạn đã trở thành trưởng phòng mới!');
     },
-    [ReadingRoomServerEvent.CHAPTER_CHANGED]: (payload) => {
-      useReadingRoomStore.getState().updateChapter(payload.chapterSlug);
-    },
-    [ReadingRoomServerEvent.MODE_CHANGED]: (payload) => {
-      const s = useReadingRoomStore.getState();
-      if (s.room) s.setRoom({ ...s.room, mode: payload.mode });
-      if (payload.changedBy === 'system') {
-        toast.info(
-          payload.mode === 'free'
-            ? 'Phòng đã chuyển sang chế độ tự do do trưởng phòng rời đi'
-            : 'Chế độ phòng đã thay đổi',
-        );
-      }
-    },
-    [ReadingRoomServerEvent.ROOM_ENDED]: (payload) => {
-      if (payload.endedBy !== userId) toast.info('Phòng đọc đã kết thúc');
-      useReadingRoomStore.getState().clearRoom();
-      invalidateRoomCache(roomCode || '');
-      router.refresh();
-    },
+
     [ReadingRoomServerEvent.ERROR]: (payload) => {
       if (payload.message?.includes('ended') && useReadingRoomStore.getState().room?.status === 'ended') return;
       toast.error(payload.message || 'Lỗi kết nối phòng đọc');
@@ -241,7 +195,7 @@ export function useReadingRoomSocket(roomCode?: string) {
   }, [roomCode, userId, socket, acquireSocket, releaseSocket, join]);
 
   return {
-    socket, changeChapter, changeMode, endRoom, leaveRoom, sendHeartbeat,
+    socket, leaveRoom, sendHeartbeat,
     addHighlight, removeHighlight, generateHighlightInsight
   };
 }

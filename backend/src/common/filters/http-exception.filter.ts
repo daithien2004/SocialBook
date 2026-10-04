@@ -56,7 +56,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         error = (response.error as string) || exception.name;
       }
     } else if (exception instanceof DomainException) {
-      status = exception.statusCode;
+      status = this.mapErrorCodeToHttpStatus(exception.code);
       message = exception.message;
       error = exception.code;
     } else if (exception instanceof Error) {
@@ -82,5 +82,29 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
 
     response.status(status).json(errorResponse);
+  }
+
+  private mapErrorCodeToHttpStatus(code: string): number {
+    switch (code) {
+      case 'NOT_FOUND':
+        return HttpStatus.NOT_FOUND;
+      case 'UNAUTHORIZED':
+      case 'TOKEN_EXPIRED':
+      case 'TOKEN_REVOKED':
+        return HttpStatus.UNAUTHORIZED;
+      case 'FORBIDDEN':
+        return HttpStatus.FORBIDDEN;
+      case 'CONFLICT':
+      case 'CONCURRENCY_CONFLICT':
+      case 'ROOM_FULL':
+        return HttpStatus.CONFLICT;
+      case 'RATE_LIMITED':
+      case 'TOO_MANY_CONNECTIONS':
+        return HttpStatus.TOO_MANY_REQUESTS;
+      case 'INTERNAL_ERROR':
+        return HttpStatus.INTERNAL_SERVER_ERROR;
+      default:
+        return HttpStatus.BAD_REQUEST;
+    }
   }
 }

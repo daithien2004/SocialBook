@@ -11,6 +11,14 @@ import { TextToSpeechRepositoryModule } from '@/infrastructure/database/reposito
 import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
 
 import { ReadingRoomGateway } from './reading-room.gateway';
+import { WsAuthService } from './ws-auth.service';
+import { ReadingRoomPresenceCoordinator } from './reading-room-presence.coordinator';
+import { ReadingProgressTracker } from './reading-progress.tracker';
+import { ReadingRoomHighlightHandler } from './reading-room-highlight.handler';
+import { WsRoomGuard } from './ws-room.guard';
+import { WsRateLimiter } from './ws-rate-limiter.service';
+import { ReadingRoomEmitter } from './reading-room.emitter';
+import { ReadingRoomSystemListener } from './reading-room-system.listener';
 import { ReadingRoomPresenceModule } from '@/application/reading-rooms/presence/reading-room-presence.module';
 import { LibraryApplicationModule } from '@/application/library/library-application.module';
 import { TargetResolutionModule } from '@/application/target-resolution/target-resolution.module';
@@ -48,6 +56,14 @@ import { isWorkerProcess } from '@/common/utils/process-role.util';
     ...(!isWorkerProcess() ? [NotificationWorker] : []),
     ...(isWorkerProcess() ? [AudioWorker] : []),
     ReadingRoomGateway,
+    WsAuthService,
+    ReadingRoomPresenceCoordinator,
+    ReadingProgressTracker,
+    ReadingRoomHighlightHandler,
+    WsRoomGuard,
+    WsRateLimiter,
+    ReadingRoomEmitter,
+    ReadingRoomSystemListener,
   ],
   exports: [NotificationsService],
 })

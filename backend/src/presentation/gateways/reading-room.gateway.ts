@@ -8,32 +8,21 @@ import {
   SubscribeMessage,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseFilters, UsePipes } from '@nestjs/common';
+import { Logger, UseFilters, UsePipes, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Namespace, Server } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import Redis from 'ioredis';
-import { WsException } from '@nestjs/websockets';
-import { GenerateHighlightInsightUseCase } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
-import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.command';
-import { ReadingRoomPresenceService } from '@/application/reading-rooms/presence/reading-room-presence.service';
-import { JoinRoomUseCase } from '@/application/reading-rooms/use-cases/join-room/join-room.use-case';
-import { LeaveRoomUseCase } from '@/application/reading-rooms/use-cases/leave-room/leave-room.use-case';
-import { ChangeChapterUseCase } from '@/application/reading-rooms/use-cases/change-chapter/change-chapter.use-case';
-import { ChangeRoomModeUseCase } from '@/application/reading-rooms/use-cases/change-room-mode/change-room-mode.use-case';
-import { EndRoomUseCase } from '@/application/reading-rooms/use-cases/end-room/end-room.use-case';
-import { DeleteRoomUseCase } from '@/application/reading-rooms/use-cases/delete-room/delete-room.use-case';
-import { DeleteRoomCommand } from '@/application/reading-rooms/use-cases/delete-room/delete-room.command';
+
+import { WsAuthService } from './ws-auth.service';
+import { ReadingRoomPresenceCoordinator } from './reading-room-presence.coordinator';
+import { ReadingProgressTracker } from './reading-progress.tracker';
+import { ReadingRoomHighlightHandler } from './reading-room-highlight.handler';
+import { WsRoomGuard } from './ws-room.guard';
+import { WsRateLimiter } from './ws-rate-limiter.service';
+import { ReadingRoomEmitter } from './reading-room.emitter';
+import { ReadingRoomSystemListener } from './reading-room-system.listener';
+import { CommandBus } from '@nestjs/cqrs';
 import { JoinRoomCommand } from '@/application/reading-rooms/use-cases/join-room/join-room.command';
 import { LeaveRoomCommand } from '@/application/reading-rooms/use-cases/leave-room/leave-room.command';
-import { ChangeChapterCommand } from '@/application/reading-rooms/use-cases/change-chapter/change-chapter.command';
-import { ChangeRoomModeCommand } from '@/application/reading-rooms/use-cases/change-room-mode/change-room-mode.command';
-import { EndRoomCommand } from '@/application/reading-rooms/use-cases/end-room/end-room.command';
-import { AddHighlightUseCase } from '@/application/reading-rooms/use-cases/add-highlight/add-highlight.use-case';
-import { AddHighlightCommand } from '@/application/reading-rooms/use-cases/add-highlight/add-highlight.command';
-import { RemoveHighlightUseCase } from '@/application/reading-rooms/use-cases/remove-highlight/remove-highlight.use-case';
-import { RemoveHighlightCommand } from '@/application/reading-rooms/use-cases/remove-highlight/remove-highlight.command';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   ReadingRoomServerEvent,
@@ -41,51 +30,26 @@ import {
 } from './reading-room.events';
 import type { RoomSocket, SocketData } from './reading-room.types';
 import { WsUser } from './ws-user.decorator';
-import { UserRoleChangedEvent } from '@/application/users/events/user-role-changed.event';
-import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
-import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
-import {
-  DomainException,
-  NotFoundDomainException,
-  ForbiddenDomainException,
-  RoomFullDomainException,
-  ConcurrencyException,
-} from '@/shared/domain/common-exceptions';
 
+import { normalizeError } from '@/shared/presentation/error-normalizer';
+import { messageOf } from '@/shared/domain/error-messages';
+import { WsAckResponse } from '@/shared/presentation/ws-ack.type';
 import { EventNames } from '@/common/constants/event-names.constant';
 
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
-import {
-  WsValidationPipe,
-  wsValidationExceptionFactory,
-} from './dto/ws-validation.pipe';
+import { WsValidationPipe } from './dto/ws-validation.pipe';
+import { toHandshakeError } from './reading-room.handshake';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { LeaveRoomDto } from './dto/leave-room.dto';
 import { AddHighlightDto } from './dto/add-highlight.dto';
 import { RemoveHighlightDto } from './dto/remove-highlight.dto';
 import { GenerateInsightDto } from './dto/generate-insight.dto';
-import { ChapterChangeDto } from './dto/chapter-change.dto';
-import { ChangeModeDto } from './dto/change-mode.dto';
-import { EndRoomDto } from './dto/end-room.dto';
-import { DeleteRoomDto } from './dto/delete-room.dto';
 import { HeartbeatDto } from './dto/heartbeat.dto';
 import {
   CHAPTER_SLUG_MAX_LENGTH,
-  DEFAULT_FRONTEND_URL,
-  MAX_CONNECTIONS_PER_USER,
-  NOT_IN_ROOM_CODE,
-  NOT_IN_ROOM_MESSAGE,
-  ROOM_MISMATCH_CODE,
-  ROOM_MISMATCH_MESSAGE,
   PARAGRAPH_ID_MAX_LENGTH,
   PROGRESS_MAX,
   PROGRESS_MIN,
-  PRESENCE_BROADCAST_DEBOUNCE_MS,
-  PROGRESS_FLUSH_DEBOUNCE_MS,
-  RATE_LIMIT_WINDOW_SECONDS,
-  TOKEN_REVOCATION_TTL_SECONDS,
   WS_CONNECT_TIMEOUT_MS,
   WS_MAX_HTTP_BUFFER_SIZE,
   WS_PING_INTERVAL_MS,
@@ -93,12 +57,11 @@ import {
   WS_TRANSPORTS,
   isObjectId,
 } from './reading-room.constants';
+import { ErrorCode } from '@/shared/domain/error-codes';
 
 @WebSocketGateway({
   namespace: '/reading-rooms',
-  // `process.env` chỉ đọc ở thời điểm decorator; allowlist origin đầy đủ được
-  // áp trong `afterInit` (T4). Giá trị mặc định nằm ở constants.
-  cors: { origin: process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL },
+  cors: { origin: '*' },
   maxHttpBufferSize: WS_MAX_HTTP_BUFFER_SIZE,
   connectTimeout: WS_CONNECT_TIMEOUT_MS,
   transports: [...WS_TRANSPORTS],
@@ -111,360 +74,110 @@ import {
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
-    exceptionFactory: wsValidationExceptionFactory,
   }),
 )
 export class ReadingRoomGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
+  constructor(
+    private readonly wsAuth: WsAuthService,
+    private readonly presenceCoordinator: ReadingRoomPresenceCoordinator,
+    private readonly commandBus: CommandBus,
+    private readonly highlightHandler: ReadingRoomHighlightHandler,
+    private readonly progressTracker: ReadingProgressTracker,
+    private readonly rateLimiter: WsRateLimiter,
+    private readonly emitter: ReadingRoomEmitter,
+    private readonly systemListener: ReadingRoomSystemListener,
+  ) {}
+
   private readonly logger = new Logger(ReadingRoomGateway.name);
-  // Batch presence broadcasts — only emit every 3s per room
-  private readonly presenceBroadcastPending = new Map<string, NodeJS.Timeout>();
 
   @WebSocketServer() server: Server;
 
-  constructor(
-    private readonly jwt: JwtService,
-    private readonly configService: ConfigService,
-    private readonly presenceService: ReadingRoomPresenceService,
-    private readonly joinRoomUseCase: JoinRoomUseCase,
-    private readonly leaveRoomUseCase: LeaveRoomUseCase,
-    private readonly changeChapterUseCase: ChangeChapterUseCase,
-    private readonly changeRoomModeUseCase: ChangeRoomModeUseCase,
-    private readonly endRoomUseCase: EndRoomUseCase,
-    private readonly deleteRoomUseCase: DeleteRoomUseCase,
-    private readonly addHighlightUseCase: AddHighlightUseCase,
-    private readonly removeHighlightUseCase: RemoveHighlightUseCase,
+  // ==========================================
+  // 1. LIFECYCLE HOOKS & MIDDLEWARE
+  // ==========================================
 
-    private readonly generateHighlightInsightUseCase: GenerateHighlightInsightUseCase,
-    private readonly updateProgressUseCase: UpdateProgressUseCase,
-    private readonly chapterRepository: IChapterRepository,
-    @InjectRedis() private readonly redis: Redis,
-  ) {}
-
+  /**
+   * Khởi tạo Gateway, cài đặt các service liên quan và Middleware Handshake.
+   * Chặn kết nối nếu token không hợp lệ trước khi user kịp join.
+   */
   afterInit(server: Namespace) {
-    const frontendUrl =
-      this.configService.get<string>('env.FRONTEND_URL') ??
-      DEFAULT_FRONTEND_URL;
-    const allowedOrigins = frontendUrl.includes(',')
-      ? frontendUrl.split(',').map((url) => url.trim())
-      : [frontendUrl.trim()];
+    this.presenceCoordinator.setServer(server);
+    this.emitter.setServer(server);
+    this.systemListener.setServer(server);
 
-    server.use((socket, next) => {
-      (async () => {
-        try {
-          const isExplicitAuth =
-            !!socket.handshake.auth?.token ||
-            !!socket.handshake.headers.authorization;
-          const usingCookie = !isExplicitAuth;
-          const origin = socket.handshake.headers.origin;
-
-          if (usingCookie) {
-            if (!origin || !allowedOrigins.includes(origin)) {
-              this.logger.warn(
-                `WS handshake rejected: forbidden origin "${origin}" with cookie authentication`,
-              );
-              return next(new Error('forbidden_origin'));
-            }
-          }
-
-          let token =
-            (socket.handshake.auth?.token as string | undefined) ??
-            socket.handshake.headers.authorization?.split(' ')[1];
-
-          if (!token && socket.handshake.headers.cookie) {
-            const match = socket.handshake.headers.cookie.match(
-              /(?:^|;\s*)sb_access_token=([^;]+)/,
-            );
-            if (match) token = match[1];
-          }
-
-          if (!token) {
-            return next(new Error('unauthorized'));
-          }
-
-          const payload = await this.jwt.verifyAsync<{
-            sub?: string;
-            id?: string;
-            role?: string;
-            displayName?: string;
-            avatarUrl?: string;
-            iat?: number;
-          }>(token, {
-            algorithms: ['HS256'],
-          });
-
-          const userId = (payload.sub ?? payload.id) as string;
-          if (!userId) {
-            return next(new Error('unauthorized'));
-          }
-
-          const revokedAt = await this.redis.get(`auth:revoked:${userId}`);
-          if (
-            revokedAt &&
-            payload.iat &&
-            payload.iat * 1000 < Number(revokedAt)
-          ) {
-            this.logger.warn(
-              `WS handshake rejected: token revoked for user ${userId}`,
-            );
-            return next(new Error('token_revoked'));
-          }
-
-          const sockets = await server.in(`user:${userId}`).fetchSockets();
-          if (sockets.length >= MAX_CONNECTIONS_PER_USER) {
-            return next(new Error('too_many_connections'));
-          }
-
-          Object.assign(socket.data, {
-            userId,
-            role: payload.role ?? 'user',
-            displayName: payload.displayName,
-            avatarUrl: payload.avatarUrl,
-          });
-          next();
-        } catch {
-          next(new Error('unauthorized'));
-        }
-      })().catch((err) =>
-        next(err instanceof Error ? err : new Error(String(err))),
-      );
-    });
-  }
-
-  private async saveReadingProgress(
-    socket: RoomSocket,
-    bookId: string,
-    chapterId: string,
-    progress: number,
-  ): Promise<void> {
-    const sd = socket.data;
-    const { userId } = sd;
-
-    // chapterId là dữ liệu client gửi lên, không phải giá trị server tự sinh ra.
-    // Phải xác minh nó thuộc đúng cuốn sách của phòng trước khi ghi, nếu không
-    // user có thể ghi progress của mình sang chương thuộc sách khác.
-    sd.verifiedChapters ??= new Map<string, string>();
-    if (sd.verifiedChapters.get(chapterId) !== bookId) {
-      const chapter = await this.chapterRepository.findById(
-        ChapterId.create(chapterId),
-      );
-      if (!chapter) {
-        this.logger.warn(
-          `Skip progress: chapter ${chapterId} not found (user ${userId}, book ${bookId})`,
-        );
-        return;
+    server.use(async (socket, next) => {
+      try {
+        Object.assign(socket.data, await this.wsAuth.authenticate(socket));
+        next();
+      } catch (e) {
+        return next(toHandshakeError(e));
       }
-      if (chapter.bookId.toString() !== bookId) {
-        this.logger.warn(
-          `Skip progress: chapter ${chapterId} does not belong to book ${bookId} (user ${userId})`,
-        );
-        return;
-      }
-      sd.verifiedChapters.set(chapterId, bookId);
-    }
-
-    try {
-      await this.updateProgressUseCase.execute(
-        new UpdateProgressCommand(userId, bookId, chapterId, progress, true),
-      );
-    } catch (error: unknown) {
-      this.logger.error(
-        `Failed to save reading progress for user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-
-  private async flushProgress(socket: RoomSocket) {
-    const sd = socket.data;
-    if (sd.progressTimer) {
-      clearTimeout(sd.progressTimer);
-      sd.progressTimer = undefined;
-    }
-
-    const pending = sd.pendingProgress;
-    if (pending && sd.userId) {
-      sd.pendingProgress = undefined;
-      await this.saveReadingProgress(
-        socket,
-        pending.bookId,
-        pending.chapterId,
-        pending.progress,
-      ).catch((e) => this.logger.warn(`Flush progress error: ${e}`));
-    }
-  }
-
-  @OnEvent(EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED)
-  handleHighlightInsightUpdated(payload: {
-    roomId: string;
-    highlightId: string;
-    insight: string;
-  }) {
-    this.toRoom(payload.roomId).emit(
-      ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT,
-      {
-        highlightId: payload.highlightId,
-        insight: payload.insight,
-      },
-    );
-  }
-
-  @SubscribeMessage('add_highlight')
-  async handleAddHighlight(
-    @ConnectedSocket() socket: RoomSocket,
-    @WsUser() sd: SocketData,
-    @MessageBody() body: AddHighlightDto,
-  ) {
-    const { userId, displayName = '', avatarUrl = '' } = sd;
-    const roomId = this.requireRoom(socket, body.roomId);
-
-    if (await this.isRateLimited(userId, 'add_highlight', 30)) {
-      this.emitError(
-        socket,
-        'RATE_LIMITED',
-        'Rate limit exceeded for adding highlights',
-      );
-      return;
-    }
-    const command = new AddHighlightCommand(
-      roomId,
-      userId,
-      body.chapterSlug,
-      body.paragraphId,
-      body.content,
-      displayName,
-      avatarUrl,
-    );
-    const room = await this.addHighlightUseCase.execute(command);
-
-    const newHighlight = room.highlights[room.highlights.length - 1];
-    const authorName = newHighlight.displayName || displayName || 'Thành viên';
-    const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
-
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
-      id: newHighlight.id,
-      userId: newHighlight.userId,
-      displayName: authorName,
-      avatarUrl: authorAvatar,
-      chapterSlug: newHighlight.chapterSlug,
-      paragraphId: newHighlight.paragraphId,
-      content: newHighlight.content,
-      aiInsight: newHighlight.aiInsight,
-      createdAt: newHighlight.createdAt,
-      user: {
-        userId: newHighlight.userId,
-        displayName: authorName,
-        avatarUrl: authorAvatar,
-      },
     });
   }
 
-  @SubscribeMessage(ReadingRoomClientEvent.REMOVE_HIGHLIGHT)
-  async handleRemoveHighlight(
-    @ConnectedSocket() socket: RoomSocket,
-    @WsUser('userId') userId: string,
-    @MessageBody() body: RemoveHighlightDto,
-  ) {
-    const roomId = this.requireRoom(socket, body.roomId);
-
-    const command = new RemoveHighlightCommand(
-      roomId,
-      userId,
-      body.highlightId,
-    );
-    await this.removeHighlightUseCase.execute(command);
-
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, {
-      highlightId: body.highlightId,
-      removedBy: userId,
-    });
-  }
-
-  @SubscribeMessage(ReadingRoomClientEvent.GENERATE_HIGHLIGHT_INSIGHT)
-  async handleGenerateHighlightInsight(
-    @ConnectedSocket() socket: RoomSocket,
-    @WsUser('userId') userId: string,
-    @MessageBody() body: GenerateInsightDto,
-  ) {
-    const roomId = this.requireRoom(socket, body.roomId);
-
-    // B3: Rate limit max 5/min cho insight
-    if (await this.isRateLimited(userId, 'generate_insight', 5)) {
-      this.emitError(
-        socket,
-        'RATE_LIMITED',
-        'Rate limit exceeded for generating insights',
-      );
-      return;
-    }
-
-    const command = new GenerateHighlightInsightCommand(
-      userId,
-      roomId,
-      body.highlightId,
-    );
-    // Generate AI Insight. The use-case will emit EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED
-    // which will then be broadcasted to the room.
-    await this.generateHighlightInsightUseCase.execute(command);
-  }
-
-  @OnEvent(EventNames.USER_ROLE_CHANGED)
-  async handleUserRoleChanged(event: UserRoleChangedEvent) {
-    this.logger.debug(
-      `User ${event.userId} role changed, revoking tokens and forcing socket disconnect.`,
-    );
-    try {
-      await this.redis.set(
-        `auth:revoked:${event.userId}`,
-        Date.now(),
-        'EX',
-        TOKEN_REVOCATION_TTL_SECONDS,
-      );
-    } catch (e: unknown) {
-      this.logger.error('Failed to set token revocation timestamp', e);
-    }
-    this.server.in(`user:${event.userId}`).disconnectSockets(true);
-  }
-
+  /**
+   * Hook chạy khi user kết nối thành công.
+   * Gán socket vào room "user:{userId}" để tiện gửi thông báo cá nhân (ví dụ bị kick).
+   */
   handleConnection(socket: RoomSocket) {
     void socket.join(`user:${socket.data.userId}`);
   }
 
+  /**
+   * Hook chạy khi người dùng đóng tab, mất mạng hoặc chủ động ngắt kết nối.
+   * Luôn đảm bảo lưu tiến độ, báo offline và nhả slot connection.
+   */
   async handleDisconnect(@ConnectedSocket() socket: RoomSocket) {
-    await this.flushProgress(socket);
-    const { userId, roomId } = socket.data;
+    try {
+      await this.progressTracker.flush(socket);
+      const { roomId } = socket.data;
 
-    if (roomId) {
-      await this.presenceService.removePresence(roomId, userId);
-      const roomPresences = await this.presenceService.getRoomPresences(roomId);
-      this.toRoom(roomId).emit(
-        ReadingRoomServerEvent.PRESENCE_UPDATE,
-        roomPresences,
-      );
+      if (roomId) {
+        await this.presenceCoordinator.onDisconnect(socket);
+      }
+    } finally {
+      if (socket.data?.userId) {
+        await this.wsAuth.releaseConnectionSlot(socket.data.userId, socket.id);
+      }
     }
   }
 
+  // ==========================================
+  // 2. CORE ROOM MANAGEMENT
+  // ==========================================
+
+  /**
+   * Xử lý hành động người dùng xin tham gia vào một Phòng đọc sách.
+   * Trả về chi tiết phòng, lịch sử tin nhắn, và danh sách người đang online.
+   */
   @SubscribeMessage('join_room')
   async handleJoinRoom(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser() sd: SocketData,
     @MessageBody() body: JoinRoomDto,
-  ) {
+  ): Promise<WsAckResponse<{ snapshot: Record<string, unknown> }>> {
     const userId = sd.userId;
+    const { roomCode } = body;
 
-    if (await this.isRateLimited(userId, 'join_room', 10)) {
+    if (await this.rateLimiter.isLimited(userId, 'join_room', 10)) {
       this.logger.warn(`Rate limit exceeded for join_room by ${userId}`);
-      return { ok: false, code: 'RATE_LIMITED' };
+      return { 
+        ok: false, 
+        code: ErrorCode.RATE_LIMITED, 
+        message: messageOf(ErrorCode.RATE_LIMITED) 
+      };
     }
 
     try {
-      const command = new JoinRoomCommand(userId, body.roomCode);
-      const room = await this.joinRoomUseCase.execute(command);
+      const command = new JoinRoomCommand(userId, roomCode);
+      const room = await this.commandBus.execute(command);
       const roomId = room.roomId;
 
       if (sd.roomId && sd.roomId !== roomId) {
         void socket.leave(`room:${sd.roomId}`);
-        await this.presenceService.removePresence(sd.roomId, userId);
+        await this.presenceCoordinator.onLeave(sd.roomId, userId);
       }
 
       const displayName = sd.displayName || 'Unknown';
@@ -477,14 +190,12 @@ export class ReadingRoomGateway
 
       void socket.join(`room:${roomId}`);
 
-      await this.presenceService.upsertPresence(roomId, userId, {
+      const presences = await this.presenceCoordinator.onJoin(roomId, userId, {
         userId,
         displayName,
         avatarUrl,
         currentChapterSlug: room.currentChapterSlug,
       });
-
-      const presences = await this.presenceService.getRoomPresences(roomId);
 
       const snapshotHighlights = room.highlights;
 
@@ -492,10 +203,11 @@ export class ReadingRoomGateway
         userId,
         displayName,
       });
-      this.toRoom(roomId).emit(
-        ReadingRoomServerEvent.PRESENCE_UPDATE,
-        presences,
-      );
+      this.emitter
+        .toRoom(roomId)
+        .emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
+
+      const presenceMap = new Map(presences.map((p) => [p.userId, p]));
 
       return {
         ok: true,
@@ -508,7 +220,7 @@ export class ReadingRoomGateway
             currentChapterSlug: room.currentChapterSlug,
             status: room.status,
             highlights: snapshotHighlights.map((h) => {
-              const presence = presences.find((p) => p.userId === h.userId);
+              const presence = presenceMap.get(h.userId);
               const displayName =
                 h.displayName || presence?.displayName || 'Thành viên';
               const avatarUrl = h.avatarUrl || presence?.avatarUrl || '';
@@ -539,53 +251,26 @@ export class ReadingRoomGateway
         },
       };
     } catch (error: unknown) {
-      let code = 'JOIN_FAILED';
-      let message = 'Tham gia phòng thất bại';
+      const { code, message, isSystemError } = normalizeError(error);
 
-      if (
-        error instanceof RoomFullDomainException ||
-        (error &&
-          typeof error === 'object' &&
-          'code' in error &&
-          error.code === 'ROOM_FULL')
-      ) {
-        code = 'FULL';
-        message = 'Phòng đã đầy';
-      } else if (
-        error instanceof NotFoundDomainException ||
-        (error &&
-          typeof error === 'object' &&
-          'code' in error &&
-          error.code === 'NOT_FOUND')
-      ) {
-        code = 'NOT_FOUND';
-        message = 'Phòng không tồn tại';
-        this.logger.warn(
-          `Failed join attempt: room ${body.roomCode} not found for user ${userId}`,
+      if (isSystemError) {
+        this.logger.error(
+          `Join failed for ${userId}`,
+          error instanceof Error ? error.stack : String(error),
         );
-      } else if (
-        error instanceof ForbiddenDomainException ||
-        (error &&
-          typeof error === 'object' &&
-          'code' in error &&
-          error.code === 'FORBIDDEN')
-      ) {
-        code = 'FORBIDDEN';
-        message = 'Bạn không có quyền tham gia phòng này';
-      } else if (error instanceof ConcurrencyException) {
-        code = 'CONCURRENCY_CONFLICT';
-        message = 'Dữ liệu vừa thay đổi từ người dùng khác, vui lòng thử lại';
-      } else if (error instanceof DomainException) {
-        message = error.message;
+      } else {
+        this.logger.warn(`Join failed for ${userId} (Code: ${code}): ${message}`);
       }
 
-      this.logger.warn(
-        `Join failed for ${userId}: ${error instanceof Error ? error.message : String(error)}`,
-      );
       return { ok: false, code, message };
     }
   }
 
+  /**
+   * Xử lý hành động người dùng chủ động rời phòng.
+   * Nếu là chủ phòng rời đi, hệ thống sẽ tự bầu chọn người khác làm chủ phòng mới.
+   */
+  @UseGuards(WsRoomGuard)
   @SubscribeMessage('leave_room')
   async handleLeaveRoom(
     @ConnectedSocket() socket: RoomSocket,
@@ -596,195 +281,63 @@ export class ReadingRoomGateway
     const roomId = body.roomId;
 
     // Lưu ngay tiến độ đọc dở (không để timer 10s chạy sau khi đã rời phòng)
-    await this.flushProgress(socket);
+    await this.progressTracker.flush(socket);
 
     const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
-    const result = await this.leaveRoomUseCase.execute(command);
-    await this.presenceService.removePresence(roomId, userId);
+    const result = await this.commandBus.execute(command);
+    const presences = await this.presenceCoordinator.onLeave(roomId, userId);
 
     void socket.leave(`room:${roomId}`);
     delete sd.roomId;
 
     if (result.hostChanged && result.hostId) {
-      this.toRoom(roomId).emit(ReadingRoomServerEvent.HOST_CHANGED, {
+      this.emitter.toRoom(roomId).emit(ReadingRoomServerEvent.HOST_CHANGED, {
         newHostId: result.hostId,
       });
     }
 
     if (result.modeChanged) {
-      this.toRoom(roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
+      this.emitter.toRoom(roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
         mode: result.mode as 'sync' | 'free',
         changedBy: 'system',
       });
     }
 
     if (result.roomEnded) {
-      this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
+      this.emitter.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
         endedBy: userId,
       });
     }
 
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.MEMBER_LEFT, { userId });
+    this.emitter
+      .toRoom(roomId)
+      .emit(ReadingRoomServerEvent.MEMBER_LEFT, { userId });
 
-    const presences = await this.presenceService.getRoomPresences(roomId);
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
+    this.emitter
+      .toRoom(roomId)
+      .emit(ReadingRoomServerEvent.PRESENCE_UPDATE, presences);
   }
 
-  @SubscribeMessage('chapter_change')
-  async handleChapterChange(
-    @ConnectedSocket() socket: RoomSocket,
-    @WsUser('userId') userId: string,
-    @MessageBody() body: ChapterChangeDto,
-  ) {
-    const roomId = this.requireRoom(socket, body.roomId);
-    const command = new ChangeChapterCommand(userId, roomId, body.chapterSlug);
-    await this.changeChapterUseCase.execute(command);
+  // ==========================================
+  // 3. MEMBER PRESENCE & PROGRESS
+  // ==========================================
 
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
-      chapterSlug: body.chapterSlug,
-      byUserId: userId,
-    });
-  }
-
-  @SubscribeMessage('change_mode')
-  async handleChangeMode(
-    @ConnectedSocket() socket: RoomSocket,
-    @WsUser('userId') userId: string,
-    @MessageBody() body: ChangeModeDto,
-  ) {
-    const roomId = this.requireRoom(socket, body.roomId);
-    const command = new ChangeRoomModeCommand(userId, roomId, body.mode);
-    await this.changeRoomModeUseCase.execute(command);
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
-      mode: body.mode,
-      changedBy: userId,
-    });
-  }
-
-  @SubscribeMessage('end_room')
-  async handleEndRoom(
-    @ConnectedSocket() socket: RoomSocket,
-    @WsUser('userId') userId: string,
-    @MessageBody() body: EndRoomDto,
-  ) {
-    const roomId = this.requireRoom(socket, body.roomId);
-    const command = new EndRoomCommand(userId, roomId);
-    await this.endRoomUseCase.execute(command);
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
-      endedBy: userId,
-    });
-
-    const presences = await this.presenceService.getRoomPresences(roomId);
-    await Promise.all(
-      presences.map((p) =>
-        this.presenceService.removePresence(roomId, p.userId),
-      ),
-    );
-  }
-
-  @SubscribeMessage('delete_room')
-  async handleDeleteRoom(
-    @ConnectedSocket() socket: RoomSocket,
-    @WsUser('userId') userId: string,
-    @MessageBody() body: DeleteRoomDto,
-  ) {
-    const roomId = this.requireRoom(socket, body.roomId);
-    const command = new DeleteRoomCommand(userId, roomId);
-    await this.deleteRoomUseCase.execute(command);
-    this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_DELETED, {
-      deletedBy: userId,
-    });
-  }
-
-  /** Broadcast tới mọi socket trong phòng (kể cả người gửi). */
-  private toRoom(roomId: string) {
-    return this.server.to(`room:${roomId}`);
-  }
-
-  private emitError(socket: RoomSocket, code: string, message: string) {
-    socket.emit(ReadingRoomServerEvent.ERROR, { code, message });
-  }
-
-  private requireRoom(socket: RoomSocket, roomId?: string): string {
-    const sd = socket.data;
-    if (
-      !roomId ||
-      sd.roomId !== roomId ||
-      !socket.rooms.has(`room:${roomId}`)
-    ) {
-      throw new WsException({
-        code: NOT_IN_ROOM_CODE,
-        message: NOT_IN_ROOM_MESSAGE,
-      });
-    }
-    return roomId;
-  }
-
-  private requireRoomForUseCase(socket: RoomSocket, roomId?: string): string {
-    const sd = socket.data;
-    if (
-      !roomId ||
-      sd.roomId !== roomId ||
-      !socket.rooms.has(`room:${roomId}`)
-    ) {
-      throw new WsException({
-        code: ROOM_MISMATCH_CODE,
-        message: ROOM_MISMATCH_MESSAGE,
-      });
-    }
-    return roomId;
-  }
-
-  private async isRateLimited(
-    userId: string,
-    event: string,
-    maxPerMinute = 30,
-  ): Promise<boolean> {
-    const key = `rl:ws:${event}:${userId}`;
-    try {
-      const res = await this.redis
-        .multi()
-        .set(key, 0, 'EX', RATE_LIMIT_WINDOW_SECONDS, 'NX')
-        .incr(key)
-        .exec();
-      const current = Number(res?.[1]?.[1] ?? 0);
-      return current > maxPerMinute;
-    } catch {
-      return false; // Fallback allow on Redis failure
-    }
-  }
-
-  private schedulePresenceBroadcast(roomId: string): void {
-    if (this.presenceBroadcastPending.has(roomId)) return;
-    const timer = setTimeout(() => {
-      this.presenceBroadcastPending.delete(roomId);
-      this.presenceService
-        .getRoomPresences(roomId)
-        .then((presences) => {
-          this.toRoom(roomId).emit(
-            ReadingRoomServerEvent.PRESENCE_UPDATE,
-            presences,
-          );
-        })
-        .catch((error: unknown) => {
-          this.logger.error(
-            `Failed to broadcast presences for room ${roomId}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        });
-    }, PRESENCE_BROADCAST_DEBOUNCE_MS);
-    this.presenceBroadcastPending.set(roomId, timer);
-  }
-
+  /**
+   * Nhịp tim (Heartbeat) báo hiệu user vẫn đang online.
+   * Ghi nhận % tiến độ đọc và cập nhật thẻ Presence để không bị tự động đá ra.
+   */
+  @UseGuards(WsRoomGuard)
   @SubscribeMessage('heartbeat')
   async handleHeartbeat(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser() sd: SocketData,
     @MessageBody() body: HeartbeatDto,
   ) {
-    this.requireRoom(socket, body.roomId);
     const { userId, displayName = '', avatarUrl = '' } = sd;
 
-    if (await this.isRateLimited(userId, 'heartbeat', 90)) return;
+    if (await this.rateLimiter.isLimited(userId, 'heartbeat', 90)) return;
+
+    await this.wsAuth.touchConnection(userId, socket.id);
 
     const chapterSlug = String(body.chapterSlug || '').slice(
       0,
@@ -803,7 +356,7 @@ export class ReadingRoomGateway
         : undefined;
 
     if (displayName && sd.roomId) {
-      await this.presenceService.upsertPresence(sd.roomId, userId, {
+      await this.presenceCoordinator.onHeartbeat(sd.roomId, userId, {
         userId,
         displayName,
         avatarUrl,
@@ -813,26 +366,68 @@ export class ReadingRoomGateway
       });
 
       if (sd.bookId && chapterId && progress !== undefined) {
-        sd.pendingProgress = {
-          bookId: sd.bookId,
-          chapterId: chapterId,
-          progress: progress,
-        };
-        sd.progressTimer ??= setTimeout(() => {
-          this.flushProgress(socket).catch((err: unknown) => {
-            this.logger.error('Failed to flush progress', err);
-          });
-        }, PROGRESS_FLUSH_DEBOUNCE_MS);
+        this.progressTracker.schedule(socket, sd.bookId, chapterId, progress);
       }
-
-      this.schedulePresenceBroadcast(sd.roomId);
     }
   }
 
-  @OnEvent(EventNames.READING_ROOM_REACTIVATED)
-  handleRoomReactivated(payload: { roomId: string; reactivatedBy: string }) {
-    this.toRoom(payload.roomId).emit(ReadingRoomServerEvent.ROOM_REACTIVATED, {
-      reactivatedBy: payload.reactivatedBy,
-    });
+  // ==========================================
+  // 4. HIGHLIGHT FEATURES
+  // ==========================================
+
+  /**
+   * Thêm Highlight (Tô sáng) vào một đoạn văn bản.
+   */
+  @UseGuards(WsRoomGuard)
+  @SubscribeMessage('add_highlight')
+  async handleAddHighlight(
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser() sd: SocketData,
+    @MessageBody() body: AddHighlightDto,
+  ) {
+    return this.highlightHandler.handleAddHighlight(socket, sd, body);
+  }
+
+  /**
+   * Xóa một Highlight do chính mình tạo.
+   */
+  @UseGuards(WsRoomGuard)
+  @SubscribeMessage(ReadingRoomClientEvent.REMOVE_HIGHLIGHT)
+  async handleRemoveHighlight(
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
+    @MessageBody() body: RemoveHighlightDto,
+  ) {
+    return this.highlightHandler.handleRemoveHighlight(socket, userId, body);
+  }
+
+  /**
+   * Yêu cầu AI sinh ra một thông tin chi tiết (Insight) về đoạn vừa Highlight.
+   */
+  @UseGuards(WsRoomGuard)
+  @SubscribeMessage(ReadingRoomClientEvent.GENERATE_HIGHLIGHT_INSIGHT)
+  async handleGenerateHighlightInsight(
+    @ConnectedSocket() socket: RoomSocket,
+    @WsUser('userId') userId: string,
+    @MessageBody() body: GenerateInsightDto,
+  ) {
+    return this.highlightHandler.handleGenerateHighlightInsight(
+      socket,
+      userId,
+      body,
+    );
+  }
+
+  /**
+   * Lắng nghe sự kiện từ Event Bus nội bộ của NestJS khi AI đã xử lý xong Insight,
+   * để đẩy (emit) kết quả về cho các user trong phòng.
+   */
+  @OnEvent(EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED)
+  handleHighlightInsightUpdated(payload: {
+    roomId: string;
+    highlightId: string;
+    insight: string;
+  }) {
+    this.highlightHandler.handleHighlightInsightUpdated(payload);
   }
 }

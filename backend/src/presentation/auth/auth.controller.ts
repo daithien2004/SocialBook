@@ -89,15 +89,11 @@ export class AuthController {
   async login(
     @Req() req: { user: User; ip: string; headers: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse<void>> {
+  ): Promise<ApiResponse<{ accessToken: string }>> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const command = new LoginCommand(req.user, req.ip, userAgent);
     const result = await this.loginUseCase.execute(command);
 
-    this.applyCookie(
-      res,
-      this.cookieService.accessTokenCookie(result.accessToken),
-    );
     this.applyCookie(
       res,
       this.cookieService.refreshTokenCookie(result.refreshToken),
@@ -105,6 +101,7 @@ export class AuthController {
 
     return {
       message: 'Đăng nhập thành công',
+      data: { accessToken: result.accessToken },
     };
   }
 
@@ -146,10 +143,8 @@ export class AuthController {
     const command = new LogoutCommand(req.user.id);
     const result = await this.logoutUseCase.execute(command);
 
-    const access = this.cookieService.clearAccessToken();
     const refresh = this.cookieService.clearRefreshToken();
     const oauthState = this.cookieService.clearOauthState();
-    res.clearCookie(access.name, { path: access.path });
     res.clearCookie(refresh.name, { path: refresh.path });
     res.clearCookie(oauthState.name, { path: oauthState.path });
 
@@ -205,7 +200,7 @@ export class AuthController {
     },
     @Body() body: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse<void>> {
+  ): Promise<ApiResponse<{ accessToken: string }>> {
     const refreshToken = body.refreshToken ?? req.cookies?.sb_refresh_token;
     if (!refreshToken) {
       throw new HttpException(
@@ -225,7 +220,6 @@ export class AuthController {
     const { accessToken, refreshToken: newRefreshToken } =
       await this.refreshTokenUseCase.execute(command);
 
-    this.applyCookie(res, this.cookieService.accessTokenCookie(accessToken));
     this.applyCookie(
       res,
       this.cookieService.refreshTokenCookie(newRefreshToken),
@@ -233,6 +227,7 @@ export class AuthController {
 
     return {
       message: 'Làm mới token thành công',
+      data: { accessToken },
     };
   }
 

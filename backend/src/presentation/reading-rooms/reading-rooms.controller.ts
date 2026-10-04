@@ -1,3 +1,4 @@
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
   Controller,
@@ -10,16 +11,14 @@ import {
 import { Throttle } from '@nestjs/throttler';
 
 import { CreateRoomCommand } from '@/application/reading-rooms/use-cases/create-room/create-room.command';
-import { CreateRoomUseCase } from '@/application/reading-rooms/use-cases/create-room/create-room.use-case';
-import { DeleteRoomUseCase } from '@/application/reading-rooms/use-cases/delete-room/delete-room.use-case';
-import { DeleteRoomCommand } from '@/application/reading-rooms/use-cases/delete-room/delete-room.command';
-import { GetMyActiveRoomsUseCase } from '@/application/reading-rooms/use-cases/get-my-active-rooms/get-my-active-rooms.use-case';
+
+
 import { GetMyActiveRoomsQuery } from '@/application/reading-rooms/use-cases/get-my-active-rooms/get-my-active-rooms.query';
-import { GetMyHistoryUseCase } from '@/application/reading-rooms/use-cases/get-my-history/get-my-history.use-case';
+
 import { GetMyHistoryQuery } from '@/application/reading-rooms/use-cases/get-my-history/get-my-history.query';
-import { GetRoomByCodeUseCase } from '@/application/reading-rooms/use-cases/get-room-by-code/get-room-by-code.use-case';
+
 import { GetRoomByCodeQuery } from '@/application/reading-rooms/use-cases/get-room-by-code/get-room-by-code.query';
-import { ReactivateRoomUseCase } from '@/application/reading-rooms/use-cases/reactivate-room/reactivate-room.use-case';
+
 import { ReactivateRoomCommand } from '@/application/reading-rooms/use-cases/reactivate-room/reactivate-room.command';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
@@ -29,12 +28,8 @@ import { ReadingRoomResponseDto } from './dto/reading-room.response.dto';
 @Controller('reading-rooms')
 export class ReadingRoomsController {
   constructor(
-    private readonly createRoomUseCase: CreateRoomUseCase,
-    private readonly deleteRoomUseCase: DeleteRoomUseCase,
-    private readonly getMyActiveRoomsUseCase: GetMyActiveRoomsUseCase,
-    private readonly getMyHistoryUseCase: GetMyHistoryUseCase,
-    private readonly getRoomByCodeUseCase: GetRoomByCodeUseCase,
-    private readonly reactivateRoomUseCase: ReactivateRoomUseCase,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
@@ -50,7 +45,7 @@ export class ReadingRoomsController {
       dto.mode,
       dto.maxMembers,
     );
-    const result = await this.createRoomUseCase.execute(command);
+    const result = await this.commandBus.execute(command);
     return {
       message: 'Tạo phòng đọc sách thành công',
       data: ReadingRoomResponseDto.fromResult(result),
@@ -59,7 +54,7 @@ export class ReadingRoomsController {
 
   @Get('my-active')
   async getMyActiveRooms(@CurrentUser('id') userId: string) {
-    const results = await this.getMyActiveRoomsUseCase.execute(
+    const results = await this.commandBus.execute(
       new GetMyActiveRoomsQuery(userId),
     );
     return {
@@ -70,7 +65,7 @@ export class ReadingRoomsController {
 
   @Get('my-history')
   async getMyHistory(@CurrentUser('id') userId: string) {
-    const result = await this.getMyHistoryUseCase.execute(
+    const result = await this.commandBus.execute(
       new GetMyHistoryQuery(userId),
     );
     return {
@@ -88,21 +83,13 @@ export class ReadingRoomsController {
     @Param('code') code: string,
   ) {
     const command = new ReactivateRoomCommand(userId, code);
-    const result = await this.reactivateRoomUseCase.execute(command);
+    const result = await this.commandBus.execute(command);
     return {
       message: 'Phòng đã được mở lại thành công',
       data: ReadingRoomResponseDto.fromResult(result),
     };
   }
 
-  @Delete(':code')
-  async deleteRoom(
-    @CurrentUser('id') userId: string,
-    @Param('code') code: string,
-  ) {
-    await this.deleteRoomUseCase.execute(new DeleteRoomCommand(userId, code));
-    return { message: 'Xoá phòng đọc thành công' };
-  }
 
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Get(':code')
@@ -110,7 +97,7 @@ export class ReadingRoomsController {
     @CurrentUser('id') userId: string,
     @Param('code') code: string,
   ) {
-    const result = await this.getRoomByCodeUseCase.execute(
+    const result = await this.commandBus.execute(
       new GetRoomByCodeQuery(code, userId),
     );
     if (!result.isMember) {

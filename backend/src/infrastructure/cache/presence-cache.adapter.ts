@@ -40,9 +40,9 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
         this.redis.expire(setKey, 3600),
       ]);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to upsert presence for room ${roomId} user ${userId}: ${errorMessage}`,
+        `Failed to upsert presence for room ${roomId} user ${userId}`,
+        err instanceof Error ? err.stack : String(err),
       );
     }
   }
@@ -72,15 +72,18 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
         this.redis
           .srem(setKey, ...expiredUserIds)
           .catch((err) =>
-            this.logger.error('Failed to cleanup expired presences:', err),
+            this.logger.error(
+              'Failed to cleanup expired presences',
+              err instanceof Error ? err.stack : String(err),
+            ),
           );
       }
 
       return activePresences;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to get presences for room ${roomId}: ${errorMessage}`,
+        `Failed to get presences for room ${roomId}`,
+        err instanceof Error ? err.stack : String(err),
       );
       return [];
     }
@@ -93,9 +96,9 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
     try {
       await Promise.all([this.redis.del(key), this.redis.srem(setKey, userId)]);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to remove presence for room ${roomId} user ${userId}: ${errorMessage}`,
+        `Failed to remove presence for room ${roomId} user ${userId}`,
+        err instanceof Error ? err.stack : String(err),
       );
     }
   }
@@ -110,9 +113,9 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
       const keys = userIds.map((userId) => this.getKey(roomId, userId));
       await Promise.all([this.redis.del(...keys), this.redis.del(setKey)]);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to remove presences for room ${roomId}: ${errorMessage}`,
+        `Failed to remove presences for room ${roomId}`,
+        err instanceof Error ? err.stack : String(err),
       );
     }
   }

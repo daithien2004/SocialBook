@@ -1,3 +1,7 @@
-export class GetMyActiveRoomsQuery {
-  constructor(public readonly userId: string) {}
+import { Query } from '@nestjs/cqrs';
+import { ReadingRoomResult } from '../../reading-room.interface';
+
+export class GetMyActiveRoomsQuery extends Query<ReadingRoomResult[]> {
+  constructor(public readonly userId: string) {
+    super();}
 }

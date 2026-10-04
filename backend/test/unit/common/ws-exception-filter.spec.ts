@@ -127,9 +127,9 @@ describe('ReadingRoomGateway error propagation to WsExceptionFilter', () => {
       {} as never, // AddHighlightUseCase
       {} as never, // RemoveHighlightUseCase
       {} as never, // GenerateHighlightInsightUseCase
-      {} as never, // UpdateProgressUseCase
-      {} as never, // IChapterRepository
-      {} as never, // Redis
+      {}, // UpdateProgressUseCase
+      {}, // IChapterRepository
+      {}, // Redis
     );
     gateway.server = {
       to: jest.fn(() => ({ emit: jest.fn() })),

@@ -79,9 +79,9 @@ describe('ReadingRoomGateway WS rate limiting', () => {
       addHighlight as never,
       {} as never, // RemoveHighlightUseCase
       {} as never, // GenerateHighlightInsightUseCase
-      {} as never, // UpdateProgressUseCase
-      {} as never, // IChapterRepository
-      redis as never,
+      {}, // UpdateProgressUseCase
+      {}, // IChapterRepository
+      redis,
     );
     gateway.server = {
       to: jest.fn(() => ({ emit: jest.fn() })),

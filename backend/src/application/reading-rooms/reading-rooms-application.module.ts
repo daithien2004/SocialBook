@@ -1,26 +1,39 @@
 import { Module } from '@nestjs/common';
-import { CreateRoomUseCase } from './use-cases/create-room/create-room.use-case';
-import { JoinRoomUseCase } from './use-cases/join-room/join-room.use-case';
-import { LeaveRoomUseCase } from './use-cases/leave-room/leave-room.use-case';
-import { ChangeChapterUseCase } from './use-cases/change-chapter/change-chapter.use-case';
-import { ChangeRoomModeUseCase } from './use-cases/change-room-mode/change-room-mode.use-case';
-import { EndRoomUseCase } from './use-cases/end-room/end-room.use-case';
-import { ReactivateRoomUseCase } from './use-cases/reactivate-room/reactivate-room.use-case';
-import { DeleteRoomUseCase } from './use-cases/delete-room/delete-room.use-case';
-import { GetMyActiveRoomsUseCase } from './use-cases/get-my-active-rooms/get-my-active-rooms.use-case';
-import { GetMyHistoryUseCase } from './use-cases/get-my-history/get-my-history.use-case';
-import { GetRoomByCodeUseCase } from './use-cases/get-room-by-code/get-room-by-code.use-case';
+import { CreateRoomHandler } from './use-cases/create-room/create-room.handler';
+import { JoinRoomHandler } from './use-cases/join-room/join-room.handler';
+import { LeaveRoomHandler } from './use-cases/leave-room/leave-room.handler';
+import { ReactivateRoomHandler } from './use-cases/reactivate-room/reactivate-room.handler';
+import { GetMyActiveRoomsHandler } from './use-cases/get-my-active-rooms/get-my-active-rooms.handler';
+import { GetMyHistoryHandler } from './use-cases/get-my-history/get-my-history.handler';
+import { GetRoomByCodeHandler } from './use-cases/get-room-by-code/get-room-by-code.handler';
 import { ReadingRoomsRepositoryModule } from '@/infrastructure/database/repositories/reading-rooms/reading-rooms-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 
-import { AddHighlightUseCase } from './use-cases/add-highlight/add-highlight.use-case';
-import { GenerateHighlightInsightUseCase } from './use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
-import { RemoveHighlightUseCase } from './use-cases/remove-highlight/remove-highlight.use-case';
+import { AddHighlightHandler } from './use-cases/add-highlight/add-highlight.handler';
+import { GenerateHighlightInsightHandler } from './use-cases/generate-highlight-insight/generate-highlight-insight.handler';
+import { RemoveHighlightHandler } from './use-cases/remove-highlight/remove-highlight.handler';
 import { AIApplicationModule } from '../ai/ai-application.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 
 import { IPresencePort } from '@/domain/reading-rooms/interfaces/presence.port';
 import { ReadingRoomPresenceService } from './presence/reading-room-presence.service';
+
+export const CommandHandlers = [
+  CreateRoomHandler,
+  JoinRoomHandler,
+  LeaveRoomHandler,
+  ReactivateRoomHandler,
+  AddHighlightHandler,
+  GenerateHighlightInsightHandler,
+  RemoveHighlightHandler
+];
+
+export const QueryHandlers = [
+  GetMyActiveRoomsHandler,
+  GetMyHistoryHandler,
+  GetRoomByCodeHandler
+];
+
 
 @Module({
   imports: [
@@ -30,41 +43,17 @@ import { ReadingRoomPresenceService } from './presence/reading-room-presence.ser
     AIApplicationModule,
   ],
   providers: [
-    CreateRoomUseCase,
-    JoinRoomUseCase,
-    LeaveRoomUseCase,
-    ChangeChapterUseCase,
-    ChangeRoomModeUseCase,
-    EndRoomUseCase,
-    ReactivateRoomUseCase,
-    DeleteRoomUseCase,
-    AddHighlightUseCase,
-    RemoveHighlightUseCase,
-    GenerateHighlightInsightUseCase,
-    GetMyActiveRoomsUseCase,
-    GetMyHistoryUseCase,
-    GetRoomByCodeUseCase,
+    ...CommandHandlers,
+    ...QueryHandlers,
     ReadingRoomPresenceService,
     {
       provide: IPresencePort,
       useExisting: ReadingRoomPresenceService,
-    },
+    }
   ],
   exports: [
-    CreateRoomUseCase,
-    JoinRoomUseCase,
-    LeaveRoomUseCase,
-    ChangeChapterUseCase,
-    ChangeRoomModeUseCase,
-    EndRoomUseCase,
-    ReactivateRoomUseCase,
-    DeleteRoomUseCase,
-    AddHighlightUseCase,
-    RemoveHighlightUseCase,
-    GenerateHighlightInsightUseCase,
-    GetMyActiveRoomsUseCase,
-    GetMyHistoryUseCase,
-    GetRoomByCodeUseCase,
+    ...CommandHandlers,
+    ...QueryHandlers,
   ],
 })
 export class ReadingRoomsApplicationModule {}

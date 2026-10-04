@@ -33,18 +33,6 @@ export class AuthCookieService {
         'lax' | 'strict' | 'none') ?? 'lax';
   }
 
-  accessTokenCookie(token: string): SetCookieSpec {
-    return {
-      name: 'sb_access_token',
-      value: token,
-      path: '/',
-      maxAgeSeconds: REFRESH_TTL_SECONDS,
-      httpOnly: true,
-      secure: this.secure,
-      sameSite: this.sameSite,
-    };
-  }
-
   refreshTokenCookie(token: string): SetCookieSpec {
     return {
       name: 'sb_refresh_token',
@@ -67,10 +55,6 @@ export class AuthCookieService {
       secure: this.secure,
       sameSite: this.sameSite,
     };
-  }
-
-  clearAccessToken(): ClearCookieSpec {
-    return { name: 'sb_access_token', path: '/' };
   }
 
   clearRefreshToken(): ClearCookieSpec {

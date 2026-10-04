@@ -1,4 +1,5 @@
-export class AddHighlightCommand {
+import { Command } from '@nestjs/cqrs';
+export class AddHighlightCommand extends Command<import('@/domain/reading-rooms/entities/reading-room.entity').ReadingRoom> {
   constructor(
     public readonly roomId: string,
     public readonly userId: string,
@@ -7,5 +8,6 @@ export class AddHighlightCommand {
     public readonly content: string,
     public readonly displayName?: string,
     public readonly avatarUrl?: string,
-  ) {}
+  ) {
+    super();}
 }

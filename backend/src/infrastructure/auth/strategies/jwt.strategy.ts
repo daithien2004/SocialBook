@@ -27,10 +27,7 @@ export function accessTokenFromRequest(req: {
   cookies?: Record<string, string | undefined>;
   headers?: Record<string, string | string[] | undefined>;
 }): string | null {
-  const cookie = req?.cookies?.['sb_access_token'];
-  if (cookie) return cookie;
-  const bearer = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-  return bearer;
+  return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
 }
 
 interface AuthUserCache {

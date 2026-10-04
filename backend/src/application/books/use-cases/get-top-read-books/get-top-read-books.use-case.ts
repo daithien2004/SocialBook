@@ -51,9 +51,9 @@ export class GetTopReadBooksUseCase {
 
       return books;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Error fetching top read books from Redis: ${errorMessage}`,
+        'Error fetching top read books from Redis',
+        err instanceof Error ? err.stack : String(err),
       );
       return this.getFallbackTopBooks(limit);
     }

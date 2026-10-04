@@ -38,9 +38,9 @@ export class ViewRankingCacheAdapter implements IViewRankingCachePort {
         this.redis.zincrby(weekKey, 1, bookId),
       ]);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to record book view in Redis: ${bookId} - ${errorMessage}`,
+        `Failed to record book view in Redis: ${bookId}`,
+        err instanceof Error ? err.stack : String(err),
       );
     }
   }
@@ -56,9 +56,9 @@ export class ViewRankingCacheAdapter implements IViewRankingCachePort {
 
       return await this.redis.zrevrange(key, 0, limit - 1);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Failed to fetch top books from Redis: ${errorMessage}`,
+        'Failed to fetch top books from Redis',
+        err instanceof Error ? err.stack : String(err),
       );
       return [];
     }

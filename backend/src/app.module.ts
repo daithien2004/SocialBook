@@ -13,6 +13,7 @@ import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis'
 import Redis from 'ioredis';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CqrsModule } from '@nestjs/cqrs';
 import { isWorkerProcess } from '@/common/utils/process-role.util';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -120,6 +121,7 @@ import { PresentationModule } from './presentation/presentation.module';
     // A8: cron chỉ chạy ở tiến trình worker (đúng 1 replica). Nếu đăng ký ở mọi
     // replica API thì mỗi @Cron sẽ bắn N lần — đối soát đơn hàng sẽ chạy trùng.
     ...(isWorkerProcess() ? [ScheduleModule.forRoot()] : []),
+    CqrsModule.forRoot(),
     LoggerModule,
     // Clean Architecture - 3 layers
     InfrastructureModule,
