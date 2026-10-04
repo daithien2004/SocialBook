@@ -278,6 +278,7 @@ báo optional trong DTO (không xoá khỏi type như bản nháp của tài li�
 | E5 | Q8: "không kiểm tra rõ ràng" | Đúng — nhưng `countByBook` **không** phải kiểm tra; cần nói rõ để tránh hiểu nhầm rằng đã an toàn | T15 | Giữ xác minh ở gateway, chuyển vào use case ở T15 |
 | E6 | Q4: "thứ tự được đảm bảo append" | Append có đúng, nhưng **không nguyên tử qua 3 lần retry OCC** ⇒ `[len-1]` có thể là của người khác | T8 | T8 dùng id do use case sinh |
 | E7 | Q12: chỉ trả lời "có reconnect gọi lại join_room" | Bổ sung: `leave_room` khi unmount gửi `roomId = roomCode` | T2/T9 | `requireRoom` so `body.roomId` với `sd.roomId`; `leave_room` xử lý riêng |
+| E8 | "namespace `/reading-rooms` đang chạy và chỉ thiếu hardening" | **`SocketModule` không được load ⇒ gateway không hề được nối** (xem P1) | Toàn bộ e2e WS fail; tính năng chết trên mọi môi trường | Hoist `@nestjs/websockets` + `@nestjs/platform-socket.io` lên root (commit riêng, trước T1) |
 
 ---
 
@@ -304,3 +305,66 @@ báo optional trong DTO (không xoá khỏi type như bản nháp của tài li�
    thêm log có cấu trúc ở T17 + ghi đề xuất metric.
 8. `chatMessages: []` trong snapshot `join_room` (`gateway:515`) là hằng rỗng — chưa có tính
    năng chat. Ghi nhận tại T14.3.
+
+---
+
+## P1 — BLOCKER phát hiện khi chạy e2e: `@nestjs/websockets` không được load ⇒ **gateway chưa từng chạy**
+
+Phát hiện này **phải sửa trước T1**, vì mọi test e2e của namespace `/reading-rooms` đều fail
+với `websocket error` và cả runtime thật cũng không có WebSocket.
+
+**Triệu chứng**
+
+- `GET /socket.io/?EIO=4&transport=polling` → `404` từ Nest (không phải từ Engine.IO).
+- `afterInit()` của gateway **không** được gọi; `@WebSocketServer()` giữ `undefined`.
+- Client `socket.io-client` luôn `connect_error: websocket error`.
+
+**Nguyên nhân**
+
+`@nestjs/core` nạp `SocketModule` bằng `optionalRequire` **tại thời điểm require module**
+(`node_modules/@nestjs/core/nest-application.js:19`):
+
+```js
+const { SocketModule } = optionalRequire('@nestjs/websockets/socket-module', () => require('@nestjs/websockets/socket-module'));
+```
+
+`optionalRequire` nuốt lỗi và trả `{}` khi resolve thất bại
+(`node_modules/@nestjs/core/helpers/optional-require.js:4-11`) ⇒ `SocketModule === undefined`
+⇒ `NestApplication.socketModule = undefined` ⇒ `registerWsModule()` (`nest-application.js:87-92`)
+bỏ qua hoàn toàn ⇒ **không gateway nào được nối**.
+
+Resolve thất bại vì npm workspace hoist **tách** 2 package: `@nestjs/core` ở
+`<root>/node_modules/@nestjs/core` còn `@nestjs/websockets` ở
+`backend/node_modules/@nestjs/websockets`. Node/Metro-style resolution từ file của `@nestjs/core`
+chỉ dò `node_modules` dọc theo cây thư mục → không nhìn thấy `backend/node_modules`:
+
+```
+node -e "console.log(require.resolve('@nestjs/websockets/socket-module',
+  { paths: [require('path').dirname(require.resolve('@nestjs/core/nest-application'))] }))"
+# trước khi sửa: MODULE_NOT_FOUND
+# sau khi sửa:  <root>/node_modules/@nestjs/websockets/socket-module.js
+```
+
+**Sửa (không thêm dependency mới)**
+
+Khai báo lại 2 package **đã có sẵn** trong `backend/package.json:70,75` ở `package.json` gốc
+(đúng version `^11.1.6`) để npm hoist chúng lên cạnh `@nestjs/core`:
+
+```json
+"dependencies": {
+  "@nestjs/platform-socket.io": "^11.1.6",
+  "@nestjs/websockets": "^11.1.6"
+}
+```
+
+Sau `npm install`: `<root>/node_modules/@nestjs/{core,common,websockets,platform-socket.io}` cùng
+cấp; `backend/node_modules/@nestjs/` chỉ còn package riêng của backend.
+
+⇒ **Không phải dependency mới** — chỉ thay đổi *vị trí cài* để Nest resolve được adapter.
+Cần chạy `npm install` ở repo root sau khi pull (đã commit `package.json` + `package-lock.json`).
+
+**Bài học áp dụng cho T1**
+
+- `maxHttpBufferSize` mặc định của socket.io là 1 MB; gateway đang đặt `1e5` (100 KB) trong
+  decorator. Payload vượt ngưỡng ⇒ **server đóng connection**, không phải trả `error`.
+  Test e2e phải kiểm tra `disconnect`, không được kỳ vọng `VALIDATION_FAILED`.
