@@ -1,13 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import {
-  ToggleLikeUseCase,
-  ToggleLikeRequest,
-} from '@/application/likes/use-cases/toggle-like/toggle-like.use-case';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { ToggleBookLikeCommand } from './toggle-book-like.command';
+import { CommandBus } from '@nestjs/cqrs';
+import { ToggleLikeCommand } from '@/application/likes/use-cases/toggle-like/toggle-like.command';
 
 export interface ToggleBookLikeResult {
   isLiked: boolean;
@@ -20,7 +18,7 @@ export class ToggleBookLikeUseCase {
 
   constructor(
     private readonly bookRepository: IBookRepository,
-    private readonly toggleLikeUseCase: ToggleLikeUseCase,
+    private readonly commandBus: CommandBus,
     private readonly bookCache: IBookCachePort,
   ) {}
 
@@ -28,13 +26,7 @@ export class ToggleBookLikeUseCase {
     try {
       const bookId = BookId.create(command.bookId);
 
-      const likeRequest: ToggleLikeRequest = {
-        userId: command.userId,
-        targetId: command.bookId,
-        targetType: TargetType.BOOK,
-      };
-
-      const likeResult = await this.toggleLikeUseCase.execute(likeRequest);
+      const likeResult = await this.commandBus.execute(new ToggleLikeCommand(command.userId, command.bookId, TargetType.BOOK));
 
       if (likeResult.isLiked) {
         await this.bookRepository.addLike(bookId, command.userId);

@@ -1,3 +1,4 @@
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
   Controller,
@@ -21,12 +22,12 @@ import {
   FollowStatusResponseDto,
 } from '@/presentation/follows/dto/follow.response.dto';
 
-import { CreateFollowUseCase } from '@/application/follows/use-cases/create-follow/create-follow.use-case';
-import { DeleteFollowUseCase } from '@/application/follows/use-cases/delete-follow/delete-follow.use-case';
-import { GetFollowStatusUseCase } from '@/application/follows/use-cases/get-follow-status/get-follow-status.use-case';
-import { GetFollowsUseCase } from '@/application/follows/use-cases/get-follows/get-follows.use-case';
-import { GetFollowingUseCase } from '@/application/follows/use-cases/get-following-with-user-info/get-following.use-case';
-import { GetFollowersUseCase } from '@/application/follows/use-cases/get-followers-with-user-info/get-followers.use-case';
+
+
+
+
+
+
 
 import { CreateFollowCommand } from '@/application/follows/use-cases/create-follow/create-follow.command';
 import { DeleteFollowCommand } from '@/application/follows/use-cases/delete-follow/delete-follow.command';
@@ -38,19 +39,15 @@ import { GetFollowersQuery } from '@/application/follows/use-cases/get-followers
 @Controller('follows')
 export class FollowsController {
   constructor(
-    private readonly createFollowUseCase: CreateFollowUseCase,
-    private readonly getFollowsUseCase: GetFollowsUseCase,
-    private readonly getFollowStatusUseCase: GetFollowStatusUseCase,
-    private readonly deleteFollowUseCase: DeleteFollowUseCase,
-    private readonly getFollowingUseCase: GetFollowingUseCase,
-    private readonly getFollowersUseCase: GetFollowersUseCase,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Public()
   @Get('following')
   async getFollowingList(@Query('userId') userId: string) {
     const query = new GetFollowingQuery(userId);
-    const result = await this.getFollowingUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get following list successfully',
@@ -62,7 +59,7 @@ export class FollowsController {
   @Get('followers')
   async getFollowersList(@Query('targetUserId') targetUserId: string) {
     const query = new GetFollowersQuery(targetUserId);
-    const result = await this.getFollowersUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get followers list successfully',
@@ -77,7 +74,7 @@ export class FollowsController {
     @Query('targetId') targetId: string,
   ) {
     const query = new GetFollowStatusQuery(userId, targetId);
-    const result = await this.getFollowStatusUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get follow status successfully',
@@ -97,7 +94,7 @@ export class FollowsController {
     @Body() dto: CreateFollowDto,
   ) {
     const command = new CreateFollowCommand(userId, dto.targetId, dto.status);
-    const follow = await this.createFollowUseCase.execute(command);
+    const follow = await this.commandBus.execute(command);
 
     return {
       message: 'Follow created successfully',
@@ -111,7 +108,7 @@ export class FollowsController {
     @Param('targetId') targetId: string,
   ) {
     const command = new DeleteFollowCommand(userId, targetId);
-    await this.deleteFollowUseCase.execute(command);
+    await this.commandBus.execute(command);
 
     return {
       message: 'Unfollowed successfully',
@@ -136,7 +133,7 @@ export class FollowsController {
       filter.actualPage,
       filter.actualLimit,
     );
-    const result = await this.getFollowsUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get all follows successfully',

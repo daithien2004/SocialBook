@@ -1,15 +1,27 @@
 import { Module } from '@nestjs/common';
-import { CreateCommentUseCase } from './use-cases/create-comment/create-comment.use-case';
-import { DeleteCommentUseCase } from './use-cases/delete-comment/delete-comment.use-case';
-import { GetCommentsUseCase } from './use-cases/get-comments/get-comments.use-case';
-import { GetCommentCountUseCase } from './use-cases/get-comment-count/get-comment-count.use-case';
-import { ModerateCommentUseCase } from './use-cases/moderate-comment/moderate-comment.use-case';
-import { UpdateCommentUseCase } from './use-cases/update-comment/update-comment.use-case';
+import { CreateCommentHandler } from './use-cases/create-comment/create-comment.handler';
+import { DeleteCommentHandler } from './use-cases/delete-comment/delete-comment.handler';
+import { GetCommentsHandler } from './use-cases/get-comments/get-comments.handler';
+import { GetCommentCountHandler } from './use-cases/get-comment-count/get-comment-count.handler';
+import { ModerateCommentHandler } from './use-cases/moderate-comment/moderate-comment.handler';
+import { UpdateCommentHandler } from './use-cases/update-comment/update-comment.handler';
 
 import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
 import { QueueModule } from '@/infrastructure/queue/queue.module';
+
+export const CommandHandlers = [
+  CreateCommentHandler,
+  DeleteCommentHandler,
+  ModerateCommentHandler,
+  UpdateCommentHandler
+];
+
+export const QueryHandlers = [
+  GetCommentsHandler,
+  GetCommentCountHandler
+];
 
 @Module({
   imports: [
@@ -19,20 +31,16 @@ import { QueueModule } from '@/infrastructure/queue/queue.module';
     QueueModule,
   ],
   providers: [
-    CreateCommentUseCase,
-    DeleteCommentUseCase,
-    GetCommentsUseCase,
-    GetCommentCountUseCase,
-    ModerateCommentUseCase,
-    UpdateCommentUseCase,
+    ...CommandHandlers,
+    ...QueryHandlers,
   ],
   exports: [
-    CreateCommentUseCase,
-    DeleteCommentUseCase,
-    GetCommentsUseCase,
-    GetCommentCountUseCase,
-    ModerateCommentUseCase,
-    UpdateCommentUseCase,
+    CreateCommentHandler,
+    DeleteCommentHandler,
+    GetCommentsHandler,
+    GetCommentCountHandler,
+    ModerateCommentHandler,
+    UpdateCommentHandler,
   ],
 })
 export class CommentsApplicationModule {}

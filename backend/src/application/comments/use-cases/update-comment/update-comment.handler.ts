@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   NotFoundDomainException,
@@ -11,9 +12,9 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class UpdateCommentUseCase {
-  private readonly logger = new Logger(UpdateCommentUseCase.name);
+@CommandHandler(UpdateCommentCommand)
+export class UpdateCommentHandler implements ICommandHandler<UpdateCommentCommand, any> {
+  private readonly logger = new Logger(UpdateCommentHandler.name);
 
   constructor(private readonly commentRepository: ICommentRepository) {}
 

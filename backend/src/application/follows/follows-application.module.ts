@@ -1,31 +1,39 @@
 import { Module } from '@nestjs/common';
-import { CreateFollowUseCase } from './use-cases/create-follow/create-follow.use-case';
-import { DeleteFollowUseCase } from './use-cases/delete-follow/delete-follow.use-case';
-import { GetFollowStatusUseCase } from './use-cases/get-follow-status/get-follow-status.use-case';
-import { GetFollowsUseCase } from './use-cases/get-follows/get-follows.use-case';
-import { GetFollowingUseCase } from './use-cases/get-following-with-user-info/get-following.use-case';
-import { GetFollowersUseCase } from './use-cases/get-followers-with-user-info/get-followers.use-case';
+import { CreateFollowHandler } from './use-cases/create-follow/create-follow.handler';
+import { DeleteFollowHandler } from './use-cases/delete-follow/delete-follow.handler';
+import { GetFollowStatusHandler } from './use-cases/get-follow-status/get-follow-status.handler';
+import { GetFollowsHandler } from './use-cases/get-follows/get-follows.handler';
+import { GetFollowingHandler } from './use-cases/get-following-with-user-info/get-following.handler';
+import { GetFollowersHandler } from './use-cases/get-followers-with-user-info/get-followers.handler';
 import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/follows/follows-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { QueueModule } from '@/infrastructure/queue/queue.module';
 
+export const CommandHandlers = [
+  CreateFollowHandler,
+  DeleteFollowHandler
+];
+
+export const QueryHandlers = [
+  GetFollowStatusHandler,
+  GetFollowsHandler,
+  GetFollowingHandler,
+  GetFollowersHandler
+];
+
 @Module({
   imports: [FollowsRepositoryModule, IdGeneratorModule, QueueModule],
   providers: [
-    CreateFollowUseCase,
-    DeleteFollowUseCase,
-    GetFollowStatusUseCase,
-    GetFollowsUseCase,
-    GetFollowingUseCase,
-    GetFollowersUseCase,
+    ...CommandHandlers,
+    ...QueryHandlers,
   ],
   exports: [
-    CreateFollowUseCase,
-    DeleteFollowUseCase,
-    GetFollowStatusUseCase,
-    GetFollowsUseCase,
-    GetFollowingUseCase,
-    GetFollowersUseCase,
+    CreateFollowHandler,
+    DeleteFollowHandler,
+    GetFollowStatusHandler,
+    GetFollowsHandler,
+    GetFollowingHandler,
+    GetFollowersHandler,
   ],
 })
 export class FollowsApplicationModule {}

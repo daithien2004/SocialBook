@@ -1,24 +1,19 @@
+import { GetLikeStatusQuery } from './get-like-status.query';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { ILikeRepository } from '@/domain/likes/repositories/like.repository.interface';
 import { UserId } from '@/domain/likes/value-objects/user-id.vo';
 import { TargetId } from '@/domain/likes/value-objects/target-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
-import { Injectable } from '@nestjs/common';
-
-export interface GetLikeStatusRequest {
-  userId: string;
-  targetId: string;
-  targetType: TargetType;
-}
 
 export interface GetLikeStatusResult {
   isLiked: boolean;
 }
 
-@Injectable()
-export class GetLikeStatusUseCase {
+@QueryHandler(GetLikeStatusQuery)
+export class GetLikeStatusHandler implements IQueryHandler<GetLikeStatusQuery, GetLikeStatusResult> {
   constructor(private readonly likeRepository: ILikeRepository) {}
 
-  async execute(request: GetLikeStatusRequest): Promise<GetLikeStatusResult> {
+  async execute(request: GetLikeStatusQuery): Promise<GetLikeStatusResult> {
     const userId = UserId.create(request.userId);
     const targetId = TargetId.create(request.targetId);
 

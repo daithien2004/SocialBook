@@ -1,4 +1,5 @@
-export class GetFollowsQuery {
+import { Query } from '@nestjs/cqrs';
+export class GetFollowsQuery extends Query<any> {
   constructor(
     public readonly userId?: string,
     public readonly targetId?: string,
@@ -6,5 +7,6 @@ export class GetFollowsQuery {
     public readonly limit?: number,
     public readonly sortBy?: 'createdAt' | 'updatedAt',
     public readonly order?: 'asc' | 'desc',
-  ) {}
+  ) {
+    super();}
 }

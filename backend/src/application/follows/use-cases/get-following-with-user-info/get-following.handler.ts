@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   IFollowRepository,
@@ -5,9 +6,9 @@ import {
 } from '@/domain/follows/repositories/follow.repository.interface';
 import { GetFollowingQuery } from './get-following.query';
 
-@Injectable()
-export class GetFollowingUseCase {
-  private readonly logger = new Logger(GetFollowingUseCase.name);
+@QueryHandler(GetFollowingQuery)
+export class GetFollowingHandler implements IQueryHandler<GetFollowingQuery, any> {
+  private readonly logger = new Logger(GetFollowingHandler.name);
 
   constructor(private readonly followRepository: IFollowRepository) {}
 

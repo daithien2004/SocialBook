@@ -1,14 +1,26 @@
 import { Module } from '@nestjs/common';
-import { GetLikeCountUseCase } from './use-cases/get-like-count/get-like-count.use-case';
-import { GetLikeStatusUseCase } from './use-cases/get-like-status/get-like-status.use-case';
-import { ToggleLikeUseCase } from './use-cases/toggle-like/toggle-like.use-case';
+import { GetLikeCountHandler } from './use-cases/get-like-count/get-like-count.handler';
+import { GetLikeStatusHandler } from './use-cases/get-like-status/get-like-status.handler';
+import { ToggleLikeHandler } from './use-cases/toggle-like/toggle-like.handler';
 import { LikesRepositoryModule } from '@/infrastructure/database/repositories/likes/likes-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { QueueModule } from '@/infrastructure/queue/queue.module';
 
+export const CommandHandlers = [
+  ToggleLikeHandler
+];
+
+export const QueryHandlers = [
+  GetLikeCountHandler,
+  GetLikeStatusHandler
+];
+
 @Module({
   imports: [LikesRepositoryModule, IdGeneratorModule, QueueModule],
-  providers: [GetLikeCountUseCase, GetLikeStatusUseCase, ToggleLikeUseCase],
-  exports: [GetLikeCountUseCase, GetLikeStatusUseCase, ToggleLikeUseCase],
+  providers: [
+    ...CommandHandlers,
+    ...QueryHandlers,
+  ],
+  exports: [GetLikeCountHandler, GetLikeStatusHandler, ToggleLikeHandler],
 })
 export class LikesApplicationModule {}

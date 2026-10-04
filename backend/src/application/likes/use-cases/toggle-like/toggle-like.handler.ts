@@ -1,3 +1,5 @@
+import { ToggleLikeCommand } from './toggle-like.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Injectable } from '@nestjs/common';
 import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
 import { LikeToggledJobPayload } from '@/application/notifications/jobs/notification-job.payload';
@@ -8,19 +10,13 @@ import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { Like } from '@/domain/likes/entities/like.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
-export interface ToggleLikeRequest {
-  userId: string;
-  targetId: string;
-  targetType: TargetType;
-}
-
 export interface ToggleLikeResult {
   isLiked: boolean;
   likeId: string;
 }
 
-@Injectable()
-export class ToggleLikeUseCase {
+@CommandHandler(ToggleLikeCommand)
+export class ToggleLikeHandler implements ICommandHandler<ToggleLikeCommand, ToggleLikeResult> {
   constructor(
     private readonly likeRepository: ILikeRepository,
     private readonly idGenerator: IIdGenerator,
@@ -28,7 +24,7 @@ export class ToggleLikeUseCase {
     private readonly notificationQueue: INotificationQueuePort,
   ) {}
 
-  async execute(request: ToggleLikeRequest): Promise<ToggleLikeResult> {
+  async execute(request: ToggleLikeCommand): Promise<ToggleLikeResult> {
     const userId = UserId.create(request.userId);
     const targetId = TargetId.create(request.targetId);
 
