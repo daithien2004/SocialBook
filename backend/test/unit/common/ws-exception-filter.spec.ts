@@ -136,10 +136,18 @@ describe('ReadingRoomGateway error propagation to WsExceptionFilter', () => {
     } as never;
 
     await expect(
-      gateway.handleChapterChange('user-1', {
-        roomId: 'room-1',
-        chapterSlug: 'chuong-2',
-      }),
+      gateway.handleChapterChange(
+        {
+          id: 'socket-1',
+          data: { userId: 'user-1', role: 'user', roomId: 'room-1' },
+          rooms: new Set(['room:room-1']),
+        } as any,
+        { userId: 'user-1', role: 'user' } as any,
+        {
+          roomId: 'room-1',
+          chapterSlug: 'chuong-2',
+        } as any,
+      ),
     ).rejects.toThrow('Bạn không phải là thành viên của phòng này');
 
     expect(changeChapter.execute).toHaveBeenCalledTimes(1);

@@ -14,6 +14,7 @@ import { Namespace, Server } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
+import { WsException } from '@nestjs/websockets';
 import { GenerateHighlightInsightUseCase } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
 import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.command';
 import { ReadingRoomPresenceService } from '@/application/reading-rooms/presence/reading-room-presence.service';
@@ -76,6 +77,8 @@ import {
   MAX_CONNECTIONS_PER_USER,
   NOT_IN_ROOM_CODE,
   NOT_IN_ROOM_MESSAGE,
+  ROOM_MISMATCH_CODE,
+  ROOM_MISMATCH_MESSAGE,
   PARAGRAPH_ID_MAX_LENGTH,
   PROGRESS_MAX,
   PROGRESS_MIN,
@@ -313,12 +316,7 @@ export class ReadingRoomGateway
     @MessageBody() body: AddHighlightDto,
   ) {
     const { userId, displayName = '', avatarUrl = '' } = sd;
-    const roomId = body.roomId;
-
-    if (!this.isInRoom(socket, roomId)) {
-      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
-      return;
-    }
+    const roomId = this.requireRoom(socket, body.roomId);
 
     if (await this.isRateLimited(userId, 'add_highlight', 30)) {
       this.emitError(
@@ -367,12 +365,7 @@ export class ReadingRoomGateway
     @WsUser('userId') userId: string,
     @MessageBody() body: RemoveHighlightDto,
   ) {
-    const roomId = body.roomId;
-
-    if (!this.isInRoom(socket, roomId)) {
-      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
-      return;
-    }
+    const roomId = this.requireRoom(socket, body.roomId);
 
     const command = new RemoveHighlightCommand(
       roomId,
@@ -393,12 +386,7 @@ export class ReadingRoomGateway
     @WsUser('userId') userId: string,
     @MessageBody() body: GenerateInsightDto,
   ) {
-    const roomId = body.roomId;
-
-    if (!this.isInRoom(socket, roomId)) {
-      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
-      return;
-    }
+    const roomId = this.requireRoom(socket, body.roomId);
 
     // B3: Rate limit max 5/min cho insight
     if (await this.isRateLimited(userId, 'generate_insight', 5)) {
@@ -644,17 +632,15 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('chapter_change')
   async handleChapterChange(
+    @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
     @MessageBody() body: ChapterChangeDto,
   ) {
-    const command = new ChangeChapterCommand(
-      userId,
-      body.roomId,
-      body.chapterSlug,
-    );
+    const roomId = this.requireRoom(socket, body.roomId);
+    const command = new ChangeChapterCommand(userId, roomId, body.chapterSlug);
     await this.changeChapterUseCase.execute(command);
 
-    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.CHAPTER_CHANGED, {
       chapterSlug: body.chapterSlug,
       byUserId: userId,
     });
@@ -662,12 +648,14 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('change_mode')
   async handleChangeMode(
+    @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
     @MessageBody() body: ChangeModeDto,
   ) {
-    const command = new ChangeRoomModeCommand(userId, body.roomId, body.mode);
+    const roomId = this.requireRoom(socket, body.roomId);
+    const command = new ChangeRoomModeCommand(userId, roomId, body.mode);
     await this.changeRoomModeUseCase.execute(command);
-    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.MODE_CHANGED, {
       mode: body.mode,
       changedBy: userId,
     });
@@ -675,31 +663,35 @@ export class ReadingRoomGateway
 
   @SubscribeMessage('end_room')
   async handleEndRoom(
+    @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
     @MessageBody() body: EndRoomDto,
   ) {
-    const command = new EndRoomCommand(userId, body.roomId);
+    const roomId = this.requireRoom(socket, body.roomId);
+    const command = new EndRoomCommand(userId, roomId);
     await this.endRoomUseCase.execute(command);
-    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_ENDED, {
       endedBy: userId,
     });
 
-    const presences = await this.presenceService.getRoomPresences(body.roomId);
+    const presences = await this.presenceService.getRoomPresences(roomId);
     await Promise.all(
       presences.map((p) =>
-        this.presenceService.removePresence(body.roomId, p.userId),
+        this.presenceService.removePresence(roomId, p.userId),
       ),
     );
   }
 
   @SubscribeMessage('delete_room')
   async handleDeleteRoom(
+    @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
     @MessageBody() body: DeleteRoomDto,
   ) {
-    const command = new DeleteRoomCommand(userId, body.roomId);
+    const roomId = this.requireRoom(socket, body.roomId);
+    const command = new DeleteRoomCommand(userId, roomId);
     await this.deleteRoomUseCase.execute(command);
-    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.ROOM_DELETED, {
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.ROOM_DELETED, {
       deletedBy: userId,
     });
   }
@@ -713,11 +705,34 @@ export class ReadingRoomGateway
     socket.emit(ReadingRoomServerEvent.ERROR, { code, message });
   }
 
-  private isInRoom(socket: RoomSocket, roomId?: string): roomId is string {
+  private requireRoom(socket: RoomSocket, roomId?: string): string {
     const sd = socket.data;
-    return (
-      !!roomId && sd.roomId === roomId && socket.rooms.has(`room:${roomId}`)
-    );
+    if (
+      !roomId ||
+      sd.roomId !== roomId ||
+      !socket.rooms.has(`room:${roomId}`)
+    ) {
+      throw new WsException({
+        code: NOT_IN_ROOM_CODE,
+        message: NOT_IN_ROOM_MESSAGE,
+      });
+    }
+    return roomId;
+  }
+
+  private requireRoomForUseCase(socket: RoomSocket, roomId?: string): string {
+    const sd = socket.data;
+    if (
+      !roomId ||
+      sd.roomId !== roomId ||
+      !socket.rooms.has(`room:${roomId}`)
+    ) {
+      throw new WsException({
+        code: ROOM_MISMATCH_CODE,
+        message: ROOM_MISMATCH_MESSAGE,
+      });
+    }
+    return roomId;
   }
 
   private async isRateLimited(
@@ -766,11 +781,7 @@ export class ReadingRoomGateway
     @WsUser() sd: SocketData,
     @MessageBody() body: HeartbeatDto,
   ) {
-    if (!this.isInRoom(socket, body.roomId)) {
-      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
-      return;
-    }
-
+    this.requireRoom(socket, body.roomId);
     const { userId, displayName = '', avatarUrl = '' } = sd;
 
     if (await this.isRateLimited(userId, 'heartbeat', 90)) return;

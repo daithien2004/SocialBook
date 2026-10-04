@@ -44,16 +44,17 @@ describe('ReadingRoomGateway remove_highlight room guard', () => {
   it('rejects remove_highlight when the socket has not joined the room', async () => {
     const socket = makeSocket(false);
 
-    await gateway.handleRemoveHighlight(socket as never, 'user-1', {
-      roomId: 'room-1',
-      highlightId: 'h1',
+    await expect(
+      gateway.handleRemoveHighlight(socket as never, 'user-1', {
+        roomId: 'room-1',
+        highlightId: 'h1',
+      }),
+    ).rejects.toMatchObject({
+      getError: expect.any(Function),
     });
 
     expect(removeHighlight.execute).not.toHaveBeenCalled();
-    expect(socket.emit).toHaveBeenCalledWith(
-      'error',
-      expect.objectContaining({ code: 'NOT_IN_ROOM' }),
-    );
+    expect(socket.emit).not.toHaveBeenCalled();
   });
 
   it('allows remove_highlight once the socket has joined the room', async () => {
