@@ -15,10 +15,26 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
 
     let errorMessage = 'Lỗi không xác định từ Server';
     let errorCode = 'INTERNAL_ERROR';
+    // Payload lỗi chi tiết (vd: VALIDATION_FAILED kèm errors) — mặc định là
+    // `data` của message như cũ.
+    let errorData: unknown = data;
 
     if (exception instanceof WsException) {
+      const payload = exception.getError();
       errorMessage = exception.message;
-      errorCode = 'WS_ERROR';
+      const isObjectPayload =
+        typeof payload === 'object' && payload !== null;
+      const payloadCode = isObjectPayload
+        ? (payload as { code?: unknown }).code
+        : undefined;
+      const payloadErrors = isObjectPayload
+        ? (payload as { errors?: unknown }).errors
+        : undefined;
+      // WsException chuỗi (hoặc object không có code) vẫn là WS_ERROR như cũ.
+      errorCode = typeof payloadCode === 'string' ? payloadCode : 'WS_ERROR';
+      if (Array.isArray(payloadErrors)) {
+        errorData = payloadErrors;
+      }
     } else if (exception instanceof HttpException) {
       const response = exception.getResponse();
       errorMessage =
@@ -62,14 +78,14 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
 
     // Log the error centrally
     this.logger.warn(
-      `WS Error for client ${client.id}: [${errorCode}] ${errorMessage}`,
+      `WS Error for client ${client.id}: [${errorCode}] ${errorMessage} Data: ${JSON.stringify(errorData)}`,
     );
 
     // Emit the error back to the client
     client.emit(ReadingRoomServerEvent.ERROR, {
       code: errorCode,
       message: errorMessage,
-      data,
+      data: errorData,
     });
   }
 }
