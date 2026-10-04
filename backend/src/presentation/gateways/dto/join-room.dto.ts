@@ -1,22 +1,28 @@
 import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
-import { ROOM_CODE_PATTERN } from '../reading-room.constants';
+import {
+  CLIENT_AVATAR_URL_MAX_LENGTH,
+  CLIENT_DISPLAY_NAME_MAX_LENGTH,
+  ROOM_ID_PATTERN,
+} from '../reading-room.constants';
 
 export class JoinRoomDto {
+  /** Mã phòng 6–10 ký tự chữ/ối — KHÔNG phải ObjectId (DEC-01). */
   @IsString()
-  @Matches(ROOM_CODE_PATTERN, { message: 'Mã phòng không hợp lệ' })
+  @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
   roomCode: string;
 
   /**
-   * Client cũ có thể gửi kèm; server lấy displayName/avatarUrl từ JWT
-   * — giữ hành vi bỏ qua giá trị nhận được (plan T1.5).
+   * Client cũ thường gửi kèm; server lấy displayName/avatarUrl từ JWT và bỏ
+   * qua giá trị — giữ nguyên hành vi bỏ qua nhưng khai optional để
+   * `forbidNonWhitelisted` không làm vỡ client (DEC-02).
    */
   @IsOptional()
   @IsString()
-  @MaxLength(80)
+  @MaxLength(CLIENT_DISPLAY_NAME_MAX_LENGTH)
   displayName?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(500)
+  @MaxLength(CLIENT_AVATAR_URL_MAX_LENGTH)
   avatarUrl?: string;
 }

@@ -1,22 +1,21 @@
 import { Transform } from 'class-transformer';
-import {
-  IsOptional,
-  IsString,
-  Length,
-  Matches,
-} from 'class-validator';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
 import {
   CHAPTER_SLUG_MAX_LENGTH,
   CLIENT_MUTATION_ID_PATTERN,
   HIGHLIGHT_CONTENT_MAX_LENGTH,
   HIGHLIGHT_CONTENT_MIN_LENGTH,
   PARAGRAPH_ID_MAX_LENGTH,
-  OBJECT_ID_PATTERN,
+  ROOM_ID_PATTERN,
 } from '../reading-room.constants';
 
 export class AddHighlightDto {
+  /**
+   * Mã phòng 6–10 ký tự chữ/ối (`^[A-Za-z0-9]{6,10}$`) — KHÔNG phải ObjectId.
+   * Xem DEC-01 trong docs/reading-room-hardening/DECISIONS.md.
+   */
   @IsString()
-  @Matches(OBJECT_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
+  @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
   roomId: string;
 
   @IsString()
@@ -27,7 +26,7 @@ export class AddHighlightDto {
   @Length(1, PARAGRAPH_ID_MAX_LENGTH)
   paragraphId: string;
 
-  /** Trim trước khi validate — domain cũng trim lần nữa (entity:231). */
+  /** Trim trước khi validate — domain cũng trim lại nữa (entity:230). */
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )

@@ -19,13 +19,20 @@ import { RemoveHighlightUseCase } from '@/application/reading-rooms/use-cases/re
 import { GenerateHighlightInsightUseCase } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
 import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { WS_MAX_HTTP_BUFFER_SIZE } from '@/presentation/gateways/reading-room.constants';
 
-const ROOM_CODE = 'ABC123';
-const ROOM_ID = '64b1a2b3c4d5e6f7a8b9c0aa';
+/**
+ * F1 — validate body ở biên WebSocket.
+ *
+ * Dùng ID thật của từng loại (DEC-01): mã phòng 6–10 ký tự
+ * (`^[A-Za-z0-9]{6,10}$`), highlight là UUID v4, còn `bookId`/`chapterId`
+ * mới là ObjectId.
+ */
+const ROOM_ID = 'ABC234XY';
 const USER_ID = '64b1a2b3c4d5e6f7a8b9c0d1';
 const BOOK_ID = '64b1a2b3c4d5e6f7a8b9c0d2';
 const CHAPTER_ID = '64b1a2b3c4d5e6f7a8b9c0d3';
-const HIGHLIGHT_ID = '64b1a2b3c4d5e6f7a8b9c0bb';
+const HIGHLIGHT_ID = '3f2b1a90-4c5d-4e6f-8a9b-0c1d2e3f4a5b';
 
 interface WsErrorPayload {
   code: string;
@@ -99,10 +106,23 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     payload: unknown,
   ): Promise<{ err: Error | null; res: unknown }> =>
     new Promise((resolve) => {
-      client.timeout(3000).emit(event, payload as never, (err: Error | null, res: unknown) => {
-        resolve({ err, res });
-      });
+      client
+        .timeout(3000)
+        .emit(event, payload, (err: Error | null, res: unknown) => {
+          resolve({ err, res });
+        });
     });
+
+  const validRoomSnapshot = () => ({
+    roomId: ROOM_ID,
+    bookId: BOOK_ID,
+    hostId: USER_ID,
+    mode: 'sync',
+    currentChapterSlug: 'chuong-1',
+    status: 'active',
+    highlights: [],
+    members: [{ userId: USER_ID, role: 'host' }],
+  });
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -147,54 +167,29 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     await app.listen(0);
     const { port } = app.getHttpServer().address() as AddressInfo;
 
-    // eslint-disable-next-line no-console
-    const probe = await fetch(
-      `http://127.0.0.1:${port}/socket.io/?EIO=4&transport=polling`,
-    );
-    // eslint-disable-next-line no-console
-    console.log(
-      'PROBE_DEBUG',
-      probe.status,
-      (await probe.text()).slice(0, 160),
-    );
-
     client = io(`http://127.0.0.1:${port}/reading-rooms`, {
       transports: ['websocket'],
       reconnection: false,
       auth: { token: 'e2e-token' },
     });
     await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('không kết nối được')), 5000);
+      const timer = setTimeout(
+        () => reject(new Error('không kết nối được')),
+        5000,
+      );
       client.once('connect', () => {
         clearTimeout(timer);
         resolve();
       });
-      client.once('connect_error', (err: Error & { context?: unknown }) => {
+      client.once('connect_error', (err: Error) => {
         clearTimeout(timer);
-        // eslint-disable-next-line no-console
-        console.log(
-          'CONNECT_ERROR_DEBUG',
-          JSON.stringify({
-            message: err.message,
-            context: String((err as { context?: unknown }).context ?? ''),
-          }),
-        );
         reject(err);
       });
     });
 
     // Vào phòng một lần — các test in-room dựa vào socket đã ở trong phòng.
-    joinRoom.execute.mockResolvedValue({
-      roomId: ROOM_ID,
-      bookId: BOOK_ID,
-      hostId: USER_ID,
-      mode: 'sync',
-      currentChapterSlug: 'chuong-1',
-      status: 'active',
-      highlights: [],
-      members: [{ userId: USER_ID, role: 'host' }],
-    });
-    const { err, res } = await emitAck('join_room', { roomCode: ROOM_CODE });
+    joinRoom.execute.mockResolvedValue(validRoomSnapshot());
+    const { err, res } = await emitAck('join_room', { roomCode: ROOM_ID });
     expect(err).toBeNull();
     expect(res).toMatchObject({ ok: true });
   });
@@ -212,16 +207,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       bookId: { toString: () => BOOK_ID },
     });
     updateProgress.execute.mockResolvedValue({});
-    joinRoom.execute.mockResolvedValue({
-      roomId: ROOM_ID,
-      bookId: BOOK_ID,
-      hostId: USER_ID,
-      mode: 'sync',
-      currentChapterSlug: 'chuong-1',
-      status: 'active',
-      highlights: [],
-      members: [{ userId: USER_ID, role: 'host' }],
-    });
+    joinRoom.execute.mockResolvedValue(validRoomSnapshot());
     leaveRoom.execute.mockResolvedValue({
       hostChanged: false,
       modeChanged: false,
@@ -268,7 +254,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       ['null', [null]],
       ['mảng', [[{ roomId: ROOM_ID }]]],
       ['số', [42]],
-      ['chuỗi 100KB', ['x'.repeat(100_000)]],
     ];
 
     for (const event of events) {
@@ -292,7 +277,17 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
 
   describe('F1 — payload sai trường', () => {
     it('join_room từ chối roomCode quá ngắn', async () => {
-      const payload = await expectValidationError('join_room', { roomCode: 'AB' });
+      const payload = await expectValidationError('join_room', {
+        roomCode: 'AB',
+      });
+      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(joinRoom.execute).not.toHaveBeenCalled();
+    });
+
+    it('join_room từ chối roomCode dạng ObjectId (sai định dạng mã phòng)', async () => {
+      const payload = await expectValidationError('join_room', {
+        roomCode: '64b1a2b3c4d5e6f7a8b9c0aa',
+      });
       expect(payload.code).toBe('VALIDATION_FAILED');
       expect(joinRoom.execute).not.toHaveBeenCalled();
     });
@@ -309,6 +304,17 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         chapterSlug: 'chuong-1',
         paragraphId: 'p1',
         content: 'x'.repeat(1001),
+      });
+      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(addHighlight.execute).not.toHaveBeenCalled();
+    });
+
+    it('add_highlight từ chối roomId dạng ObjectId', async () => {
+      const payload = await expectValidationError('add_highlight', {
+        roomId: '64b1a2b3c4d5e6f7a8b9c0aa',
+        chapterSlug: 'chuong-1',
+        paragraphId: 'p1',
+        content: 'nội dung',
       });
       expect(payload.code).toBe('VALIDATION_FAILED');
       expect(addHighlight.execute).not.toHaveBeenCalled();
@@ -356,16 +362,25 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     it('remove_highlight từ chối highlightId không phải UUID', async () => {
       const payload = await expectValidationError('remove_highlight', {
         roomId: ROOM_ID,
-        highlightId: 'h1',
+        highlightId: '64b1a2b3c4d5e6f7a8b9c0bb',
       });
       expect(payload.code).toBe('VALIDATION_FAILED');
       expect(removeHighlight.execute).not.toHaveBeenCalled();
+    });
+
+    it('từ chối field lạ không có trong hợp đồng', async () => {
+      const payload = await expectValidationError('join_room', {
+        roomCode: ROOM_ID,
+        hack: 'x',
+      });
+      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(joinRoom.execute).not.toHaveBeenCalled();
     });
   });
 
   describe('payload hợp lệ cũ vẫn chạy như trước', () => {
     it('join_room trả ack { ok: true, snapshot } như contract cũ', async () => {
-      const { err, res } = await emitAck('join_room', { roomCode: ROOM_CODE });
+      const { err, res } = await emitAck('join_room', { roomCode: ROOM_ID });
       expect(err).toBeNull();
       expect(res).toMatchObject({
         ok: true,
@@ -380,7 +395,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
 
     it('join_room chấp nhận body có displayName/avatarUrl (client cũ) nhưng bỏ qua', async () => {
       const { res } = await emitAck('join_room', {
-        roomCode: ROOM_CODE,
+        roomCode: ROOM_ID,
         displayName: 'Tên client gửi',
         avatarUrl: 'https://cdn.example.com/a.png',
       });
@@ -389,22 +404,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     });
 
     it('add_highlight chạy với payload cũ và content được trim', async () => {
-      addHighlight.execute.mockResolvedValue({
-        highlights: [
-          {
-            id: HIGHLIGHT_ID,
-            userId: USER_ID,
-            displayName: 'E2E User',
-            avatarUrl: '',
-            chapterSlug: 'chuong-1',
-            paragraphId: 'p1',
-            content: 'đoạn văn highlight',
-            createdAt: new Date(),
-          },
-        ],
-      });
-
-      await emitAck('add_highlight', {
+      client.emit('add_highlight', {
         roomId: ROOM_ID,
         chapterSlug: 'chuong-1',
         paragraphId: 'p1',
@@ -418,7 +418,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     });
 
     it('chapter_change chấp nhận bookId/chapterId thừa mà client cũ vẫn gửi', async () => {
-      await emitAck('chapter_change', {
+      client.emit('chapter_change', {
         roomId: ROOM_ID,
         chapterSlug: 'chuong-2',
         bookId: BOOK_ID,
@@ -430,9 +430,9 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     });
 
     it('heartbeat chấp nhận roomCode/bookId thừa, vẫn cập nhật presence và tiến độ', async () => {
-      await emitAck('heartbeat', {
+      client.emit('heartbeat', {
         roomId: ROOM_ID,
-        roomCode: ROOM_CODE,
+        roomCode: ROOM_ID,
         chapterSlug: 'chuong-1',
         chapterId: CHAPTER_ID,
         paragraphId: null,
@@ -447,33 +447,80 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       );
     });
 
-    it('change_mode / end_room / delete_room / remove_highlight / generate insight chạy bình thường', async () => {
-      await emitAck('change_mode', { roomId: ROOM_ID, mode: 'free' });
-      await emitAck('remove_highlight', {
+    it('heartbeat không gửi progress vẫn hợp lệ (client gửi progress undefined)', async () => {
+      client.emit('heartbeat', {
+        roomId: ROOM_ID,
+        chapterSlug: 'chuong-1',
+        paragraphId: null,
+      });
+      await waitFor(() => presence.upsertPresence.mock.calls.length === 1);
+      expect(presence.upsertPresence).toHaveBeenCalledWith(
+        ROOM_ID,
+        USER_ID,
+        expect.objectContaining({ progress: undefined }),
+      );
+    });
+
+    it('remove_highlight / generate insight nhận highlightId UUID thật', async () => {
+      client.emit('remove_highlight', {
         roomId: ROOM_ID,
         highlightId: HIGHLIGHT_ID,
       });
-      await emitAck('generate_highlight_insight', {
+      client.emit('generate_highlight_insight', {
         roomId: ROOM_ID,
         highlightId: HIGHLIGHT_ID,
       });
-      await emitAck('end_room', { roomId: ROOM_ID });
-      await emitAck('delete_room', { roomId: ROOM_ID });
+      await waitFor(
+        () =>
+          removeHighlight.execute.mock.calls.length === 1 &&
+          generateInsight.execute.mock.calls.length === 1,
+      );
+    });
+
+    it('change_mode / end_room / delete_room chạy bình thường', async () => {
+      client.emit('change_mode', { roomId: ROOM_ID, mode: 'free' });
+      client.emit('end_room', { roomId: ROOM_ID });
+      client.emit('delete_room', { roomId: ROOM_ID });
 
       await waitFor(
         () =>
           changeRoomMode.execute.mock.calls.length === 1 &&
-          removeHighlight.execute.mock.calls.length === 1 &&
-          generateInsight.execute.mock.calls.length === 1 &&
           endRoom.execute.mock.calls.length === 1 &&
           deleteRoom.execute.mock.calls.length === 1,
       );
     });
 
-    it('leave_room chạy và trả về hợp đồng cũ', async () => {
-      const { err } = await emitAck('leave_room', { roomId: ROOM_ID });
-      expect(err).toBeNull();
+    it('leave_room chạy và giữ hợp đồng cũ', async () => {
+      client.emit('leave_room', { roomId: ROOM_ID });
       await waitFor(() => leaveRoom.execute.mock.calls.length === 1);
+      expect(leaveRoom.execute.mock.calls[0][0].roomId).toBe(ROOM_ID);
+    });
+  });
+
+  // Đặt CUỐI file: payload vượt `maxHttpBufferSize` khiến Engine.IO đóng
+  // connection ⇒ socket dùng chung của các describe trên không còn dùng được.
+  describe('payload vượt giới hạn transport', () => {
+    it('payload > WS_MAX_HTTP_BUFFER_SIZE bị ngắt kết nối, không chạm handler', async () => {
+      const disconnected = new Promise<string>((resolve, reject) => {
+        const timer = setTimeout(
+          () => reject(new Error('không nhận được disconnect')),
+          5000,
+        );
+        client.once('disconnect', (reason: string) => {
+          clearTimeout(timer);
+          resolve(reason);
+        });
+      });
+
+      client.emit('add_highlight', {
+        roomId: ROOM_ID,
+        chapterSlug: 'chuong-1',
+        paragraphId: 'p1',
+        content: 'x'.repeat(WS_MAX_HTTP_BUFFER_SIZE),
+      });
+
+      expect(await disconnected).toBe('transport close');
+      expect(addHighlight.execute).not.toHaveBeenCalled();
     });
   });
 });

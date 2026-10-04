@@ -41,7 +41,6 @@ export class RedisIoAdapter extends IoAdapter {
       const username = process.env.SOCKET_ADMIN_USER;
       const password = process.env.SOCKET_ADMIN_PASSWORD_BCRYPT;
       if (username && password) {
-        // @ts-expect-error Type mismatch between duplicate socket.io instances in node_modules
         instrument(server, {
           auth: {
             type: 'basic',

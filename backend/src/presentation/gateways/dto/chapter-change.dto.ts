@@ -1,12 +1,19 @@
-import { IsOptional, IsString, Length, Matches, MaxLength } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+} from 'class-validator';
 import {
   CHAPTER_SLUG_MAX_LENGTH,
-  OBJECT_ID_PATTERN,
+  IGNORED_FIELD_MAX_LENGTH,
+  ROOM_ID_PATTERN,
 } from '../reading-room.constants';
 
 export class ChapterChangeDto {
   @IsString()
-  @Matches(OBJECT_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
+  @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
   roomId: string;
 
   @IsString()
@@ -14,16 +21,16 @@ export class ChapterChangeDto {
   chapterSlug: string;
 
   /**
-   * Client cũ vẫn gửi 2 field này (useReadingRoomSocket.changeChapter) nhưng
-   * server không dùng — chấp nhận và bỏ qua (DEC-04).
+   * Client vẫn gửi 2 field này (`useReadingRoomSocket.changeChapter`) nhưng
+   * server chỉ cần `chapterSlug` — khai optional và bỏ qua giá trị (DEC-02).
    */
   @IsOptional()
   @IsString()
-  @MaxLength(64)
+  @MaxLength(IGNORED_FIELD_MAX_LENGTH)
   bookId?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(64)
+  @MaxLength(IGNORED_FIELD_MAX_LENGTH)
   chapterId?: string;
 }

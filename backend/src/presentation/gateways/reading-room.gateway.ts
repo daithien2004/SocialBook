@@ -8,9 +8,9 @@ import {
   SubscribeMessage,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseFilters } from '@nestjs/common';
+import { Logger, UseFilters, UsePipes } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Server } from 'socket.io';
+import { Namespace, Server } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
@@ -56,24 +56,61 @@ import {
 import { EventNames } from '@/common/constants/event-names.constant';
 
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
-
-const OBJECT_ID_PATTERN = /^[0-9a-f]{24}$/i;
-
-// Chặn ở biên trước khi chạm vào Mongoose: `findById` ném CastError khi
-// gặp chuỗi không phải ObjectId.
-const isObjectId = (value: unknown): value is string =>
-  typeof value === 'string' && OBJECT_ID_PATTERN.test(value);
+import {
+  WsValidationPipe,
+  wsValidationExceptionFactory,
+} from './dto/ws-validation.pipe';
+import { JoinRoomDto } from './dto/join-room.dto';
+import { LeaveRoomDto } from './dto/leave-room.dto';
+import { AddHighlightDto } from './dto/add-highlight.dto';
+import { RemoveHighlightDto } from './dto/remove-highlight.dto';
+import { GenerateInsightDto } from './dto/generate-insight.dto';
+import { ChapterChangeDto } from './dto/chapter-change.dto';
+import { ChangeModeDto } from './dto/change-mode.dto';
+import { EndRoomDto } from './dto/end-room.dto';
+import { DeleteRoomDto } from './dto/delete-room.dto';
+import { HeartbeatDto } from './dto/heartbeat.dto';
+import {
+  CHAPTER_SLUG_MAX_LENGTH,
+  DEFAULT_FRONTEND_URL,
+  MAX_CONNECTIONS_PER_USER,
+  NOT_IN_ROOM_CODE,
+  NOT_IN_ROOM_MESSAGE,
+  PARAGRAPH_ID_MAX_LENGTH,
+  PROGRESS_MAX,
+  PROGRESS_MIN,
+  PRESENCE_BROADCAST_DEBOUNCE_MS,
+  PROGRESS_FLUSH_DEBOUNCE_MS,
+  RATE_LIMIT_WINDOW_SECONDS,
+  TOKEN_REVOCATION_TTL_SECONDS,
+  WS_CONNECT_TIMEOUT_MS,
+  WS_MAX_HTTP_BUFFER_SIZE,
+  WS_PING_INTERVAL_MS,
+  WS_PING_TIMEOUT_MS,
+  WS_TRANSPORTS,
+  isObjectId,
+} from './reading-room.constants';
 
 @WebSocketGateway({
   namespace: '/reading-rooms',
-  cors: { origin: process.env.FRONTEND_URL || 'http://localhost:3000' },
-  maxHttpBufferSize: 1e5,
-  connectTimeout: 10_000,
-  transports: ['websocket'],
-  pingInterval: 25000,
-  pingTimeout: 20000,
+  // `process.env` chỉ đọc ở thời điểm decorator; allowlist origin đầy đủ được
+  // áp trong `afterInit` (T4). Giá trị mặc định nằm ở constants.
+  cors: { origin: process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL },
+  maxHttpBufferSize: WS_MAX_HTTP_BUFFER_SIZE,
+  connectTimeout: WS_CONNECT_TIMEOUT_MS,
+  transports: [...WS_TRANSPORTS],
+  pingInterval: WS_PING_INTERVAL_MS,
+  pingTimeout: WS_PING_TIMEOUT_MS,
 })
 @UseFilters(WsExceptionFilter)
+@UsePipes(
+  new WsValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+    exceptionFactory: wsValidationExceptionFactory,
+  }),
+)
 export class ReadingRoomGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -102,11 +139,10 @@ export class ReadingRoomGateway
     @InjectRedis() private readonly redis: Redis,
   ) {}
 
-  afterInit(server: Server) {
-    const frontendUrl = this.configService.get<string>(
-      'env.FRONTEND_URL',
-      'http://localhost:3000',
-    );
+  afterInit(server: Namespace) {
+    const frontendUrl =
+      this.configService.get<string>('env.FRONTEND_URL') ??
+      DEFAULT_FRONTEND_URL;
     const allowedOrigins = frontendUrl.includes(',')
       ? frontendUrl.split(',').map((url) => url.trim())
       : [frontendUrl.trim()];
@@ -173,7 +209,7 @@ export class ReadingRoomGateway
           }
 
           const sockets = await server.in(`user:${userId}`).fetchSockets();
-          if (sockets.length >= 5) {
+          if (sockets.length >= MAX_CONNECTIONS_PER_USER) {
             return next(new Error('too_many_connections'));
           }
 
@@ -274,15 +310,15 @@ export class ReadingRoomGateway
   async handleAddHighlight(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser() sd: SocketData,
-    @MessageBody()
-    body: {
-      roomId: string;
-      chapterSlug: string;
-      paragraphId: string;
-      content: string;
-    },
+    @MessageBody() body: AddHighlightDto,
   ) {
     const { userId, displayName = '', avatarUrl = '' } = sd;
+    const roomId = body.roomId;
+
+    if (!this.isInRoom(socket, roomId)) {
+      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
+      return;
+    }
 
     if (await this.isRateLimited(userId, 'add_highlight', 30)) {
       this.emitError(
@@ -293,7 +329,7 @@ export class ReadingRoomGateway
       return;
     }
     const command = new AddHighlightCommand(
-      body.roomId,
+      roomId,
       userId,
       body.chapterSlug,
       body.paragraphId,
@@ -307,7 +343,7 @@ export class ReadingRoomGateway
     const authorName = newHighlight.displayName || displayName || 'Thành viên';
     const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
 
-    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
       id: newHighlight.id,
       userId: newHighlight.userId,
       displayName: authorName,
@@ -329,21 +365,23 @@ export class ReadingRoomGateway
   async handleRemoveHighlight(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
-    @MessageBody() body: { roomId: string; highlightId: string },
+    @MessageBody() body: RemoveHighlightDto,
   ) {
-    if (!this.isInRoom(socket, body.roomId)) {
-      this.emitError(socket, 'NOT_IN_ROOM', 'Bạn chưa tham gia phòng này');
+    const roomId = body.roomId;
+
+    if (!this.isInRoom(socket, roomId)) {
+      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
       return;
     }
 
     const command = new RemoveHighlightCommand(
-      body.roomId,
+      roomId,
       userId,
       body.highlightId,
     );
     await this.removeHighlightUseCase.execute(command);
 
-    this.toRoom(body.roomId).emit(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, {
+    this.toRoom(roomId).emit(ReadingRoomServerEvent.HIGHLIGHT_REMOVED, {
       highlightId: body.highlightId,
       removedBy: userId,
     });
@@ -353,10 +391,12 @@ export class ReadingRoomGateway
   async handleGenerateHighlightInsight(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser('userId') userId: string,
-    @MessageBody() body: { roomId: string; highlightId: string },
+    @MessageBody() body: GenerateInsightDto,
   ) {
-    if (!this.isInRoom(socket, body.roomId)) {
-      this.emitError(socket, 'NOT_IN_ROOM', 'Bạn chưa tham gia phòng này');
+    const roomId = body.roomId;
+
+    if (!this.isInRoom(socket, roomId)) {
+      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
       return;
     }
 
@@ -372,7 +412,7 @@ export class ReadingRoomGateway
 
     const command = new GenerateHighlightInsightCommand(
       userId,
-      body.roomId,
+      roomId,
       body.highlightId,
     );
     // Generate AI Insight. The use-case will emit EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED
@@ -390,7 +430,7 @@ export class ReadingRoomGateway
         `auth:revoked:${event.userId}`,
         Date.now(),
         'EX',
-        7 * 24 * 3600,
+        TOKEN_REVOCATION_TTL_SECONDS,
       );
     } catch (e: unknown) {
       this.logger.error('Failed to set token revocation timestamp', e);
@@ -420,8 +460,7 @@ export class ReadingRoomGateway
   async handleJoinRoom(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser() sd: SocketData,
-    @MessageBody()
-    body: { roomCode: string; displayName: string; avatarUrl: string },
+    @MessageBody() body: JoinRoomDto,
   ) {
     const userId = sd.userId;
 
@@ -563,7 +602,7 @@ export class ReadingRoomGateway
   async handleLeaveRoom(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser() sd: SocketData,
-    @MessageBody() body: { roomId: string; newHostId?: string },
+    @MessageBody() body: LeaveRoomDto,
   ) {
     const userId = sd.userId;
     const roomId = body.roomId;
@@ -606,13 +645,7 @@ export class ReadingRoomGateway
   @SubscribeMessage('chapter_change')
   async handleChapterChange(
     @WsUser('userId') userId: string,
-    @MessageBody()
-    body: {
-      roomId: string;
-      chapterSlug: string;
-      bookId?: string;
-      chapterId?: string;
-    },
+    @MessageBody() body: ChapterChangeDto,
   ) {
     const command = new ChangeChapterCommand(
       userId,
@@ -630,7 +663,7 @@ export class ReadingRoomGateway
   @SubscribeMessage('change_mode')
   async handleChangeMode(
     @WsUser('userId') userId: string,
-    @MessageBody() body: { roomId: string; mode: 'sync' | 'free' },
+    @MessageBody() body: ChangeModeDto,
   ) {
     const command = new ChangeRoomModeCommand(userId, body.roomId, body.mode);
     await this.changeRoomModeUseCase.execute(command);
@@ -643,7 +676,7 @@ export class ReadingRoomGateway
   @SubscribeMessage('end_room')
   async handleEndRoom(
     @WsUser('userId') userId: string,
-    @MessageBody() body: { roomId: string },
+    @MessageBody() body: EndRoomDto,
   ) {
     const command = new EndRoomCommand(userId, body.roomId);
     await this.endRoomUseCase.execute(command);
@@ -662,7 +695,7 @@ export class ReadingRoomGateway
   @SubscribeMessage('delete_room')
   async handleDeleteRoom(
     @WsUser('userId') userId: string,
-    @MessageBody() body: { roomId: string },
+    @MessageBody() body: DeleteRoomDto,
   ) {
     const command = new DeleteRoomCommand(userId, body.roomId);
     await this.deleteRoomUseCase.execute(command);
@@ -696,7 +729,7 @@ export class ReadingRoomGateway
     try {
       const res = await this.redis
         .multi()
-        .set(key, 0, 'EX', 60, 'NX')
+        .set(key, 0, 'EX', RATE_LIMIT_WINDOW_SECONDS, 'NX')
         .incr(key)
         .exec();
       const current = Number(res?.[1]?.[1] ?? 0);
@@ -723,7 +756,7 @@ export class ReadingRoomGateway
             `Failed to broadcast presences for room ${roomId}: ${error instanceof Error ? error.message : String(error)}`,
           );
         });
-    }, 3000);
+    }, PRESENCE_BROADCAST_DEBOUNCE_MS);
     this.presenceBroadcastPending.set(roomId, timer);
   }
 
@@ -731,17 +764,10 @@ export class ReadingRoomGateway
   async handleHeartbeat(
     @ConnectedSocket() socket: RoomSocket,
     @WsUser() sd: SocketData,
-    @MessageBody()
-    body: {
-      roomId: string;
-      chapterSlug: string;
-      chapterId?: string;
-      paragraphId?: string;
-      progress?: number;
-    },
+    @MessageBody() body: HeartbeatDto,
   ) {
     if (!this.isInRoom(socket, body.roomId)) {
-      this.emitError(socket, 'NOT_IN_ROOM', 'Bạn chưa tham gia phòng này');
+      this.emitError(socket, NOT_IN_ROOM_CODE, NOT_IN_ROOM_MESSAGE);
       return;
     }
 
@@ -749,14 +775,20 @@ export class ReadingRoomGateway
 
     if (await this.isRateLimited(userId, 'heartbeat', 90)) return;
 
-    const chapterSlug = String(body.chapterSlug || '').slice(0, 200);
+    const chapterSlug = String(body.chapterSlug || '').slice(
+      0,
+      CHAPTER_SLUG_MAX_LENGTH,
+    );
     const chapterId = isObjectId(body.chapterId) ? body.chapterId : undefined;
     const paragraphId = body.paragraphId
-      ? String(body.paragraphId).slice(0, 100)
+      ? String(body.paragraphId).slice(0, PARAGRAPH_ID_MAX_LENGTH)
       : undefined;
     const progress =
       body.progress !== undefined
-        ? Math.max(0, Math.min(100, Math.round(Number(body.progress) || 0)))
+        ? Math.max(
+            PROGRESS_MIN,
+            Math.min(PROGRESS_MAX, Math.round(Number(body.progress) || 0)),
+          )
         : undefined;
 
     if (displayName && sd.roomId) {
@@ -779,7 +811,7 @@ export class ReadingRoomGateway
           this.flushProgress(socket).catch((err: unknown) => {
             this.logger.error('Failed to flush progress', err);
           });
-        }, 10_000);
+        }, PROGRESS_FLUSH_DEBOUNCE_MS);
       }
 
       this.schedulePresenceBroadcast(sd.roomId);
