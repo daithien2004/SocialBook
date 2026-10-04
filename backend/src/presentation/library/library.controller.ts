@@ -1,22 +1,15 @@
-import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
-import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
-import { GetBookLibraryInfoUseCase } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.use-case';
-import { GetChapterProgressQuery } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.query';
-import { GetChapterProgressUseCase } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.use-case';
-import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get-library.query';
-import { GetLibraryUseCase } from '@/application/library/use-cases/get-library/get-library.use-case';
-import { ProcessReadingSessionCommand } from '@/application/library/use-cases/process-reading-session/process-reading-session.command';
-import { ProcessReadingSessionUseCase } from '@/application/library/use-cases/process-reading-session/process-reading-session.use-case';
-import { RemoveFromLibraryCommand } from '@/application/library/use-cases/remove-from-library/remove-from-library.command';
-import { RemoveFromLibraryUseCase } from '@/application/library/use-cases/remove-from-library/remove-from-library.use-case';
-import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
-import { UpdateCollectionsUseCase } from '@/application/library/use-cases/update-collections/update-collections.use-case';
-import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
-import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
 import { UpdateStatusCommand } from '@/application/library/use-cases/update-status/update-status.command';
-import { UpdateStatusUseCase } from '@/application/library/use-cases/update-status/update-status.use-case';
+import { RecordReadingTimeCommand } from '@/application/library/use-cases/record-reading-time/record-reading-time.command';
+import { ProcessReadingSessionCommand } from '@/application/library/use-cases/process-reading-session/process-reading-session.command';
+import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get-library.query';
 import { GetKnowledgeGraphQuery } from '@/application/library/use-cases/get-knowledge-graph/get-knowledge-graph.query';
-import { GetKnowledgeGraphUseCase } from '@/application/library/use-cases/get-knowledge-graph/get-knowledge-graph.use-case';
+import { GetChapterProgressQuery } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.query';
+import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
+import { RemoveFromLibraryCommand } from '@/application/library/use-cases/remove-from-library/remove-from-library.command';
+import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
+import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
 
 import {
   AddToCollectionsDto,
@@ -44,17 +37,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('library')
 export class LibraryController {
-  constructor(
-    private readonly getLibraryUseCase: GetLibraryUseCase,
-    private readonly updateStatusUseCase: UpdateStatusUseCase,
-    private readonly updateProgressUseCase: UpdateProgressUseCase,
-    private readonly processReadingSessionUseCase: ProcessReadingSessionUseCase,
-    private readonly updateCollectionsUseCase: UpdateCollectionsUseCase,
-    private readonly removeFromLibraryUseCase: RemoveFromLibraryUseCase,
-    private readonly getBookLibraryInfoUseCase: GetBookLibraryInfoUseCase,
-    private readonly getChapterProgressUseCase: GetChapterProgressUseCase,
-    private readonly getKnowledgeGraphUseCase: GetKnowledgeGraphUseCase,
-  ) {}
+  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
 
   @Get()
   async getLibrary(
@@ -73,7 +56,7 @@ export class LibraryController {
 
     const limitNumber = limit ? parseInt(limit, 10) : undefined;
     const query = new GetLibraryQuery(userId, readingStatuses, limitNumber);
-    const readingLists = await this.getLibraryUseCase.execute(query);
+    const readingLists = await this.queryBus.execute(query);
 
     return {
       message: 'Get library list successfully',
@@ -84,7 +67,7 @@ export class LibraryController {
   @Get('knowledge-graph')
   async getKnowledgeGraph(@CurrentUser('id') userId: string) {
     const query = new GetKnowledgeGraphQuery(userId);
-    const result = await this.getKnowledgeGraphUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get knowledge graph successfully',
@@ -98,7 +81,7 @@ export class LibraryController {
     @Body() dto: UpdateLibraryStatusDto,
   ) {
     const command = new UpdateStatusCommand(userId, dto.bookId, dto.status);
-    const readingList = await this.updateStatusUseCase.execute(command);
+    const readingList = await this.commandBus.execute(command);
 
     return {
       message: 'Update library status successfully',
@@ -113,7 +96,7 @@ export class LibraryController {
     @Query('chapterId') chapterId: string,
   ) {
     const query = new GetChapterProgressQuery(userId, bookId, chapterId);
-    const result = await this.getChapterProgressUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
     return {
       message: 'Get chapter progress successfully',
       data: ChapterProgressResponseDto.fromResult(result),
@@ -132,7 +115,7 @@ export class LibraryController {
       updateProgressDto.progress || 0,
     );
 
-    const result = await this.updateProgressUseCase.execute(command);
+    const result = await this.commandBus.execute(command);
     return {
       data: {
         readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
@@ -154,7 +137,7 @@ export class LibraryController {
       dto.chapterId,
       dto.durationInSeconds,
     );
-    const result = await this.processReadingSessionUseCase.execute(command);
+    const result = await this.commandBus.execute(command);
 
     return {
       data: RecordReadingTimeResponseDto.fromResult(result.timeSpentMinutes),
@@ -171,7 +154,7 @@ export class LibraryController {
       dto.bookId,
       dto.collectionIds,
     );
-    const readingList = await this.updateCollectionsUseCase.execute(command);
+    const readingList = await this.commandBus.execute(command);
 
     return {
       message: 'Update book collections successfully',
@@ -185,7 +168,7 @@ export class LibraryController {
     @Param('bookId') bookId: string,
   ) {
     const command = new RemoveFromLibraryCommand(userId, bookId);
-    await this.removeFromLibraryUseCase.execute(command);
+    await this.commandBus.execute(command);
 
     return {
       message: 'Remove book from library successfully',
@@ -198,7 +181,7 @@ export class LibraryController {
     @Param('bookId') bookId: string,
   ) {
     const query = new GetBookLibraryInfoQuery(userId, bookId);
-    const result = await this.getBookLibraryInfoUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get book library info successfully',

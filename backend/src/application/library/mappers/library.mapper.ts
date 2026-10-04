@@ -6,7 +6,7 @@ import {
   ReadingProgressResult,
   ChapterStatusResult,
 } from '../dto/library.dto';
-import { CollectionResult } from '../use-cases/get-book-library-info/get-book-library-info.use-case';
+import { CollectionResult } from '../use-cases/get-book-library-info/get-book-library-info.handler';
 
 export class LibraryApplicationMapper {
   static toListResult(readingList: ReadingList): ReadingListResult {

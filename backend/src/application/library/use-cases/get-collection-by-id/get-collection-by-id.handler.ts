@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Collection } from '@/domain/library/entities/collection.entity';
 import { LibraryItemReadModel } from '@/domain/library/read-models/library-item.read-model';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
@@ -11,8 +12,8 @@ export interface GetCollectionByIdResult {
   books: LibraryItemReadModel[];
 }
 
-@Injectable()
-export class GetCollectionByIdUseCase {
+@QueryHandler(GetCollectionByIdQuery)
+export class GetCollectionByIdHandler implements IQueryHandler<GetCollectionByIdQuery, GetCollectionByIdResult | null> {
   constructor(
     private readonly collectionRepository: ICollectionRepository,
     private readonly readingListRepository: IReadingListRepository,

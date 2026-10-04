@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Collection } from '@/domain/library/entities/collection.entity';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -14,8 +15,8 @@ export interface CollectionResult {
   updatedAt: Date;
 }
 
-@Injectable()
-export class CreateCollectionUseCase {
+@CommandHandler(CreateCollectionCommand)
+export class CreateCollectionHandler implements ICommandHandler<CreateCollectionCommand, Collection> {
   constructor(
     private readonly collectionRepository: ICollectionRepository,
     private readonly idGenerator: IIdGenerator,

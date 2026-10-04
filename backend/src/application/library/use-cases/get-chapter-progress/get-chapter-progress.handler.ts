@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
@@ -6,8 +7,8 @@ import { GetChapterProgressQuery } from './get-chapter-progress.query';
 import { ReadingProgressResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
 
-@Injectable()
-export class GetChapterProgressUseCase {
+@QueryHandler(GetChapterProgressQuery)
+export class GetChapterProgressHandler implements IQueryHandler<GetChapterProgressQuery, ReadingProgressResult | null> {
   constructor(
     private readonly readingProgressRepository: IReadingProgressRepository,
   ) {}

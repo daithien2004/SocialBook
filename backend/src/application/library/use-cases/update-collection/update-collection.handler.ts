@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
 import {
   Injectable,
@@ -9,8 +10,8 @@ import { Collection } from '@/domain/library/entities/collection.entity';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class UpdateCollectionUseCase {
+@CommandHandler(UpdateCollectionCommand)
+export class UpdateCollectionHandler implements ICommandHandler<UpdateCollectionCommand, Collection> {
   constructor(private readonly collectionRepository: ICollectionRepository) {}
 
   async execute(command: UpdateCollectionCommand): Promise<Collection> {

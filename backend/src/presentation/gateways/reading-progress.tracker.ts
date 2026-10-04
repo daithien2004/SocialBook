@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
+
 import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { RoomSocket } from './reading-room.types';
@@ -11,8 +12,8 @@ export class ReadingProgressTracker {
   private readonly logger = new Logger(ReadingProgressTracker.name);
 
   constructor(
-    private readonly chapterRepository: IChapterRepository,
-    private readonly updateProgressUseCase: UpdateProgressUseCase,
+    @Inject('IChapterRepository') private readonly chapterRepository: IChapterRepository,
+    private readonly commandBus: CommandBus,
   ) {}
 
   schedule(
@@ -84,7 +85,7 @@ export class ReadingProgressTracker {
     }
 
     try {
-      await this.updateProgressUseCase.execute(
+      await this.commandBus.execute(
         new UpdateProgressCommand(userId, bookId, chapterId, progress, true),
       );
     } catch (error: unknown) {

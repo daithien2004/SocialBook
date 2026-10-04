@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
@@ -28,8 +29,8 @@ export interface GetBookLibraryInfoResult {
   totalChapters: number;
 }
 
-@Injectable()
-export class GetBookLibraryInfoUseCase {
+@QueryHandler(GetBookLibraryInfoQuery)
+export class GetBookLibraryInfoHandler implements IQueryHandler<GetBookLibraryInfoQuery, GetBookLibraryInfoResult> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly collectionRepository: ICollectionRepository,

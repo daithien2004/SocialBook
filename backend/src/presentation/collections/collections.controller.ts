@@ -1,9 +1,11 @@
-import { CreateCollectionUseCase } from '@/application/library/use-cases/create-collection/create-collection.use-case';
-import { GetAllCollectionsUseCase } from '@/application/library/use-cases/get-all-collections/get-all-collections.use-case';
-import { GetCollectionByIdUseCase } from '@/application/library/use-cases/get-collection-by-id/get-collection-by-id.use-case';
-import { UpdateCollectionUseCase } from '@/application/library/use-cases/update-collection/update-collection.use-case';
-import { DeleteCollectionUseCase } from '@/application/library/use-cases/delete-collection/delete-collection.use-case';
+import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
 import { UpdateCollectionCommand } from '@/application/library/use-cases/update-collection/update-collection.command';
+import { RemoveFromLibraryCommand } from '@/application/library/use-cases/remove-from-library/remove-from-library.command';
+import { GetCollectionByIdQuery } from '@/application/library/use-cases/get-collection-by-id/get-collection-by-id.query';
+import { GetAllCollectionsQuery } from '@/application/library/use-cases/get-all-collections/get-all-collections.query';
+import { DeleteCollectionCommand } from '@/application/library/use-cases/delete-collection/delete-collection.command';
+import { CreateCollectionCommand } from '@/application/library/use-cases/create-collection/create-collection.command';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Public } from '@/common/decorators/custom.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
@@ -33,25 +35,19 @@ import { Request } from 'express';
 
 @Controller('collections')
 export class CollectionsController {
-  constructor(
-    private readonly createCollectionUseCase: CreateCollectionUseCase,
-    private readonly getAllCollectionsUseCase: GetAllCollectionsUseCase,
-    private readonly getCollectionByIdUseCase: GetCollectionByIdUseCase,
-    private readonly updateCollectionUseCase: UpdateCollectionUseCase,
-    private readonly deleteCollectionUseCase: DeleteCollectionUseCase,
-  ) {}
+  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
 
   @Post()
   async create(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: CreateCollectionDto,
   ) {
-    const collection = await this.createCollectionUseCase.execute({
-      userId: req.user.id,
-      name: dto.name,
-      description: dto.description,
-      isPublic: dto.isPublic,
-    });
+    const collection = await this.commandBus.execute(new CreateCollectionCommand(
+      req.user.id,
+      dto.name,
+      dto.description,
+      dto.isPublic,
+    ));
     return {
       message: 'Collection created successfully',
       data: CollectionResponseDto.fromResult(collection),
@@ -65,10 +61,7 @@ export class CollectionsController {
     @Query('userId') userId?: string,
     @CurrentUser('id') viewerId?: string,
   ) {
-    const results = await this.getAllCollectionsUseCase.execute({
-      userId: userId || '',
-      viewerId,
-    });
+    const results = await this.queryBus.execute(new GetAllCollectionsQuery(userId || '', viewerId));
     return {
       message: 'Get collections successfully',
       data: results.map((r) =>
@@ -84,10 +77,7 @@ export class CollectionsController {
     @Query('userId') userId: string,
     @Query('id') id: string,
   ) {
-    const result = await this.getCollectionByIdUseCase.execute({
-      userId,
-      collectionId: id,
-    });
+    const result = await this.queryBus.execute(new GetCollectionByIdQuery(userId, id));
     return {
       message: 'Get collection successfully',
       data: result
@@ -105,10 +95,7 @@ export class CollectionsController {
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
   ) {
-    const result = await this.getCollectionByIdUseCase.execute({
-      userId: req.user.id,
-      collectionId: id,
-    });
+    const result = await this.queryBus.execute(new GetCollectionByIdQuery(req.user.id, id));
     return {
       message: 'Get collection successfully',
       data: result
@@ -136,7 +123,7 @@ export class CollectionsController {
       dto.description,
       dto.isPublic,
     );
-    const collection = await this.updateCollectionUseCase.execute(command);
+    const collection = await this.commandBus.execute(command);
     return {
       message: 'Collection updated successfully',
       data: CollectionResponseDto.fromResult(collection),
@@ -150,7 +137,7 @@ export class CollectionsController {
     @Param('id') id: string,
     @CurrentAbility() ability: AppAbility,
   ) {
-    await this.deleteCollectionUseCase.execute(id, req.user.id, ability);
+    await this.commandBus.execute(new DeleteCollectionCommand(id, req.user.id, ability));
     return {
       message: 'Collection deleted successfully',
     };

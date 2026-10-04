@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   ReadingList,
   ReadingStatus,
@@ -27,8 +28,8 @@ export interface UpdateProgressResult {
   readingProgress: ReadingProgressResult;
 }
 
-@Injectable()
-export class UpdateProgressUseCase {
+@CommandHandler(UpdateProgressCommand)
+export class UpdateProgressHandler implements ICommandHandler<UpdateProgressCommand, UpdateProgressResult> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,

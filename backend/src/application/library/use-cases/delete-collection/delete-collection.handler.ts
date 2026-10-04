@@ -1,3 +1,5 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { DeleteCollectionCommand } from './delete-collection.command';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
 import {
   Injectable,
@@ -7,23 +9,19 @@ import {
 import { Action, Subject, AppAbility } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class DeleteCollectionUseCase {
+@CommandHandler(DeleteCollectionCommand)
+export class DeleteCollectionHandler implements ICommandHandler<DeleteCollectionCommand, void> {
   constructor(private readonly collectionRepository: ICollectionRepository) {}
 
-  async execute(
-    id: string,
-    userId: string,
-    ability: AppAbility,
-  ): Promise<void> {
-    const collection = await this.collectionRepository.findById(id);
+  async execute(command: DeleteCollectionCommand): Promise<void> {
+    const collection = await this.collectionRepository.findById(command.id);
 
     if (!collection) {
       throw new NotFoundException('Collection not found');
     }
 
     if (
-      !ability.can(
+      !command.ability.can(
         Action.Delete,
         subject(Subject.Collection, { userId: collection.userId.getValue() }),
       )
@@ -33,6 +31,6 @@ export class DeleteCollectionUseCase {
       );
     }
 
-    await this.collectionRepository.delete(id);
+    await this.collectionRepository.delete(command.id);
   }
 }

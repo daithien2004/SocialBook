@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Collection } from '@/domain/library/entities/collection.entity';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
@@ -9,8 +10,8 @@ export interface GetAllCollectionsResult {
   bookCount: number;
 }
 
-@Injectable()
-export class GetAllCollectionsUseCase {
+@QueryHandler(GetAllCollectionsQuery)
+export class GetAllCollectionsHandler implements IQueryHandler<GetAllCollectionsQuery, GetAllCollectionsResult[]> {
   constructor(
     private readonly collectionRepository: ICollectionRepository,
     private readonly readingListRepository: IReadingListRepository,

@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
@@ -6,8 +7,8 @@ import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
 import { RemoveFromLibraryCommand } from './remove-from-library.command';
 
-@Injectable()
-export class RemoveFromLibraryUseCase {
+@CommandHandler(RemoveFromLibraryCommand)
+export class RemoveFromLibraryHandler implements ICommandHandler<RemoveFromLibraryCommand, void> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,

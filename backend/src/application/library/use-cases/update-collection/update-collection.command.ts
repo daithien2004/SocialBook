@@ -1,6 +1,7 @@
+import { Command } from '@nestjs/cqrs';
 import { AppAbility } from '@socialbook/shared';
 
-export class UpdateCollectionCommand {
+export class UpdateCollectionCommand extends Command<any> {
   constructor(
     public readonly id: string,
     public readonly userId: string,
@@ -8,5 +9,5 @@ export class UpdateCollectionCommand {
     public readonly name?: string,
     public readonly description?: string,
     public readonly isPublic?: boolean,
-  ) {}
+  ) { super(); }
 }

@@ -1,15 +1,16 @@
+import { CqrsModule } from '@nestjs/cqrs';
 ﻿import { Module } from '@nestjs/common';
-import { CreateCollectionUseCase } from './use-cases/create-collection/create-collection.use-case';
-import { GetAllCollectionsUseCase } from './use-cases/get-all-collections/get-all-collections.use-case';
-import { GetBookLibraryInfoUseCase } from './use-cases/get-book-library-info/get-book-library-info.use-case';
-import { GetChapterProgressUseCase } from './use-cases/get-chapter-progress/get-chapter-progress.use-case';
-import { GetCollectionByIdUseCase } from './use-cases/get-collection-by-id/get-collection-by-id.use-case';
-import { GetLibraryUseCase } from './use-cases/get-library/get-library.use-case';
-import { RecordReadingTimeUseCase } from './use-cases/record-reading-time/record-reading-time.use-case';
-import { RemoveFromLibraryUseCase } from './use-cases/remove-from-library/remove-from-library.use-case';
-import { UpdateCollectionsUseCase } from './use-cases/update-collections/update-collections.use-case';
-import { UpdateProgressUseCase } from './use-cases/update-progress/update-progress.use-case';
-import { UpdateStatusUseCase } from './use-cases/update-status/update-status.use-case';
+import { CreateCollectionHandler } from './use-cases/create-collection/create-collection.handler';
+import { GetAllCollectionsHandler } from './use-cases/get-all-collections/get-all-collections.handler';
+import { GetBookLibraryInfoHandler } from './use-cases/get-book-library-info/get-book-library-info.handler';
+import { GetChapterProgressHandler } from './use-cases/get-chapter-progress/get-chapter-progress.handler';
+import { GetCollectionByIdHandler } from './use-cases/get-collection-by-id/get-collection-by-id.handler';
+import { GetLibraryHandler } from './use-cases/get-library/get-library.handler';
+import { RecordReadingTimeHandler } from './use-cases/record-reading-time/record-reading-time.handler';
+import { RemoveFromLibraryHandler } from './use-cases/remove-from-library/remove-from-library.handler';
+import { UpdateCollectionsHandler } from './use-cases/update-collections/update-collections.handler';
+import { UpdateProgressHandler } from './use-cases/update-progress/update-progress.handler';
+import { UpdateStatusHandler } from './use-cases/update-status/update-status.handler';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
 import { UsersRepositoryModule } from '@/infrastructure/database/repositories/users/users-repository.module';
@@ -17,10 +18,10 @@ import { GenresRepositoryModule } from '@/infrastructure/database/repositories/g
 import { AIInfrastructureModule } from '@/infrastructure/ai/ai-infrastructure.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
-import { ProcessReadingSessionUseCase } from './use-cases/process-reading-session/process-reading-session.use-case';
-import { UpdateCollectionUseCase } from './use-cases/update-collection/update-collection.use-case';
-import { DeleteCollectionUseCase } from './use-cases/delete-collection/delete-collection.use-case';
-import { GetKnowledgeGraphUseCase } from './use-cases/get-knowledge-graph/get-knowledge-graph.use-case';
+import { ProcessReadingSessionHandler } from './use-cases/process-reading-session/process-reading-session.handler';
+import { UpdateCollectionHandler } from './use-cases/update-collection/update-collection.handler';
+import { DeleteCollectionHandler } from './use-cases/delete-collection/delete-collection.handler';
+import { GetKnowledgeGraphHandler } from './use-cases/get-knowledge-graph/get-knowledge-graph.handler';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { RecommendationsInfrastructureModule } from '@/infrastructure/recommendations/recommendations-infrastructure.module';
 
@@ -34,41 +35,42 @@ import { RecommendationsInfrastructureModule } from '@/infrastructure/recommenda
     IdGeneratorModule,
     ChaptersRepositoryModule,
     RecommendationsInfrastructureModule,
+    CqrsModule,
   ],
 
   providers: [
-    CreateCollectionUseCase,
-    GetAllCollectionsUseCase,
-    GetBookLibraryInfoUseCase,
-    GetChapterProgressUseCase,
-    GetCollectionByIdUseCase,
-    GetLibraryUseCase,
-    RecordReadingTimeUseCase,
-    RemoveFromLibraryUseCase,
-    UpdateCollectionsUseCase,
-    UpdateProgressUseCase,
-    UpdateStatusUseCase,
-    ProcessReadingSessionUseCase,
-    UpdateCollectionUseCase,
-    DeleteCollectionUseCase,
-    GetKnowledgeGraphUseCase,
+    CreateCollectionHandler,
+    GetAllCollectionsHandler,
+    GetBookLibraryInfoHandler,
+    GetChapterProgressHandler,
+    GetCollectionByIdHandler,
+    GetLibraryHandler,
+    RecordReadingTimeHandler,
+    RemoveFromLibraryHandler,
+    UpdateCollectionsHandler,
+    UpdateProgressHandler,
+    UpdateStatusHandler,
+    ProcessReadingSessionHandler,
+    UpdateCollectionHandler,
+    DeleteCollectionHandler,
+    GetKnowledgeGraphHandler,
   ],
   exports: [
-    CreateCollectionUseCase,
-    GetAllCollectionsUseCase,
-    GetBookLibraryInfoUseCase,
-    GetChapterProgressUseCase,
-    GetCollectionByIdUseCase,
-    GetLibraryUseCase,
-    RecordReadingTimeUseCase,
-    RemoveFromLibraryUseCase,
-    UpdateCollectionsUseCase,
-    UpdateProgressUseCase,
-    UpdateStatusUseCase,
-    ProcessReadingSessionUseCase,
-    UpdateCollectionUseCase,
-    DeleteCollectionUseCase,
-    GetKnowledgeGraphUseCase,
+    CreateCollectionHandler,
+    GetAllCollectionsHandler,
+    GetBookLibraryInfoHandler,
+    GetChapterProgressHandler,
+    GetCollectionByIdHandler,
+    GetLibraryHandler,
+    RecordReadingTimeHandler,
+    RemoveFromLibraryHandler,
+    UpdateCollectionsHandler,
+    UpdateProgressHandler,
+    UpdateStatusHandler,
+    ProcessReadingSessionHandler,
+    UpdateCollectionHandler,
+    DeleteCollectionHandler,
+    GetKnowledgeGraphHandler,
   ],
 })
 export class LibraryApplicationModule {}

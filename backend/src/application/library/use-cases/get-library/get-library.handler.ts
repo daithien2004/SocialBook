@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
 import { LibraryItemReadModel } from '@/domain/library/read-models/library-item.read-model';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
@@ -8,8 +9,8 @@ import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repos
 import { Injectable } from '@nestjs/common';
 import { GetLibraryQuery } from './get-library.query';
 
-@Injectable()
-export class GetLibraryUseCase {
+@QueryHandler(GetLibraryQuery)
+export class GetLibraryHandler implements IQueryHandler<GetLibraryQuery, LibraryItemReadModel[]> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,

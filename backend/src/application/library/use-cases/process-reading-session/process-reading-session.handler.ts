@@ -1,24 +1,25 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { RecordReadingTimeUseCase } from '@/application/library/use-cases/record-reading-time/record-reading-time.use-case';
+import { RecordReadingTimeHandler } from '@/application/library/use-cases/record-reading-time/record-reading-time.handler';
 import { ProcessReadingSessionCommand } from './process-reading-session.command';
 
 export interface ProcessReadingSessionResult {
   timeSpentMinutes: number;
 }
 
-@Injectable()
-export class ProcessReadingSessionUseCase {
-  private readonly logger = new Logger(ProcessReadingSessionUseCase.name);
+@CommandHandler(ProcessReadingSessionCommand)
+export class ProcessReadingSessionHandler implements ICommandHandler<ProcessReadingSessionCommand, ProcessReadingSessionResult> {
+  private readonly logger = new Logger(ProcessReadingSessionHandler.name);
 
   constructor(
-    private readonly recordReadingTimeUseCase: RecordReadingTimeUseCase,
+    private readonly recordReadingTimeHandler: RecordReadingTimeHandler,
   ) {}
 
   async execute(
     command: ProcessReadingSessionCommand,
   ): Promise<ProcessReadingSessionResult> {
     try {
-      const result = await this.recordReadingTimeUseCase.execute(command);
+      const result = await this.recordReadingTimeHandler.execute(command);
 
       this.logger.log(
         `Processed reading session for user ${command.userId}: ${result.timeSpentMinutes} minutes`,
