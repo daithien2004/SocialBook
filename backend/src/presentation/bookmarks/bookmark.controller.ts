@@ -1,3 +1,7 @@
+import { GetBookmarksByBookQuery } from '@/application/bookmarks/use-cases/get-bookmarks-by-book/get-bookmarks-by-book.query';
+import { DeleteBookmarkCommand } from '@/application/bookmarks/use-cases/delete-bookmark/delete-bookmark.command';
+import { CreateBookmarkCommand } from '@/application/bookmarks/use-cases/create-bookmark/create-bookmark.command';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Controller,
   Post,
@@ -9,21 +13,11 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { CreateBookmarkUseCase } from '@/application/bookmarks/use-cases/create-bookmark/create-bookmark.use-case';
-import { CreateBookmarkCommand } from '@/application/bookmarks/use-cases/create-bookmark/create-bookmark.command';
-import { DeleteBookmarkUseCase } from '@/application/bookmarks/use-cases/delete-bookmark/delete-bookmark.use-case';
-import { DeleteBookmarkCommand } from '@/application/bookmarks/use-cases/delete-bookmark/delete-bookmark.command';
-import { GetBookmarksByBookUseCase } from '@/application/bookmarks/use-cases/get-bookmarks-by-book/get-bookmarks-by-book.use-case';
-import { GetBookmarksByBookQuery } from '@/application/bookmarks/use-cases/get-bookmarks-by-book/get-bookmarks-by-book.query';
 
 @Controller('bookmarks')
 @UseGuards(JwtAuthGuard)
 export class BookmarkController {
-  constructor(
-    private readonly createBookmarkUseCase: CreateBookmarkUseCase,
-    private readonly deleteBookmarkUseCase: DeleteBookmarkUseCase,
-    private readonly getBookmarksByBookUseCase: GetBookmarksByBookUseCase,
-  ) {}
+  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
 
   @Post()
   async createBookmark(
@@ -37,7 +31,7 @@ export class BookmarkController {
       textPreview: string;
     },
   ) {
-    const bookmark = await this.createBookmarkUseCase.execute(
+    const bookmark = await this.commandBus.execute(
       new CreateBookmarkCommand(
         userId,
         body.bookId,
@@ -66,7 +60,7 @@ export class BookmarkController {
     @CurrentUser('id') userId: string,
     @Param('paragraphId') paragraphId: string,
   ) {
-    await this.deleteBookmarkUseCase.execute(
+    await this.commandBus.execute(
       new DeleteBookmarkCommand(userId, paragraphId),
     );
     return {
@@ -79,7 +73,7 @@ export class BookmarkController {
     @CurrentUser('id') userId: string,
     @Param('bookId') bookId: string,
   ) {
-    const bookmarks = await this.getBookmarksByBookUseCase.execute(
+    const bookmarks = await this.queryBus.execute(
       new GetBookmarksByBookQuery(userId, bookId),
     );
     return {

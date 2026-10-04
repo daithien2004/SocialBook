@@ -1,11 +1,12 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, ConflictException } from '@nestjs/common';
 import { IBookmarkRepository } from '@/domain/bookmarks/repositories/bookmark.repository.interface';
 import { Bookmark } from '@/domain/bookmarks/entities/bookmark.entity';
 import { Types } from 'mongoose';
 import { CreateBookmarkCommand } from './create-bookmark.command';
 
-@Injectable()
-export class CreateBookmarkUseCase {
+@CommandHandler(CreateBookmarkCommand)
+export class CreateBookmarkHandler {
   constructor(private readonly bookmarkRepository: IBookmarkRepository) {}
 
   async execute(command: CreateBookmarkCommand): Promise<Bookmark> {

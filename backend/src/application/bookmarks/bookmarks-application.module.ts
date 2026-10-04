@@ -1,20 +1,21 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { CreateBookmarkUseCase } from './use-cases/create-bookmark/create-bookmark.use-case';
-import { DeleteBookmarkUseCase } from './use-cases/delete-bookmark/delete-bookmark.use-case';
-import { GetBookmarksByBookUseCase } from './use-cases/get-bookmarks-by-book/get-bookmarks-by-book.use-case';
+import { CreateBookmarkHandler } from './use-cases/create-bookmark/create-bookmark.handler';
+import { DeleteBookmarkHandler } from './use-cases/delete-bookmark/delete-bookmark.handler';
+import { GetBookmarksByBookHandler } from './use-cases/get-bookmarks-by-book/get-bookmarks-by-book.handler';
 import { BookmarksRepositoryModule } from '@/infrastructure/database/repositories/bookmarks/bookmarks-repository.module';
 
 @Module({
-  imports: [BookmarksRepositoryModule],
+  imports: [BookmarksRepositoryModule, CqrsModule],
   providers: [
-    CreateBookmarkUseCase,
-    DeleteBookmarkUseCase,
-    GetBookmarksByBookUseCase,
+    CreateBookmarkHandler,
+    DeleteBookmarkHandler,
+    GetBookmarksByBookHandler,
   ],
   exports: [
-    CreateBookmarkUseCase,
-    DeleteBookmarkUseCase,
-    GetBookmarksByBookUseCase,
+    CreateBookmarkHandler,
+    DeleteBookmarkHandler,
+    GetBookmarksByBookHandler,
   ],
 })
 export class BookmarksApplicationModule {}

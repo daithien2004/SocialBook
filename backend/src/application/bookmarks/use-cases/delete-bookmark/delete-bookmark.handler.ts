@@ -1,9 +1,10 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { IBookmarkRepository } from '@/domain/bookmarks/repositories/bookmark.repository.interface';
 import { DeleteBookmarkCommand } from './delete-bookmark.command';
 
-@Injectable()
-export class DeleteBookmarkUseCase {
+@CommandHandler(DeleteBookmarkCommand)
+export class DeleteBookmarkHandler {
   constructor(private readonly bookmarkRepository: IBookmarkRepository) {}
 
   async execute(command: DeleteBookmarkCommand): Promise<void> {
