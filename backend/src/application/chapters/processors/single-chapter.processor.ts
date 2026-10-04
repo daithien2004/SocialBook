@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { UnrecoverableError } from 'bullmq';
-import { CreateChapterUseCase } from '../use-cases/create-chapter/create-chapter.use-case';
+import { CommandBus } from '@nestjs/cqrs';
 import { CreateChapterCommand } from '../use-cases/create-chapter/create-chapter.command';
 import type { Job } from 'bullmq';
 import { z } from 'zod';
@@ -21,7 +21,7 @@ export interface CreateSingleChapterJobData {
   concurrency: 5,
 })
 export class SingleChapterProcessor extends WorkerHost {
-  constructor(private readonly createChapterUseCase: CreateChapterUseCase) {
+  constructor(private readonly commandBus: CommandBus) {
     super();
   }
 
@@ -43,7 +43,7 @@ export class SingleChapterProcessor extends WorkerHost {
     }
 
     const { bookId, title, paragraphs, orderIndex } = parsed.data;
-    await this.createChapterUseCase.execute(
+    await this.commandBus.execute(
       new CreateChapterCommand(
         title,
         bookId,

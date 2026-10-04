@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { ChapterDetailReadModel } from '@/domain/chapters/read-models/chapter-detail.read-model';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
@@ -5,8 +6,8 @@ import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { GetChapterBySlugQuery } from './get-chapter-by-slug.query';
 
-@Injectable()
-export class GetChapterBySlugUseCase {
+@QueryHandler(GetChapterBySlugQuery)
+export class GetChapterBySlugHandler implements IQueryHandler<GetChapterBySlugQuery, ChapterDetailReadModel> {
   constructor(private readonly chapterRepository: IChapterRepository) {}
 
   async execute(query: GetChapterBySlugQuery): Promise<ChapterDetailReadModel> {

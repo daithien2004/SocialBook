@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { ICachePort } from '@/shared/domain/cache.port';
@@ -5,8 +6,8 @@ import { RecordChapterViewQuery } from './record-chapter-view.query';
 
 const VIEW_DEDUP_TTL = 30 * 60; // 30 phút
 
-@Injectable()
-export class RecordChapterViewUseCase {
+@QueryHandler(RecordChapterViewQuery)
+export class RecordChapterViewHandler implements IQueryHandler<RecordChapterViewQuery, void> {
   constructor(
     private readonly chapterRepository: IChapterRepository,
     private readonly cacheService: ICachePort,

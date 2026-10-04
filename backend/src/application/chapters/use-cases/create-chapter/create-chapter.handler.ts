@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
@@ -10,8 +11,8 @@ import { CreateChapterCommand } from './create-chapter.command';
 import { ChapterResult } from '../get-chapters/get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
-@Injectable()
-export class CreateChapterUseCase {
+@CommandHandler(CreateChapterCommand)
+export class CreateChapterHandler implements ICommandHandler<CreateChapterCommand, ChapterResult> {
   constructor(
     private readonly chapterRepository: IChapterRepository,
     private readonly idGenerator: IIdGenerator,

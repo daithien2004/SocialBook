@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import {
   NotFoundDomainException,
@@ -5,29 +6,25 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
+import { DeleteChapterCommand } from './delete-chapter.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
-import { GetChapterByIdQuery } from './get-chapter-by-id.query';
-import { ChapterResult } from '../get-chapters/get-chapters.result';
-import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
-@Injectable()
-export class GetChapterByIdUseCase {
+@CommandHandler(DeleteChapterCommand)
+export class DeleteChapterHandler implements ICommandHandler<DeleteChapterCommand, void> {
   constructor(private readonly chapterRepository: IChapterRepository) {}
 
-  async execute(query: GetChapterByIdQuery): Promise<ChapterResult> {
-    if (!query.id) {
+  async execute(command: DeleteChapterCommand): Promise<void> {
+    if (!command.id) {
       throw new BadRequestDomainException(ErrorMessages.INVALID_ID);
     }
 
-    const chapterId = ChapterId.create(query.id);
+    const chapterId = ChapterId.create(command.id);
     const chapter = await this.chapterRepository.findById(chapterId);
 
     if (!chapter) {
       throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
     }
 
-    await this.chapterRepository.incrementViews(chapterId);
-
-    return ChapterApplicationMapper.toResult(chapter);
+    await this.chapterRepository.delete(chapterId);
   }
 }

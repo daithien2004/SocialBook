@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 ﻿import { Injectable, Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
@@ -7,9 +8,9 @@ import { getChapterContext } from '@/application/shared/utils/chapter-context-ex
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { AskChapterAICommand } from './ask-chapter-ai.command';
 
-@Injectable()
-export class AskChapterAIUseCase {
-  private readonly logger = new Logger(AskChapterAIUseCase.name);
+@CommandHandler(AskChapterAICommand)
+export class AskChapterAIHandler implements ICommandHandler<AskChapterAICommand, any> {
+  private readonly logger = new Logger(AskChapterAIHandler.name);
 
   constructor(
     private readonly bookRepository: IBookRepository,

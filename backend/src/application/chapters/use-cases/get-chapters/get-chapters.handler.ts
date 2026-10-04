@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import {
   PaginatedResult,
   PaginationOptions,
@@ -14,8 +15,8 @@ import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 import { GetChaptersQuery } from './get-chapters.query';
 import { ChapterResult } from './get-chapters.result';
 
-@Injectable()
-export class GetChaptersUseCase {
+@QueryHandler(GetChaptersQuery)
+export class GetChaptersHandler implements IQueryHandler<GetChaptersQuery, ChapterListReadModel | PaginatedResult<ChapterResult>> {
   constructor(private readonly chapterRepository: IChapterRepository) {}
 
   async execute(

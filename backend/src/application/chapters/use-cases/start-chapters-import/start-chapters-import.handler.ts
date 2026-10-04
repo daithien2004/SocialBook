@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { IChaptersImportPort } from '@/domain/chapters/interfaces/chapters-import.port';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { StartChaptersImportCommand } from './start-chapters-import.command';
+import { IChaptersImportPort } from '@/domain/chapters/interfaces/chapters-import.port';
 
-@Injectable()
-export class StartChaptersImportUseCase {
+@CommandHandler(StartChaptersImportCommand)
+export class StartChaptersImportHandler implements ICommandHandler<StartChaptersImportCommand, any> {
   constructor(private readonly chaptersImportQueue: IChaptersImportPort) {}
 
   async execute(command: StartChaptersImportCommand) {
