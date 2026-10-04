@@ -1,10 +1,11 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { GetBookFiltersQuery } from './get-book-filters.query';
 
-@Injectable()
-export class GetBookFiltersUseCase {
-  private readonly logger = new Logger(GetBookFiltersUseCase.name);
+@QueryHandler(GetBookFiltersQuery)
+export class GetBookFiltersHandler implements IQueryHandler<GetBookFiltersQuery, any> {
+  private readonly logger = new Logger(GetBookFiltersHandler.name);
 
   constructor(private readonly bookRepository: IBookRepository) {}
 

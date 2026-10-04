@@ -1,3 +1,4 @@
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { SkipThrottle } from '@nestjs/throttler';
 import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
 import { ApiFileUpload, Public } from '@/common/decorators/custom.decorator';
@@ -21,26 +22,16 @@ import { FilterBookDto } from '@/presentation/books/dto/filter-book.dto';
 import { UpdateBookDto } from '@/presentation/books/dto/update-book.dto';
 
 import { CreateBookCommand } from '@/application/books/use-cases/create-book/create-book.command';
-import { CreateBookUseCase } from '@/application/books/use-cases/create-book/create-book.use-case';
 import { DeleteBookCommand } from '@/application/books/use-cases/delete-book/delete-book.command';
-import { DeleteBookUseCase } from '@/application/books/use-cases/delete-book/delete-book.use-case';
 import { GetBookByIdQuery } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.query';
-import { GetBookByIdUseCase } from '@/application/books/use-cases/get-book-by-id/get-book-by-id.use-case';
 import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query';
-import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
 import { GetBookFiltersQuery } from '@/application/books/use-cases/get-book-filters/get-book-filters.query';
-import { GetBookFiltersUseCase } from '@/application/books/use-cases/get-book-filters/get-book-filters.use-case';
 import { GetBooksQuery } from '@/application/books/use-cases/get-books/get-books.query';
-import { GetBooksUseCase } from '@/application/books/use-cases/get-books/get-books.use-case';
 import { UpdateBookCommand } from '@/application/books/use-cases/update-book/update-book.command';
-import { UpdateBookUseCase } from '@/application/books/use-cases/update-book/update-book.use-case';
 import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelligent-search.use-case';
 import { IntelligentSearchQuery } from '@/application/search/use-cases/intelligent-search.query';
-import { ToggleBookLikeUseCase } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.use-case';
-import { RecordBookViewUseCase } from '@/application/books/use-cases/record-book-view/record-book-view.use-case';
-import { RecordBookViewCommand } from '@/application/books/use-cases/record-book-view/record-book-view.command';
 import { ToggleBookLikeCommand } from '@/application/books/use-cases/toggle-book-like/toggle-book-like.command';
-import { GetTopReadBooksUseCase } from '@/application/books/use-cases/get-top-read-books/get-top-read-books.use-case';
+import { RecordBookViewCommand } from '@/application/books/use-cases/record-book-view/record-book-view.command';
 import { GetTopReadBooksQuery } from '@/application/books/use-cases/get-top-read-books/get-top-read-books.query';
 import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -49,18 +40,10 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 @SkipThrottle({ global: true })
 export class BooksController {
   constructor(
-    private readonly createBookUseCase: CreateBookUseCase,
-    private readonly updateBookUseCase: UpdateBookUseCase,
-    private readonly getBooksUseCase: GetBooksUseCase,
-    private readonly getBookBySlugUseCase: GetBookBySlugUseCase,
-    private readonly deleteBookUseCase: DeleteBookUseCase,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
     private readonly mediaService: IMediaPort,
-    private readonly getBookByIdUseCase: GetBookByIdUseCase,
-    private readonly getBookFiltersUseCase: GetBookFiltersUseCase,
-    private readonly toggleBookLikeUseCase: ToggleBookLikeUseCase,
     private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
-    private readonly recordBookViewUseCase: RecordBookViewUseCase,
-    private readonly getTopReadBooksUseCase: GetTopReadBooksUseCase,
   ) {}
 
   @Post()
@@ -81,7 +64,7 @@ export class BooksController {
       coverUrl,
     });
 
-    const book = await this.createBookUseCase.execute(command);
+    const book = await this.commandBus.execute(command);
     return {
       message: 'Tạo sách thành công',
       data: BookResponseDto.fromEntity(book),
@@ -97,7 +80,7 @@ export class BooksController {
       sortBy: filter.sortBy,
     });
 
-    const result = await this.getBooksUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy danh sách sách (Admin) thành công',
@@ -110,7 +93,7 @@ export class BooksController {
   @Get('filters/all')
   async getFilters() {
     const query = new GetBookFiltersQuery();
-    const data = await this.getBookFiltersUseCase.execute(query);
+    const data = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy danh sách bộ lọc thành công',
@@ -125,7 +108,7 @@ export class BooksController {
     @Query('limit') limit: number = 5,
   ) {
     const query = new GetTopReadBooksQuery(timeRange, Number(limit));
-    const result = await this.getTopReadBooksUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy danh sách top đọc nhiều thành công',
@@ -159,7 +142,7 @@ export class BooksController {
       search: undefined, // Explicitly clear search for fallback flow
     });
 
-    const result = await this.getBooksUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy danh sách sách thành công',
@@ -172,7 +155,7 @@ export class BooksController {
   @Public()
   async findOne(@Param('slug') slug: string) {
     const query = new GetBookBySlugQuery(slug);
-    const book = await this.getBookBySlugUseCase.execute(query);
+    const book = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy thông tin sách thành công',
@@ -187,7 +170,7 @@ export class BooksController {
     @Param('slug') slug: string,
     @CurrentUser('id') userId: string,
   ) {
-    const book = await this.getBookBySlugUseCase.execute(
+    const book = await this.queryBus.execute(
       new GetBookBySlugQuery(slug),
     );
     const command = new ToggleBookLikeCommand({
@@ -195,7 +178,7 @@ export class BooksController {
       userId,
       bookSlug: slug,
     });
-    const result = await this.toggleBookLikeUseCase.execute(command);
+    const result = await this.commandBus.execute(command);
 
     return {
       message: result.isLiked ? 'Liked successfully' : 'Unliked successfully',
@@ -210,7 +193,7 @@ export class BooksController {
   @Post(':slug/views')
   @Public()
   async recordView(@Param('slug') slug: string) {
-    await this.recordBookViewUseCase.execute(new RecordBookViewCommand(slug));
+    await this.commandBus.execute(new RecordBookViewCommand(slug));
     return {
       message: 'Recorded view successfully',
     };
@@ -220,7 +203,7 @@ export class BooksController {
   @Public()
   async findOneById(@Param('id') id: string) {
     const query = new GetBookByIdQuery(id);
-    const book = await this.getBookByIdUseCase.execute(query);
+    const book = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy thông tin sách thành công',
@@ -248,7 +231,7 @@ export class BooksController {
       coverUrl,
     });
 
-    const book = await this.updateBookUseCase.execute(command);
+    const book = await this.commandBus.execute(command);
     return {
       message: 'Cập nhật sách thành công',
       data: BookResponseDto.fromEntity(book),
@@ -260,7 +243,7 @@ export class BooksController {
   @SkipThrottle({ global: false })
   async remove(@Param('id') id: string) {
     const command = new DeleteBookCommand(id);
-    await this.deleteBookUseCase.execute(command);
+    await this.commandBus.execute(command);
     return {
       message: 'Xóa sách thành công',
     };

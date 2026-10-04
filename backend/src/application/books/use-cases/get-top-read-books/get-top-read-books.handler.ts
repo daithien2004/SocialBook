@@ -1,12 +1,13 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
 import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
 import { GetTopReadBooksQuery } from './get-top-read-books.query';
 import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 
-@Injectable()
-export class GetTopReadBooksUseCase {
-  private readonly logger = new Logger(GetTopReadBooksUseCase.name);
+@QueryHandler(GetTopReadBooksQuery)
+export class GetTopReadBooksHandler implements IQueryHandler<GetTopReadBooksQuery, BookListReadModel[]> {
+  private readonly logger = new Logger(GetTopReadBooksHandler.name);
 
   constructor(
     private readonly bookQueryProvider: IBookQueryProvider,

@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
@@ -11,8 +12,8 @@ import { ICachePort } from '@/shared/domain/cache.port';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
 import { GetBookBySlugQuery } from './get-book-by-slug.query';
 
-@Injectable()
-export class GetBookBySlugUseCase {
+@QueryHandler(GetBookBySlugQuery)
+export class GetBookBySlugHandler implements IQueryHandler<GetBookBySlugQuery, BookDetailReadModel> {
   constructor(
     private readonly bookQueryProvider: IBookQueryProvider,
     private readonly cache: ICachePort,

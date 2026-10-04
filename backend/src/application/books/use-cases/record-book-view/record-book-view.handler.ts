@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { RecordBookViewCommand } from './record-book-view.command';
@@ -6,9 +7,9 @@ import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-ca
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
-@Injectable()
-export class RecordBookViewUseCase {
-  private readonly logger = new Logger(RecordBookViewUseCase.name);
+@CommandHandler(RecordBookViewCommand)
+export class RecordBookViewHandler implements ICommandHandler<RecordBookViewCommand, void> {
+  private readonly logger = new Logger(RecordBookViewHandler.name);
 
   constructor(
     private readonly bookRepository: IBookRepository,

@@ -1,3 +1,4 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import {
   PaginationOptions,
   SortOptions,
@@ -7,8 +8,8 @@ import { BookFilter } from '@/domain/books/repositories/book.repository.interfac
 import { Injectable } from '@nestjs/common';
 import { GetBooksQuery } from './get-books.query';
 
-@Injectable()
-export class GetBooksUseCase {
+@QueryHandler(GetBooksQuery)
+export class GetBooksHandler implements IQueryHandler<GetBooksQuery, any> {
   constructor(private readonly bookQueryProvider: IBookQueryProvider) {}
 
   async execute(query: GetBooksQuery) {

@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   Injectable,
   NotFoundException,
@@ -11,8 +12,8 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { ICachePort } from '@/shared/domain/cache.port';
 import { EventNames } from '@/common/constants/event-names.constant';
 
-@Injectable()
-export class DeleteBookUseCase {
+@CommandHandler(DeleteBookCommand)
+export class DeleteBookHandler implements ICommandHandler<DeleteBookCommand, void> {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly cache: ICachePort,

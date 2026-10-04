@@ -4,7 +4,7 @@ import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
 import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { ToggleBookLikeCommand } from './toggle-book-like.command';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ToggleLikeCommand } from '@/application/likes/use-cases/toggle-like/toggle-like.command';
 
 export interface ToggleBookLikeResult {
@@ -12,9 +12,9 @@ export interface ToggleBookLikeResult {
   likes: number;
 }
 
-@Injectable()
-export class ToggleBookLikeUseCase {
-  private readonly logger = new Logger(ToggleBookLikeUseCase.name);
+@CommandHandler(ToggleBookLikeCommand)
+export class ToggleBookLikeHandler implements ICommandHandler<ToggleBookLikeCommand, ToggleBookLikeResult> {
+  private readonly logger = new Logger(ToggleBookLikeHandler.name);
 
   constructor(
     private readonly bookRepository: IBookRepository,
