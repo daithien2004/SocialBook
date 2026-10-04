@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -8,8 +8,8 @@ import { AuthorId } from '@/domain/authors/value-objects/author-id.vo';
 import { DeleteAuthorCommand } from './delete-author.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
-@Injectable()
-export class DeleteAuthorUseCase {
+@CommandHandler(DeleteAuthorCommand)
+export class DeleteAuthorHandler implements ICommandHandler<DeleteAuthorCommand, void> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(command: DeleteAuthorCommand): Promise<void> {

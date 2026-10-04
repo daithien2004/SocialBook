@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -9,8 +9,8 @@ import { AuthorId } from '@/domain/authors/value-objects/author-id.vo';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { GetAuthorByIdQuery } from './get-author-by-id.query';
 
-@Injectable()
-export class GetAuthorByIdUseCase {
+@QueryHandler(GetAuthorByIdQuery)
+export class GetAuthorByIdHandler implements IQueryHandler<GetAuthorByIdQuery, Author> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(query: GetAuthorByIdQuery): Promise<Author> {

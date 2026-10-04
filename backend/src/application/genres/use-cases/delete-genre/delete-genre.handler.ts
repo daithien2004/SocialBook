@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   NotFoundDomainException,
   ConflictDomainException,
@@ -9,8 +9,8 @@ import { DeleteGenreCommand } from './delete-genre.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 
-@Injectable()
-export class DeleteGenreUseCase {
+@CommandHandler(DeleteGenreCommand)
+export class DeleteGenreHandler implements ICommandHandler<DeleteGenreCommand, void> {
   constructor(
     private readonly genreRepository: IGenreRepository,
     private readonly bookRepository: IBookRepository,

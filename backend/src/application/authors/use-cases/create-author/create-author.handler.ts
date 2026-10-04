@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -8,8 +8,8 @@ import { AuthorName } from '@/domain/authors/value-objects/author-name.vo';
 import { CreateAuthorCommand } from './create-author.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
-@Injectable()
-export class CreateAuthorUseCase {
+@CommandHandler(CreateAuthorCommand)
+export class CreateAuthorHandler implements ICommandHandler<CreateAuthorCommand, Author> {
   constructor(
     private readonly authorRepository: IAuthorRepository,
     private readonly idGenerator: IIdGenerator,

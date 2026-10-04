@@ -1,13 +1,13 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { PaginationOptions } from '@/common/interfaces/pagination.interface';
 import {
   AuthorFilter,
   IAuthorRepository,
 } from '@/domain/authors/repositories/author.repository.interface';
-import { Injectable } from '@nestjs/common';
 import { GetAuthorsQuery } from './get-authors.query';
 
-@Injectable()
-export class GetAuthorsUseCase {
+@QueryHandler(GetAuthorsQuery)
+export class GetAuthorsHandler implements IQueryHandler<GetAuthorsQuery, any> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(query: GetAuthorsQuery) {

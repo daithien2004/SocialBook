@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   NotFoundDomainException,
   ConflictDomainException,
@@ -10,8 +10,8 @@ import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 import { UpdateGenreCommand } from './update-genre.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
-@Injectable()
-export class UpdateGenreUseCase {
+@CommandHandler(UpdateGenreCommand)
+export class UpdateGenreHandler implements ICommandHandler<UpdateGenreCommand, Genre> {
   constructor(private readonly genreRepository: IGenreRepository) {}
 
   async execute(command: UpdateGenreCommand): Promise<Genre> {

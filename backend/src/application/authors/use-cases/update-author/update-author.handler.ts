@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   NotFoundDomainException,
   ConflictDomainException,
@@ -10,8 +10,8 @@ import { AuthorName } from '@/domain/authors/value-objects/author-name.vo';
 import { UpdateAuthorCommand } from './update-author.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
-@Injectable()
-export class UpdateAuthorUseCase {
+@CommandHandler(UpdateAuthorCommand)
+export class UpdateAuthorHandler implements ICommandHandler<UpdateAuthorCommand, Author> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(command: UpdateAuthorCommand): Promise<Author> {

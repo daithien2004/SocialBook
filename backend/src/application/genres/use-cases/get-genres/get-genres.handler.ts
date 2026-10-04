@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { Genre } from '@/domain/genres/entities/genre.entity';
 import { GetGenresQuery } from './get-genres.query';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 
-@Injectable()
-export class GetGenresUseCase {
+@QueryHandler(GetGenresQuery)
+export class GetGenresHandler implements IQueryHandler<GetGenresQuery, PaginatedResult<Genre>> {
   constructor(private readonly genreRepository: IGenreRepository) {}
 
   async execute(query: GetGenresQuery): Promise<PaginatedResult<Genre>> {

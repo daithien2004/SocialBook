@@ -1,11 +1,12 @@
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreateGenreCommand } from '@/application/genres/use-cases/create-genre/create-genre.command';
-import { CreateGenreUseCase } from '@/application/genres/use-cases/create-genre/create-genre.use-case';
+
 import { DeleteGenreCommand } from '@/application/genres/use-cases/delete-genre/delete-genre.command';
-import { DeleteGenreUseCase } from '@/application/genres/use-cases/delete-genre/delete-genre.use-case';
+
 import { GetGenresQuery } from '@/application/genres/use-cases/get-genres/get-genres.query';
-import { GetGenresUseCase } from '@/application/genres/use-cases/get-genres/get-genres.use-case';
+
 import { UpdateGenreCommand } from '@/application/genres/use-cases/update-genre/update-genre.command';
-import { UpdateGenreUseCase } from '@/application/genres/use-cases/update-genre/update-genre.use-case';
+
 import { Public } from '@/common/decorators/custom.decorator';
 import { CreateGenreDto } from '@/presentation/genres/dto/create-genre.dto';
 import { FilterGenreDto } from '@/presentation/genres/dto/filter-genre.dto';
@@ -24,18 +25,15 @@ import {
 } from '@nestjs/common';
 
 import { GetGenreByIdQuery } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.query';
-import { GetGenreByIdUseCase } from '@/application/genres/use-cases/get-genre-by-id/get-genre-by-id.use-case';
+
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
 @Controller('genres')
 export class GenresController {
   constructor(
-    private readonly createGenreUseCase: CreateGenreUseCase,
-    private readonly updateGenreUseCase: UpdateGenreUseCase,
-    private readonly getGenresUseCase: GetGenresUseCase,
-    private readonly deleteGenreUseCase: DeleteGenreUseCase,
-    private readonly getGenreByIdUseCase: GetGenreByIdUseCase,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post()
@@ -46,7 +44,7 @@ export class GenresController {
       createGenreDto.name,
       createGenreDto.description,
     );
-    const genre = await this.createGenreUseCase.execute(command);
+    const genre = await this.commandBus.execute(command);
     return {
       message: 'Genre created successfully',
       data: new GenreResponseDto(genre),
@@ -61,7 +59,7 @@ export class GenresController {
       filter.actualLimit,
       filter.name,
     );
-    const result = await this.getGenresUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get genres successfully',
@@ -79,7 +77,7 @@ export class GenresController {
       filter.actualLimit,
       filter.name,
     );
-    const result = await this.getGenresUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get genres (Admin) successfully',
@@ -92,7 +90,7 @@ export class GenresController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const query = new GetGenreByIdQuery(id);
-    const genre = await this.getGenreByIdUseCase.execute(query);
+    const genre = await this.queryBus.execute(query);
     return {
       message: 'Get genre successfully',
       data: new GenreResponseDto(genre),
@@ -111,7 +109,7 @@ export class GenresController {
       updateGenreDto.name,
       updateGenreDto.description,
     );
-    const genre = await this.updateGenreUseCase.execute(command);
+    const genre = await this.commandBus.execute(command);
     return {
       message: 'Genre updated successfully',
       data: new GenreResponseDto(genre),
@@ -123,7 +121,7 @@ export class GenresController {
   @UseGuards(RolesGuard)
   async remove(@Param('id') id: string) {
     const command = new DeleteGenreCommand(id);
-    await this.deleteGenreUseCase.execute(command);
+    await this.commandBus.execute(command);
     return { message: 'Genre deleted successfully' };
   }
 }

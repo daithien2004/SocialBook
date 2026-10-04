@@ -1,3 +1,4 @@
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiFileUpload, Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -19,11 +20,11 @@ import { CreateAuthorDto } from '@/presentation/authors/dto/create-author.dto';
 import { FilterAuthorDto } from '@/presentation/authors/dto/filter-author.dto';
 import { UpdateAuthorDto } from '@/presentation/authors/dto/update-author.dto';
 
-import { CreateAuthorUseCase } from '@/application/authors/use-cases/create-author/create-author.use-case';
-import { DeleteAuthorUseCase } from '@/application/authors/use-cases/delete-author/delete-author.use-case';
-import { GetAuthorByIdUseCase } from '@/application/authors/use-cases/get-author-by-id/get-author-by-id.use-case';
-import { GetAuthorsUseCase } from '@/application/authors/use-cases/get-authors/get-authors.use-case';
-import { UpdateAuthorUseCase } from '@/application/authors/use-cases/update-author/update-author.use-case';
+
+
+
+
+
 
 import { CreateAuthorCommand } from '@/application/authors/use-cases/create-author/create-author.command';
 import { DeleteAuthorCommand } from '@/application/authors/use-cases/delete-author/delete-author.command';
@@ -36,12 +37,9 @@ import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 @Controller('authors')
 export class AuthorsController {
   constructor(
-    private readonly createAuthorUseCase: CreateAuthorUseCase,
-    private readonly updateAuthorUseCase: UpdateAuthorUseCase,
-    private readonly getAuthorsUseCase: GetAuthorsUseCase,
-    private readonly getAuthorByIdUseCase: GetAuthorByIdUseCase,
-    private readonly deleteAuthorUseCase: DeleteAuthorUseCase,
-    private readonly mediaService: IMediaPort,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  private readonly mediaService: IMediaPort,
   ) {}
 
   @Post()
@@ -58,7 +56,7 @@ export class AuthorsController {
       file ? await this.uploadFile(file) : createAuthorDto.photoUrl,
     );
 
-    const author = await this.createAuthorUseCase.execute(command);
+    const author = await this.commandBus.execute(command);
     return {
       message: 'Tạo tác giả thành công',
       data: new AuthorResponseDto(author),
@@ -76,7 +74,7 @@ export class AuthorsController {
       filter.bio,
     );
 
-    const result = await this.getAuthorsUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy danh sách tác giả thành công',
@@ -89,7 +87,7 @@ export class AuthorsController {
   @Public()
   async findOne(@Param('id') id: string) {
     const query = new GetAuthorByIdQuery(id);
-    const author = await this.getAuthorByIdUseCase.execute(query);
+    const author = await this.queryBus.execute(query);
     return {
       message: 'Lấy thông tin tác giả thành công',
       data: new AuthorResponseDto(author),
@@ -112,7 +110,7 @@ export class AuthorsController {
       file ? await this.uploadFile(file) : updateAuthorDto.photoUrl,
     );
 
-    const author = await this.updateAuthorUseCase.execute(command);
+    const author = await this.commandBus.execute(command);
     return {
       message: 'Cập nhật tác giả thành công',
       data: new AuthorResponseDto(author),
@@ -124,7 +122,7 @@ export class AuthorsController {
   @UseGuards(RolesGuard)
   async remove(@Param('id') id: string) {
     const command = new DeleteAuthorCommand(id);
-    await this.deleteAuthorUseCase.execute(command);
+    await this.commandBus.execute(command);
     return {
       message: 'Xóa tác giả thành công',
     };
@@ -134,7 +132,7 @@ export class AuthorsController {
   @Public()
   async getForSelect() {
     const query = new GetAuthorsQuery(1, 1000);
-    const result = await this.getAuthorsUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Lấy danh sách tác giả thành công',

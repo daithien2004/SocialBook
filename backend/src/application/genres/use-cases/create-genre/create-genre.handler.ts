@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -8,8 +8,8 @@ import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 import { CreateGenreCommand } from './create-genre.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
-@Injectable()
-export class CreateGenreUseCase {
+@CommandHandler(CreateGenreCommand)
+export class CreateGenreHandler implements ICommandHandler<CreateGenreCommand, Genre> {
   constructor(
     private readonly genreRepository: IGenreRepository,
     private readonly idGenerator: IIdGenerator,
