@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run start:dev --workspace=backend\" \"npm run start:worker:dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
-    "build:shared": "npm run build --workspace shared"
+    "build:shared": "npm run build --workspace shared",
+    "prepare": "husky"
   },
   "dependencies": {
     "@cfworker/json-schema": "^4.1.1",
@@ -23,6 +24,19 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "concurrently": "^9.2.4"
+    "concurrently": "^9.2.4",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.tsx": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }
