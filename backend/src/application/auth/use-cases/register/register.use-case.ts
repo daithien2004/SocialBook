@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
-import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
+import { CreateUserHandler } from '@/application/users/use-cases/create-user/create-user.handler';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
 import { GetRoleByNameUseCase } from '@/application/roles/use-cases/get-role-by-name.use-case';
 import { GetRoleByNameQuery } from '@/application/roles/use-cases/get-role-by-name.query';
@@ -21,7 +21,7 @@ export class RegisterUseCase {
 
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly createUserUseCase: CreateUserUseCase,
+    private readonly createUserUseCase: CreateUserHandler,
     private readonly getRoleByNameUseCase: GetRoleByNameUseCase,
     private readonly sendOtpUseCase: SendOtpUseCase,
     private readonly passwordHasher: IPasswordHasher,

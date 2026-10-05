@@ -1,3 +1,5 @@
+import { GetUserProfileQuery } from './get-user-profile.query';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -6,10 +8,9 @@ import { IPostRepository } from '@/domain/posts/repositories/post.repository.int
 import { IFollowRepository } from '@/domain/follows/repositories/follow.repository.interface';
 import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
-import { GetUserProfileQuery } from './get-user-profile.query';
 
-@Injectable()
-export class GetUserProfileUseCase {
+@QueryHandler(GetUserProfileQuery)
+export class GetUserProfileHandler {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly postsRepository: IPostRepository,

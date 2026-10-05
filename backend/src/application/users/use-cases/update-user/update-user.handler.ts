@@ -1,3 +1,5 @@
+import { UpdateUserCommand } from './update-user.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import {
   NotFoundDomainException,
@@ -6,10 +8,9 @@ import {
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { User } from '@/domain/users/entities/user.entity';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { UpdateUserCommand } from './update-user.command';
 
-@Injectable()
-export class UpdateUserUseCase {
+@CommandHandler(UpdateUserCommand)
+export class UpdateUserHandler {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(command: UpdateUserCommand): Promise<User> {

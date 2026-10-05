@@ -1,12 +1,13 @@
+import { UpdateReadingPreferencesCommand } from './update-reading-preferences.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { User } from '@/domain/users/entities/user.entity';
-import { UpdateReadingPreferencesCommand } from './update-reading-preferences.command';
 
-@Injectable()
-export class UpdateReadingPreferencesUseCase {
+@CommandHandler(UpdateReadingPreferencesCommand)
+export class UpdateReadingPreferencesHandler {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(command: UpdateReadingPreferencesCommand): Promise<User> {

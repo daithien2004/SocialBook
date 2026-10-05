@@ -15,6 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -30,44 +31,21 @@ import {
 import { UserResponseDto } from '@/presentation/users/dto/user.response.dto';
 
 import { CheckUserExistQuery } from '@/application/users/use-cases/check-user-exist/check-user-exist.query';
-import { CheckUserExistUseCase } from '@/application/users/use-cases/check-user-exist/check-user-exist.use-case';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
-import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
-import { DeleteUserUseCase } from '@/application/users/use-cases/delete-user/delete-user.use-case';
 import { GetReadingPreferencesQuery } from '@/application/users/use-cases/get-reading-preferences/get-reading-preferences.query';
-import { GetReadingPreferencesUseCase } from '@/application/users/use-cases/get-reading-preferences/get-reading-preferences.use-case';
-import { GetUserByIdUseCase } from '@/application/users/use-cases/get-user-by-id/get-user-by-id.use-case';
 import { GetUserProfileQuery } from '@/application/users/use-cases/get-user-profile/get-user-profile.query';
-import { GetUserProfileUseCase } from '@/application/users/use-cases/get-user-profile/get-user-profile.use-case';
 import { GetUsersQuery } from '@/application/users/use-cases/get-users/get-users.query';
-import { GetUsersUseCase } from '@/application/users/use-cases/get-users/get-users.use-case';
 import { SearchUsersQuery } from '@/application/users/use-cases/search-users/search-users.query';
-import { SearchUsersUseCase } from '@/application/users/use-cases/search-users/search-users.use-case';
 import { ToggleBanCommand } from '@/application/users/use-cases/toggle-ban/toggle-ban.command';
-import { ToggleBanUseCase } from '@/application/users/use-cases/toggle-ban/toggle-ban.use-case';
 import { UpdateReadingPreferencesCommand } from '@/application/users/use-cases/update-reading-preferences/update-reading-preferences.command';
-import { UpdateReadingPreferencesUseCase } from '@/application/users/use-cases/update-reading-preferences/update-reading-preferences.use-case';
 import { UpdateUserImageCommand } from '@/application/users/use-cases/update-user-image/update-user-image.command';
-import { UpdateUserImageUseCase } from '@/application/users/use-cases/update-user-image/update-user-image.use-case';
 import { UpdateUserCommand } from '@/application/users/use-cases/update-user/update-user.command';
-import { UpdateUserUseCase } from '@/application/users/use-cases/update-user/update-user.use-case';
 
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly createUserUseCase: CreateUserUseCase,
-    private readonly getUsersUseCase: GetUsersUseCase,
-
-    private readonly getUserByIdUseCase: GetUserByIdUseCase,
-    private readonly updateUserUseCase: UpdateUserUseCase,
-    private readonly deleteUserUseCase: DeleteUserUseCase,
-    private readonly toggleBanUseCase: ToggleBanUseCase,
-    private readonly getUserProfileUseCase: GetUserProfileUseCase,
-    private readonly checkUserExistUseCase: CheckUserExistUseCase,
-    private readonly updateUserImageUseCase: UpdateUserImageUseCase,
-    private readonly getReadingPreferencesUseCase: GetReadingPreferencesUseCase,
-    private readonly updateReadingPreferencesUseCase: UpdateReadingPreferencesUseCase,
-    private readonly searchUsersUseCase: SearchUsersUseCase,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post()
@@ -81,7 +59,7 @@ export class UsersController {
       createUserDto.provider,
       createUserDto.providerId,
     );
-    const user = await this.createUserUseCase.execute(command);
+    const user = await this.commandBus.execute(command);
     return {
       message: 'User created successfully',
       data: new UserResponseDto(user),
@@ -101,10 +79,10 @@ export class UsersController {
       filter.isBanned,
       filter.isVerified,
     );
-    const result = await this.getUsersUseCase.execute(getUsersQuery);
+    const result = await this.queryBus.execute(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map((user) => new UserResponseDto(user)),
+      data: result.data.map((user: any) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
@@ -121,10 +99,10 @@ export class UsersController {
       undefined,
       undefined,
     );
-    const result = await this.getUsersUseCase.execute(getUsersQuery);
+    const result = await this.queryBus.execute(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map((user) => new UserResponseDto(user)),
+      data: result.data.map((user: any) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
@@ -134,7 +112,7 @@ export class UsersController {
   @Roles('admin')
   async toggleBan(@Param('id') id: string) {
     const command = new ToggleBanCommand(id);
-    const user = await this.toggleBanUseCase.execute(command);
+    const user = await this.commandBus.execute(command);
     return {
       message: `User ${user.isBanned ? 'banned' : 'unbanned'} successfully`,
       data: new UserResponseDto(user),
@@ -145,7 +123,7 @@ export class UsersController {
   @Get(':id/overview')
   async getUserProfileOverview(@Param('id') id: string) {
     const query = new GetUserProfileQuery(id);
-    const data = await this.getUserProfileUseCase.execute(query);
+    const data = await this.queryBus.execute(query);
     return {
       message: 'Get user profile overview successfully',
       data,
@@ -156,7 +134,7 @@ export class UsersController {
   @Get(':id/exist')
   async isUserExist(@Param('id') id: string) {
     const query = new CheckUserExistQuery(undefined, undefined, id);
-    const exists = await this.checkUserExistUseCase.execute(query);
+    const exists = await this.queryBus.execute(query);
     return {
       message: 'Check user exist successfully',
       data: exists,
@@ -175,7 +153,7 @@ export class UsersController {
       dto.location,
       dto.website,
     );
-    const user = await this.updateUserUseCase.execute(command);
+    const user = await this.commandBus.execute(command);
     return {
       message: 'Profile overview updated successfully',
       data: new UserResponseDto(user),
@@ -202,8 +180,8 @@ export class UsersController {
     )
     file: Express.Multer.File,
   ) {
-    const command = new UpdateUserImageCommand(userId);
-    const result = await this.updateUserImageUseCase.execute(command, file);
+    const command = new UpdateUserImageCommand(userId, file);
+    const result = await this.commandBus.execute(command);
     return {
       message: 'Update avatar successfully',
       data: result,
@@ -213,7 +191,7 @@ export class UsersController {
   @Get('me/reading-preferences')
   async getMyReadingPreferences(@CurrentUser('id') userId: string) {
     const query = new GetReadingPreferencesQuery(userId);
-    const data = await this.getReadingPreferencesUseCase.execute(query);
+    const data = await this.queryBus.execute(query);
     return {
       message: 'Get reading preferences successfully',
       data,
@@ -242,7 +220,7 @@ export class UsersController {
       dto.dailyReadingGoal,
     );
 
-    const user = await this.updateReadingPreferencesUseCase.execute(command);
+    const user = await this.commandBus.execute(command);
 
     return {
       message: 'Reading preferences updated successfully',
@@ -259,11 +237,11 @@ export class UsersController {
       filter.actualPage,
       filter.actualLimit,
     );
-    const result = await this.searchUsersUseCase.execute(query);
+    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Search users successfully',
-      data: result.data.map((user) => new UserResponseDto(user)),
+      data: result.data.map((user: any) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }

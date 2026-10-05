@@ -1,12 +1,14 @@
+import { CheckUserExistCommand } from './check-user-exist.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { CheckUserExistQuery } from './check-user-exist.query';
 
-@Injectable()
-export class CheckUserExistUseCase {
-  private readonly logger = new Logger(CheckUserExistUseCase.name);
+@CommandHandler(CheckUserExistCommand)
+export class CheckUserExistHandler {
+  private readonly logger = new Logger(CheckUserExistHandler.name);
 
   constructor(private readonly userRepository: IUserRepository) {}
 

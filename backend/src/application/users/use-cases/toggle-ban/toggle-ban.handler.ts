@@ -1,3 +1,5 @@
+import { ToggleBanCommand } from './toggle-ban.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
@@ -5,11 +7,10 @@ import { IUserRepository } from '@/domain/users/repositories/user.repository.int
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { User } from '@/domain/users/entities/user.entity';
 import { UserRoleChangedEvent } from '../../events/user-role-changed.event';
-import { ToggleBanCommand } from './toggle-ban.command';
 import { EventNames } from '@/common/constants/event-names.constant';
 
-@Injectable()
-export class ToggleBanUseCase {
+@CommandHandler(ToggleBanCommand)
+export class ToggleBanHandler {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly eventEmitter: EventEmitter2,

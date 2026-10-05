@@ -1,3 +1,5 @@
+import { CreateUserCommand } from './create-user.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -5,12 +7,11 @@ import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { User } from '@/domain/users/entities/user.entity';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { CreateUserCommand } from './create-user.command';
 
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 
-@Injectable()
-export class CreateUserUseCase {
+@CommandHandler(CreateUserCommand)
+export class CreateUserHandler {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly idGenerator: IIdGenerator,

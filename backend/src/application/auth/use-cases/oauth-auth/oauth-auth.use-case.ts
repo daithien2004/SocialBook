@@ -12,7 +12,7 @@ import { IUserRepository } from '@/domain/users/repositories/user.repository.int
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
-import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
+import { CreateUserHandler } from '@/application/users/use-cases/create-user/create-user.handler';
 import { TokenService } from '../../services/token.service';
 import { OAuthAuthCommand } from './oauth-auth.command';
 
@@ -22,7 +22,7 @@ export class OAuthAuthUseCase {
 
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly createUserUseCase: CreateUserUseCase,
+    private readonly createUserUseCase: CreateUserHandler,
     private readonly rolesRepository: IRoleRepository,
     private readonly tokenService: TokenService,
   ) {}

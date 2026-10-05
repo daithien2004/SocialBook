@@ -1,3 +1,4 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import {
   NotFoundDomainException,
@@ -8,18 +9,15 @@ import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { UpdateUserImageCommand } from './update-user-image.command';
 
-@Injectable()
-export class UpdateUserImageUseCase {
+@CommandHandler(UpdateUserImageCommand)
+export class UpdateUserImageHandler implements ICommandHandler<UpdateUserImageCommand, { url: string }> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly mediaService: IMediaPort,
   ) {}
 
-  async execute(
-    command: UpdateUserImageCommand,
-    file: Express.Multer.File,
-  ): Promise<{ url: string }> {
-    if (!file) {
+  async execute(command: UpdateUserImageCommand): Promise<{ url: string }> {
+    if (!command.file) {
       throw new BadRequestDomainException('File is required');
     }
 
@@ -30,7 +28,7 @@ export class UpdateUserImageUseCase {
       throw new NotFoundDomainException('User not found');
     }
 
-    const url = await this.mediaService.uploadImage(file);
+    const url = await this.mediaService.uploadImage(command.file);
 
     user.updateProfile({ image: url });
     await this.userRepository.save(user);
