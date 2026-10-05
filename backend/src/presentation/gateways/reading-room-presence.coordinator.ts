@@ -22,6 +22,14 @@ export class ReadingRoomPresenceCoordinator {
     return this.server.to(`room:${roomId}`);
   }
 
+  private async hasOtherTabsInRoom(
+    userId: string,
+    roomId: string,
+  ): Promise<boolean> {
+    const userSockets = await this.server.in(`user:${userId}`).fetchSockets();
+    return userSockets.some((s) => s.rooms.has(`room:${roomId}`));
+  }
+
   scheduleBroadcast(roomId: string): void {
     if (this.presenceBroadcastPending.has(roomId)) return;
     const timer = setTimeout(() => {
@@ -60,11 +68,8 @@ export class ReadingRoomPresenceCoordinator {
     if (force) {
       await this.presenceService.removePresence(roomId, userId);
     } else {
-      const userSockets = await this.server.in(`user:${userId}`).fetchSockets();
-      const hasOtherTabsInRoom = userSockets.some((s) =>
-        s.rooms.has(`room:${roomId}`),
-      );
-      if (!hasOtherTabsInRoom) {
+      const hasOtherTabs = await this.hasOtherTabsInRoom(userId, roomId);
+      if (!hasOtherTabs) {
         await this.presenceService.removePresence(roomId, userId);
       }
     }
@@ -85,12 +90,9 @@ export class ReadingRoomPresenceCoordinator {
     if (!roomId || !userId) return;
 
     try {
-      const userSockets = await this.server.in(`user:${userId}`).fetchSockets();
-      const hasOtherTabsInRoom = userSockets.some((s) =>
-        s.rooms.has(`room:${roomId}`),
-      );
+      const hasOtherTabs = await this.hasOtherTabsInRoom(userId, roomId);
 
-      if (!hasOtherTabsInRoom) {
+      if (!hasOtherTabs) {
         await this.presenceService.removePresence(roomId, userId);
         const roomPresences =
           await this.presenceService.getRoomPresences(roomId);
