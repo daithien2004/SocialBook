@@ -52,8 +52,22 @@ export class ReadingRoomPresenceCoordinator {
     return await this.presenceService.getRoomPresences(roomId);
   }
 
-  async onLeave(roomId: string, userId: string): Promise<PresenceData[]> {
-    await this.presenceService.removePresence(roomId, userId);
+  async onLeave(
+    roomId: string,
+    userId: string,
+    force = false,
+  ): Promise<PresenceData[]> {
+    if (force) {
+      await this.presenceService.removePresence(roomId, userId);
+    } else {
+      const userSockets = await this.server.in(`user:${userId}`).fetchSockets();
+      const hasOtherTabsInRoom = userSockets.some((s) =>
+        s.rooms.has(`room:${roomId}`),
+      );
+      if (!hasOtherTabsInRoom) {
+        await this.presenceService.removePresence(roomId, userId);
+      }
+    }
     return await this.presenceService.getRoomPresences(roomId);
   }
 
@@ -68,12 +82,27 @@ export class ReadingRoomPresenceCoordinator {
 
   async onDisconnect(socket: RoomSocket): Promise<void> {
     const { userId, roomId } = socket.data;
-    if (roomId) {
-      await this.presenceService.removePresence(roomId, userId);
-      const roomPresences = await this.presenceService.getRoomPresences(roomId);
-      this.toRoom(roomId).emit(
-        ReadingRoomServerEvent.PRESENCE_UPDATE,
-        roomPresences,
+    if (!roomId || !userId) return;
+
+    try {
+      const userSockets = await this.server.in(`user:${userId}`).fetchSockets();
+      const hasOtherTabsInRoom = userSockets.some((s) =>
+        s.rooms.has(`room:${roomId}`),
+      );
+
+      if (!hasOtherTabsInRoom) {
+        await this.presenceService.removePresence(roomId, userId);
+        const roomPresences =
+          await this.presenceService.getRoomPresences(roomId);
+        this.toRoom(roomId).emit(
+          ReadingRoomServerEvent.PRESENCE_UPDATE,
+          roomPresences,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to check sockets on disconnect for user ${userId}`,
+        error instanceof Error ? error.stack : String(error),
       );
     }
   }

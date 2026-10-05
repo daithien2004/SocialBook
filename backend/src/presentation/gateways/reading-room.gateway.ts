@@ -179,7 +179,7 @@ export class ReadingRoomGateway
 
       if (sd.roomId && sd.roomId !== roomId) {
         void socket.leave(`room:${sd.roomId}`);
-        await this.presenceCoordinator.onLeave(sd.roomId, userId);
+        await this.presenceCoordinator.onLeave(sd.roomId, userId, false);
       }
 
       const displayName = sd.displayName || 'Unknown';
@@ -289,9 +289,14 @@ export class ReadingRoomGateway
 
     const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
     const result = await this.dispatcher.command(command);
-    const presences = await this.presenceCoordinator.onLeave(roomId, userId);
+    const presences = await this.presenceCoordinator.onLeave(
+      roomId,
+      userId,
+      true,
+    );
 
-    void socket.leave(`room:${roomId}`);
+    // Force ALL tabs of this user to leave the Socket.IO room
+    this.server.in(`user:${userId}`).socketsLeave(`room:${roomId}`);
     delete sd.roomId;
 
     if (result.hostChanged && result.hostId) {
@@ -342,6 +347,12 @@ export class ReadingRoomGateway
     if (await this.rateLimiter.isLimited(userId, 'heartbeat', 90)) return;
 
     await this.wsAuth.touchConnection(userId, socket.id);
+
+    // If socket was forced out of the room by another tab, stop sending heartbeats
+    if (sd.roomId && !socket.rooms.has(`room:${sd.roomId}`)) {
+      delete sd.roomId;
+      return;
+    }
 
     const chapterSlug = String(body.chapterSlug || '').slice(
       0,
