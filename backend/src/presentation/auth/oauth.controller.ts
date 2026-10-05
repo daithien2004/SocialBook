@@ -8,12 +8,12 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { Public } from '@/common/decorators/custom.decorator';
 import { OAuthProviderStrategy } from '@/application/auth/services/oauth-provider.strategy';
 import { OAuthStateService } from '@/application/auth/services/oauth-state.service';
-import { OAuthAuthUseCase } from '@/application/auth/use-cases/oauth-auth/oauth-auth.use-case';
 import { OAuthAuthCommand } from '@/application/auth/use-cases/oauth-auth/oauth-auth.command';
 import {
   AuthCookieService,
@@ -42,10 +42,10 @@ export function toErrorCode(error: unknown): OAuthErrorCode {
 @Controller('auth')
 export class OAuthController {
   constructor(
+    private readonly commandBus: CommandBus,
     @Inject(OAuthProviderStrategy)
     private readonly strategies: OAuthProviderStrategy[],
     private readonly oauthStateService: OAuthStateService,
-    private readonly oauthAuthUseCase: OAuthAuthUseCase,
     private readonly cookieService: AuthCookieService,
     private readonly config: ConfigService,
   ) {}
@@ -187,7 +187,7 @@ export class OAuthController {
         codeVerifier: flow.codeVerifier,
         redirectUri,
       });
-      const result = await this.oauthAuthUseCase.execute(
+      const result = await this.commandBus.execute(
         new OAuthAuthCommand(profile),
       );
 

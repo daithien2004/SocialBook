@@ -1,3 +1,5 @@
+import { RegisterCommand } from './register.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   Injectable,
   ConflictException,
@@ -13,11 +15,10 @@ import { GetRoleByNameQuery } from '@/application/roles/use-cases/get-role-by-na
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { SendOtpUseCase } from '@/application/otp/use-cases/send-otp.use-case';
 import { SendOtpCommand } from '@/application/otp/use-cases/send-otp.command';
-import { RegisterCommand } from './register.command';
 
-@Injectable()
-export class RegisterUseCase {
-  private readonly logger = new Logger(RegisterUseCase.name);
+@CommandHandler(RegisterCommand)
+export class RegisterHandler {
+  private readonly logger = new Logger(RegisterHandler.name);
 
   constructor(
     private readonly userRepository: IUserRepository,

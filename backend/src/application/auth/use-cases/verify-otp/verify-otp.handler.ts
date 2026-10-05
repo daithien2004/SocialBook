@@ -1,12 +1,13 @@
+import { VerifyOtpCommand } from './verify-otp.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { VerifyOtpUseCase as VerifyOtpTokenUseCase } from '@/application/otp/use-cases/verify-otp.use-case';
 import { VerifyOtpCommand as VerifyOtpTokenCommand } from '@/application/otp/use-cases/verify-otp.command';
-import { VerifyOtpCommand } from './verify-otp.command';
 
-@Injectable()
-export class VerifyOtpUseCase {
+@CommandHandler(VerifyOtpCommand)
+export class VerifyOtpHandler {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly verifyOtpTokenUseCase: VerifyOtpTokenUseCase,

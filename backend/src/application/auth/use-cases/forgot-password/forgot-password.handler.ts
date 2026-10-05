@@ -1,12 +1,13 @@
+import { ForgotPasswordCommand } from './forgot-password.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { SendOtpUseCase } from '@/application/otp/use-cases/send-otp.use-case';
 import { SendOtpCommand } from '@/application/otp/use-cases/send-otp.command';
-import { ForgotPasswordCommand } from './forgot-password.command';
 
-@Injectable()
-export class ForgotPasswordUseCase {
+@CommandHandler(ForgotPasswordCommand)
+export class ForgotPasswordHandler {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly sendOtpUseCase: SendOtpUseCase,

@@ -1,13 +1,14 @@
+import { ResetPasswordCommand } from './reset-password.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { VerifyOtpUseCase } from '@/application/otp/use-cases/verify-otp.use-case';
 import { VerifyOtpCommand } from '@/application/otp/use-cases/verify-otp.command';
-import { ResetPasswordCommand } from './reset-password.command';
 
-@Injectable()
-export class ResetPasswordUseCase {
+@CommandHandler(ResetPasswordCommand)
+export class ResetPasswordHandler {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly verifyOtpUseCase: VerifyOtpUseCase,

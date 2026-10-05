@@ -1,3 +1,5 @@
+import { RefreshTokenCommand } from './refresh-token.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
 import { Inject, Injectable } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
@@ -6,13 +8,12 @@ import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { TokenService } from '../../services/token.service';
 import { TokenRotationPort } from '@/application/ports/token-rotation.port';
-import { RefreshTokenCommand } from './refresh-token.command';
 
 // Tokens mới được giữ lâu hơn lock để các request ăn kè kịp đọc.
 const FRESH_TOKENS_TTL_SECONDS = 10;
 
-@Injectable()
-export class RefreshTokenUseCase {
+@CommandHandler(RefreshTokenCommand)
+export class RefreshTokenHandler {
   private readonly GRACE_MS = 30_000;
 
   constructor(

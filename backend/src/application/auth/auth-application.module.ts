@@ -1,18 +1,19 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 
-import { LoginUseCase } from './use-cases/login/login.use-case';
-import { RegisterUseCase } from './use-cases/register/register.use-case';
-import { OAuthAuthUseCase } from './use-cases/oauth-auth/oauth-auth.use-case';
-import { RefreshTokenUseCase } from './use-cases/refresh-token/refresh-token.use-case';
-import { LogoutUseCase } from './use-cases/logout/logout.use-case';
-import { ForgotPasswordUseCase } from './use-cases/forgot-password/forgot-password.use-case';
-import { ResetPasswordUseCase } from './use-cases/reset-password/reset-password.use-case';
-import { VerifyOtpUseCase } from './use-cases/verify-otp/verify-otp.use-case';
-import { ResendOtpUseCase } from './use-cases/resend-otp/resend-otp.use-case';
-import { ValidateUserUseCase } from './use-cases/validate-user/validate-user.use-case';
+import { LoginHandler } from './use-cases/login/login.handler';
+import { RegisterHandler } from './use-cases/register/register.handler';
+import { OAuthAuthHandler } from './use-cases/oauth-auth/oauth-auth.handler';
+import { RefreshTokenHandler } from './use-cases/refresh-token/refresh-token.handler';
+import { LogoutHandler } from './use-cases/logout/logout.handler';
+import { ForgotPasswordHandler } from './use-cases/forgot-password/forgot-password.handler';
+import { ResetPasswordHandler } from './use-cases/reset-password/reset-password.handler';
+import { VerifyOtpHandler } from './use-cases/verify-otp/verify-otp.handler';
+import { ResendOtpHandler } from './use-cases/resend-otp/resend-otp.handler';
+import { ValidateUserHandler } from './use-cases/validate-user/validate-user.handler';
 
 import { TokenService } from './services/token.service';
 import { OAuthStateService } from './services/oauth-state.service';
@@ -30,6 +31,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
 
 @Module({
   imports: [
+    CqrsModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -51,16 +53,16 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
   ],
   providers: [
     TokenService,
-    LoginUseCase,
-    RegisterUseCase,
-    OAuthAuthUseCase,
-    RefreshTokenUseCase,
-    LogoutUseCase,
-    ForgotPasswordUseCase,
-    ResetPasswordUseCase,
-    VerifyOtpUseCase,
-    ResendOtpUseCase,
-    ValidateUserUseCase,
+    LoginHandler,
+    RegisterHandler,
+    OAuthAuthHandler,
+    RefreshTokenHandler,
+    LogoutHandler,
+    ForgotPasswordHandler,
+    ResetPasswordHandler,
+    VerifyOtpHandler,
+    ResendOtpHandler,
+    ValidateUserHandler,
     RedisOAuthStateAdapter,
     {
       provide: OAuthStateStorePort,
@@ -71,16 +73,16 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
   ],
 
   exports: [
-    LoginUseCase,
-    RegisterUseCase,
-    OAuthAuthUseCase,
-    RefreshTokenUseCase,
-    LogoutUseCase,
-    ForgotPasswordUseCase,
-    ResetPasswordUseCase,
-    VerifyOtpUseCase,
-    ResendOtpUseCase,
-    ValidateUserUseCase,
+    LoginHandler,
+    RegisterHandler,
+    OAuthAuthHandler,
+    RefreshTokenHandler,
+    LogoutHandler,
+    ForgotPasswordHandler,
+    ResetPasswordHandler,
+    VerifyOtpHandler,
+    ResendOtpHandler,
+    ValidateUserHandler,
     TokenService,
     OAuthStateStorePort,
     OAuthStateService,

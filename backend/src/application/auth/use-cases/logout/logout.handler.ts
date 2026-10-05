@@ -1,11 +1,12 @@
+import { LogoutCommand } from './logout.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Inject, Injectable } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { TokenRotationPort } from '@/application/ports/token-rotation.port';
-import { LogoutCommand } from './logout.command';
 
-@Injectable()
-export class LogoutUseCase {
+@CommandHandler(LogoutCommand)
+export class LogoutHandler {
   constructor(
     private readonly userRepository: IUserRepository,
     @Inject(TokenRotationPort)

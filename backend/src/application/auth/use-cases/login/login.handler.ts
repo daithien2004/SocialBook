@@ -1,3 +1,5 @@
+import { LoginCommand } from './login.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import {
   UnauthorizedDomainException,
@@ -5,10 +7,9 @@ import {
 } from '@/domain/auth/exceptions/auth-exceptions';
 import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
-import { LoginCommand } from './login.command';
 
-@Injectable()
-export class LoginUseCase {
+@CommandHandler(LoginCommand)
+export class LoginHandler {
   constructor(
     private readonly tokenService: TokenService,
     private readonly rolesRepository: IRoleRepository,

@@ -1,3 +1,5 @@
+import { OAuthAuthCommand } from './oauth-auth.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   ConflictException,
   Injectable,
@@ -14,11 +16,10 @@ import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
 import { CreateUserHandler } from '@/application/users/use-cases/create-user/create-user.handler';
 import { TokenService } from '../../services/token.service';
-import { OAuthAuthCommand } from './oauth-auth.command';
 
-@Injectable()
-export class OAuthAuthUseCase {
-  private readonly logger = new Logger(OAuthAuthUseCase.name);
+@CommandHandler(OAuthAuthCommand)
+export class OAuthAuthHandler {
+  private readonly logger = new Logger(OAuthAuthHandler.name);
 
   constructor(
     private readonly userRepository: IUserRepository,

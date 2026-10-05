@@ -1,17 +1,13 @@
+import { ValidateUserCommand } from './validate-user.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UserBannedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
-import { Injectable } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { User } from '@/domain/users/entities/user.entity';
 
-export interface ValidateUserCommand {
-  email: string;
-  password: string;
-}
-
-@Injectable()
-export class ValidateUserUseCase {
+@CommandHandler(ValidateUserCommand)
+export class ValidateUserHandler implements ICommandHandler<ValidateUserCommand, User | null> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly passwordHasher: IPasswordHasher,
