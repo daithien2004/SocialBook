@@ -1,4 +1,6 @@
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Comment } from '@/domain/comments/entities/comment.entity';
+import { Dispatcher } from '@/application/common/dispatcher';
+
 import {
   Body,
   Controller,
@@ -37,19 +39,19 @@ import { GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
 
 
 
-import { CreateCommentCommand } from '@/application/comments/use-cases/create-comment/create-comment.command';
-import { DeleteCommentCommand } from '@/application/comments/use-cases/delete-comment/delete-comment.command';
-import { GetCommentCountQuery } from '@/application/comments/use-cases/get-comment-count/get-comment-count.query';
-import { GetCommentsQuery } from '@/application/comments/use-cases/get-comments/get-comments.query';
-import { ModerateCommentCommand } from '@/application/comments/use-cases/moderate-comment/moderate-comment.command';
-import { UpdateCommentCommand } from '@/application/comments/use-cases/update-comment/update-comment.command';
+import { CreateCommentCommand } from '@/application/comments/commands/create-comment/create-comment.command';
+import { DeleteCommentCommand } from '@/application/comments/commands/delete-comment/delete-comment.command';
+import { GetCommentCountQuery } from '@/application/comments/queries/get-comment-count/get-comment-count.query';
+import { GetCommentsQuery } from '@/application/comments/queries/get-comments/get-comments.query';
+import { ModerateCommentCommand } from '@/application/comments/commands/moderate-comment/moderate-comment.command';
+import { UpdateCommentCommand } from '@/application/comments/commands/update-comment/update-comment.command';
 
 @Controller('comments')
 export class CommentsController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Post()
   async create(
@@ -64,11 +66,11 @@ export class CommentsController {
       dto.parentId,
     );
 
-    const comment = await this.commandBus.execute(command);
+    const comment = await this.dispatcher.command(command);
 
     return {
       message: 'Comment created successfully',
-      data: new CommentResponseDto(comment),
+      data: new CommentResponseDto(comment as unknown as Comment),
     };
   }
 
@@ -88,7 +90,7 @@ export class CommentsController {
       query.order,
       userId,
     );
-    const result = await this.queryBus.execute(getQuery);
+    const result = await this.dispatcher.query(getQuery);
 
     return {
       message: 'Comments retrieved successfully',
@@ -107,7 +109,7 @@ export class CommentsController {
       query.targetType,
       query.parentId,
     );
-    const result = await this.queryBus.execute(countQuery);
+    const result = await this.dispatcher.query(countQuery);
 
     return {
       message: 'Comment count retrieved successfully',
@@ -133,11 +135,11 @@ export class CommentsController {
   ) {
     const command = new UpdateCommentCommand(id, userId, ability, dto.content);
 
-    const comment = await this.commandBus.execute(command);
+    const comment = await this.dispatcher.command(command);
 
     return {
       message: 'Comment updated successfully',
-      data: new CommentResponseDto(comment),
+      data: new CommentResponseDto(comment as unknown as Comment),
     };
   }
 
@@ -149,7 +151,7 @@ export class CommentsController {
   ) {
     const command = new DeleteCommentCommand(id, userId, ability);
 
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
 
     return {
       message: 'Comment deleted successfully',
@@ -170,7 +172,7 @@ export class CommentsController {
   async moderate(@Param('id') id: string, @Body() dto: ModerateCommentDto) {
     const command = new ModerateCommentCommand(id, dto.status, dto.reason);
 
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
 
     return {
       message: `Comment ${dto.status} successfully`,

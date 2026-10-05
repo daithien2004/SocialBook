@@ -1,4 +1,4 @@
-import { ChapterResult } from '@/application/chapters/use-cases/get-chapters/get-chapters.result';
+import { ChapterResult } from '@/application/chapters/queries/get-chapters/get-chapters.result';
 
 export class ChapterResponseDto {
   id: string;

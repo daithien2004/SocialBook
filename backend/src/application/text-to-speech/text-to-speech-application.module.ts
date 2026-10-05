@@ -1,9 +1,10 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { DeleteChapterAudioUseCase } from './use-cases/delete-chapter-audio.use-case';
-import { GenerateBookAudioUseCase } from './use-cases/generate-book-audio.use-case';
-import { GenerateChapterAudioUseCase } from './use-cases/generate-chapter-audio.use-case';
-import { GetChapterAudioUseCase } from './use-cases/get-chapter-audio.use-case';
-import { IncrementPlayCountUseCase } from './use-cases/increment-play-count.use-case';
+import { DeleteChapterAudioHandler } from './commands/delete-chapter-audio/delete-chapter-audio.handler';
+import { GenerateBookAudioHandler } from './commands/generate-book-audio/generate-book-audio.handler';
+import { GenerateChapterAudioHandler } from './commands/generate-chapter-audio/generate-chapter-audio.handler';
+import { GetChapterAudioHandler } from './queries/get-chapter-audio/get-chapter-audio.handler';
+import { IncrementPlayCountHandler } from './commands/increment-play-count/increment-play-count.handler';
 import { TextToSpeechRepositoryModule } from '@/infrastructure/database/repositories/text-to-speech/text-to-speech-repository.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
@@ -13,6 +14,7 @@ import { QueueModule } from '@/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
+    CqrsModule,
     TextToSpeechRepositoryModule,
     ChaptersRepositoryModule,
     IdGeneratorModule,
@@ -20,19 +22,19 @@ import { QueueModule } from '@/infrastructure/queue/queue.module';
     QueueModule,
   ],
   providers: [
-    DeleteChapterAudioUseCase,
-    GenerateBookAudioUseCase,
-    GenerateChapterAudioUseCase,
-    GetChapterAudioUseCase,
-    IncrementPlayCountUseCase,
+    DeleteChapterAudioHandler,
+    GenerateBookAudioHandler,
+    GenerateChapterAudioHandler,
+    GetChapterAudioHandler,
+    IncrementPlayCountHandler,
     LanguageDetectorService,
   ],
   exports: [
-    DeleteChapterAudioUseCase,
-    GenerateBookAudioUseCase,
-    GenerateChapterAudioUseCase,
-    GetChapterAudioUseCase,
-    IncrementPlayCountUseCase,
+    DeleteChapterAudioHandler,
+    GenerateBookAudioHandler,
+    GenerateChapterAudioHandler,
+    GetChapterAudioHandler,
+    IncrementPlayCountHandler,
   ],
 })
 export class TextToSpeechApplicationModule {}

@@ -26,7 +26,6 @@ import { MediaInfrastructureModule } from './media/media-infrastructure.module';
 
 import { TtsInfrastructureModule } from './text-to-speech/tts-infrastructure.module';
 import { RecommendationsInfrastructureModule } from './recommendations/recommendations-infrastructure.module';
-import { ScraperInfrastructureModule } from './scraper/scraper-infrastructure.module';
 import { ChaptersImportModule } from './queues/chapters-import/chapters-import.module';
 import { PostModerationQueueModule } from './queues/post-moderation/post-moderation.module';
 import { ReadingRoomsRepositoryModule } from './database/repositories/reading-rooms/reading-rooms-repository.module';
@@ -63,7 +62,6 @@ import { RealtimeInfrastructureModule } from './realtime/realtime-infrastructure
     MediaInfrastructureModule,
 
     TtsInfrastructureModule,
-    ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
     ReadingRoomsRepositoryModule,
     AnalyticsRepositoryModule,
@@ -101,7 +99,6 @@ import { RealtimeInfrastructureModule } from './realtime/realtime-infrastructure
     MediaInfrastructureModule,
 
     TtsInfrastructureModule,
-    ScraperInfrastructureModule,
     RecommendationsInfrastructureModule,
     ReadingRoomsRepositoryModule,
     AnalyticsRepositoryModule,

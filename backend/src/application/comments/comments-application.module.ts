@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CreateCommentHandler } from './use-cases/create-comment/create-comment.handler';
-import { DeleteCommentHandler } from './use-cases/delete-comment/delete-comment.handler';
-import { GetCommentsHandler } from './use-cases/get-comments/get-comments.handler';
-import { GetCommentCountHandler } from './use-cases/get-comment-count/get-comment-count.handler';
-import { ModerateCommentHandler } from './use-cases/moderate-comment/moderate-comment.handler';
-import { UpdateCommentHandler } from './use-cases/update-comment/update-comment.handler';
+import { CreateCommentHandler } from './commands/create-comment/create-comment.handler';
+import { DeleteCommentHandler } from './commands/delete-comment/delete-comment.handler';
+import { GetCommentsHandler } from './queries/get-comments/get-comments.handler';
+import { GetCommentCountHandler } from './queries/get-comment-count/get-comment-count.handler';
+import { ModerateCommentHandler } from './commands/moderate-comment/moderate-comment.handler';
+import { UpdateCommentHandler } from './commands/update-comment/update-comment.handler';
 
 import { CommentsRepositoryModule } from '@/infrastructure/database/repositories/comments/comments-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';

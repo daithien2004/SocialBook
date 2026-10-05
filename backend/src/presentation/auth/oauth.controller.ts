@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import {
   ConflictException,
   Controller,
@@ -8,13 +9,13 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { Public } from '@/common/decorators/custom.decorator';
 import { OAuthProviderStrategy } from '@/application/auth/services/oauth-provider.strategy';
 import { OAuthStateService } from '@/application/auth/services/oauth-state.service';
-import { OAuthAuthCommand } from '@/application/auth/use-cases/oauth-auth/oauth-auth.command';
+import { OAuthAuthCommand } from '@/application/auth/commands/oauth-auth/oauth-auth.command';
 import {
   AuthCookieService,
   SetCookieSpec,
@@ -42,7 +43,8 @@ export function toErrorCode(error: unknown): OAuthErrorCode {
 @Controller('auth')
 export class OAuthController {
   constructor(
-    private readonly commandBus: CommandBus,
+    private readonly dispatcher: Dispatcher,
+
     @Inject(OAuthProviderStrategy)
     private readonly strategies: OAuthProviderStrategy[],
     private readonly oauthStateService: OAuthStateService,
@@ -187,7 +189,7 @@ export class OAuthController {
         codeVerifier: flow.codeVerifier,
         redirectUri,
       });
-      const result = await this.commandBus.execute(
+      const result = await this.dispatcher.command(
         new OAuthAuthCommand(profile),
       );
 

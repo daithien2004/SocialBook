@@ -1,19 +1,19 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { TrackUserEventUseCase } from '@/application/analytics/use-cases/track-user-event/track-user-event.use-case';
-import { GetTrendingBooksUseCase } from '@/application/analytics/use-cases/get-trending-books/get-trending-books.use-case';
-import { GetTopActiveReadersUseCase } from '@/application/analytics/use-cases/get-top-active-readers/get-top-active-readers.use-case';
+
 import { TrackUserEventDto } from './dto/track-user-event.dto';
-import { TrackUserEventCommand } from '@/application/analytics/use-cases/track-user-event/track-user-event.command';
+import { TrackUserEventCommand } from '@/application/analytics/commands/track-user-event/track-user-event.command';
+import { GetTrendingBooksQuery } from '@/application/analytics/queries/get-trending-books/get-trending-books.query';
+import { GetTopActiveReadersQuery } from '@/application/analytics/queries/get-top-active-readers/get-top-active-readers.query';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Public } from '@/common/decorators/custom.decorator';
 
 @Controller('analytics')
 export class AnalyticsController {
   constructor(
-    private readonly trackUserEventUseCase: TrackUserEventUseCase,
-    private readonly getTrendingBooksUseCase: GetTrendingBooksUseCase,
-    private readonly getTopActiveReadersUseCase: GetTopActiveReadersUseCase,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Post('events')
   async trackEvent(
@@ -32,7 +32,7 @@ export class AnalyticsController {
       dto.metadata,
       dto.sessionId,
     );
-    await this.trackUserEventUseCase.execute(command);
+    await this.dispatcher.command(command);
     return { success: true };
   }
 
@@ -42,10 +42,11 @@ export class AnalyticsController {
     @Query('days') days?: string,
     @Query('limit') limit?: string,
   ) {
-    const data = await this.getTrendingBooksUseCase.execute(
+    const query = new GetTrendingBooksQuery(
       days ? parseInt(days, 10) : undefined,
       limit ? parseInt(limit, 10) : undefined,
     );
+    const data = await this.dispatcher.query(query);
     return { data };
   }
 
@@ -55,10 +56,11 @@ export class AnalyticsController {
     @Query('days') days?: string,
     @Query('limit') limit?: string,
   ) {
-    const data = await this.getTopActiveReadersUseCase.execute(
+    const query = new GetTopActiveReadersQuery(
       days ? parseInt(days, 10) : undefined,
       limit ? parseInt(limit, 10) : undefined,
     );
+    const data = await this.dispatcher.query(query);
     return { data };
   }
 }

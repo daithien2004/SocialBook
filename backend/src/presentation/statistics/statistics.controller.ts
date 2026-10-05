@@ -3,24 +3,24 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 
-import { GetBookStatsUseCase } from '@/application/statistics/use-cases/get-book-stats.use-case';
-import { GetEngagementStatsUseCase } from '@/application/statistics/use-cases/get-engagement-stats.use-case';
-import { GetGrowthStatsUseCase } from '@/application/statistics/use-cases/get-growth-stats.use-case';
-import { GetOverviewStatsUseCase } from '@/application/statistics/use-cases/get-overview-stats.use-case';
-import { GetUserStatsUseCase } from '@/application/statistics/use-cases/get-user-stats.use-case';
-import { CheckUserLocationsUseCase } from '@/application/statistics/use-cases/check-user-locations/check-user-locations.use-case';
+import { GetBookStatsHandler } from '@/application/statistics/queries/get-book-stats/get-book-stats.handler';
+import { GetEngagementStatsHandler } from '@/application/statistics/queries/get-engagement-stats/get-engagement-stats.handler';
+import { GetGrowthStatsHandler } from '@/application/statistics/queries/get-growth-stats/get-growth-stats.handler';
+import { GetOverviewStatsHandler } from '@/application/statistics/queries/get-overview-stats/get-overview-stats.handler';
+import { GetUserStatsHandler } from '@/application/statistics/queries/get-user-stats/get-user-stats.handler';
+import { CheckUserLocationsHandler } from '@/application/statistics/commands/check-user-locations/check-user-locations.handler';
 
 @Controller('statistics')
 @UseGuards(RolesGuard)
 @Roles('admin', 'editor')
 export class StatisticsController {
   constructor(
-    private readonly getOverviewStatsUseCase: GetOverviewStatsUseCase,
-    private readonly getUserStatsUseCase: GetUserStatsUseCase,
-    private readonly getBookStatsUseCase: GetBookStatsUseCase,
-    private readonly getEngagementStatsUseCase: GetEngagementStatsUseCase,
-    private readonly getGrowthStatsUseCase: GetGrowthStatsUseCase,
-    private readonly checkUserLocationsUseCase: CheckUserLocationsUseCase,
+    private readonly getOverviewStatsUseCase: GetOverviewStatsHandler,
+    private readonly getUserStatsUseCase: GetUserStatsHandler,
+    private readonly getBookStatsUseCase: GetBookStatsHandler,
+    private readonly getEngagementStatsUseCase: GetEngagementStatsHandler,
+    private readonly getGrowthStatsUseCase: GetGrowthStatsHandler,
+    private readonly checkUserLocationsUseCase: CheckUserLocationsHandler,
   ) {}
 
   @Get('overview')

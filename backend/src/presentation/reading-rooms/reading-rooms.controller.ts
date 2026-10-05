@@ -1,4 +1,5 @@
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Dispatcher } from '@/application/common/dispatcher';
+
 import {
   Body,
   Controller,
@@ -10,16 +11,16 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 
-import { CreateRoomCommand } from '@/application/reading-rooms/use-cases/create-room/create-room.command';
+import { CreateRoomCommand } from '@/application/reading-rooms/commands/create-room/create-room.command';
 
 
-import { GetMyActiveRoomsQuery } from '@/application/reading-rooms/use-cases/get-my-active-rooms/get-my-active-rooms.query';
+import { GetMyActiveRoomsQuery } from '@/application/reading-rooms/queries/get-my-active-rooms/get-my-active-rooms.query';
 
-import { GetMyHistoryQuery } from '@/application/reading-rooms/use-cases/get-my-history/get-my-history.query';
+import { GetMyHistoryQuery } from '@/application/reading-rooms/queries/get-my-history/get-my-history.query';
 
-import { GetRoomByCodeQuery } from '@/application/reading-rooms/use-cases/get-room-by-code/get-room-by-code.query';
+import { GetRoomByCodeQuery } from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.query';
 
-import { ReactivateRoomCommand } from '@/application/reading-rooms/use-cases/reactivate-room/reactivate-room.command';
+import { ReactivateRoomCommand } from '@/application/reading-rooms/commands/reactivate-room/reactivate-room.command';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -28,9 +29,9 @@ import { ReadingRoomResponseDto } from './dto/reading-room.response.dto';
 @Controller('reading-rooms')
 export class ReadingRoomsController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post()
@@ -45,7 +46,7 @@ export class ReadingRoomsController {
       dto.mode,
       dto.maxMembers,
     );
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Tạo phòng đọc sách thành công',
       data: ReadingRoomResponseDto.fromResult(result),
@@ -54,7 +55,7 @@ export class ReadingRoomsController {
 
   @Get('my-active')
   async getMyActiveRooms(@CurrentUser('id') userId: string) {
-    const results = await this.commandBus.execute(
+    const results = await this.dispatcher.command(
       new GetMyActiveRoomsQuery(userId),
     );
     return {
@@ -65,7 +66,7 @@ export class ReadingRoomsController {
 
   @Get('my-history')
   async getMyHistory(@CurrentUser('id') userId: string) {
-    const result = await this.commandBus.execute(
+    const result = await this.dispatcher.command(
       new GetMyHistoryQuery(userId),
     );
     return {
@@ -83,7 +84,7 @@ export class ReadingRoomsController {
     @Param('code') code: string,
   ) {
     const command = new ReactivateRoomCommand(userId, code);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Phòng đã được mở lại thành công',
       data: ReadingRoomResponseDto.fromResult(result),
@@ -97,7 +98,7 @@ export class ReadingRoomsController {
     @CurrentUser('id') userId: string,
     @Param('code') code: string,
   ) {
-    const result = await this.commandBus.execute(
+    const result = await this.dispatcher.command(
       new GetRoomByCodeQuery(code, userId),
     );
     if (!result.isMember) {

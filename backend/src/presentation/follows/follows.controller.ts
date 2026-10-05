@@ -1,4 +1,5 @@
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Dispatcher } from '@/application/common/dispatcher';
+
 import {
   Body,
   Controller,
@@ -29,25 +30,25 @@ import {
 
 
 
-import { CreateFollowCommand } from '@/application/follows/use-cases/create-follow/create-follow.command';
-import { DeleteFollowCommand } from '@/application/follows/use-cases/delete-follow/delete-follow.command';
-import { GetFollowStatusQuery } from '@/application/follows/use-cases/get-follow-status/get-follow-status.query';
-import { GetFollowsQuery } from '@/application/follows/use-cases/get-follows/get-follows.query';
-import { GetFollowingQuery } from '@/application/follows/use-cases/get-following-with-user-info/get-following.query';
-import { GetFollowersQuery } from '@/application/follows/use-cases/get-followers-with-user-info/get-followers.query';
+import { CreateFollowCommand } from '@/application/follows/commands/create-follow/create-follow.command';
+import { DeleteFollowCommand } from '@/application/follows/commands/delete-follow/delete-follow.command';
+import { GetFollowStatusQuery } from '@/application/follows/queries/get-follow-status/get-follow-status.query';
+import { GetFollowsQuery } from '@/application/follows/queries/get-follows/get-follows.query';
+import { GetFollowingQuery } from '@/application/follows/queries/get-following-with-user-info/get-following.query';
+import { GetFollowersQuery } from '@/application/follows/queries/get-followers-with-user-info/get-followers.query';
 
 @Controller('follows')
 export class FollowsController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Public()
   @Get('following')
   async getFollowingList(@Query('userId') userId: string) {
     const query = new GetFollowingQuery(userId);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get following list successfully',
@@ -59,7 +60,7 @@ export class FollowsController {
   @Get('followers')
   async getFollowersList(@Query('targetUserId') targetUserId: string) {
     const query = new GetFollowersQuery(targetUserId);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get followers list successfully',
@@ -74,7 +75,7 @@ export class FollowsController {
     @Query('targetId') targetId: string,
   ) {
     const query = new GetFollowStatusQuery(userId, targetId);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get follow status successfully',
@@ -94,7 +95,7 @@ export class FollowsController {
     @Body() dto: CreateFollowDto,
   ) {
     const command = new CreateFollowCommand(userId, dto.targetId, dto.status);
-    const follow = await this.commandBus.execute(command);
+    const follow = await this.dispatcher.command(command);
 
     return {
       message: 'Follow created successfully',
@@ -108,7 +109,7 @@ export class FollowsController {
     @Param('targetId') targetId: string,
   ) {
     const command = new DeleteFollowCommand(userId, targetId);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
 
     return {
       message: 'Unfollowed successfully',
@@ -133,7 +134,7 @@ export class FollowsController {
       filter.actualPage,
       filter.actualLimit,
     );
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get all follows successfully',

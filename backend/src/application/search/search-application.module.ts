@@ -1,5 +1,6 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { IntelligentSearchUseCase } from './use-cases/intelligent-search.use-case';
+import { IntelligentSearchHandler } from './queries/intelligent-search/intelligent-search.handler';
 import { SearchQueryExpansionService } from './services/search-query-expansion.service';
 import { SearchRankingService } from './services/search-ranking.service';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
@@ -13,6 +14,7 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
 
 @Module({
   imports: [
+    CqrsModule,
     BooksRepositoryModule,
     ChaptersRepositoryModule,
     ReviewsRepositoryModule,
@@ -23,10 +25,10 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
     IdGeneratorModule,
   ],
   providers: [
-    IntelligentSearchUseCase,
+    IntelligentSearchHandler,
     SearchQueryExpansionService,
     SearchRankingService,
   ],
-  exports: [IntelligentSearchUseCase],
+  exports: [IntelligentSearchHandler],
 })
 export class SearchApplicationModule {}

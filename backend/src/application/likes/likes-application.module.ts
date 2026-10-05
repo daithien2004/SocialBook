@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { GetLikeCountHandler } from './use-cases/get-like-count/get-like-count.handler';
-import { GetLikeStatusHandler } from './use-cases/get-like-status/get-like-status.handler';
-import { ToggleLikeHandler } from './use-cases/toggle-like/toggle-like.handler';
+import { GetLikeCountHandler } from './queries/get-like-count/get-like-count.handler';
+import { GetLikeStatusHandler } from './queries/get-like-status/get-like-status.handler';
+import { ToggleLikeHandler } from './commands/toggle-like/toggle-like.handler';
 import { LikesRepositoryModule } from '@/infrastructure/database/repositories/likes/likes-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { QueueModule } from '@/infrastructure/queue/queue.module';

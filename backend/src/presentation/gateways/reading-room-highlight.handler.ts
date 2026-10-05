@@ -4,9 +4,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { WsRateLimiter } from './ws-rate-limiter.service';
 import { ReadingRoomEmitter } from './reading-room.emitter';
 
-import { AddHighlightCommand } from '@/application/reading-rooms/use-cases/add-highlight/add-highlight.command';
-import { RemoveHighlightCommand } from '@/application/reading-rooms/use-cases/remove-highlight/remove-highlight.command';
-import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.command';
+import { AddHighlightCommand } from '@/application/reading-rooms/commands/add-highlight/add-highlight.command';
+import { RemoveHighlightCommand } from '@/application/reading-rooms/commands/remove-highlight/remove-highlight.command';
+import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/commands/generate-highlight-insight/generate-highlight-insight.command';
 import { ReadingRoomServerEvent } from './reading-room.events';
 import { RoomSocket, SocketData } from './reading-room.types';
 import { AddHighlightDto } from './dto/add-highlight.dto';

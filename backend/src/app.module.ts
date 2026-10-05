@@ -1,3 +1,4 @@
+import { CommonModule } from '@/application/common/common.module';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { LoggerModule } from '@/shared/logger/logger.module';
 import { getRedisConnectionToken, RedisModule } from '@nestjs-modules/ioredis';
@@ -28,6 +29,7 @@ import { PresentationModule } from './presentation/presentation.module';
 
 @Module({
   imports: [
+    CommonModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [envConfig],

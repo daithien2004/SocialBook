@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
-import { CreateNotificationCommand } from '@/application/notifications/use-cases/create-notification/create-notification.command';
+import { CreateNotificationCommand } from '@/application/notifications/commands/create-notification/create-notification.command';
 import { CreateNotificationInput } from './dto/create-notification-input.interface';
 import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
-import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
-import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
-import { GetUserNotificationsQuery } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.query';
-import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
-import { MarkNotificationReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.command';
-import { MarkAllNotificationsReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-all-notifications-read.use-case';
-import { MarkAllNotificationsReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-all-notifications-read.command';
+import { CreateNotificationHandler } from '@/application/notifications/commands/create-notification/create-notification.handler';
+import { GetUserNotificationsHandler } from '@/application/notifications/queries/get-user-notification/get-user-notifications.handler';
+import { GetUserNotificationsQuery } from '@/application/notifications/queries/get-user-notification/get-user-notifications.query';
+import { MarkNotificationReadHandler } from '@/application/notifications/commands/mark-notification/mark-notification-read.handler';
+import { MarkNotificationReadCommand } from '@/application/notifications/commands/mark-notification/mark-notification-read.command';
+import { MarkAllNotificationsReadHandler } from '@/application/notifications/commands/mark-notification/mark-all-notifications-read.handler';
+import { MarkAllNotificationsReadCommand } from '@/application/notifications/commands/mark-notification/mark-all-notifications-read.command';
 
 @Injectable()
 export class NotificationsService {
@@ -19,10 +19,10 @@ export class NotificationsService {
   }
 
   constructor(
-    private readonly createNotificationUseCase: CreateNotificationUseCase,
-    private readonly getUserNotificationsUseCase: GetUserNotificationsUseCase,
-    private readonly markNotificationReadUseCase: MarkNotificationReadUseCase,
-    private readonly markAllNotificationsReadUseCase: MarkAllNotificationsReadUseCase,
+    private readonly createNotificationUseCase: CreateNotificationHandler,
+    private readonly getUserNotificationsUseCase: GetUserNotificationsHandler,
+    private readonly markNotificationReadUseCase: MarkNotificationReadHandler,
+    private readonly markAllNotificationsReadUseCase: MarkAllNotificationsReadHandler,
   ) {}
 
   private userRoom(userId: string) {

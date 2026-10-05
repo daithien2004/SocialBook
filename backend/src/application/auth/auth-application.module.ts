@@ -4,16 +4,16 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 
-import { LoginHandler } from './use-cases/login/login.handler';
-import { RegisterHandler } from './use-cases/register/register.handler';
-import { OAuthAuthHandler } from './use-cases/oauth-auth/oauth-auth.handler';
-import { RefreshTokenHandler } from './use-cases/refresh-token/refresh-token.handler';
-import { LogoutHandler } from './use-cases/logout/logout.handler';
-import { ForgotPasswordHandler } from './use-cases/forgot-password/forgot-password.handler';
-import { ResetPasswordHandler } from './use-cases/reset-password/reset-password.handler';
-import { VerifyOtpHandler } from './use-cases/verify-otp/verify-otp.handler';
-import { ResendOtpHandler } from './use-cases/resend-otp/resend-otp.handler';
-import { ValidateUserHandler } from './use-cases/validate-user/validate-user.handler';
+import { LoginHandler } from './commands/login/login.handler';
+import { RegisterHandler } from './commands/register/register.handler';
+import { OAuthAuthHandler } from './commands/oauth-auth/oauth-auth.handler';
+import { RefreshTokenHandler } from './commands/refresh-token/refresh-token.handler';
+import { LogoutHandler } from './commands/logout/logout.handler';
+import { ForgotPasswordHandler } from './commands/forgot-password/forgot-password.handler';
+import { ResetPasswordHandler } from './commands/reset-password/reset-password.handler';
+import { VerifyOtpHandler } from './commands/verify-otp/verify-otp.handler';
+import { ResendOtpHandler } from './commands/resend-otp/resend-otp.handler';
+import { ValidateUserHandler } from './commands/validate-user/validate-user.handler';
 
 import { TokenService } from './services/token.service';
 import { OAuthStateService } from './services/oauth-state.service';

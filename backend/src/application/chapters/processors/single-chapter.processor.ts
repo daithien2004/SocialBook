@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { UnrecoverableError } from 'bullmq';
 import { CommandBus } from '@nestjs/cqrs';
-import { CreateChapterCommand } from '../use-cases/create-chapter/create-chapter.command';
+import { CreateChapterCommand } from '../commands/create-chapter/create-chapter.command';
 import type { Job } from 'bullmq';
 import { z } from 'zod';
 

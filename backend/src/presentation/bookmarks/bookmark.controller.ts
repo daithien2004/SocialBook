@@ -1,7 +1,8 @@
-import { GetBookmarksByBookQuery } from '@/application/bookmarks/use-cases/get-bookmarks-by-book/get-bookmarks-by-book.query';
-import { DeleteBookmarkCommand } from '@/application/bookmarks/use-cases/delete-bookmark/delete-bookmark.command';
-import { CreateBookmarkCommand } from '@/application/bookmarks/use-cases/create-bookmark/create-bookmark.command';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Dispatcher } from '@/application/common/dispatcher';
+import { GetBookmarksByBookQuery } from '@/application/bookmarks/queries/get-bookmarks-by-book/get-bookmarks-by-book.query';
+import { DeleteBookmarkCommand } from '@/application/bookmarks/commands/delete-bookmark/delete-bookmark.command';
+import { CreateBookmarkCommand } from '@/application/bookmarks/commands/create-bookmark/create-bookmark.command';
+
 import {
   Controller,
   Post,
@@ -17,7 +18,9 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 @Controller('bookmarks')
 @UseGuards(JwtAuthGuard)
 export class BookmarkController {
-  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly dispatcher: Dispatcher,
+) {}
 
   @Post()
   async createBookmark(
@@ -31,7 +34,7 @@ export class BookmarkController {
       textPreview: string;
     },
   ) {
-    const bookmark = await this.commandBus.execute(
+    const bookmark = await this.dispatcher.command(
       new CreateBookmarkCommand(
         userId,
         body.bookId,
@@ -60,7 +63,7 @@ export class BookmarkController {
     @CurrentUser('id') userId: string,
     @Param('paragraphId') paragraphId: string,
   ) {
-    await this.commandBus.execute(
+    await this.dispatcher.command(
       new DeleteBookmarkCommand(userId, paragraphId),
     );
     return {
@@ -73,7 +76,7 @@ export class BookmarkController {
     @CurrentUser('id') userId: string,
     @Param('bookId') bookId: string,
   ) {
-    const bookmarks = await this.queryBus.execute(
+    const bookmarks = await this.dispatcher.query(
       new GetBookmarksByBookQuery(userId, bookId),
     );
     return {

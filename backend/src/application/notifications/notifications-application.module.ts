@@ -1,24 +1,26 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { CreateNotificationUseCase } from './use-cases/create-notification/create-notification.use-case';
-import { GetUserNotificationsUseCase } from './use-cases/get-user-notification/get-user-notifications.use-case';
-import { MarkNotificationReadUseCase } from './use-cases/mark-notification/mark-notification-read.use-case';
-import { MarkAllNotificationsReadUseCase } from './use-cases/mark-notification/mark-all-notifications-read.use-case';
+import { CreateNotificationHandler } from './commands/create-notification/create-notification.handler';
+import { GetUserNotificationsHandler } from './queries/get-user-notification/get-user-notifications.handler';
+import { MarkNotificationReadHandler } from './commands/mark-notification/mark-notification-read.handler';
+import { MarkAllNotificationsReadHandler } from './commands/mark-notification/mark-all-notifications-read.handler';
 import { NotificationsRepositoryModule } from '@/infrastructure/database/repositories/notifications/notifications-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [NotificationsRepositoryModule, IdGeneratorModule],
+  imports: [
+    CqrsModule,NotificationsRepositoryModule, IdGeneratorModule],
   providers: [
-    CreateNotificationUseCase,
-    GetUserNotificationsUseCase,
-    MarkNotificationReadUseCase,
-    MarkAllNotificationsReadUseCase,
+    CreateNotificationHandler,
+    GetUserNotificationsHandler,
+    MarkNotificationReadHandler,
+    MarkAllNotificationsReadHandler,
   ],
   exports: [
-    CreateNotificationUseCase,
-    GetUserNotificationsUseCase,
-    MarkNotificationReadUseCase,
-    MarkAllNotificationsReadUseCase,
+    CreateNotificationHandler,
+    GetUserNotificationsHandler,
+    MarkNotificationReadHandler,
+    MarkAllNotificationsReadHandler,
   ],
 })
 export class NotificationsApplicationModule {}

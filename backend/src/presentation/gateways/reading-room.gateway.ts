@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -20,9 +21,9 @@ import { WsRoomGuard } from './ws-room.guard';
 import { WsRateLimiter } from './ws-rate-limiter.service';
 import { ReadingRoomEmitter } from './reading-room.emitter';
 import { ReadingRoomSystemListener } from './reading-room-system.listener';
-import { CommandBus } from '@nestjs/cqrs';
-import { JoinRoomCommand } from '@/application/reading-rooms/use-cases/join-room/join-room.command';
-import { LeaveRoomCommand } from '@/application/reading-rooms/use-cases/leave-room/leave-room.command';
+
+import { JoinRoomCommand } from '@/application/reading-rooms/commands/join-room/join-room.command';
+import { LeaveRoomCommand } from '@/application/reading-rooms/commands/leave-room/leave-room.command';
 import { OnEvent } from '@nestjs/event-emitter';
 import {
   ReadingRoomServerEvent,
@@ -80,9 +81,10 @@ export class ReadingRoomGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
+    private readonly dispatcher: Dispatcher,
+
     private readonly wsAuth: WsAuthService,
     private readonly presenceCoordinator: ReadingRoomPresenceCoordinator,
-    private readonly commandBus: CommandBus,
     private readonly highlightHandler: ReadingRoomHighlightHandler,
     private readonly progressTracker: ReadingProgressTracker,
     private readonly rateLimiter: WsRateLimiter,
@@ -172,7 +174,7 @@ export class ReadingRoomGateway
 
     try {
       const command = new JoinRoomCommand(userId, roomCode);
-      const room = await this.commandBus.execute(command);
+      const room = await this.dispatcher.command(command);
       const roomId = room.roomId;
 
       if (sd.roomId && sd.roomId !== roomId) {
@@ -284,7 +286,7 @@ export class ReadingRoomGateway
     await this.progressTracker.flush(socket);
 
     const command = new LeaveRoomCommand(userId, roomId, body.newHostId);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     const presences = await this.presenceCoordinator.onLeave(roomId, userId);
 
     void socket.leave(`room:${roomId}`);

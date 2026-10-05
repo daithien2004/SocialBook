@@ -1,11 +1,12 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { GetCollectionStatsUseCase } from './use-cases/get-collection-stats/get-collection-stats.use-case';
-import { ClearCollectionUseCase } from './use-cases/clear-collection/clear-collection.use-case';
-import { BatchIndexUseCase } from './use-cases/batch-index/batch-index.use-case';
-import { IndexDocumentUseCase } from './use-cases/index-document/index-document.use-case';
-import { SearchUseCase } from './use-cases/search/search.use-case';
-import { ReindexAllUseCase } from './use-cases/reindex-all/reindex-all.use-case';
-import { AskChatbotUseCase } from './use-cases/ask-chatbot/ask-chatbot.use-case';
+import { GetCollectionStatsHandler } from './queries/get-collection-stats/get-collection-stats.handler';
+import { ClearCollectionHandler } from './commands/clear-collection/clear-collection.handler';
+import { BatchIndexHandler } from './commands/batch-index/batch-index.handler';
+import { IndexDocumentHandler } from './commands/index-document/index-document.handler';
+import { SearchHandler } from './commands/search/search.handler';
+import { ReindexAllHandler } from './commands/reindex-all/reindex-all.handler';
+import { AskChatbotHandler } from './commands/ask-chatbot/ask-chatbot.handler';
 import { BookVectorIndexListener } from './listeners/book-vector-index.listener';
 import { ChromaRepositoryModule } from '../../infrastructure/database/repositories/chroma/chroma-repository.module';
 import { BooksRepositoryModule } from '../../infrastructure/database/repositories/books/books-repository.module';
@@ -20,6 +21,7 @@ import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
 
 @Module({
   imports: [
+    CqrsModule,
     ChromaRepositoryModule,
     BooksRepositoryModule,
     AuthorsRepositoryModule,
@@ -32,23 +34,23 @@ import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
   ],
   providers: [
     ...(isWorkerProcess() ? [ChromaProcessor, ChromaReconciliationCron] : []),
-    GetCollectionStatsUseCase,
-    ClearCollectionUseCase,
-    BatchIndexUseCase,
-    IndexDocumentUseCase,
-    SearchUseCase,
-    ReindexAllUseCase,
-    AskChatbotUseCase,
+    GetCollectionStatsHandler,
+    ClearCollectionHandler,
+    BatchIndexHandler,
+    IndexDocumentHandler,
+    SearchHandler,
+    ReindexAllHandler,
+    AskChatbotHandler,
     BookVectorIndexListener,
   ],
   exports: [
-    GetCollectionStatsUseCase,
-    ClearCollectionUseCase,
-    BatchIndexUseCase,
-    IndexDocumentUseCase,
-    SearchUseCase,
-    ReindexAllUseCase,
-    AskChatbotUseCase,
+    GetCollectionStatsHandler,
+    ClearCollectionHandler,
+    BatchIndexHandler,
+    IndexDocumentHandler,
+    SearchHandler,
+    ReindexAllHandler,
+    AskChatbotHandler,
   ],
 })
 export class ChromaApplicationModule {}

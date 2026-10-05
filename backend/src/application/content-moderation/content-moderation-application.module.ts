@@ -1,8 +1,9 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { CheckContentUseCase } from './use-cases/check-content.use-case';
-import { AddToxicWordUseCase } from './use-cases/add-toxic-word.use-case';
-import { DeleteToxicWordUseCase } from './use-cases/delete-toxic-word.use-case';
-import { GetToxicWordsUseCase } from './use-cases/get-toxic-words.use-case';
+import { CheckContentHandler } from './commands/check-content/check-content.handler';
+import { AddToxicWordHandler } from './commands/add-toxic-word/add-toxic-word.handler';
+import { DeleteToxicWordHandler } from './commands/delete-toxic-word/delete-toxic-word.handler';
+import { GetToxicWordsHandler } from './queries/get-toxic-words/get-toxic-words.handler';
 import { RefreshToxicWordsListener } from './listeners/refresh-toxic-words.listener';
 import { ContentModerationRepositoryModule } from '@/infrastructure/database/repositories/content-moderation/content-moderation-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
@@ -11,24 +12,25 @@ import { ContentModerationService } from './services/content-moderation.service'
 
 @Module({
   imports: [
+    CqrsModule,
     ContentModerationRepositoryModule,
     IdGeneratorModule,
     AIInfrastructureModule,
   ],
   providers: [
-    CheckContentUseCase,
-    AddToxicWordUseCase,
-    DeleteToxicWordUseCase,
-    GetToxicWordsUseCase,
+    CheckContentHandler,
+    AddToxicWordHandler,
+    DeleteToxicWordHandler,
+    GetToxicWordsHandler,
     RefreshToxicWordsListener,
     ContentModerationService,
   ],
   exports: [
-    CheckContentUseCase,
+    CheckContentHandler,
     ContentModerationService,
-    AddToxicWordUseCase,
-    DeleteToxicWordUseCase,
-    GetToxicWordsUseCase,
+    AddToxicWordHandler,
+    DeleteToxicWordHandler,
+    GetToxicWordsHandler,
   ],
 })
 export class ContentModerationApplicationModule {}

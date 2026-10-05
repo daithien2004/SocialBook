@@ -1,10 +1,12 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { GetPersonalizedRecommendationsUseCase } from './use-cases/get-personalized-recommendations.use-case';
+import { GetPersonalizedRecommendationsHandler } from './queries/get-personalized-recommendations/get-personalized-recommendations.handler';
 import { RecommendationsInfrastructureModule } from '@/infrastructure/recommendations/recommendations-infrastructure.module';
 
 @Module({
-  imports: [RecommendationsInfrastructureModule],
-  providers: [GetPersonalizedRecommendationsUseCase],
-  exports: [GetPersonalizedRecommendationsUseCase],
+  imports: [
+    CqrsModule,RecommendationsInfrastructureModule],
+  providers: [GetPersonalizedRecommendationsHandler],
+  exports: [GetPersonalizedRecommendationsHandler],
 })
 export class RecommendationsApplicationModule {}

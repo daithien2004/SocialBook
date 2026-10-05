@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Post } from '@/domain/posts/entities/post.entity';
-import { CheckContentUseCase } from '@/application/content-moderation/use-cases/check-content.use-case';
+import { CheckContentHandler } from '@/application/content-moderation/commands/check-content/check-content.handler';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 
 @Injectable()
 export class PostModerationService {
-  constructor(private readonly checkContentUseCase: CheckContentUseCase) {}
+  constructor(private readonly checkContentUseCase: CheckContentHandler) {}
 
   /**
    * Moderate post content and update Post entity status.

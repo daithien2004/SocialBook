@@ -1,13 +1,16 @@
-import { GetPersonalizedRecommendationsUseCase } from '@/application/recommendations/use-cases/get-personalized-recommendations.use-case';
+import { Dispatcher } from '@/application/common/dispatcher';
+
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { GetRecommendationsDto } from './dto/get-recommendations.dto';
+import { GetPersonalizedRecommendationsQuery } from '@/application/recommendations/queries/get-personalized-recommendations/get-personalized-recommendations.query';
 
 @Controller('recommendations')
 export class RecommendationsController {
   constructor(
-    private readonly getPersonalizedRecommendationsUseCase: GetPersonalizedRecommendationsUseCase,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Get('personalized')
   async getPersonalizedRecommendations(
@@ -15,11 +18,12 @@ export class RecommendationsController {
     @Query() filter: GetRecommendationsDto,
   ) {
     const userId = (req as unknown as { user: { id: string } }).user.id;
-    const result = await this.getPersonalizedRecommendationsUseCase.execute({
+    const query = new GetPersonalizedRecommendationsQuery(
       userId,
-      page: filter.actualPage,
-      limit: filter.actualLimit,
-    });
+      filter.actualPage,
+      filter.actualLimit,
+    );
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Recommendations generated successfully',

@@ -16,7 +16,6 @@ import { NotificationController } from './notification/notification.controller';
 import { PostsController } from './posts/posts.controller';
 import { RecommendationsController } from './recommendations/recommendations.controller';
 import { ReviewsController } from './reviews/reviews.controller';
-import { ScraperController } from './scraper/scraper.controller';
 import { SearchController } from './search/search.controller';
 import { StatisticsController } from './statistics/statistics.controller';
 import { TextToSpeechController } from './text-to-speech/text-to-speech.controller';
@@ -46,7 +45,6 @@ import { LibraryApplicationModule } from '@/application/library/library-applicat
 import { LikesApplicationModule } from '@/application/likes/likes-application.module';
 import { StatisticsApplicationModule } from '@/application/statistics/statistics-application.module';
 import { ChromaApplicationModule } from '@/application/chroma/chroma-application.module';
-import { ScraperApplicationModule } from '@/application/scraper/scraper-application.module';
 import { SearchApplicationModule } from '@/application/search/search-application.module';
 import { TextToSpeechApplicationModule } from '@/application/text-to-speech/text-to-speech-application.module';
 import { AIApplicationModule } from '@/application/ai/ai-application.module';
@@ -78,7 +76,6 @@ import { HealthModule } from './health/health.module';
     LikesApplicationModule,
     StatisticsApplicationModule,
     ChromaApplicationModule,
-    ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
     AIApplicationModule,
@@ -112,7 +109,6 @@ import { HealthModule } from './health/health.module';
     PostsController,
     RecommendationsController,
     ReviewsController,
-    ScraperController,
     SearchController,
     StatisticsController,
     TextToSpeechController,

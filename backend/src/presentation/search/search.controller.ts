@@ -7,8 +7,8 @@ import {
   HttpCode,
   RequestTimeoutException,
 } from '@nestjs/common';
-import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelligent-search.use-case';
-import { IntelligentSearchQuery } from '@/application/search/use-cases/intelligent-search.query';
+import { IntelligentSearchHandler } from '@/application/search/queries/intelligent-search/intelligent-search.handler';
+import { IntelligentSearchQuery } from '@/application/search/queries/intelligent-search/intelligent-search.query';
 import { Public } from '@/common/decorators/custom.decorator';
 import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
 import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';
@@ -16,7 +16,7 @@ import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-k
 @Controller('search')
 export class SearchController {
   constructor(
-    private readonly intelligentSearchUseCase: IntelligentSearchUseCase,
+    private readonly intelligentSearchUseCase: IntelligentSearchHandler,
     private readonly trendingKeywordCache: ITrendingKeywordCachePort,
   ) {}
 

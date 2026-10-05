@@ -2,7 +2,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 
-import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
+import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { RoomSocket } from './reading-room.types';
 import { PROGRESS_FLUSH_DEBOUNCE_MS } from './reading-room.constants';

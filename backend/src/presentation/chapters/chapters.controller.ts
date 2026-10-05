@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -23,7 +24,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+
 
 import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response.dto';
@@ -31,29 +32,29 @@ import { CreateChapterDto } from '@/presentation/chapters/dto/create-chapter.dto
 import { FilterChapterDto } from '@/presentation/chapters/dto/filter-chapter.dto';
 import { UpdateChapterDto } from '@/presentation/chapters/dto/update-chapter.dto';
 
-import { CreateChapterCommand } from '@/application/chapters/use-cases/create-chapter/create-chapter.command';
-import { DeleteChapterCommand } from '@/application/chapters/use-cases/delete-chapter/delete-chapter.command';
-import { GetChapterByIdQuery } from '@/application/chapters/use-cases/get-chapter-by-id/get-chapter-by-id.query';
-import { GetChapterBySlugQuery } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.query';
-import { GetChaptersQuery } from '@/application/chapters/use-cases/get-chapters/get-chapters.query';
-import { UpdateChapterCommand } from '@/application/chapters/use-cases/update-chapter/update-chapter.command';
-import { StartChaptersImportCommand } from '@/application/chapters/use-cases/start-chapters-import/start-chapters-import.command';
-import { GetChaptersImportStatusQuery } from '@/application/chapters/use-cases/get-chapters-import-status/get-chapters-import-status.query';
+import { CreateChapterCommand } from '@/application/chapters/commands/create-chapter/create-chapter.command';
+import { DeleteChapterCommand } from '@/application/chapters/commands/delete-chapter/delete-chapter.command';
+import { GetChapterByIdQuery } from '@/application/chapters/queries/get-chapter-by-id/get-chapter-by-id.query';
+import { GetChapterBySlugQuery } from '@/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.query';
+import { GetChaptersQuery } from '@/application/chapters/queries/get-chapters/get-chapters.query';
+import { UpdateChapterCommand } from '@/application/chapters/commands/update-chapter/update-chapter.command';
+import { StartChaptersImportCommand } from '@/application/chapters/commands/start-chapters-import/start-chapters-import.command';
+import { GetChaptersImportStatusQuery } from '@/application/chapters/queries/get-chapters-import-status/get-chapters-import-status.query';
 import { StartChaptersImportDto } from './dto/start-chapters-import.dto';
 
-import { GetChapterKnowledgeQuery } from '@/application/chapters/use-cases/get-chapter-knowledge/get-chapter-knowledge.query';
-import { AskChapterAICommand } from '@/application/chapters/use-cases/ask-ai/ask-chapter-ai.command';
+import { GetChapterKnowledgeQuery } from '@/application/chapters/queries/get-chapter-knowledge/get-chapter-knowledge.query';
+import { AskChapterAICommand } from '@/application/chapters/commands/ask-ai/ask-chapter-ai.command';
 import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dto';
-import { RecordChapterViewQuery } from '@/application/chapters/use-cases/record-chapter-view/record-chapter-view.query';
+import { RecordChapterViewQuery } from '@/application/chapters/queries/record-chapter-view/record-chapter-view.query';
 import { AIThrottleGuard } from '@/common/guards/ai-throttle.guard';
-import { ImportEpubPreviewCommand } from '@/application/chapters/use-cases/import-epub-preview/import-epub-preview.command';
+import { ImportEpubPreviewCommand } from '@/application/chapters/commands/import-epub-preview/import-epub-preview.command';
 
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Get(':chapterId/knowledge')
   async getKnowledge(
@@ -61,7 +62,7 @@ export class ChaptersController {
     @Query('force') force?: string,
   ) {
     const query = new GetChapterKnowledgeQuery(chapterId, force === 'true');
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
     return {
       message: 'Get chapter knowledge successfully',
       data: ChapterKnowledgeResponseDto.fromEntity(result),
@@ -76,7 +77,7 @@ export class ChaptersController {
     @Body('question') question: string,
     @CurrentUser('id') userId: string,
   ) {
-    const result = await this.commandBus.execute(
+    const result = await this.dispatcher.command(
       new AskChapterAICommand(chapterId, bookSlug, userId, question),
     );
 
@@ -112,7 +113,7 @@ export class ChaptersController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    const result = await this.commandBus.execute(
+    const result = await this.dispatcher.command(
       new ImportEpubPreviewCommand(file.buffer, file.originalname),
     );
     return {
@@ -126,7 +127,7 @@ export class ChaptersController {
   @UseGuards(RolesGuard)
   async startImport(@Body() dto: StartChaptersImportDto) {
     const command = new StartChaptersImportCommand(dto.bookId, dto.chapters);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Import job started successfully',
       data: result,
@@ -138,7 +139,7 @@ export class ChaptersController {
   @UseGuards(RolesGuard)
   async getImportStatus(@Param('jobId') jobId: string) {
     const query = new GetChaptersImportStatusQuery(jobId);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
     return {
       message: 'Get import status successfully',
       data: result,
@@ -159,7 +160,7 @@ export class ChaptersController {
       bookSlug,
     );
 
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get list chapters successfully',
@@ -172,7 +173,7 @@ export class ChaptersController {
   async getAllChapters(@Param('bookSlug') bookSlug: string) {
     const query = new GetChaptersQuery(1, 1000, undefined, undefined, bookSlug);
 
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get all chapters successfully',
@@ -201,7 +202,7 @@ export class ChaptersController {
       filter.order,
     );
 
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     if ('book' in result && 'chapters' in result) {
       return {
@@ -223,7 +224,7 @@ export class ChaptersController {
   @UseGuards(RolesGuard)
   async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
     const query = new GetChapterByIdQuery(chapterId);
-    const chapter = await this.queryBus.execute(query);
+    const chapter = await this.dispatcher.query(query);
     return {
       message: 'Get chapter successfully',
       data: new ChapterResponseDto(chapter),
@@ -237,7 +238,7 @@ export class ChaptersController {
     @Param('bookSlug') bookSlug: string,
   ) {
     const query = new GetChapterBySlugQuery(chapterSlug, bookSlug);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
     return {
       message: 'Get chapter successfully',
       data: result,
@@ -259,7 +260,7 @@ export class ChaptersController {
       userId,
       clientIp,
     );
-    await this.queryBus.execute(query);
+    await this.dispatcher.query(query);
     return {
       message: 'View recorded successfully',
     };
@@ -277,7 +278,7 @@ export class ChaptersController {
       createChapterDto.orderIndex,
     );
 
-    const chapterResult = await this.commandBus.execute(command);
+    const chapterResult = await this.dispatcher.command(command);
     return {
       message: 'Tạo chương thành công',
       data: ChapterResponseDto.fromResult(chapterResult),
@@ -300,7 +301,7 @@ export class ChaptersController {
       updateChapterDto.orderIndex,
     );
 
-    const chapterResult = await this.commandBus.execute(command);
+    const chapterResult = await this.dispatcher.command(command);
     return {
       message: 'Cập nhật chương thành công',
       data: ChapterResponseDto.fromResult(chapterResult),
@@ -312,7 +313,7 @@ export class ChaptersController {
   @UseGuards(RolesGuard)
   async remove(@Param('chapterId') chapterId: string) {
     const command = new DeleteChapterCommand(chapterId);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
     return {
       message: 'Xóa chương thành công',
     };

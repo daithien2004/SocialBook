@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { UnrecoverableError } from 'bullmq';
 import { CommandBus } from '@nestjs/cqrs';
-import { ProcessPostModerationCommand } from '@/application/posts/use-cases/process-post-moderation.handler';
+import { ProcessPostModerationCommand } from '@/application/posts/commands/process-post-moderation/process-post-moderation.handler';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { getErrorMessage } from '@/common/utils/error.util';
 

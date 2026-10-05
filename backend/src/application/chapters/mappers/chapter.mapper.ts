@@ -1,5 +1,5 @@
 import { Chapter } from '@/domain/chapters/entities/chapter.entity';
-import { ChapterResult } from '../use-cases/get-chapters/get-chapters.result';
+import { ChapterResult } from '../queries/get-chapters/get-chapters.result';
 
 export class ChapterApplicationMapper {
   static toResult(chapter: Chapter): ChapterResult {

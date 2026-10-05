@@ -1,4 +1,6 @@
-﻿import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Dispatcher } from '@/application/common/dispatcher';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+
 
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -10,30 +12,20 @@ import { IndexDocumentDto } from '@/presentation/chroma/dto/index-document.dto';
 import { SearchQueryDto } from '@/presentation/chroma/dto/search-query.dto';
 import { SearchResponseDto } from '@/presentation/chroma/dto/search.response.dto';
 
-import { BatchIndexUseCase } from '@/application/chroma/use-cases/batch-index/batch-index.use-case';
-import { ClearCollectionUseCase } from '@/application/chroma/use-cases/clear-collection/clear-collection.use-case';
-import { GetCollectionStatsUseCase } from '@/application/chroma/use-cases/get-collection-stats/get-collection-stats.use-case';
-import { IndexDocumentUseCase } from '@/application/chroma/use-cases/index-document/index-document.use-case';
-import { ReindexAllUseCase } from '@/application/chroma/use-cases/reindex-all/reindex-all.use-case';
-import { SearchUseCase } from '@/application/chroma/use-cases/search/search.use-case';
-import { AskChatbotUseCase } from '@/application/chroma/use-cases/ask-chatbot/ask-chatbot.use-case';
-
-import { BatchIndexCommand } from '@/application/chroma/use-cases/batch-index/batch-index.command';
-import { IndexDocumentCommand } from '@/application/chroma/use-cases/index-document/index-document.command';
-import { SearchCommand } from '@/application/chroma/use-cases/search/search.command';
-import { AskChatbotCommand } from '@/application/chroma/use-cases/ask-chatbot/ask-chatbot.command';
+import { BatchIndexCommand } from '@/application/chroma/commands/batch-index/batch-index.command';
+import { IndexDocumentCommand } from '@/application/chroma/commands/index-document/index-document.command';
+import { SearchCommand } from '@/application/chroma/commands/search/search.command';
+import { AskChatbotCommand } from '@/application/chroma/commands/ask-chatbot/ask-chatbot.command';
+import { ClearCollectionCommand } from '@/application/chroma/commands/clear-collection/clear-collection.command';
+import { ReindexAllCommand } from '@/application/chroma/commands/reindex-all/reindex-all.command';
+import { GetCollectionStatsQuery } from '@/application/chroma/queries/get-collection-stats/get-collection-stats.query';
 
 @Controller('chroma')
 export class ChromaController {
   constructor(
-    private readonly indexDocumentUseCase: IndexDocumentUseCase,
-    private readonly searchUseCase: SearchUseCase,
-    private readonly batchIndexUseCase: BatchIndexUseCase,
-    private readonly clearCollectionUseCase: ClearCollectionUseCase,
-    private readonly getCollectionStatsUseCase: GetCollectionStatsUseCase,
-    private readonly reindexAllUseCase: ReindexAllUseCase,
-    private readonly askChatbotUseCase: AskChatbotUseCase,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Public()
   @Post('search')
@@ -47,7 +39,7 @@ export class ChromaController {
       searchQuery.embedding,
     );
 
-    const result = await this.searchUseCase.execute(command);
+    const result = await this.dispatcher.command(command);
 
     return {
       message: 'Search completed successfully',
@@ -67,7 +59,7 @@ export class ChromaController {
       indexDocumentDto.embedding,
     );
 
-    const result = await this.indexDocumentUseCase.execute(command);
+    const result = await this.dispatcher.command(command);
 
     return {
       message: result.success
@@ -87,7 +79,7 @@ export class ChromaController {
       batchIndexDto.forceReindex,
     );
 
-    const result = await this.batchIndexUseCase.execute(command);
+    const result = await this.dispatcher.command(command);
 
     return {
       message: `Batch indexing completed: ${result.successful}/${result.totalProcessed} successful`,
@@ -99,7 +91,8 @@ export class ChromaController {
   @UseGuards(RolesGuard)
   @Post('reindex-all')
   async reindexAll() {
-    const result = await this.reindexAllUseCase.execute();
+    const command = new ReindexAllCommand();
+    const result = await this.dispatcher.command(command);
 
     return {
       message: 'Successfully reindexed all content types',
@@ -111,7 +104,8 @@ export class ChromaController {
   @UseGuards(RolesGuard)
   @Post('clear')
   async clearCollection() {
-    const result = await this.clearCollectionUseCase.execute();
+    const command = new ClearCollectionCommand();
+    const result = await this.dispatcher.command(command);
 
     return {
       message: 'Collection cleared successfully',
@@ -122,7 +116,8 @@ export class ChromaController {
   @Public()
   @Get('stats')
   async getStats() {
-    const stats = await this.getCollectionStatsUseCase.execute();
+    const query = new GetCollectionStatsQuery();
+    const stats = await this.dispatcher.query(query);
 
     return {
       message: 'Collection stats retrieved successfully',
@@ -147,7 +142,7 @@ export class ChromaController {
   @Post('chat/ask')
   async askChatbot(@Body() body: { question: string }) {
     const command = new AskChatbotCommand(body.question);
-    const result = await this.askChatbotUseCase.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Chatbot answered successfully',
       data: result,

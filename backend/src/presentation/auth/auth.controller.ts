@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import { Public } from '@/common/decorators/custom.decorator';
 import { User } from '@/domain/users/entities/user.entity';
 
@@ -12,7 +13,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+
 
 import type { Response } from 'express';
 
@@ -21,14 +22,14 @@ import { AuthGuard } from '@nestjs/passport';
 import { LoginGuard } from './guards/login.guard';
 
 // Use Cases
-import { ForgotPasswordCommand } from '@/application/auth/use-cases/forgot-password/forgot-password.command';
-import { LoginCommand } from '@/application/auth/use-cases/login/login.command';
-import { LogoutCommand } from '@/application/auth/use-cases/logout/logout.command';
-import { RefreshTokenCommand } from '@/application/auth/use-cases/refresh-token/refresh-token.command';
-import { RegisterCommand } from '@/application/auth/use-cases/register/register.command';
-import { ResendOtpCommand } from '@/application/auth/use-cases/resend-otp/resend-otp.command';
-import { ResetPasswordCommand } from '@/application/auth/use-cases/reset-password/reset-password.command';
-import { VerifyOtpCommand } from '@/application/auth/use-cases/verify-otp/verify-otp.command';
+import { ForgotPasswordCommand } from '@/application/auth/commands/forgot-password/forgot-password.command';
+import { LoginCommand } from '@/application/auth/commands/login/login.command';
+import { LogoutCommand } from '@/application/auth/commands/logout/logout.command';
+import { RefreshTokenCommand } from '@/application/auth/commands/refresh-token/refresh-token.command';
+import { RegisterCommand } from '@/application/auth/commands/register/register.command';
+import { ResendOtpCommand } from '@/application/auth/commands/resend-otp/resend-otp.command';
+import { ResetPasswordCommand } from '@/application/auth/commands/reset-password/reset-password.command';
+import { VerifyOtpCommand } from '@/application/otp/commands/verify-otp/verify-otp.command';
 
 import type { JwtValidatedUser } from '@/common/interfaces/jwt-validated-user.interface';
 import type { JwtPayload } from '@/infrastructure/auth/strategies/jwt.strategy';
@@ -53,7 +54,8 @@ import {
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly commandBus: CommandBus,
+    private readonly dispatcher: Dispatcher,
+
     private readonly userRepository: IUserRepository,
     private readonly cookieService: AuthCookieService,
   ) {}
@@ -78,7 +80,7 @@ export class AuthController {
   ): Promise<ApiResponse<{ accessToken: string }>> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const command = new LoginCommand(req.user, req.ip, userAgent);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
 
     this.applyCookie(
       res,
@@ -127,7 +129,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {
     const command = new LogoutCommand(req.user.id);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
 
     const refresh = this.cookieService.clearRefreshToken();
     const oauthState = this.cookieService.clearOauthState();
@@ -142,7 +144,7 @@ export class AuthController {
   @Post('signup')
   async signup(@Body() dto: SignupLocalDto) {
     const command = new RegisterCommand(dto.email, dto.username, dto.password);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
 
     return {
       message: 'Mã OTP đã được gửi đến email của bạn',
@@ -154,7 +156,7 @@ export class AuthController {
   @Post('verify-otp')
   async verifyOtp(@Body() body: VerifyOtpDto) {
     const command = new VerifyOtpCommand(body.email, body.otp);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return { message: result };
   }
 
@@ -163,7 +165,7 @@ export class AuthController {
   @Post('resend-otp')
   async resendOtp(@Body() body: ResendOtpDto) {
     const command = new ResendOtpCommand(body.email);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Gửi lại mã OTP thành công',
       data: {
@@ -204,7 +206,7 @@ export class AuthController {
       userAgent,
     );
     const { accessToken, refreshToken: newRefreshToken } =
-      await this.commandBus.execute(command);
+      await this.dispatcher.command(command);
 
     this.applyCookie(
       res,
@@ -222,7 +224,7 @@ export class AuthController {
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     const command = new ForgotPasswordCommand(dto.email);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
     return {
       message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
     };
@@ -236,7 +238,7 @@ export class AuthController {
       dto.otp,
       dto.newPassword,
     );
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return { message: result };
   }
 }

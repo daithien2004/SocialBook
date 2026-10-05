@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import {
   Controller,
   Post,
@@ -8,15 +9,15 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
-import { CreateUserHighlightCommand } from '@/application/user-highlights/use-cases/create-user-highlight/create-user-highlight.command';
-import { UpdateUserHighlightCommand } from '@/application/user-highlights/use-cases/update-user-highlight/update-user-highlight.command';
-import { DeleteUserHighlightCommand } from '@/application/user-highlights/use-cases/delete-user-highlight/delete-user-highlight.command';
-import { GetUserHighlightsQuery } from '@/application/user-highlights/use-cases/get-user-highlights/get-user-highlights.query';
+import { CreateUserHighlightCommand } from '@/application/user-highlights/commands/create-user-highlight/create-user-highlight.command';
+import { UpdateUserHighlightCommand } from '@/application/user-highlights/commands/update-user-highlight/update-user-highlight.command';
+import { DeleteUserHighlightCommand } from '@/application/user-highlights/commands/delete-user-highlight/delete-user-highlight.command';
+import { GetUserHighlightsQuery } from '@/application/user-highlights/queries/get-user-highlights/get-user-highlights.query';
 import { CreateUserHighlightDto } from './dto/create-user-highlight.dto';
 import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
 
@@ -24,9 +25,9 @@ import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
 @UseGuards(JwtAuthGuard)
 export class UserHighlightsController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Post()
   async createHighlight(
@@ -42,7 +43,7 @@ export class UserHighlightsController {
       dto.color,
       dto.note,
     );
-    const highlight = await this.commandBus.execute(command);
+    const highlight = await this.dispatcher.command(command);
 
     return {
       data: {
@@ -64,7 +65,7 @@ export class UserHighlightsController {
     @Param('bookId') bookId: string,
   ) {
     const query = new GetUserHighlightsQuery(userId, bookId, undefined);
-    const highlights = await this.queryBus.execute(query);
+    const highlights = await this.dispatcher.query(query);
     return {
       data: highlights.map((h: any) => ({
         id: h.id,
@@ -86,7 +87,7 @@ export class UserHighlightsController {
     @Param('chapterId') chapterId: string,
   ) {
     const query = new GetUserHighlightsQuery(userId, undefined, chapterId);
-    const highlights = await this.queryBus.execute(query);
+    const highlights = await this.dispatcher.query(query);
     return {
       data: highlights.map((h: any) => ({
         id: h.id,
@@ -116,7 +117,7 @@ export class UserHighlightsController {
       dto.color,
       dto.note,
     );
-    const highlight = await this.commandBus.execute(command);
+    const highlight = await this.dispatcher.command(command);
 
     return {
       data: {
@@ -135,7 +136,7 @@ export class UserHighlightsController {
     @CurrentAbility() ability: AppAbility,
   ) {
     const command = new DeleteUserHighlightCommand(highlightId, userId, ability);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
     return { success: true };
   }
 }

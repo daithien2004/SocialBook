@@ -1,8 +1,9 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { TrackUserEventUseCase } from './use-cases/track-user-event/track-user-event.use-case';
-import { GetTrendingBooksUseCase } from './use-cases/get-trending-books/get-trending-books.use-case';
+import { TrackUserEventHandler } from './commands/track-user-event/track-user-event.handler';
+import { GetTrendingBooksHandler } from './queries/get-trending-books/get-trending-books.handler';
 import { AnalyticsFlushCron } from './analytics-flush.cron';
-import { GetTopActiveReadersUseCase } from './use-cases/get-top-active-readers/get-top-active-readers.use-case';
+import { GetTopActiveReadersHandler } from './queries/get-top-active-readers/get-top-active-readers.handler';
 import { AnalyticsRepositoryModule } from '@/infrastructure/database/repositories/analytics/analytics-repository.module';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
@@ -17,6 +18,7 @@ import { isWorkerProcess } from '@/common/utils/process-role.util';
 
 @Module({
   imports: [
+    CqrsModule,
     AnalyticsRepositoryModule,
     IdGeneratorModule,
     BooksRepositoryModule,
@@ -26,18 +28,18 @@ import { isWorkerProcess } from '@/common/utils/process-role.util';
   ],
   providers: [
     ...(isWorkerProcess() ? [AnalyticsFlushCron] : []),
-    TrackUserEventUseCase,
-    GetTrendingBooksUseCase,
-    GetTopActiveReadersUseCase,
+    TrackUserEventHandler,
+    GetTrendingBooksHandler,
+    GetTopActiveReadersHandler,
     ScoringService,
     AnalyticsListener,
     BookAnalyticsListener,
     TtsAnalyticsListener,
   ],
   exports: [
-    TrackUserEventUseCase,
-    GetTrendingBooksUseCase,
-    GetTopActiveReadersUseCase,
+    TrackUserEventHandler,
+    GetTrendingBooksHandler,
+    GetTopActiveReadersHandler,
     ScoringService,
   ],
 })

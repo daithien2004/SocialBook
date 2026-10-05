@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import {
   Controller,
   Post,
@@ -7,6 +8,7 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+
 import {
   GenerateChapterAudioDto,
   GenerateBookAudioDto,
@@ -15,25 +17,19 @@ import {
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
-import { GenerateChapterAudioUseCase } from '@/application/text-to-speech/use-cases/generate-chapter-audio.use-case';
-import { GetChapterAudioUseCase } from '@/application/text-to-speech/use-cases/get-chapter-audio.use-case';
-import { DeleteChapterAudioUseCase } from '@/application/text-to-speech/use-cases/delete-chapter-audio.use-case';
-import { GenerateBookAudioUseCase } from '@/application/text-to-speech/use-cases/generate-book-audio.use-case';
-import { IncrementPlayCountUseCase } from '@/application/text-to-speech/use-cases/increment-play-count.use-case';
+import { GenerateChapterAudioCommand } from '@/application/text-to-speech/commands/generate-chapter-audio/generate-chapter-audio.command';
+import { GetChapterAudioQuery } from '@/application/text-to-speech/queries/get-chapter-audio/get-chapter-audio.query';
+import { DeleteChapterAudioCommand } from '@/application/text-to-speech/commands/delete-chapter-audio/delete-chapter-audio.command';
+import { GenerateBookAudioCommand } from '@/application/text-to-speech/commands/generate-book-audio/generate-book-audio.command';
+import { IncrementPlayCountCommand } from '@/application/text-to-speech/commands/increment-play-count/increment-play-count.command';
 
 @Controller('text-to-speech')
 export class TextToSpeechController {
   constructor(
-    private readonly generateChapterAudioUseCase: GenerateChapterAudioUseCase,
-    private readonly getChapterAudioUseCase: GetChapterAudioUseCase,
-    private readonly deleteChapterAudioUseCase: DeleteChapterAudioUseCase,
-    private readonly generateBookAudioUseCase: GenerateBookAudioUseCase,
-    private readonly incrementPlayCountUseCase: IncrementPlayCountUseCase,
-  ) {}
+    private readonly dispatcher: Dispatcher,
 
-  /**
-   * Generate audio for a single chapter (admin only)
-   */
+    ) {}
+
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('chapter/:chapterId')
@@ -41,19 +37,18 @@ export class TextToSpeechController {
     @Param('chapterId') chapterId: string,
     @Body() dto: GenerateChapterAudioDto,
   ) {
-    const result = await this.generateChapterAudioUseCase.execute(
+    const command = new GenerateChapterAudioCommand(
       chapterId,
-      dto,
+      dto.forceRegenerate,
+      dto.voice,
     );
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Audio generated successfully',
       data: TextToSpeechResponseDto.fromEntity(result),
     };
   }
 
-  /**
-   * Generate audio for all chapters in a book (admin only)
-   */
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('book/:bookId/all')
@@ -61,20 +56,23 @@ export class TextToSpeechController {
     @Param('bookId') bookId: string,
     @Body() dto: GenerateBookAudioDto,
   ) {
-    const result = await this.generateBookAudioUseCase.execute(bookId, dto);
+    const command = new GenerateBookAudioCommand(
+      bookId,
+      dto.forceRegenerate,
+      dto.voice,
+    );
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Batch audio generation completed',
       data: result,
     };
   }
 
-  /**
-   * Get TTS by chapter ID (public)
-   */
   @Public()
   @Get('chapter/:chapterId')
   async getChapterAudio(@Param('chapterId') chapterId: string) {
-    const result = await this.getChapterAudioUseCase.execute(chapterId);
+    const query = new GetChapterAudioQuery(chapterId);
+    const result = await this.dispatcher.query(query);
 
     if (!result) {
       return {
@@ -89,34 +87,25 @@ export class TextToSpeechController {
     };
   }
 
-  /**
-   * Delete TTS for a chapter (admin only)
-   */
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Delete('chapter/:chapterId')
   async deleteChapterAudio(@Param('chapterId') chapterId: string) {
-    await this.deleteChapterAudioUseCase.execute(chapterId);
+    const command = new DeleteChapterAudioCommand(chapterId);
+    await this.dispatcher.command(command);
     return {
       message: 'Audio deleted successfully',
       data: { success: true },
     };
   }
 
-  /**
-   * Increment play count (public)
-   */
   @Public()
   @Post('chapter/:chapterId/play')
   incrementPlayCount(@Param('chapterId') chapterId: string) {
-    this.incrementPlayCountUseCase.execute(chapterId);
+    const command = new IncrementPlayCountCommand(chapterId);
+    this.dispatcher.command(command);
     return {
       message: 'Play count incremented',
     };
   }
-
-  // Remove legacy generateSpeech endpoint from controller as it was for direct text-to-speech without saving?
-  // Previous controller had it. Let's keep it if needed, but the refactor focused on Chapters.
-  // The plan didn't explicitly mention keeping the legacy generic one, but user might need it.
-  // I'll skip it for now unless requested, to keep it clean.
 }

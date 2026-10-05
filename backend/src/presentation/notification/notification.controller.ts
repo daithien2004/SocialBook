@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import {
   Body,
   Controller,
@@ -9,18 +10,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
+
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
-import { CreateNotificationCommand } from '@/application/notifications/use-cases/create-notification/create-notification.command';
-import { CreateNotificationUseCase } from '@/application/notifications/use-cases/create-notification/create-notification.use-case';
-import { GetUserNotificationsQuery } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.query';
-import { GetUserNotificationsUseCase } from '@/application/notifications/use-cases/get-user-notification/get-user-notifications.use-case';
-import { MarkNotificationReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.command';
-import { MarkNotificationReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-notification-read.use-case';
-import { MarkAllNotificationsReadCommand } from '@/application/notifications/use-cases/mark-notification/mark-all-notifications-read.command';
-import { MarkAllNotificationsReadUseCase } from '@/application/notifications/use-cases/mark-notification/mark-all-notifications-read.use-case';
+import { CreateNotificationCommand } from '@/application/notifications/commands/create-notification/create-notification.command';
+import { GetUserNotificationsQuery } from '@/application/notifications/queries/get-user-notification/get-user-notifications.query';
+import { MarkNotificationReadCommand } from '@/application/notifications/commands/mark-notification/mark-notification-read.command';
+import { MarkAllNotificationsReadCommand } from '@/application/notifications/commands/mark-notification/mark-all-notifications-read.command';
 import { CreateNotificationDto } from '@/presentation/notification/dto/create-notification.dto';
 
 import { FilterNotificationDto } from '@/presentation/notification/dto/filter-notification.dto';
@@ -29,11 +27,9 @@ import { NotificationResponseDto } from '@/presentation/notification/dto/notific
 @Controller('notifications')
 export class NotificationController {
   constructor(
-    private readonly createNotificationUseCase: CreateNotificationUseCase,
-    private readonly getUserNotificationsUseCase: GetUserNotificationsUseCase,
-    private readonly markNotificationReadUseCase: MarkNotificationReadUseCase,
-    private readonly markAllNotificationsReadUseCase: MarkAllNotificationsReadUseCase,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Get()
   async getMyNotifications(
@@ -47,12 +43,12 @@ export class NotificationController {
       filter.isRead,
     );
 
-    const result = await this.getUserNotificationsUseCase.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get notifications successfully',
       data: result.map(
-        (notification) => new NotificationResponseDto(notification),
+        (notification: any) => new NotificationResponseDto(notification),
       ),
     };
   }
@@ -60,7 +56,7 @@ export class NotificationController {
   @Patch('read-all')
   async markAllRead(@CurrentUser('id') userId: string) {
     const command = new MarkAllNotificationsReadCommand(userId);
-    await this.markAllNotificationsReadUseCase.execute(command);
+    await this.dispatcher.command(command);
     return {
       message: 'All notifications marked as read',
     };
@@ -69,7 +65,7 @@ export class NotificationController {
   @Patch(':id/read')
   async markRead(@Param('id') id: string, @CurrentUser('id') userId: string) {
     const command = new MarkNotificationReadCommand(userId, id);
-    await this.markNotificationReadUseCase.execute(command);
+    await this.dispatcher.command(command);
     return {
       message: 'Notification marked as read',
     };
@@ -88,7 +84,7 @@ export class NotificationController {
       dto.actionUrl,
     );
 
-    const notification = await this.createNotificationUseCase.execute(command);
+    const notification = await this.dispatcher.command(command);
 
     return {
       message: 'Notification created successfully',

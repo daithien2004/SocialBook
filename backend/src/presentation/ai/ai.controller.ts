@@ -1,4 +1,5 @@
-﻿import {
+import { Dispatcher } from '@/application/common/dispatcher';
+import {
   Controller,
   Post,
   Body,
@@ -7,17 +8,18 @@
   BadRequestException,
   UseGuards,
 } from '@nestjs/common';
-import { GenerateTextUseCase } from '@/application/ai/use-cases/generate-text/generate-text.use-case';
-import { SummarizeChapterUseCase } from '@/application/ai/use-cases/summarize-chapter/summarize-chapter.use-case';
+
+import { GenerateTextCommand } from '@/application/ai/commands/generate-text/generate-text.command';
+import { SummarizeChapterCommand } from '@/application/ai/commands/summarize-chapter/summarize-chapter.command';
 import { Public } from '@/common/decorators/custom.decorator';
 import { AIThrottleGuard } from '@/common/guards/ai-throttle.guard';
 
 @Controller('ai')
 export class AIController {
   constructor(
-    private readonly generateTextUseCase: GenerateTextUseCase,
-    private readonly summarizeChapterUseCase: SummarizeChapterUseCase,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Public()
   @UseGuards(AIThrottleGuard)
@@ -29,10 +31,11 @@ export class AIController {
     if (!body.prompt) {
       throw new BadRequestException('Prompt is required');
     }
-    return await this.generateTextUseCase.execute({
-      prompt: body.prompt,
-      userId: req.user?.id ?? 'GUEST',
-    });
+    const command = new GenerateTextCommand(
+      body.prompt,
+      req.user?.id ?? 'GUEST',
+    );
+    return await this.dispatcher.command(command);
   }
 
   @Public()
@@ -46,10 +49,11 @@ export class AIController {
     if (!chapterId) {
       throw new BadRequestException('Chapter ID is required');
     }
-    const result = await this.summarizeChapterUseCase.execute({
+    const command = new SummarizeChapterCommand(
       chapterId,
-      userId: req.user?.id ?? 'GUEST',
-    });
-    return { data: result, message: 'TÃ³m táº¯t chÆ°Æ¡ng thÃ nh cÃ´ng' };
+      req.user?.id ?? 'GUEST',
+    );
+    const result = await this.dispatcher.command(command);
+    return { data: result, message: 'Tóm tắt chương thành công' };
   }
 }

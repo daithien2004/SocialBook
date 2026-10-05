@@ -17,7 +17,6 @@ import { LibraryApplicationModule } from './library/library-application.module';
 import { LikesApplicationModule } from './likes/likes-application.module';
 import { StatisticsApplicationModule } from './statistics/statistics-application.module';
 import { ChromaApplicationModule } from './chroma/chroma-application.module';
-import { ScraperApplicationModule } from './scraper/scraper-application.module';
 import { SearchApplicationModule } from './search/search-application.module';
 import { TextToSpeechApplicationModule } from './text-to-speech/text-to-speech-application.module';
 import { AIApplicationModule } from './ai/ai-application.module';
@@ -46,7 +45,6 @@ import { PostModerationApplicationModule } from './posts/post-moderation.applica
     LikesApplicationModule,
     StatisticsApplicationModule,
     ChromaApplicationModule,
-    ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
     AIApplicationModule,
@@ -74,7 +72,6 @@ import { PostModerationApplicationModule } from './posts/post-moderation.applica
     LikesApplicationModule,
     StatisticsApplicationModule,
     ChromaApplicationModule,
-    ScraperApplicationModule,
     SearchApplicationModule,
     TextToSpeechApplicationModule,
     AIApplicationModule,

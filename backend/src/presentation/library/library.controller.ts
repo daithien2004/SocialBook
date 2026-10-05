@@ -1,15 +1,16 @@
-import { UpdateStatusCommand } from '@/application/library/use-cases/update-status/update-status.command';
-import { RecordReadingTimeCommand } from '@/application/library/use-cases/record-reading-time/record-reading-time.command';
-import { ProcessReadingSessionCommand } from '@/application/library/use-cases/process-reading-session/process-reading-session.command';
-import { GetLibraryQuery } from '@/application/library/use-cases/get-library/get-library.query';
-import { GetKnowledgeGraphQuery } from '@/application/library/use-cases/get-knowledge-graph/get-knowledge-graph.query';
-import { GetChapterProgressQuery } from '@/application/library/use-cases/get-chapter-progress/get-chapter-progress.query';
-import { GetBookLibraryInfoQuery } from '@/application/library/use-cases/get-book-library-info/get-book-library-info.query';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Dispatcher } from '@/application/common/dispatcher';
+import { UpdateStatusCommand } from '@/application/library/commands/update-status/update-status.command';
+import { RecordReadingTimeCommand } from '@/application/library/commands/record-reading-time/record-reading-time.command';
+import { ProcessReadingSessionCommand } from '@/application/library/commands/process-reading-session/process-reading-session.command';
+import { GetLibraryQuery } from '@/application/library/queries/get-library/get-library.query';
+import { GetKnowledgeGraphQuery } from '@/application/library/queries/get-knowledge-graph/get-knowledge-graph.query';
+import { GetChapterProgressQuery } from '@/application/library/queries/get-chapter-progress/get-chapter-progress.query';
+import { GetBookLibraryInfoQuery } from '@/application/library/queries/get-book-library-info/get-book-library-info.query';
+
 import { ReadingStatus } from '@/domain/library/entities/reading-list.entity';
-import { RemoveFromLibraryCommand } from '@/application/library/use-cases/remove-from-library/remove-from-library.command';
-import { UpdateCollectionsCommand } from '@/application/library/use-cases/update-collections/update-collections.command';
-import { UpdateProgressCommand } from '@/application/library/use-cases/update-progress/update-progress.command';
+import { RemoveFromLibraryCommand } from '@/application/library/commands/remove-from-library/remove-from-library.command';
+import { UpdateCollectionsCommand } from '@/application/library/commands/update-collections/update-collections.command';
+import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
 
 import {
   AddToCollectionsDto,
@@ -37,7 +38,9 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('library')
 export class LibraryController {
-  constructor(private readonly commandBus: CommandBus, private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly dispatcher: Dispatcher,
+) {}
 
   @Get()
   async getLibrary(
@@ -56,7 +59,7 @@ export class LibraryController {
 
     const limitNumber = limit ? parseInt(limit, 10) : undefined;
     const query = new GetLibraryQuery(userId, readingStatuses, limitNumber);
-    const readingLists = await this.queryBus.execute(query);
+    const readingLists = await this.dispatcher.query(query);
 
     return {
       message: 'Get library list successfully',
@@ -67,7 +70,7 @@ export class LibraryController {
   @Get('knowledge-graph')
   async getKnowledgeGraph(@CurrentUser('id') userId: string) {
     const query = new GetKnowledgeGraphQuery(userId);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get knowledge graph successfully',
@@ -81,7 +84,7 @@ export class LibraryController {
     @Body() dto: UpdateLibraryStatusDto,
   ) {
     const command = new UpdateStatusCommand(userId, dto.bookId, dto.status);
-    const readingList = await this.commandBus.execute(command);
+    const readingList = await this.dispatcher.command(command);
 
     return {
       message: 'Update library status successfully',
@@ -96,7 +99,7 @@ export class LibraryController {
     @Query('chapterId') chapterId: string,
   ) {
     const query = new GetChapterProgressQuery(userId, bookId, chapterId);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
     return {
       message: 'Get chapter progress successfully',
       data: ChapterProgressResponseDto.fromResult(result),
@@ -115,7 +118,7 @@ export class LibraryController {
       updateProgressDto.progress || 0,
     );
 
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       data: {
         readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
@@ -137,7 +140,7 @@ export class LibraryController {
       dto.chapterId,
       dto.durationInSeconds,
     );
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
 
     return {
       data: RecordReadingTimeResponseDto.fromResult(result.timeSpentMinutes),
@@ -154,7 +157,7 @@ export class LibraryController {
       dto.bookId,
       dto.collectionIds,
     );
-    const readingList = await this.commandBus.execute(command);
+    const readingList = await this.dispatcher.command(command);
 
     return {
       message: 'Update book collections successfully',
@@ -168,7 +171,7 @@ export class LibraryController {
     @Param('bookId') bookId: string,
   ) {
     const command = new RemoveFromLibraryCommand(userId, bookId);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
 
     return {
       message: 'Remove book from library successfully',
@@ -181,7 +184,7 @@ export class LibraryController {
     @Param('bookId') bookId: string,
   ) {
     const query = new GetBookLibraryInfoQuery(userId, bookId);
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Get book library info successfully',

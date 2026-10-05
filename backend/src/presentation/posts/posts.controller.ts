@@ -1,5 +1,6 @@
-import { GetModerationStatsQuery } from '@/application/posts/use-cases/get-moderation-stats.query';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Dispatcher } from '@/application/common/dispatcher';
+import { GetModerationStatsQuery } from '@/application/posts/queries/get-moderation-stats/get-moderation-stats.query';
+
 import {
   BadRequestException,
   Body,
@@ -31,16 +32,16 @@ import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
 
 // Use Cases
-import { ApprovePostCommand } from '@/application/posts/use-cases/approve-post.command';
-import { CreatePostCommand } from '@/application/posts/use-cases/create-post.command';
-import { DeletePostCommand } from '@/application/posts/use-cases/delete-post.command';
-import { GetFlaggedPostsQuery } from '@/application/posts/use-cases/get-flagged-posts.query';
-import { GetPostQuery } from '@/application/posts/use-cases/get-post.query';
-import { GetPostsByUserQuery } from '@/application/posts/use-cases/get-posts-by-user.query';
-import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
-import { RejectPostCommand } from '@/application/posts/use-cases/reject-post.command';
-import { RemovePostImageCommand } from '@/application/posts/use-cases/remove-post-image.command';
-import { UpdatePostCommand } from '@/application/posts/use-cases/update-post.command';
+import { ApprovePostCommand } from '@/application/posts/commands/approve-post/approve-post.command';
+import { CreatePostCommand } from '@/application/posts/commands/create-post/create-post.command';
+import { DeletePostCommand } from '@/application/posts/commands/delete-post/delete-post.command';
+import { GetFlaggedPostsQuery } from '@/application/posts/queries/get-flagged-posts/get-flagged-posts.query';
+import { GetPostQuery } from '@/application/posts/queries/get-post/get-post.query';
+import { GetPostsByUserQuery } from '@/application/posts/queries/get-posts-by-user/get-posts-by-user.query';
+import { GetPostsQuery } from '@/application/posts/queries/get-posts/get-posts.query';
+import { RejectPostCommand } from '@/application/posts/commands/reject-post/reject-post.command';
+import { RemovePostImageCommand } from '@/application/posts/commands/remove-post-image/remove-post-image.command';
+import { UpdatePostCommand } from '@/application/posts/commands/update-post/update-post.command';
 import { PostResponseDto } from '@/presentation/posts/dto/post.response.dto';
 import { IsOptional, IsString, IsEnum, IsDateString } from 'class-validator';
 
@@ -65,9 +66,9 @@ export class FlaggedPostsQueryDto extends PaginationQueryDto {
 @Controller('posts')
 export class PostsController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Public()
   @Get()
@@ -77,7 +78,7 @@ export class PostsController {
   ) {
     const limit = Math.min(query.actualLimit || 10, 100);
     const postsQuery = new GetPostsQuery(limit, query.cursor, userId);
-    const result = await this.queryBus.execute(postsQuery);
+    const result = await this.dispatcher.query(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
@@ -102,7 +103,7 @@ export class PostsController {
       query.cursor,
       currentUserId,
     );
-    const result = await this.queryBus.execute(postsQuery);
+    const result = await this.dispatcher.query(postsQuery);
     return {
       message: 'Get posts successfully',
       data: PostResponseDto.fromArray(result.data),
@@ -121,7 +122,7 @@ export class PostsController {
     @Param('id') id: string,
   ) {
     const query = new GetPostQuery(id, userId);
-    const data = await this.queryBus.execute(query);
+    const data = await this.dispatcher.query(query);
     return {
       message: 'Get post detail successfully',
       data: new PostResponseDto(data),
@@ -144,7 +145,7 @@ export class PostsController {
     files?: Express.Multer.File[],
   ) {
     const command = new CreatePostCommand(userId, dto.bookId, dto.content, files);
-    const { post, moderationMessage } = await this.commandBus.execute(command);
+    const { post, moderationMessage } = await this.dispatcher.command(command);
 
     const responseDto = new PostResponseDto(post);
     return {
@@ -179,7 +180,7 @@ export class PostsController {
       dto.bookId,
       dto.imageUrls,
     );
-    const { post, moderationMessage } = await this.commandBus.execute(command);
+    const { post, moderationMessage } = await this.dispatcher.command(command);
     return {
       message: moderationMessage ? undefined : 'Cập nhật bài viết thành công',
       data: new PostResponseDto(post),
@@ -194,7 +195,7 @@ export class PostsController {
     @CurrentAbility() ability: AppAbility,
   ) {
     const command = new DeletePostCommand(userId, id, ability, false);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
     return {
       message: 'Delete post successfully',
     };
@@ -209,7 +210,7 @@ export class PostsController {
     @CurrentAbility() ability: AppAbility,
   ) {
     const command = new DeletePostCommand(userId, id, ability, true);
-    await this.commandBus.execute(command);
+    await this.dispatcher.command(command);
     return {
       message: 'Permanently deleted post',
     };
@@ -225,7 +226,7 @@ export class PostsController {
     if (!imageUrl) throw new BadRequestException('imageUrl is required');
 
     const command = new RemovePostImageCommand(userId, id, ability, imageUrl);
-    const data = await this.commandBus.execute(command);
+    const data = await this.dispatcher.command(command);
     return {
       message: 'Image removed successfully',
       data,
@@ -247,7 +248,7 @@ export class PostsController {
       query.endDate ? new Date(query.endDate) : undefined,
       query.sortBy,
     );
-    const result = await this.queryBus.execute(flaggedQuery);
+    const result = await this.dispatcher.query(flaggedQuery);
     return {
       message: 'Get flagged posts successfully',
       data: PostResponseDto.fromArray(result.data),
@@ -259,7 +260,7 @@ export class PostsController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   async getModerationStats() {
-    const data = await this.queryBus.execute(new GetModerationStatsQuery());
+    const data = await this.dispatcher.query(new GetModerationStatsQuery());
     return {
       message: 'Get moderation stats successfully',
       data,
@@ -271,7 +272,7 @@ export class PostsController {
   @Roles('admin')
   async approvePost(@Param('id') id: string) {
     const command = new ApprovePostCommand(id);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: result.message,
     };
@@ -282,7 +283,7 @@ export class PostsController {
   @Roles('admin')
   async rejectPost(@Param('id') id: string) {
     const command = new RejectPostCommand(id, 'Rejected by admin');
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: result.message,
     };
@@ -297,7 +298,7 @@ export class PostsController {
 
     const results = await Promise.allSettled(
       postIds.map((id) =>
-        this.commandBus.execute(new ApprovePostCommand(id)),
+        this.dispatcher.command(new ApprovePostCommand(id)),
       ),
     );
 
@@ -316,7 +317,7 @@ export class PostsController {
 
     const results = await Promise.allSettled(
       postIds.map((id) =>
-        this.commandBus.execute(
+        this.dispatcher.command(
           new RejectPostCommand(id, 'Rejected by admin'),
         ),
       ),

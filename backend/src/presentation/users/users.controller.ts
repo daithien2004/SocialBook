@@ -1,3 +1,4 @@
+import { Dispatcher } from '@/application/common/dispatcher';
 import {
   Body,
   Controller,
@@ -15,7 +16,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+
 
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -30,23 +31,25 @@ import {
 } from '@/presentation/users/dto/user.dto';
 import { UserResponseDto } from '@/presentation/users/dto/user.response.dto';
 
-import { CheckUserExistQuery } from '@/application/users/use-cases/check-user-exist/check-user-exist.query';
-import { CreateUserCommand } from '@/application/users/use-cases/create-user/create-user.command';
-import { GetReadingPreferencesQuery } from '@/application/users/use-cases/get-reading-preferences/get-reading-preferences.query';
-import { GetUserProfileQuery } from '@/application/users/use-cases/get-user-profile/get-user-profile.query';
-import { GetUsersQuery } from '@/application/users/use-cases/get-users/get-users.query';
-import { SearchUsersQuery } from '@/application/users/use-cases/search-users/search-users.query';
-import { ToggleBanCommand } from '@/application/users/use-cases/toggle-ban/toggle-ban.command';
-import { UpdateReadingPreferencesCommand } from '@/application/users/use-cases/update-reading-preferences/update-reading-preferences.command';
-import { UpdateUserImageCommand } from '@/application/users/use-cases/update-user-image/update-user-image.command';
-import { UpdateUserCommand } from '@/application/users/use-cases/update-user/update-user.command';
+import { CheckUserExistQuery } from '@/application/users/commands/check-user-exist/check-user-exist.query';
+import { CreateUserCommand } from '@/application/users/commands/create-user/create-user.command';
+import { GetReadingPreferencesQuery } from '@/application/users/queries/get-reading-preferences/get-reading-preferences.query';
+import { GetUserProfileQuery } from '@/application/users/queries/get-user-profile/get-user-profile.query';
+import { GetUsersQuery } from '@/application/users/queries/get-users/get-users.query';
+import { SearchUsersQuery } from '@/application/users/commands/search-users/search-users.query';
+import { ToggleBanCommand } from '@/application/users/commands/toggle-ban/toggle-ban.command';
+import { UpdateReadingPreferencesCommand } from '@/application/users/commands/update-reading-preferences/update-reading-preferences.command';
+import { UpdateUserImageCommand } from '@/application/users/commands/update-user-image/update-user-image.command';
+import { UpdateUserCommand } from '@/application/users/commands/update-user/update-user.command';
+
+import { User } from '@/domain/users/entities/user.entity';
 
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+    private readonly dispatcher: Dispatcher,
+
+    ) {}
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
@@ -59,7 +62,7 @@ export class UsersController {
       createUserDto.provider,
       createUserDto.providerId,
     );
-    const user = await this.commandBus.execute(command);
+    const user = await this.dispatcher.command(command);
     return {
       message: 'User created successfully',
       data: new UserResponseDto(user),
@@ -79,10 +82,10 @@ export class UsersController {
       filter.isBanned,
       filter.isVerified,
     );
-    const result = await this.queryBus.execute(getUsersQuery);
+    const result = await this.dispatcher.query(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map((user: any) => new UserResponseDto(user)),
+      data: result.data.map((user: User) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
@@ -99,10 +102,10 @@ export class UsersController {
       undefined,
       undefined,
     );
-    const result = await this.queryBus.execute(getUsersQuery);
+    const result = await this.dispatcher.query(getUsersQuery);
     return {
       message: 'Get users successfully',
-      data: result.data.map((user: any) => new UserResponseDto(user)),
+      data: result.data.map((user: User) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
@@ -112,7 +115,7 @@ export class UsersController {
   @Roles('admin')
   async toggleBan(@Param('id') id: string) {
     const command = new ToggleBanCommand(id);
-    const user = await this.commandBus.execute(command);
+    const user = await this.dispatcher.command(command);
     return {
       message: `User ${user.isBanned ? 'banned' : 'unbanned'} successfully`,
       data: new UserResponseDto(user),
@@ -123,7 +126,7 @@ export class UsersController {
   @Get(':id/overview')
   async getUserProfileOverview(@Param('id') id: string) {
     const query = new GetUserProfileQuery(id);
-    const data = await this.queryBus.execute(query);
+    const data = await this.dispatcher.query(query);
     return {
       message: 'Get user profile overview successfully',
       data,
@@ -134,7 +137,7 @@ export class UsersController {
   @Get(':id/exist')
   async isUserExist(@Param('id') id: string) {
     const query = new CheckUserExistQuery(undefined, undefined, id);
-    const exists = await this.queryBus.execute(query);
+    const exists = await this.dispatcher.query(query);
     return {
       message: 'Check user exist successfully',
       data: exists,
@@ -153,7 +156,7 @@ export class UsersController {
       dto.location,
       dto.website,
     );
-    const user = await this.commandBus.execute(command);
+    const user = await this.dispatcher.command(command);
     return {
       message: 'Profile overview updated successfully',
       data: new UserResponseDto(user),
@@ -181,7 +184,7 @@ export class UsersController {
     file: Express.Multer.File,
   ) {
     const command = new UpdateUserImageCommand(userId, file);
-    const result = await this.commandBus.execute(command);
+    const result = await this.dispatcher.command(command);
     return {
       message: 'Update avatar successfully',
       data: result,
@@ -191,7 +194,7 @@ export class UsersController {
   @Get('me/reading-preferences')
   async getMyReadingPreferences(@CurrentUser('id') userId: string) {
     const query = new GetReadingPreferencesQuery(userId);
-    const data = await this.queryBus.execute(query);
+    const data = await this.dispatcher.query(query);
     return {
       message: 'Get reading preferences successfully',
       data,
@@ -220,7 +223,7 @@ export class UsersController {
       dto.dailyReadingGoal,
     );
 
-    const user = await this.commandBus.execute(command);
+    const user = await this.dispatcher.command(command);
 
     return {
       message: 'Reading preferences updated successfully',
@@ -237,11 +240,11 @@ export class UsersController {
       filter.actualPage,
       filter.actualLimit,
     );
-    const result = await this.queryBus.execute(query);
+    const result = await this.dispatcher.query(query);
 
     return {
       message: 'Search users successfully',
-      data: result.data.map((user: any) => new UserResponseDto(user)),
+      data: result.data.map((user: User) => new UserResponseDto(user)),
       meta: result.meta,
     };
   }
