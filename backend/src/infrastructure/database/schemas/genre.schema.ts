@@ -9,13 +9,13 @@ export type GenreDocument = Genre & Document;
 @Schema({ timestamps: true })
 export class Genre extends BaseSchema {
   @Prop({ required: true, unique: true, index: true })
-  name: string;
+  name!: string;
 
   @Prop({ unique: true, index: true })
-  slug: string;
+  slug!: string;
 
   @Prop()
-  description: string;
+  description!: string;
 }
 
 export const GenreSchema = SchemaFactory.createForClass(Genre);

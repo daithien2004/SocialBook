@@ -20,16 +20,13 @@ export function updateToxicWordsCache(
   words: { pattern: string; group: string }[],
 ) {
   // Nhóm các từ lại theo group
-  const grouped = words.reduce(
-    (acc, word) => {
-      if (!acc[word.group]) {
-        acc[word.group] = [];
-      }
-      acc[word.group].push(word.pattern);
-      return acc;
-    },
-    {} as Record<string, string[]>,
-  );
+  const grouped = words.reduce<Record<string, string[]>>((acc, word) => {
+    if (!acc[word.group]) {
+      acc[word.group] = [];
+    }
+    acc[word.group].push(word.pattern);
+    return acc;
+  }, {});
 
   // Parse thành mảng PatternGroup với RegExp
   EXTREME_PROFANITY = Object.entries(grouped).map(([group, patterns]) => ({

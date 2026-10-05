@@ -10,5 +10,6 @@ export class GetFlaggedPostsQuery extends Query<PaginatedResult<Post>> {
     public readonly endDate?: Date,
     public readonly sortBy?: 'newest' | 'oldest' | 'violations',
   ) {
-    super();}
+    super();
+  }
 }

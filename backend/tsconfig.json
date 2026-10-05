@@ -16,11 +16,15 @@
     "outDir": "./dist",
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
+    // Theo .agents/skills/nestjs-type-safety-enforcement: bật strict dần từng cờ.
+    // strict = strictNullChecks + noImplicitAny + strictFunctionTypes +
+    //          strictBindCallApply + strictPropertyInitialization + ...
+    // noUncheckedIndexedAccess để bước sau (135 lỗi src, cần refactoring thật).
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/*": ["./src/*"]
     }

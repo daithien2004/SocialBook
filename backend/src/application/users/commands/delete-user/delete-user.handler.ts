@@ -1,6 +1,5 @@
 import { DeleteUserCommand } from './delete-user.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';

@@ -1,12 +1,58 @@
 # SocialBook Agent Guide
-Never use the `any` type in TypeScript. Always define an Interface, Type, or use `unknown` instead.
-Ensuring write code lint 
+
 ## Quick Reference
 
-- Before any task, read `.claude/rules/craftsman.md`
-- Apply guidance from `.claude/rules/craftsman.md` across planning, implementation, testing, and review
-- Prefer repo-specific instructions over generic habits
-- Keep changes scoped. Do not rewrite unrelated areas
+- Trước khi làm việc, đọc `.agents/rules/AGENT_TYPE_RULES.md` (luật type safety bắt buộc)
+- Đọc `.claude/rules/craftsman.md` và áp dụng cho toàn bộ quy hoạch/hiện thực/kiểm thử
+- Chạy `npm run check --workspace=backend` trước khi báo "xong"
+- Prefer repo-specific instructions over generic habits; keep changes scoped
+
+## Type safety (bắt buộc)
+
+Nguồn chuẩn: `.agents/rules/AGENT_TYPE_RULES.md` (khối dưới đây phải khớp với file đó).
+
+Dự án này cấm "ép kiểu cho qua". Compiler và lint là nguồn sự thật; không hạ chuẩn chúng.
+
+### Cấm tuyệt đối trong `src/` (trừ file ngoại lệ bên dưới)
+
+- `as any`, `: any`, `<any>`, `Function`/`object`/`{}` làm kiểu wildcard
+- `as T`, `as unknown as T`, `<T>x`, `{} as T`, `JSON.parse(x) as T`
+- `x!` (non-null assertion biểu thức)
+- `// @ts-ignore`, `// @ts-expect-error`, `// @ts-nocheck`
+- `eslint-disable` cho bất kỳ rule `@typescript-eslint/*` nào liên quan đến type
+- `catch (e: any)`, `(e as Error)`
+
+Được phép: `as const`, `satisfies`, type annotation, generics, type guard (`x is T`), `name!: string` trên **property của DTO/entity/@WebSocketServer** (definite assignment).
+
+### Khi `tsc` hoặc ESLint báo lỗi type
+
+Làm theo thứ tự, dừng ở bước đầu tiên giải quyết được:
+
+1. Tìm **nguồn** của lỗi (type khai báo sai? dữ liệu có thể sai lúc chạy? thư viện trả kiểu rộng?).
+2. Sửa khai báo ở nguồn.
+3. Thu hẹp: `typeof`/`instanceof`/`in`/kiểm tra `null`/discriminated union/type guard.
+4. Dữ liệu từ ngoài (HTTP, WS, JWT, Redis, JSON, env, query raw, job, event payload) là `unknown` cho đến khi được xác thực ở **biên**: DTO class + ValidationPipe, type guard, `readJson`, `requireEnv`, `registerAs`.
+5. Mô hình hóa lại: generics có ràng buộc, overload, `satisfies`, interface hẹp.
+6. Đổi thiết kế (thêm nhánh `null`, ném exception có nghĩa).
+7. Escape hatch: chỉ trong `src/shared/typing/unsafe.ts` hoặc `test/support/typed-fake.ts`, có `@reason` + test, và **báo cáo cho người dùng**.
+
+Không bao giờ đổi `as T` thành `as unknown as T`. Không thêm `| undefined`/`?` để im lỗi mà không xử lý. Không sửa `tsconfig.json`, `eslint.config.mjs`, hay `eslint-suppressions.json` để làm lỗi biến mất. Cần đổi cấu hình thì hỏi người dùng.
+
+### Test
+
+- Không `as any`, `as unknown as jest.Mocked<X>`, `{} as Entity`.
+- Dùng fake class kế thừa/cài port, interface hẹp, builder gọi factory thật, `jest.fn` suy kiểu từ cài đặt.
+- Không truy cập private qua cast; test qua public API.
+
+### Trước khi báo "xong"
+
+- Chạy `npm run check --workspace=backend` (typecheck + lint + test) và báo kết quả.
+- Báo cáo mọi type assertion mới (nếu có) theo mẫu: vị trí, vì sao không tránh được, vì sao an toàn, đã thử gì, test nào.
+- Không tăng số mục trong `eslint-suppressions.json` (chỉ được giảm: `npm run lint:prune`).
+
+### Khi bí
+
+Dừng lại và hỏi, kèm: lỗi gốc, 2 đến 3 phương án, đánh đổi. Không cast "tạm".
 
 ## Project Overview
 
@@ -38,7 +84,12 @@ cd backend
 npm install && npm run start:dev
 
 # Build & lint
-npm run build && npm run lint
+npm run build
+npm run check       # typecheck + lint + test (chạy trước khi báo xong)
+npm run typecheck   # tsc --noEmit
+npm run lint        # eslint, không fix, --max-warnings 0
+npm run lint:fix    # eslint --fix (tự sửa prettier/unused import)
+npm run lint:prune  # bỏ suppression không còn cần
 
 # Run single test
 npm test -- test/unit/application/posts/get-posts.use-case.spec.ts
@@ -62,7 +113,7 @@ npm run build && npm run lint
 
 ## TypeScript Configuration
 
-**Backend** (`backend/tsconfig.json`): `strictNullChecks: true`, `noImplicitAny: false`, `@/*` → `src/*`
+**Backend** (`backend/tsconfig.json`): `strict: true`, `noImplicitOverride`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `@/*` → `src/*` (chưa bật `noUncheckedIndexedAccess`)
 **Frontend** (`frontend/tsconfig.json`): `strict: true`, `@/*` → `src/*`
 
 ## Naming Conventions
@@ -150,9 +201,10 @@ export const getErrorMessage = (error: any): string => {
 
 **Prettier**: `singleQuote: true`, `trailingComma: "all"`
 
-**Backend ESLint** (`eslint.config.mjs`):
-- `@typescript-eslint/no-explicit-any: error`
-- `@typescript-eslint/no-floating-promises: warn`
+**Backend ESLint** (`backend/eslint.config.mjs`, theo `.agents/skills/nestjs-type-safety-enforcement`):
+- `strictTypeChecked` + `consistent-type-assertions: never`, `no-explicit-any`, `no-non-null-assertion`, `ban-ts-comment`, `switch-exhaustiveness-check`, `no-floating-promises: error`
+- Chỉ `src/shared/typing/unsafe.ts` và `test/support/typed-fake.ts` được cast
+- Violation cũ nằm trong `backend/eslint-suppressions.json` — chỉ được giảm, không được tăng
 
 **Frontend ESLint**: follows `next/core-web-vitals`, `next/typescript`
 

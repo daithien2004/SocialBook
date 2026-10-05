@@ -5,13 +5,13 @@ import { BaseSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true, collection: 'user_preferences' })
 export class UserPreference extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Genre', required: true })
-  genreId: Types.ObjectId;
+  genreId!: Types.ObjectId;
 
   @Prop({ type: Number, default: 0 })
-  score: number;
+  score!: number;
 }
 
 export type UserPreferenceDocument = HydratedDocument<UserPreference>;

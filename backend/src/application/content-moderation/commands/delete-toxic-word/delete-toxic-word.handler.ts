@@ -1,6 +1,5 @@
 import { CommandHandler } from '@nestjs/cqrs';
 import { DeleteToxicWordCommand } from './delete-toxic-word.command';
-import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IToxicWordRepository } from '@/domain/content-moderation/repositories/toxic-word.repository.interface';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';

@@ -34,12 +34,43 @@ interface ChromaMetadata {
 @Injectable()
 export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   private readonly logger = new Logger(ChromaVectorRepository.name);
-  private vectorStore: Chroma;
-  private embeddings: HuggingFaceInferenceEmbeddings;
+  private _vectorStore: Chroma | undefined;
+  private _embeddings: HuggingFaceInferenceEmbeddings | undefined;
   private isInitialized = false;
-  private chromaClient: ChromaClient;
-  private collection: Collection;
+  private _chromaClient: ChromaClient | undefined;
+  private _collection: Collection | undefined;
   private readonly DEFAULT_SEARCH_LIMIT = 10;
+
+  // onModuleInit() gán các field này sau khi kết nối thành công. Thay vì dùng
+  // `!` (ép compiler tin), getter kiểm tra thật và ném lỗi có nghĩa nếu chưa
+  // khởi tạo — mọi method đều đi qua ensureInitialized() trước.
+  private get vectorStore(): Chroma {
+    if (!this._vectorStore) {
+      throw new Error('Chroma vector store chưa được khởi tạo');
+    }
+    return this._vectorStore;
+  }
+
+  private get embeddings(): HuggingFaceInferenceEmbeddings {
+    if (!this._embeddings) {
+      throw new Error('Chroma embeddings chưa được khởi tạo');
+    }
+    return this._embeddings;
+  }
+
+  private get chromaClient(): ChromaClient {
+    if (!this._chromaClient) {
+      throw new Error('Chroma client chưa được khởi tạo');
+    }
+    return this._chromaClient;
+  }
+
+  private get collection(): Collection {
+    if (!this._collection) {
+      throw new Error('Chroma collection chưa được khởi tạo');
+    }
+    return this._collection;
+  }
 
   constructor(
     private readonly chromaConnectionFactory: ChromaConnectionFactory,
@@ -60,7 +91,7 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
       );
 
       // model cho tiếng Việt
-      this.embeddings = this.chromaConnectionFactory.createEmbeddings();
+      this._embeddings = this.chromaConnectionFactory.createEmbeddings();
 
       const chromaUrl = this.chromaConnectionFactory.getChromaUrl();
       const collectionName = this.chromaConnectionFactory.getCollectionName();
@@ -69,14 +100,14 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
         `🌐 Connecting to Chroma at: ${chromaUrl}, Collection: ${collectionName}`,
       );
 
-      this.chromaClient = this.chromaConnectionFactory.createChromaClient();
-      this.collection = await this.chromaClient.getOrCreateCollection({
+      this._chromaClient = this.chromaConnectionFactory.createChromaClient();
+      this._collection = await this.chromaClient.getOrCreateCollection({
         name: collectionName,
         metadata: this.chromaConnectionFactory.getCollectionMetadata(),
         embeddingFunction: null,
       });
 
-      this.vectorStore = this.chromaConnectionFactory.createVectorStore(
+      this._vectorStore = this.chromaConnectionFactory.createVectorStore(
         this.embeddings,
         collectionName,
       );
@@ -402,12 +433,12 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
         );
       }
 
-      this.collection = await this.chromaClient.createCollection({
+      this._collection = await this.chromaClient.createCollection({
         name: collectionName,
         metadata: this.chromaConnectionFactory.getCollectionMetadata(),
       });
 
-      this.vectorStore = this.chromaConnectionFactory.createVectorStore(
+      this._vectorStore = this.chromaConnectionFactory.createVectorStore(
         this.embeddings,
         collectionName,
       );
@@ -442,21 +473,21 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   // These are stubs — actual indexing is done by ReindexAllUseCase
 
   indexBooks(_bookIds: string[]): Promise<BatchIndexResult> {
-    void _bookIds;
+    _bookIds;
     throw new InternalServerErrorException(
       'Not implemented — use ReindexAllUseCase',
     );
   }
 
   indexAuthors(_authorIds: string[]): Promise<BatchIndexResult> {
-    void _authorIds;
+    _authorIds;
     throw new InternalServerErrorException(
       'Not implemented — use ReindexAllUseCase',
     );
   }
 
   indexChapters(_chapterIds: string[]): Promise<BatchIndexResult> {
-    void _chapterIds;
+    _chapterIds;
     throw new InternalServerErrorException(
       'Not implemented — use ReindexAllUseCase',
     );

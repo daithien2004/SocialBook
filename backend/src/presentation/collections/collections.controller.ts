@@ -1,7 +1,5 @@
 import { Dispatcher } from '@/application/common/dispatcher';
-import { UpdateCollectionsCommand } from '@/application/library/commands/update-collections/update-collections.command';
 import { UpdateCollectionCommand } from '@/application/library/commands/update-collection/update-collection.command';
-import { RemoveFromLibraryCommand } from '@/application/library/commands/remove-from-library/remove-from-library.command';
 import { GetCollectionByIdQuery } from '@/application/library/queries/get-collection-by-id/get-collection-by-id.query';
 import { GetAllCollectionsQuery } from '@/application/library/queries/get-all-collections/get-all-collections.query';
 import { DeleteCollectionCommand } from '@/application/library/commands/delete-collection/delete-collection.command';
@@ -36,21 +34,21 @@ import { Request } from 'express';
 
 @Controller('collections')
 export class CollectionsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post()
   async create(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: CreateCollectionDto,
   ) {
-    const collection = await this.dispatcher.command(new CreateCollectionCommand(
-      req.user.id,
-      dto.name,
-      dto.description,
-      dto.isPublic,
-    ));
+    const collection = await this.dispatcher.command(
+      new CreateCollectionCommand(
+        req.user.id,
+        dto.name,
+        dto.description,
+        dto.isPublic,
+      ),
+    );
     return {
       message: 'Collection created successfully',
       data: CollectionResponseDto.fromResult(collection),
@@ -64,7 +62,9 @@ export class CollectionsController {
     @Query('userId') userId?: string,
     @CurrentUser('id') viewerId?: string,
   ) {
-    const results = await this.dispatcher.query(new GetAllCollectionsQuery(userId || '', viewerId));
+    const results = await this.dispatcher.query(
+      new GetAllCollectionsQuery(userId || '', viewerId),
+    );
     return {
       message: 'Get collections successfully',
       data: results.map((r) =>
@@ -80,7 +80,9 @@ export class CollectionsController {
     @Query('userId') userId: string,
     @Query('id') id: string,
   ) {
-    const result = await this.dispatcher.query(new GetCollectionByIdQuery(userId, id));
+    const result = await this.dispatcher.query(
+      new GetCollectionByIdQuery(userId, id),
+    );
     return {
       message: 'Get collection successfully',
       data: result
@@ -98,7 +100,9 @@ export class CollectionsController {
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
   ) {
-    const result = await this.dispatcher.query(new GetCollectionByIdQuery(req.user.id, id));
+    const result = await this.dispatcher.query(
+      new GetCollectionByIdQuery(req.user.id, id),
+    );
     return {
       message: 'Get collection successfully',
       data: result
@@ -140,7 +144,9 @@ export class CollectionsController {
     @Param('id') id: string,
     @CurrentAbility() ability: AppAbility,
   ) {
-    await this.dispatcher.command(new DeleteCollectionCommand(id, req.user.id, ability));
+    await this.dispatcher.command(
+      new DeleteCollectionCommand(id, req.user.id, ability),
+    );
     return {
       message: 'Collection deleted successfully',
     };

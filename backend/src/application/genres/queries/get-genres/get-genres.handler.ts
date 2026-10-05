@@ -5,7 +5,10 @@ import { GetGenresQuery } from './get-genres.query';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 
 @QueryHandler(GetGenresQuery)
-export class GetGenresHandler implements IQueryHandler<GetGenresQuery, PaginatedResult<Genre>> {
+export class GetGenresHandler implements IQueryHandler<
+  GetGenresQuery,
+  PaginatedResult<Genre>
+> {
   constructor(private readonly genreRepository: IGenreRepository) {}
 
   async execute(query: GetGenresQuery): Promise<PaginatedResult<Genre>> {

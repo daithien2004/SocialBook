@@ -5,11 +5,10 @@ import {
 } from '@/common/interfaces/pagination.interface';
 import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
 import { BookFilter } from '@/domain/books/repositories/book.repository.interface';
-import { Injectable } from '@nestjs/common';
 import { GetBooksQuery } from './get-books.query';
 
 @QueryHandler(GetBooksQuery)
-export class GetBooksHandler implements IQueryHandler<GetBooksQuery, any> {
+export class GetBooksHandler implements IQueryHandler<GetBooksQuery> {
   constructor(private readonly bookQueryProvider: IBookQueryProvider) {}
 
   async execute(query: GetBooksQuery) {

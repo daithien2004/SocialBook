@@ -10,7 +10,10 @@ import { EventNames } from '@/common/constants/event-names.constant';
 import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
 
 @CommandHandler(ReactivateRoomCommand)
-export class ReactivateRoomHandler implements ICommandHandler<ReactivateRoomCommand, ReadingRoomResult> {
+export class ReactivateRoomHandler implements ICommandHandler<
+  ReactivateRoomCommand,
+  ReadingRoomResult
+> {
   constructor(
     private readonly roomRepository: IReadingRoomRepository,
     private readonly eventEmitter: EventEmitter2,

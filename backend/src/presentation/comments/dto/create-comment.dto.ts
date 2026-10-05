@@ -16,14 +16,14 @@ export enum TargetTypeEnum {
 
 export class CreateCommentDto {
   @IsEnum(TargetTypeEnum)
-  targetType: TargetTypeEnum;
+  targetType!: TargetTypeEnum;
 
   @IsString()
-  targetId: string;
+  targetId!: string;
 
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 
   @IsOptional()
   @ValidateIf((o: { parentId?: string | null }) => o.parentId !== null)
@@ -33,15 +33,15 @@ export class CreateCommentDto {
 export class UpdateCommentDto {
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 }
 
 export class CommentCountDto {
   @IsString()
-  targetId: string;
+  targetId!: string;
 
   @IsEnum(TargetTypeEnum)
-  targetType: TargetTypeEnum;
+  targetType!: TargetTypeEnum;
 
   @IsOptional()
   @ValidateIf((o: { parentId?: string | null }) => o.parentId !== null)
@@ -50,7 +50,7 @@ export class CommentCountDto {
 
 export class ModerateCommentDto {
   @IsEnum(['approved', 'rejected'])
-  status: 'approved' | 'rejected';
+  status!: 'approved' | 'rejected';
 
   @IsOptional()
   @IsString()
@@ -60,5 +60,5 @@ export class ModerateCommentDto {
 export class FlagCommentDto {
   @IsString()
   @IsNotEmpty()
-  reason: string;
+  reason!: string;
 }

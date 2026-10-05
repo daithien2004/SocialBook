@@ -25,9 +25,9 @@ export class FollowResponseDto {
   updatedAt: Date;
   username?: string;
   image?: string;
-  postCount: number;
-  readingListCount: number;
-  followersCount: number;
+  postCount!: number;
+  readingListCount!: number;
+  followersCount!: number;
 
   constructor(
     follow: Follow | RawFollowData,

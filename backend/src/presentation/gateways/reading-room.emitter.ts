@@ -5,7 +5,7 @@ import { ReadingRoomServerEvent } from './reading-room.events';
 
 @Injectable()
 export class ReadingRoomEmitter {
-  private server: Namespace;
+  private server!: Namespace;
 
   setServer(server: Namespace) {
     this.server = server;

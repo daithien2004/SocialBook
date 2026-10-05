@@ -3,7 +3,7 @@ import { StartChaptersImportCommand } from './start-chapters-import.command';
 import { IChaptersImportPort } from '@/domain/chapters/interfaces/chapters-import.port';
 
 @CommandHandler(StartChaptersImportCommand)
-export class StartChaptersImportHandler implements ICommandHandler<StartChaptersImportCommand, any> {
+export class StartChaptersImportHandler implements ICommandHandler<StartChaptersImportCommand> {
   constructor(private readonly chaptersImportQueue: IChaptersImportPort) {}
 
   async execute(command: StartChaptersImportCommand) {

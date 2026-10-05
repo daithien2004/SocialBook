@@ -1,17 +1,16 @@
-import { ReactivateRoomUseCase } from '@/application/reading-rooms/use-cases/reactivate-room/reactivate-room.use-case';
-import { ReactivateRoomCommand } from '@/application/reading-rooms/use-cases/reactivate-room/reactivate-room.command';
+import { ReactivateRoomHandler } from '@/application/reading-rooms/commands/reactivate-room/reactivate-room.handler';
+import { ReactivateRoomCommand } from '@/application/reading-rooms/commands/reactivate-room/reactivate-room.command';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   BadRequestDomainException,
   ForbiddenDomainException,
-  NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { EventNames } from '@/common/constants/event-names.constant';
 
-describe('ReactivateRoomUseCase & Aggregate reactivate (T16)', () => {
-  let useCase: ReactivateRoomUseCase;
+describe('ReactivateRoomHandler & Aggregate reactivate (T16)', () => {
+  let useCase: ReactivateRoomHandler;
   let mockRepo: jest.Mocked<IReadingRoomRepository>;
   let mockEmitter: { emit: jest.Mock };
 
@@ -25,7 +24,7 @@ describe('ReactivateRoomUseCase & Aggregate reactivate (T16)', () => {
       emit: jest.fn(),
     };
 
-    useCase = new ReactivateRoomUseCase(
+    useCase = new ReactivateRoomHandler(
       mockRepo,
       mockEmitter as unknown as EventEmitter2,
     );

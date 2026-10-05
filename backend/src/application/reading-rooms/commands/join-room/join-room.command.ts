@@ -1,5 +1,4 @@
 import { Command } from '@nestjs/cqrs';
-import { ReadingRoomResult } from '../../reading-room.interface';
 
 import { ReadingRoomResult } from '@/application/reading-rooms/reading-room.interface';
 

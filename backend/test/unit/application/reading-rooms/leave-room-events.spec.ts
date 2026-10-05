@@ -1,13 +1,10 @@
-import { LeaveRoomUseCase } from '@/application/reading-rooms/use-cases/leave-room/leave-room.use-case';
-import { LeaveRoomCommand } from '@/application/reading-rooms/use-cases/leave-room/leave-room.command';
+import { LeaveRoomHandler } from '@/application/reading-rooms/commands/leave-room/leave-room.handler';
+import { LeaveRoomCommand } from '@/application/reading-rooms/commands/leave-room/leave-room.command';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
-import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
-import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { RoomMode } from '@/domain/reading-rooms/value-objects/room-mode.vo';
 
-describe('LeaveRoomUseCase (T8: accurate host & mode change tracking)', () => {
-  let useCase: LeaveRoomUseCase;
+describe('LeaveRoomHandler (T8: accurate host & mode change tracking)', () => {
+  let useCase: LeaveRoomHandler;
   let mockRepo: jest.Mocked<IReadingRoomRepository>;
 
   beforeEach(() => {
@@ -16,7 +13,7 @@ describe('LeaveRoomUseCase (T8: accurate host & mode change tracking)', () => {
       save: jest.fn().mockImplementation((room) => Promise.resolve(room)),
     } as unknown as jest.Mocked<IReadingRoomRepository>;
 
-    useCase = new LeaveRoomUseCase(mockRepo);
+    useCase = new LeaveRoomHandler(mockRepo);
   });
 
   it('keeps hostChanged: false and modeChanged: false when a non-host member leaves', async () => {

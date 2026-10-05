@@ -1,12 +1,5 @@
 import { Command } from '@nestjs/cqrs';
-import { NotFoundDomainException, ConflictDomainException } from "@/shared/domain/common-exceptions";
-import { IBookRepository } from "@/domain/books/repositories/book.repository.interface";
-import { Book } from "@/domain/books/entities/book.entity";
-import { BookId } from "@/domain/books/value-objects/book-id.vo";
-import { BookTitle } from "@/domain/books/value-objects/book-title.vo";
-import { ErrorMessages } from "@/common/constants/error-messages";
-import { IBookCachePort } from "@/domain/books/interfaces/book-cache.port";
-import { EventNames } from "@/common/constants/event-names.constant";
+import { Book } from '@/domain/books/entities/book.entity';
 
 export class UpdateBookCommand extends Command<Book> {
   public readonly id: string;
@@ -29,7 +22,8 @@ export class UpdateBookCommand extends Command<Book> {
     coverUrl?: string;
     status?: 'draft' | 'published' | 'completed';
     tags?: string[];
-  }) { super(); 
+  }) {
+    super();
     this.id = props.id;
     this.title = props.title;
     this.authorId = props.authorId;

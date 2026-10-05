@@ -6,13 +6,13 @@ export type ReadingRoomDocument = ReadingRoom & Document;
 @Schema({ _id: false })
 export class RoomMemberSchema {
   @Prop({ type: String, required: true })
-  userId: string;
+  userId!: string;
 
   @Prop({ type: String, enum: ['host', 'member'], required: true })
-  role: string;
+  role!: string;
 
   @Prop({ type: Date, required: true })
-  joinedAt: Date;
+  joinedAt!: Date;
 
   @Prop({ type: Date })
   leftAt?: Date;
@@ -21,19 +21,19 @@ export class RoomMemberSchema {
 @Schema({ _id: false })
 export class RoomHighlight {
   @Prop({ type: String, required: true })
-  id: string;
+  id!: string;
 
   @Prop({ type: String, required: true })
-  userId: string;
+  userId!: string;
 
   @Prop({ type: String, required: true })
-  chapterSlug: string;
+  chapterSlug!: string;
 
   @Prop({ type: String, required: true })
-  paragraphId: string;
+  paragraphId!: string;
 
   @Prop({ type: String, required: true })
-  content: string;
+  content!: string;
 
   @Prop({ type: String })
   displayName?: string;
@@ -45,7 +45,7 @@ export class RoomHighlight {
   aiInsight?: string;
 
   @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
+  createdAt!: Date;
 }
 
 const RoomHighlightSchema = SchemaFactory.createForClass(RoomHighlight);
@@ -55,16 +55,16 @@ export class ChatMessage {
   _id?: Types.ObjectId;
 
   @Prop({ type: String, required: true })
-  userId: string;
+  userId!: string;
 
   @Prop({ type: String, required: true, enum: ['user', 'ai'] })
-  role: 'user' | 'ai';
+  role!: 'user' | 'ai';
 
   @Prop({ type: String, required: true })
-  content: string;
+  content!: string;
 
   @Prop({ type: Date, default: Date.now })
-  createdAt: Date;
+  createdAt!: Date;
 }
 
 const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);
@@ -72,16 +72,16 @@ const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);
 @Schema({ timestamps: true, collection: 'reading_rooms' })
 export class ReadingRoom {
   @Prop({ type: String, required: true })
-  _id: string; // roomId (6-char code)
+  _id!: string; // roomId (6-char code)
 
   @Prop({ type: String, required: true })
-  bookId: string;
+  bookId!: string;
 
   @Prop({ type: String, required: true })
-  hostId: string;
+  hostId!: string;
 
   @Prop({ type: String, enum: ['sync', 'free'], required: true })
-  mode: string;
+  mode!: string;
 
   @Prop({
     type: String,
@@ -89,31 +89,31 @@ export class ReadingRoom {
     required: true,
     default: 'active',
   })
-  status: string;
+  status!: string;
 
   @Prop({ type: String, required: true })
-  currentChapterSlug: string;
+  currentChapterSlug!: string;
 
   @Prop({ type: Number, required: true, default: 10 })
-  maxMembers: number;
+  maxMembers!: number;
 
   @Prop({ type: [SchemaFactory.createForClass(RoomMemberSchema)], default: [] })
-  members: RoomMemberSchema[];
+  members!: RoomMemberSchema[];
 
   @Prop({ type: [RoomHighlightSchema], default: [] })
-  highlights: RoomHighlight[];
+  highlights!: RoomHighlight[];
 
   @Prop({ type: [ChatMessageSchema], default: [] })
-  chatMessages: ChatMessage[];
+  chatMessages!: ChatMessage[];
 
   @Prop({ type: Date })
   endedAt?: Date;
 
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 
   @Prop({ type: Number, default: 0 })
-  version: number;
+  version!: number;
 }
 
 export const ReadingRoomSchema = SchemaFactory.createForClass(ReadingRoom);

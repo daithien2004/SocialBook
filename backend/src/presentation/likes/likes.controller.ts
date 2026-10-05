@@ -13,9 +13,6 @@ import {
   Query,
 } from '@nestjs/common';
 
-
-
-
 import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
 import { Public } from '@/common/decorators/custom.decorator';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
@@ -23,10 +20,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('likes')
 export class LikesController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post('toggle')
   @RequireAuth()
@@ -35,11 +29,9 @@ export class LikesController {
     @CurrentUser('id') userId: string,
     @Body() dto: { targetId: string; targetType: string },
   ) {
-    const result = await this.dispatcher.command(new ToggleLikeCommand(
-      userId,
-      dto.targetId,
-      dto.targetType as TargetType,
-    ));
+    const result = await this.dispatcher.command(
+      new ToggleLikeCommand(userId, dto.targetId, dto.targetType as TargetType),
+    );
 
     return {
       message: result.isLiked ? 'Liked successfully' : 'Unliked successfully',
@@ -51,10 +43,9 @@ export class LikesController {
   @Get('count')
   @HttpCode(HttpStatus.OK)
   async getCount(@Query() dto: { targetId: string; targetType: string }) {
-    const data = await this.dispatcher.query(new GetLikeCountQuery(
-      dto.targetId,
-      dto.targetType as TargetType,
-    ));
+    const data = await this.dispatcher.query(
+      new GetLikeCountQuery(dto.targetId, dto.targetType as TargetType),
+    );
     return {
       message: 'Get like count successfully',
       data,
@@ -68,11 +59,13 @@ export class LikesController {
     @CurrentUser('id') userId: string,
     @Query() dto: { targetId: string; targetType: string },
   ) {
-    const data = await this.dispatcher.query(new GetLikeStatusQuery(
-      userId,
-      dto.targetId,
-      dto.targetType as TargetType,
-    ));
+    const data = await this.dispatcher.query(
+      new GetLikeStatusQuery(
+        userId,
+        dto.targetId,
+        dto.targetType as TargetType,
+      ),
+    );
     return {
       message: 'Get like status successfully',
       data,

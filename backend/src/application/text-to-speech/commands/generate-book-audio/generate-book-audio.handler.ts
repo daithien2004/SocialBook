@@ -1,7 +1,6 @@
 import { GenerateBookAudioCommand } from './generate-book-audio.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/common/utils/error.util';
-import { Injectable } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import {
   GenerateChapterAudioHandler,

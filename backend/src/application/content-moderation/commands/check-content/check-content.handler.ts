@@ -1,6 +1,5 @@
 import { CheckContentCommand } from './check-content.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { ContentModerationService } from '@/application/content-moderation/services/content-moderation.service';
 import { ModerationResult } from '@/domain/content-moderation/interfaces/moderation-result.interface';
 

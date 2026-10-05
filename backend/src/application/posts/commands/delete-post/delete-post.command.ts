@@ -1,9 +1,5 @@
-import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AppAbility, Action, Subject } from '@socialbook/shared';
-import { ForbiddenDomainException, NotFoundDomainException } from "@/shared/domain/common-exceptions";
-import { IPostRepository } from "@/domain/posts/repositories/post.repository.interface";
-import { ErrorMessages } from "@/common/constants/error-messages";
-import { subject } from "@casl/ability";
+import { Command } from '@nestjs/cqrs';
+import { AppAbility } from '@socialbook/shared';
 
 export class DeletePostCommand extends Command<void> {
   constructor(
@@ -12,5 +8,6 @@ export class DeletePostCommand extends Command<void> {
     public readonly ability: AppAbility,
     public readonly isHardDelete: boolean = false,
   ) {
-    super();}
+    super();
+  }
 }

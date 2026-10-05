@@ -1,6 +1,5 @@
 import { UpdateUserCommand } from './update-user.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import {
   NotFoundDomainException,
   ConflictDomainException,

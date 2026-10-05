@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
@@ -9,7 +9,7 @@ import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { AskChapterAICommand } from './ask-chapter-ai.command';
 
 @CommandHandler(AskChapterAICommand)
-export class AskChapterAIHandler implements ICommandHandler<AskChapterAICommand, any> {
+export class AskChapterAIHandler implements ICommandHandler<AskChapterAICommand> {
   private readonly logger = new Logger(AskChapterAIHandler.name);
 
   constructor(

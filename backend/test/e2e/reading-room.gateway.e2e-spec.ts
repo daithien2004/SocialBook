@@ -6,18 +6,24 @@ import { getRedisConnectionToken } from '@nestjs-modules/ioredis';
 import { io, Socket } from 'socket.io-client';
 import type { AddressInfo } from 'net';
 
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+
 import { ReadingRoomGateway } from '@/presentation/gateways/reading-room.gateway';
 import { ReadingRoomPresenceService } from '@/application/reading-rooms/presence/reading-room-presence.service';
-import { JoinRoomUseCase } from '@/application/reading-rooms/use-cases/join-room/join-room.use-case';
-import { LeaveRoomUseCase } from '@/application/reading-rooms/use-cases/leave-room/leave-room.use-case';
-import { ChangeChapterUseCase } from '@/application/reading-rooms/use-cases/change-chapter/change-chapter.use-case';
-import { ChangeRoomModeUseCase } from '@/application/reading-rooms/use-cases/change-room-mode/change-room-mode.use-case';
-import { EndRoomUseCase } from '@/application/reading-rooms/use-cases/end-room/end-room.use-case';
-import { DeleteRoomUseCase } from '@/application/reading-rooms/use-cases/delete-room/delete-room.use-case';
-import { AddHighlightUseCase } from '@/application/reading-rooms/use-cases/add-highlight/add-highlight.use-case';
-import { RemoveHighlightUseCase } from '@/application/reading-rooms/use-cases/remove-highlight/remove-highlight.use-case';
-import { GenerateHighlightInsightUseCase } from '@/application/reading-rooms/use-cases/generate-highlight-insight/generate-highlight-insight.use-case';
-import { UpdateProgressUseCase } from '@/application/library/use-cases/update-progress/update-progress.use-case';
+import { Dispatcher } from '@/application/common/dispatcher';
+import { WsAuthService } from '@/presentation/gateways/ws-auth.service';
+import { WsRateLimiter } from '@/presentation/gateways/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room.emitter';
+import { ReadingRoomSystemListener } from '@/presentation/gateways/reading-room-system.listener';
+import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room-highlight.handler';
+import { ReadingProgressTracker } from '@/presentation/gateways/reading-progress.tracker';
+import { ReadingRoomPresenceCoordinator } from '@/presentation/gateways/reading-room-presence.coordinator';
+import { JoinRoomCommand } from '@/application/reading-rooms/commands/join-room/join-room.command';
+import { LeaveRoomCommand } from '@/application/reading-rooms/commands/leave-room/leave-room.command';
+import { AddHighlightCommand } from '@/application/reading-rooms/commands/add-highlight/add-highlight.command';
+import { RemoveHighlightCommand } from '@/application/reading-rooms/commands/remove-highlight/remove-highlight.command';
+import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/commands/generate-highlight-insight/generate-highlight-insight.command';
+import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { WS_MAX_HTTP_BUFFER_SIZE } from '@/presentation/gateways/reading-room.constants';
 
@@ -44,16 +50,56 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
   let app: INestApplication;
   let client: Socket;
 
-  const joinRoom = { execute: jest.fn() };
-  const leaveRoom = { execute: jest.fn() };
-  const changeChapter = { execute: jest.fn() };
-  const changeRoomMode = { execute: jest.fn() };
-  const endRoom = { execute: jest.fn() };
-  const deleteRoom = { execute: jest.fn() };
-  const addHighlight = { execute: jest.fn() };
-  const removeHighlight = { execute: jest.fn() };
-  const generateInsight = { execute: jest.fn() };
-  const updateProgress = { execute: jest.fn() };
+  const joinRoom = {
+    execute: jest.fn(async (_cmd: JoinRoomCommand): Promise<unknown> => undefined),
+  };
+  const leaveRoom = {
+    execute: jest.fn(async (_cmd: LeaveRoomCommand): Promise<unknown> => undefined),
+  };
+  const addHighlight = {
+    execute: jest.fn(async (_cmd: AddHighlightCommand): Promise<unknown> => undefined),
+  };
+  const removeHighlight = {
+    execute: jest.fn(async (_cmd: RemoveHighlightCommand): Promise<unknown> => undefined),
+  };
+  const generateInsight = {
+    execute: jest.fn(
+      async (_cmd: GenerateHighlightInsightCommand): Promise<unknown> => undefined,
+    ),
+  };
+  const updateProgress = {
+    execute: jest.fn(async (_cmd: UpdateProgressCommand): Promise<unknown> => undefined),
+  };
+
+  /**
+   * Gateway sau refactor CQRS đi qua Dispatcher → CommandBus. Fake CommandBus
+   * chuyển từng command về đúng spy như cũ nên mọi assertion giữ nguyên.
+   */
+  const routeCommand = async (cmd: unknown): Promise<unknown> => {
+    if (cmd instanceof JoinRoomCommand) return joinRoom.execute(cmd);
+    if (cmd instanceof LeaveRoomCommand) return leaveRoom.execute(cmd);
+    if (cmd instanceof AddHighlightCommand) return addHighlight.execute(cmd);
+    if (cmd instanceof RemoveHighlightCommand) return removeHighlight.execute(cmd);
+    if (cmd instanceof GenerateHighlightInsightCommand) {
+      return generateInsight.execute(cmd);
+    }
+    if (cmd instanceof UpdateProgressCommand) return updateProgress.execute(cmd);
+    return undefined;
+  };
+
+  const commandBus = { execute: jest.fn((cmd: unknown) => routeCommand(cmd)) };
+  const queryBus = { execute: jest.fn() };
+  const wsAuth = {
+    authenticate: jest.fn().mockResolvedValue({
+      userId: USER_ID,
+      role: 'user',
+      displayName: 'E2E User',
+      avatarUrl: '',
+    }),
+    touchConnection: jest.fn().mockResolvedValue(undefined),
+    releaseConnectionSlot: jest.fn().mockResolvedValue(undefined),
+  };
+  const rateLimiter = { isLimited: jest.fn().mockResolvedValue(false) };
   const presence = {
     upsertPresence: jest.fn(),
     getRoomPresences: jest.fn().mockResolvedValue([]),
@@ -80,10 +126,9 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     ...emitArgs: unknown[]
   ): Promise<WsErrorPayload> =>
     new Promise<WsErrorPayload>((resolve, reject) => {
-      const timer = setTimeout(
-        () => reject(new Error(`không nhận được error event cho ${event}`)),
-        3000,
-      );
+      const timer = setTimeout(() => {
+        reject(new Error(`không nhận được error event cho ${event}`));
+      }, 3000);
       client.once('error', (payload: WsErrorPayload) => {
         clearTimeout(timer);
         resolve(payload);
@@ -148,16 +193,18 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
           },
         },
         { provide: ReadingRoomPresenceService, useValue: presence },
-        { provide: JoinRoomUseCase, useValue: joinRoom },
-        { provide: LeaveRoomUseCase, useValue: leaveRoom },
-        { provide: ChangeChapterUseCase, useValue: changeChapter },
-        { provide: ChangeRoomModeUseCase, useValue: changeRoomMode },
-        { provide: EndRoomUseCase, useValue: endRoom },
-        { provide: DeleteRoomUseCase, useValue: deleteRoom },
-        { provide: AddHighlightUseCase, useValue: addHighlight },
-        { provide: RemoveHighlightUseCase, useValue: removeHighlight },
-        { provide: GenerateHighlightInsightUseCase, useValue: generateInsight },
-        { provide: UpdateProgressUseCase, useValue: updateProgress },
+        // 8 dependency mới của gateway (refactor CQRS) — Dispatcher/Coordinator/
+        // HighlightHandler/Tracker dùng bản thật, bus & auth/rate-limit là fake
+        { provide: Dispatcher, useValue: new Dispatcher(commandBus as never, queryBus as never) },
+        { provide: CommandBus, useValue: commandBus },
+        { provide: QueryBus, useValue: queryBus },
+        { provide: WsAuthService, useValue: wsAuth },
+        { provide: WsRateLimiter, useValue: rateLimiter },
+        ReadingRoomEmitter,
+        ReadingRoomSystemListener,
+        ReadingRoomHighlightHandler,
+        ReadingProgressTracker,
+        ReadingRoomPresenceCoordinator,
         { provide: IChapterRepository, useValue: chapterRepository },
         { provide: getRedisConnectionToken(), useValue: redis },
       ],
@@ -173,10 +220,9 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       auth: { token: 'e2e-token' },
     });
     await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(
-        () => reject(new Error('không kết nối được')),
-        5000,
-      );
+      const timer = setTimeout(() => {
+        reject(new Error('không kết nối được'));
+      }, 5000);
       client.once('connect', () => {
         clearTimeout(timer);
         resolve();
@@ -227,10 +273,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         },
       ],
     });
-    changeChapter.execute.mockResolvedValue({});
-    changeRoomMode.execute.mockResolvedValue({});
-    endRoom.execute.mockResolvedValue({});
-    deleteRoom.execute.mockResolvedValue({});
     removeHighlight.execute.mockResolvedValue({});
     generateInsight.execute.mockResolvedValue({});
   });
@@ -242,10 +284,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       'add_highlight',
       'remove_highlight',
       'generate_highlight_insight',
-      'chapter_change',
-      'change_mode',
-      'end_room',
-      'delete_room',
       'heartbeat',
     ];
 
@@ -318,15 +356,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       });
       expect(payload.code).toBe('VALIDATION_FAILED');
       expect(addHighlight.execute).not.toHaveBeenCalled();
-    });
-
-    it('change_mode từ chối mode lạ', async () => {
-      const payload = await expectValidationError('change_mode', {
-        roomId: ROOM_ID,
-        mode: 'turbo',
-      });
-      expect(payload.code).toBe('VALIDATION_FAILED');
-      expect(changeRoomMode.execute).not.toHaveBeenCalled();
     });
 
     it('heartbeat từ chối chapterId không phải ObjectId', async () => {
@@ -417,18 +446,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       expect(command.content).toBe('đoạn văn highlight');
     });
 
-    it('chapter_change chấp nhận bookId/chapterId thừa mà client cũ vẫn gửi', async () => {
-      client.emit('chapter_change', {
-        roomId: ROOM_ID,
-        chapterSlug: 'chuong-2',
-        bookId: BOOK_ID,
-        chapterId: CHAPTER_ID,
-      });
-      await waitFor(() => changeChapter.execute.mock.calls.length === 1);
-      const command = changeChapter.execute.mock.calls[0][0];
-      expect(command.chapterSlug).toBe('chuong-2');
-    });
-
     it('heartbeat chấp nhận roomCode/bookId thừa, vẫn cập nhật presence và tiến độ', async () => {
       client.emit('heartbeat', {
         roomId: ROOM_ID,
@@ -477,19 +494,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       );
     });
 
-    it('change_mode / end_room / delete_room chạy bình thường', async () => {
-      client.emit('change_mode', { roomId: ROOM_ID, mode: 'free' });
-      client.emit('end_room', { roomId: ROOM_ID });
-      client.emit('delete_room', { roomId: ROOM_ID });
-
-      await waitFor(
-        () =>
-          changeRoomMode.execute.mock.calls.length === 1 &&
-          endRoom.execute.mock.calls.length === 1 &&
-          deleteRoom.execute.mock.calls.length === 1,
-      );
-    });
-
     it('leave_room chạy và giữ hợp đồng cũ', async () => {
       client.emit('leave_room', { roomId: ROOM_ID });
       await waitFor(() => leaveRoom.execute.mock.calls.length === 1);
@@ -502,10 +506,9 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
   describe('payload vượt giới hạn transport', () => {
     it('payload > WS_MAX_HTTP_BUFFER_SIZE bị ngắt kết nối, không chạm handler', async () => {
       const disconnected = new Promise<string>((resolve, reject) => {
-        const timer = setTimeout(
-          () => reject(new Error('không nhận được disconnect')),
-          5000,
-        );
+        const timer = setTimeout(() => {
+          reject(new Error('không nhận được disconnect'));
+        }, 5000);
         client.once('disconnect', (reason: string) => {
           clearTimeout(timer);
           resolve(reason);

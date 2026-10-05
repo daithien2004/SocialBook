@@ -1,6 +1,5 @@
 import { DeleteReviewCommand } from './delete-review.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import {
   NotFoundDomainException,

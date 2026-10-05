@@ -5,5 +5,6 @@ export class GetPostQuery extends Query<Post> {
     public readonly postId: string,
     public readonly viewerUserId?: string,
   ) {
-    super();}
+    super();
+  }
 }

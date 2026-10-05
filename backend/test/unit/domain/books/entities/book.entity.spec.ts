@@ -1,6 +1,5 @@
 import { Book } from '@/domain/books/entities/book.entity';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { BookStatus } from '@/domain/books/value-objects/book-status.vo';
 import { GenreId } from '@/domain/books/value-objects/genre-id.vo';
 
 describe('Book Entity (Unit)', () => {
@@ -127,15 +126,15 @@ describe('Book Entity (Unit)', () => {
     });
 
     it('updateGenres should throw on empty genres', () => {
-      expect(() => book.updateGenres([])).toThrow(
-        'Book must have at least one genre',
-      );
+      expect(() => {
+        book.updateGenres([]);
+      }).toThrow('Book must have at least one genre');
     });
 
     it('updateGenres should throw on more than 5 genres', () => {
-      expect(() => book.updateGenres(['1', '2', '3', '4', '5', '6'])).toThrow(
-        'Book cannot have more than 5 genres',
-      );
+      expect(() => {
+        book.updateGenres(['1', '2', '3', '4', '5', '6']);
+      }).toThrow('Book cannot have more than 5 genres');
     });
 
     it('incrementViews should increase view count', () => {

@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
-import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
-import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
+import { GetPostsHandler } from '@/application/posts/queries/get-posts/get-posts.handler';
+import { GetPostsQuery } from '@/application/posts/queries/get-posts/get-posts.query';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { Post as PostEntity } from '@/domain/posts/entities/post.entity';
 import { PostRepository } from '@/infrastructure/database/repositories/posts/post.repository';
@@ -42,9 +42,9 @@ const AUTHOR_ID = new Types.ObjectId();
 /** Số bài KHÔNG bị xoá mềm — dùng để khẳng định soft-delete thật sự bị lọc. */
 const VISIBLE_POST_COUNT = 4;
 
-describe('GetPostsUseCase (Integration)', () => {
+describe('GetPostsHandler (Integration)', () => {
   let module: TestingModule;
-  let useCase: GetPostsUseCase;
+  let useCase: GetPostsHandler;
   let mongod: MongoMemoryReplSet;
   let postModel: Model<Post>;
   let userModel: Model<User>;
@@ -70,7 +70,7 @@ describe('GetPostsUseCase (Integration)', () => {
         ]),
       ],
       providers: [
-        GetPostsUseCase,
+        GetPostsHandler,
         {
           provide: IPostRepository,
           useClass: PostRepository,
@@ -78,7 +78,7 @@ describe('GetPostsUseCase (Integration)', () => {
       ],
     }).compile();
 
-    useCase = module.get<GetPostsUseCase>(GetPostsUseCase);
+    useCase = module.get<GetPostsHandler>(GetPostsHandler);
     postModel = module.get<Model<Post>>(getModelToken(Post.name));
     userModel = module.get<Model<User>>(getModelToken(User.name));
     roleModel = module.get<Model<Role>>(getModelToken(Role.name));

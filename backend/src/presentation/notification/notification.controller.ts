@@ -10,7 +10,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -26,10 +25,7 @@ import { NotificationResponseDto } from '@/presentation/notification/dto/notific
 
 @Controller('notifications')
 export class NotificationController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Get()
   async getMyNotifications(

@@ -5,12 +5,15 @@ import { IReadingListRepository } from '@/domain/library/repositories/reading-li
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException } from '@nestjs/common';
 import { UpdateStatusCommand } from './update-status.command';
 import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 
 @CommandHandler(UpdateStatusCommand)
-export class UpdateStatusHandler implements ICommandHandler<UpdateStatusCommand, LibraryItemReadModel> {
+export class UpdateStatusHandler implements ICommandHandler<
+  UpdateStatusCommand,
+  LibraryItemReadModel
+> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly idGenerator: IIdGenerator,

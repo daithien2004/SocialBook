@@ -1,6 +1,6 @@
 import { SearchCommand } from './search.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { SearchQuery } from '@/domain/chroma/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';

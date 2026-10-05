@@ -3,7 +3,6 @@ import { Collection } from '@/domain/library/entities/collection.entity';
 import { LibraryItemReadModel } from '@/domain/library/read-models/library-item.read-model';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
-import { Injectable } from '@nestjs/common';
 import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
 import { GetCollectionByIdQuery } from './get-collection-by-id.query';
 
@@ -13,7 +12,10 @@ export interface GetCollectionByIdResult {
 }
 
 @QueryHandler(GetCollectionByIdQuery)
-export class GetCollectionByIdHandler implements IQueryHandler<GetCollectionByIdQuery, GetCollectionByIdResult | null> {
+export class GetCollectionByIdHandler implements IQueryHandler<
+  GetCollectionByIdQuery,
+  GetCollectionByIdResult | null
+> {
   constructor(
     private readonly collectionRepository: ICollectionRepository,
     private readonly readingListRepository: IReadingListRepository,

@@ -36,7 +36,7 @@ export class ChromaProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<ChromaJobData, void, string>): Promise<void> {
+  async process(job: Job<ChromaJobData, void>): Promise<void> {
     const parsed = ChromaBookJobSchema.safeParse(job.data);
     if (!parsed.success) {
       throw new UnrecoverableError(

@@ -4,5 +4,7 @@ export class CheckUserExistQuery extends Query<unknown> {
     public readonly email?: string,
     public readonly username?: string,
     public readonly id?: string,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

@@ -58,7 +58,7 @@ export class OtpRepository implements IOtpRepository {
   }
 
   getTtl(_email: string): Promise<number> {
-    void _email;
+    _email;
     return Promise.resolve(this.OTP_EXPIRY);
   }
 

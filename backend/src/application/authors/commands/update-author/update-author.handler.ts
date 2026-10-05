@@ -11,7 +11,10 @@ import { UpdateAuthorCommand } from './update-author.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @CommandHandler(UpdateAuthorCommand)
-export class UpdateAuthorHandler implements ICommandHandler<UpdateAuthorCommand, Author> {
+export class UpdateAuthorHandler implements ICommandHandler<
+  UpdateAuthorCommand,
+  Author
+> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(command: UpdateAuthorCommand): Promise<Author> {

@@ -1,6 +1,5 @@
 import { GetToxicWordsQuery } from './get-toxic-words.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
 import { IToxicWordRepository } from '@/domain/content-moderation/repositories/toxic-word.repository.interface';
 import { ToxicWord } from '@/domain/content-moderation/entities/toxic-word.entity';
 

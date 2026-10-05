@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -10,7 +9,10 @@ import { DeleteChapterCommand } from './delete-chapter.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @CommandHandler(DeleteChapterCommand)
-export class DeleteChapterHandler implements ICommandHandler<DeleteChapterCommand, void> {
+export class DeleteChapterHandler implements ICommandHandler<
+  DeleteChapterCommand,
+  void
+> {
   constructor(private readonly chapterRepository: IChapterRepository) {}
 
   async execute(command: DeleteChapterCommand): Promise<void> {

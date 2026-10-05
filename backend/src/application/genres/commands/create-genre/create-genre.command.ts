@@ -5,5 +5,6 @@ export class CreateGenreCommand extends Command<Genre> {
     public readonly name: string,
     public readonly description?: string,
   ) {
-    super();}
+    super();
+  }
 }

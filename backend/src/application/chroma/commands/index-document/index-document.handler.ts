@@ -1,7 +1,7 @@
 import { IndexDocumentCommand } from './index-document.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/common/utils/error.util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { VectorDocument } from '@/domain/chroma/entities/vector-document.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';

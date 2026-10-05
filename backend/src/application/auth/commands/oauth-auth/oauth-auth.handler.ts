@@ -1,8 +1,7 @@
 import { OAuthAuthCommand } from './oauth-auth.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import {
   ConflictException,
-  Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';

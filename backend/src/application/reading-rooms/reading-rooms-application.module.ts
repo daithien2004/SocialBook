@@ -25,15 +25,14 @@ export const CommandHandlers = [
   ReactivateRoomHandler,
   AddHighlightHandler,
   GenerateHighlightInsightHandler,
-  RemoveHighlightHandler
+  RemoveHighlightHandler,
 ];
 
 export const QueryHandlers = [
   GetMyActiveRoomsHandler,
   GetMyHistoryHandler,
-  GetRoomByCodeHandler
+  GetRoomByCodeHandler,
 ];
-
 
 @Module({
   imports: [
@@ -49,11 +48,8 @@ export const QueryHandlers = [
     {
       provide: IPresencePort,
       useExisting: ReadingRoomPresenceService,
-    }
+    },
   ],
-  exports: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-  ],
+  exports: [...CommandHandlers, ...QueryHandlers],
 })
 export class ReadingRoomsApplicationModule {}

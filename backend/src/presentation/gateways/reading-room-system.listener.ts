@@ -12,7 +12,7 @@ import { ReadingRoomServerEvent } from './reading-room.events';
 @Injectable()
 export class ReadingRoomSystemListener {
   private readonly logger = new Logger(ReadingRoomSystemListener.name);
-  private server: Namespace;
+  private server!: Namespace;
 
   constructor(
     @InjectRedis() private readonly redis: Redis,

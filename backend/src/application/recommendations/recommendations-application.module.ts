@@ -4,8 +4,7 @@ import { GetPersonalizedRecommendationsHandler } from './queries/get-personalize
 import { RecommendationsInfrastructureModule } from '@/infrastructure/recommendations/recommendations-infrastructure.module';
 
 @Module({
-  imports: [
-    CqrsModule,RecommendationsInfrastructureModule],
+  imports: [CqrsModule, RecommendationsInfrastructureModule],
   providers: [GetPersonalizedRecommendationsHandler],
   exports: [GetPersonalizedRecommendationsHandler],
 })

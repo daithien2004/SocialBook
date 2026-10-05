@@ -171,9 +171,7 @@ export class BooksController {
     @Param('slug') slug: string,
     @CurrentUser('id') userId: string,
   ) {
-    const book = await this.dispatcher.query(
-      new GetBookBySlugQuery(slug),
-    );
+    const book = await this.dispatcher.query(new GetBookBySlugQuery(slug));
     const command = new ToggleBookLikeCommand({
       bookId: book.id,
       userId,

@@ -10,10 +10,10 @@ import {
 
 export class UpdateProgressDto {
   @IsMongoId()
-  bookId: string;
+  bookId!: string;
 
   @IsMongoId()
-  chapterId: string;
+  chapterId!: string;
 
   @IsNumber()
   @IsOptional()
@@ -22,15 +22,15 @@ export class UpdateProgressDto {
 
 export class UpdateLibraryStatusDto {
   @IsMongoId()
-  bookId: string;
+  bookId!: string;
 
   @IsEnum(ReadingStatus)
-  status: ReadingStatus;
+  status!: ReadingStatus;
 }
 
 export class AddToCollectionsDto {
   @IsMongoId()
-  bookId: string;
+  bookId!: string;
 
   @IsArray()
   @IsString({ each: true })
@@ -39,16 +39,16 @@ export class AddToCollectionsDto {
     message:
       'Each value in collectionIds must be a valid 24-character hexadecimal MongoDB ID',
   })
-  collectionIds: string[];
+  collectionIds!: string[];
 }
 
 export class UpdateReadingTimeDto {
   @IsMongoId()
-  bookId: string;
+  bookId!: string;
 
   @IsMongoId()
-  chapterId: string;
+  chapterId!: string;
 
   @IsNumber()
-  durationInSeconds: number;
+  durationInSeconds!: number;
 }

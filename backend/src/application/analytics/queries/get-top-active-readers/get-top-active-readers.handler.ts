@@ -1,6 +1,5 @@
 import { GetTopActiveReadersQuery } from './get-top-active-readers.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
 import { IUserAnalyticsRepository } from '@/domain/analytics/repositories/user-analytics.repository.interface';
 
 @QueryHandler(GetTopActiveReadersQuery)

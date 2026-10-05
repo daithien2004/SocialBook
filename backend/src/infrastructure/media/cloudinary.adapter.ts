@@ -29,10 +29,13 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
         (error, result) => {
           if (error) {
             const errMsg = getErrorMessage(error, 'Upload failed');
-            return reject(new Error(errMsg));
+            reject(new Error(errMsg));
+            return;
           }
-          if (!result)
-            return reject(new Error('Upload failed: result is undefined'));
+          if (!result) {
+            reject(new Error('Upload failed: result is undefined'));
+            return;
+          }
 
           resolve(result.secure_url);
         },
@@ -73,10 +76,13 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
         (error, result) => {
           if (error) {
             const errMsg = getErrorMessage(error, 'Upload failed');
-            return reject(new Error(errMsg));
+            reject(new Error(errMsg));
+            return;
           }
-          if (!result)
-            return reject(new Error('Upload failed: result is undefined'));
+          if (!result) {
+            reject(new Error('Upload failed: result is undefined'));
+            return;
+          }
 
           resolve(result.secure_url);
         },

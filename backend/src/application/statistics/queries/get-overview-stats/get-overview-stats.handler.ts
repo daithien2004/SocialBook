@@ -1,6 +1,5 @@
 import { GetOverviewStatsQuery } from './get-overview-stats.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';

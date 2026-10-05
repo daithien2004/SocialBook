@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { EventNames } from '@/common/constants/event-names.constant';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
@@ -20,7 +20,10 @@ import { GenreId } from '@/domain/genres/value-objects/genre-id.vo';
 import { GenreName } from '@/domain/genres/value-objects/genre-name.vo';
 
 @CommandHandler(CreateBookCommand)
-export class CreateBookHandler implements ICommandHandler<CreateBookCommand, Book> {
+export class CreateBookHandler implements ICommandHandler<
+  CreateBookCommand,
+  Book
+> {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly authorRepository: IAuthorRepository,

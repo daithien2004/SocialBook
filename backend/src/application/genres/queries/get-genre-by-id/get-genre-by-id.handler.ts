@@ -7,7 +7,10 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { GetGenreByIdQuery } from './get-genre-by-id.query';
 
 @QueryHandler(GetGenreByIdQuery)
-export class GetGenreByIdHandler implements IQueryHandler<GetGenreByIdQuery, Genre> {
+export class GetGenreByIdHandler implements IQueryHandler<
+  GetGenreByIdQuery,
+  Genre
+> {
   constructor(private readonly genreRepository: IGenreRepository) {}
 
   async execute(query: GetGenreByIdQuery): Promise<Genre> {

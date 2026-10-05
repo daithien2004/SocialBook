@@ -1,5 +1,5 @@
 import { Command } from '@nestjs/cqrs';
-import { ReadingRoom } from "@/domain/reading-rooms/entities/reading-room.entity";
+import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 
 export class GenerateHighlightInsightCommand extends Command<ReadingRoom> {
   constructor(
@@ -7,5 +7,6 @@ export class GenerateHighlightInsightCommand extends Command<ReadingRoom> {
     public readonly roomId: string,
     public readonly highlightId: string,
   ) {
-    super();}
+    super();
+  }
 }

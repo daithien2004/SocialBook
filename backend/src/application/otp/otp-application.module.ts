@@ -6,8 +6,7 @@ import { OtpRepositoryModule } from '@/infrastructure/database/repositories/otp/
 import { EmailModule } from '@/infrastructure/email/email.module';
 
 @Module({
-  imports: [
-    CqrsModule,OtpRepositoryModule, EmailModule],
+  imports: [CqrsModule, OtpRepositoryModule, EmailModule],
   providers: [SendOtpHandler, VerifyOtpHandler],
   exports: [SendOtpHandler, VerifyOtpHandler],
 })

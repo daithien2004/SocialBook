@@ -1,11 +1,9 @@
-import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
-import { GetPostsQuery } from '@/application/posts/use-cases/get-posts.query';
+import { GetPostsHandler } from '@/application/posts/queries/get-posts/get-posts.handler';
+import { GetPostsQuery } from '@/application/posts/queries/get-posts/get-posts.query';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
-import { Post } from '@/domain/posts/entities/post.entity';
 
-describe('GetPostsUseCase (Unit)', () => {
-  let useCase: GetPostsUseCase;
+describe('GetPostsHandler (Unit)', () => {
+  let useCase: GetPostsHandler;
   let mockPostRepository: jest.Mocked<IPostRepository>;
 
   beforeEach(() => {
@@ -25,7 +23,7 @@ describe('GetPostsUseCase (Unit)', () => {
       countDeleted: jest.fn(),
       getGrowthMetrics: jest.fn(),
     };
-    useCase = new GetPostsUseCase(mockPostRepository);
+    useCase = new GetPostsHandler(mockPostRepository);
   });
 
   it('limit=10, no cursor → first page', async () => {

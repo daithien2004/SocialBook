@@ -12,22 +12,22 @@ export type TextToSpeechDocument = TextToSpeech & Document;
 @Schema({ timestamps: true })
 export class TextToSpeech {
   @Prop({ type: Types.ObjectId, ref: 'Chapter', required: true, index: true })
-  chapterId: Types.ObjectId;
+  chapterId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true, index: true })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({ required: true })
-  text: string;
+  text!: string;
 
   @Prop({ required: true })
-  voice: string;
+  voice!: string;
 
   @Prop({ required: true })
-  language: string;
+  language!: string;
 
   @Prop({ default: 1.0 })
-  speed: number;
+  speed!: number;
 
   @Prop({
     type: String,
@@ -35,7 +35,7 @@ export class TextToSpeech {
     default: TTSStatus.PENDING,
     index: true,
   })
-  status: TTSStatus;
+  status!: TTSStatus;
 
   @Prop()
   audioUrl?: string;
@@ -59,7 +59,7 @@ export class TextToSpeech {
   provider?: string;
 
   @Prop({ default: 0 })
-  playCount: number;
+  playCount!: number;
 
   @Prop()
   lastPlayedAt?: Date;
@@ -67,8 +67,8 @@ export class TextToSpeech {
   @Prop()
   processedAt?: Date;
 
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 }
 
 export const TextToSpeechSchema = SchemaFactory.createForClass(TextToSpeech);

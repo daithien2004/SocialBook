@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Logger, Inject } from '@nestjs/common';
 import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
 import { UserFollowedJobPayload } from '@/application/notifications/jobs/notification-job.payload';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
@@ -12,7 +12,10 @@ import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
 import { CreateFollowCommand } from './create-follow.command';
 
 @CommandHandler(CreateFollowCommand)
-export class CreateFollowHandler implements ICommandHandler<CreateFollowCommand, Follow> {
+export class CreateFollowHandler implements ICommandHandler<
+  CreateFollowCommand,
+  Follow
+> {
   private readonly logger = new Logger(CreateFollowHandler.name);
 
   constructor(

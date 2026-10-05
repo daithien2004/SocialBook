@@ -1,7 +1,7 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/common/utils/error.util';
 import { calculateFuzzyScore } from '@/common/utils/string.util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { IntelligentSearchQuery } from './intelligent-search.query';
 import {
   PaginatedSearchBookResult,

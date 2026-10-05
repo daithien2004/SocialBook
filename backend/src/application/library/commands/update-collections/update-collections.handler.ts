@@ -5,11 +5,14 @@ import { IReadingListRepository } from '@/domain/library/repositories/reading-li
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException } from '@nestjs/common';
 import { UpdateCollectionsCommand } from './update-collections.command';
 
 @CommandHandler(UpdateCollectionsCommand)
-export class UpdateCollectionsHandler implements ICommandHandler<UpdateCollectionsCommand, LibraryItemReadModel> {
+export class UpdateCollectionsHandler implements ICommandHandler<
+  UpdateCollectionsCommand,
+  LibraryItemReadModel
+> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly idGenerator: IIdGenerator,

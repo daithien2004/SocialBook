@@ -1,8 +1,5 @@
-import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from "@nestjs/common";
-import { INotificationRepository } from "@/domain/notifications/repositories/notification.repository.interface";
-import { Notification } from "@/domain/notifications/entities/notification.entity";
-import { IIdGenerator } from "@/shared/domain/id-generator.interface";
+import { Command } from '@nestjs/cqrs';
+import { Notification } from '@/domain/notifications/entities/notification.entity';
 
 export class CreateNotificationCommand extends Command<Notification> {
   constructor(
@@ -12,5 +9,7 @@ export class CreateNotificationCommand extends Command<Notification> {
     public readonly type: string,
     public readonly meta?: Record<string, any>,
     public readonly actionUrl?: string,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

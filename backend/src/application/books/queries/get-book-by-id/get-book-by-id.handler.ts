@@ -1,5 +1,4 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
@@ -16,7 +15,10 @@ import { BookViewedEvent } from '@/application/analytics/events/book-viewed.even
 import { EventNames } from '@/common/constants/event-names.constant';
 
 @QueryHandler(GetBookByIdQuery)
-export class GetBookByIdHandler implements IQueryHandler<GetBookByIdQuery, Book> {
+export class GetBookByIdHandler implements IQueryHandler<
+  GetBookByIdQuery,
+  Book
+> {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly eventEmitter: EventEmitter2,

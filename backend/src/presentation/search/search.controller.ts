@@ -29,15 +29,13 @@ export class SearchController {
     });
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(
-        () =>
-          reject(
-            new RequestTimeoutException(
-              'Tìm kiếm quá thời gian (vượt quá 8 giây), vui lòng thử lại sau.',
-            ),
+      setTimeout(() => {
+        reject(
+          new RequestTimeoutException(
+            'Tìm kiếm quá thời gian (vượt quá 8 giây), vui lòng thử lại sau.',
           ),
-        8000,
-      );
+        );
+      }, 8000);
     });
 
     const result = await Promise.race([

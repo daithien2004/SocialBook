@@ -7,5 +7,6 @@ export class GetPostsQuery extends Query<CursorPaginatedResult<Post>> {
     public readonly cursor?: string,
     public readonly viewerUserId?: string,
   ) {
-    super();}
+    super();
+  }
 }

@@ -6,13 +6,13 @@ import { BaseSoftDeleteSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true })
 export class Follow extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  targetId: Types.ObjectId;
+  targetId!: Types.ObjectId;
 
   @Prop({ required: true })
-  status: boolean;
+  status!: boolean;
 }
 
 export type FollowDocument = HydratedDocument<Follow>;

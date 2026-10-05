@@ -7,7 +7,10 @@ import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { GetPostsByUserQuery } from './get-posts-by-user.query';
 
 @QueryHandler(GetPostsByUserQuery)
-export class GetPostsByUserHandler implements IQueryHandler<GetPostsByUserQuery, CursorPaginatedResult<Post>> {
+export class GetPostsByUserHandler implements IQueryHandler<
+  GetPostsByUserQuery,
+  CursorPaginatedResult<Post>
+> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(

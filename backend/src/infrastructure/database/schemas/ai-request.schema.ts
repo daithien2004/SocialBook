@@ -9,19 +9,19 @@ import { BaseSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true })
 export class AIRequest extends BaseSchema {
   @Prop({ required: true, maxlength: 10000 })
-  prompt: string;
+  prompt!: string;
 
   @Prop({ type: String, default: null })
-  response: string;
+  response!: string;
 
   @Prop({ required: true, type: String, enum: AIRequestType })
-  type: AIRequestType;
+  type!: AIRequestType;
 
   @Prop({ required: true })
-  userId: string;
+  userId!: string;
 
   @Prop({ type: Object, default: {} })
-  metadata: Record<string, unknown>;
+  metadata!: Record<string, unknown>;
 }
 
 export const AIRequestSchema = SchemaFactory.createForClass(AIRequest);

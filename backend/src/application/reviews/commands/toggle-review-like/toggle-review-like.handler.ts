@@ -1,6 +1,5 @@
 import { ToggleReviewLikeCommand } from './toggle-review-like.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { Review } from '@/domain/reviews/entities/review.entity';

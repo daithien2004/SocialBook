@@ -4,7 +4,10 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { Socket } from 'socket.io';
 import { SocketData } from './reading-room.types';
-import { MAX_CONNECTIONS_PER_USER, CONN_STALE_MS } from './reading-room.constants';
+import {
+  MAX_CONNECTIONS_PER_USER,
+  CONN_STALE_MS,
+} from './reading-room.constants';
 import { ErrorCode } from '@/shared/domain/error-codes';
 import { AuthException } from '@/shared/domain/common-exceptions';
 
@@ -23,7 +26,7 @@ export class WsAuthService {
   constructor(
     private readonly jwt: JwtService,
     @InjectRedis() private readonly redis: Redis,
-  ) { }
+  ) {}
 
   async authenticate(socket: Socket): Promise<SocketData> {
     const token = this.extractToken(socket);
@@ -60,10 +63,12 @@ export class WsAuthService {
     } catch (e) {
       const name = (e as { name?: string } | null)?.name;
       throw new AuthException(
-        name === 'TokenExpiredError' ? ErrorCode.TOKEN_EXPIRED : ErrorCode.UNAUTHORIZED,
+        name === 'TokenExpiredError'
+          ? ErrorCode.TOKEN_EXPIRED
+          : ErrorCode.UNAUTHORIZED,
       );
     }
-    
+
     if (!payload.sub || typeof payload.iat !== 'number') {
       throw new AuthException(ErrorCode.UNAUTHORIZED);
     }
@@ -82,17 +87,22 @@ export class WsAuthService {
       );
       throw new AuthException(ErrorCode.UNAUTHORIZED);
     }
-    
+
     if (!revokedAt) return;
 
     const revokedAtSec = Math.floor(Number(revokedAt) / 1000);
     if (!Number.isFinite(revokedAtSec) || payload.iat < revokedAtSec) {
-      this.logger.warn(`WS handshake rejected: token revoked for user ${payload.sub}`);
+      this.logger.warn(
+        `WS handshake rejected: token revoked for user ${payload.sub}`,
+      );
       throw new AuthException(ErrorCode.TOKEN_REVOKED);
     }
   }
 
-  private async reserveConnectionSlot(userId: string, socketId: string): Promise<void> {
+  private async reserveConnectionSlot(
+    userId: string,
+    socketId: string,
+  ): Promise<void> {
     const key = `ws:conns:${userId}`;
     const now = Date.now();
     try {
@@ -103,7 +113,7 @@ export class WsAuthService {
         .zcard(key)
         .pexpire(key, CONN_STALE_MS)
         .exec();
-        
+
       const count = Number(res?.[2]?.[1] ?? 0);
       if (count > MAX_CONNECTIONS_PER_USER) {
         await this.redis.zrem(key, socketId);
@@ -127,7 +137,9 @@ export class WsAuthService {
         .pexpire(key, CONN_STALE_MS)
         .exec();
     } catch (error) {
-      this.logger.debug(`touchConnection failed for ${userId}: ${String(error)}`);
+      this.logger.debug(
+        `touchConnection failed for ${userId}: ${String(error)}`,
+      );
     }
   }
 

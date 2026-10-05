@@ -1,7 +1,5 @@
 import { Command } from '@nestjs/cqrs';
-import { Collection } from "@/domain/library/entities/collection.entity";
-import { ICollectionRepository } from "@/domain/library/repositories/collection.repository.interface";
-import { IIdGenerator } from "@/shared/domain/id-generator.interface";
+import { Collection } from '@/domain/library/entities/collection.entity';
 
 export class CreateCollectionCommand extends Command<Collection> {
   constructor(
@@ -9,5 +7,7 @@ export class CreateCollectionCommand extends Command<Collection> {
     public readonly name: string,
     public readonly description?: string,
     public readonly isPublic?: boolean,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

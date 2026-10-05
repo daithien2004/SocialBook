@@ -1,18 +1,9 @@
 import { Dispatcher } from '@/application/common/dispatcher';
 
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 
 import { CreateRoomCommand } from '@/application/reading-rooms/commands/create-room/create-room.command';
-
 
 import { GetMyActiveRoomsQuery } from '@/application/reading-rooms/queries/get-my-active-rooms/get-my-active-rooms.query';
 
@@ -28,10 +19,7 @@ import { ReadingRoomResponseDto } from './dto/reading-room.response.dto';
 
 @Controller('reading-rooms')
 export class ReadingRoomsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post()
@@ -66,9 +54,7 @@ export class ReadingRoomsController {
 
   @Get('my-history')
   async getMyHistory(@CurrentUser('id') userId: string) {
-    const result = await this.dispatcher.command(
-      new GetMyHistoryQuery(userId),
-    );
+    const result = await this.dispatcher.command(new GetMyHistoryQuery(userId));
     return {
       message: 'Lấy lịch sử phòng đọc thành công',
       data: {
@@ -90,7 +76,6 @@ export class ReadingRoomsController {
       data: ReadingRoomResponseDto.fromResult(result),
     };
   }
-
 
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Get(':code')

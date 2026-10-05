@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   NotFoundDomainException,
   ForbiddenDomainException,
@@ -10,7 +10,7 @@ import { TargetId } from '@/domain/follows/value-objects/target-id.vo';
 import { DeleteFollowCommand } from './delete-follow.command';
 
 @CommandHandler(DeleteFollowCommand)
-export class DeleteFollowHandler implements ICommandHandler<DeleteFollowCommand, any> {
+export class DeleteFollowHandler implements ICommandHandler<DeleteFollowCommand> {
   private readonly logger = new Logger(DeleteFollowHandler.name);
 
   constructor(private readonly followRepository: IFollowRepository) {}

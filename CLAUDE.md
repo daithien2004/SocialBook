@@ -45,8 +45,13 @@ npm install
 npm run start:dev      # API only — BullMQ consumers will NOT run
 npm run start:worker   # Worker only (dist/worker.js) — consumes BullMQ jobs, no HTTP port
 
-# Build & lint
-npm run build && npm run lint
+# Build & test
+npm run check       # typecheck + lint + test — chạy trước khi báo xong
+npm run build
+npm run typecheck   # tsc --noEmit
+npm run lint        # eslint (không fix, --max-warnings 0)
+npm run lint:fix    # eslint --fix
+npm run lint:prune  # bỏ suppression không còn cần
 
 # Run tests
 npm run test:unit        # Unit tests (test/unit/**/*.spec.ts)
@@ -123,7 +128,7 @@ that isn't listed there fails that test**, which is deliberate. `main.ts` throws
 
 | Layer | Config |
 |-------|--------|
-| Backend | `strictNullChecks: true`, `noImplicitAny: false`, `@/*` → `src/*` |
+| Backend | `strict: true`, `noImplicitOverride`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `@/*` → `src/*` (chưa bật `noUncheckedIndexedAccess`) |
 | Frontend | `strict: true`, `@/*` → `src/*` |
 
 ## Naming Conventions
@@ -241,8 +246,27 @@ Follow `.github/GIT_FLOW.md`: branch off `develop` as `feature/*` / `fix/*` (or 
 
 ## Required Rules
 
-- **Never use `any`**: Define Interface, Type, or use `unknown`
-- **Preserve Clean Architecture boundaries**: Business rules in `domain/` or `application/`
-- **Preserve design language**: Keep client/server component boundaries intentional on frontend
+### Type safety (bắt buộc — nguồn chuẩn: `.agents/rules/AGENT_TYPE_RULES.md`)
+
+Dự án cấm "ép kiểu cho qua". Compiler và lint là nguồn sự thật; không hạ chuẩn chúng.
+
+**Cấm tuyệt đối trong `src/`**: `as any`, `: any`, `<any>`, `Function`/`object`/`{}` làm kiểu wildcard, `as T`, `as unknown as T`, `JSON.parse(x) as T`, `x!` (non-null assertion biểu thức), `// @ts-ignore`/`@ts-expect-error`/`@ts-nocheck`, `eslint-disable` cho rule `@typescript-eslint/*` liên quan đến type, `catch (e: any)`, `(e as Error)`.
+
+**Được phép**: `as const`, `satisfies`, type annotation, generics, type guard (`x is T`), `name!: string` trên property của DTO/entity/@WebSocketServer.
+
+**Khi tsc/ESLint báo lỗi type** (dừng ở bước đầu tiên giải quyết được): tìm nguồn lỗi → sửa khai báo ở nguồn → thu hẹp bằng `typeof`/`instanceof`/type guard → dữ liệu ngoài biên là `unknown` cho đến khi được xác thực (DTO + ValidationPipe, `readJson`, `requireEnv`) → mô hình hóa lại (generics, overload, `satisfies`) → đổi thiết kế (nhánh `null`, exception có nghĩa) → escape hatch chỉ trong `src/shared/typing/unsafe.ts` hay `test/support/typed-fake.ts`, có `@reason` + test, và phải báo cáo người dùng.
+
+Không đổi `as T` thành `as unknown as T`. Không thêm `| undefined`/`?` để im lỗi. Không sửa `tsconfig.json`, `eslint.config.mjs`, `eslint-suppressions.json` để làm lỗi biến mất — cần đổi cấu hình thì hỏi người dùng.
+
+**Test**: không `as any`, `as unknown as jest.Mocked<X>`, `{} as Entity`; dùng fake class cài port, interface hẹp, builder gọi factory thật, `jest.fn` suy kiểu từ cài đặt; test qua public API.
+
+**Trước khi báo "xong"**: chạy `npm run check --workspace=backend` (typecheck + lint + test) và báo kết quả; báo cáo mọi type assertion mới; không tăng số mục trong `eslint-suppressions.json`.
+
+**Khi bí**: dừng lại hỏi kèm lỗi gốc, 2–3 phương án, đánh đổi. Không cast "tạm".
+
+### Kiến trúc & style
+
+- **Preserve Clean Architecture boundaries**: business rules in `domain/` / `application/`
+- **Preserve design language**: giữ ranh giới client/server component ở frontend
 - **Prettier**: `singleQuote: true`, `trailingComma: "all"`
-- **ESLint backend**: `@typescript-eslint/no-explicit-any: error`
+- **ESLint backend** (`backend/eslint.config.mjs`): `strictTypeChecked` + `consistent-type-assertions: never`, `no-explicit-any`, `ban-ts-comment`, `no-non-null-assertion`, `switch-exhaustiveness-check`, `no-floating-promises: error`

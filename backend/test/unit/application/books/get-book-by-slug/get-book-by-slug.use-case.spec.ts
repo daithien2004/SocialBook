@@ -1,5 +1,5 @@
-import { GetBookBySlugUseCase } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.use-case';
-import { GetBookBySlugQuery } from '@/application/books/use-cases/get-book-by-slug/get-book-by-slug.query';
+import { GetBookBySlugHandler } from '@/application/books/queries/get-book-by-slug/get-book-by-slug.handler';
+import { GetBookBySlugQuery } from '@/application/books/queries/get-book-by-slug/get-book-by-slug.query';
 import {
   BadRequestDomainException,
   NotFoundDomainException,
@@ -73,8 +73,8 @@ function createMockBookDetail(
   };
 }
 
-describe('GetBookBySlugUseCase (Unit)', () => {
-  let useCase: GetBookBySlugUseCase;
+describe('GetBookBySlugHandler (Unit)', () => {
+  let useCase: GetBookBySlugHandler;
   let mockQueryProvider: ReturnType<typeof createMockBookQueryProvider>;
   let mockCache: ReturnType<typeof createMockCacheService>;
   let mockReviewRepo: ReturnType<typeof createMockReviewRepository>;
@@ -84,7 +84,7 @@ describe('GetBookBySlugUseCase (Unit)', () => {
     mockCache = createMockCacheService();
     mockReviewRepo = createMockReviewRepository();
 
-    useCase = new GetBookBySlugUseCase(
+    useCase = new GetBookBySlugHandler(
       mockQueryProvider,
       mockCache,
       mockReviewRepo,

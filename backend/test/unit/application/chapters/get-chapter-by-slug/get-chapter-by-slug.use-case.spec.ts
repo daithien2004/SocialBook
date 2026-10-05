@@ -1,5 +1,5 @@
-import { GetChapterBySlugUseCase } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.use-case';
-import { GetChapterBySlugQuery } from '@/application/chapters/use-cases/get-chapter-by-slug/get-chapter-by-slug.query';
+import { GetChapterBySlugHandler } from '@/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.handler';
+import { GetChapterBySlugQuery } from '@/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.query';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { ChapterDetailReadModel } from '@/domain/chapters/read-models/chapter-detail.read-model';
 import { createMockChapterRepository } from '../../../../helpers/mock-chapter-repository';
@@ -52,13 +52,13 @@ function createMockChapterDetail(
   };
 }
 
-describe('GetChapterBySlugUseCase (Unit)', () => {
-  let useCase: GetChapterBySlugUseCase;
+describe('GetChapterBySlugHandler (Unit)', () => {
+  let useCase: GetChapterBySlugHandler;
   let mockChapterRepo: ReturnType<typeof createMockChapterRepository>;
 
   beforeEach(() => {
     mockChapterRepo = createMockChapterRepository();
-    useCase = new GetChapterBySlugUseCase(mockChapterRepo);
+    useCase = new GetChapterBySlugHandler(mockChapterRepo);
   });
 
   it('should return chapter detail with navigation', async () => {

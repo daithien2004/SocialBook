@@ -8,7 +8,7 @@ export type RoleDocument = Role & Document;
 @Schema({ timestamps: true })
 export class Role extends BaseSchema {
   @Prop({ type: String, required: true, unique: true })
-  name: string;
+  name!: string;
 }
 
 export const RoleSchema = SchemaFactory.createForClass(Role);

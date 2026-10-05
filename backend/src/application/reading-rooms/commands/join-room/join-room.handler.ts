@@ -12,7 +12,10 @@ import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { withRetries } from '@/application/shared/utils/with-retries.util';
 
 @CommandHandler(JoinRoomCommand)
-export class JoinRoomHandler implements ICommandHandler<JoinRoomCommand, ReadingRoomResult> {
+export class JoinRoomHandler implements ICommandHandler<
+  JoinRoomCommand,
+  ReadingRoomResult
+> {
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: JoinRoomCommand): Promise<ReadingRoomResult> {

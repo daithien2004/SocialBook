@@ -7,8 +7,7 @@ import { GetUserHighlightsHandler } from './queries/get-user-highlights/get-user
 import { UserHighlightsRepositoryModule } from '@/infrastructure/database/repositories/user-highlights/user-highlights-repository.module';
 
 @Module({
-  imports: [
-    CqrsModule,UserHighlightsRepositoryModule],
+  imports: [CqrsModule, UserHighlightsRepositoryModule],
   providers: [
     CreateUserHighlightHandler,
     UpdateUserHighlightHandler,

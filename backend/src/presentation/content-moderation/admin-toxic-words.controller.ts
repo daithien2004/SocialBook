@@ -24,10 +24,7 @@ import { GetToxicWordsQuery } from '@/application/content-moderation/queries/get
 @Roles('admin')
 @Controller('admin/toxic-words')
 export class AdminToxicWordsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Get()
   @ApiOperation({ summary: 'Lấy danh sách các từ khóa toxic' })
@@ -52,7 +49,7 @@ export class AdminToxicWordsController {
     const command = new AddToxicWordCommand(
       dto.pattern,
       dto.group,
-      (dto as any).originalWord
+      (dto as any).originalWord,
     );
     const word = await this.dispatcher.command(command);
     return {

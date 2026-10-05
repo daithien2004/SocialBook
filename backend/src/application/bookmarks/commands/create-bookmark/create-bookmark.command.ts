@@ -1,8 +1,5 @@
-import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, ConflictException } from "@nestjs/common";
-import { IBookmarkRepository } from "@/domain/bookmarks/repositories/bookmark.repository.interface";
-import { Bookmark } from "@/domain/bookmarks/entities/bookmark.entity";
-import { Types } from "mongoose";
+import { Command } from '@nestjs/cqrs';
+import { Bookmark } from '@/domain/bookmarks/entities/bookmark.entity';
 
 export class CreateBookmarkCommand extends Command<Bookmark> {
   constructor(
@@ -12,5 +9,7 @@ export class CreateBookmarkCommand extends Command<Bookmark> {
     public readonly chapterSlug: string,
     public readonly paragraphId: string,
     public readonly textPreview: string,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

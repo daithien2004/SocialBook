@@ -1,5 +1,5 @@
 import { CqrsModule } from '@nestjs/cqrs';
-﻿import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { CreateCollectionHandler } from './commands/create-collection/create-collection.handler';
 import { GetAllCollectionsHandler } from './queries/get-all-collections/get-all-collections.handler';
 import { GetBookLibraryInfoHandler } from './queries/get-book-library-info/get-book-library-info.handler';

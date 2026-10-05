@@ -1,7 +1,7 @@
-import { JoinRoomUseCase } from '@/application/reading-rooms/use-cases/join-room/join-room.use-case';
-import { JoinRoomCommand } from '@/application/reading-rooms/use-cases/join-room/join-room.command';
-import { AddHighlightUseCase } from '@/application/reading-rooms/use-cases/add-highlight/add-highlight.use-case';
-import { AddHighlightCommand } from '@/application/reading-rooms/use-cases/add-highlight/add-highlight.command';
+import { JoinRoomHandler } from '@/application/reading-rooms/commands/join-room/join-room.handler';
+import { JoinRoomCommand } from '@/application/reading-rooms/commands/join-room/join-room.command';
+import { AddHighlightHandler } from '@/application/reading-rooms/commands/add-highlight/add-highlight.handler';
+import { AddHighlightCommand } from '@/application/reading-rooms/commands/add-highlight/add-highlight.command';
 import { ReadingRoomRepository } from '@/infrastructure/database/repositories/reading-rooms/reading-room.repository';
 
 /**
@@ -70,7 +70,7 @@ describe('ReadingRoom OCC — thao tác song song (T2)', () => {
   it('10 user join song song → cả 10 trở thành thành viên, không user nào bị mất', async () => {
     const fake = createFakeRoomModel(seedDoc());
     const repository = new ReadingRoomRepository(fake as never);
-    const joinRoom = new JoinRoomUseCase(repository);
+    const joinRoom = new JoinRoomHandler(repository);
 
     const joiners = Array.from(
       { length: 10 },
@@ -102,7 +102,7 @@ describe('ReadingRoom OCC — thao tác song song (T2)', () => {
       }),
     );
     const repository = new ReadingRoomRepository(fake as never);
-    const addHighlight = new AddHighlightUseCase(repository);
+    const addHighlight = new AddHighlightHandler(repository);
 
     await Promise.all([
       addHighlight.execute(

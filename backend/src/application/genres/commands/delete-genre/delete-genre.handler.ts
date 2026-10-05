@@ -10,7 +10,10 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 
 @CommandHandler(DeleteGenreCommand)
-export class DeleteGenreHandler implements ICommandHandler<DeleteGenreCommand, void> {
+export class DeleteGenreHandler implements ICommandHandler<
+  DeleteGenreCommand,
+  void
+> {
   constructor(
     private readonly genreRepository: IGenreRepository,
     private readonly bookRepository: IBookRepository,

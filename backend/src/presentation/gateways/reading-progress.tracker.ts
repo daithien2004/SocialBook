@@ -1,5 +1,5 @@
 import { CommandBus } from '@nestjs/cqrs';
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 
 import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
@@ -12,7 +12,7 @@ export class ReadingProgressTracker {
   private readonly logger = new Logger(ReadingProgressTracker.name);
 
   constructor(
-    @Inject('IChapterRepository') private readonly chapterRepository: IChapterRepository,
+    private readonly chapterRepository: IChapterRepository,
     private readonly commandBus: CommandBus,
   ) {}
 
@@ -51,7 +51,9 @@ export class ReadingProgressTracker {
         pending.bookId,
         pending.chapterId,
         pending.progress,
-      ).catch((e) => this.logger.warn(`Flush progress error: ${e}`));
+      ).catch((e) => {
+        this.logger.warn(`Flush progress error: ${e}`);
+      });
     }
   }
 

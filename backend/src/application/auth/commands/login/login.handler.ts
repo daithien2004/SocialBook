@@ -1,6 +1,5 @@
 import { LoginCommand } from './login.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import {
   UnauthorizedDomainException,
   UserBannedDomainException,

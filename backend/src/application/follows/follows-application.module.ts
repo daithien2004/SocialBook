@@ -9,24 +9,18 @@ import { FollowsRepositoryModule } from '@/infrastructure/database/repositories/
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { QueueModule } from '@/infrastructure/queue/queue.module';
 
-export const CommandHandlers = [
-  CreateFollowHandler,
-  DeleteFollowHandler
-];
+export const CommandHandlers = [CreateFollowHandler, DeleteFollowHandler];
 
 export const QueryHandlers = [
   GetFollowStatusHandler,
   GetFollowsHandler,
   GetFollowingHandler,
-  GetFollowersHandler
+  GetFollowersHandler,
 ];
 
 @Module({
   imports: [FollowsRepositoryModule, IdGeneratorModule, QueueModule],
-  providers: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-  ],
+  providers: [...CommandHandlers, ...QueryHandlers],
   exports: [
     CreateFollowHandler,
     DeleteFollowHandler,

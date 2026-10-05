@@ -1,5 +1,7 @@
 import type { Job, Queue } from 'bullmq';
 import type { Redis } from 'ioredis';
+import { CommandBus } from '@nestjs/cqrs';
+import { fakeOf } from '../../support/typed-fake';
 
 import { AudioWorker } from '@/presentation/gateways/audio.worker';
 import {
@@ -14,9 +16,7 @@ import { TTSStatus } from '@/domain/text-to-speech/entities/text-to-speech.entit
 import type { ImportChaptersJobData } from '@/domain/chapters/interfaces/chapters-import.types';
 import type { CreateSingleChapterJobData } from '@/application/chapters/processors/single-chapter.processor';
 import type { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
-import type { ITextToSpeechPort } from '@/domain/text-to-speech/interfaces/text-to-speech.port';
 import type { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import type { ProcessPostModerationUseCase } from '@/application/posts/use-cases/process-post-moderation.use-case';
 import type { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 
 /**
@@ -171,9 +171,7 @@ describe('A3 — moderation thất bại thì giữ PENDING cho Admin, không th
     postRepository: unknown = { findById: jest.fn(), update: jest.fn() },
   ) =>
     new PostModerationProcessor(
-      {
-        execute,
-      } as unknown as ProcessPostModerationUseCase,
+      fakeOf<CommandBus>({ execute }),
       postRepository as IPostRepository,
     );
 

@@ -3,7 +3,7 @@ import { GetChaptersImportStatusQuery } from './get-chapters-import-status.query
 import { IChaptersImportPort } from '@/domain/chapters/interfaces/chapters-import.port';
 
 @QueryHandler(GetChaptersImportStatusQuery)
-export class GetChaptersImportStatusHandler implements IQueryHandler<GetChaptersImportStatusQuery, any> {
+export class GetChaptersImportStatusHandler implements IQueryHandler<GetChaptersImportStatusQuery> {
   constructor(private readonly chaptersImportQueue: IChaptersImportPort) {}
 
   async execute(query: GetChaptersImportStatusQuery) {

@@ -2,7 +2,10 @@ import { Command } from '@nestjs/cqrs';
 import { Post } from '@/domain/posts/entities/post.entity';
 import { AppAbility } from '@socialbook/shared';
 
-export class UpdatePostCommand extends Command<{ post: Post; moderationMessage?: string }> {
+export class UpdatePostCommand extends Command<{
+  post: Post;
+  moderationMessage?: string;
+}> {
   constructor(
     public readonly userId: string,
     public readonly postId: string,

@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Logger, Inject } from '@nestjs/common';
 import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
 import { CommentCreatedJobPayload } from '@/application/notifications/jobs/notification-job.payload';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
@@ -13,7 +13,10 @@ import { CreateCommentCommand } from './create-comment.command';
 import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/vietnamese-profanity';
 
 @CommandHandler(CreateCommentCommand)
-export class CreateCommentHandler implements ICommandHandler<CreateCommentCommand, Comment> {
+export class CreateCommentHandler implements ICommandHandler<
+  CreateCommentCommand,
+  Comment
+> {
   private readonly logger = new Logger(CreateCommentHandler.name);
 
   constructor(

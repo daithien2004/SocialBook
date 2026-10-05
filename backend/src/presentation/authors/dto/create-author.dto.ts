@@ -4,7 +4,7 @@ export class CreateAuthorDto {
   @IsNotEmpty({ message: 'Tên tác giả không được để trống' })
   @IsString()
   @MaxLength(100, { message: 'Tên tác giả không được vượt quá 100 ký tự' })
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()

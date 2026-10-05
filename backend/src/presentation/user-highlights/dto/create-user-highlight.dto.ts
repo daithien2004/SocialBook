@@ -3,19 +3,19 @@ import { IsString, IsNotEmpty, IsOptional, IsHexColor } from 'class-validator';
 export class CreateUserHighlightDto {
   @IsString()
   @IsNotEmpty()
-  bookId: string;
+  bookId!: string;
 
   @IsString()
   @IsNotEmpty()
-  chapterId: string;
+  chapterId!: string;
 
   @IsString()
   @IsNotEmpty()
-  paragraphId: string;
+  paragraphId!: string;
 
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 
   @IsString()
   @IsOptional()

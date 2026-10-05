@@ -32,9 +32,9 @@ export class RefreshToxicWordsListener
     this.subscriber.on('message', (channel) => {
       if (channel === 'cache-invalidate:toxic-words') {
         this.logger.debug('Received cache-invalidate signal from Redis PubSub');
-        this.refreshCache().catch((err) =>
-          this.logger.error('Failed to refresh cache on pubsub message', err),
-        );
+        this.refreshCache().catch((err) => {
+          this.logger.error('Failed to refresh cache on pubsub message', err);
+        });
       }
     });
   }

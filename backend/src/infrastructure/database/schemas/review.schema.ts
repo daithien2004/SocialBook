@@ -8,13 +8,13 @@ export type ReviewDocument = HydratedDocument<Review>;
 @Schema({ timestamps: true })
 export class Review extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({ type: String, required: true, trim: true })
-  content: string;
+  content!: string;
 
   @Prop({
     type: Number,
@@ -22,19 +22,19 @@ export class Review extends BaseSchema {
     max: 5,
     required: true,
   })
-  rating: number;
+  rating!: number;
 
   @Prop({ type: Number, default: 0 })
-  likesCount: number;
+  likesCount!: number;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
-  likedBy: Types.ObjectId[];
+  likedBy!: Types.ObjectId[];
 
   @Prop({ type: Boolean, default: false })
-  verifiedPurchase: boolean;
+  verifiedPurchase!: boolean;
 
   @Prop({ type: Boolean, default: false })
-  isFlagged: boolean;
+  isFlagged!: boolean;
 
   @Prop({ type: String })
   moderationReason?: string;

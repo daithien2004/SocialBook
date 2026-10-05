@@ -6,5 +6,6 @@ export class CreateAuthorCommand extends Command<Author> {
     public readonly bio?: string,
     public readonly photoUrl?: string,
   ) {
-    super();}
+    super();
+  }
 }

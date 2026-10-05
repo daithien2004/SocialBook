@@ -4,7 +4,7 @@ export class CreateGenreDto {
   @IsString()
   @IsNotEmpty({ message: 'Tên thể loại không được để trống' })
   @MaxLength(100, { message: 'Tên thể loại không được vượt quá 100 ký tự' })
-  name: string;
+  name!: string;
 
   @IsString()
   @IsOptional()

@@ -13,7 +13,7 @@ import {
 export class CreateBookDto {
   @IsNotEmpty({ message: 'Tiêu đề sách là bắt buộc' })
   @Length(5, 200, { message: 'Tiêu đề phải từ 5 đến 200 ký tự' })
-  title: string;
+  title!: string;
 
   @IsOptional()
   @IsString()
@@ -21,7 +21,7 @@ export class CreateBookDto {
 
   @IsNotEmpty({ message: 'Tác giả là bắt buộc' })
   @IsString({ message: 'Author ID phải là chuỗi ký tự' })
-  authorId: string;
+  authorId!: string;
 
   @IsOptional()
   @IsString()
@@ -36,7 +36,7 @@ export class CreateBookDto {
   @ArrayMinSize(1, { message: 'Phải chọn ít nhất 1 thể loại' })
   @ArrayMaxSize(5, { message: 'Tối đa 5 thể loại' })
   @IsString({ each: true, message: 'Mỗi genres ID phải là chuỗi ký tự hợp lệ' })
-  genres: string[];
+  genres!: string[];
 
   @IsOptional()
   @IsString()

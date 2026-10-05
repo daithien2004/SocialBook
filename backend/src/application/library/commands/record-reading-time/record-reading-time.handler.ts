@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
 import { IReadingProgressRepository } from '@/domain/library/repositories/reading-progress.repository.interface';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { ChapterId } from '@/domain/library/value-objects/chapter-id.vo';
@@ -13,7 +12,10 @@ export interface RecordReadingTimeResult {
 }
 
 @CommandHandler(RecordReadingTimeCommand)
-export class RecordReadingTimeHandler implements ICommandHandler<RecordReadingTimeCommand, RecordReadingTimeResult> {
+export class RecordReadingTimeHandler implements ICommandHandler<
+  RecordReadingTimeCommand,
+  RecordReadingTimeResult
+> {
   constructor(
     private readonly readingProgressRepository: IReadingProgressRepository,
     private readonly idGenerator: IIdGenerator,

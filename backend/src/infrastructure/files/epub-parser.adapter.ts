@@ -58,7 +58,7 @@ export class EpubParserAdapter implements IEpubParserPort {
               if (!chapter.id) continue;
 
               const chapterText = await new Promise<string>((res, rej) => {
-                epub.getChapter(chapter.id!, (err: Error, text: string) => {
+                epub.getChapter(chapter.id!, (err: Error, text?: string) => {
                   if (err) rej(err);
                   else res(text || '');
                 });

@@ -9,7 +9,7 @@ export class JoinRoomDto {
   /** Mã phòng 6–10 ký tự chữ/ối — KHÔNG phải ObjectId (DEC-01). */
   @IsString()
   @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
-  roomCode: string;
+  roomCode!: string;
 
   /**
    * Client cũ thường gửi kèm; server lấy displayName/avatarUrl từ JWT và bỏ

@@ -1,5 +1,4 @@
 import { Command } from '@nestjs/cqrs';
-import { ReadingRoomResult } from '../../reading-room.interface';
 
 import { ReadingRoomResult } from '@/application/reading-rooms/reading-room.interface';
 
@@ -11,5 +10,6 @@ export class CreateRoomCommand extends Command<ReadingRoomResult> {
     public readonly mode: 'sync' | 'free',
     public readonly maxMembers?: number,
   ) {
-    super();}
+    super();
+  }
 }

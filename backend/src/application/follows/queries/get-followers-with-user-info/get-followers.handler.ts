@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   IFollowRepository,
   PaginatedFollowsWithUserInfo,
@@ -7,7 +7,7 @@ import {
 import { GetFollowersQuery } from './get-followers.query';
 
 @QueryHandler(GetFollowersQuery)
-export class GetFollowersHandler implements IQueryHandler<GetFollowersQuery, any> {
+export class GetFollowersHandler implements IQueryHandler<GetFollowersQuery> {
   private readonly logger = new Logger(GetFollowersHandler.name);
 
   constructor(private readonly followRepository: IFollowRepository) {}

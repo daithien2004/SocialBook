@@ -5,7 +5,10 @@ import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { GetFlaggedPostsQuery } from './get-flagged-posts.query';
 
 @QueryHandler(GetFlaggedPostsQuery)
-export class GetFlaggedPostsHandler implements IQueryHandler<GetFlaggedPostsQuery, PaginatedResult<Post>> {
+export class GetFlaggedPostsHandler implements IQueryHandler<
+  GetFlaggedPostsQuery,
+  PaginatedResult<Post>
+> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(query: GetFlaggedPostsQuery): Promise<PaginatedResult<Post>> {

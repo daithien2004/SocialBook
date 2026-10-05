@@ -7,5 +7,7 @@ export class GetUserNotificationsQuery extends Query<Notification[]> {
     public readonly page?: number,
     public readonly limit?: number,
     public readonly isRead?: boolean,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

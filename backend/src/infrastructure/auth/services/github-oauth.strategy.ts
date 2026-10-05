@@ -95,7 +95,7 @@ export class GitHubOAuthStrategy implements OAuthProviderStrategy {
       const chosen = emails.find((e) => e.primary) ?? emails[0];
       if (chosen) {
         email = chosen.email;
-        emailVerified = chosen.verified === true;
+        emailVerified = chosen.verified;
       }
     }
     if (!email) {

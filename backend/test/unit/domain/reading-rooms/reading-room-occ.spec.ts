@@ -2,7 +2,6 @@ import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity
 import { ReadingRoomRepository } from '@/infrastructure/database/repositories/reading-rooms/reading-room.repository';
 import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
-import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 
 describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
   describe('Entity OCC State & Mutations', () => {

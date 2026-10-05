@@ -20,7 +20,7 @@ export class ReadingRoomHighlightHandler {
 
   constructor(
     private readonly commandBus: CommandBus,
-  private readonly rateLimiter: WsRateLimiter,
+    private readonly rateLimiter: WsRateLimiter,
     private readonly emitter: ReadingRoomEmitter,
   ) {}
 

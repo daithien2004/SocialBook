@@ -1,14 +1,14 @@
 import { PaginationMeta } from '@/common/interfaces/pagination.interface';
 
 export class ResponseDto<T> {
-  success: boolean;
-  statusCode: number;
-  message: string;
+  success!: boolean;
+  statusCode!: number;
+  message!: string;
   warning?: string;
   data?: T;
   meta?: PaginationMeta;
   timestamp: string;
-  path: string;
+  path!: string;
 
   constructor(partial: Partial<ResponseDto<T>>) {
     Object.assign(this, partial);
@@ -17,11 +17,11 @@ export class ResponseDto<T> {
 }
 
 export class ErrorResponseDto {
-  success: boolean;
-  statusCode: number;
-  message: string | string[];
-  error: string;
-  timestamp: string;
-  path: string;
+  success!: boolean;
+  statusCode!: number;
+  message!: string | string[];
+  error!: string;
+  timestamp!: string;
+  path!: string;
   stack?: string; // Only in development
 }

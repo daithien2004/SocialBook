@@ -1,11 +1,11 @@
 import { Query } from '@nestjs/cqrs';
-import { PaginatedResult, PaginationOptions, SortOptions } from "@/common/interfaces/pagination.interface";
-import { ChapterListReadModel } from "@/domain/chapters/read-models/chapter-list.read-model";
-import { ChapterFilter, IChapterRepository } from "@/domain/chapters/repositories/chapter.repository.interface";
-import { BookId } from "@/domain/chapters/value-objects/book-id.vo";
-import { ChapterResult } from "@/application/chapters/queries/get-chapters/get-chapters.result";
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { ChapterListReadModel } from '@/domain/chapters/read-models/chapter-list.read-model';
+import { ChapterResult } from '@/application/chapters/queries/get-chapters/get-chapters.result';
 
-export class GetChaptersQuery extends Query<PaginatedResult<ChapterResult> | ChapterListReadModel> {
+export class GetChaptersQuery extends Query<
+  PaginatedResult<ChapterResult> | ChapterListReadModel
+> {
   constructor(
     public readonly page: number = 1,
     public readonly limit: number = 10,
@@ -16,5 +16,7 @@ export class GetChaptersQuery extends Query<PaginatedResult<ChapterResult> | Cha
     public readonly sortBy?:
       'createdAt' | 'updatedAt' | 'title' | 'orderIndex' | 'viewsCount',
     public readonly order?: 'asc' | 'desc',
-  ) { super(); }
+  ) {
+    super();
+  }
 }

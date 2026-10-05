@@ -9,38 +9,38 @@ export type ProgressDocument = HydratedDocument<Progress>;
 @Schema({ timestamps: true, collection: 'progresses' })
 export class Progress extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true, index: true })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Chapter', required: true })
-  chapterId: Types.ObjectId;
+  chapterId!: Types.ObjectId;
 
   @Prop({ default: 0 })
-  progress: number;
+  progress!: number;
 
   @Prop({ default: 0 })
-  timeSpent: number;
+  timeSpent!: number;
 
   @Prop({
     type: String,
     enum: ChapterStatus,
     default: ChapterStatus.READING,
   })
-  status: string;
+  status!: string;
 
   @Prop({ default: 0 })
-  xpEarned: number;
+  xpEarned!: number;
 
   @Prop({ default: 0 })
-  pagesRead: number; // Session pages
+  pagesRead!: number; // Session pages
 
   @Prop({ default: 0 })
-  wordsRead: number;
+  wordsRead!: number;
 
   @Prop({ type: Date, default: Date.now })
-  lastReadAt: Date;
+  lastReadAt!: Date;
 }
 
 export const ProgressSchema = SchemaFactory.createForClass(Progress);

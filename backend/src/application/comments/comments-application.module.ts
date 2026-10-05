@@ -15,13 +15,10 @@ export const CommandHandlers = [
   CreateCommentHandler,
   DeleteCommentHandler,
   ModerateCommentHandler,
-  UpdateCommentHandler
+  UpdateCommentHandler,
 ];
 
-export const QueryHandlers = [
-  GetCommentsHandler,
-  GetCommentCountHandler
-];
+export const QueryHandlers = [GetCommentsHandler, GetCommentCountHandler];
 
 @Module({
   imports: [
@@ -30,10 +27,7 @@ export const QueryHandlers = [
     ContentModerationApplicationModule,
     QueueModule,
   ],
-  providers: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-  ],
+  providers: [...CommandHandlers, ...QueryHandlers],
   exports: [
     CreateCommentHandler,
     DeleteCommentHandler,

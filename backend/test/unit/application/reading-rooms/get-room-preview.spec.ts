@@ -1,16 +1,16 @@
 import {
-  GetRoomByCodeUseCase,
+  GetRoomByCodeHandler,
   ReadingRoomPreviewResult,
-} from '@/application/reading-rooms/use-cases/get-room-by-code/get-room-by-code.use-case';
-import { GetRoomByCodeQuery } from '@/application/reading-rooms/use-cases/get-room-by-code/get-room-by-code.query';
+} from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.handler';
+import { GetRoomByCodeQuery } from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.query';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { NotFoundException } from '@nestjs/common';
 
-describe('GetRoomByCodeUseCase (T3: Information Exposure & Room Preview)', () => {
+describe('GetRoomByCodeHandler (T3: Information Exposure & Room Preview)', () => {
   let mockRoom: ReadingRoom;
   let mockRepo: { findById: jest.Mock };
-  let useCase: GetRoomByCodeUseCase;
+  let useCase: GetRoomByCodeHandler;
 
   beforeEach(() => {
     mockRoom = ReadingRoom.reconstitute({
@@ -44,7 +44,7 @@ describe('GetRoomByCodeUseCase (T3: Information Exposure & Room Preview)', () =>
       findById: jest.fn().mockResolvedValue(mockRoom),
     };
 
-    useCase = new GetRoomByCodeUseCase(
+    useCase = new GetRoomByCodeHandler(
       mockRepo as unknown as IReadingRoomRepository,
     );
   });

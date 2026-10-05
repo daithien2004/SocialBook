@@ -26,11 +26,11 @@ export class FollowStatus {
   }
 
   isActive(): boolean {
-    return this.value === true;
+    return this.value;
   }
 
   isInactive(): boolean {
-    return this.value === false;
+    return !this.value;
   }
 
   equals(other: FollowStatus): boolean {

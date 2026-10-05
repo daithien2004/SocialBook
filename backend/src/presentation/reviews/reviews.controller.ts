@@ -25,10 +25,7 @@ import { ToggleReviewLikeCommand } from '@/application/reviews/commands/toggle-r
 
 @Controller('reviews')
 export class ReviewsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Public()
   @Get('book/:bookId')
@@ -36,7 +33,9 @@ export class ReviewsController {
     @CurrentUser('id') userId: string | undefined,
     @Param('bookId') bookId: string,
   ) {
-    const reviews = await this.dispatcher.query(new GetBookReviewsQuery(bookId));
+    const reviews = await this.dispatcher.query(
+      new GetBookReviewsQuery(bookId),
+    );
 
     const responseDtos = reviews.map((review: Review) => {
       const responseDto = new ReviewResponseDto(review);
@@ -57,7 +56,9 @@ export class ReviewsController {
     @CurrentUser('id') userId: string,
     @Body() dto: CreateReviewDto,
   ) {
-    const review = await this.dispatcher.command(new CreateReviewCommand(userId, dto));
+    const review = await this.dispatcher.command(
+      new CreateReviewCommand(userId, dto),
+    );
     return {
       message: 'Review created successfully',
       data: this.toResponse(review),
@@ -70,7 +71,9 @@ export class ReviewsController {
     @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateReviewDto,
   ) {
-    const review = await this.dispatcher.command(new UpdateReviewCommand(id, dto, ability));
+    const review = await this.dispatcher.command(
+      new UpdateReviewCommand(id, dto, ability),
+    );
     return {
       message: 'Review updated successfully',
       data: this.toResponse(review),
@@ -79,7 +82,9 @@ export class ReviewsController {
 
   @Patch(':id/like')
   async toggleLike(@CurrentUser('id') userId: string, @Param('id') id: string) {
-    const review = await this.dispatcher.command(new ToggleReviewLikeCommand(id, userId));
+    const review = await this.dispatcher.command(
+      new ToggleReviewLikeCommand(id, userId),
+    );
     const isLiked = review.likedBy.includes(userId);
     return {
       message: 'Toggle like review successfully',

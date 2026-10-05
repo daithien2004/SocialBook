@@ -1,6 +1,6 @@
 import { AskChatbotCommand } from './ask-chatbot.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { SearchQuery } from '@/domain/chroma/entities/search-query.entity';

@@ -14,34 +14,34 @@ const PASSWORD_MESSAGE =
 export class SignupLocalDto {
   @IsString()
   @IsNotEmpty()
-  username: string;
+  username!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @Matches(PASSWORD_REGEX, { message: PASSWORD_MESSAGE })
-  password: string;
+  password!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Vui lòng nhập lại mật khẩu' })
-  confirmPassword: string;
+  confirmPassword!: string;
 }
 
 export class VerifyOtpDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
-  otp: string;
+  otp!: string;
 }
 
 export class ResendOtpDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 }
 
 export class RefreshTokenDto {
@@ -52,27 +52,27 @@ export class RefreshTokenDto {
 
 export class LoginDto {
   @IsEmail({}, { message: 'Email không hợp lệ' })
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Vui lòng nhập mật khẩu' })
-  password: string;
+  password!: string;
 }
 
 export class ForgotPasswordDto {
   @IsEmail({}, { message: 'Invalid email format' })
-  email: string;
+  email!: string;
 }
 
 export class ResetPasswordDto {
   @IsEmail({}, { message: 'Invalid email format' })
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'OTP is required' })
-  otp: string;
+  otp!: string;
 
   @IsString()
   @Matches(PASSWORD_REGEX, { message: PASSWORD_MESSAGE })
-  newPassword: string;
+  newPassword!: string;
 }

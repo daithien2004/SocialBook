@@ -47,7 +47,7 @@ import { LikesApplicationModule } from '@/application/likes/likes-application.mo
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { MockCacheModule } from '../helpers/mock-cache.module';
 import { envConfig } from '@/config';
-import { IntelligentSearchUseCase } from '@/application/search/use-cases/intelligent-search.use-case';
+import { IntelligentSearchHandler } from '@/application/search/queries/intelligent-search/intelligent-search.handler';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
 
@@ -167,7 +167,7 @@ describe('Books API (E2E)', () => {
       providers: [
         { provide: APP_FILTER, useClass: HttpExceptionFilter },
         {
-          provide: IntelligentSearchUseCase,
+          provide: IntelligentSearchHandler,
           useFactory: (bookModel: Model<BookDocument>) =>
             createSearchStub(bookModel),
           inject: [getModelToken(Book.name)],

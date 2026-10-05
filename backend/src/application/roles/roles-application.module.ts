@@ -4,8 +4,7 @@ import { GetRoleByNameHandler } from './queries/get-role-by-name/get-role-by-nam
 import { RolesRepositoryModule } from '@/infrastructure/database/repositories/roles/roles-repository.module';
 
 @Module({
-  imports: [
-    CqrsModule,RolesRepositoryModule],
+  imports: [CqrsModule, RolesRepositoryModule],
   providers: [GetRoleByNameHandler],
   exports: [GetRoleByNameHandler],
 })

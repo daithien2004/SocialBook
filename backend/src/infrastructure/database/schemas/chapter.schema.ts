@@ -11,7 +11,7 @@ export interface ParagraphDocument {
 @Schema({ _id: true })
 class Paragraph {
   @Prop({ required: true })
-  content: string;
+  content!: string;
 }
 
 const ParagraphSchema = SchemaFactory.createForClass(Paragraph);
@@ -21,26 +21,26 @@ import { BaseSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true })
 export class Chapter extends BaseSchema {
   @Prop({ type: Types.ObjectId, required: true, ref: 'Book' })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({ required: true, trim: true })
-  title: string;
+  title!: string;
 
   @Prop({
     required: true,
     trim: true,
     lowercase: true,
   })
-  slug: string;
+  slug!: string;
 
   @Prop({ type: [ParagraphSchema], required: true })
-  paragraphs: Types.DocumentArray<ParagraphDocument>;
+  paragraphs!: Types.DocumentArray<ParagraphDocument>;
 
   @Prop({ default: 0 })
-  viewsCount: number;
+  viewsCount!: number;
 
   @Prop({ required: true })
-  orderIndex: number;
+  orderIndex!: number;
 }
 
 export const ChapterSchema = SchemaFactory.createForClass(Chapter);

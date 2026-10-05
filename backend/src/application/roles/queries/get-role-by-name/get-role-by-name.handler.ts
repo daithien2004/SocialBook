@@ -1,6 +1,5 @@
 import { GetRoleByNameQuery } from './get-role-by-name.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import { Role } from '@/domain/roles/entities/role.entity';
 

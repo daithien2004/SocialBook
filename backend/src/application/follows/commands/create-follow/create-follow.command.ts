@@ -6,5 +6,6 @@ export class CreateFollowCommand extends Command<Follow> {
     public readonly targetId: string,
     public readonly status?: boolean,
   ) {
-    super();}
+    super();
+  }
 }

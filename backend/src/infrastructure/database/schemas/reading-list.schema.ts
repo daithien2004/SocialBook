@@ -16,26 +16,26 @@ import { BaseSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true, collection: 'reading_lists' })
 export class ReadingList extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({
     type: String,
     enum: ReadingStatus,
     default: ReadingStatus.READING,
   })
-  status: ReadingStatus;
+  status!: ReadingStatus;
 
   @Prop({ type: Types.ObjectId, ref: 'Chapter', default: null })
-  lastReadChapterId: Types.ObjectId;
+  lastReadChapterId!: Types.ObjectId;
 
   @Prop({
     type: [{ type: Types.ObjectId, ref: 'Collection' }],
     default: [],
   })
-  collectionIds: Types.ObjectId[];
+  collectionIds!: Types.ObjectId[];
 }
 
 export const ReadingListSchema = SchemaFactory.createForClass(ReadingList);

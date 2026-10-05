@@ -11,7 +11,10 @@ import { UpdateGenreCommand } from './update-genre.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @CommandHandler(UpdateGenreCommand)
-export class UpdateGenreHandler implements ICommandHandler<UpdateGenreCommand, Genre> {
+export class UpdateGenreHandler implements ICommandHandler<
+  UpdateGenreCommand,
+  Genre
+> {
   constructor(private readonly genreRepository: IGenreRepository) {}
 
   async execute(command: UpdateGenreCommand): Promise<Genre> {

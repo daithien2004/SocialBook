@@ -12,11 +12,11 @@ import { Type } from 'class-transformer';
 class NotificationMetaDto {
   @IsOptional()
   @IsMongoId()
-  actorId: string;
+  actorId!: string;
 
   @IsOptional()
   @IsString()
-  username: string;
+  username!: string;
 
   @IsOptional()
   @IsString()
@@ -24,21 +24,21 @@ class NotificationMetaDto {
 
   @IsOptional()
   @IsMongoId()
-  targetId: string;
+  targetId!: string;
 }
 
 export class CreateNotificationDto {
   @IsMongoId()
-  userId: string;
+  userId!: string;
 
   @IsString()
-  title: string;
+  title!: string;
 
   @IsString()
-  message: string;
+  message!: string;
 
   @IsString()
-  type: string;
+  type!: string;
 
   @IsOptional()
   @IsBoolean()
@@ -52,5 +52,5 @@ export class CreateNotificationDto {
   @IsObject()
   @ValidateNested()
   @Type(() => NotificationMetaDto)
-  meta: NotificationMetaDto;
+  meta!: NotificationMetaDto;
 }

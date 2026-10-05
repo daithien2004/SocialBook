@@ -1,17 +1,16 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ICollectionRepository } from '@/domain/library/repositories/collection.repository.interface';
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { UpdateCollectionCommand } from './update-collection.command';
 import { Collection } from '@/domain/library/entities/collection.entity';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
 @CommandHandler(UpdateCollectionCommand)
-export class UpdateCollectionHandler implements ICommandHandler<UpdateCollectionCommand, Collection> {
+export class UpdateCollectionHandler implements ICommandHandler<
+  UpdateCollectionCommand,
+  Collection
+> {
   constructor(private readonly collectionRepository: ICollectionRepository) {}
 
   async execute(command: UpdateCollectionCommand): Promise<Collection> {

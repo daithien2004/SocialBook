@@ -6,7 +6,8 @@ import { Logger } from '@nestjs/common';
 import { instrument } from '@socket.io/admin-ui';
 
 export class RedisIoAdapter extends IoAdapter {
-  private adapterConstructor: ReturnType<typeof createAdapter>;
+  // undefined = chưa connectToRedis(); createIOServer() chỉ gắn adapter khi đã có.
+  private adapterConstructor: ReturnType<typeof createAdapter> | undefined;
 
   async connectToRedis(redisUrl: string): Promise<void> {
     const pubClient = createClient({ url: redisUrl });
@@ -14,11 +15,11 @@ export class RedisIoAdapter extends IoAdapter {
     const logger = new Logger('RedisIoAdapter');
 
     for (const c of [pubClient, subClient]) {
-      c.on('error', (e: unknown) =>
+      c.on('error', (e: unknown) => {
         logger.error(
           `Socket Redis Error: ${e instanceof Error ? e.message : String(e)}`,
-        ),
-      );
+        );
+      });
     }
 
     await Promise.all([pubClient.connect(), subClient.connect()]);
@@ -26,7 +27,7 @@ export class RedisIoAdapter extends IoAdapter {
     this.adapterConstructor = createAdapter(pubClient, subClient);
   }
 
-  createIOServer(port: number, options?: ServerOptions): Server {
+  override createIOServer(port: number, options?: ServerOptions): Server {
     // Tắt perMessageDeflate để tiết kiệm CPU cho server
     const serverOptions: ServerOptions = {
       ...options,
@@ -34,7 +35,9 @@ export class RedisIoAdapter extends IoAdapter {
     } as ServerOptions;
 
     const server = super.createIOServer(port, serverOptions) as Server;
-    server.adapter(this.adapterConstructor);
+    if (this.adapterConstructor) {
+      server.adapter(this.adapterConstructor);
+    }
 
     // Instrument the socket server for Admin UI only when explicitly enabled
     if (process.env.SOCKET_ADMIN_UI === 'true') {

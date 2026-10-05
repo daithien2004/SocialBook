@@ -13,25 +13,25 @@ import { BaseSoftDeleteSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true })
 export class Comment extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: String, enum: TARGET_TYPES, required: true })
-  targetType: string;
+  targetType!: string;
 
   @Prop({ type: Types.ObjectId, required: true })
-  targetId: Types.ObjectId;
+  targetId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Comment', default: null })
-  parentId: Types.ObjectId | null;
+  parentId!: Types.ObjectId | null;
 
   @Prop({ type: String, required: true, trim: true })
-  content: string;
+  content!: string;
 
   @Prop({ type: Number, default: 0 })
-  likesCount: number;
+  likesCount!: number;
 
   @Prop({ type: Boolean, default: false })
-  isFlagged: boolean;
+  isFlagged!: boolean;
 
   @Prop({ type: String })
   moderationReason?: string;

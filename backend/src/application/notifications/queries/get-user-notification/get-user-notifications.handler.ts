@@ -1,6 +1,5 @@
 import { QueryHandler } from '@nestjs/cqrs';
 import { GetUserNotificationsQuery } from './get-user-notifications.query';
-import { Injectable } from '@nestjs/common';
 import { INotificationRepository } from '@/domain/notifications/repositories/notification.repository.interface';
 import { Notification } from '@/domain/notifications/entities/notification.entity';
 

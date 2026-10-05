@@ -1,16 +1,16 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { GetBookFiltersQuery } from './get-book-filters.query';
 
 @QueryHandler(GetBookFiltersQuery)
-export class GetBookFiltersHandler implements IQueryHandler<GetBookFiltersQuery, any> {
+export class GetBookFiltersHandler implements IQueryHandler<GetBookFiltersQuery> {
   private readonly logger = new Logger(GetBookFiltersHandler.name);
 
   constructor(private readonly bookRepository: IBookRepository) {}
 
   async execute(_query: GetBookFiltersQuery) {
-    void _query;
+    _query;
     try {
       const [genres, tags] = await Promise.all([
         this.bookRepository.countByGenreName(),

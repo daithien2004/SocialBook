@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   NotFoundDomainException,
@@ -30,7 +30,10 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 @CommandHandler(GenerateHighlightInsightCommand)
-export class GenerateHighlightInsightHandler implements ICommandHandler<GenerateHighlightInsightCommand, void> {
+export class GenerateHighlightInsightHandler implements ICommandHandler<
+  GenerateHighlightInsightCommand,
+  void
+> {
   private readonly logger = new Logger(GenerateHighlightInsightHandler.name);
 
   constructor(

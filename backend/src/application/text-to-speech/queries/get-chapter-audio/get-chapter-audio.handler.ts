@@ -1,6 +1,5 @@
 import { GetChapterAudioQuery } from './get-chapter-audio.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
 import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
 import { TextToSpeech } from '@/domain/text-to-speech/entities/text-to-speech.entity';
 

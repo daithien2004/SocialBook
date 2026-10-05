@@ -9,5 +9,6 @@ export class CreateCommentCommand extends Command<Comment> {
     public readonly content: string,
     public readonly parentId?: string | null,
   ) {
-    super();}
+    super();
+  }
 }

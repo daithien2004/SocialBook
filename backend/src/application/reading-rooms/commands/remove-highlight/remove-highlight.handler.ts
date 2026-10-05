@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
@@ -9,7 +9,10 @@ import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity
 import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
 
 @CommandHandler(RemoveHighlightCommand)
-export class RemoveHighlightHandler implements ICommandHandler<RemoveHighlightCommand, ReadingRoom> {
+export class RemoveHighlightHandler implements ICommandHandler<
+  RemoveHighlightCommand,
+  ReadingRoom
+> {
   private readonly logger = new Logger(RemoveHighlightHandler.name);
 
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}

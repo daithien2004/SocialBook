@@ -1,8 +1,38 @@
+import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 import {
   RoomFullDomainException,
   ConcurrencyException,
 } from '@/shared/domain/common-exceptions';
+import { ERROR_MESSAGES } from '@/shared/domain/error-messages';
+import { ErrorCode } from '@/shared/domain/error-codes';
+import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
+import { fakeOf } from '../../../support/typed-fake';
+
+/**
+ * `code` → HTTP status nằm trong HttpExceptionFilter (error catalog: exception
+ * chỉ mang `code` + `message`, filter lo phần transport — xem
+ * .agents/skills/nestjs-error-catalog).
+ */
+const runThroughHttpFilter = (exception: unknown): number => {
+  const status = jest.fn().mockReturnThis();
+  const json = jest.fn();
+
+  const host = fakeOf<ArgumentsHost>({
+    switchToHttp: () => ({
+      getResponse: () => ({ status, json }),
+      getRequest: () => ({ url: '/reading-rooms' }),
+      getNext: () => undefined,
+    }),
+  });
+
+  const filter = new HttpExceptionFilter(new ConfigService());
+  filter.catch(exception, host);
+
+  expect(status).toHaveBeenCalledWith(expect.any(Number));
+  return Number(status.mock.calls[0][0]);
+};
 
 describe('RoomFullDomainException & Concurrency mapping (T9)', () => {
   it('throws RoomFullDomainException when adding member to a full room', () => {
@@ -19,11 +49,16 @@ describe('RoomFullDomainException & Concurrency mapping (T9)', () => {
     expect(() => room.addMember('member-3')).toThrow(RoomFullDomainException);
     try {
       room.addMember('member-3');
+      throw new Error('mong đợi addMember ném RoomFullDomainException');
     } catch (err) {
       expect(err).toBeInstanceOf(RoomFullDomainException);
-      expect((err as RoomFullDomainException).code).toBe('ROOM_FULL');
-      expect((err as RoomFullDomainException).statusCode).toBe(409);
-      expect((err as RoomFullDomainException).message).toBe('Phòng đã đầy');
+      if (!(err instanceof RoomFullDomainException)) throw err;
+
+      expect(err.code).toBe(ErrorCode.ROOM_FULL);
+      expect(err.message).toBe(ERROR_MESSAGES[ErrorCode.ROOM_FULL]);
+      expect(err.message).toBe('Phòng đã đầy');
+      // Room full trả HTTP 409 — kiểm tra qua filter (nơi map code → status)
+      expect(runThroughHttpFilter(err)).toBe(HttpStatus.CONFLICT);
     }
   });
 
@@ -43,7 +78,8 @@ describe('RoomFullDomainException & Concurrency mapping (T9)', () => {
 
   it('ConcurrencyException has code CONCURRENCY_CONFLICT', () => {
     const err = new ConcurrencyException();
-    expect(err.code).toBe('CONCURRENCY_CONFLICT');
-    expect(err.statusCode).toBe(409);
+    expect(err.code).toBe(ErrorCode.CONCURRENCY_CONFLICT);
+    expect(err.message).toBe(ERROR_MESSAGES[ErrorCode.CONCURRENCY_CONFLICT]);
+    expect(runThroughHttpFilter(err)).toBe(HttpStatus.CONFLICT);
   });
 });

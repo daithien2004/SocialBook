@@ -2,8 +2,8 @@ import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { OAuthAuthUseCase } from '@/application/auth/use-cases/oauth-auth/oauth-auth.use-case';
-import { OAuthAuthCommand } from '@/application/auth/use-cases/oauth-auth/oauth-auth.command';
+import { OAuthAuthHandler } from '@/application/auth/commands/oauth-auth/oauth-auth.handler';
+import { OAuthAuthCommand } from '@/application/auth/commands/oauth-auth/oauth-auth.command';
 import { OAuthProfile } from '@/application/auth/services/oauth-provider.strategy';
 import {
   UnauthorizedDomainException,
@@ -13,7 +13,7 @@ import { IRoleRepository } from '@/domain/roles/repositories/role.repository.int
 import { Role } from '@/domain/roles/entities/role.entity';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { User } from '@/domain/users/entities/user.entity';
-import { CreateUserUseCase } from '@/application/users/use-cases/create-user/create-user.use-case';
+import { CreateUserHandler } from '@/application/users/commands/create-user/create-user.handler';
 import { TokenService } from '@/application/auth/services/token.service';
 
 function createMockUserRepository(): jest.Mocked<IUserRepository> {
@@ -40,7 +40,7 @@ function createMockUserRepository(): jest.Mocked<IUserRepository> {
 }
 
 function createMockCreateUserUseCase(): jest.Mocked<
-  Partial<CreateUserUseCase>
+  Partial<CreateUserHandler>
 > {
   return { execute: jest.fn() };
 }
@@ -98,12 +98,12 @@ const profile: OAuthProfile = {
   image: 'pic',
 };
 
-describe('OAuthAuthUseCase', () => {
+describe('OAuthAuthHandler', () => {
   let userRepository: jest.Mocked<IUserRepository>;
-  let createUserUseCase: jest.Mocked<Partial<CreateUserUseCase>>;
+  let createUserUseCase: jest.Mocked<Partial<CreateUserHandler>>;
   let rolesRepository: jest.Mocked<IRoleRepository>;
   let tokenService: jest.Mocked<Partial<TokenService>>;
-  let useCase: OAuthAuthUseCase;
+  let useCase: OAuthAuthHandler;
 
   const tokenPair = {
     accessToken: 'access-token',
@@ -117,9 +117,9 @@ describe('OAuthAuthUseCase', () => {
     tokenService = createMockTokenService();
     (tokenService.signTokens as jest.Mock).mockResolvedValue(tokenPair);
 
-    useCase = new OAuthAuthUseCase(
+    useCase = new OAuthAuthHandler(
       userRepository,
-      createUserUseCase as unknown as CreateUserUseCase,
+      createUserUseCase as unknown as CreateUserHandler,
       rolesRepository,
       tokenService as unknown as TokenService,
     );

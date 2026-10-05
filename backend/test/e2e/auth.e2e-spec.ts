@@ -18,14 +18,14 @@ import { Reflector } from '@nestjs/core';
 import { AuthController } from '@/presentation/auth/auth.controller';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
-import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
-import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
-import { RefreshTokenUseCase } from '@/application/auth/use-cases/refresh-token/refresh-token.use-case';
-import { LogoutUseCase } from '@/application/auth/use-cases/logout/logout.use-case';
-import { ForgotPasswordUseCase } from '@/application/auth/use-cases/forgot-password/forgot-password.use-case';
-import { ResetPasswordUseCase } from '@/application/auth/use-cases/reset-password/reset-password.use-case';
-import { VerifyOtpUseCase } from '@/application/auth/use-cases/verify-otp/verify-otp.use-case';
-import { ResendOtpUseCase } from '@/application/auth/use-cases/resend-otp/resend-otp.use-case';
+import { LoginHandler } from '@/application/auth/commands/login/login.handler';
+import { RegisterHandler } from '@/application/auth/commands/register/register.handler';
+import { RefreshTokenHandler } from '@/application/auth/commands/refresh-token/refresh-token.handler';
+import { LogoutHandler } from '@/application/auth/commands/logout/logout.handler';
+import { ForgotPasswordHandler } from '@/application/auth/commands/forgot-password/forgot-password.handler';
+import { ResetPasswordHandler } from '@/application/auth/commands/reset-password/reset-password.handler';
+import { VerifyOtpHandler } from '@/application/auth/commands/verify-otp/verify-otp.handler';
+import { ResendOtpHandler } from '@/application/auth/commands/resend-otp/resend-otp.handler';
 
 @Injectable()
 class MockGuard implements CanActivate {
@@ -73,14 +73,14 @@ describe('Auth API (E2E)', () => {
             reset: jest.fn(),
           },
         },
-        { provide: LoginUseCase, useValue: { execute: mockExecute } },
-        { provide: RegisterUseCase, useValue: { execute: mockExecute } },
-        { provide: RefreshTokenUseCase, useValue: { execute: mockExecute } },
-        { provide: LogoutUseCase, useValue: { execute: mockExecute } },
-        { provide: ForgotPasswordUseCase, useValue: { execute: mockExecute } },
-        { provide: ResetPasswordUseCase, useValue: { execute: mockExecute } },
-        { provide: VerifyOtpUseCase, useValue: { execute: mockExecute } },
-        { provide: ResendOtpUseCase, useValue: { execute: mockExecute } },
+        { provide: LoginHandler, useValue: { execute: mockExecute } },
+        { provide: RegisterHandler, useValue: { execute: mockExecute } },
+        { provide: RefreshTokenHandler, useValue: { execute: mockExecute } },
+        { provide: LogoutHandler, useValue: { execute: mockExecute } },
+        { provide: ForgotPasswordHandler, useValue: { execute: mockExecute } },
+        { provide: ResetPasswordHandler, useValue: { execute: mockExecute } },
+        { provide: VerifyOtpHandler, useValue: { execute: mockExecute } },
+        { provide: ResendOtpHandler, useValue: { execute: mockExecute } },
         {
           provide: IUserRepository,
           useValue: {

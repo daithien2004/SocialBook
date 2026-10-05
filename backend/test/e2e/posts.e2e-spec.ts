@@ -4,7 +4,7 @@ import request from 'supertest';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
-import { GetPostsUseCase } from '@/application/posts/use-cases/get-posts.use-case';
+import { GetPostsHandler } from '@/application/posts/queries/get-posts/get-posts.handler';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { PostRepository } from '@/infrastructure/database/repositories/posts/post.repository';
 import {
@@ -38,16 +38,16 @@ import {
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { PostsController } from '@/presentation/posts/posts.controller';
 
-import { CreatePostUseCase } from '@/application/posts/use-cases/create-post.use-case';
-import { GetPostsByUserUseCase } from '@/application/posts/use-cases/get-posts-by-user.use-case';
-import { GetPostUseCase } from '@/application/posts/use-cases/get-post.use-case';
-import { UpdatePostUseCase } from '@/application/posts/use-cases/update-post.use-case';
-import { DeletePostUseCase } from '@/application/posts/use-cases/delete-post.use-case';
-import { RemovePostImageUseCase } from '@/application/posts/use-cases/remove-post-image.use-case';
-import { GetFlaggedPostsUseCase } from '@/application/posts/use-cases/get-flagged-posts.use-case';
-import { GetModerationStatsUseCase } from '@/application/posts/use-cases/get-moderation-stats.use-case';
-import { ApprovePostUseCase } from '@/application/posts/use-cases/approve-post.use-case';
-import { RejectPostUseCase } from '@/application/posts/use-cases/reject-post.use-case';
+import { CreatePostHandler } from '@/application/posts/commands/create-post/create-post.handler';
+import { GetPostsByUserHandler } from '@/application/posts/queries/get-posts-by-user/get-posts-by-user.handler';
+import { GetPostHandler } from '@/application/posts/queries/get-post/get-post.handler';
+import { UpdatePostHandler } from '@/application/posts/commands/update-post/update-post.handler';
+import { DeletePostHandler } from '@/application/posts/commands/delete-post/delete-post.handler';
+import { RemovePostImageHandler } from '@/application/posts/commands/remove-post-image/remove-post-image.handler';
+import { GetFlaggedPostsHandler } from '@/application/posts/queries/get-flagged-posts/get-flagged-posts.handler';
+import { GetModerationStatsHandler } from '@/application/posts/queries/get-moderation-stats/get-moderation-stats.handler';
+import { ApprovePostHandler } from '@/application/posts/commands/approve-post/approve-post.handler';
+import { RejectPostHandler } from '@/application/posts/commands/reject-post/reject-post.handler';
 
 const ROLE_ID = new Types.ObjectId();
 const AUTHOR_ID = new Types.ObjectId();
@@ -77,21 +77,21 @@ describe('GET /posts (E2E)', () => {
       ],
       controllers: [PostsController],
       providers: [
-        GetPostsUseCase,
+        GetPostsHandler,
         {
           provide: IPostRepository,
           useClass: PostRepository,
         },
-        { provide: CreatePostUseCase, useValue: mockUseCase },
-        { provide: GetPostsByUserUseCase, useValue: mockUseCase },
-        { provide: GetPostUseCase, useValue: mockUseCase },
-        { provide: UpdatePostUseCase, useValue: mockUseCase },
-        { provide: DeletePostUseCase, useValue: mockUseCase },
-        { provide: RemovePostImageUseCase, useValue: mockUseCase },
-        { provide: GetFlaggedPostsUseCase, useValue: mockUseCase },
-        { provide: GetModerationStatsUseCase, useValue: mockUseCase },
-        { provide: ApprovePostUseCase, useValue: mockUseCase },
-        { provide: RejectPostUseCase, useValue: mockUseCase },
+        { provide: CreatePostHandler, useValue: mockUseCase },
+        { provide: GetPostsByUserHandler, useValue: mockUseCase },
+        { provide: GetPostHandler, useValue: mockUseCase },
+        { provide: UpdatePostHandler, useValue: mockUseCase },
+        { provide: DeletePostHandler, useValue: mockUseCase },
+        { provide: RemovePostImageHandler, useValue: mockUseCase },
+        { provide: GetFlaggedPostsHandler, useValue: mockUseCase },
+        { provide: GetModerationStatsHandler, useValue: mockUseCase },
+        { provide: ApprovePostHandler, useValue: mockUseCase },
+        { provide: RejectPostHandler, useValue: mockUseCase },
       ],
     })
       .overrideGuard(JwtAuthGuard)

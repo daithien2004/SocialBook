@@ -17,7 +17,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -46,10 +45,7 @@ import { User } from '@/domain/users/entities/user.entity';
 
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {

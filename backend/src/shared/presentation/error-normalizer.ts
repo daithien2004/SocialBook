@@ -23,7 +23,8 @@ export function normalizeError(e: unknown): NormalizedError {
 
   if (e instanceof WsException) {
     const p = e.getError();
-    const obj = typeof p === 'object' && p !== null ? (p as Record<string, unknown>) : {};
+    const obj =
+      typeof p === 'object' && p !== null ? (p as Record<string, unknown>) : {};
     const code = typeof obj.code === 'string' ? obj.code : ErrorCode.WS_ERROR;
     const message =
       typeof obj.message === 'string'

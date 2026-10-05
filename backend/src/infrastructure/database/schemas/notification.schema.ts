@@ -19,26 +19,26 @@ import { BaseSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true })
 export class Notification extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: String, required: true, trim: true })
-  title: string;
+  title!: string;
 
   @Prop({ type: String, required: true, trim: true })
-  message: string;
+  message!: string;
 
   @Prop({
     type: String,
     enum: NOTIFICATION_TYPES,
     default: 'info',
   })
-  type: string;
+  type!: string;
 
   @Prop({ type: Boolean, default: false })
-  isRead: boolean;
+  isRead!: boolean;
 
   @Prop({ type: Date, default: null })
-  sentAt: Date | null;
+  sentAt!: Date | null;
 
   @Prop({
     type: {
@@ -48,7 +48,7 @@ export class Notification extends BaseSchema {
       targetId: { type: Types.ObjectId },
     },
   })
-  meta: {
+  meta!: {
     actorId: Types.ObjectId;
     username: string;
     image: string;
@@ -56,7 +56,7 @@ export class Notification extends BaseSchema {
   };
 
   @Prop({ type: String, default: null })
-  actionUrl: string | null;
+  actionUrl!: string | null;
 }
 
 export type NotificationDocument = HydratedDocument<Notification>;

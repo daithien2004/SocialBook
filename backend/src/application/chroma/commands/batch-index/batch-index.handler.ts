@@ -1,6 +1,6 @@
 import { BatchIndexCommand } from './batch-index.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { Logger, BadRequestException } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 
 @CommandHandler(BatchIndexCommand)

@@ -44,7 +44,9 @@ export class PostModerationProcessor extends WorkerHost {
 
     // Một lần gọi duy nhất. Nếu lỗi mạng/timeout → throw → BullMQ tự retry
     // với exponential backoff (tránh dội thêm lần vào AI provider đang bận).
-    await this.commandBus.execute(new ProcessPostModerationCommand(postId, content));
+    await this.commandBus.execute(
+      new ProcessPostModerationCommand(postId, content),
+    );
   }
 
   /**

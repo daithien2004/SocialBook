@@ -7,5 +7,6 @@ export class GetCommentCountQuery extends Query<GetCommentCountResult> {
       'book' | 'chapter' | 'post' | 'author' | 'paragraph',
     public readonly parentId?: string | null,
   ) {
-    super();}
+    super();
+  }
 }

@@ -8,8 +8,7 @@ import { NotificationsRepositoryModule } from '@/infrastructure/database/reposit
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
 @Module({
-  imports: [
-    CqrsModule,NotificationsRepositoryModule, IdGeneratorModule],
+  imports: [CqrsModule, NotificationsRepositoryModule, IdGeneratorModule],
   providers: [
     CreateNotificationHandler,
     GetUserNotificationsHandler,

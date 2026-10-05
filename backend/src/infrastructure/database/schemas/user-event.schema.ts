@@ -6,7 +6,7 @@ import { UserEventType } from '@/domain/analytics/enums/user-event-type.enum';
 @Schema({ timestamps: true, collection: 'user_events' })
 export class UserEvent extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: String, index: true })
   sessionId?: string;
@@ -17,7 +17,7 @@ export class UserEvent extends BaseSchema {
     required: true,
     index: true,
   })
-  eventType: UserEventType;
+  eventType!: UserEventType;
 
   @Prop({ type: Types.ObjectId, ref: 'Book', index: true })
   bookId?: Types.ObjectId;

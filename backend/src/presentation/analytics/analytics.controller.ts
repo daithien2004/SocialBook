@@ -10,10 +10,7 @@ import { Public } from '@/common/decorators/custom.decorator';
 
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post('events')
   async trackEvent(

@@ -1,7 +1,7 @@
 import { RefreshTokenCommand } from './refresh-token.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';

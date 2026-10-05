@@ -10,7 +10,7 @@ import { PresenceData } from '@/domain/reading-rooms/interfaces/presence-cache.p
 export class ReadingRoomPresenceCoordinator {
   private readonly logger = new Logger(ReadingRoomPresenceCoordinator.name);
   private readonly presenceBroadcastPending = new Map<string, NodeJS.Timeout>();
-  private server: Namespace;
+  private server!: Namespace;
 
   constructor(private readonly presenceService: ReadingRoomPresenceService) {}
 

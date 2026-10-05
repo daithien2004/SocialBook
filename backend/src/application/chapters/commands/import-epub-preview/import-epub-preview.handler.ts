@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ImportEpubPreviewCommand } from './import-epub-preview.command';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   IEpubParserPort,
   ParsedChapter,
@@ -12,15 +12,23 @@ export interface ImportEpubPreviewResult {
 }
 
 @CommandHandler(ImportEpubPreviewCommand)
-export class ImportEpubPreviewHandler implements ICommandHandler<ImportEpubPreviewCommand, ImportEpubPreviewResult> {
+export class ImportEpubPreviewHandler implements ICommandHandler<
+  ImportEpubPreviewCommand,
+  ImportEpubPreviewResult
+> {
   private readonly logger = new Logger(ImportEpubPreviewHandler.name);
 
   constructor(private readonly epubParser: IEpubParserPort) {}
 
-  async execute(command: ImportEpubPreviewCommand): Promise<ImportEpubPreviewResult> {
+  async execute(
+    command: ImportEpubPreviewCommand,
+  ): Promise<ImportEpubPreviewResult> {
     try {
       this.logger.log(`Parsing EPUB file: ${command.fileName}`);
-      const chapters = await this.epubParser.parseEpub(command.fileBuffer, command.fileName);
+      const chapters = await this.epubParser.parseEpub(
+        command.fileBuffer,
+        command.fileName,
+      );
 
       this.logger.log(`Parsed ${chapters.length} chapters from EPUB`);
 
@@ -29,7 +37,10 @@ export class ImportEpubPreviewHandler implements ICommandHandler<ImportEpubPrevi
         totalChapters: chapters.length,
       };
     } catch (error) {
-      this.logger.error(`Failed to parse EPUB file: ${command.fileName}`, error);
+      this.logger.error(
+        `Failed to parse EPUB file: ${command.fileName}`,
+        error,
+      );
       throw error;
     }
   }

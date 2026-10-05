@@ -28,7 +28,7 @@ export class LikeRepository implements ILikeRepository {
   async save(like: Like): Promise<void> {
     const persistenceData = this.toPersistence(like);
     const { _id, ...updateData } = persistenceData;
-    void _id;
+    _id;
 
     await this.likeModel
       .findOneAndUpdate(

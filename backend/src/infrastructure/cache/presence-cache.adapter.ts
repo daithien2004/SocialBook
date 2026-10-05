@@ -69,14 +69,12 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
       });
 
       if (expiredUserIds.length > 0) {
-        this.redis
-          .srem(setKey, ...expiredUserIds)
-          .catch((err) =>
-            this.logger.error(
-              'Failed to cleanup expired presences',
-              err instanceof Error ? err.stack : String(err),
-            ),
+        this.redis.srem(setKey, ...expiredUserIds).catch((err) => {
+          this.logger.error(
+            'Failed to cleanup expired presences',
+            err instanceof Error ? err.stack : String(err),
           );
+        });
       }
 
       return activePresences;

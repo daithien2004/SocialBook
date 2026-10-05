@@ -1,5 +1,5 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, ConflictException } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { ConflictException } from '@nestjs/common';
 import { IBookmarkRepository } from '@/domain/bookmarks/repositories/bookmark.repository.interface';
 import { Bookmark } from '@/domain/bookmarks/entities/bookmark.entity';
 import { Types } from 'mongoose';

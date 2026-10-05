@@ -9,7 +9,10 @@ import { DeleteAuthorCommand } from './delete-author.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @CommandHandler(DeleteAuthorCommand)
-export class DeleteAuthorHandler implements ICommandHandler<DeleteAuthorCommand, void> {
+export class DeleteAuthorHandler implements ICommandHandler<
+  DeleteAuthorCommand,
+  void
+> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(command: DeleteAuthorCommand): Promise<void> {

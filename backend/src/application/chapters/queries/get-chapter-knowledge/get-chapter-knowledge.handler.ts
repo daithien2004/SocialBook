@@ -1,6 +1,6 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { GetChapterKnowledgeQuery } from './get-chapter-knowledge.query';
-﻿import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Logger, NotFoundException } from '@nestjs/common';
 
 import { IChapterKnowledgeRepository } from '@/domain/chapters/repositories/chapter-knowledge.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
@@ -12,9 +12,8 @@ import {
 import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 
-
 @QueryHandler(GetChapterKnowledgeQuery)
-export class GetChapterKnowledgeHandler implements IQueryHandler<GetChapterKnowledgeQuery, any> {
+export class GetChapterKnowledgeHandler implements IQueryHandler<GetChapterKnowledgeQuery> {
   private readonly logger = new Logger(GetChapterKnowledgeHandler.name);
 
   constructor(

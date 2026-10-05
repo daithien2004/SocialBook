@@ -1,6 +1,5 @@
 import { CreateUserHighlightCommand } from './create-user-highlight.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
 

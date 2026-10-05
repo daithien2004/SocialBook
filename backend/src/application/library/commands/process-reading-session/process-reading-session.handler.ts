@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { RecordReadingTimeHandler } from '@/application/library/commands/record-reading-time/record-reading-time.handler';
 import { ProcessReadingSessionCommand } from './process-reading-session.command';
 
@@ -8,7 +8,10 @@ export interface ProcessReadingSessionResult {
 }
 
 @CommandHandler(ProcessReadingSessionCommand)
-export class ProcessReadingSessionHandler implements ICommandHandler<ProcessReadingSessionCommand, ProcessReadingSessionResult> {
+export class ProcessReadingSessionHandler implements ICommandHandler<
+  ProcessReadingSessionCommand,
+  ProcessReadingSessionResult
+> {
   private readonly logger = new Logger(ProcessReadingSessionHandler.name);
 
   constructor(
@@ -19,7 +22,9 @@ export class ProcessReadingSessionHandler implements ICommandHandler<ProcessRead
     command: ProcessReadingSessionCommand,
   ): Promise<ProcessReadingSessionResult> {
     try {
-      const result = await this.recordReadingTimeHandler.execute(command as any);
+      const result = await this.recordReadingTimeHandler.execute(
+        command as any,
+      );
 
       this.logger.log(
         `Processed reading session for user ${command.userId}: ${result.timeSpentMinutes} minutes`,

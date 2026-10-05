@@ -1,6 +1,5 @@
 import { IncrementPlayCountCommand } from './increment-play-count.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AudioPlayedEvent } from '@/application/analytics/events/audio-played.event';
 import { EventNames } from '@/common/constants/event-names.constant';

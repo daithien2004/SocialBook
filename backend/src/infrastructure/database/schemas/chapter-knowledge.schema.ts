@@ -6,7 +6,7 @@ export type ChapterKnowledgeDocument = ChapterKnowledge & Document;
 @Schema({ _id: false })
 export class KnowledgeEntitySchema {
   @Prop({ type: String, required: true })
-  name: string;
+  name!: string;
 
   @Prop({
     type: String,
@@ -20,25 +20,25 @@ export class KnowledgeEntitySchema {
     ],
     required: true,
   })
-  type: string;
+  type!: string;
 
   @Prop({ type: String, required: true })
-  description: string;
+  description!: string;
 
   @Prop({ type: Number, default: 5 })
-  importance: number;
+  importance!: number;
 }
 
 @Schema({ _id: false })
 export class KnowledgeRelationshipSchema {
   @Prop({ type: String, required: true })
-  source: string;
+  source!: string;
 
   @Prop({ type: String, required: true })
-  target: string;
+  target!: string;
 
   @Prop({ type: String, required: true })
-  type: string;
+  type!: string;
 
   @Prop({ type: String })
   description?: string;
@@ -47,28 +47,28 @@ export class KnowledgeRelationshipSchema {
 @Schema({ timestamps: true, collection: 'chapter_knowledge' })
 export class ChapterKnowledge {
   @Prop({ type: String, required: true })
-  _id: string;
+  _id!: string;
 
   @Prop({ type: String, required: true, index: true })
-  chapterId: string;
+  chapterId!: string;
 
   @Prop({
     type: [SchemaFactory.createForClass(KnowledgeEntitySchema)],
     default: [],
   })
-  entities: KnowledgeEntitySchema[];
+  entities!: KnowledgeEntitySchema[];
 
   @Prop({
     type: [SchemaFactory.createForClass(KnowledgeRelationshipSchema)],
     default: [],
   })
-  relationships: KnowledgeRelationshipSchema[];
+  relationships!: KnowledgeRelationshipSchema[];
 
   @Prop({ type: String })
   summary?: string;
 
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 }
 
 export const ChapterKnowledgeSchema =

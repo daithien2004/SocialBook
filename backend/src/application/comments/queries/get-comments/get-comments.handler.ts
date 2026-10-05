@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   ICommentRepository,
   CommentFilter,
@@ -9,7 +9,7 @@ import { PaginatedResult } from '@/common/interfaces/pagination.interface';
 import { CommentModel } from '@/domain/comments/read-models/comment-model';
 
 @QueryHandler(GetCommentsQuery)
-export class GetCommentsHandler implements IQueryHandler<GetCommentsQuery, any> {
+export class GetCommentsHandler implements IQueryHandler<GetCommentsQuery> {
   private readonly logger = new Logger(GetCommentsHandler.name);
 
   constructor(private readonly commentRepository: ICommentRepository) {}

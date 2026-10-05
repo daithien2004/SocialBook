@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
 import { TargetType } from '@/domain/likes/value-objects/target-type.vo';
@@ -13,7 +13,10 @@ export interface ToggleBookLikeResult {
 }
 
 @CommandHandler(ToggleBookLikeCommand)
-export class ToggleBookLikeHandler implements ICommandHandler<ToggleBookLikeCommand, ToggleBookLikeResult> {
+export class ToggleBookLikeHandler implements ICommandHandler<
+  ToggleBookLikeCommand,
+  ToggleBookLikeResult
+> {
   private readonly logger = new Logger(ToggleBookLikeHandler.name);
 
   constructor(
@@ -26,7 +29,9 @@ export class ToggleBookLikeHandler implements ICommandHandler<ToggleBookLikeComm
     try {
       const bookId = BookId.create(command.bookId);
 
-      const likeResult = await this.commandBus.execute(new ToggleLikeCommand(command.userId, command.bookId, TargetType.BOOK));
+      const likeResult = await this.commandBus.execute(
+        new ToggleLikeCommand(command.userId, command.bookId, TargetType.BOOK),
+      );
 
       if (likeResult.isLiked) {
         await this.bookRepository.addLike(bookId, command.userId);

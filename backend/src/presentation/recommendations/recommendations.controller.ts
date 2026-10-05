@@ -7,10 +7,7 @@ import { GetPersonalizedRecommendationsQuery } from '@/application/recommendatio
 
 @Controller('recommendations')
 export class RecommendationsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Get('personalized')
   async getPersonalizedRecommendations(

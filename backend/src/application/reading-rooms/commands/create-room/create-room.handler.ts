@@ -14,7 +14,10 @@ import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 
 @CommandHandler(CreateRoomCommand)
-export class CreateRoomHandler implements ICommandHandler<CreateRoomCommand, ReadingRoomResult> {
+export class CreateRoomHandler implements ICommandHandler<
+  CreateRoomCommand,
+  ReadingRoomResult
+> {
   constructor(
     private readonly roomRepository: IReadingRoomRepository,
     private readonly bookRepository: IBookRepository,

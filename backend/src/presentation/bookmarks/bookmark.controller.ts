@@ -18,9 +18,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 @Controller('bookmarks')
 @UseGuards(JwtAuthGuard)
 export class BookmarkController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post()
   async createBookmark(

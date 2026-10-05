@@ -9,7 +9,10 @@ import { CreateAuthorCommand } from './create-author.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @CommandHandler(CreateAuthorCommand)
-export class CreateAuthorHandler implements ICommandHandler<CreateAuthorCommand, Author> {
+export class CreateAuthorHandler implements ICommandHandler<
+  CreateAuthorCommand,
+  Author
+> {
   constructor(
     private readonly authorRepository: IAuthorRepository,
     private readonly idGenerator: IIdGenerator,

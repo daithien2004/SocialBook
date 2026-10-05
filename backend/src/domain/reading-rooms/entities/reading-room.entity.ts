@@ -207,7 +207,7 @@ export class ReadingRoom extends Entity<RoomId> {
     this._dirty = false;
   }
 
-  protected markAsUpdated(): void {
+  protected override markAsUpdated(): void {
     super.markAsUpdated();
     this._dirty = true;
   }

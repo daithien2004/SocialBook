@@ -9,7 +9,7 @@ import { UserEventType } from '@/domain/analytics/enums/user-event-type.enum';
 
 export class TrackUserEventDto {
   @IsEnum(UserEventType)
-  eventType: UserEventType;
+  eventType!: UserEventType;
 
   @IsOptional()
   @IsString()

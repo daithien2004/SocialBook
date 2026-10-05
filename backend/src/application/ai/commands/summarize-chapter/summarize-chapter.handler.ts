@@ -1,6 +1,5 @@
 import { SummarizeChapterCommand } from './summarize-chapter.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IAIPort } from '@/domain/ai/interfaces/ai.port';
 import { IAIRequestRepository } from '@/domain/ai/repositories/ai-request.repository.interface';

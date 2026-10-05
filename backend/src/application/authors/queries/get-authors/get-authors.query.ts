@@ -1,8 +1,6 @@
-import { Query, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { PaginationOptions } from "@/common/interfaces/pagination.interface";
-import { AuthorFilter, IAuthorRepository } from "@/domain/authors/repositories/author.repository.interface";
-import { PaginatedResult } from "@/shared/domain/pagination.types";
-import { Author } from "@/domain/authors/entities/author.entity";
+import { Query } from '@nestjs/cqrs';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
+import { Author } from '@/domain/authors/entities/author.entity';
 
 export class GetAuthorsQuery extends Query<PaginatedResult<Author>> {
   constructor(
@@ -11,5 +9,6 @@ export class GetAuthorsQuery extends Query<PaginatedResult<Author>> {
     public readonly name?: string,
     public readonly bio?: string,
   ) {
-    super();}
+    super();
+  }
 }

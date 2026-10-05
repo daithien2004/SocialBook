@@ -1,5 +1,5 @@
-import { RefreshTokenUseCase } from '@/application/auth/use-cases/refresh-token/refresh-token.use-case';
-import { RefreshTokenCommand } from '@/application/auth/use-cases/refresh-token/refresh-token.command';
+import { RefreshTokenHandler } from '@/application/auth/commands/refresh-token/refresh-token.handler';
+import { RefreshTokenCommand } from '@/application/auth/commands/refresh-token/refresh-token.command';
 import { TokenRotationPort } from '@/application/ports/token-rotation.port';
 import { TokenService } from '@/application/auth/services/token.service';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -14,8 +14,8 @@ const EMAIL = 'user@example.com';
 const REFRESH_TOKEN = 'refresh-token';
 const ACCESS_TOKEN = 'access-token';
 
-describe('RefreshTokenUseCase (Unit)', () => {
-  let useCase: RefreshTokenUseCase;
+describe('RefreshTokenHandler (Unit)', () => {
+  let useCase: RefreshTokenHandler;
   let mockUserRepository: jest.Mocked<
     Pick<IUserRepository, 'findById' | 'save'>
   >;
@@ -85,7 +85,7 @@ describe('RefreshTokenUseCase (Unit)', () => {
       revokeAll: jest.fn(),
     };
 
-    useCase = new RefreshTokenUseCase(
+    useCase = new RefreshTokenHandler(
       mockUserRepository as unknown as IUserRepository,
       mockRolesRepository as unknown as IRoleRepository,
       mockTokenService as unknown as TokenService,

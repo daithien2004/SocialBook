@@ -7,19 +7,19 @@ import { ModerationStatus } from '@/domain/posts/enums/moderation-status.enum';
 @Schema({ timestamps: true })
 export class Post extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Book' })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({ type: String, required: true, trim: true })
-  content: string;
+  content!: string;
 
   @Prop({ type: [String], default: [] })
-  imageUrls: string[];
+  imageUrls!: string[];
 
   @Prop({ type: Boolean, default: false })
-  isFlagged: boolean;
+  isFlagged!: boolean;
 
   @Prop({ type: String })
   moderationReason?: string;

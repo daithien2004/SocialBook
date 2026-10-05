@@ -8,16 +8,16 @@ export type CollectionDocument = HydratedDocument<Collection>;
 @Schema({ timestamps: true, collection: 'collections' })
 export class Collection extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ required: true, trim: true })
-  name: string;
+  name!: string;
 
   @Prop({ default: '' })
-  description: string;
+  description!: string;
 
   @Prop({ default: false })
-  isPublic: boolean;
+  isPublic!: boolean;
 }
 
 export const CollectionSchema = SchemaFactory.createForClass(Collection);

@@ -11,7 +11,10 @@ import { withRetries } from '@/application/shared/utils/with-retries.util';
 import { AddHighlightCommand } from './add-highlight.command';
 
 @CommandHandler(AddHighlightCommand)
-export class AddHighlightHandler implements ICommandHandler<AddHighlightCommand, void> {
+export class AddHighlightHandler implements ICommandHandler<
+  AddHighlightCommand,
+  void
+> {
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(command: AddHighlightCommand) {

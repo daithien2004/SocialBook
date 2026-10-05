@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import {
   NotFoundDomainException,
   ConflictDomainException,
@@ -15,7 +15,10 @@ import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
 import { EventNames } from '@/common/constants/event-names.constant';
 
 @CommandHandler(UpdateBookCommand)
-export class UpdateBookHandler implements ICommandHandler<UpdateBookCommand, Book> {
+export class UpdateBookHandler implements ICommandHandler<
+  UpdateBookCommand,
+  Book
+> {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly bookCache: IBookCachePort,

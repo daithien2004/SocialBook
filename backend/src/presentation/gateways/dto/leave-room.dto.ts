@@ -8,7 +8,7 @@ import {
 export class LeaveRoomDto {
   @IsString()
   @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
-  roomId: string;
+  roomId!: string;
 
   /** `newHostId` là userId ⇒ ObjectId 24 hex. */
   @IsOptional()

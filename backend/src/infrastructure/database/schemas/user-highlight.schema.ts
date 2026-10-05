@@ -7,22 +7,22 @@ export type UserHighlightDocument = HydratedDocument<UserHighlight>;
 @Schema({ timestamps: true, collection: 'user_highlights' })
 export class UserHighlight extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true, index: true })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Chapter', required: true })
-  chapterId: Types.ObjectId;
+  chapterId!: Types.ObjectId;
 
   @Prop({ required: true })
-  paragraphId: string;
+  paragraphId!: string;
 
   @Prop({ required: true })
-  content: string;
+  content!: string;
 
   @Prop({ required: true, default: '#ffeb3b' })
-  color: string;
+  color!: string;
 
   @Prop({ required: false })
   note?: string;

@@ -1,7 +1,7 @@
-import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from "@nestjs/common";
-import { IVectorRepository } from "@/domain/chroma/repositories/vector.repository.interface";
+import { Command } from '@nestjs/cqrs';
 
-export class ClearCollectionCommand extends Command<{ success: boolean; }> {
-  constructor() { super(); }
+export class ClearCollectionCommand extends Command<{ success: boolean }> {
+  constructor() {
+    super();
+  }
 }

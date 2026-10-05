@@ -1,5 +1,5 @@
-import { CreateBookUseCase } from '@/application/books/use-cases/create-book/create-book.use-case';
-import { CreateBookCommand } from '@/application/books/use-cases/create-book/create-book.command';
+import { CreateBookHandler } from '@/application/books/commands/create-book/create-book.handler';
+import { CreateBookCommand } from '@/application/books/commands/create-book/create-book.command';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { createMockBookRepository } from '../../../../helpers/mock-book-repository';
 import { createMockBookCacheService } from '../../../../helpers/mock-cache-service';
@@ -8,8 +8,8 @@ import { IAuthorRepository } from '@/domain/authors/repositories/author.reposito
 import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
 import { Book } from '@/domain/books/entities/book.entity';
 
-describe('CreateBookUseCase (Unit)', () => {
-  let useCase: CreateBookUseCase;
+describe('CreateBookHandler (Unit)', () => {
+  let useCase: CreateBookHandler;
   let mockBookRepo: ReturnType<typeof createMockBookRepository>;
   let mockAuthorRepo: jest.Mocked<IAuthorRepository>;
   let mockGenreRepo: jest.Mocked<IGenreRepository>;
@@ -46,7 +46,7 @@ describe('CreateBookUseCase (Unit)', () => {
     mockBookCache = createMockBookCacheService();
     mockEventEmitter = { emit: jest.fn() };
 
-    useCase = new CreateBookUseCase(
+    useCase = new CreateBookHandler(
       mockBookRepo,
       mockAuthorRepo,
       mockGenreRepo,

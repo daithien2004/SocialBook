@@ -16,15 +16,15 @@ export class AddHighlightDto {
    */
   @IsString()
   @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
-  roomId: string;
+  roomId!: string;
 
   @IsString()
   @Length(1, CHAPTER_SLUG_MAX_LENGTH)
-  chapterSlug: string;
+  chapterSlug!: string;
 
   @IsString()
   @Length(1, PARAGRAPH_ID_MAX_LENGTH)
-  paragraphId: string;
+  paragraphId!: string;
 
   /** Trim trước khi validate — domain cũng trim lại nữa (entity:230). */
   @Transform(({ value }: { value: unknown }) =>
@@ -32,7 +32,7 @@ export class AddHighlightDto {
   )
   @IsString()
   @Length(HIGHLIGHT_CONTENT_MIN_LENGTH, HIGHLIGHT_CONTENT_MAX_LENGTH)
-  content: string;
+  content!: string;
 
   /** Idempotency key do client cấp (T16) — tùy chọn. */
   @IsOptional()

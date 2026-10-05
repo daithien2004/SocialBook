@@ -6,21 +6,13 @@ import { LikesRepositoryModule } from '@/infrastructure/database/repositories/li
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { QueueModule } from '@/infrastructure/queue/queue.module';
 
-export const CommandHandlers = [
-  ToggleLikeHandler
-];
+export const CommandHandlers = [ToggleLikeHandler];
 
-export const QueryHandlers = [
-  GetLikeCountHandler,
-  GetLikeStatusHandler
-];
+export const QueryHandlers = [GetLikeCountHandler, GetLikeStatusHandler];
 
 @Module({
   imports: [LikesRepositoryModule, IdGeneratorModule, QueueModule],
-  providers: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-  ],
+  providers: [...CommandHandlers, ...QueryHandlers],
   exports: [GetLikeCountHandler, GetLikeStatusHandler, ToggleLikeHandler],
 })
 export class LikesApplicationModule {}

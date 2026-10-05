@@ -6,32 +6,32 @@ import { BaseSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true })
 export class User extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'Role', required: true })
-  roleId: Types.ObjectId;
+  roleId!: Types.ObjectId;
 
   @Prop({ unique: true, required: true, trim: true })
-  username: string;
+  username!: string;
 
   @Prop({ unique: true, required: true })
-  email: string;
+  email!: string;
 
   @Prop({ required: false })
   password?: string;
 
   @Prop({ default: false })
-  isVerified: boolean;
+  isVerified!: boolean;
 
   @Prop({ default: false })
-  isBanned: boolean;
+  isBanned!: boolean;
 
   @Prop({ default: 0 })
-  violationCount: number;
+  violationCount!: number;
 
   @Prop({
     type: String,
     enum: ['local', 'google', 'facebook'],
     default: 'local',
   })
-  provider: string;
+  provider!: string;
 
   @Prop({ required: false })
   providerId?: string;
@@ -64,7 +64,7 @@ export class User extends BaseSchema {
   lastLoginUa?: string;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Genre' }], default: [] })
-  favoriteGenres: Types.ObjectId[];
+  favoriteGenres!: Types.ObjectId[];
 
   @Prop({
     type: {

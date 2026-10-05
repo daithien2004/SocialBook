@@ -8,46 +8,46 @@ export type BookDocument = Book & Document;
 @Schema({ timestamps: true }) // tự sinh createdAt, updatedAt
 export class Book extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'Author', required: true })
-  authorId: Types.ObjectId;
+  authorId!: Types.ObjectId;
 
   @Prop({
     type: [{ type: Types.ObjectId, ref: 'Genre' }],
     default: [],
   })
-  genres: Types.ObjectId[];
+  genres!: Types.ObjectId[];
 
   @Prop({ required: true })
-  title: string;
+  title!: string;
 
   @Prop({ required: true })
-  slug: string;
+  slug!: string;
 
   @Prop()
-  publishedYear: string;
+  publishedYear!: string;
 
   @Prop()
-  description: string;
+  description!: string;
 
   @Prop()
-  coverUrl: string;
+  coverUrl!: string;
 
   @Prop({ enum: ['draft', 'published', 'completed'], default: 'draft' })
-  status: string;
+  status!: string;
 
   @Prop()
-  tags: string[];
+  tags!: string[];
 
   @Prop({ default: 0 })
-  views: number;
+  views!: number;
 
   @Prop({ default: 0 })
-  likes: number;
+  likes!: number;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
-  likedBy: Types.ObjectId[];
+  likedBy!: Types.ObjectId[];
 
   @Prop({ type: Date, default: null })
-  vectorIndexedAt: Date | null;
+  vectorIndexedAt!: Date | null;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);

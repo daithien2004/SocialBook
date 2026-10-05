@@ -11,20 +11,14 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
 export const CommandHandlers = [
   CreateGenreHandler,
   DeleteGenreHandler,
-  UpdateGenreHandler
+  UpdateGenreHandler,
 ];
 
-export const QueryHandlers = [
-  GetGenreByIdHandler,
-  GetGenresHandler
-];
+export const QueryHandlers = [GetGenreByIdHandler, GetGenresHandler];
 
 @Module({
   imports: [GenresRepositoryModule, BooksRepositoryModule, IdGeneratorModule],
-  providers: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-  ],
+  providers: [...CommandHandlers, ...QueryHandlers],
   exports: [
     CreateGenreHandler,
     DeleteGenreHandler,

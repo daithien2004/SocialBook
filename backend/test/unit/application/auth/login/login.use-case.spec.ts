@@ -1,5 +1,5 @@
-import { LoginUseCase } from '@/application/auth/use-cases/login/login.use-case';
-import { LoginCommand } from '@/application/auth/use-cases/login/login.command';
+import { LoginHandler } from '@/application/auth/commands/login/login.handler';
+import { LoginCommand } from '@/application/auth/commands/login/login.command';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
 import {
   UnauthorizedDomainException,
@@ -68,15 +68,15 @@ function createBannedUser(): User {
   });
 }
 
-describe('LoginUseCase (Unit)', () => {
-  let useCase: LoginUseCase;
+describe('LoginHandler (Unit)', () => {
+  let useCase: LoginHandler;
   let mockTokenService: ReturnType<typeof createMockTokenService>;
   let mockRoleRepository: ReturnType<typeof createMockRoleRepository>;
 
   beforeEach(() => {
     mockTokenService = createMockTokenService();
     mockRoleRepository = createMockRoleRepository();
-    useCase = new LoginUseCase(mockTokenService as any, mockRoleRepository);
+    useCase = new LoginHandler(mockTokenService as any, mockRoleRepository);
   });
 
   it('should return tokens and user data for a verified user', async () => {

@@ -3,8 +3,8 @@ import {
   BadRequestDomainException,
   ConflictDomainException,
 } from '@/shared/domain/common-exceptions';
-import { CreateRoomUseCase } from '@/application/reading-rooms/use-cases/create-room/create-room.use-case';
-import { CreateRoomCommand } from '@/application/reading-rooms/use-cases/create-room/create-room.command';
+import { CreateRoomHandler } from '@/application/reading-rooms/commands/create-room/create-room.handler';
+import { CreateRoomCommand } from '@/application/reading-rooms/commands/create-room/create-room.command';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
@@ -42,7 +42,7 @@ describe('RoomId & Collision Retries (T4)', () => {
     });
   });
 
-  describe('CreateRoomUseCase duplicate key retry', () => {
+  describe('CreateRoomHandler duplicate key retry', () => {
     it('retries up to 5 times when encountering a duplicate key collision and succeeds', async () => {
       let attempts = 0;
       const mockRoomRepo = {
@@ -66,7 +66,7 @@ describe('RoomId & Collision Retries (T4)', () => {
         findFirstChapter: jest.fn().mockResolvedValue({ slug: 'chapter-1' }),
       } as unknown as IChapterRepository;
 
-      const useCase = new CreateRoomUseCase(
+      const useCase = new CreateRoomHandler(
         mockRoomRepo,
         mockBookRepo,
         mockChapterRepo,

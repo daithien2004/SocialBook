@@ -1,6 +1,5 @@
 import { GetUserStatsQuery } from './get-user-stats.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserStats } from '@/domain/statistics/read-models/statistics.model';
 

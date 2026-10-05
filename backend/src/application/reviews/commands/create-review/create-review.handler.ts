@@ -1,7 +1,6 @@
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { CreateReviewCommand } from './create-review.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import {
   BadRequestDomainException,
   ConflictDomainException,

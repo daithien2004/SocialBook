@@ -47,7 +47,7 @@ import { Type } from 'class-transformer';
 
 export class GetCommentsDto {
   @IsString()
-  targetId: string;
+  targetId!: string;
 
   @IsOptional()
   parentId?: string | null;

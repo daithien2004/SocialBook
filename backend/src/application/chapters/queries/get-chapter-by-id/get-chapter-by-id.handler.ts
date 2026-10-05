@@ -1,5 +1,4 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -12,7 +11,10 @@ import { ChapterResult } from '../get-chapters/get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
 @QueryHandler(GetChapterByIdQuery)
-export class GetChapterByIdHandler implements IQueryHandler<GetChapterByIdQuery, ChapterResult> {
+export class GetChapterByIdHandler implements IQueryHandler<
+  GetChapterByIdQuery,
+  ChapterResult
+> {
   constructor(private readonly chapterRepository: IChapterRepository) {}
 
   async execute(query: GetChapterByIdQuery): Promise<ChapterResult> {

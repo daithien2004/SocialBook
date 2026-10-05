@@ -1,6 +1,5 @@
 import { CreateNotificationCommand } from './create-notification.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { INotificationRepository } from '@/domain/notifications/repositories/notification.repository.interface';
 import { Notification } from '@/domain/notifications/entities/notification.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';

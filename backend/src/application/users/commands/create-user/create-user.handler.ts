@@ -1,6 +1,5 @@
 import { CreateUserCommand } from './create-user.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';

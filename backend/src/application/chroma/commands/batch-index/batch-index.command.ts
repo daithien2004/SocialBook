@@ -1,11 +1,16 @@
-import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger, BadRequestException } from "@nestjs/common";
-import { IVectorRepository } from "@/domain/chroma/repositories/vector.repository.interface";
+import { Command } from '@nestjs/cqrs';
 
-export class BatchIndexCommand extends Command<{ totalProcessed: number; successful: number; failed: number; errors: { contentId: string; error: string; }[]; }> {
+export class BatchIndexCommand extends Command<{
+  totalProcessed: number;
+  successful: number;
+  failed: number;
+  errors: { contentId: string; error: string }[];
+}> {
   constructor(
     public readonly contentIds: string[],
     public readonly contentType: string,
     public readonly forceReindex?: boolean,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

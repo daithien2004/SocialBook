@@ -1,74 +1,72 @@
-import { ReadingRoomGateway } from '@/presentation/gateways/reading-room.gateway';
+import { ExecutionContext } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
+import { WsRoomGuard } from '@/presentation/gateways/ws-room.guard';
+import type { RoomSocket } from '@/presentation/gateways/reading-room.types';
+import { fakeOf } from '../../support/typed-fake';
 
-type FakeSocket = {
-  data: { userId: string; role: string; roomId?: string };
-  rooms: Set<string>;
-  emit: jest.Mock;
-};
+/**
+ * Guard `@UseGuards(WsRoomGuard)` giờ là nơi duy nhất chặn event khi socket
+ * chưa vào phòng (refactor CQRS tách guard ra khỏi handler).
+ */
+const makeContext = (client: unknown, data: unknown): ExecutionContext =>
+  fakeOf<ExecutionContext>({
+    switchToWs: () => ({
+      getClient: () => client,
+      getData: () => data,
+    }),
+  });
 
-describe('ReadingRoomGateway remove_highlight room guard', () => {
-  let gateway: ReadingRoomGateway;
-  let removeHighlight: { execute: jest.Mock };
+describe('WsRoomGuard — remove_highlight room guard', () => {
+  const guard = new WsRoomGuard();
 
-  const makeSocket = (joined: boolean): FakeSocket => ({
+  const makeSocket = (joined: boolean): Partial<RoomSocket> => ({
+    id: 'socket-1',
     data: { userId: 'user-1', role: 'user', roomId: 'room-1' },
-    rooms: joined ? new Set(['room:room-1']) : new Set(),
-    emit: jest.fn(),
+    rooms: joined ? new Set(['room:room-1']) : new Set<string>(),
   });
 
-  beforeEach(() => {
-    removeHighlight = { execute: jest.fn().mockResolvedValue({}) };
+  it('rejects remove_highlight when the socket has not joined the room', () => {
+    const socket = fakeOf<RoomSocket>(makeSocket(false));
 
-    gateway = new ReadingRoomGateway(
-      {} as never, // JwtService
-      {} as never, // ConfigService
-      {} as never, // ReadingRoomPresenceService
-      {} as never, // JoinRoomUseCase
-      {} as never, // LeaveRoomUseCase
-      {} as never, // ChangeChapterUseCase
-      {} as never, // ChangeRoomModeUseCase
-      {} as never, // EndRoomUseCase
-      {} as never, // DeleteRoomUseCase
-      {} as never, // AddHighlightUseCase
-      removeHighlight as never,
-      {} as never, // GenerateHighlightInsightUseCase
-      {}, // UpdateProgressUseCase
-      {}, // IChapterRepository
-      {}, // Redis
+    expect(() =>
+      guard.canActivate(makeContext(socket, { roomId: 'room-1' })),
+    ).toThrow(WsException);
+  });
+
+  it('rejects when the payload roomId differs from the socket roomId', () => {
+    const socket = fakeOf<RoomSocket>(makeSocket(true));
+
+    expect(() =>
+      guard.canActivate(makeContext(socket, { roomId: 'room-2' })),
+    ).toThrow(WsException);
+  });
+
+  it('rejects when the payload has no roomId', () => {
+    const socket = fakeOf<RoomSocket>(makeSocket(true));
+
+    expect(() => guard.canActivate(makeContext(socket, undefined))).toThrow(
+      WsException,
     );
-    gateway.server = {
-      to: jest.fn(() => ({ emit: jest.fn() })),
-    } as never;
   });
 
-  it('rejects remove_highlight when the socket has not joined the room', async () => {
-    const socket = makeSocket(false);
+  it('allows remove_highlight once the socket has joined the room', () => {
+    const socket = fakeOf<RoomSocket>(makeSocket(true));
 
-    await expect(
-      gateway.handleRemoveHighlight(socket as never, 'user-1', {
-        roomId: 'room-1',
-        highlightId: 'h1',
-      }),
-    ).rejects.toMatchObject({
-      getError: expect.any(Function),
-    });
-
-    expect(removeHighlight.execute).not.toHaveBeenCalled();
-    expect(socket.emit).not.toHaveBeenCalled();
-  });
-
-  it('allows remove_highlight once the socket has joined the room', async () => {
-    const socket = makeSocket(true);
-
-    await gateway.handleRemoveHighlight(socket as never, 'user-1', {
-      roomId: 'room-1',
-      highlightId: 'h1',
-    });
-
-    expect(removeHighlight.execute).toHaveBeenCalledTimes(1);
-    expect(socket.emit).not.toHaveBeenCalledWith(
-      'error',
-      expect.objectContaining({ code: 'NOT_IN_ROOM' }),
+    expect(guard.canActivate(makeContext(socket, { roomId: 'room-1' }))).toBe(
+      true,
     );
+  });
+
+  it('throws WsException carrying the NOT_IN_ROOM code', () => {
+    const socket = fakeOf<RoomSocket>(makeSocket(false));
+
+    try {
+      guard.canActivate(makeContext(socket, { roomId: 'room-1' }));
+      throw new Error('mong đợi guard ném WsException');
+    } catch (err) {
+      expect(err).toBeInstanceOf(WsException);
+      if (!(err instanceof WsException)) throw err;
+      expect(err.getError()).toEqual({ code: 'NOT_IN_ROOM' });
+    }
   });
 });

@@ -4,20 +4,20 @@ import { Type } from 'class-transformer';
 export class ChapterImportItemDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 }
 
 export class StartChaptersImportDto {
   @IsString()
   @IsNotEmpty()
-  bookId: string;
+  bookId!: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChapterImportItemDto)
-  chapters: ChapterImportItemDto[];
+  chapters!: ChapterImportItemDto[];
 }

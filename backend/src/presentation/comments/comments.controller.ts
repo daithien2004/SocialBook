@@ -32,13 +32,6 @@ import {
 } from '@/presentation/comments/dto/create-comment.dto';
 import { GetCommentsDto } from '@/presentation/comments/dto/filter-comment.dto';
 
-
-
-
-
-
-
-
 import { CreateCommentCommand } from '@/application/comments/commands/create-comment/create-comment.command';
 import { DeleteCommentCommand } from '@/application/comments/commands/delete-comment/delete-comment.command';
 import { GetCommentCountQuery } from '@/application/comments/queries/get-comment-count/get-comment-count.query';
@@ -48,10 +41,7 @@ import { UpdateCommentCommand } from '@/application/comments/commands/update-com
 
 @Controller('comments')
 export class CommentsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post()
   async create(
@@ -70,7 +60,7 @@ export class CommentsController {
 
     return {
       message: 'Comment created successfully',
-      data: new CommentResponseDto(comment as unknown as Comment),
+      data: new CommentResponseDto(comment),
     };
   }
 
@@ -139,7 +129,7 @@ export class CommentsController {
 
     return {
       message: 'Comment updated successfully',
-      data: new CommentResponseDto(comment as unknown as Comment),
+      data: new CommentResponseDto(comment),
     };
   }
 

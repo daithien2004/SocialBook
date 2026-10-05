@@ -1,7 +1,6 @@
 import { RegisterCommand } from './register.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import {
-  Injectable,
   ConflictException,
   InternalServerErrorException,
   Logger,

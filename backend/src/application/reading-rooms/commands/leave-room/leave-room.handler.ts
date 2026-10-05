@@ -12,7 +12,10 @@ import { LeaveRoomCommand } from './leave-room.command';
 import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
 
 @CommandHandler(LeaveRoomCommand)
-export class LeaveRoomHandler implements ICommandHandler<LeaveRoomCommand, LeaveRoomResult> {
+export class LeaveRoomHandler implements ICommandHandler<
+  LeaveRoomCommand,
+  LeaveRoomResult
+> {
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: LeaveRoomCommand): Promise<LeaveRoomResult> {

@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import {
   NotFoundDomainException,
   ConflictDomainException,
@@ -14,7 +14,10 @@ import { ChapterResult } from '../../queries/get-chapters/get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
 @CommandHandler(UpdateChapterCommand)
-export class UpdateChapterHandler implements ICommandHandler<UpdateChapterCommand, ChapterResult> {
+export class UpdateChapterHandler implements ICommandHandler<
+  UpdateChapterCommand,
+  ChapterResult
+> {
   constructor(private readonly chapterRepository: IChapterRepository) {}
 
   async execute(command: UpdateChapterCommand): Promise<ChapterResult> {

@@ -16,7 +16,10 @@ import { IPostModerationPort } from '@/domain/posts/interfaces/post-moderation.p
 import { EventNames } from '@/common/constants/event-names.constant';
 
 @CommandHandler(CreatePostCommand)
-export class CreatePostHandler implements ICommandHandler<CreatePostCommand, { post: Post; moderationMessage?: string }> {
+export class CreatePostHandler implements ICommandHandler<
+  CreatePostCommand,
+  { post: Post; moderationMessage?: string }
+> {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly mediaService: IMediaPort,

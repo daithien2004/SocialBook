@@ -1,6 +1,6 @@
 import { CheckUserExistCommand } from './check-user-exist.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/domain/users/value-objects/user-id.vo';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';

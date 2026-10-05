@@ -12,11 +12,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(private reflector: Reflector) {
     super();
   }
-  canActivate(context: ExecutionContext) {
+  override canActivate(context: ExecutionContext) {
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = Express.User>(
+  override handleRequest<TUser = Express.User>(
     err: Error | null,
     user: TUser,
     _info: unknown,

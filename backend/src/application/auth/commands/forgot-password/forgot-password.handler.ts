@@ -1,6 +1,6 @@
 import { ForgotPasswordCommand } from './forgot-password.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { BadRequestException } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { SendOtpHandler } from '@/application/otp/commands/send-otp/send-otp.handler';

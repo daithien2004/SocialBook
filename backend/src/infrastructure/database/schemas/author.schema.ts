@@ -9,16 +9,16 @@ export type AuthorDocument = Author & Document;
 @Schema({ timestamps: true })
 export class Author extends BaseSchema {
   @Prop({ required: true, unique: true, index: true })
-  name: string;
+  name!: string;
 
   @Prop({ unique: true, index: true })
-  slug: string;
+  slug!: string;
 
   @Prop()
-  bio: string;
+  bio!: string;
 
   @Prop()
-  photoUrl: string;
+  photoUrl!: string;
 }
 
 export const AuthorSchema = SchemaFactory.createForClass(Author);

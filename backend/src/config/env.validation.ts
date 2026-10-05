@@ -14,7 +14,9 @@ const envValidationSchema = z.object({
   AUTH_COOKIE_SECURE: z.string().optional(),
   AUTH_COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).optional(),
   // Optional — giá trị mặc định nằm ở env.config.ts
-  PORT: z.coerce.number().int().positive().optional(),
+  // PORT=0 (IDE/preview export ra) không phải lỗi cấu hình — env.config.ts
+  // sẽ fallback về 5000, nên chỉ reject giá trị âm/không phải số.
+  PORT: z.coerce.number().int().nonnegative().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
   FRONTEND_URL: z.string().url().optional(),
   REDIS_HOST: z.string().optional(),

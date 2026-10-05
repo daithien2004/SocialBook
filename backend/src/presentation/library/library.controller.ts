@@ -1,6 +1,5 @@
 import { Dispatcher } from '@/application/common/dispatcher';
 import { UpdateStatusCommand } from '@/application/library/commands/update-status/update-status.command';
-import { RecordReadingTimeCommand } from '@/application/library/commands/record-reading-time/record-reading-time.command';
 import { ProcessReadingSessionCommand } from '@/application/library/commands/process-reading-session/process-reading-session.command';
 import { GetLibraryQuery } from '@/application/library/queries/get-library/get-library.query';
 import { GetKnowledgeGraphQuery } from '@/application/library/queries/get-knowledge-graph/get-knowledge-graph.query';
@@ -38,9 +37,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('library')
 export class LibraryController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Get()
   async getLibrary(

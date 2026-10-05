@@ -1,7 +1,7 @@
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
-import { CreateRoomUseCase } from '@/application/reading-rooms/use-cases/create-room/create-room.use-case';
-import { CreateRoomCommand } from '@/application/reading-rooms/use-cases/create-room/create-room.command';
+import { CreateRoomHandler } from '@/application/reading-rooms/commands/create-room/create-room.handler';
+import { CreateRoomCommand } from '@/application/reading-rooms/commands/create-room/create-room.command';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
@@ -66,43 +66,43 @@ describe('ReadingRoom Limits & Constraints (T12)', () => {
     });
 
     it('rejects empty or overly long highlight content (> 1000 chars)', () => {
-      expect(() =>
+      expect(() => {
         room.addHighlight({
           userId: '507f1f77bcf86cd799439012',
           chapterSlug: 'chap-1',
           paragraphId: 'p-1',
           content: '   ',
-        }),
-      ).toThrow(BadRequestDomainException);
+        });
+      }).toThrow(BadRequestDomainException);
 
-      expect(() =>
+      expect(() => {
         room.addHighlight({
           userId: '507f1f77bcf86cd799439012',
           chapterSlug: 'chap-1',
           paragraphId: 'p-1',
           content: 'a'.repeat(1001),
-        }),
-      ).toThrow(BadRequestDomainException);
+        });
+      }).toThrow(BadRequestDomainException);
     });
 
     it('rejects invalid chapterSlug or paragraphId > 100 chars', () => {
-      expect(() =>
+      expect(() => {
         room.addHighlight({
           userId: '507f1f77bcf86cd799439012',
           chapterSlug: 'INVALID SLUG WITH SPACES',
           paragraphId: 'p-1',
           content: 'Valid content',
-        }),
-      ).toThrow(BadRequestDomainException);
+        });
+      }).toThrow(BadRequestDomainException);
 
-      expect(() =>
+      expect(() => {
         room.addHighlight({
           userId: '507f1f77bcf86cd799439012',
           chapterSlug: 'chap-1',
           paragraphId: 'p'.repeat(101),
           content: 'Valid content',
-        }),
-      ).toThrow(BadRequestDomainException);
+        });
+      }).toThrow(BadRequestDomainException);
     });
 
     it('rejects when user exceeds 100 highlights limit in room', () => {
@@ -115,18 +115,18 @@ describe('ReadingRoom Limits & Constraints (T12)', () => {
         });
       }
 
-      expect(() =>
+      expect(() => {
         room.addHighlight({
           userId: '507f1f77bcf86cd799439012',
           chapterSlug: 'chap-1',
           paragraphId: 'p-101',
           content: 'Highlight 101 should fail',
-        }),
-      ).toThrow(/100 highlight/);
+        });
+      }).toThrow(/100 highlight/);
     });
   });
 
-  describe('CreateRoomUseCase host active rooms limit', () => {
+  describe('CreateRoomHandler host active rooms limit', () => {
     it('throws BadRequestDomainException when user already hosts 5 active rooms', async () => {
       const mockRoomRepo = {
         findActiveByUser: jest
@@ -149,7 +149,7 @@ describe('ReadingRoom Limits & Constraints (T12)', () => {
         findFirstChapter: jest.fn(),
       } as unknown as IChapterRepository;
 
-      const useCase = new CreateRoomUseCase(
+      const useCase = new CreateRoomHandler(
         mockRoomRepo,
         mockBookRepo,
         mockChapterRepo,

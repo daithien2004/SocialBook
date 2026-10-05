@@ -11,15 +11,15 @@ import {
 export class CreateRoomDto {
   @IsString()
   @IsNotEmpty()
-  bookId: string;
+  bookId!: string;
 
   @IsString()
   @IsNotEmpty()
-  currentChapterSlug: string;
+  currentChapterSlug!: string;
 
   @IsEnum(['sync', 'free'])
   @IsNotEmpty()
-  mode: 'sync' | 'free';
+  mode!: 'sync' | 'free';
 
   @IsInt()
   @Min(2)

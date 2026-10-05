@@ -1,9 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BookId } from '@/domain/books/value-objects/book-id.vo';
@@ -13,7 +9,10 @@ import { ICachePort } from '@/shared/domain/cache.port';
 import { EventNames } from '@/common/constants/event-names.constant';
 
 @CommandHandler(DeleteBookCommand)
-export class DeleteBookHandler implements ICommandHandler<DeleteBookCommand, void> {
+export class DeleteBookHandler implements ICommandHandler<
+  DeleteBookCommand,
+  void
+> {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly cache: ICachePort,

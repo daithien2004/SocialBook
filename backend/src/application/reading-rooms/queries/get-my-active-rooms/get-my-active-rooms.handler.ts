@@ -5,7 +5,10 @@ import { ReadingRoomResult } from '../../reading-room.interface';
 import { GetMyActiveRoomsQuery } from './get-my-active-rooms.query';
 
 @QueryHandler(GetMyActiveRoomsQuery)
-export class GetMyActiveRoomsHandler implements IQueryHandler<GetMyActiveRoomsQuery, ReadingRoomResult[]> {
+export class GetMyActiveRoomsHandler implements IQueryHandler<
+  GetMyActiveRoomsQuery,
+  ReadingRoomResult[]
+> {
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(query: GetMyActiveRoomsQuery): Promise<ReadingRoomResult[]> {

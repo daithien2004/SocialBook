@@ -23,13 +23,6 @@ import {
   FollowStatusResponseDto,
 } from '@/presentation/follows/dto/follow.response.dto';
 
-
-
-
-
-
-
-
 import { CreateFollowCommand } from '@/application/follows/commands/create-follow/create-follow.command';
 import { DeleteFollowCommand } from '@/application/follows/commands/delete-follow/delete-follow.command';
 import { GetFollowStatusQuery } from '@/application/follows/queries/get-follow-status/get-follow-status.query';
@@ -39,10 +32,7 @@ import { GetFollowersQuery } from '@/application/follows/queries/get-followers-w
 
 @Controller('follows')
 export class FollowsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Public()
   @Get('following')

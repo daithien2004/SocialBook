@@ -11,15 +11,15 @@ import {
 export class CreateReviewDto {
   @IsNotEmpty()
   @IsMongoId()
-  bookId: string;
+  bookId!: string;
 
   @IsNotEmpty()
   @IsString()
-  content: string;
+  content!: string;
 
   @IsNotEmpty()
   @IsNumber()
   @Min(1)
   @Max(5)
-  rating: number;
+  rating!: number;
 }

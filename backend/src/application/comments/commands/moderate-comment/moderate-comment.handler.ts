@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
@@ -7,7 +7,7 @@ import { ModerateCommentCommand } from './moderate-comment.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @CommandHandler(ModerateCommentCommand)
-export class ModerateCommentHandler implements ICommandHandler<ModerateCommentCommand, any> {
+export class ModerateCommentHandler implements ICommandHandler<ModerateCommentCommand> {
   private readonly logger = new Logger(ModerateCommentHandler.name);
 
   constructor(private readonly commentRepository: ICommentRepository) {}

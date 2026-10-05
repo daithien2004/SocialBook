@@ -10,7 +10,10 @@ import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { Author } from '@/domain/authors/entities/author.entity';
 
 @QueryHandler(GetAuthorsQuery)
-export class GetAuthorsHandler implements IQueryHandler<GetAuthorsQuery, PaginatedResult<Author>> {
+export class GetAuthorsHandler implements IQueryHandler<
+  GetAuthorsQuery,
+  PaginatedResult<Author>
+> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(query: GetAuthorsQuery) {

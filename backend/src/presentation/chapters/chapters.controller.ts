@@ -25,7 +25,6 @@ import {
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-
 import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { ChapterResponseDto } from '@/presentation/chapters/dto/chapter.response.dto';
 import { CreateChapterDto } from '@/presentation/chapters/dto/create-chapter.dto';
@@ -51,10 +50,7 @@ import { ImportEpubPreviewCommand } from '@/application/chapters/commands/import
 
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Get(':chapterId/knowledge')
   async getKnowledge(

@@ -12,5 +12,7 @@ export class TrackUserEventCommand extends Command<void> {
     public readonly deviceType?: string,
     public readonly metadata?: Record<string, unknown>,
     public readonly sessionId?: string,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

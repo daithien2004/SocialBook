@@ -7,5 +7,6 @@ export class LeaveRoomCommand extends Command<LeaveRoomResult> {
     public readonly roomId: string,
     public readonly newHostId?: string,
   ) {
-    super();}
+    super();
+  }
 }

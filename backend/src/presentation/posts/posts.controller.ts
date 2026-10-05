@@ -65,10 +65,7 @@ export class FlaggedPostsQueryDto extends PaginationQueryDto {
 
 @Controller('posts')
 export class PostsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Public()
   @Get()
@@ -144,7 +141,12 @@ export class PostsController {
     )
     files?: Express.Multer.File[],
   ) {
-    const command = new CreatePostCommand(userId, dto.bookId, dto.content, files);
+    const command = new CreatePostCommand(
+      userId,
+      dto.bookId,
+      dto.content,
+      files,
+    );
     const { post, moderationMessage } = await this.dispatcher.command(command);
 
     const responseDto = new PostResponseDto(post);
@@ -297,9 +299,7 @@ export class PostsController {
       throw new BadRequestException('postIds array is required');
 
     const results = await Promise.allSettled(
-      postIds.map((id) =>
-        this.dispatcher.command(new ApprovePostCommand(id)),
-      ),
+      postIds.map((id) => this.dispatcher.command(new ApprovePostCommand(id))),
     );
 
     const successCount = results.filter((r) => r.status === 'fulfilled').length;
@@ -317,9 +317,7 @@ export class PostsController {
 
     const results = await Promise.allSettled(
       postIds.map((id) =>
-        this.dispatcher.command(
-          new RejectPostCommand(id, 'Rejected by admin'),
-        ),
+        this.dispatcher.command(new RejectPostCommand(id, 'Rejected by admin')),
       ),
     );
 

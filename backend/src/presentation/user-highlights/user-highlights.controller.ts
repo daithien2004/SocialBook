@@ -24,10 +24,7 @@ import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
 @Controller('user-highlights')
 @UseGuards(JwtAuthGuard)
 export class UserHighlightsController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post()
   async createHighlight(
@@ -135,7 +132,11 @@ export class UserHighlightsController {
     @Param('id') highlightId: string,
     @CurrentAbility() ability: AppAbility,
   ) {
-    const command = new DeleteUserHighlightCommand(highlightId, userId, ability);
+    const command = new DeleteUserHighlightCommand(
+      highlightId,
+      userId,
+      ability,
+    );
     await this.dispatcher.command(command);
     return { success: true };
   }

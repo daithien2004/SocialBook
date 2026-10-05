@@ -8,7 +8,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.BAD_REQUEST]: 'Yêu cầu không hợp lệ',
   [ErrorCode.CONFLICT]: 'Xung đột dữ liệu',
   [ErrorCode.FORBIDDEN]: 'Không có quyền truy cập',
-  [ErrorCode.CONCURRENCY_CONFLICT]: 'Dữ liệu vừa thay đổi từ người dùng khác, vui lòng thử lại',
+  [ErrorCode.CONCURRENCY_CONFLICT]:
+    'Dữ liệu vừa thay đổi từ người dùng khác, vui lòng thử lại',
   [ErrorCode.ROOM_FULL]: 'Phòng đã đầy',
   [ErrorCode.DOMAIN_ERROR]: 'Lỗi xử lý nghiệp vụ',
   [ErrorCode.RATE_LIMITED]: 'Thao tác quá nhanh, vui lòng thử lại sau',
@@ -16,7 +17,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.ROOM_MISMATCH]: 'Bạn không ở trong phòng này',
   [ErrorCode.UNAUTHORIZED]: 'Phiên đăng nhập không hợp lệ',
   [ErrorCode.TOKEN_EXPIRED]: 'Phiên đăng nhập đã hết hạn',
-  [ErrorCode.TOKEN_REVOKED]: 'Phiên đăng nhập đã bị thu hồi, vui lòng đăng nhập lại',
+  [ErrorCode.TOKEN_REVOKED]:
+    'Phiên đăng nhập đã bị thu hồi, vui lòng đăng nhập lại',
   [ErrorCode.TOO_MANY_CONNECTIONS]: 'Bạn đang mở quá nhiều kết nối',
 };
 

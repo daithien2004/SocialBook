@@ -9,7 +9,7 @@ import { DomainException } from '@/shared/domain/domain-exception.base';
 export class WsExceptionFilter extends BaseWsExceptionFilter {
   private readonly logger = new Logger(WsExceptionFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  override catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToWs();
     const client = ctx.getClient<Socket>();
     const args = host.getArgs<unknown[]>();
@@ -36,7 +36,8 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
         errObj?.stack,
       );
     } else {
-      const details = exception instanceof DomainException ? exception.details : undefined;
+      const details =
+        exception instanceof DomainException ? exception.details : undefined;
       this.logger.debug({ ...logCtx, details });
     }
 
@@ -49,7 +50,10 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
         client.emit(ReadingRoomServerEvent.ERROR, payload);
       }
     } catch (sendErr) {
-      this.logger.debug({ ...logCtx, sendErr: String(sendErr) }, 'Failed to deliver error to client');
+      this.logger.debug(
+        { ...logCtx, sendErr: String(sendErr) },
+        'Failed to deliver error to client',
+      );
     }
   }
 }

@@ -10,20 +10,14 @@ import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.mod
 export const CommandHandlers = [
   CreateAuthorHandler,
   DeleteAuthorHandler,
-  UpdateAuthorHandler
+  UpdateAuthorHandler,
 ];
 
-export const QueryHandlers = [
-  GetAuthorByIdHandler,
-  GetAuthorsHandler
-];
+export const QueryHandlers = [GetAuthorByIdHandler, GetAuthorsHandler];
 
 @Module({
   imports: [AuthorsRepositoryModule, IdGeneratorModule],
-  providers: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-  ],
+  providers: [...CommandHandlers, ...QueryHandlers],
   exports: [
     CreateAuthorHandler,
     DeleteAuthorHandler,

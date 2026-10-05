@@ -25,10 +25,7 @@ import { IncrementPlayCountCommand } from '@/application/text-to-speech/commands
 
 @Controller('text-to-speech')
 export class TextToSpeechController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Roles('admin')
   @UseGuards(RolesGuard)

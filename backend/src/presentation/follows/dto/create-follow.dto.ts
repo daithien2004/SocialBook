@@ -9,7 +9,7 @@ import {
 export class CreateFollowDto {
   @IsMongoId()
   @IsNotEmpty()
-  targetId: string;
+  targetId!: string;
 
   @IsOptional()
   @IsBoolean()
@@ -19,23 +19,23 @@ export class CreateFollowDto {
 export class UpdateFollowDto {
   @IsBoolean()
   @IsNotEmpty()
-  status: boolean;
+  status!: boolean;
 }
 
 export class FollowStatusDto {
   @IsMongoId()
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 
   @IsMongoId()
   @IsNotEmpty()
-  targetId: string;
+  targetId!: string;
 }
 
 export class FollowStatsDto {
   @IsMongoId()
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 }
 
 import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';

@@ -6,11 +6,13 @@ import { IReadingProgressRepository } from '@/domain/library/repositories/readin
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { Injectable } from '@nestjs/common';
 import { GetLibraryQuery } from './get-library.query';
 
 @QueryHandler(GetLibraryQuery)
-export class GetLibraryHandler implements IQueryHandler<GetLibraryQuery, LibraryItemReadModel[]> {
+export class GetLibraryHandler implements IQueryHandler<
+  GetLibraryQuery,
+  LibraryItemReadModel[]
+> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,

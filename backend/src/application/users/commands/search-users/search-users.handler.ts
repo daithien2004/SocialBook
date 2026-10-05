@@ -1,6 +1,5 @@
 import { SearchUsersCommand } from './search-users.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { User } from '@/domain/users/entities/user.entity';
 import { PaginatedResult } from '@/common/interfaces/pagination.interface';

@@ -1,6 +1,5 @@
 import { CommandHandler } from '@nestjs/cqrs';
 import { MarkAllNotificationsReadCommand } from './mark-all-notifications-read.command';
-import { Injectable } from '@nestjs/common';
 import { INotificationRepository } from '@/domain/notifications/repositories/notification.repository.interface';
 
 @CommandHandler(MarkAllNotificationsReadCommand)

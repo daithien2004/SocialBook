@@ -4,7 +4,6 @@ import { ICollectionRepository } from '@/domain/library/repositories/collection.
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { BookId } from '@/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/domain/library/value-objects/user-id.vo';
-import { Injectable } from '@nestjs/common';
 import { GetBookLibraryInfoQuery } from './get-book-library-info.query';
 import { ReadingListResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
@@ -30,7 +29,10 @@ export interface GetBookLibraryInfoResult {
 }
 
 @QueryHandler(GetBookLibraryInfoQuery)
-export class GetBookLibraryInfoHandler implements IQueryHandler<GetBookLibraryInfoQuery, GetBookLibraryInfoResult> {
+export class GetBookLibraryInfoHandler implements IQueryHandler<
+  GetBookLibraryInfoQuery,
+  GetBookLibraryInfoResult
+> {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
     private readonly collectionRepository: ICollectionRepository,

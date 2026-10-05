@@ -21,12 +21,6 @@ import { CreateAuthorDto } from '@/presentation/authors/dto/create-author.dto';
 import { FilterAuthorDto } from '@/presentation/authors/dto/filter-author.dto';
 import { UpdateAuthorDto } from '@/presentation/authors/dto/update-author.dto';
 
-
-
-
-
-
-
 import { CreateAuthorCommand } from '@/application/authors/commands/create-author/create-author.command';
 import { DeleteAuthorCommand } from '@/application/authors/commands/delete-author/delete-author.command';
 import { GetAuthorByIdQuery } from '@/application/authors/queries/get-author-by-id/get-author-by-id.query';

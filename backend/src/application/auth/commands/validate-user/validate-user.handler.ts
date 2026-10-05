@@ -7,7 +7,10 @@ import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { User } from '@/domain/users/entities/user.entity';
 
 @CommandHandler(ValidateUserCommand)
-export class ValidateUserHandler implements ICommandHandler<ValidateUserCommand, User | null> {
+export class ValidateUserHandler implements ICommandHandler<
+  ValidateUserCommand,
+  User | null
+> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly passwordHasher: IPasswordHasher,

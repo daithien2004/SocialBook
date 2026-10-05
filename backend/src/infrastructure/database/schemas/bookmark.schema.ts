@@ -5,22 +5,22 @@ import { BaseSchema } from '@/shared/schemas/base.schema';
 @Schema({ timestamps: true, collection: 'bookmarks' })
 export class Bookmark extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true, index: true })
-  bookId: Types.ObjectId;
+  bookId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Chapter', required: true })
-  chapterId: Types.ObjectId;
+  chapterId!: Types.ObjectId;
 
   @Prop({ required: true })
-  chapterSlug: string;
+  chapterSlug!: string;
 
   @Prop({ required: true })
-  paragraphId: string;
+  paragraphId!: string;
 
   @Prop({ required: true })
-  textPreview: string;
+  textPreview!: string;
 }
 
 export type BookmarkDocument = HydratedDocument<Bookmark>;

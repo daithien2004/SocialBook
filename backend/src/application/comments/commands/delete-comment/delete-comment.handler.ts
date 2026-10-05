@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   NotFoundDomainException,
   ForbiddenDomainException,
@@ -13,7 +13,7 @@ import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
 @CommandHandler(DeleteCommentCommand)
-export class DeleteCommentHandler implements ICommandHandler<DeleteCommentCommand, any> {
+export class DeleteCommentHandler implements ICommandHandler<DeleteCommentCommand> {
   private readonly logger = new Logger(DeleteCommentHandler.name);
 
   constructor(private readonly commentRepository: ICommentRepository) {}

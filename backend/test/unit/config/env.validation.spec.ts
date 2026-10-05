@@ -41,6 +41,20 @@ describe('validateEnv', () => {
     );
   });
 
+  it('accepts PORT=0 (env.config.ts falls back to the default port)', () => {
+    expect(() => validateEnv({ ...validEnv, PORT: '0' })).not.toThrow();
+  });
+
+  it('throws when PORT is not a number', () => {
+    expect(() => validateEnv({ ...validEnv, PORT: 'not-a-port' })).toThrow(
+      /PORT/,
+    );
+  });
+
+  it('throws when PORT is negative', () => {
+    expect(() => validateEnv({ ...validEnv, PORT: -1 })).toThrow(/PORT/);
+  });
+
   it('throws when a required secret is shorter than 32 characters', () => {
     expect(() =>
       validateEnv({ ...validEnv, JWT_REFRESH_SECRET: 'too-short' }),

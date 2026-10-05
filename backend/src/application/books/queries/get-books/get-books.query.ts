@@ -1,10 +1,6 @@
-import { Query, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { PaginationOptions, SortOptions } from "@/common/interfaces/pagination.interface";
-import { IBookQueryProvider } from "@/domain/books/repositories/book-query.provider.interface";
-import { BookFilter } from "@/domain/books/repositories/book.repository.interface";
-import { Injectable } from "@nestjs/common";
-import { PaginatedResult } from "@/shared/domain/pagination.types";
-import { BookListReadModel } from "@/domain/books/read-models/book-list.read-model";
+import { Query } from '@nestjs/cqrs';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
+import { BookListReadModel } from '@/domain/books/read-models/book-list.read-model';
 
 export class GetBooksQuery extends Query<PaginatedResult<BookListReadModel>> {
   public readonly page: number;
@@ -32,7 +28,8 @@ export class GetBooksQuery extends Query<PaginatedResult<BookListReadModel>> {
     publishedYear?: string;
     sortBy?: string; // Accept string for adaptation
     order?: 'asc' | 'desc';
-  }) { super(); 
+  }) {
+    super();
     this.page = props.page ?? 1;
     this.limit = props.limit ?? 10;
     this.title = props.title;

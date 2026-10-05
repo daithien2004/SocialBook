@@ -9,7 +9,10 @@ import { CreateGenreCommand } from './create-genre.command';
 import { ErrorMessages } from '@/common/constants/error-messages';
 
 @CommandHandler(CreateGenreCommand)
-export class CreateGenreHandler implements ICommandHandler<CreateGenreCommand, Genre> {
+export class CreateGenreHandler implements ICommandHandler<
+  CreateGenreCommand,
+  Genre
+> {
   constructor(
     private readonly genreRepository: IGenreRepository,
     private readonly idGenerator: IIdGenerator,

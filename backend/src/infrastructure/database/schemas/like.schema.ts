@@ -7,16 +7,16 @@ export type LikeDocument = HydratedDocument<Like>;
 @Schema({ timestamps: true })
 export class Like extends BaseSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ type: String, required: true })
-  targetType: string;
+  targetType!: string;
 
   @Prop({ type: Types.ObjectId, required: true })
-  targetId: Types.ObjectId;
+  targetId!: Types.ObjectId;
 
   @Prop({ required: true })
-  status: boolean;
+  status!: boolean;
 }
 
 export const LikeSchema = SchemaFactory.createForClass(Like);

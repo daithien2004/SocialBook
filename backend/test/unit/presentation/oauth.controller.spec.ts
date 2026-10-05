@@ -1,7 +1,4 @@
-import {
-  OAuthController,
-  toErrorCode,
-} from '@/presentation/auth/oauth.controller';
+import { toErrorCode } from '@/presentation/auth/oauth.controller';
 import {
   OAuthProviderError,
   OAuthErrorCode,

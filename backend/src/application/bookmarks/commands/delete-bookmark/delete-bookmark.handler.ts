@@ -1,5 +1,5 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { NotFoundException } from '@nestjs/common';
 import { IBookmarkRepository } from '@/domain/bookmarks/repositories/bookmark.repository.interface';
 import { DeleteBookmarkCommand } from './delete-bookmark.command';
 

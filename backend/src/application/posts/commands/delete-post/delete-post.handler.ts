@@ -11,7 +11,10 @@ import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
 @CommandHandler(DeletePostCommand)
-export class DeletePostHandler implements ICommandHandler<DeletePostCommand, void> {
+export class DeletePostHandler implements ICommandHandler<
+  DeletePostCommand,
+  void
+> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(command: DeletePostCommand): Promise<void> {

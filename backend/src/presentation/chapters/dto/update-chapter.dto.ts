@@ -18,7 +18,7 @@ class ParagraphDto {
 
   @IsString()
   @IsNotEmpty({ message: 'Nội dung đoạn văn không được để trống' })
-  content: string;
+  content!: string;
 }
 
 export class UpdateChapterDto {

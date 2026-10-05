@@ -10,7 +10,6 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Logger, UseFilters, UsePipes, UseGuards } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Namespace, Server } from 'socket.io';
 
 import { WsAuthService } from './ws-auth.service';
@@ -94,7 +93,7 @@ export class ReadingRoomGateway
 
   private readonly logger = new Logger(ReadingRoomGateway.name);
 
-  @WebSocketServer() server: Server;
+  @WebSocketServer() server!: Server;
 
   // ==========================================
   // 1. LIFECYCLE HOOKS & MIDDLEWARE
@@ -114,7 +113,8 @@ export class ReadingRoomGateway
         Object.assign(socket.data, await this.wsAuth.authenticate(socket));
         next();
       } catch (e) {
-        return next(toHandshakeError(e));
+        next(toHandshakeError(e));
+        return;
       }
     });
   }
@@ -165,10 +165,10 @@ export class ReadingRoomGateway
 
     if (await this.rateLimiter.isLimited(userId, 'join_room', 10)) {
       this.logger.warn(`Rate limit exceeded for join_room by ${userId}`);
-      return { 
-        ok: false, 
-        code: ErrorCode.RATE_LIMITED, 
-        message: messageOf(ErrorCode.RATE_LIMITED) 
+      return {
+        ok: false,
+        code: ErrorCode.RATE_LIMITED,
+        message: messageOf(ErrorCode.RATE_LIMITED),
       };
     }
 
@@ -261,7 +261,9 @@ export class ReadingRoomGateway
           error instanceof Error ? error.stack : String(error),
         );
       } else {
-        this.logger.warn(`Join failed for ${userId} (Code: ${code}): ${message}`);
+        this.logger.warn(
+          `Join failed for ${userId} (Code: ${code}): ${message}`,
+        );
       }
 
       return { ok: false, code, message };

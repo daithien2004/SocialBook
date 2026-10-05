@@ -1,6 +1,5 @@
 import { GetBookReviewsQuery } from './get-book-reviews.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
 import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
 import { Review } from '@/domain/reviews/entities/review.entity';
 

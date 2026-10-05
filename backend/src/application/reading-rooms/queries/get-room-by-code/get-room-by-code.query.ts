@@ -6,5 +6,6 @@ export class GetRoomByCodeQuery extends Query<GetRoomByCodeResult> {
     public readonly code: string,
     public readonly userId?: string,
   ) {
-    super();}
+    super();
+  }
 }

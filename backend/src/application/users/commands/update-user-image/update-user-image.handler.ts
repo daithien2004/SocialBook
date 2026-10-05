@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -10,7 +9,10 @@ import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
 import { UpdateUserImageCommand } from './update-user-image.command';
 
 @CommandHandler(UpdateUserImageCommand)
-export class UpdateUserImageHandler implements ICommandHandler<UpdateUserImageCommand, { url: string }> {
+export class UpdateUserImageHandler implements ICommandHandler<
+  UpdateUserImageCommand,
+  { url: string }
+> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly mediaService: IMediaPort,

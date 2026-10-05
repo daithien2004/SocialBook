@@ -2,8 +2,8 @@ import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { RegisterUseCase } from '@/application/auth/use-cases/register/register.use-case';
-import { RegisterCommand } from '@/application/auth/use-cases/register/register.command';
+import { RegisterHandler } from '@/application/auth/commands/register/register.handler';
+import { RegisterCommand } from '@/application/auth/commands/register/register.command';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { User } from '@/domain/users/entities/user.entity';
 
@@ -81,8 +81,8 @@ function createVerifiedExistingUser(): User {
   });
 }
 
-describe('RegisterUseCase (Unit)', () => {
-  let useCase: RegisterUseCase;
+describe('RegisterHandler (Unit)', () => {
+  let useCase: RegisterHandler;
   let mockUserRepo: ReturnType<typeof createMockUserRepository>;
   let mockCreateUser: ReturnType<typeof createMockCreateUserUseCase>;
   let mockGetRoleByName: ReturnType<typeof createMockGetRoleByNameUseCase>;
@@ -96,7 +96,7 @@ describe('RegisterUseCase (Unit)', () => {
     mockSendOtp = createMockSendOtpUseCase();
     mockPasswordHasher = createMockPasswordHasher();
 
-    useCase = new RegisterUseCase(
+    useCase = new RegisterHandler(
       mockUserRepo,
       mockCreateUser as any,
       mockGetRoleByName as any,

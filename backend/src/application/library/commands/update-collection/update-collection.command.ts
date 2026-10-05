@@ -1,7 +1,6 @@
 import { Command } from '@nestjs/cqrs';
 import { AppAbility } from '@socialbook/shared';
-import { ICollectionRepository } from "@/domain/library/repositories/collection.repository.interface";
-import { Collection } from "@/domain/library/entities/collection.entity";
+import { Collection } from '@/domain/library/entities/collection.entity';
 
 export class UpdateCollectionCommand extends Command<Collection> {
   constructor(
@@ -11,5 +10,7 @@ export class UpdateCollectionCommand extends Command<Collection> {
     public readonly name?: string,
     public readonly description?: string,
     public readonly isPublic?: boolean,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

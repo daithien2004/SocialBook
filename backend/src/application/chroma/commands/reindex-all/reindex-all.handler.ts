@@ -1,7 +1,7 @@
 import { ReindexAllCommand } from './reindex-all.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/common/utils/error.util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';

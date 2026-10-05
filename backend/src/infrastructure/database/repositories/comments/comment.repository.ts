@@ -370,7 +370,7 @@ export class CommentRepository
     targetType: CommentTargetType,
     _maxDepth?: number,
   ): Promise<CommentReplies[]> {
-    void _maxDepth;
+    _maxDepth;
     // This is a complex operation that would require recursive queries
     // For now, return top-level comments
     const topLevelComments = await this.findTopLevel(targetId, targetType);

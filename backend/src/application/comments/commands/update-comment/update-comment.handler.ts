@@ -1,6 +1,6 @@
 import { Comment } from '@/domain/comments/entities/comment.entity';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   NotFoundDomainException,
   ForbiddenDomainException,
@@ -14,7 +14,7 @@ import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
 @CommandHandler(UpdateCommentCommand)
-export class UpdateCommentHandler implements ICommandHandler<UpdateCommentCommand, any> {
+export class UpdateCommentHandler implements ICommandHandler<UpdateCommentCommand> {
   private readonly logger = new Logger(UpdateCommentHandler.name);
 
   constructor(private readonly commentRepository: ICommentRepository) {}

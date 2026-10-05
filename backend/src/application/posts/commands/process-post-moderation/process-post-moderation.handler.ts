@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Logger, Inject } from '@nestjs/common';
 import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
 import { PostModeratedJobPayload } from '@/application/notifications/jobs/notification-job.payload';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
@@ -7,13 +7,19 @@ import { CheckContentHandler } from '@/application/content-moderation/commands/.
 
 import { Command } from '@nestjs/cqrs';
 export class ProcessPostModerationCommand extends Command<void> {
-  constructor(public readonly postId: string, public readonly content: string) {
+  constructor(
+    public readonly postId: string,
+    public readonly content: string,
+  ) {
     super();
   }
 }
 
 @CommandHandler(ProcessPostModerationCommand)
-export class ProcessPostModerationHandler implements ICommandHandler<ProcessPostModerationCommand, void> {
+export class ProcessPostModerationHandler implements ICommandHandler<
+  ProcessPostModerationCommand,
+  void
+> {
   private readonly logger = new Logger(ProcessPostModerationHandler.name);
 
   constructor(

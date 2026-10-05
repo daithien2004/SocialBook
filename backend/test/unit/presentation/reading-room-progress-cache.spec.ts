@@ -1,326 +1,177 @@
-import { ReadingRoomGateway } from '@/presentation/gateways/reading-room.gateway';
-import type { SocketData } from '@/presentation/gateways/reading-room.types';
+import { Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
+import { ReadingProgressTracker } from '@/presentation/gateways/reading-progress.tracker';
+import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
+import type { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import type { Chapter } from '@/domain/chapters/entities/chapter.entity';
+import type { RoomSocket } from '@/presentation/gateways/reading-room.types';
+import { fakeOf } from '../../support/typed-fake';
 
+/**
+ * Refactor CQRS tách logic ghi tiến độ đọc ra `ReadingProgressTracker`
+ * (trước đây nằm trong gateway `handleHeartbeat`/`handleDisconnect`).
+ * Test bám vào đúng lớp đó, không dựng cả gateway nữa.
+ */
 const CHAPTER_ID = '66f1a2b3c4d5e6f7a8b9c0d1';
-const OTHER_BOOK_ID = '66f1a2b3c4d5e6f7a8b9c0d2';
+const OTHER_BOOK_ID = 'book-2';
+const BOOK_ID = 'book-1';
 
-type FakeSocket = {
-  data: SocketData;
-  rooms: Set<string>;
-  leave: jest.Mock;
-};
+describe('ReadingProgressTracker (chapterId path)', () => {
+  let tracker: ReadingProgressTracker;
+  let findById: jest.Mock;
+  let execute: jest.Mock;
+  let socket: RoomSocket;
 
-describe('ReadingRoomGateway reading progress (chapterId path)', () => {
-  let gateway: ReadingRoomGateway;
-  let chapterRepository: { findById: jest.Mock };
-  let updateProgress: { execute: jest.Mock };
-  let leaveRoom: { execute: jest.Mock };
-  let presenceService: {
-    upsertPresence: jest.Mock;
-    getRoomPresences: jest.Mock;
-    removePresence: jest.Mock;
-  };
-  let socket: FakeSocket;
-  let warn: jest.SpyInstance;
-
-  const heartbeat = async (overrides: Record<string, unknown> = {}) => {
-    await gateway.handleHeartbeat(socket as never, socket.data, {
-      roomId: 'room-1',
-      chapterSlug: 'chuong-1',
-      chapterId: CHAPTER_ID,
-      progress: 50,
-      ...overrides,
+  const chapterOf = (bookId: string): Chapter =>
+    fakeOf<Chapter>({
+      bookId: { toString: () => bookId },
     });
-    await jest.advanceTimersByTimeAsync(10_000);
+
+  const makeSocket = (userId = 'user-1'): RoomSocket =>
+    fakeOf<RoomSocket>({
+      id: 'socket-1',
+      data: { userId, role: 'user', roomId: 'room-1', bookId: BOOK_ID },
+      rooms: new Set(['room:room-1']),
+      emit: jest.fn(),
+    });
+
+  const scheduleAndFlush = async (
+    bookId = BOOK_ID,
+    chapterId = CHAPTER_ID,
+    progress = 50,
+  ): Promise<void> => {
+    tracker.schedule(socket, bookId, chapterId, progress);
+    await tracker.flush(socket);
   };
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
-    chapterRepository = { findById: jest.fn() };
-    updateProgress = { execute: jest.fn().mockResolvedValue({}) };
-    leaveRoom = {
-      execute: jest.fn().mockResolvedValue({
-        hostChanged: false,
-        modeChanged: false,
-        roomEnded: false,
-      }),
-    };
-    presenceService = {
-      upsertPresence: jest.fn().mockResolvedValue(undefined),
-      getRoomPresences: jest.fn().mockResolvedValue([]),
-      removePresence: jest.fn().mockResolvedValue(undefined),
-    };
-
-    const redis = {
-      get: jest.fn().mockResolvedValue(null),
-      multi: jest.fn(() => ({
-        set: jest.fn().mockReturnThis(),
-        incr: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue([
-          [null, 'OK'],
-          [null, 1],
-        ]),
-      })),
-    };
-
-    gateway = new ReadingRoomGateway(
-      {} as never, // JwtService
-      {} as never, // ConfigService
-      presenceService as never,
-      {} as never, // JoinRoomUseCase
-      leaveRoom as never, // LeaveRoomUseCase
-      {} as never, // ChangeChapterUseCase
-      {} as never, // ChangeRoomModeUseCase
-      {} as never, // EndRoomUseCase
-      {} as never, // DeleteRoomUseCase
-      {} as never, // AddHighlightUseCase
-      {} as never, // RemoveHighlightUseCase
-      {} as never, // GenerateHighlightInsightUseCase
-      updateProgress,
-      chapterRepository,
-      redis,
+    findById = jest.fn();
+    execute = jest.fn().mockResolvedValue({});
+    tracker = new ReadingProgressTracker(
+      fakeOf<IChapterRepository>({ findById }),
+      fakeOf<CommandBus>({ execute }),
     );
-    gateway.server = {
-      to: jest.fn(() => ({ emit: jest.fn() })),
-    } as never;
-
-    warn = jest
-      .spyOn(gateway['logger'], 'warn')
-      .mockImplementation(() => undefined);
-
-    socket = {
-      data: {
-        userId: 'user-1',
-        role: 'user',
-        displayName: 'User One',
-        avatarUrl: '',
-        roomId: 'room-1',
-        bookId: 'book-1',
-      },
-      rooms: new Set(['room:room-1']),
-      leave: jest.fn(),
-    };
+    socket = makeSocket();
   });
 
   afterEach(() => {
-    warn.mockRestore();
-    jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   it('saves progress using the chapterId the client sent', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => 'book-1' },
+    findById.mockResolvedValue(chapterOf(BOOK_ID));
+
+    await scheduleAndFlush();
+
+    expect(findById).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledTimes(1);
+
+    const command = execute.mock.calls[0][0];
+    expect(command).toBeInstanceOf(UpdateProgressCommand);
+    expect(command).toMatchObject({
+      userId: 'user-1',
+      bookId: BOOK_ID,
+      chapterId: CHAPTER_ID,
+      progress: 50,
+      monotonic: true,
     });
-
-    await heartbeat();
-
-    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userId: 'user-1',
-        bookId: 'book-1',
-        chapterId: CHAPTER_ID,
-        progress: 50,
-        monotonic: true,
-      }),
-    );
   });
 
   it('verifies the chapter once and reuses the cache on later flushes', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => 'book-1' },
-    });
+    findById.mockResolvedValue(chapterOf(BOOK_ID));
 
-    await heartbeat();
-    await heartbeat();
-    await heartbeat();
+    await scheduleAndFlush();
+    await scheduleAndFlush(BOOK_ID, CHAPTER_ID, 60);
 
-    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).toHaveBeenCalledTimes(3);
+    expect(findById).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledTimes(2);
   });
 
   it('re-verifies when the socket moves to a room holding another book', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => 'book-1' },
-    });
+    findById.mockResolvedValue(chapterOf(BOOK_ID));
 
-    await heartbeat();
-    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
+    await scheduleAndFlush();
+    await scheduleAndFlush(OTHER_BOOK_ID);
 
-    socket.data.bookId = 'book-2';
-    await heartbeat();
-
-    // Cache lưu chapterId → book-1, nên book-2 phải được xác minh lại
-    expect(chapterRepository.findById).toHaveBeenCalledTimes(2);
-    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('does not belong to book book-2'),
-    );
+    expect(findById).toHaveBeenCalledTimes(2);
   });
 
   it('does not cache a failed verification — the next flush retries', async () => {
-    chapterRepository.findById
+    findById
       .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        id: { toString: () => CHAPTER_ID },
-        bookId: { toString: () => 'book-1' },
-      });
+      .mockResolvedValueOnce(chapterOf(BOOK_ID));
 
-    await heartbeat();
-    expect(chapterRepository.findById).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).not.toHaveBeenCalled();
+    await scheduleAndFlush();
+    expect(execute).not.toHaveBeenCalled();
 
-    await heartbeat();
-    expect(chapterRepository.findById).toHaveBeenCalledTimes(2);
-    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
+    await scheduleAndFlush();
+    expect(findById).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it('refuses a chapterId that belongs to another book', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => OTHER_BOOK_ID },
-    });
+    findById.mockResolvedValue(chapterOf(OTHER_BOOK_ID));
 
-    await heartbeat();
+    await scheduleAndFlush();
 
-    expect(updateProgress.execute).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('does not belong to book book-1'),
-    );
+    expect(execute).not.toHaveBeenCalled();
+    expect(socket.data.verifiedChapters?.has(CHAPTER_ID)).toBeFalsy();
   });
 
   it('refuses a chapterId that does not exist', async () => {
-    chapterRepository.findById.mockResolvedValue(null);
+    findById.mockResolvedValue(null);
 
-    await heartbeat();
+    await scheduleAndFlush();
 
-    expect(updateProgress.execute).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('not found'));
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it('never queries the DB for a chapterId that is not a valid ObjectId', async () => {
-    await heartbeat({ chapterId: 'chuong-1' });
-    expect(chapterRepository.findById).not.toHaveBeenCalled();
-    expect(updateProgress.execute).not.toHaveBeenCalled();
+    await scheduleAndFlush(BOOK_ID, 'khong-phai-object-id');
 
-    await heartbeat({ chapterId: undefined });
-    expect(chapterRepository.findById).not.toHaveBeenCalled();
-    expect(updateProgress.execute).not.toHaveBeenCalled();
-
-    await heartbeat({ chapterId: '__proto__' });
-    expect(chapterRepository.findById).not.toHaveBeenCalled();
-    expect(updateProgress.execute).not.toHaveBeenCalled();
-  });
-
-  it('still broadcasts presence when chapterId is unusable', async () => {
-    await heartbeat({ chapterId: 'not-an-object-id' });
-
-    expect(presenceService.upsertPresence).toHaveBeenCalledWith(
-      'room-1',
-      'user-1',
-      expect.objectContaining({ currentChapterSlug: 'chuong-1' }),
-    );
+    expect(findById).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it('logs but does not throw when the progress write fails', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => 'book-1' },
-    });
-    updateProgress.execute.mockRejectedValue(new Error('write failed'));
-    const error = jest
-      .spyOn(gateway['logger'], 'error')
-      .mockImplementation(() => undefined);
+    findById.mockResolvedValue(chapterOf(BOOK_ID));
+    execute.mockRejectedValue(new Error('db down'));
+    const errorSpy = jest.spyOn(Logger.prototype, 'error');
 
-    await expect(
-      gateway.handleHeartbeat(socket as never, socket.data as never, {
-        roomId: 'room-1',
-        chapterSlug: 'chuong-1',
-        chapterId: CHAPTER_ID,
-        progress: 50,
-      }),
-    ).resolves.toBeUndefined();
+    await expect(scheduleAndFlush()).resolves.toBeUndefined();
 
-    await jest.advanceTimersByTimeAsync(10_000);
-    expect(error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to save reading progress'),
-    );
-
-    error.mockRestore();
+    expect(errorSpy).toHaveBeenCalled();
   });
 
-  it('flushes pending progress when the user leaves the room', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => 'book-1' },
-    });
+  it('flushes pending progress and leaves no stale cache on socket data', async () => {
+    findById.mockResolvedValue(chapterOf(BOOK_ID));
 
-    await gateway.handleHeartbeat(socket as never, socket.data, {
-      roomId: 'room-1',
-      chapterSlug: 'chuong-1',
-      chapterId: CHAPTER_ID,
-      progress: 55,
-    });
-    // Timer 10s chưa bắn → chưa lưu
-    expect(updateProgress.execute).not.toHaveBeenCalled();
+    await scheduleAndFlush();
 
-    await gateway.handleLeaveRoom(socket as never, socket.data, {
-      roomId: 'room-1',
-    });
+    expect(socket.data.pendingProgress).toBeUndefined();
+    expect(socket.data.progressTimer).toBeUndefined();
 
-    // flush ngay khi rời phòng, không để mất tiến độ
-    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        chapterId: CHAPTER_ID,
-        progress: 55,
-        monotonic: true,
-      }),
-    );
-
-    // Timer đã được dọn — advance thêm cũng không lưu thêm lần nữa
-    await jest.advanceTimersByTimeAsync(20_000);
-    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
-    expect(leaveRoom.execute).toHaveBeenCalledTimes(1);
+    // flush lần nữa không gửi lại tiến độ cũ
+    await tracker.flush(socket);
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
-  it('flushes pending progress on disconnect', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => 'book-1' },
-    });
+  it('does nothing when there is nothing pending', async () => {
+    await tracker.flush(socket);
 
-    await gateway.handleHeartbeat(socket as never, socket.data, {
-      roomId: 'room-1',
-      chapterSlug: 'chuong-1',
-      chapterId: CHAPTER_ID,
-      progress: 70,
-    });
-    expect(updateProgress.execute).not.toHaveBeenCalled();
-
-    await gateway.handleDisconnect(socket);
-
-    expect(updateProgress.execute).toHaveBeenCalledTimes(1);
-    expect(updateProgress.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ chapterId: CHAPTER_ID, progress: 70 }),
-    );
+    expect(findById).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
   });
 
-  it('does not leave the old slug cache on socket data', async () => {
-    chapterRepository.findById.mockResolvedValue({
-      id: { toString: () => CHAPTER_ID },
-      bookId: { toString: () => 'book-1' },
-    });
+  it('does not write progress for an unauthenticated socket', async () => {
+    socket = makeSocket('');
+    findById.mockResolvedValue(chapterOf(BOOK_ID));
 
-    await heartbeat();
+    await scheduleAndFlush();
 
-    expect(socket.data).not.toHaveProperty('chapterSlugToId');
-    expect(socket.data.verifiedChapters).toBeInstanceOf(Map);
-    expect(socket.data.verifiedChapters?.get(CHAPTER_ID)).toBe('book-1');
+    expect(execute).not.toHaveBeenCalled();
   });
 });

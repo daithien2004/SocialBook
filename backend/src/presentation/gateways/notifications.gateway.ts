@@ -41,7 +41,7 @@ export class NotificationsGateway
 {
   private readonly logger = new Logger(NotificationsGateway.name);
 
-  @WebSocketServer() server: Server;
+  @WebSocketServer() server!: Server;
 
   constructor(
     private readonly notificationsService: NotificationsService,
@@ -58,7 +58,8 @@ export class NotificationsGateway
             socket.handshake.headers.authorization?.split(' ')[1];
 
           if (!token) {
-            return next(new Error('unauthorized'));
+            next(new Error('unauthorized'));
+            return;
           }
 
           const payload = await this.jwt.verifyAsync<{
@@ -68,12 +69,14 @@ export class NotificationsGateway
 
           const userId = (payload.sub ?? payload.id) as string;
           if (!userId) {
-            return next(new Error('unauthorized'));
+            next(new Error('unauthorized'));
+            return;
           }
 
           const sockets = await server.in(`user:${userId}`).fetchSockets();
           if (sockets.length >= 5) {
-            return next(new Error('too_many_connections'));
+            next(new Error('too_many_connections'));
+            return;
           }
 
           (socket.data as SocketData).userId = userId;
@@ -81,9 +84,9 @@ export class NotificationsGateway
         } catch {
           next(new Error('unauthorized'));
         }
-      })().catch((err) =>
-        next(err instanceof Error ? err : new Error(String(err))),
-      );
+      })().catch((err) => {
+        next(err instanceof Error ? err : new Error(String(err)));
+      });
     });
   }
 

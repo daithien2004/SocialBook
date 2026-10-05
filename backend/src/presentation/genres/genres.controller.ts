@@ -32,10 +32,7 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 
 @Controller('genres')
 export class GenresController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Post()
   @Roles('admin')

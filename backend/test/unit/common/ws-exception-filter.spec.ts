@@ -1,11 +1,17 @@
 import { Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { WsException } from '@nestjs/websockets';
+import type { Namespace } from 'socket.io';
 import { WsExceptionFilter } from '@/common/filters/ws-exception.filter';
 import {
   ConcurrencyException,
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
-import { ReadingRoomGateway } from '@/presentation/gateways/reading-room.gateway';
+import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room-highlight.handler';
+import { WsRateLimiter } from '@/presentation/gateways/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room.emitter';
+import type { RoomSocket } from '@/presentation/gateways/reading-room.types';
+import { fakeOf } from '../../support/typed-fake';
 
 type FakeHost = {
   switchToWs: () => {
@@ -19,8 +25,9 @@ describe('WsExceptionFilter', () => {
   let emit: jest.Mock;
   let host: FakeHost;
 
-  const run = (exception: unknown): void =>
+  const run = (exception: unknown): void => {
     filter.catch(exception, host as never);
+  };
 
   beforeEach(() => {
     filter = new WsExceptionFilter();
@@ -102,9 +109,9 @@ describe('WsExceptionFilter', () => {
   });
 });
 
-describe('ReadingRoomGateway error propagation to WsExceptionFilter', () => {
+describe('ReadingRoomHighlightHandler error propagation to WsExceptionFilter', () => {
   it('lets domain exceptions bubble out of handlers instead of swallowing them', async () => {
-    const changeChapter = {
+    const commandBus = fakeOf<CommandBus>({
       execute: jest
         .fn()
         .mockRejectedValue(
@@ -112,44 +119,36 @@ describe('ReadingRoomGateway error propagation to WsExceptionFilter', () => {
             'Bạn không phải là thành viên của phòng này',
           ),
         ),
-    };
+    });
+    const rateLimiter = fakeOf<WsRateLimiter>({
+      isLimited: jest.fn().mockResolvedValue(false),
+    });
+    const emitter = fakeOf<ReadingRoomEmitter>({
+      emitError: jest.fn(),
+      toRoom: () => fakeOf<ReturnType<Namespace['to']>>({ emit: jest.fn() }),
+    });
 
-    const gateway = new ReadingRoomGateway(
-      {} as never, // JwtService
-      {} as never, // ConfigService
-      {} as never, // ReadingRoomPresenceService
-      {} as never, // JoinRoomUseCase
-      {} as never, // LeaveRoomUseCase
-      changeChapter as never,
-      {} as never, // ChangeRoomModeUseCase
-      {} as never, // EndRoomUseCase
-      {} as never, // DeleteRoomUseCase
-      {} as never, // AddHighlightUseCase
-      {} as never, // RemoveHighlightUseCase
-      {} as never, // GenerateHighlightInsightUseCase
-      {}, // UpdateProgressUseCase
-      {}, // IChapterRepository
-      {}, // Redis
+    const handler = new ReadingRoomHighlightHandler(
+      commandBus,
+      rateLimiter,
+      emitter,
     );
-    gateway.server = {
-      to: jest.fn(() => ({ emit: jest.fn() })),
-    } as never;
+    const socket = fakeOf<RoomSocket>({
+      id: 'socket-1',
+      data: { userId: 'user-1', role: 'user', roomId: 'room-1' },
+      rooms: new Set(['room:room-1']),
+      emit: jest.fn(),
+    });
 
     await expect(
-      gateway.handleChapterChange(
-        {
-          id: 'socket-1',
-          data: { userId: 'user-1', role: 'user', roomId: 'room-1' },
-          rooms: new Set(['room:room-1']),
-        } as any,
-        { userId: 'user-1', role: 'user' } as any,
-        {
-          roomId: 'room-1',
-          chapterSlug: 'chuong-2',
-        } as any,
-      ),
+      handler.handleRemoveHighlight(socket, 'user-1', {
+        roomId: 'room-1',
+        highlightId: 'h1',
+      }),
     ).rejects.toThrow('Bạn không phải là thành viên của phòng này');
 
-    expect(changeChapter.execute).toHaveBeenCalledTimes(1);
+    expect(commandBus.execute).toHaveBeenCalledTimes(1);
+    // handler không nuốt lỗi → filter sẽ nhận và convert sang payload WS
+    expect(socket.emit).not.toHaveBeenCalled();
   });
 });

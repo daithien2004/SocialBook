@@ -7,5 +7,6 @@ export class GetGenresQuery extends Query<PaginatedResult<Genre>> {
     public readonly limit: number = 10,
     public readonly name?: string,
   ) {
-    super();}
+    super();
+  }
 }

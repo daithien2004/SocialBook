@@ -3,5 +3,7 @@ export class MarkNotificationReadCommand extends Command<unknown> {
   constructor(
     public readonly userId: string,
     public readonly id: string,
-  ) { super(); }
+  ) {
+    super();
+  }
 }

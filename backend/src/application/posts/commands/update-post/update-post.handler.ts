@@ -15,7 +15,10 @@ import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
 @CommandHandler(UpdatePostCommand)
-export class UpdatePostHandler implements ICommandHandler<UpdatePostCommand, { post: Post; moderationMessage?: string }> {
+export class UpdatePostHandler implements ICommandHandler<
+  UpdatePostCommand,
+  { post: Post; moderationMessage?: string }
+> {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly mediaService: IMediaPort,
@@ -64,7 +67,9 @@ export class UpdatePostHandler implements ICommandHandler<UpdatePostCommand, { p
     }
 
     if (command.files && command.files.length > 0) {
-      const newImageUrls = await this.mediaService.uploadMultipleImages(command.files);
+      const newImageUrls = await this.mediaService.uploadMultipleImages(
+        command.files,
+      );
       post.updateImages([...post.imageUrls, ...newImageUrls]);
     }
 

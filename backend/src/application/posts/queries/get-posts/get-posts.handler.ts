@@ -5,7 +5,10 @@ import { IPostRepository } from '@/domain/posts/repositories/post.repository.int
 import { GetPostsQuery } from './get-posts.query';
 
 @QueryHandler(GetPostsQuery)
-export class GetPostsHandler implements IQueryHandler<GetPostsQuery, CursorPaginatedResult<Post>> {
+export class GetPostsHandler implements IQueryHandler<
+  GetPostsQuery,
+  CursorPaginatedResult<Post>
+> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(query: GetPostsQuery): Promise<CursorPaginatedResult<Post>> {

@@ -1,7 +1,6 @@
 import { Dispatcher } from '@/application/common/dispatcher';
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 
-
 import { Public } from '@/common/decorators/custom.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -22,10 +21,7 @@ import { GetCollectionStatsQuery } from '@/application/chroma/queries/get-collec
 
 @Controller('chroma')
 export class ChromaController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Public()
   @Post('search')

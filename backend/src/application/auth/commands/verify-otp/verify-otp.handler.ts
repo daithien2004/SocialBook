@@ -1,7 +1,7 @@
 import { VerifyOtpCommand } from './verify-otp.command';
 import { VerifyOtpCommand as VerifyOtpTokenCommand } from '@/application/otp/commands/verify-otp/verify-otp.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { BadRequestException } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';
 import { VerifyOtpHandler as VerifyOtpTokenUseCase } from '@/application/otp/commands/verify-otp/verify-otp.handler';

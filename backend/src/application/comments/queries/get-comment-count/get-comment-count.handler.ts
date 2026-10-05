@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { TargetId } from '@/domain/comments/value-objects/target-id.vo';
 import { CommentTargetType } from '@/domain/comments/value-objects/comment-target-type.vo';
@@ -8,7 +8,10 @@ import { GetCommentCountQuery } from './get-comment-count.query';
 import { GetCommentCountResult } from './get-comment-count.result';
 
 @QueryHandler(GetCommentCountQuery)
-export class GetCommentCountHandler implements IQueryHandler<GetCommentCountQuery, GetCommentCountResult> {
+export class GetCommentCountHandler implements IQueryHandler<
+  GetCommentCountQuery,
+  GetCommentCountResult
+> {
   private readonly logger = new Logger(GetCommentCountHandler.name);
 
   constructor(private readonly commentRepository: ICommentRepository) {}

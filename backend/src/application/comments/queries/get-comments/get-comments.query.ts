@@ -1,7 +1,6 @@
 import { Query } from '@nestjs/cqrs';
-import { ICommentRepository, CommentFilter } from "@/domain/comments/repositories/comment.repository.interface";
-import { PaginatedResult } from "@/common/interfaces/pagination.interface";
-import { CommentModel } from "@/domain/comments/read-models/comment-model";
+import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { CommentModel } from '@/domain/comments/read-models/comment-model';
 
 export class GetCommentsQuery extends Query<PaginatedResult<CommentModel>> {
   constructor(
@@ -14,5 +13,6 @@ export class GetCommentsQuery extends Query<PaginatedResult<CommentModel>> {
     public readonly order?: 'asc' | 'desc',
     public readonly viewerUserId?: string,
   ) {
-    super();}
+    super();
+  }
 }

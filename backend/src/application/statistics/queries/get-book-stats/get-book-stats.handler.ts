@@ -1,9 +1,8 @@
 import { GetBookStatsQuery } from './get-book-stats.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { QueryHandler } from '@nestjs/cqrs';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
 import { BookStats } from '@/domain/statistics/read-models/statistics.model';
-import { Injectable } from '@nestjs/common';
 
 @QueryHandler(GetBookStatsQuery)
 export class GetBookStatsHandler {

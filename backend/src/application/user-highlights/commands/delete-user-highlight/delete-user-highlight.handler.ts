@@ -1,10 +1,6 @@
 import { DeleteUserHighlightCommand } from './delete-user-highlight.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';

@@ -5,7 +5,10 @@ import { ReadingRoomResult } from '../../reading-room.interface';
 import { GetMyHistoryQuery } from './get-my-history.query';
 
 @QueryHandler(GetMyHistoryQuery)
-export class GetMyHistoryHandler implements IQueryHandler<GetMyHistoryQuery, void> {
+export class GetMyHistoryHandler implements IQueryHandler<
+  GetMyHistoryQuery,
+  void
+> {
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(

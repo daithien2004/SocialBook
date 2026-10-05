@@ -1,6 +1,6 @@
 import { TrackUserEventCommand } from './track-user-event.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 

@@ -16,10 +16,7 @@ import { AIThrottleGuard } from '@/common/guards/ai-throttle.guard';
 
 @Controller('ai')
 export class AIController {
-  constructor(
-    private readonly dispatcher: Dispatcher,
-
-    ) {}
+  constructor(private readonly dispatcher: Dispatcher) {}
 
   @Public()
   @UseGuards(AIThrottleGuard)

@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
@@ -23,7 +23,10 @@ export type GetRoomByCodeResult =
   (ReadingRoomResult & { isMember: true }) | ReadingRoomPreviewResult;
 
 @QueryHandler(GetRoomByCodeQuery)
-export class GetRoomByCodeHandler implements IQueryHandler<GetRoomByCodeQuery, GetRoomByCodeResult> {
+export class GetRoomByCodeHandler implements IQueryHandler<
+  GetRoomByCodeQuery,
+  GetRoomByCodeResult
+> {
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
   async execute(query: GetRoomByCodeQuery): Promise<GetRoomByCodeResult> {

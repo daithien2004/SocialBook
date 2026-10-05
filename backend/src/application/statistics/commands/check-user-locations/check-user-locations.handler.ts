@@ -1,6 +1,6 @@
 import { CheckUserLocationsCommand } from './check-user-locations.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 
 export interface UserLocationSummary {

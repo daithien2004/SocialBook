@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   ForbiddenDomainException,
   NotFoundDomainException,
@@ -13,7 +13,10 @@ import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
 @CommandHandler(RemovePostImageCommand)
-export class RemovePostImageHandler implements ICommandHandler<RemovePostImageCommand, { imageUrls: string[]; }> {
+export class RemovePostImageHandler implements ICommandHandler<
+  RemovePostImageCommand,
+  { imageUrls: string[] }
+> {
   private readonly logger = new Logger(RemovePostImageHandler.name);
 
   constructor(
@@ -32,9 +35,9 @@ export class RemovePostImageHandler implements ICommandHandler<RemovePostImageCo
     post.removeImage(command.imageUrl);
     await this.postRepository.update(post);
 
-    this.mediaService
-      .deleteImage(command.imageUrl)
-      .catch((err) => this.logger.error('Media delete error:', err));
+    this.mediaService.deleteImage(command.imageUrl).catch((err) => {
+      this.logger.error('Media delete error:', err);
+    });
 
     return { imageUrls: post.imageUrls };
   }

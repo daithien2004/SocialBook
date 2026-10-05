@@ -1,7 +1,7 @@
 import { VerifyOtpCommand } from './verify-otp.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/common/utils/error.util';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import {
   BadRequestDomainException,
   InternalServerDomainException,

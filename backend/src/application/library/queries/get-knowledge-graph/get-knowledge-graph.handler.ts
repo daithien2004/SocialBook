@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-﻿import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Logger, NotFoundException } from '@nestjs/common';
 import { IReadingListRepository } from '@/domain/library/repositories/reading-list.repository.interface';
 import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -36,7 +36,10 @@ export interface KnowledgeGraphResult {
 }
 
 @QueryHandler(GetKnowledgeGraphQuery)
-export class GetKnowledgeGraphHandler implements IQueryHandler<GetKnowledgeGraphQuery, KnowledgeGraphResult> {
+export class GetKnowledgeGraphHandler implements IQueryHandler<
+  GetKnowledgeGraphQuery,
+  KnowledgeGraphResult
+> {
   private readonly logger = new Logger(GetKnowledgeGraphHandler.name);
 
   constructor(

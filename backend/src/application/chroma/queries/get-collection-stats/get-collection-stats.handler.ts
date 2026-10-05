@@ -1,6 +1,6 @@
 import { GetCollectionStatsQuery } from './get-collection-stats.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { QueryHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/domain/chroma/repositories/vector.repository.interface';
 
 @QueryHandler(GetCollectionStatsQuery)

@@ -1,5 +1,3 @@
-import { GetEngagementStatsQuery } from './get-engagement-stats.query';
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { IProgressRepository } from '@/domain/progress/repositories/progress.repository.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
@@ -11,7 +9,7 @@ import {
   GeographicData,
 } from '@/domain/statistics/read-models/statistics.model';
 
-@QueryHandler(GetEngagementStatsQuery)
+@Injectable()
 export class GetEngagementStatsHandler {
   constructor(
     private readonly progressRepository: IProgressRepository,

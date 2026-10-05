@@ -133,9 +133,11 @@ export class OAuthController {
         codeChallenge: flow.codeChallenge,
         callbackUrl: this.providerRedirectUri(provider),
       });
-      return res.redirect(302, authUrl);
+      res.redirect(302, authUrl);
+      return;
     } catch {
-      return res.redirect(302, this.errorRedirect(OAuthErrorCode.OAuthFailed));
+      res.redirect(302, this.errorRedirect(OAuthErrorCode.OAuthFailed));
+      return;
     }
   }
 
@@ -171,7 +173,8 @@ export class OAuthController {
     const cookieState = req.cookies?.sb_oauth_state as string | undefined;
     if (!cookieState || cookieState !== state || !code) {
       this.clearOauthStateCookie(res);
-      return res.redirect(302, this.errorRedirect(OAuthErrorCode.OAuthFailed));
+      res.redirect(302, this.errorRedirect(OAuthErrorCode.OAuthFailed));
+      return;
     }
     this.clearOauthStateCookie(res);
     try {
@@ -179,10 +182,8 @@ export class OAuthController {
       const redirectUri = this.providerRedirectUri(provider);
       const flow = await this.oauthStateService.getConsumedFlow(state);
       if (!flow) {
-        return res.redirect(
-          302,
-          this.errorRedirect(OAuthErrorCode.OAuthFailed),
-        );
+        res.redirect(302, this.errorRedirect(OAuthErrorCode.OAuthFailed));
+        return;
       }
       const profile = await strat.exchangeCode({
         code,
@@ -197,12 +198,14 @@ export class OAuthController {
         res,
         this.cookieService.refreshTokenCookie(result.refreshToken),
       );
-      return res.redirect(
+      res.redirect(
         302,
         this.redirectWithQuery(flow.callbackUrl, 'oauth', 'success'),
       );
+      return;
     } catch (error: unknown) {
-      return res.redirect(302, this.errorRedirect(toErrorCode(error)));
+      res.redirect(302, this.errorRedirect(toErrorCode(error)));
+      return;
     }
   }
 }

@@ -23,11 +23,11 @@ import {
 export class HeartbeatDto {
   @IsString()
   @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
-  roomId: string;
+  roomId!: string;
 
   @IsString()
   @Length(1, CHAPTER_SLUG_MAX_LENGTH)
-  chapterSlug: string;
+  chapterSlug!: string;
 
   @IsOptional()
   @IsString()

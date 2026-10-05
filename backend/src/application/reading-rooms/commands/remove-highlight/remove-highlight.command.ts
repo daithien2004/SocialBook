@@ -7,5 +7,6 @@ export class RemoveHighlightCommand extends Command<ReadingRoom> {
     public readonly userId: string,
     public readonly highlightId: string,
   ) {
-    super();}
+    super();
+  }
 }

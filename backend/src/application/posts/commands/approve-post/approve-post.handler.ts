@@ -8,7 +8,10 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { ApprovePostCommand } from './approve-post.command';
 
 @CommandHandler(ApprovePostCommand)
-export class ApprovePostHandler implements ICommandHandler<ApprovePostCommand, { success: boolean; message: string; }> {
+export class ApprovePostHandler implements ICommandHandler<
+  ApprovePostCommand,
+  { success: boolean; message: string }
+> {
   constructor(private readonly postRepository: IPostRepository) {}
 
   async execute(command: ApprovePostCommand) {

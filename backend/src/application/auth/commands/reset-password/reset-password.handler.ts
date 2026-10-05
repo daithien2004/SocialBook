@@ -1,6 +1,6 @@
 import { ResetPasswordCommand } from './reset-password.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
+import { BadRequestException } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/domain/users/value-objects/user-email.vo';

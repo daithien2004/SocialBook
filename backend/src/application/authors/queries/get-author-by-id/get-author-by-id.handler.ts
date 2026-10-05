@@ -10,7 +10,10 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { GetAuthorByIdQuery } from './get-author-by-id.query';
 
 @QueryHandler(GetAuthorByIdQuery)
-export class GetAuthorByIdHandler implements IQueryHandler<GetAuthorByIdQuery, Author> {
+export class GetAuthorByIdHandler implements IQueryHandler<
+  GetAuthorByIdQuery,
+  Author
+> {
   constructor(private readonly authorRepository: IAuthorRepository) {}
 
   async execute(query: GetAuthorByIdQuery): Promise<Author> {

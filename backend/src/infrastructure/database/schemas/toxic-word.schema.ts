@@ -6,16 +6,16 @@ export type ToxicWordDocument = ToxicWord & Document;
 @Schema({ timestamps: true, collection: 'toxic_words' })
 export class ToxicWord {
   @Prop({ required: true, unique: true })
-  pattern: string;
+  pattern!: string;
 
   @Prop({ required: true })
-  group: string;
+  group!: string;
 
   @Prop({ required: true })
-  originalWord: string;
+  originalWord!: string;
 
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt!: Date;
+  updatedAt!: Date;
 }
 
 export const ToxicWordSchema = SchemaFactory.createForClass(ToxicWord);

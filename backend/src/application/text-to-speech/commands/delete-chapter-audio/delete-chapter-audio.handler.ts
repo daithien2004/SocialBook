@@ -1,6 +1,5 @@
 import { DeleteChapterAudioCommand } from './delete-chapter-audio.command';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable } from '@nestjs/common';
+import { CommandHandler } from '@nestjs/cqrs';
 import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
 
 @CommandHandler(DeleteChapterAudioCommand)

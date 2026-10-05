@@ -10,7 +10,7 @@ import {
 export class SearchQueryDto {
   @IsString()
   @IsNotEmpty()
-  query: string;
+  query!: string;
 
   @IsOptional()
   @IsEnum(['book', 'author', 'chapter'])

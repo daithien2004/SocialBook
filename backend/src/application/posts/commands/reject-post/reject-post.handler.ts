@@ -7,7 +7,10 @@ import { ErrorMessages } from '@/common/constants/error-messages';
 import { RejectPostCommand } from './reject-post.command';
 
 @CommandHandler(RejectPostCommand)
-export class RejectPostHandler implements ICommandHandler<RejectPostCommand, { success: boolean; message: string; }> {
+export class RejectPostHandler implements ICommandHandler<
+  RejectPostCommand,
+  { success: boolean; message: string }
+> {
   constructor(
     private readonly postRepository: IPostRepository,
     private readonly userRepository: IUserRepository,
