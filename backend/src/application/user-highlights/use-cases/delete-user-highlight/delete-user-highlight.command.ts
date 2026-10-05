@@ -1,7 +1,9 @@
-import { AppAbility } from '@socialbook/shared';
-
-export interface DeleteUserHighlightCommand {
-  highlightId: string;
-  userId: string;
-  ability: AppAbility;
+import { Command } from '@nestjs/cqrs';
+import type { AppAbility } from '@socialbook/shared';
+export class DeleteUserHighlightCommand extends Command<any> {
+  constructor(
+    public readonly highlightId: string,
+    public readonly userId: string,
+    public readonly ability: AppAbility,
+  ) { super(); }
 }

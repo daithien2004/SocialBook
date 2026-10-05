@@ -1,15 +1,16 @@
+import { SendOtpCommand } from './send-otp.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/common/utils/error.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { IMailerPort } from '@/domain/auth/otp/interfaces/mailer.port';
 import { IOtpRepository } from '@/domain/auth/otp/repositories/otp.repository.interface';
 import { Otp } from '@/domain/auth/otp/entities/otp.entity';
-import { SendOtpCommand } from './send-otp.command';
 
-@Injectable()
-export class SendOtpUseCase {
+@CommandHandler(SendOtpCommand)
+export class SendOtpHandler {
   private readonly OTP_EXPIRY_MINUTES = 5;
-  private readonly logger = new Logger(SendOtpUseCase.name);
+  private readonly logger = new Logger(SendOtpHandler.name);
 
   constructor(
     private readonly otpRepository: IOtpRepository,

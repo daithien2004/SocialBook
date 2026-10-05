@@ -1,15 +1,16 @@
+import { DeleteUserHighlightCommand } from './delete-user-highlight.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
-import { DeleteUserHighlightCommand } from './delete-user-highlight.command';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class DeleteUserHighlightUseCase {
+@CommandHandler(DeleteUserHighlightCommand)
+export class DeleteUserHighlightHandler {
   constructor(private readonly highlightRepository: IUserHighlightRepository) {}
 
   async execute(command: DeleteUserHighlightCommand): Promise<void> {

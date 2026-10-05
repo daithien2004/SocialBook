@@ -8,14 +8,15 @@ import {
   Patch,
   Delete,
 } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
-import { CreateUserHighlightUseCase } from '@/application/user-highlights/use-cases/create-user-highlight/create-user-highlight.use-case';
-import { UpdateUserHighlightUseCase } from '@/application/user-highlights/use-cases/update-user-highlight/update-user-highlight.use-case';
-import { DeleteUserHighlightUseCase } from '@/application/user-highlights/use-cases/delete-user-highlight/delete-user-highlight.use-case';
-import { GetUserHighlightsUseCase } from '@/application/user-highlights/use-cases/get-user-highlights/get-user-highlights.use-case';
+import { CreateUserHighlightCommand } from '@/application/user-highlights/use-cases/create-user-highlight/create-user-highlight.command';
+import { UpdateUserHighlightCommand } from '@/application/user-highlights/use-cases/update-user-highlight/update-user-highlight.command';
+import { DeleteUserHighlightCommand } from '@/application/user-highlights/use-cases/delete-user-highlight/delete-user-highlight.command';
+import { GetUserHighlightsQuery } from '@/application/user-highlights/use-cases/get-user-highlights/get-user-highlights.query';
 import { CreateUserHighlightDto } from './dto/create-user-highlight.dto';
 import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
 
@@ -23,10 +24,8 @@ import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
 @UseGuards(JwtAuthGuard)
 export class UserHighlightsController {
   constructor(
-    private readonly createHighlightUseCase: CreateUserHighlightUseCase,
-    private readonly updateHighlightUseCase: UpdateUserHighlightUseCase,
-    private readonly deleteHighlightUseCase: DeleteUserHighlightUseCase,
-    private readonly getHighlightsUseCase: GetUserHighlightsUseCase,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post()
@@ -34,15 +33,16 @@ export class UserHighlightsController {
     @CurrentUser('id') userId: string,
     @Body() dto: CreateUserHighlightDto,
   ) {
-    const highlight = await this.createHighlightUseCase.execute({
+    const command = new CreateUserHighlightCommand(
       userId,
-      bookId: dto.bookId,
-      chapterId: dto.chapterId,
-      paragraphId: dto.paragraphId,
-      content: dto.content,
-      color: dto.color,
-      note: dto.note,
-    });
+      dto.bookId,
+      dto.chapterId,
+      dto.paragraphId,
+      dto.content,
+      dto.color,
+      dto.note,
+    );
+    const highlight = await this.commandBus.execute(command);
 
     return {
       data: {
@@ -63,12 +63,10 @@ export class UserHighlightsController {
     @CurrentUser('id') userId: string,
     @Param('bookId') bookId: string,
   ) {
-    const highlights = await this.getHighlightsUseCase.execute({
-      userId,
-      bookId,
-    });
+    const query = new GetUserHighlightsQuery(userId, bookId, undefined);
+    const highlights = await this.queryBus.execute(query);
     return {
-      data: highlights.map((h) => ({
+      data: highlights.map((h: any) => ({
         id: h.id,
         bookId: h.bookId,
         chapterId: h.chapterId,
@@ -87,12 +85,10 @@ export class UserHighlightsController {
     @CurrentUser('id') userId: string,
     @Param('chapterId') chapterId: string,
   ) {
-    const highlights = await this.getHighlightsUseCase.execute({
-      userId,
-      chapterId,
-    });
+    const query = new GetUserHighlightsQuery(userId, undefined, chapterId);
+    const highlights = await this.queryBus.execute(query);
     return {
-      data: highlights.map((h) => ({
+      data: highlights.map((h: any) => ({
         id: h.id,
         bookId: h.bookId,
         chapterId: h.chapterId,
@@ -113,13 +109,14 @@ export class UserHighlightsController {
     @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateUserHighlightDto,
   ) {
-    const highlight = await this.updateHighlightUseCase.execute({
+    const command = new UpdateUserHighlightCommand(
       highlightId,
       userId,
       ability,
-      color: dto.color,
-      note: dto.note,
-    });
+      dto.color,
+      dto.note,
+    );
+    const highlight = await this.commandBus.execute(command);
 
     return {
       data: {
@@ -137,7 +134,8 @@ export class UserHighlightsController {
     @Param('id') highlightId: string,
     @CurrentAbility() ability: AppAbility,
   ) {
-    await this.deleteHighlightUseCase.execute({ highlightId, userId, ability });
+    const command = new DeleteUserHighlightCommand(highlightId, userId, ability);
+    await this.commandBus.execute(command);
     return { success: true };
   }
 }

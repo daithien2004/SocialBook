@@ -1,3 +1,5 @@
+import { UpdateUserHighlightCommand } from './update-user-highlight.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   Injectable,
   NotFoundException,
@@ -5,12 +7,11 @@ import {
 } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
-import { UpdateUserHighlightCommand } from './update-user-highlight.command';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class UpdateUserHighlightUseCase {
+@CommandHandler(UpdateUserHighlightCommand)
+export class UpdateUserHighlightHandler {
   constructor(private readonly highlightRepository: IUserHighlightRepository) {}
 
   async execute(command: UpdateUserHighlightCommand): Promise<UserHighlight> {

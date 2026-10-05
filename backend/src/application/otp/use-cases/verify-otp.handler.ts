@@ -1,3 +1,5 @@
+import { VerifyOtpCommand } from './verify-otp.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/common/utils/error.util';
 import { Injectable, Logger } from '@nestjs/common';
 import {
@@ -5,12 +7,11 @@ import {
   InternalServerDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IOtpRepository } from '@/domain/auth/otp/repositories/otp.repository.interface';
-import { VerifyOtpCommand } from './verify-otp.command';
 
-@Injectable()
-export class VerifyOtpUseCase {
+@CommandHandler(VerifyOtpCommand)
+export class VerifyOtpHandler {
   private readonly MAX_VERIFY_ATTEMPTS = 5;
-  private readonly logger = new Logger(VerifyOtpUseCase.name);
+  private readonly logger = new Logger(VerifyOtpHandler.name);
 
   constructor(private readonly otpRepository: IOtpRepository) {}
 

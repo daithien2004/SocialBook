@@ -1,10 +1,11 @@
+import { CreateUserHighlightCommand } from './create-user-highlight.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { IUserHighlightRepository } from '@/domain/user-highlights/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/domain/user-highlights/entities/user-highlight.entity';
-import { CreateUserHighlightCommand } from './create-user-highlight.command';
 
-@Injectable()
-export class CreateUserHighlightUseCase {
+@CommandHandler(CreateUserHighlightCommand)
+export class CreateUserHighlightHandler {
   constructor(private readonly highlightRepository: IUserHighlightRepository) {}
 
   async execute(command: CreateUserHighlightCommand): Promise<UserHighlight> {

@@ -1,10 +1,12 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { GetRoleByNameUseCase } from './use-cases/get-role-by-name.use-case';
+import { GetRoleByNameHandler } from './use-cases/get-role-by-name.handler';
 import { RolesRepositoryModule } from '@/infrastructure/database/repositories/roles/roles-repository.module';
 
 @Module({
-  imports: [RolesRepositoryModule],
-  providers: [GetRoleByNameUseCase],
-  exports: [GetRoleByNameUseCase],
+  imports: [
+    CqrsModule,RolesRepositoryModule],
+  providers: [GetRoleByNameHandler],
+  exports: [GetRoleByNameHandler],
 })
 export class RolesApplicationModule {}

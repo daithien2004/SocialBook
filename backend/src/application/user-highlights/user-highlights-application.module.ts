@@ -1,23 +1,25 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { CreateUserHighlightUseCase } from './use-cases/create-user-highlight/create-user-highlight.use-case';
-import { UpdateUserHighlightUseCase } from './use-cases/update-user-highlight/update-user-highlight.use-case';
-import { DeleteUserHighlightUseCase } from './use-cases/delete-user-highlight/delete-user-highlight.use-case';
-import { GetUserHighlightsUseCase } from './use-cases/get-user-highlights/get-user-highlights.use-case';
+import { CreateUserHighlightHandler } from './use-cases/create-user-highlight/create-user-highlight.handler';
+import { UpdateUserHighlightHandler } from './use-cases/update-user-highlight/update-user-highlight.handler';
+import { DeleteUserHighlightHandler } from './use-cases/delete-user-highlight/delete-user-highlight.handler';
+import { GetUserHighlightsHandler } from './use-cases/get-user-highlights/get-user-highlights.handler';
 import { UserHighlightsRepositoryModule } from '@/infrastructure/database/repositories/user-highlights/user-highlights-repository.module';
 
 @Module({
-  imports: [UserHighlightsRepositoryModule],
+  imports: [
+    CqrsModule,UserHighlightsRepositoryModule],
   providers: [
-    CreateUserHighlightUseCase,
-    UpdateUserHighlightUseCase,
-    DeleteUserHighlightUseCase,
-    GetUserHighlightsUseCase,
+    CreateUserHighlightHandler,
+    UpdateUserHighlightHandler,
+    DeleteUserHighlightHandler,
+    GetUserHighlightsHandler,
   ],
   exports: [
-    CreateUserHighlightUseCase,
-    UpdateUserHighlightUseCase,
-    DeleteUserHighlightUseCase,
-    GetUserHighlightsUseCase,
+    CreateUserHighlightHandler,
+    UpdateUserHighlightHandler,
+    DeleteUserHighlightHandler,
+    GetUserHighlightsHandler,
   ],
 })
 export class UserHighlightsApplicationModule {}
