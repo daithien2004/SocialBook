@@ -1,3 +1,5 @@
+import { CreateReviewCommand } from './create-review.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import {
   BadRequestDomainException,
@@ -17,8 +19,8 @@ import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity
 import { BookId as ChapterBookId } from '@/domain/chapters/value-objects/book-id.vo';
 import { IRecommendationCachePort } from '@/domain/recommendations/interfaces/recommendation-cache.port';
 
-@Injectable()
-export class CreateReviewUseCase {
+@CommandHandler(CreateReviewCommand)
+export class CreateReviewHandler {
   constructor(
     private readonly reviewRepository: IReviewRepository,
 

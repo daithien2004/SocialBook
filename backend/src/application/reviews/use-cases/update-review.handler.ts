@@ -1,3 +1,5 @@
+import { UpdateReviewCommand } from './update-review.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import {
@@ -12,8 +14,8 @@ import { containsVietnameseToxicWords } from '@/domain/content-moderation/utils/
 import { Action, Subject, AppAbility } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class UpdateReviewUseCase {
+@CommandHandler(UpdateReviewCommand)
+export class UpdateReviewHandler {
   constructor(private readonly reviewRepository: IReviewRepository) {}
 
   async execute(

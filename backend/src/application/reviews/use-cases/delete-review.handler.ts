@@ -1,3 +1,5 @@
+import { DeleteReviewCommand } from './delete-review.command';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { ErrorMessages } from '@/common/constants/error-messages';
 import {
@@ -8,8 +10,8 @@ import { IReviewRepository } from '@/domain/reviews/repositories/review.reposito
 import { Action, Subject, AppAbility } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
-@Injectable()
-export class DeleteReviewUseCase {
+@CommandHandler(DeleteReviewCommand)
+export class DeleteReviewHandler {
   constructor(private readonly reviewRepository: IReviewRepository) {}
 
   async execute(id: string, ability: AppAbility): Promise<void> {

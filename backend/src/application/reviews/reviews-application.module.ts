@@ -1,10 +1,11 @@
+import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { CreateReviewUseCase } from './use-cases/create-review.use-case';
-import { DeleteReviewUseCase } from './use-cases/delete-review.use-case';
-import { GetBookReviewsUseCase } from './use-cases/get-book-reviews.use-case';
-import { GetReviewUseCase } from './use-cases/get-review.use-case';
-import { ToggleReviewLikeUseCase } from './use-cases/toggle-review-like.use-case';
-import { UpdateReviewUseCase } from './use-cases/update-review.use-case';
+import { CreateReviewHandler } from './use-cases/create-review.handler';
+import { DeleteReviewHandler } from './use-cases/delete-review.handler';
+import { GetBookReviewsHandler } from './use-cases/get-book-reviews.handler';
+import { GetReviewHandler } from './use-cases/get-review.handler';
+import { ToggleReviewLikeHandler } from './use-cases/toggle-review-like.handler';
+import { UpdateReviewHandler } from './use-cases/update-review.handler';
 import { LibraryRepositoryModule } from '@/infrastructure/database/repositories/library/library-repository.module';
 import { ChaptersRepositoryModule } from '@/infrastructure/database/repositories/chapters/chapters-repository.module';
 import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/reviews/reviews-repository.module';
@@ -14,6 +15,7 @@ import { RecommendationsInfrastructureModule } from '@/infrastructure/recommenda
 
 @Module({
   imports: [
+    CqrsModule,
     ReviewsRepositoryModule,
     ContentModerationApplicationModule,
     IdGeneratorModule,
@@ -22,20 +24,20 @@ import { RecommendationsInfrastructureModule } from '@/infrastructure/recommenda
     RecommendationsInfrastructureModule,
   ],
   providers: [
-    CreateReviewUseCase,
-    DeleteReviewUseCase,
-    GetBookReviewsUseCase,
-    GetReviewUseCase,
-    ToggleReviewLikeUseCase,
-    UpdateReviewUseCase,
+    CreateReviewHandler,
+    DeleteReviewHandler,
+    GetBookReviewsHandler,
+    GetReviewHandler,
+    ToggleReviewLikeHandler,
+    UpdateReviewHandler,
   ],
   exports: [
-    CreateReviewUseCase,
-    DeleteReviewUseCase,
-    GetBookReviewsUseCase,
-    GetReviewUseCase,
-    ToggleReviewLikeUseCase,
-    UpdateReviewUseCase,
+    CreateReviewHandler,
+    DeleteReviewHandler,
+    GetBookReviewsHandler,
+    GetReviewHandler,
+    ToggleReviewLikeHandler,
+    UpdateReviewHandler,
   ],
 })
 export class ReviewsApplicationModule {}
