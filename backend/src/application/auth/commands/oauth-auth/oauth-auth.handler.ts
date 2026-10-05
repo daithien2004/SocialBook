@@ -105,10 +105,8 @@ export class OAuthAuthHandler {
     }
 
     let roleName = 'user';
-    if (existingUser.roleId) {
-      const role = await this.rolesRepository.findById(existingUser.roleId);
-      if (role) roleName = role.name;
-    }
+    const role = await this.rolesRepository.findById(existingUser.roleId);
+    if (role) roleName = role.name;
 
     const tokens = await this.tokenService.signTokens(
       existingUser.id.toString(),

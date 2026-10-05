@@ -22,10 +22,11 @@ const makeStore = (
   const pipeline: RateLimitPipeline = {
     set: () => pipeline,
     incr: () => pipeline,
-    exec: async (): Promise<Array<[unknown, unknown]>> => [
-      [null, 'OK'],
-      [null, current()],
-    ],
+    exec: (): Promise<Array<[unknown, unknown]>> =>
+      Promise.resolve([
+        [null, 'OK'],
+        [null, current()],
+      ]),
   };
   return {
     multi: () => {
@@ -91,8 +92,7 @@ describe('ReadingRoomHighlightHandler WS rate limiting', () => {
       emitError: (target, code, message) => {
         target.emit('error', { code, message });
       },
-      toRoom: () =>
-        fakeOf<ReturnType<Namespace['to']>>({ emit: jest.fn() }),
+      toRoom: () => fakeOf<ReturnType<Namespace['to']>>({ emit: jest.fn() }),
     });
 
     const rateLimiter = new WsRateLimiter(

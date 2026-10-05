@@ -17,10 +17,6 @@ export class LoginHandler {
   async execute(command: LoginCommand) {
     const user = command.user;
 
-    if (!user) {
-      throw new UnauthorizedDomainException('Người dùng không tồn tại');
-    }
-
     if (!user.isVerified) {
       throw new UnauthorizedDomainException('Tài khoản chưa được xác thực');
     }

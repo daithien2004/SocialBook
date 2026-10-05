@@ -19,7 +19,7 @@ const BOOK_ID = 'book-1';
 describe('ReadingProgressTracker (chapterId path)', () => {
   let tracker: ReadingProgressTracker;
   let findById: jest.Mock;
-  let execute: jest.Mock;
+  let execute: jest.Mock<unknown, [UpdateProgressCommand]>;
   let socket: RoomSocket;
 
   const chapterOf = (bookId: string): Chapter =>
@@ -138,7 +138,7 @@ describe('ReadingProgressTracker (chapterId path)', () => {
 
   it('logs but does not throw when the progress write fails', async () => {
     findById.mockResolvedValue(chapterOf(BOOK_ID));
-    execute.mockRejectedValue(new Error('db down'));
+    execute.mockImplementation(() => Promise.reject(new Error('db down')));
     const errorSpy = jest.spyOn(Logger.prototype, 'error');
 
     await expect(scheduleAndFlush()).resolves.toBeUndefined();

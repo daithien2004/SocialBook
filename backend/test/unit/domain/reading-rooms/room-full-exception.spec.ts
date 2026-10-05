@@ -16,8 +16,12 @@ import { fakeOf } from '../../../support/typed-fake';
  * .agents/skills/nestjs-error-catalog).
  */
 const runThroughHttpFilter = (exception: unknown): number => {
-  const status = jest.fn().mockReturnThis();
+  let capturedStatus = 0;
   const json = jest.fn();
+  const status = jest.fn((s: number) => {
+    capturedStatus = s;
+    return { json };
+  });
 
   const host = fakeOf<ArgumentsHost>({
     switchToHttp: () => ({
@@ -31,7 +35,7 @@ const runThroughHttpFilter = (exception: unknown): number => {
   filter.catch(exception, host);
 
   expect(status).toHaveBeenCalledWith(expect.any(Number));
-  return Number(status.mock.calls[0][0]);
+  return capturedStatus;
 };
 
 describe('RoomFullDomainException & Concurrency mapping (T9)', () => {
@@ -46,7 +50,9 @@ describe('RoomFullDomainException & Concurrency mapping (T9)', () => {
 
     room.addMember('member-2');
 
-    expect(() => room.addMember('member-3')).toThrow(RoomFullDomainException);
+    expect(() => {
+      room.addMember('member-3');
+    }).toThrow(RoomFullDomainException);
     try {
       room.addMember('member-3');
       throw new Error('mong đợi addMember ném RoomFullDomainException');
@@ -73,7 +79,9 @@ describe('RoomFullDomainException & Concurrency mapping (T9)', () => {
 
     room.addMember('member-2');
     // Calling addMember again with existing active member should not throw
-    expect(() => room.addMember('member-2')).not.toThrow();
+    expect(() => {
+      room.addMember('member-2');
+    }).not.toThrow();
   });
 
   it('ConcurrencyException has code CONCURRENCY_CONFLICT', () => {

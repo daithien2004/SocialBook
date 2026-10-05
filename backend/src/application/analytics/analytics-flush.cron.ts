@@ -38,21 +38,24 @@ export class AnalyticsFlushCron {
           .del(this.BUFFER_KEY)
           .exec()) || [];
 
-      const rawEvents = (results?.[1] as string[]) || [];
+      const lrangeResult = results[1];
+      const rawEvents: string[] = Array.isArray(lrangeResult)
+        ? lrangeResult.map(String)
+        : [];
 
-      if (!rawEvents || rawEvents.length === 0) {
+      if (rawEvents.length === 0) {
         return;
       }
 
       this.logger.log(
-        `Flushing ${rawEvents.length} analytics events to MongoDB...`,
+        `Flushing ${String(rawEvents.length)} analytics events to MongoDB...`,
       );
 
       const entitiesToInsert: UserEvent[] = [];
 
       for (const raw of rawEvents) {
         try {
-          const parsedCommand = JSON.parse(raw) as unknown;
+          const parsedCommand: unknown = JSON.parse(raw);
           const parsed = TrackEventPayloadSchema.safeParse(parsedCommand);
           if (!parsed.success) {
             this.logger.warn(
@@ -62,10 +65,20 @@ export class AnalyticsFlushCron {
           }
           const command = parsed.data;
 
+          const isUserEventType = (val: string): val is UserEventType =>
+            Object.values(UserEventType).map(String).includes(val);
+
+          if (!isUserEventType(command.eventType)) {
+            this.logger.warn(
+              `Invalid event type in buffer: ${command.eventType}`,
+            );
+            continue;
+          }
+
           const event = UserEvent.create({
             id: this.idGenerator.generate(),
             userId: command.userId,
-            eventType: command.eventType as UserEventType,
+            eventType: command.eventType,
             bookId: command.bookId,
             chapterId: command.chapterId,
             durationSeconds: command.durationSeconds,
@@ -91,7 +104,7 @@ export class AnalyticsFlushCron {
       if (entitiesToInsert.length > 0) {
         await this.analyticsRepository.insertManyEvents(entitiesToInsert);
         this.logger.log(
-          `Successfully flushed ${entitiesToInsert.length} events.`,
+          `Successfully flushed ${String(entitiesToInsert.length)} events.`,
         );
       }
     } catch (error) {

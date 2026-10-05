@@ -29,7 +29,7 @@ export class ScoringService {
     if (!score || genreIds.length === 0) return;
 
     this.logger.log(
-      `Updating scores for user ${userId}: ${eventType} (+${score}) for genres: ${genreIds.join(', ')}`,
+      `Updating scores for user ${userId}: ${eventType} (+${String(score)}) for genres: ${genreIds.join(', ')}`,
     );
 
     await Promise.all(

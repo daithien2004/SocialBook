@@ -1,30 +1,4 @@
 {
-  "src/application/analytics/analytics-flush.cron.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/application/analytics/listeners/analytics.listener.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    }
-  },
-  "src/application/analytics/services/scoring.service.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/auth/commands/login/login.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
   "src/application/auth/commands/oauth-auth/oauth-auth.handler.ts": {
     "@typescript-eslint/no-unnecessary-type-conversion": {
       "count": 1
@@ -1699,17 +1673,8 @@
     }
   },
   "test/e2e/reading-room.gateway.e2e-spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 6
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
@@ -1809,12 +1774,6 @@
   },
   "test/unit/common/ws-exception-filter.spec.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 13
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-call": {
       "count": 1
     }
   },
@@ -1832,11 +1791,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
-    }
-  },
-  "test/unit/domain/reading-rooms/room-full-exception.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 3
     }
   },
   "test/unit/domain/reading-rooms/room-id-and-collision.spec.ts": {
@@ -1927,24 +1881,9 @@
       "count": 1
     }
   },
-  "test/unit/presentation/reading-room-progress-cache.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 15
-    }
-  },
-  "test/unit/presentation/reading-room.gateway-ratelimit.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 12
-    }
-  },
-  "test/unit/presentation/reading-room.gateway-room-guard.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 11
-    }
-  },
   "test/unit/production-hardening/track-a-regressions.spec.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 21
+      "count": 19
     },
     "@typescript-eslint/no-misused-spread": {
       "count": 2

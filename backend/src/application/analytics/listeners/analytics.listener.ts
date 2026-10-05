@@ -30,7 +30,7 @@ export class AnalyticsListener {
       const book = await this.bookRepository.findById(
         BookId.create(event.bookId),
       );
-      if (book && book.genres) {
+      if (book) {
         const genreIds = book.genres.map((g) =>
           typeof g === 'string' ? g : g.toString(),
         );
@@ -43,7 +43,7 @@ export class AnalyticsListener {
     }
 
     if (event.eventType === UserEventType.SEARCH && event.metadata?.keyword) {
-      const metadata = event.metadata ?? {};
+      const metadata = event.metadata;
       const keyword = String(metadata.keyword).toLowerCase();
       const allGenres = await this.genreRepository.findAllSimple();
 
@@ -132,7 +132,7 @@ export class AnalyticsListener {
     await this.analyticsRepository.saveEvent(event);
 
     const book = await this.bookRepository.findById(BookId.create(bookId));
-    if (book && book.genres) {
+    if (book) {
       const genreIds = book.genres.map((g) =>
         typeof g === 'string' ? g : g.toString(),
       );

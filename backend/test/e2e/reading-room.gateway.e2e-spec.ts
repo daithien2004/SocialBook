@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { getRedisConnectionToken } from '@nestjs-modules/ioredis';
 import { io, Socket } from 'socket.io-client';
-import type { AddressInfo } from 'net';
 
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
@@ -51,24 +50,35 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
   let client: Socket;
 
   const joinRoom = {
-    execute: jest.fn(async (_cmd: JoinRoomCommand): Promise<unknown> => undefined),
+    execute: jest.fn((_cmd: JoinRoomCommand): Promise<unknown> =>
+      Promise.resolve(undefined),
+    ),
   };
   const leaveRoom = {
-    execute: jest.fn(async (_cmd: LeaveRoomCommand): Promise<unknown> => undefined),
+    execute: jest.fn((_cmd: LeaveRoomCommand): Promise<unknown> =>
+      Promise.resolve(undefined),
+    ),
   };
   const addHighlight = {
-    execute: jest.fn(async (_cmd: AddHighlightCommand): Promise<unknown> => undefined),
+    execute: jest.fn((_cmd: AddHighlightCommand): Promise<unknown> =>
+      Promise.resolve(undefined),
+    ),
   };
   const removeHighlight = {
-    execute: jest.fn(async (_cmd: RemoveHighlightCommand): Promise<unknown> => undefined),
+    execute: jest.fn((_cmd: RemoveHighlightCommand): Promise<unknown> =>
+      Promise.resolve(undefined),
+    ),
   };
   const generateInsight = {
     execute: jest.fn(
-      async (_cmd: GenerateHighlightInsightCommand): Promise<unknown> => undefined,
+      (_cmd: GenerateHighlightInsightCommand): Promise<unknown> =>
+        Promise.resolve(undefined),
     ),
   };
   const updateProgress = {
-    execute: jest.fn(async (_cmd: UpdateProgressCommand): Promise<unknown> => undefined),
+    execute: jest.fn((_cmd: UpdateProgressCommand): Promise<unknown> =>
+      Promise.resolve(undefined),
+    ),
   };
 
   /**
@@ -79,11 +89,13 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     if (cmd instanceof JoinRoomCommand) return joinRoom.execute(cmd);
     if (cmd instanceof LeaveRoomCommand) return leaveRoom.execute(cmd);
     if (cmd instanceof AddHighlightCommand) return addHighlight.execute(cmd);
-    if (cmd instanceof RemoveHighlightCommand) return removeHighlight.execute(cmd);
+    if (cmd instanceof RemoveHighlightCommand)
+      return removeHighlight.execute(cmd);
     if (cmd instanceof GenerateHighlightInsightCommand) {
       return generateInsight.execute(cmd);
     }
-    if (cmd instanceof UpdateProgressCommand) return updateProgress.execute(cmd);
+    if (cmd instanceof UpdateProgressCommand)
+      return updateProgress.execute(cmd);
     return undefined;
   };
 
@@ -133,7 +145,11 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         clearTimeout(timer);
         resolve(payload);
       });
-      client.emit(event, ...(emitArgs as never[]));
+      if (Array.isArray(emitArgs)) {
+        client.emit(event, ...emitArgs);
+      } else {
+        client.emit(event, emitArgs);
+      }
     });
 
   const waitFor = async (fn: () => boolean, ms = 3000): Promise<void> => {
@@ -195,7 +211,11 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         { provide: ReadingRoomPresenceService, useValue: presence },
         // 8 dependency mới của gateway (refactor CQRS) — Dispatcher/Coordinator/
         // HighlightHandler/Tracker dùng bản thật, bus & auth/rate-limit là fake
-        { provide: Dispatcher, useValue: new Dispatcher(commandBus as never, queryBus as never) },
+        {
+          provide: Dispatcher,
+          useFactory: (c: CommandBus, q: QueryBus) => new Dispatcher(c, q),
+          inject: [CommandBus, QueryBus],
+        },
         { provide: CommandBus, useValue: commandBus },
         { provide: QueryBus, useValue: queryBus },
         { provide: WsAuthService, useValue: wsAuth },
@@ -212,7 +232,8 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
 
     app = module.createNestApplication();
     await app.listen(0);
-    const { port } = app.getHttpServer().address() as AddressInfo;
+    const server: { address: () => { port: number } } = app.getHttpServer();
+    const port = server.address().port;
 
     client = io(`http://127.0.0.1:${port}/reading-rooms`, {
       transports: ['websocket'],
