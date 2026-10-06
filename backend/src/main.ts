@@ -17,7 +17,7 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Queue } from 'bullmq';
 import { AppModule } from './app.module';
-import { RedisIoAdapter } from './presentation/gateways/redis-io.adapter';
+import { RedisIoAdapter } from './presentation/gateways/core/redis-io.adapter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { configSwagger } from './config/swagger.config';
 import { isWorkerProcess } from './common/utils/process-role.util';

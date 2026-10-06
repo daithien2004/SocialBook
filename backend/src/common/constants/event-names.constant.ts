@@ -9,7 +9,6 @@ export const EventNames = {
   AUDIO_PLAYED: 'audio.played',
 
   // Reading room events
-  READING_ROOM_REACTIVATED: 'reading-room.reactivated',
   READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED:
     'reading-room.highlight_insight_updated',
 

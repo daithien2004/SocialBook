@@ -1,33 +1,20 @@
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { ReactivateRoomHandler } from '@/application/reading-rooms/commands/reactivate-room/reactivate-room.handler';
 import { ReactivateRoomCommand } from '@/application/reading-rooms/commands/reactivate-room/reactivate-room.command';
-import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FakeReadingRoomRepository } from '../../../helpers/fake-reading-room.repository';
 import {
   BadRequestDomainException,
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
-import { EventNames } from '@/common/constants/event-names.constant';
 
 describe('ReactivateRoomHandler & Aggregate reactivate (T16)', () => {
   let useCase: ReactivateRoomHandler;
-  let mockRepo: jest.Mocked<IReadingRoomRepository>;
-  let mockEmitter: { emit: jest.Mock };
+  let mockRepo: FakeReadingRoomRepository;
 
   beforeEach(() => {
-    mockRepo = {
-      findById: jest.fn(),
-      save: jest.fn().mockImplementation((r) => Promise.resolve(r)),
-    } as unknown as jest.Mocked<IReadingRoomRepository>;
-
-    mockEmitter = {
-      emit: jest.fn(),
-    };
-
-    useCase = new ReactivateRoomHandler(
-      mockRepo,
-      mockEmitter as unknown as EventEmitter2,
-    );
+    mockRepo = new FakeReadingRoomRepository();
+    useCase = new ReactivateRoomHandler(mockRepo);
   });
 
   it('rejects reactivation if room is already active', async () => {
@@ -38,7 +25,7 @@ describe('ReactivateRoomHandler & Aggregate reactivate (T16)', () => {
       currentChapterSlug: 'chap-1',
     });
 
-    mockRepo.findById.mockResolvedValue(room);
+    mockRepo.seed(room);
 
     await expect(
       useCase.execute(new ReactivateRoomCommand('host-1', room.roomId)),
@@ -54,14 +41,14 @@ describe('ReactivateRoomHandler & Aggregate reactivate (T16)', () => {
     });
     room.end();
 
-    mockRepo.findById.mockResolvedValue(room);
+    mockRepo.seed(room);
 
     await expect(
       useCase.execute(new ReactivateRoomCommand('other-user', room.roomId)),
     ).rejects.toThrow(ForbiddenDomainException);
   });
 
-  it('successfully reactivates room, updates status to active, saves aggregate, and emits event', async () => {
+  it('successfully reactivates room, updates status to active, and saves aggregate', async () => {
     const room = ReadingRoom.create({
       bookId: 'book-1',
       hostId: 'host-1',
@@ -70,20 +57,13 @@ describe('ReactivateRoomHandler & Aggregate reactivate (T16)', () => {
     });
     room.end();
 
-    mockRepo.findById.mockResolvedValue(room);
+    mockRepo.seed(room);
 
     const result = await useCase.execute(
       new ReactivateRoomCommand('host-1', room.roomId),
     );
 
     expect(result.status).toBe('active');
-    expect(mockRepo.save).toHaveBeenCalledWith(room);
-    expect(mockEmitter.emit).toHaveBeenCalledWith(
-      EventNames.READING_ROOM_REACTIVATED,
-      {
-        roomId: room.roomId,
-        reactivatedBy: 'host-1',
-      },
-    );
+    expect(mockRepo.savedRooms).toContain(room);
   });
 });

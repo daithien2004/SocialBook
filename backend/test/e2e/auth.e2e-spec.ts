@@ -1,3 +1,4 @@
+import { CommonModule } from '@/application/common/common.module';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   INestApplication,
@@ -18,14 +19,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthController } from '@/presentation/auth/auth.controller';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
-import { LoginHandler } from '@/application/auth/commands/login/login.handler';
-import { RegisterHandler } from '@/application/auth/commands/register/register.handler';
-import { RefreshTokenHandler } from '@/application/auth/commands/refresh-token/refresh-token.handler';
-import { LogoutHandler } from '@/application/auth/commands/logout/logout.handler';
-import { ForgotPasswordHandler } from '@/application/auth/commands/forgot-password/forgot-password.handler';
-import { ResetPasswordHandler } from '@/application/auth/commands/reset-password/reset-password.handler';
-import { VerifyOtpHandler } from '@/application/auth/commands/verify-otp/verify-otp.handler';
-import { ResendOtpHandler } from '@/application/auth/commands/resend-otp/resend-otp.handler';
+import { Dispatcher } from '@/application/common/dispatcher';
 
 @Injectable()
 class MockGuard implements CanActivate {
@@ -42,6 +36,7 @@ describe('Auth API (E2E)', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        CommonModule,
         ConfigModule.forRoot({
           isGlobal: true,
           ignoreEnvFile: true,
@@ -73,14 +68,10 @@ describe('Auth API (E2E)', () => {
             reset: jest.fn(),
           },
         },
-        { provide: LoginHandler, useValue: { execute: mockExecute } },
-        { provide: RegisterHandler, useValue: { execute: mockExecute } },
-        { provide: RefreshTokenHandler, useValue: { execute: mockExecute } },
-        { provide: LogoutHandler, useValue: { execute: mockExecute } },
-        { provide: ForgotPasswordHandler, useValue: { execute: mockExecute } },
-        { provide: ResetPasswordHandler, useValue: { execute: mockExecute } },
-        { provide: VerifyOtpHandler, useValue: { execute: mockExecute } },
-        { provide: ResendOtpHandler, useValue: { execute: mockExecute } },
+        {
+          provide: Dispatcher,
+          useValue: { command: mockExecute, query: mockExecute },
+        },
         {
           provide: IUserRepository,
           useValue: {

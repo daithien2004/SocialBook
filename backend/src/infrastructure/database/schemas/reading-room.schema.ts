@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 
 export type ReadingRoomDocument = ReadingRoom & Document;
 
@@ -50,25 +50,6 @@ export class RoomHighlight {
 
 const RoomHighlightSchema = SchemaFactory.createForClass(RoomHighlight);
 
-@Schema({ _id: true, timestamps: true })
-export class ChatMessage {
-  _id?: Types.ObjectId;
-
-  @Prop({ type: String, required: true })
-  userId!: string;
-
-  @Prop({ type: String, required: true, enum: ['user', 'ai'] })
-  role!: 'user' | 'ai';
-
-  @Prop({ type: String, required: true })
-  content!: string;
-
-  @Prop({ type: Date, default: Date.now })
-  createdAt!: Date;
-}
-
-const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);
-
 @Schema({ timestamps: true, collection: 'reading_rooms' })
 export class ReadingRoom {
   @Prop({ type: String, required: true })
@@ -102,9 +83,6 @@ export class ReadingRoom {
 
   @Prop({ type: [RoomHighlightSchema], default: [] })
   highlights!: RoomHighlight[];
-
-  @Prop({ type: [ChatMessageSchema], default: [] })
-  chatMessages!: ChatMessage[];
 
   @Prop({ type: Date })
   endedAt?: Date;

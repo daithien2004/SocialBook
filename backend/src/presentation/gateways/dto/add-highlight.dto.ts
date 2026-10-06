@@ -1,13 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsOptional, IsString, Length, Matches } from 'class-validator';
+import { IsString, Length, Matches } from 'class-validator';
 import {
   CHAPTER_SLUG_MAX_LENGTH,
-  CLIENT_MUTATION_ID_PATTERN,
   HIGHLIGHT_CONTENT_MAX_LENGTH,
   HIGHLIGHT_CONTENT_MIN_LENGTH,
   PARAGRAPH_ID_MAX_LENGTH,
   ROOM_ID_PATTERN,
-} from '../reading-room.constants';
+} from '../reading-room/reading-room.constants';
 
 export class AddHighlightDto {
   /**
@@ -33,12 +32,4 @@ export class AddHighlightDto {
   @IsString()
   @Length(HIGHLIGHT_CONTENT_MIN_LENGTH, HIGHLIGHT_CONTENT_MAX_LENGTH)
   content!: string;
-
-  /** Idempotency key do client cấp (T16) — tùy chọn. */
-  @IsOptional()
-  @IsString()
-  @Matches(CLIENT_MUTATION_ID_PATTERN, {
-    message: 'clientMutationId không hợp lệ',
-  })
-  clientMutationId?: string;
 }

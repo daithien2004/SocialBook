@@ -1,9 +1,4 @@
 {
-  "src/application/auth/commands/oauth-auth/oauth-auth.handler.ts": {
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    }
-  },
   "src/application/auth/commands/resend-otp/resend-otp.handler.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
@@ -452,11 +447,6 @@
       "count": 1
     }
   },
-  "src/application/reading-rooms/commands/leave-room/leave-room.handler.ts": {
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 2
-    }
-  },
   "src/application/reading-rooms/mappers/reading-room.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
@@ -641,13 +631,7 @@
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 3
     },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
     "@typescript-eslint/no-unsafe-call": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
       "count": 1
     }
   },
@@ -820,9 +804,6 @@
     }
   },
   "src/infrastructure/cache/presence-cache.adapter.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "@typescript-eslint/use-unknown-in-catch-callback-variable": {
       "count": 1
     }
@@ -1097,7 +1078,7 @@
       "count": 1
     },
     "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
+      "count": 1
     }
   },
   "src/infrastructure/database/repositories/reading-rooms/reading-room.repository.ts": {
@@ -1312,34 +1293,17 @@
       "count": 10
     }
   },
-  "src/presentation/gateways/audio.worker.ts": {
+  "src/presentation/gateways/core/redis-io.adapter.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/presentation/gateways/core/ws-room.guard.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
     }
   },
-  "src/presentation/gateways/dto/ws-validation.pipe.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
-    }
-  },
-  "src/presentation/gateways/notification.worker.ts": {
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/presentation/gateways/notifications.gateway.ts": {
+  "src/presentation/gateways/notifications/notifications.gateway.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 7
     },
@@ -1350,52 +1314,39 @@
       "count": 1
     }
   },
-  "src/presentation/gateways/reading-progress.tracker.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
+  "src/presentation/gateways/pipes/ws-validation.pipe.ts": {
+    "@typescript-eslint/no-explicit-any": {
       "count": 1
     },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-return": {
       "count": 1
     }
   },
-  "src/presentation/gateways/reading-room-system.listener.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/presentation/gateways/reading-room.gateway.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
+  "src/presentation/gateways/reading-room/reading-room.gateway.ts": {
     "@typescript-eslint/no-misused-promises": {
       "count": 1
     },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
+    }
+  },
+  "src/presentation/gateways/workers/audio.worker.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
     },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/presentation/gateways/workers/notification.worker.ts": {
     "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 3
-    }
-  },
-  "src/presentation/gateways/redis-io.adapter.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/presentation/gateways/ws-auth.service.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 2
     },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    }
-  },
-  "src/presentation/gateways/ws-room.guard.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
     }
   },
   "src/presentation/library/library.controller.ts": {
@@ -1706,14 +1657,6 @@
       "count": 1
     }
   },
-  "test/unit/application/auth/login/login.use-case.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 7
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    }
-  },
   "test/unit/application/auth/oauth-auth.use-case.spec.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 6
@@ -1752,26 +1695,6 @@
       "count": 2
     }
   },
-  "test/unit/application/reading-rooms/get-room-preview.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 9
-    }
-  },
-  "test/unit/application/reading-rooms/leave-room-events.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "test/unit/application/reading-rooms/reactivate-room.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 4
-    }
-  },
-  "test/unit/application/reading-rooms/reading-room-mapper-active.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
   "test/unit/common/ws-exception-filter.spec.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -1786,9 +1709,6 @@
     }
   },
   "test/unit/domain/reading-rooms/reading-room-occ.spec.ts": {
-    "@typescript-eslint/ban-ts-comment": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -1832,15 +1752,6 @@
     }
   },
   "test/unit/infrastructure/database/reading-room-concurrent.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 4
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 4
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }

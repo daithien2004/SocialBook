@@ -1,14 +1,14 @@
 import { CommandBus } from '@nestjs/cqrs';
 import type { Namespace } from 'socket.io';
-import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room-highlight.handler';
+import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room/reading-room-highlight.handler';
 import {
   WsRateLimiter,
   type RateLimitPipeline,
   type RateLimitStore,
-} from '@/presentation/gateways/ws-rate-limiter.service';
-import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room.emitter';
+} from '@/presentation/gateways/core/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room/reading-room.emitter';
 import { ErrorCode } from '@/shared/domain/error-codes';
-import type { RoomSocket } from '@/presentation/gateways/reading-room.types';
+import type { RoomSocket } from '@/presentation/gateways/reading-room/reading-room.types';
 import { fakeOf } from '../../support/typed-fake';
 
 /**

@@ -14,6 +14,7 @@ import { ResetPasswordHandler } from './commands/reset-password/reset-password.h
 import { VerifyOtpHandler } from './commands/verify-otp/verify-otp.handler';
 import { ResendOtpHandler } from './commands/resend-otp/resend-otp.handler';
 import { ValidateUserHandler } from './commands/validate-user/validate-user.handler';
+import { GenerateWsTicketHandler } from './commands/generate-ws-ticket/generate-ws-ticket.handler';
 
 import { TokenService } from './services/token.service';
 import { OAuthStateService } from './services/oauth-state.service';
@@ -70,6 +71,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     },
     OAuthStateService,
     AuthCookieService,
+    GenerateWsTicketHandler,
   ],
 
   exports: [
@@ -83,6 +85,7 @@ import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oau
     VerifyOtpHandler,
     ResendOtpHandler,
     ValidateUserHandler,
+    GenerateWsTicketHandler,
     TokenService,
     OAuthStateStorePort,
     OAuthStateService,

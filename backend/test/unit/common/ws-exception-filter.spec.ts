@@ -7,17 +7,22 @@ import {
   ConcurrencyException,
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
-import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room-highlight.handler';
-import { WsRateLimiter } from '@/presentation/gateways/ws-rate-limiter.service';
-import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room.emitter';
-import type { RoomSocket } from '@/presentation/gateways/reading-room.types';
+import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room/reading-room-highlight.handler';
+import { WsRateLimiter } from '@/presentation/gateways/core/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room/reading-room.emitter';
+import type { RoomSocket } from '@/presentation/gateways/reading-room/reading-room.types';
 import { fakeOf } from '../../support/typed-fake';
 
 type FakeHost = {
   switchToWs: () => {
-    getClient: () => { id: string; emit: jest.Mock };
+    getClient: () => {
+      id: string;
+      emit: jest.Mock;
+      data: Record<string, unknown>;
+    };
     getData: () => unknown;
   };
+  getArgs: () => unknown[];
 };
 
 describe('WsExceptionFilter', () => {
@@ -34,9 +39,10 @@ describe('WsExceptionFilter', () => {
     emit = jest.fn();
     host = {
       switchToWs: () => ({
-        getClient: () => ({ id: 'socket-1', emit }),
+        getClient: () => ({ id: 'socket-1', emit, data: { userId: 'u1' } }),
         getData: () => ({ roomId: 'room-1' }),
       }),
+      getArgs: () => [],
     };
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
@@ -66,22 +72,6 @@ describe('WsExceptionFilter', () => {
     });
   });
 
-  it('handles duck-typed domain errors whose name ends in DomainException', () => {
-    const duck = Object.assign(new Error('Số lượng không hợp lệ'), {
-      name: 'QuotaDomainException',
-    });
-
-    run(duck);
-
-    expect(emit).toHaveBeenCalledWith(
-      'error',
-      expect.objectContaining({
-        code: 'DOMAIN_ERROR',
-        message: 'Số lượng không hợp lệ',
-      }),
-    );
-  });
-
   it('falls back to SERVER_ERROR for unexpected errors and logs them', () => {
     const errorSpy = jest
       .spyOn(Logger.prototype, 'error')
@@ -92,7 +82,7 @@ describe('WsExceptionFilter', () => {
     expect(errorSpy).toHaveBeenCalled();
     expect(emit).toHaveBeenCalledWith(
       'error',
-      expect.objectContaining({ code: 'SERVER_ERROR', message: 'boom' }),
+      expect.objectContaining({ code: 'INTERNAL_ERROR' }),
     );
   });
 

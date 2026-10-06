@@ -13,7 +13,7 @@ export abstract class IPresenceCachePort {
     roomId: string,
     userId: string,
     data: Omit<PresenceData, 'lastSeen'>,
-  ): Promise<void>;
+  ): Promise<{ created: boolean; chapterChanged: boolean }>;
   abstract getRoomPresences(roomId: string): Promise<PresenceData[]>;
   abstract removePresence(roomId: string, userId: string): Promise<void>;
   abstract removeRoomPresences(roomId: string): Promise<void>;

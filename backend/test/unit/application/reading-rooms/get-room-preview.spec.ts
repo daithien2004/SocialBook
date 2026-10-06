@@ -1,15 +1,13 @@
-import {
-  GetRoomByCodeHandler,
-  ReadingRoomPreviewResult,
-} from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.handler';
+import { describe, expect, it, beforeEach } from '@jest/globals';
+import { GetRoomByCodeHandler } from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.handler';
 import { GetRoomByCodeQuery } from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.query';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
-import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
 import { NotFoundException } from '@nestjs/common';
+import { FakeReadingRoomRepository } from '../../../helpers/fake-reading-room.repository';
 
 describe('GetRoomByCodeHandler (T3: Information Exposure & Room Preview)', () => {
   let mockRoom: ReadingRoom;
-  let mockRepo: { findById: jest.Mock };
+  let mockRepo: FakeReadingRoomRepository;
   let useCase: GetRoomByCodeHandler;
 
   beforeEach(() => {
@@ -34,19 +32,14 @@ describe('GetRoomByCodeHandler (T3: Information Exposure & Room Preview)', () =>
           content: 'Secret private highlight',
         },
       ],
-      chatMessages: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       version: 1,
     });
 
-    mockRepo = {
-      findById: jest.fn().mockResolvedValue(mockRoom),
-    };
-
-    useCase = new GetRoomByCodeHandler(
-      mockRepo as unknown as IReadingRoomRepository,
-    );
+    mockRepo = new FakeReadingRoomRepository();
+    mockRepo.seed(mockRoom);
+    useCase = new GetRoomByCodeHandler(mockRepo);
   });
 
   it('returns full room data including highlights and members when caller is an active member', async () => {
@@ -55,18 +48,23 @@ describe('GetRoomByCodeHandler (T3: Information Exposure & Room Preview)', () =>
     );
 
     expect(result.isMember).toBe(true);
-    if ('highlights' in result) {
-      expect(result.highlights).toHaveLength(1);
-      expect(result.highlights[0].content).toBe('Secret private highlight');
-      expect(result.members).toHaveLength(2);
-      expect(result.hostId).toBe('user-host');
+    if (!result.isMember) {
+      throw new Error('Expected full room data for an active member.');
     }
+    expect(result.highlights).toHaveLength(1);
+    expect(result.highlights[0].content).toBe('Secret private highlight');
+    expect(result.members).toHaveLength(2);
+    expect(result.hostId).toBe('user-host');
   });
 
   it('returns only minimal preview data (no highlights, no members array, no hostId) for non-members', async () => {
-    const result = (await useCase.execute(
+    const result = await useCase.execute(
       new GetRoomByCodeQuery('ABCDEF', 'outsider-user-999'),
-    )) as ReadingRoomPreviewResult;
+    );
+
+    if (result.isMember) {
+      throw new Error('Expected preview data for a non-member.');
+    }
 
     expect(result.isMember).toBe(false);
     expect(result.roomId).toBe('ABCDEF');
@@ -78,20 +76,12 @@ describe('GetRoomByCodeHandler (T3: Information Exposure & Room Preview)', () =>
     expect(result.isFull).toBe(false);
 
     // MUST NOT expose private details to outsiders
-    expect(
-      (result as unknown as Record<string, unknown>).highlights,
-    ).toBeUndefined();
-    expect(
-      (result as unknown as Record<string, unknown>).members,
-    ).toBeUndefined();
-    expect(
-      (result as unknown as Record<string, unknown>).hostId,
-    ).toBeUndefined();
+    expect(Object.keys(result)).not.toContain('highlights');
+    expect(Object.keys(result)).not.toContain('members');
+    expect(Object.keys(result)).not.toContain('hostId');
   });
 
   it('throws NotFoundException when room code does not exist', async () => {
-    mockRepo.findById.mockResolvedValue(null);
-
     await expect(
       useCase.execute(new GetRoomByCodeQuery('ABCXYZ', 'user-1')),
     ).rejects.toThrow(NotFoundException);

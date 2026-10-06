@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { CreateNotificationCommand } from '@/application/notifications/commands/create-notification/create-notification.command';
-import { CreateNotificationInput } from './dto/create-notification-input.interface';
+import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
 import { CreateNotificationHandler } from '@/application/notifications/commands/create-notification/create-notification.handler';
 import { GetUserNotificationsHandler } from '@/application/notifications/queries/get-user-notification/get-user-notifications.handler';
@@ -29,7 +29,7 @@ export class NotificationsService {
     return `user:${userId}`;
   }
 
-  async create(data: CreateNotificationInput) {
+  async create(data: CreateNotificationDto) {
     const command = new CreateNotificationCommand(
       data.userId,
       data.title,

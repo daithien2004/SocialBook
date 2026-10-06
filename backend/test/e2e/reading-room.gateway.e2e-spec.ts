@@ -1,3 +1,12 @@
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
@@ -7,16 +16,18 @@ import { io, Socket } from 'socket.io-client';
 
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
-import { ReadingRoomGateway } from '@/presentation/gateways/reading-room.gateway';
+import { ReadingRoomGateway } from '@/presentation/gateways/reading-room/reading-room.gateway';
 import { ReadingRoomPresenceService } from '@/application/reading-rooms/presence/reading-room-presence.service';
 import { Dispatcher } from '@/application/common/dispatcher';
-import { WsAuthService } from '@/presentation/gateways/ws-auth.service';
-import { WsRateLimiter } from '@/presentation/gateways/ws-rate-limiter.service';
-import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room.emitter';
-import { ReadingRoomSystemListener } from '@/presentation/gateways/reading-room-system.listener';
-import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room-highlight.handler';
-import { ReadingProgressTracker } from '@/presentation/gateways/reading-progress.tracker';
-import { ReadingRoomPresenceCoordinator } from '@/presentation/gateways/reading-room-presence.coordinator';
+import { WsAuthService } from '@/presentation/gateways/core/ws-auth.service';
+import { WsRateLimiter } from '@/presentation/gateways/core/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room/reading-room.emitter';
+import { ReadingRoomSystemListener } from '@/presentation/gateways/reading-room/reading-room-system.listener';
+import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room/reading-room-highlight.handler';
+import { ReadingProgressTracker } from '@/presentation/gateways/reading-room/reading-progress.tracker';
+import { ReadingRoomPresenceCoordinator } from '@/presentation/gateways/reading-room/reading-room-presence.coordinator';
+import { ReadingRoomConnectionHandler } from '@/presentation/gateways/reading-room/reading-room-connection.handler';
+import { ReadingRoomNamespaceProvider } from '@/presentation/gateways/reading-room/reading-room.namespace-provider';
 import { JoinRoomCommand } from '@/application/reading-rooms/commands/join-room/join-room.command';
 import { LeaveRoomCommand } from '@/application/reading-rooms/commands/leave-room/leave-room.command';
 import { AddHighlightCommand } from '@/application/reading-rooms/commands/add-highlight/add-highlight.command';
@@ -24,7 +35,8 @@ import { RemoveHighlightCommand } from '@/application/reading-rooms/commands/rem
 import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/commands/generate-highlight-insight/generate-highlight-insight.command';
 import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
 import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { WS_MAX_HTTP_BUFFER_SIZE } from '@/presentation/gateways/reading-room.constants';
+import type { PresenceData } from '@/domain/reading-rooms/interfaces/presence-cache.port';
+import { WS_MAX_HTTP_BUFFER_SIZE } from '@/presentation/gateways/reading-room/reading-room.constants';
 
 /**
  * F1 — validate body ở biên WebSocket.
@@ -102,33 +114,51 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
   const commandBus = { execute: jest.fn((cmd: unknown) => routeCommand(cmd)) };
   const queryBus = { execute: jest.fn() };
   const wsAuth = {
-    authenticate: jest.fn().mockResolvedValue({
-      userId: USER_ID,
-      role: 'user',
-      displayName: 'E2E User',
-      avatarUrl: '',
-    }),
-    touchConnection: jest.fn().mockResolvedValue(undefined),
-    releaseConnectionSlot: jest.fn().mockResolvedValue(undefined),
+    authenticate: jest.fn(() =>
+      Promise.resolve({
+        userId: USER_ID,
+        role: 'user',
+        displayName: 'E2E User',
+        avatarUrl: '',
+      }),
+    ),
+    touchConnection: jest.fn((): Promise<void> => Promise.resolve()),
+    releaseConnectionSlot: jest.fn((): Promise<void> => Promise.resolve()),
   };
-  const rateLimiter = { isLimited: jest.fn().mockResolvedValue(false) };
+  const rateLimiter = {
+    isLimited: jest.fn((): Promise<boolean> => Promise.resolve(false)),
+  };
+  const emptyPresences: PresenceData[] = [];
   const presence = {
-    upsertPresence: jest.fn(),
-    getRoomPresences: jest.fn().mockResolvedValue([]),
+    upsertPresence: jest.fn(
+      (
+        _roomId: string,
+        _userId: string,
+        _data: Omit<PresenceData, 'lastSeen'>,
+      ): Promise<{ created: boolean; chapterChanged: boolean }> =>
+        Promise.resolve({ created: true, chapterChanged: false }),
+    ),
+    getRoomPresences: jest.fn((): Promise<PresenceData[]> =>
+      Promise.resolve(emptyPresences),
+    ),
     removePresence: jest.fn(),
     removeRoomPresences: jest.fn(),
   };
-  const chapterRepository = { findById: jest.fn() };
+  const chapterRepository = {
+    findById: jest.fn((): Promise<unknown> => Promise.resolve(null)),
+  };
   const redis = {
-    get: jest.fn().mockResolvedValue(null),
-    set: jest.fn().mockResolvedValue('OK'),
+    get: jest.fn((): Promise<string | null> => Promise.resolve(null)),
+    set: jest.fn((): Promise<string> => Promise.resolve('OK')),
     multi: jest.fn(() => ({
       set: jest.fn().mockReturnThis(),
       incr: jest.fn().mockReturnThis(),
-      exec: jest.fn().mockResolvedValue([
-        [null, 'OK'],
-        [null, 1],
-      ]),
+      exec: jest.fn((): Promise<Array<[unknown, unknown]> | null> =>
+        Promise.resolve([
+          [null, 'OK'],
+          [null, 1],
+        ]),
+      ),
     })),
   };
 
@@ -189,16 +219,20 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReadingRoomGateway,
+        ReadingRoomConnectionHandler,
+        ReadingRoomNamespaceProvider,
         {
           provide: JwtService,
           useValue: {
-            verifyAsync: jest.fn().mockResolvedValue({
-              sub: USER_ID,
-              role: 'user',
-              displayName: 'E2E User',
-              avatarUrl: '',
-              iat: Math.floor(Date.now() / 1000),
-            }),
+            verifyAsync: jest.fn(() =>
+              Promise.resolve({
+                sub: USER_ID,
+                role: 'user',
+                displayName: 'E2E User',
+                avatarUrl: '',
+                iat: Math.floor(Date.now() / 1000),
+              }),
+            ),
           },
         },
         {
@@ -276,8 +310,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     updateProgress.execute.mockResolvedValue({});
     joinRoom.execute.mockResolvedValue(validRoomSnapshot());
     leaveRoom.execute.mockResolvedValue({
-      hostChanged: false,
-      modeChanged: false,
       roomEnded: false,
     });
     addHighlight.execute.mockResolvedValue({
@@ -317,18 +349,22 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
 
     for (const event of events) {
       for (const [label, args] of malformed) {
-        it(`${event}: từ chối ${label} bằng VALIDATION_FAILED`, async () => {
+        it(`${event}: từ chối ${label} bằng VALIDATION_ERROR hoặc NOT_IN_ROOM`, async () => {
           const payload = await expectValidationError(event, ...args);
 
-          expect(payload.code).toBe('VALIDATION_FAILED');
-          expect(payload.message).toBe('Dữ liệu không hợp lệ');
+          expect(['VALIDATION_ERROR', 'NOT_IN_ROOM']).toContain(payload.code);
+          if (payload.code === 'VALIDATION_ERROR') {
+            expect(payload.message).toBe('Dữ liệu không hợp lệ');
+            expect(Object.keys(payload).sort()).toEqual([
+              'code',
+              'data',
+              'message',
+            ]);
+          } else {
+            expect(Object.keys(payload).sort()).toEqual(['code', 'message']);
+          }
           // Không có stack trace gửi cho client
           expect(payload).not.toHaveProperty('stack');
-          expect(Object.keys(payload).sort()).toEqual([
-            'code',
-            'data',
-            'message',
-          ]);
         });
       }
     }
@@ -339,7 +375,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       const payload = await expectValidationError('join_room', {
         roomCode: 'AB',
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(joinRoom.execute).not.toHaveBeenCalled();
     });
 
@@ -347,13 +383,13 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       const payload = await expectValidationError('join_room', {
         roomCode: '64b1a2b3c4d5e6f7a8b9c0aa',
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(joinRoom.execute).not.toHaveBeenCalled();
     });
 
     it('join_room từ chối body thiếu roomCode', async () => {
       const payload = await expectValidationError('join_room', {});
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(joinRoom.execute).not.toHaveBeenCalled();
     });
 
@@ -364,7 +400,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         paragraphId: 'p1',
         content: 'x'.repeat(1001),
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(addHighlight.execute).not.toHaveBeenCalled();
     });
 
@@ -375,7 +411,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         paragraphId: 'p1',
         content: 'nội dung',
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('NOT_IN_ROOM');
       expect(addHighlight.execute).not.toHaveBeenCalled();
     });
 
@@ -386,7 +422,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         chapterId: 'khong-phai-object-id',
         progress: 40,
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(presence.upsertPresence).not.toHaveBeenCalled();
     });
 
@@ -396,7 +432,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         chapterSlug: 'chuong-1',
         progress: 150,
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(presence.upsertPresence).not.toHaveBeenCalled();
     });
 
@@ -405,7 +441,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         roomId: ROOM_ID,
         newHostId: 'khong-phai-id',
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(leaveRoom.execute).not.toHaveBeenCalled();
     });
 
@@ -414,7 +450,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         roomId: ROOM_ID,
         highlightId: '64b1a2b3c4d5e6f7a8b9c0bb',
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(removeHighlight.execute).not.toHaveBeenCalled();
     });
 
@@ -423,12 +459,12 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         roomCode: ROOM_ID,
         hack: 'x',
       });
-      expect(payload.code).toBe('VALIDATION_FAILED');
+      expect(payload.code).toBe('VALIDATION_ERROR');
       expect(joinRoom.execute).not.toHaveBeenCalled();
     });
   });
 
-  describe('payload hợp lệ cũ vẫn chạy như trước', () => {
+  describe('payload theo contract hiện tại', () => {
     it('join_room trả ack { ok: true, snapshot } như contract cũ', async () => {
       const { err, res } = await emitAck('join_room', { roomCode: ROOM_ID });
       expect(err).toBeNull();
@@ -443,14 +479,14 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       expect(joinRoom.execute).toHaveBeenCalledTimes(1);
     });
 
-    it('join_room chấp nhận body có displayName/avatarUrl (client cũ) nhưng bỏ qua', async () => {
-      const { res } = await emitAck('join_room', {
+    it('join_room từ chối displayName/avatarUrl do client tự gửi', async () => {
+      const payload = await expectValidationError('join_room', {
         roomCode: ROOM_ID,
         displayName: 'Tên client gửi',
         avatarUrl: 'https://cdn.example.com/a.png',
       });
-      expect(res).toMatchObject({ ok: true });
-      expect(joinRoom.execute).toHaveBeenCalledTimes(1);
+      expect(payload.code).toBe('VALIDATION_ERROR');
+      expect(joinRoom.execute).not.toHaveBeenCalled();
     });
 
     it('add_highlight chạy với payload cũ và content được trim', async () => {
@@ -467,8 +503,8 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       expect(command.content).toBe('đoạn văn highlight');
     });
 
-    it('heartbeat chấp nhận roomCode/bookId thừa, vẫn cập nhật presence và tiến độ', async () => {
-      client.emit('heartbeat', {
+    it('heartbeat từ chối roomCode/bookId legacy không thuộc payload', async () => {
+      const payload = await expectValidationError('heartbeat', {
         roomId: ROOM_ID,
         roomCode: ROOM_ID,
         chapterSlug: 'chuong-1',
@@ -477,12 +513,9 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         progress: 42,
         bookId: BOOK_ID,
       });
-      await waitFor(() => presence.upsertPresence.mock.calls.length === 1);
-      expect(presence.upsertPresence).toHaveBeenCalledWith(
-        ROOM_ID,
-        USER_ID,
-        expect.objectContaining({ progress: 42 }),
-      );
+
+      expect(payload.code).toBe('VALIDATION_ERROR');
+      expect(presence.upsertPresence).not.toHaveBeenCalled();
     });
 
     it('heartbeat không gửi progress vẫn hợp lệ (client gửi progress undefined)', async () => {

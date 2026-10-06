@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useCallback,
+} from 'react';
 import { Manager, Socket } from 'socket.io-client';
 import { env } from '@/env';
 import { useAppAuth } from '@/features/auth/hooks';
@@ -24,7 +30,9 @@ if (typeof window !== 'undefined' && SOCKET_URL === '/') {
   SOCKET_URL = window.location.origin;
 }
 
-export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const managerRef = useRef<Manager | null>(null);
   const socketsRef = useRef<Record<string, Socket>>({});
   const refCountRef = useRef<Record<string, number>>({});
@@ -47,25 +55,47 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return managerRef.current;
   }, []);
 
-  const getSocket = useCallback((namespace: string): Socket => {
-    if (socketsRef.current[namespace]) {
-      return socketsRef.current[namespace];
-    }
+  const getSocket = useCallback(
+    (namespace: string): Socket => {
+      if (socketsRef.current[namespace]) {
+        return socketsRef.current[namespace];
+      }
 
-    const manager = getManager();
-    const socket = manager.socket(namespace);
-    socketsRef.current[namespace] = socket;
+      const manager = getManager();
+      const socket = manager.socket(namespace);
 
-    return socket;
-  }, [getManager]);
+      socket.auth = async (cb) => {
+        try {
+          const res = await fetch('/api/auth/ws-ticket', { method: 'POST' });
+          if (res.status === 401) {
+            window.location.href = '/login';
+            return cb({ ticket: '' });
+          }
+          const data = await res.json();
+          cb({ ticket: data.ticket || '' });
+        } catch (e) {
+          cb({ ticket: '' });
+        }
+      };
 
-  const acquireSocket = useCallback((namespace: string) => {
-    const socket = getSocket(namespace);
-    refCountRef.current[namespace] = (refCountRef.current[namespace] || 0) + 1;
-    if (!socket.connected) {
-      socket.connect();
-    }
-  }, [getSocket]);
+      socketsRef.current[namespace] = socket;
+      return socket;
+    },
+    [getManager],
+  );
+
+  const acquireSocket = useCallback(
+    (namespace: string) => {
+      const socket = getSocket(namespace);
+      refCountRef.current[namespace] =
+        (refCountRef.current[namespace] || 0) + 1;
+
+      if (!socket.connected) {
+        socket.connect();
+      }
+    },
+    [getSocket],
+  );
 
   const releaseSocket = useCallback((namespace: string) => {
     if (refCountRef.current[namespace] > 0) {
@@ -94,7 +124,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [isAuthenticated, disconnectAll]);
 
   return (
-    <SocketContext.Provider value={{ getSocket, acquireSocket, releaseSocket, disconnectAll }}>
+    <SocketContext.Provider
+      value={{ getSocket, acquireSocket, releaseSocket, disconnectAll }}
+    >
       {children}
     </SocketContext.Provider>
   );

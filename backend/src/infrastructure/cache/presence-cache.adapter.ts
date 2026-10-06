@@ -5,6 +5,12 @@ import type {
   IPresenceCachePort,
   PresenceData,
 } from '@/domain/reading-rooms/interfaces/presence-cache.port';
+import { PRESENCE_HASH_TTL_SECONDS } from '@/presentation/gateways/reading-room/reading-room.constants';
+
+function isPresenceData(data: unknown): data is PresenceData {
+  if (!data || typeof data !== 'object') return false;
+  return 'userId' in data && 'currentChapterSlug' in data;
+}
 
 @Injectable()
 export class PresenceCacheAdapter implements IPresenceCachePort {
@@ -24,7 +30,7 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
     roomId: string,
     userId: string,
     data: Omit<PresenceData, 'lastSeen'>,
-  ): Promise<void> {
+  ): Promise<{ created: boolean; chapterChanged: boolean }> {
     const key = this.getKey(roomId, userId);
     const setKey = this.getSetKey(roomId);
 
@@ -33,18 +39,47 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
       lastSeen: Date.now(),
     };
 
+    let created = true;
+    let chapterChanged = false;
+
     try {
-      await Promise.all([
-        this.redis.setex(key, 30, JSON.stringify(presenceData)),
-        this.redis.sadd(setKey, userId),
-        this.redis.expire(setKey, 3600),
-      ]);
+      const script = `
+        local oldVal = redis.call('GET', KEYS[1])
+        redis.call('SETEX', KEYS[1], ${String(PRESENCE_HASH_TTL_SECONDS)}, ARGV[1])
+        redis.call('SADD', KEYS[2], ARGV[2])
+        redis.call('EXPIRE', KEYS[2], 3600)
+        return oldVal
+      `;
+      const oldValStr = await this.redis.eval(
+        script,
+        2,
+        key,
+        setKey,
+        JSON.stringify(presenceData),
+        userId,
+      );
+
+      if (typeof oldValStr === 'string') {
+        created = false;
+        try {
+          const oldData: unknown = JSON.parse(oldValStr);
+          if (
+            isPresenceData(oldData) &&
+            oldData.currentChapterSlug !== data.currentChapterSlug
+          ) {
+            chapterChanged = true;
+          }
+        } catch {
+          // Ignore parse error
+        }
+      }
     } catch (err) {
       this.logger.error(
         `Failed to upsert presence for room ${roomId} user ${userId}`,
         err instanceof Error ? err.stack : String(err),
       );
     }
+    return { created, chapterChanged };
   }
 
   async getRoomPresences(roomId: string): Promise<PresenceData[]> {
@@ -62,7 +97,10 @@ export class PresenceCacheAdapter implements IPresenceCachePort {
 
       presencesJson.forEach((json, index) => {
         if (json) {
-          activePresences.push(JSON.parse(json) as PresenceData);
+          const parsed: unknown = JSON.parse(json);
+          if (isPresenceData(parsed)) {
+            activePresences.push(parsed);
+          }
         } else {
           expiredUserIds.push(userIds[index]);
         }

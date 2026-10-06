@@ -1,10 +1,7 @@
 export enum ReadingRoomServerEvent {
-  ROOM_SNAPSHOT = 'room_snapshot',
   PRESENCE_UPDATE = 'presence_update',
   MEMBER_JOINED = 'member_joined',
   MEMBER_LEFT = 'member_left',
-  ROOM_REACTIVATED = 'room_reactivated',
-  HOST_CHANGED = 'host_changed',
   NEW_HIGHLIGHT = 'new_highlight',
   HIGHLIGHT_REMOVED = 'highlight_removed',
   UPDATE_HIGHLIGHT_INSIGHT = 'update_highlight_insight',
@@ -19,4 +16,3 @@ export enum ReadingRoomClientEvent {
   ADD_HIGHLIGHT = 'add_highlight',
   REMOVE_HIGHLIGHT = 'remove_highlight',
 }
-

@@ -1,7 +1,7 @@
 import { CommandBus } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 
-import { WsRateLimiter } from './ws-rate-limiter.service';
+import { WsRateLimiter } from '../core/ws-rate-limiter.service';
 import { ReadingRoomEmitter } from './reading-room.emitter';
 
 import { AddHighlightCommand } from '@/application/reading-rooms/commands/add-highlight/add-highlight.command';
@@ -9,9 +9,9 @@ import { RemoveHighlightCommand } from '@/application/reading-rooms/commands/rem
 import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/commands/generate-highlight-insight/generate-highlight-insight.command';
 import { ReadingRoomServerEvent } from './reading-room.events';
 import { RoomSocket, SocketData } from './reading-room.types';
-import { AddHighlightDto } from './dto/add-highlight.dto';
-import { RemoveHighlightDto } from './dto/remove-highlight.dto';
-import { GenerateInsightDto } from './dto/generate-insight.dto';
+import { AddHighlightDto } from '../dto/add-highlight.dto';
+import { RemoveHighlightDto } from '../dto/remove-highlight.dto';
+import { GenerateInsightDto } from '../dto/generate-insight.dto';
 import { ErrorCode } from '@/shared/domain/error-codes';
 
 @Injectable()

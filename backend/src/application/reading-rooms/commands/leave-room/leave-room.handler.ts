@@ -33,9 +33,6 @@ export class LeaveRoomHandler implements ICommandHandler<
         );
       }
 
-      const prevHostId = room.hostId;
-      const prevMode = room.mode.toString();
-
       if (command.newHostId) {
         room.transferHost(command.userId, command.newHostId);
       }
@@ -43,17 +40,11 @@ export class LeaveRoomHandler implements ICommandHandler<
       room.removeMember(command.userId);
       await this.roomRepository.save(room);
 
-      const nextHostId = room.status === 'ended' ? '' : room.hostId;
-      const nextMode = room.mode.toString();
-      const hostChanged = prevHostId !== nextHostId && !!nextHostId;
-      const modeChanged = prevMode !== nextMode;
       const roomEnded = room.status === 'ended';
 
       const baseResult = ReadingRoomApplicationMapper.toResult(room);
       return {
         ...baseResult,
-        hostChanged,
-        modeChanged,
         roomEnded,
       };
     });

@@ -2,7 +2,7 @@ import { IsString, Matches } from 'class-validator';
 import {
   HIGHLIGHT_ID_PATTERN,
   ROOM_ID_PATTERN,
-} from '../reading-room.constants';
+} from '../reading-room/reading-room.constants';
 
 export class GenerateInsightDto {
   @IsString()

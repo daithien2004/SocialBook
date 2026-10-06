@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job, UnrecoverableError } from 'bullmq';
-import { NotificationsService } from './notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
 import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
 import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';

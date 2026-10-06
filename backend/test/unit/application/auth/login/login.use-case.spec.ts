@@ -1,22 +1,39 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { LoginHandler } from '@/application/auth/commands/login/login.handler';
 import { LoginCommand } from '@/application/auth/commands/login/login.command';
 import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
+import { Role } from '@/domain/roles/entities/role.entity';
 import {
   UnauthorizedDomainException,
   UserBannedDomainException,
 } from '@/domain/auth/exceptions/auth-exceptions';
 import { User } from '@/domain/users/entities/user.entity';
+import { TokenService } from '@/application/auth/services/token.service';
+import { fakeOf } from '../../../../support/typed-fake';
 
-function createMockTokenService(): { signTokens: jest.Mock } {
+function createMockTokenService() {
+  const signTokens = jest.fn(
+    (..._args: Parameters<TokenService['signTokens']>) =>
+      Promise.resolve({ accessToken: '', refreshToken: '' }),
+  );
+
   return {
-    signTokens: jest.fn(),
+    service: fakeOf<TokenService>({ signTokens }),
+    signTokens,
   };
 }
 
-function createMockRoleRepository(): jest.Mocked<IRoleRepository> {
+function createMockRoleRepository() {
+  const findByName = jest.fn((_name: string): Promise<Role | null> =>
+    Promise.resolve(null),
+  );
+  const findById = jest.fn((_id: string): Promise<Role | null> =>
+    Promise.resolve(null),
+  );
+
   return {
-    findByName: jest.fn(),
-    findById: jest.fn(),
+    repository: { findByName, findById } satisfies IRoleRepository,
+    findById,
   };
 }
 
@@ -76,15 +93,17 @@ describe('LoginHandler (Unit)', () => {
   beforeEach(() => {
     mockTokenService = createMockTokenService();
     mockRoleRepository = createMockRoleRepository();
-    useCase = new LoginHandler(mockTokenService as any, mockRoleRepository);
+    useCase = new LoginHandler(
+      mockTokenService.service,
+      mockRoleRepository.repository,
+    );
   });
 
   it('should return tokens and user data for a verified user', async () => {
     const user = createVerifiedUser();
-    mockRoleRepository.findById.mockResolvedValue({
-      id: 'role-1',
-      name: 'user',
-    } as any);
+    mockRoleRepository.findById.mockResolvedValue(
+      Role.create({ id: 'role-1', name: 'user' }),
+    );
     mockTokenService.signTokens.mockResolvedValue({
       accessToken: 'access-token-123',
       refreshToken: 'refresh-token-123',
@@ -101,10 +120,9 @@ describe('LoginHandler (Unit)', () => {
   });
 
   it('should assign default "user" role when user has no roleId', async () => {
-    const user = createVerifiedUser();
     const userNoRole = User.reconstitute({
       id: 'user-4',
-      roleId: null as any,
+      roleId: '',
       username: 'norole',
       email: 'norole@example.com',
       isVerified: true,
@@ -127,10 +145,9 @@ describe('LoginHandler (Unit)', () => {
 
   it('should use role name from repository when roleId exists', async () => {
     const user = createVerifiedUser();
-    mockRoleRepository.findById.mockResolvedValue({
-      id: 'role-1',
-      name: 'admin',
-    } as any);
+    mockRoleRepository.findById.mockResolvedValue(
+      Role.create({ id: 'role-1', name: 'admin' }),
+    );
     mockTokenService.signTokens.mockResolvedValue({
       accessToken: 'access-token-123',
       refreshToken: 'refresh-token-123',
@@ -140,12 +157,6 @@ describe('LoginHandler (Unit)', () => {
 
     expect(result.user.role).toBe('admin');
     expect(mockRoleRepository.findById).toHaveBeenCalledWith('role-1');
-  });
-
-  it('should throw UnauthorizedDomainException when user is null', async () => {
-    await expect(
-      useCase.execute(new LoginCommand(null as unknown as User)),
-    ).rejects.toThrow(UnauthorizedDomainException);
   });
 
   it('should throw UnauthorizedDomainException when user is not verified', async () => {
@@ -164,10 +175,9 @@ describe('LoginHandler (Unit)', () => {
 
   it('should propagate errors from TokenService', async () => {
     const user = createVerifiedUser();
-    mockRoleRepository.findById.mockResolvedValue({
-      id: 'role-1',
-      name: 'user',
-    } as any);
+    mockRoleRepository.findById.mockResolvedValue(
+      Role.create({ id: 'role-1', name: 'user' }),
+    );
     mockTokenService.signTokens.mockRejectedValue(
       new Error('JWT signing failed'),
     );

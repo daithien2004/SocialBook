@@ -1,7 +1,34 @@
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 import { ReadingRoomRepository } from '@/infrastructure/database/repositories/reading-rooms/reading-room.repository';
+import { ReadingRoom as ReadingRoomSchema } from '@/infrastructure/database/schemas/reading-room.schema';
 import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
+import { getModelToken } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+
+function createMockRoomModel(getUpdateResult: () => UpdateResult) {
+  return {
+    create: jest.fn(),
+    updateOne: jest.fn(
+      (_filter: { _id: string; version: number }, _update: unknown) => ({
+        exec: () => Promise.resolve(getUpdateResult()),
+      }),
+    ),
+  };
+}
+
+interface UpdateResult {
+  matchedCount: number;
+  modifiedCount: number;
+}
 
 describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
   describe('Entity OCC State & Mutations', () => {
@@ -36,7 +63,6 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
           },
         ],
         highlights: [],
-        chatMessages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 5,
@@ -65,7 +91,6 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
           },
         ],
         highlights: [],
-        chatMessages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 2,
@@ -100,7 +125,6 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
           },
         ],
         highlights: [],
-        chatMessages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 3,
@@ -139,7 +163,6 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
           },
         ],
         highlights: [],
-        chatMessages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 1,
@@ -158,19 +181,28 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
   });
 
   describe('Repository save OCC behavior', () => {
-    let mockRoomModel: {
-      create: jest.Mock;
-      updateOne: jest.Mock;
-    };
+    let updateResult: UpdateResult;
+    let mockRoomModel: ReturnType<typeof createMockRoomModel>;
     let repository: ReadingRoomRepository;
+    let moduleRef: TestingModule;
 
-    beforeEach(() => {
-      mockRoomModel = {
-        create: jest.fn(),
-        updateOne: jest.fn(),
-      };
-      // @ts-expect-error Mock Model injection
-      repository = new ReadingRoomRepository(mockRoomModel);
+    beforeEach(async () => {
+      updateResult = { matchedCount: 1, modifiedCount: 1 };
+      mockRoomModel = createMockRoomModel(() => updateResult);
+      moduleRef = await Test.createTestingModule({
+        providers: [
+          ReadingRoomRepository,
+          {
+            provide: getModelToken(ReadingRoomSchema.name),
+            useValue: mockRoomModel,
+          },
+        ],
+      }).compile();
+      repository = moduleRef.get(ReadingRoomRepository);
+    });
+
+    afterEach(async () => {
+      await moduleRef.close();
     });
 
     it('skips database update when room is not dirty', async () => {
@@ -190,7 +222,6 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
           },
         ],
         highlights: [],
-        chatMessages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 2,
@@ -219,19 +250,12 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
           },
         ],
         highlights: [],
-        chatMessages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 2,
       });
 
       room.addMember('507f1f77bcf86cd799439099');
-
-      mockRoomModel.updateOne.mockReturnValue({
-        exec: jest
-          .fn()
-          .mockResolvedValue({ matchedCount: 1, modifiedCount: 1 }),
-      });
 
       await repository.save(room);
 
@@ -264,7 +288,6 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
           },
         ],
         highlights: [],
-        chatMessages: [],
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 2,
@@ -272,11 +295,7 @@ describe('ReadingRoom Optimistic Concurrency Control (T2)', () => {
 
       room.addMember('507f1f77bcf86cd799439099');
 
-      mockRoomModel.updateOne.mockReturnValue({
-        exec: jest
-          .fn()
-          .mockResolvedValue({ matchedCount: 0, modifiedCount: 0 }),
-      });
+      updateResult = { matchedCount: 0, modifiedCount: 0 };
 
       await expect(repository.save(room)).rejects.toThrow(ConcurrencyException);
       // loadedVersion must not change when save fails

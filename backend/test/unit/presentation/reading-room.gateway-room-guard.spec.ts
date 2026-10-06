@@ -1,7 +1,7 @@
 import { ExecutionContext } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
-import { WsRoomGuard } from '@/presentation/gateways/ws-room.guard';
-import type { RoomSocket } from '@/presentation/gateways/reading-room.types';
+import { WsRoomGuard } from '@/presentation/gateways/core/ws-room.guard';
+import type { RoomSocket } from '@/presentation/gateways/reading-room/reading-room.types';
 import { fakeOf } from '../../support/typed-fake';
 
 /**

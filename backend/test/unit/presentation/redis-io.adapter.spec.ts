@@ -1,4 +1,4 @@
-import { RedisIoAdapter } from '@/presentation/gateways/redis-io.adapter';
+import { RedisIoAdapter } from '@/presentation/gateways/core/redis-io.adapter';
 import { instrument } from '@socket.io/admin-ui';
 
 jest.mock('@socket.io/admin-ui', () => ({

@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
-import { RoomSocket } from './reading-room.types';
+import { RoomSocket } from '../reading-room/reading-room.types';
 import { ErrorCode } from '@/shared/domain/error-codes';
 
 @Injectable()

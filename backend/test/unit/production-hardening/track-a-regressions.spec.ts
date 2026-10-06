@@ -3,7 +3,7 @@ import type { Redis } from 'ioredis';
 import { CommandBus } from '@nestjs/cqrs';
 import { fakeOf } from '../../support/typed-fake';
 
-import { AudioWorker } from '@/presentation/gateways/audio.worker';
+import { AudioWorker } from '@/presentation/gateways/workers/audio.worker';
 import {
   POST_MODERATION_JOB,
   PostModerationProcessor,

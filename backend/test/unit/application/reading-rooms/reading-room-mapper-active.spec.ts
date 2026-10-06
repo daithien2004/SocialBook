@@ -1,7 +1,12 @@
+import { describe, expect, it } from '@jest/globals';
+import mongoose from 'mongoose';
 import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
 import { ReadingRoomApplicationMapper } from '@/application/reading-rooms/mappers/reading-room.mapper';
 import { ReadingRoomMapper } from '@/infrastructure/database/repositories/reading-rooms/reading-room.mapper';
-import { ReadingRoomDocument } from '@/infrastructure/database/schemas/reading-room.schema';
+import {
+  ReadingRoom as ReadingRoomMongo,
+  ReadingRoomSchema,
+} from '@/infrastructure/database/schemas/reading-room.schema';
 
 describe('ReadingRoomMapper & Highlight Denormalization (T10)', () => {
   it('ReadingRoomApplicationMapper.toResult excludes departed members and maps highlight user info', () => {
@@ -45,7 +50,11 @@ describe('ReadingRoomMapper & Highlight Denormalization (T10)', () => {
   });
 
   it('infrastructure ReadingRoomMapper preserves displayName and avatarUrl', () => {
-    const doc = {
+    const model = mongoose.model<ReadingRoomMongo>(
+      'ReadingRoomMapperActiveTest',
+      ReadingRoomSchema,
+    );
+    const doc = model.hydrate({
       _id: 'ROOM0001',
       bookId: 'book-1',
       hostId: 'host-1',
@@ -66,11 +75,10 @@ describe('ReadingRoomMapper & Highlight Denormalization (T10)', () => {
           createdAt: new Date(),
         },
       ],
-      chatMessages: [],
       createdAt: new Date(),
       updatedAt: new Date(),
       version: 1,
-    } as unknown as ReadingRoomDocument;
+    });
 
     const domain = ReadingRoomMapper.toDomain(doc);
     expect(domain.highlights[0].displayName).toBe('Host User');

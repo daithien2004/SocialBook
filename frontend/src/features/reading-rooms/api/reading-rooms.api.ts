@@ -16,12 +16,6 @@ export interface RoomResponse {
     aiInsight?: string;
     createdAt: string;
   }>;
-  chatMessages?: Array<{
-    userId: string;
-    role: 'user' | 'ai';
-    content: string;
-    createdAt: string;
-  }>;
 }
 
 export interface CreateRoomPayload {
@@ -57,7 +51,9 @@ export async function getMyHistory(): Promise<RoomHistoryResponse> {
   });
 }
 
-export async function createRoom(body: CreateRoomPayload): Promise<RoomResponse> {
+export async function createRoom(
+  body: CreateRoomPayload,
+): Promise<RoomResponse> {
   return apiRequest<RoomResponse>({
     url: '/reading-rooms',
     method: 'POST',

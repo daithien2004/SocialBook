@@ -29,12 +29,6 @@ export class ReadingRoomApplicationMapper {
         aiInsight: h.aiInsight,
         createdAt: h.createdAt!,
       })),
-      chatMessages: room.chatMessages.map((m) => ({
-        userId: m.userId,
-        role: m.role,
-        content: m.content,
-        createdAt: m.createdAt,
-      })),
     };
   }
 

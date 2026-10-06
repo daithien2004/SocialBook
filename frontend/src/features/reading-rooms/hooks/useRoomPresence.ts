@@ -6,28 +6,55 @@ const MIN_GAP_MS = 1_500;
 
 export const useRoomPresence = (
   chapterSlug: string | undefined,
-  sendHeartbeat: (slug: string, paraId?: string, progress?: number, bookId?: string, chapterId?: string) => void,
+  sendHeartbeat: (
+    slug: string,
+    paraId?: string,
+    progress?: number,
+    chapterId?: string,
+  ) => void,
   activeParagraphId?: string | null,
   readingProgress?: number,
-  bookId?: string,
   chapterId?: string,
 ) => {
   const connection = useReadingRoomStore((state) => state.connection);
 
-  const latest = useRef({ chapterSlug, activeParagraphId, readingProgress, bookId, chapterId });
-  
+  const latest = useRef({
+    chapterSlug,
+    activeParagraphId,
+    readingProgress,
+    chapterId,
+  });
+
   useEffect(() => {
-    latest.current = { chapterSlug, activeParagraphId, readingProgress, bookId, chapterId };
+    latest.current = {
+      chapterSlug,
+      activeParagraphId,
+      readingProgress,
+      chapterId,
+    };
   });
 
   const sendNow = useCallback(() => {
-    const { chapterSlug: c, activeParagraphId: p, readingProgress: pr, bookId: b, chapterId: ch } = latest.current;
+    const {
+      chapterSlug: c,
+      activeParagraphId: p,
+      readingProgress: pr,
+      chapterId: ch,
+    } = latest.current;
     if (!c) return;
-    sendHeartbeat(c, p || undefined, pr ? Math.round(pr * 100) / 100 : undefined, b, ch);
+    sendHeartbeat(
+      c,
+      p || undefined,
+      pr ? Math.round(pr * 100) / 100 : undefined,
+      ch,
+    );
   }, [sendHeartbeat]);
 
   // Simple throttle with leading & trailing
-  const throttleRef = useRef<{ timeout: NodeJS.Timeout | null, lastRan: number }>({ timeout: null, lastRan: 0 });
+  const throttleRef = useRef<{
+    timeout: NodeJS.Timeout | null;
+    lastRan: number;
+  }>({ timeout: null, lastRan: 0 });
 
   const throttledSend = useCallback(() => {
     const now = Date.now();
@@ -42,11 +69,14 @@ export const useRoomPresence = (
       throttleRef.current.lastRan = now;
     } else {
       if (!timeout) {
-        throttleRef.current.timeout = setTimeout(() => {
-          sendNow();
-          throttleRef.current.lastRan = Date.now();
-          throttleRef.current.timeout = null;
-        }, MIN_GAP_MS - (now - lastRan));
+        throttleRef.current.timeout = setTimeout(
+          () => {
+            sendNow();
+            throttleRef.current.lastRan = Date.now();
+            throttleRef.current.timeout = null;
+          },
+          MIN_GAP_MS - (now - lastRan),
+        );
       }
     }
   }, [sendNow]);
@@ -64,20 +94,26 @@ export const useRoomPresence = (
       throttledSend();
     }
     return () => cancelThrottle();
-  }, [chapterSlug, activeParagraphId, connection, throttledSend, cancelThrottle]);
+  }, [
+    chapterSlug,
+    activeParagraphId,
+    connection,
+    throttledSend,
+    cancelThrottle,
+  ]);
 
   // 2) Keepalive + visibility
   useEffect(() => {
-    const tick = () => { 
+    const tick = () => {
       if (document.visibilityState === 'visible' && connection === 'joined') {
-        sendNow(); 
+        sendNow();
       }
     };
     const id = setInterval(tick, KEEPALIVE_MS);
     document.addEventListener('visibilitychange', tick);
-    return () => { 
-      clearInterval(id); 
-      document.removeEventListener('visibilitychange', tick); 
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', tick);
     };
   }, [sendNow, connection]);
 };

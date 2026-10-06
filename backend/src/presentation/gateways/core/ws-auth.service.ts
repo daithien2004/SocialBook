@@ -1,15 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { Socket } from 'socket.io';
-import { SocketData } from './reading-room.types';
+import { SocketData } from '../reading-room/reading-room.types';
 import {
   MAX_CONNECTIONS_PER_USER,
   CONN_STALE_MS,
-} from './reading-room.constants';
+} from '../reading-room/reading-room.constants';
 import { ErrorCode } from '@/shared/domain/error-codes';
 import { AuthException } from '@/shared/domain/common-exceptions';
+
+import { createHash } from 'crypto';
 
 export interface JwtAuthPayload {
   sub: string;
@@ -23,79 +24,82 @@ export interface JwtAuthPayload {
 export class WsAuthService {
   private readonly logger = new Logger(WsAuthService.name);
 
-  constructor(
-    private readonly jwt: JwtService,
-    @InjectRedis() private readonly redis: Redis,
-  ) {}
+  constructor(@InjectRedis() private readonly redis: Redis) {}
 
   async authenticate(socket: Socket): Promise<SocketData> {
-    const token = this.extractToken(socket);
-    const payload = await this.verifyToken(token);
-    await this.assertNotRevoked(payload);
-    await this.reserveConnectionSlot(payload.sub, socket.id);
+    const ticket = this.extractTicket(socket);
+    const payload = await this.verifyTicket(ticket);
+    await this.reserveConnectionSlot(payload.userId, socket.id);
 
     return {
-      userId: payload.sub,
-      role: payload.role ?? 'user',
+      userId: payload.userId,
+      role: payload.role,
       displayName: payload.displayName,
       avatarUrl: payload.avatarUrl,
     };
   }
 
-  private extractToken(socket: Socket): string {
-    const token = socket.handshake.auth?.token;
-    if (!token || typeof token !== 'string') {
+  private extractTicket(socket: Socket): string {
+    const auth: unknown = socket.handshake.auth;
+    if (typeof auth !== 'object' || auth === null || !('ticket' in auth)) {
       throw new AuthException(ErrorCode.UNAUTHORIZED);
     }
-    if (token.length > 2000) {
-      this.logger.warn('WS connection rejected: token too long');
+    const ticket = auth.ticket;
+    if (typeof ticket !== 'string') {
       throw new AuthException(ErrorCode.UNAUTHORIZED);
     }
-    return token;
+    if (ticket.length > 200) {
+      this.logger.warn('WS connection rejected: ticket too long');
+      throw new AuthException(ErrorCode.UNAUTHORIZED);
+    }
+    return ticket;
   }
 
-  private async verifyToken(token: string): Promise<JwtAuthPayload> {
-    let payload: Partial<JwtAuthPayload>;
+  private async verifyTicket(ticket: string): Promise<SocketData> {
+    const hash = createHash('sha256').update(ticket).digest('hex');
+    let raw: unknown;
     try {
-      payload = await this.jwt.verifyAsync<Partial<JwtAuthPayload>>(token, {
-        algorithms: ['HS256'],
-      });
+      if (typeof this.redis.getdel === 'function') {
+        raw = await this.redis.getdel(`wsticket:${hash}`);
+      } else {
+        raw = await this.redis.call('GETDEL', `wsticket:${hash}`);
+      }
     } catch (e) {
-      const name = (e as { name?: string } | null)?.name;
-      throw new AuthException(
-        name === 'TokenExpiredError'
-          ? ErrorCode.TOKEN_EXPIRED
-          : ErrorCode.UNAUTHORIZED,
-      );
-    }
-
-    if (!payload.sub || typeof payload.iat !== 'number') {
-      throw new AuthException(ErrorCode.UNAUTHORIZED);
-    }
-
-    return payload as JwtAuthPayload;
-  }
-
-  private async assertNotRevoked(payload: JwtAuthPayload): Promise<void> {
-    let revokedAt: string | null;
-    try {
-      revokedAt = await this.redis.get(`auth:revoked:${payload.sub}`);
-    } catch (error) {
       this.logger.error(
-        `Redis error during revoke check for ${payload.sub}`,
-        error instanceof Error ? error.stack : String(error),
+        'Redis GETDEL error',
+        e instanceof Error ? e.stack : String(e),
       );
       throw new AuthException(ErrorCode.UNAUTHORIZED);
     }
 
-    if (!revokedAt) return;
+    if (typeof raw !== 'string' || !raw) {
+      throw new AuthException(ErrorCode.UNAUTHORIZED);
+    }
 
-    const revokedAtSec = Math.floor(Number(revokedAt) / 1000);
-    if (!Number.isFinite(revokedAtSec) || payload.iat < revokedAtSec) {
-      this.logger.warn(
-        `WS handshake rejected: token revoked for user ${payload.sub}`,
-      );
-      throw new AuthException(ErrorCode.TOKEN_REVOKED);
+    try {
+      const data: unknown = JSON.parse(raw);
+      if (typeof data !== 'object' || data === null)
+        throw new Error('Invalid ticket data');
+
+      if (!('userId' in data) || typeof data.userId !== 'string') {
+        throw new Error('Missing userId in ticket');
+      }
+
+      return {
+        userId: data.userId,
+        role:
+          'role' in data && typeof data.role === 'string' ? data.role : 'user',
+        displayName:
+          'displayName' in data && typeof data.displayName === 'string'
+            ? data.displayName
+            : undefined,
+        avatarUrl:
+          'avatarUrl' in data && typeof data.avatarUrl === 'string'
+            ? data.avatarUrl
+            : undefined,
+      };
+    } catch {
+      throw new AuthException(ErrorCode.UNAUTHORIZED);
     }
   }
 

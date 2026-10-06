@@ -53,7 +53,7 @@ export class OAuthAuthHandler {
         p.name || p.email.split('@')[0],
         p.email,
         undefined,
-        userRole.id.toString(),
+        userRole.id,
         p.image,
         p.provider,
         p.providerId,

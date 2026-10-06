@@ -12,8 +12,8 @@ export class ReadingRoomPresenceService {
     roomId: string,
     userId: string,
     data: Omit<PresenceData, 'lastSeen'>,
-  ): Promise<void> {
-    await this.presenceCache.upsertPresence(roomId, userId, data);
+  ): Promise<{ created: boolean; chapterChanged: boolean }> {
+    return this.presenceCache.upsertPresence(roomId, userId, data);
   }
 
   async getRoomPresences(roomId: string): Promise<PresenceData[]> {

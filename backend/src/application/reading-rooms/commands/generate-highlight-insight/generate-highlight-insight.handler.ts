@@ -17,6 +17,8 @@ import { EventNames } from '@/common/constants/event-names.constant';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 
+const INSIGHT_LOCK_TTL_SECONDS = 60;
+
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -83,7 +85,7 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
       lockKey,
       command.userId,
       'EX',
-      60,
+      INSIGHT_LOCK_TTL_SECONDS,
       'NX',
     );
     if (!gotLock) {

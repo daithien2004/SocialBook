@@ -1,3 +1,4 @@
+import { CommonModule } from '@/application/common/common.module';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
@@ -63,6 +64,7 @@ describe('GET /posts (E2E)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        CommonModule,
         MongooseModule.forRoot(mongod.getUri()),
         MongooseModule.forFeature([
           { name: Post.name, schema: PostSchema },

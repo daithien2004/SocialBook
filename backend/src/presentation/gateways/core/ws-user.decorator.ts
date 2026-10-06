@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { RoomSocket, SocketData } from './reading-room.types';
+import { RoomSocket, SocketData } from '../reading-room/reading-room.types';
 
 /**
  * Param decorator đọc trực tiếp `socket.data` của namespace /reading-rooms.

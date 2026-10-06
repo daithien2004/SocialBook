@@ -23,13 +23,6 @@ export interface RoomHighlightProps {
   createdAt?: Date;
 }
 
-export interface ChatMessageProps {
-  userId: string;
-  role: 'user' | 'ai';
-  content: string;
-  createdAt: Date;
-}
-
 export interface ReadingRoomProps {
   bookId: BookId;
   hostId: UserId;
@@ -39,7 +32,6 @@ export interface ReadingRoomProps {
   maxMembers: number;
   members: RoomMember[];
   highlights: RoomHighlightProps[];
-  chatMessages: ChatMessageProps[];
   endedAt?: Date;
   version: number;
 }
@@ -96,7 +88,6 @@ export class ReadingRoom extends Entity<RoomId> {
         maxMembers,
         members: [hostMember],
         highlights: [],
-        chatMessages: [],
         version: 0,
       },
       undefined,
@@ -121,7 +112,6 @@ export class ReadingRoom extends Entity<RoomId> {
       leftAt?: Date;
     }>;
     highlights: RoomHighlightProps[];
-    chatMessages: ChatMessageProps[];
     createdAt: Date;
     updatedAt: Date;
     endedAt?: Date;
@@ -139,7 +129,6 @@ export class ReadingRoom extends Entity<RoomId> {
         maxMembers: props.maxMembers,
         members: props.members.map((m) => RoomMember.reconstitute(m)),
         highlights: props.highlights,
-        chatMessages: props.chatMessages,
         endedAt: props.endedAt,
         version: loadedVer,
       },
@@ -180,9 +169,6 @@ export class ReadingRoom extends Entity<RoomId> {
   }
   get highlights(): RoomHighlightProps[] {
     return [...this._props.highlights];
-  }
-  get chatMessages(): ChatMessageProps[] {
-    return [...this._props.chatMessages];
   }
   get endedAt(): Date | undefined {
     return this._props.endedAt;
@@ -293,18 +279,6 @@ export class ReadingRoom extends Entity<RoomId> {
     this.markAsUpdated();
   }
 
-  addChatMessage(props: {
-    userId: string;
-    role: 'user' | 'ai';
-    content: string;
-  }): void {
-    this._props.chatMessages.push({
-      ...props,
-      createdAt: new Date(),
-    });
-    this.markAsUpdated();
-  }
-
   addMember(userId: string): void {
     if (this._props.status === 'ended') {
       throw new BadRequestDomainException('Phòng đã kết thúc');
@@ -392,43 +366,6 @@ export class ReadingRoom extends Entity<RoomId> {
 
       this.markAsUpdated();
     }
-  }
-
-  changeChapter(userId: string, newChapterSlug: string): void {
-    if (this._props.status === 'ended') {
-      throw new BadRequestDomainException(
-        'Không thể đổi chương trong phòng đã kết thúc',
-      );
-    }
-
-    if (!this.isMember(userId)) {
-      throw new BadRequestDomainException('Chỉ thành viên mới được đổi chương');
-    }
-
-    // Only host can change chapter in sync mode
-    if (this._props.mode.toString() === 'sync' && userId !== this.hostId) {
-      throw new BadRequestDomainException(
-        'Chỉ chủ phòng mới được đổi chương ở chế độ đồng bộ',
-      );
-    }
-
-    this._props.currentChapterSlug = newChapterSlug;
-    this.markAsUpdated();
-  }
-
-  changeMode(userId: string, newMode: string): void {
-    if (this._props.status === 'ended') {
-      throw new BadRequestDomainException(
-        'Không thể đổi chế độ trong phòng đã kết thúc',
-      );
-    }
-
-    if (userId !== this.hostId) {
-      throw new BadRequestDomainException('Chỉ chủ phòng mới được đổi chế độ');
-    }
-
-    this._props.mode = RoomMode.create(newMode);
-    this.markAsUpdated();
   }
 
   end(): void {

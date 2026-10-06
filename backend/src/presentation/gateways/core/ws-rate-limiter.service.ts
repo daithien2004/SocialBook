@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
-import { RATE_LIMIT_WINDOW_SECONDS } from './reading-room.constants';
+import { RATE_LIMIT_WINDOW_SECONDS } from '../reading-room/reading-room.constants';
 
 /**
  * Cổng hẹp cho Redis (xem .agents/skills/nestjs-type-safety-boundaries §10):

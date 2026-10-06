@@ -8,6 +8,7 @@
   "scripts": {
     "seed": "ts-node -r tsconfig-paths/register src/shared/database/seeds/run-seed.ts",
     "seed:revert": "ts-node -r tsconfig-paths/register src/shared/database/seeds/run-seed.ts --revert",
+    "db:remove-reading-room-chat-messages": "ts-node -r tsconfig-paths/register src/shared/database/migrations/remove-reading-room-chat-messages.ts",
     "seed:chapter-discussions": "ts-node -r tsconfig-paths/register src/shared/database/seeds/run-chapter-discussions.ts",
     "seed:chapter-discussions:prod": "node -r tsconfig-paths/register dist/shared/database/seeds/run-chapter-discussions.js",
     "seed:read-progress-review:prod": "node -r tsconfig-paths/register dist/shared/database/seeds/run-read-progress-review.js",

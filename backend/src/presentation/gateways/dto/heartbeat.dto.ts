@@ -11,14 +11,12 @@ import {
 } from 'class-validator';
 import {
   CHAPTER_SLUG_MAX_LENGTH,
-  IGNORED_FIELD_MAX_LENGTH,
   OBJECT_ID_PATTERN,
   PARAGRAPH_ID_MAX_LENGTH,
   PROGRESS_MAX,
   PROGRESS_MIN,
-  ROOM_ID_MAX_LENGTH,
   ROOM_ID_PATTERN,
-} from '../reading-room.constants';
+} from '../reading-room/reading-room.constants';
 
 export class HeartbeatDto {
   @IsString()
@@ -59,18 +57,4 @@ export class HeartbeatDto {
   @Min(PROGRESS_MIN)
   @Max(PROGRESS_MAX)
   progress?: number;
-
-  /**
-   * Client hiện gửi kèm 2 field này (`useReadingRoomSocket.sendHeartbeat`) —
-   * khai optional và bỏ qua để không vỡ client cũ (DEC-02).
-   */
-  @IsOptional()
-  @IsString()
-  @MaxLength(ROOM_ID_MAX_LENGTH)
-  roomCode?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(IGNORED_FIELD_MAX_LENGTH)
-  bookId?: string;
 }

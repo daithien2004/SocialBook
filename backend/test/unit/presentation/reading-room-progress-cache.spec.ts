@@ -1,10 +1,8 @@
 import { Logger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ReadingProgressTracker } from '@/presentation/gateways/reading-progress.tracker';
+import { ReadingProgressTracker } from '@/presentation/gateways/reading-room/reading-progress.tracker';
 import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
-import type { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import type { Chapter } from '@/domain/chapters/entities/chapter.entity';
-import type { RoomSocket } from '@/presentation/gateways/reading-room.types';
+import type { RoomSocket } from '@/presentation/gateways/reading-room/reading-room.types';
 import { fakeOf } from '../../support/typed-fake';
 
 /**
@@ -18,14 +16,8 @@ const BOOK_ID = 'book-1';
 
 describe('ReadingProgressTracker (chapterId path)', () => {
   let tracker: ReadingProgressTracker;
-  let findById: jest.Mock;
   let execute: jest.Mock<unknown, [UpdateProgressCommand]>;
   let socket: RoomSocket;
-
-  const chapterOf = (bookId: string): Chapter =>
-    fakeOf<Chapter>({
-      bookId: { toString: () => bookId },
-    });
 
   const makeSocket = (userId = 'user-1'): RoomSocket =>
     fakeOf<RoomSocket>({
@@ -48,12 +40,8 @@ describe('ReadingProgressTracker (chapterId path)', () => {
     jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
-    findById = jest.fn();
     execute = jest.fn().mockResolvedValue({});
-    tracker = new ReadingProgressTracker(
-      fakeOf<IChapterRepository>({ findById }),
-      fakeOf<CommandBus>({ execute }),
-    );
+    tracker = new ReadingProgressTracker(fakeOf<CommandBus>({ execute }));
     socket = makeSocket();
   });
 
@@ -62,11 +50,8 @@ describe('ReadingProgressTracker (chapterId path)', () => {
   });
 
   it('saves progress using the chapterId the client sent', async () => {
-    findById.mockResolvedValue(chapterOf(BOOK_ID));
-
     await scheduleAndFlush();
 
-    expect(findById).toHaveBeenCalledTimes(1);
     expect(execute).toHaveBeenCalledTimes(1);
 
     const command = execute.mock.calls[0][0];
@@ -80,64 +65,7 @@ describe('ReadingProgressTracker (chapterId path)', () => {
     });
   });
 
-  it('verifies the chapter once and reuses the cache on later flushes', async () => {
-    findById.mockResolvedValue(chapterOf(BOOK_ID));
-
-    await scheduleAndFlush();
-    await scheduleAndFlush(BOOK_ID, CHAPTER_ID, 60);
-
-    expect(findById).toHaveBeenCalledTimes(1);
-    expect(execute).toHaveBeenCalledTimes(2);
-  });
-
-  it('re-verifies when the socket moves to a room holding another book', async () => {
-    findById.mockResolvedValue(chapterOf(BOOK_ID));
-
-    await scheduleAndFlush();
-    await scheduleAndFlush(OTHER_BOOK_ID);
-
-    expect(findById).toHaveBeenCalledTimes(2);
-  });
-
-  it('does not cache a failed verification — the next flush retries', async () => {
-    findById
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(chapterOf(BOOK_ID));
-
-    await scheduleAndFlush();
-    expect(execute).not.toHaveBeenCalled();
-
-    await scheduleAndFlush();
-    expect(findById).toHaveBeenCalledTimes(2);
-    expect(execute).toHaveBeenCalledTimes(1);
-  });
-
-  it('refuses a chapterId that belongs to another book', async () => {
-    findById.mockResolvedValue(chapterOf(OTHER_BOOK_ID));
-
-    await scheduleAndFlush();
-
-    expect(execute).not.toHaveBeenCalled();
-    expect(socket.data.verifiedChapters?.has(CHAPTER_ID)).toBeFalsy();
-  });
-
-  it('refuses a chapterId that does not exist', async () => {
-    findById.mockResolvedValue(null);
-
-    await scheduleAndFlush();
-
-    expect(execute).not.toHaveBeenCalled();
-  });
-
-  it('never queries the DB for a chapterId that is not a valid ObjectId', async () => {
-    await scheduleAndFlush(BOOK_ID, 'khong-phai-object-id');
-
-    expect(findById).not.toHaveBeenCalled();
-    expect(execute).not.toHaveBeenCalled();
-  });
-
   it('logs but does not throw when the progress write fails', async () => {
-    findById.mockResolvedValue(chapterOf(BOOK_ID));
     execute.mockImplementation(() => Promise.reject(new Error('db down')));
     const errorSpy = jest.spyOn(Logger.prototype, 'error');
 
@@ -146,13 +74,8 @@ describe('ReadingProgressTracker (chapterId path)', () => {
     expect(errorSpy).toHaveBeenCalled();
   });
 
-  it('flushes pending progress and leaves no stale cache on socket data', async () => {
-    findById.mockResolvedValue(chapterOf(BOOK_ID));
-
+  it('flushes pending progress and clears internal state', async () => {
     await scheduleAndFlush();
-
-    expect(socket.data.pendingProgress).toBeUndefined();
-    expect(socket.data.progressTimer).toBeUndefined();
 
     // flush lần nữa không gửi lại tiến độ cũ
     await tracker.flush(socket);
@@ -162,13 +85,11 @@ describe('ReadingProgressTracker (chapterId path)', () => {
   it('does nothing when there is nothing pending', async () => {
     await tracker.flush(socket);
 
-    expect(findById).not.toHaveBeenCalled();
     expect(execute).not.toHaveBeenCalled();
   });
 
   it('does not write progress for an unauthenticated socket', async () => {
     socket = makeSocket('');
-    findById.mockResolvedValue(chapterOf(BOOK_ID));
 
     await scheduleAndFlush();
 

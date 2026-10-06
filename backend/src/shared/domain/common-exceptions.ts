@@ -60,3 +60,9 @@ export class AuthException extends DomainException {
     super(code, undefined, details);
   }
 }
+
+export class RateLimitDomainException extends DomainException {
+  constructor(message?: string) {
+    super(ErrorCode.RATE_LIMITED, message);
+  }
+}

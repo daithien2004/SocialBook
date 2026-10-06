@@ -28,12 +28,6 @@ export class ReadingRoomMapper {
         aiInsight: h.aiInsight,
         createdAt: h.createdAt,
       })),
-      chatMessages: (doc.chatMessages || []).map((m) => ({
-        userId: m.userId,
-        role: m.role,
-        content: m.content,
-        createdAt: m.createdAt,
-      })),
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
       endedAt: doc.endedAt,
@@ -70,12 +64,6 @@ export class ReadingRoomMapper {
         createdAt: h.createdAt || new Date(),
       })),
 
-      chatMessages: domain.chatMessages.map((m) => ({
-        userId: m.userId,
-        role: m.role,
-        content: m.content,
-        createdAt: m.createdAt,
-      })),
       endedAt: domain.endedAt,
       version: domain.version,
     };

@@ -38,14 +38,16 @@ interface ReadingRoomPageClientProps {
   roomCode: string;
 }
 
-export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) {
+export function ReadingRoomPageClient({
+  roomCode,
+}: ReadingRoomPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAppAuth();
 
   const storeRoom = useReadingRoomStore((state) => state.room);
   const presences = useReadingRoomStore((state) => state.presences);
-  
+
   const currentChapterSlug =
     storeRoom?.status !== 'ended' && storeRoom?.mode === 'sync'
       ? storeRoom?.currentChapterSlug || ''
@@ -75,13 +77,9 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
   const savedProgress = progressData?.progress || 0;
 
   const shouldConnectSocket = isAuthenticated && !!initialRoom;
-  const {
-    endRoom,
-    leaveRoom,
-    changeChapter,
-    changeMode,
-    sendHeartbeat,
-  } = useReadingRoomSocket(shouldConnectSocket ? roomCode : undefined);
+  const { leaveRoom, sendHeartbeat } = useReadingRoomSocket(
+    shouldConnectSocket ? roomCode : undefined,
+  );
 
   const {
     copied,
@@ -118,7 +116,6 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
     sendHeartbeat,
     readingParagraphId,
     readingProgress,
-    bookData?.id,
     chapter?.id,
   );
 
@@ -129,7 +126,8 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
     isHost,
   });
 
-  const handleChapterNav = (slug: string) => navigateChapter(slug, bookData?.id, changeChapter);
+  const handleChapterNav = (slug: string) =>
+    navigateChapter(slug, bookData?.id);
 
   // UI state
   const [transferHostOpen, setTransferHostOpen] = useState(false);
@@ -154,7 +152,11 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
     );
   }
 
-  if (isLoadingRoom || connection === 'connecting' || connection === 'joining') {
+  if (
+    isLoadingRoom ||
+    connection === 'connecting' ||
+    connection === 'joining'
+  ) {
     return (
       <div className="min-h-[60vh]">
         <LoadingOverlay>Đang kết nối vào phòng...</LoadingOverlay>
@@ -163,10 +165,12 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
   }
 
   if (error || !initialRoom || connection === 'error') {
-    let errDesc = "Phòng không tồn tại hoặc đã kết thúc.";
-    if (errorCode === 'FULL') errDesc = "Phòng đã đầy.";
-    else if (errorCode === 'FORBIDDEN') errDesc = "Bạn không có quyền vào phòng này.";
-    else if (errorCode === 'UNAUTHORIZED') errDesc = "Bạn cần đăng nhập lại để vào phòng.";
+    let errDesc = 'Phòng không tồn tại hoặc đã kết thúc.';
+    if (errorCode === 'FULL') errDesc = 'Phòng đã đầy.';
+    else if (errorCode === 'FORBIDDEN')
+      errDesc = 'Bạn không có quyền vào phòng này.';
+    else if (errorCode === 'UNAUTHORIZED')
+      errDesc = 'Bạn cần đăng nhập lại để vào phòng.';
 
     return (
       <div className="min-h-[60vh]">
@@ -174,7 +178,11 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
           icon={AlertTriangle}
           title="Không thể vào phòng"
           description={errDesc}
-          action={<Button onClick={() => router.push('/reading-rooms')}>Quay lại</Button>}
+          action={
+            <Button onClick={() => router.push('/reading-rooms')}>
+              Quay lại
+            </Button>
+          }
           iconClassName="text-destructive"
         />
       </div>
@@ -184,7 +192,14 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground relative transition-colors duration-300 overflow-x-clip">
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <Image src="/main-background.jpg" alt="BG" fill priority sizes="100vw" className="object-cover opacity-10 dark:opacity-40" />
+        <Image
+          src="/main-background.jpg"
+          alt="BG"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover opacity-10 dark:opacity-40"
+        />
         <div className="absolute inset-0 bg-background/80 dark:bg-background/90" />
       </div>
 
@@ -196,18 +211,30 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
         )}
 
         <MobileHeader
-          roomCode={roomCode} room={room} bookData={bookData} presences={presences}
-          isHost={isHost} isEnded={isEnded} copied={copied} handleCopyCode={handleCopyCode}
-          changeMode={changeMode} endRoom={endRoom}
-          isReactivating={isReactivating} onReactivateRoom={handleReactivateRoom}
+          roomCode={roomCode}
+          room={room}
+          bookData={bookData}
+          presences={presences}
+          isHost={isHost}
+          isEnded={isEnded}
+          copied={copied}
+          handleCopyCode={handleCopyCode}
+          isReactivating={isReactivating}
+          onReactivateRoom={handleReactivateRoom}
           setTransferHostOpen={setTransferHostOpen}
         />
 
         <DesktopSidebar
-          roomCode={roomCode} room={room} bookData={bookData} presences={presences}
-          isHost={isHost} isEnded={isEnded} copied={copied} handleCopyCode={handleCopyCode}
-          changeMode={changeMode} endRoom={endRoom}
-          isReactivating={isReactivating} onReactivateRoom={handleReactivateRoom}
+          roomCode={roomCode}
+          room={room}
+          bookData={bookData}
+          presences={presences}
+          isHost={isHost}
+          isEnded={isEnded}
+          copied={copied}
+          handleCopyCode={handleCopyCode}
+          isReactivating={isReactivating}
+          onReactivateRoom={handleReactivateRoom}
           onTransferHost={() => setTransferHostOpen(true)}
         />
 
@@ -218,24 +245,35 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
             <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
               <div className="flex-1 w-full max-w-3xl mx-auto lg:mx-0">
                 <ChapterContentView
-                  isLoadingChapter={isLoadingChapter} chapter={chapter} bookData={bookData}
-                  navigation={navigation} currentChapterSlug={currentChapterSlug}
-                  contentRef={contentRef} onActiveParagraphChange={onActiveParagraphChange}
+                  isLoadingChapter={isLoadingChapter}
+                  chapter={chapter}
+                  bookData={bookData}
+                  navigation={navigation}
+                  currentChapterSlug={currentChapterSlug}
+                  contentRef={contentRef}
+                  onActiveParagraphChange={onActiveParagraphChange}
                   handleChapterNav={handleChapterNav}
                 />
               </div>
 
               <aside className="w-full lg:w-80 sticky top-28 shrink-0 space-y-6 hidden sm:block">
                 <RoomTabs
-                  variant="desktop" isEnded={isEnded}
+                  variant="desktop"
+                  isEnded={isEnded}
                   roomCode={roomCode}
-                  isHost={isHost} currentUserId={user?.id}
-                  bookSlug={bookData?.slug || ''} chapterId={chapter?.id || ''}
+                  isHost={isHost}
+                  currentUserId={user?.id}
+                  bookSlug={bookData?.slug || ''}
+                  chapterId={chapter?.id || ''}
                   onTransferHost={handleTransferHostClick}
                 />
 
-                <div className={`p-6 rounded-3xl border ${isEnded ? 'bg-muted/5 border-muted/20' : 'bg-primary/5 border-primary/10'}`}>
-                  <h4 className={`text-[10px] font-black uppercase mb-2 ${isEnded ? 'text-muted-foreground' : 'text-primary'}`}>
+                <div
+                  className={`p-6 rounded-3xl border ${isEnded ? 'bg-muted/5 border-muted/20' : 'bg-primary/5 border-primary/10'}`}
+                >
+                  <h4
+                    className={`text-[10px] font-black uppercase mb-2 ${isEnded ? 'text-muted-foreground' : 'text-primary'}`}
+                  >
                     {isEnded ? 'Phòng đã kết thúc' : 'Thông báo phòng'}
                   </h4>
                   <p className="text-xs text-muted-foreground leading-relaxed">
@@ -243,7 +281,11 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
                       'Phòng đọc này đã kết thúc. Bạn có thể xem lại nội dung nhưng không thể tương tác.'
                     ) : (
                       <>
-                        Bạn đang ở chế độ <strong>{room?.mode === 'sync' ? 'Đồng bộ' : 'Tự do'}</strong>.
+                        Bạn đang ở chế độ{' '}
+                        <strong>
+                          {room?.mode === 'sync' ? 'Đồng bộ' : 'Tự do'}
+                        </strong>
+                        .
                         {room?.mode === 'sync'
                           ? ' Chương sách sẽ được tự động lật khi trưởng phòng chuyển trang.'
                           : ' Bạn có thể tự do đọc các chương khác nhau.'}
@@ -258,50 +300,76 @@ export function ReadingRoomPageClient({ roomCode }: ReadingRoomPageClientProps) 
       </div>
 
       <FloatingDock
-        navigation={navigation} isControlsVisible={isControlsVisible}
-        showSettings={showSettings} setShowSettings={setShowSettings}
-        showTOC={showTOC} setShowTOC={setShowTOC}
-        showBookmarks={showBookmarks} setShowBookmarks={setShowBookmarks}
-        showHighlights={showHighlights} setShowHighlights={setShowHighlights}
-        showMobileSidebar={showMobileSidebar} setShowMobileSidebar={setShowMobileSidebar}
-        user={user ?? undefined} bookData={bookData} chapter={chapter}
-        handleChapterNav={handleChapterNav} handleShareRoom={handleShareRoom}
+        navigation={navigation}
+        isControlsVisible={isControlsVisible}
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        showTOC={showTOC}
+        setShowTOC={setShowTOC}
+        showBookmarks={showBookmarks}
+        setShowBookmarks={setShowBookmarks}
+        showHighlights={showHighlights}
+        setShowHighlights={setShowHighlights}
+        showMobileSidebar={showMobileSidebar}
+        setShowMobileSidebar={setShowMobileSidebar}
+        user={user ?? undefined}
+        bookData={bookData}
+        chapter={chapter}
+        handleChapterNav={handleChapterNav}
+        handleShareRoom={handleShareRoom}
         onAddToLibrary={onAddToLibrary}
       />
 
       <BookmarksDrawer
-        open={showBookmarks} onOpenChange={setShowBookmarks}
-        bookId={bookData?.id || ''} bookSlug={bookData?.slug || ''}
+        open={showBookmarks}
+        onOpenChange={setShowBookmarks}
+        bookId={bookData?.id || ''}
+        bookSlug={bookData?.slug || ''}
         currentChapterSlug={currentChapterSlug}
       />
 
       <RoomHighlightsDrawer
-        open={showHighlights} onOpenChange={setShowHighlights}
-        currentChapterSlug={currentChapterSlug} roomCode={roomCode}
+        open={showHighlights}
+        onOpenChange={setShowHighlights}
+        currentChapterSlug={currentChapterSlug}
+        roomCode={roomCode}
       />
 
       <ChapterListDrawer
-        isOpen={showTOC} onClose={() => setShowTOC(false)}
-        chapters={chaptersData?.chapters || []} bookSlug={bookData?.slug || ''}
-        currentChapterSlug={currentChapterSlug} totalChapters={chaptersData?.total}
+        isOpen={showTOC}
+        onClose={() => setShowTOC(false)}
+        chapters={chaptersData?.chapters || []}
+        bookSlug={bookData?.slug || ''}
+        currentChapterSlug={currentChapterSlug}
+        totalChapters={chaptersData?.total}
         onNavigate={(slug) => handleChapterNav(slug)}
       />
 
-      <ReadingSettingsPanel isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <ReadingSettingsPanel
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
 
       <TransferHostModal
-        open={transferHostOpen} onOpenChange={setTransferHostOpen}
+        open={transferHostOpen}
+        onOpenChange={setTransferHostOpen}
         onConfirm={handleTransferHost}
       />
 
       <Sheet open={showMobileSidebar} onOpenChange={setShowMobileSidebar}>
-        <SheetContent side="bottom" className="h-[85vh] p-4 pt-6 rounded-t-3xl border-t border-border overflow-hidden flex flex-col z-50">
+        <SheetContent
+          side="bottom"
+          className="h-[85vh] p-4 pt-6 rounded-t-3xl border-t border-border overflow-hidden flex flex-col z-50"
+        >
           <SheetTitle className="sr-only">Hoạt động phòng</SheetTitle>
           <RoomTabs
-            variant="mobile" isEnded={isEnded}
+            variant="mobile"
+            isEnded={isEnded}
             roomCode={roomCode}
-            isHost={isHost} currentUserId={user?.id}
-            bookSlug={bookData?.slug || ''} chapterId={chapter?.id || ''}
+            isHost={isHost}
+            currentUserId={user?.id}
+            bookSlug={bookData?.slug || ''}
+            chapterId={chapter?.id || ''}
             onTransferHost={handleTransferHostClick}
           />
         </SheetContent>

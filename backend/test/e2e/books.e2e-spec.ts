@@ -5,8 +5,10 @@ import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
 import { ConfigModule } from '@nestjs/config';
+import { CommonModule } from '@/application/common/common.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_FILTER } from '@nestjs/core';
+import { CqrsModule } from '@nestjs/cqrs';
 
 import {
   Book,
@@ -142,6 +144,7 @@ describe('Books API (E2E)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        CommonModule,
         MongooseModule.forRoot(uri),
         MongooseModule.forFeature([
           { name: Book.name, schema: BookSchema },
@@ -162,6 +165,7 @@ describe('Books API (E2E)', () => {
         IdGeneratorModule,
         MockCacheModule,
         EventEmitterModule.forRoot(),
+        CqrsModule,
       ],
       controllers: [BooksController],
       providers: [

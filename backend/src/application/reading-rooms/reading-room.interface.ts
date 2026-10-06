@@ -21,16 +21,8 @@ export interface ReadingRoomResult {
     aiInsight?: string;
     createdAt: Date;
   }>;
-  chatMessages: Array<{
-    userId: string;
-    role: string;
-    content: string;
-    createdAt: Date;
-  }>;
 }
 
 export interface LeaveRoomResult extends ReadingRoomResult {
-  hostChanged: boolean;
-  modeChanged: boolean;
   roomEnded: boolean;
 }

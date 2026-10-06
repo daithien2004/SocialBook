@@ -21,6 +21,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { LoginGuard } from './guards/login.guard';
 
 // Use Cases
+import { GenerateWsTicketCommand } from '@/application/auth/commands/generate-ws-ticket/generate-ws-ticket.command';
 import { ForgotPasswordCommand } from '@/application/auth/commands/forgot-password/forgot-password.command';
 import { LoginCommand } from '@/application/auth/commands/login/login.command';
 import { LogoutCommand } from '@/application/auth/commands/logout/logout.command';
@@ -136,6 +137,16 @@ export class AuthController {
     res.clearCookie(oauthState.name, { path: oauthState.path });
 
     return result;
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('ws-ticket')
+  async getWsTicket(
+    @Req() req: { user: JwtPayload },
+  ): Promise<ApiResponse<{ ticket: string }>> {
+    const command = new GenerateWsTicketCommand(req.user.sub, req.user.role);
+    const ticket = await this.dispatcher.command(command);
+    return { data: { ticket } };
   }
 
   @Public()

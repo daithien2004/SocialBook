@@ -1,24 +1,26 @@
 import { NotificationsApplicationModule } from '@/application/notifications/notifications-application.module';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import { NotificationsService } from './notifications.service';
-import { NotificationsGateway } from './notifications.gateway';
-import { NotificationWorker } from './notification.worker';
-import { AudioWorker } from './audio.worker';
+
+import { NotificationsService } from './notifications/notifications.service';
+import { NotificationsGateway } from './notifications/notifications.gateway';
+import { NotificationWorker } from './workers/notification.worker';
+import { AudioWorker } from './workers/audio.worker';
 import { TtsInfrastructureModule } from '@/infrastructure/text-to-speech/tts-infrastructure.module';
 import { TextToSpeechRepositoryModule } from '@/infrastructure/database/repositories/text-to-speech/text-to-speech-repository.module';
 import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
 
-import { ReadingRoomGateway } from './reading-room.gateway';
-import { WsAuthService } from './ws-auth.service';
-import { ReadingRoomPresenceCoordinator } from './reading-room-presence.coordinator';
-import { ReadingProgressTracker } from './reading-progress.tracker';
-import { ReadingRoomHighlightHandler } from './reading-room-highlight.handler';
-import { WsRoomGuard } from './ws-room.guard';
-import { WsRateLimiter } from './ws-rate-limiter.service';
-import { ReadingRoomEmitter } from './reading-room.emitter';
-import { ReadingRoomSystemListener } from './reading-room-system.listener';
+import { ReadingRoomGateway } from './reading-room/reading-room.gateway';
+import { WsAuthService } from './core/ws-auth.service';
+import { ReadingRoomPresenceCoordinator } from './reading-room/reading-room-presence.coordinator';
+import { ReadingProgressTracker } from './reading-room/reading-progress.tracker';
+import { ReadingRoomHighlightHandler } from './reading-room/reading-room-highlight.handler';
+import { WsRoomGuard } from './core/ws-room.guard';
+import { WsThrottleGuard } from './core/ws-throttle.guard';
+import { WsRateLimiter } from './core/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from './reading-room/reading-room.emitter';
+import { ReadingRoomSystemListener } from './reading-room/reading-room-system.listener';
+import { ReadingRoomConnectionHandler } from './reading-room/reading-room-connection.handler';
+import { ReadingRoomNamespaceProvider } from './reading-room/reading-room.namespace-provider';
 import { ReadingRoomPresenceModule } from '@/application/reading-rooms/presence/reading-room-presence.module';
 import { LibraryApplicationModule } from '@/application/library/library-application.module';
 import { TargetResolutionModule } from '@/application/target-resolution/target-resolution.module';
@@ -42,13 +44,6 @@ import { isWorkerProcess } from '@/common/utils/process-role.util';
     TargetResolutionModule,
     ReadingRoomPresenceModule,
     LibraryApplicationModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('env.JWT_ACCESS_SECRET'),
-      }),
-    }),
   ],
   providers: [
     NotificationsGateway,
@@ -61,9 +56,12 @@ import { isWorkerProcess } from '@/common/utils/process-role.util';
     ReadingProgressTracker,
     ReadingRoomHighlightHandler,
     WsRoomGuard,
+    WsThrottleGuard,
     WsRateLimiter,
     ReadingRoomEmitter,
     ReadingRoomSystemListener,
+    ReadingRoomConnectionHandler,
+    ReadingRoomNamespaceProvider,
   ],
   exports: [NotificationsService],
 })
