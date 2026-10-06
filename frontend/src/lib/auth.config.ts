@@ -80,7 +80,7 @@ export const authOptions: NextAuthOptions = {
           const response = await serverApi.post('/auth/google/login', {
             email: user.email,
             name: user.name,
-            googleId: user.id,
+            googleId: user.id || account.providerAccountId,
             image: user.image,
           });
 
@@ -93,7 +93,8 @@ export const authOptions: NextAuthOptions = {
           }
 
           return true;
-        } catch {
+        } catch (error: unknown) {
+          console.error('Google sign-in error:', getErrorMessage(error));
           return false;
         }
       }
