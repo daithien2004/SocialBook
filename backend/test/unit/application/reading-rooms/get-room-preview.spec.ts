@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from '@jest/globals';
-import { GetRoomByCodeHandler } from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.handler';
-import { GetRoomByCodeQuery } from '@/application/reading-rooms/queries/get-room-by-code/get-room-by-code.query';
-import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
+import { GetRoomByCodeHandler } from '@/modules/reading-rooms/application/queries/get-room-by-code/get-room-by-code.handler';
+import { GetRoomByCodeQuery } from '@/modules/reading-rooms/application/queries/get-room-by-code/get-room-by-code.query';
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 import { NotFoundException } from '@nestjs/common';
 import { FakeReadingRoomRepository } from '../../../helpers/fake-reading-room.repository';
 

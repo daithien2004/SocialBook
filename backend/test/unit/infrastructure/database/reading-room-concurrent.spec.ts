@@ -1,12 +1,12 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { JoinRoomHandler } from '@/application/reading-rooms/commands/join-room/join-room.handler';
-import { JoinRoomCommand } from '@/application/reading-rooms/commands/join-room/join-room.command';
-import { AddHighlightHandler } from '@/application/reading-rooms/commands/add-highlight/add-highlight.handler';
-import { AddHighlightCommand } from '@/application/reading-rooms/commands/add-highlight/add-highlight.command';
-import { ReadingRoomRepository } from '@/infrastructure/database/repositories/reading-rooms/reading-room.repository';
-import { ReadingRoom as ReadingRoomSchema } from '@/infrastructure/database/schemas/reading-room.schema';
+import { JoinRoomHandler } from '@/modules/reading-rooms/application/commands/join-room/join-room.handler';
+import { JoinRoomCommand } from '@/modules/reading-rooms/application/commands/join-room/join-room.command';
+import { AddHighlightHandler } from '@/modules/reading-rooms/application/commands/add-highlight/add-highlight.handler';
+import { AddHighlightCommand } from '@/modules/reading-rooms/application/commands/add-highlight/add-highlight.command';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.repository';
+import { ReadingRoom as ReadingRoomSchema } from '@/modules/reading-rooms/infrastructure/mongo/schemas/reading-room.schema';
 
 /**
  * T2 — test SONG SONG (không phải đường vui): 10 user join cùng lúc và 2 user

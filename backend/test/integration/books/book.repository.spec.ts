@@ -2,27 +2,21 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
-import { BookRepository } from '@/infrastructure/database/repositories/books/book.repository';
-import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { BookRepository } from '@/modules/books/infrastructure/repositories/books/book.repository';
+import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import {
   Book,
   BookSchema,
-} from '@/infrastructure/database/schemas/book.schema';
-import {
-  Author,
-  AuthorSchema,
-} from '@/infrastructure/database/schemas/author.schema';
-import {
-  Genre,
-  GenreSchema,
-} from '@/infrastructure/database/schemas/genre.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
+import { AuthorSchemaModel as Author, AuthorSchema } from '@/modules/authors';
+import { GenreSchemaModel as Genre, GenreSchema } from '@/modules/genres';
 import {
   Chapter,
   ChapterSchema,
-} from '@/infrastructure/database/schemas/chapter.schema';
+} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
 import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
-import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { BookTitle } from '@/domain/books/value-objects/book-title.vo';
+import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
+import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
 
 const AUTHOR_ID = new Types.ObjectId();
 const GENRE_1_ID = new Types.ObjectId();

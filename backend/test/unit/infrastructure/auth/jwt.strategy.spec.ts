@@ -1,12 +1,12 @@
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import { JwtStrategy } from '@/infrastructure/auth/strategies/jwt.strategy';
-import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
+import { JwtStrategy } from '@/modules/auth/infrastructure/auth/strategies/jwt.strategy';
+import { IRoleRepository } from '@/modules/roles';
 import { ICachePort } from '@/shared/domain/cache.port';
 import {
   AUTH_USER_CACHE_TTL_SECONDS,
   getAuthUserCacheKey,
 } from '@/shared/domain/auth-cache.keys';
-import { User } from '@/domain/users/entities/user.entity';
+import { User } from '@/modules/users/domain/users/entities/user.entity';
 
 function createMockConfigService(): { getOrThrow: jest.Mock } {
   return {

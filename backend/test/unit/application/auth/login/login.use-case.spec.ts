@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { LoginHandler } from '@/application/auth/commands/login/login.handler';
-import { LoginCommand } from '@/application/auth/commands/login/login.command';
-import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
-import { Role } from '@/domain/roles/entities/role.entity';
+import { LoginHandler } from '@/modules/auth/application/auth/commands/login/login.handler';
+import { LoginCommand } from '@/modules/auth/application/auth/commands/login/login.command';
+import { IRoleRepository } from '@/modules/roles';
+import { RoleEntity as Role } from '@/modules/roles';
 import {
   UnauthorizedDomainException,
   UserBannedDomainException,
-} from '@/domain/auth/exceptions/auth-exceptions';
-import { User } from '@/domain/users/entities/user.entity';
-import { TokenService } from '@/application/auth/services/token.service';
+} from '@/modules/auth/domain/auth/exceptions/auth-exceptions';
+import { User } from '@/modules/users/domain/users/entities/user.entity';
+import { TokenService } from '@/modules/auth/application/auth/services/token.service';
 import { fakeOf } from '../../../../support/typed-fake';
 
 function createMockTokenService() {

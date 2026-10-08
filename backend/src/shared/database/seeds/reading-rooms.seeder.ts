@@ -6,20 +6,20 @@ import {
   ReadingRoomDocument,
   RoomMemberSchema,
   RoomHighlight,
-} from '@/infrastructure/database/schemas/reading-room.schema';
+} from '@/modules/reading-rooms/infrastructure/mongo/schemas/reading-room.schema';
 
 import {
   Chapter,
   ChapterDocument,
-} from '@/infrastructure/database/schemas/chapter.schema';
+} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
 import {
   Book,
   BookDocument,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 
 interface RoomConfig {
   code: string;

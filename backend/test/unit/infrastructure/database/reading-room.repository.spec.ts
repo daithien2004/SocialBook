@@ -1,15 +1,17 @@
-import { ReadingRoomRepository } from '@/infrastructure/database/repositories/reading-rooms/reading-room.repository';
-import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.repository';
+import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 
 describe('ReadingRoomRepository (T5: setHighlightInsightIfEmpty)', () => {
   let mockRoomModel: {
     updateOne: jest.Mock;
+    aggregate: jest.Mock;
   };
   let repository: ReadingRoomRepository;
 
   beforeEach(() => {
     mockRoomModel = {
       updateOne: jest.fn(),
+      aggregate: jest.fn(),
     };
     // @ts-expect-error Mock Model injection
     repository = new ReadingRoomRepository(mockRoomModel);
@@ -56,5 +58,40 @@ describe('ReadingRoomRepository (T5: setHighlightInsightIfEmpty)', () => {
     );
 
     expect(result).toBe(false);
+  });
+
+  it('projects only the requested highlight slice and its total for an active member', async () => {
+    mockRoomModel.aggregate.mockReturnValue({
+      exec: jest.fn().mockResolvedValue([{ items: [], total: 24 }]),
+    });
+
+    const result = await repository.findHighlightPage(
+      RoomId.create('ABCDEF'),
+      'user-1',
+      20,
+      20,
+    );
+
+    expect(result).toEqual({ items: [], total: 24 });
+    expect(mockRoomModel.aggregate).toHaveBeenCalledWith([
+      {
+        $match: {
+          _id: 'ABCDEF',
+          members: {
+            $elemMatch: {
+              userId: 'user-1',
+              $or: [{ leftAt: { $exists: false } }, { leftAt: null }],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          items: { $slice: [{ $ifNull: ['$highlights', []] }, 20, 20] },
+          total: { $size: { $ifNull: ['$highlights', []] } },
+        },
+      },
+    ]);
   });
 });

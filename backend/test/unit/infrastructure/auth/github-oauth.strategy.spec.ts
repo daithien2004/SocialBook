@@ -1,4 +1,4 @@
-import { GitHubOAuthStrategy } from '@/infrastructure/auth/services/github-oauth.strategy';
+import { GitHubOAuthStrategy } from '@/modules/auth/infrastructure/auth/services/github-oauth.strategy';
 
 const config = {
   get: (k: string, d?: unknown) =>

@@ -1,6 +1,6 @@
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 import {
   RoomFullDomainException,
   ConcurrencyException,

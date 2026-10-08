@@ -1,619 +1,4 @@
 {
-  "src/application/auth/commands/resend-otp/resend-otp.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/auth/commands/reset-password/reset-password.handler.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    }
-  },
-  "src/application/auth/services/auth-cookie.service.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/application/authors/commands/create-author/create-author.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/application/books/commands/create-book/create-book.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/application/books/commands/delete-book/delete-book.handler.ts": {
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    }
-  },
-  "src/application/books/commands/toggle-book-like/toggle-book-like.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/books/queries/get-book-filters/get-book-filters.handler.ts": {
-    "@typescript-eslint/no-unused-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/books/queries/get-book-filters/get-book-filters.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/books/queries/get-books/get-books.query.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/application/books/queries/get-filters/get-filters.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/books/queries/get-top-read-books/get-top-read-books.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    },
-    "@typescript-eslint/return-await": {
-      "count": 1
-    }
-  },
-  "src/application/chapters/commands/create-chapter/create-chapter.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chapters/commands/import-epub-preview/import-epub-preview.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chapters/commands/update-chapter/update-chapter.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chapters/mappers/chapter.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/application/chapters/queries/get-chapter-knowledge/get-chapter-knowledge.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chapters/queries/record-chapter-view/record-chapter-view.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/chroma-reconciliation.cron.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/application/chroma/commands/ask-chatbot/ask-chatbot.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 7
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/commands/batch-index/batch-index.handler.ts": {
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
-    }
-  },
-  "src/application/chroma/commands/clear-collection/clear-collection.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/commands/index-document/index-document.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/commands/index-document/index-document.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/commands/reindex-all/reindex-all.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/commands/reindex-all/reindex-all.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 8
-    }
-  },
-  "src/application/chroma/commands/search/search.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/commands/search/search.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/processors/chroma.processor.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/queries/get-collection-stats/get-collection-stats.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/chroma/queries/get-collection-stats/get-collection-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/comments/queries/get-comment-count/get-comment-count.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/comments/queries/get-comments/get-comments.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/content-moderation/commands/add-toxic-word/add-toxic-word.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/content-moderation/commands/add-toxic-word/add-toxic-word.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 5
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 4
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 5
-    }
-  },
-  "src/application/content-moderation/commands/check-content/check-content.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/content-moderation/commands/delete-toxic-word/delete-toxic-word.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/content-moderation/commands/delete-toxic-word/delete-toxic-word.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    }
-  },
-  "src/application/content-moderation/listeners/refresh-toxic-words.listener.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 2
-    }
-  },
-  "src/application/content-moderation/queries/get-toxic-words/get-toxic-words.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/content-moderation/services/content-moderation.service.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "src/application/follows/commands/create-follow/create-follow.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/follows/queries/get-followers-with-user-info/get-followers.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/follows/queries/get-following-with-user-info/get-following.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/follows/queries/get-follows/get-follows.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/genres/commands/create-genre/create-genre.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/application/genres/commands/delete-genre/delete-genre.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/genres/commands/update-genre/update-genre.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "src/application/genres/queries/get-genre-by-id/get-genre-by-id.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/application/library/commands/process-reading-session/process-reading-session.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/library/mappers/library.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 3
-    }
-  },
-  "src/application/library/queries/get-knowledge-graph/get-knowledge-graph.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 4
-    }
-  },
-  "src/application/notifications/commands/create-notification/create-notification.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/notifications/commands/mark-notification/mark-all-notifications-read.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    }
-  },
-  "src/application/notifications/commands/mark-notification/mark-notification-read.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    }
-  },
-  "src/application/notifications/commands/mark-notification/mark-notification.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/notifications/queries/get-user-notification/get-user-notification.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/notifications/queries/get-user-notification/get-user-notifications.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 5
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 5
-    }
-  },
-  "src/application/otp/commands/send-otp/send-otp.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/posts/commands/process-post-moderation/process-post-moderation.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 2
-    }
-  },
-  "src/application/posts/commands/reject-post/reject-post.handler.ts": {
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    }
-  },
-  "src/application/posts/commands/remove-post-image/remove-post-image.handler.ts": {
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
-    }
-  },
-  "src/application/posts/commands/update-post/update-post.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/application/posts/queries/get-moderation-stats/get-moderation-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/reading-rooms/commands/generate-highlight-insight/generate-highlight-insight.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/application/reading-rooms/mappers/reading-room.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
-    }
-  },
-  "src/application/recommendations/queries/get-personalized-recommendations/get-personalized-recommendations.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 7
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-plus-operands": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
-    }
-  },
-  "src/application/recommendations/queries/get-personalized-recommendations/get-personalized-recommendations.query.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/reviews/commands/create-review/create-review.handler.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
-    }
-  },
-  "src/application/reviews/queries/get-review/get-review.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/search/commands/intelligent-search/intelligent-search.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/search/queries/intelligent-search/intelligent-search.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    },
-    "@typescript-eslint/no-useless-default-assignment": {
-      "count": 3
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 4
-    },
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
-    }
-  },
-  "src/application/search/queries/intelligent-search/intelligent-search.query.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/application/search/services/search-ranking.service.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/application/search/utils/text-preprocessing.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/application/statistics/commands/check-user-locations/check-user-locations.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/statistics/queries/get-book-stats/get-book-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/statistics/queries/get-growth-stats/get-growth-stats.handler.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/application/statistics/queries/get-growth-stats/get-growth-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/statistics/queries/get-overview-stats/get-overview-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/statistics/queries/get-user-stats/get-user-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/text-to-speech/commands/delete-chapter-audio/delete-chapter-audio.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/text-to-speech/commands/generate-book-audio/generate-book-audio.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/text-to-speech/commands/generate-book-audio/generate-book-audio.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/application/text-to-speech/commands/generate-chapter-audio/generate-chapter-audio.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/text-to-speech/commands/increment-play-count/increment-play-count.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/text-to-speech/queries/get-chapter-audio/get-chapter-audio.query.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/application/users/commands/check-user-exist/check-user-exist.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/users/commands/search-users/search-users.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/application/users/commands/update-user-image/update-user-image.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
   "src/common/decorators/custom.decorator.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -673,141 +58,6 @@
       "count": 7
     }
   },
-  "src/domain/auth/otp/entities/otp.entity.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/domain/books/value-objects/book-status.vo.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/domain/chapters/entities/chapter-knowledge.entity.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/domain/chapters/value-objects/paragraph.vo.ts": {
-    "@typescript-eslint/no-deprecated": {
-      "count": 1
-    }
-  },
-  "src/domain/chroma/entities/search-query.entity.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 1
-    }
-  },
-  "src/domain/chroma/entities/vector-document.entity.ts": {
-    "@typescript-eslint/no-dynamic-delete": {
-      "count": 1
-    }
-  },
-  "src/domain/chroma/value-objects/content-type.vo.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/domain/chroma/value-objects/embedding-vector.vo.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/domain/comments/value-objects/comment-depth.vo.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/domain/comments/value-objects/comment-target-type.vo.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/domain/comments/value-objects/moderation-status.vo.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/domain/content-moderation/utils/spoiler-detection.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/domain/content-moderation/utils/vietnamese-profanity.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "src/domain/content-moderation/utils/vietnamese-regex-builder.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/domain/reading-rooms/entities/reading-room.entity.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/domain/reading-rooms/value-objects/room-mode.vo.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/domain/users/entities/user.entity.ts": {
-    "@typescript-eslint/no-misused-spread": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    }
-  },
-  "src/infrastructure/ai/ai-provider.factory.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/ai/openai-compatible.client.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unnecessary-type-parameters": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/auth/adapters/redis-oauth-state.adapter.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/auth/services/github-oauth.strategy.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/infrastructure/auth/services/google-oauth.strategy.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/auth/strategies/jwt-refresh.strategy.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/cache/presence-cache.adapter.ts": {
-    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
-      "count": 1
-    }
-  },
   "src/infrastructure/cache/redis-cache.adapter.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -831,7 +81,33 @@
       "count": 2
     }
   },
-  "src/infrastructure/database/repositories/ai-requests/ai-request.mapper.ts": {
+  "src/infrastructure/queue/notification-queue.adapter.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/main.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/ai/infrastructure/ai/ai-provider.factory.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/ai/infrastructure/ai/openai-compatible.client.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unnecessary-type-parameters": {
+      "count": 1
+    }
+  },
+  "src/modules/ai/infrastructure/repositories/ai-requests/ai-request.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
     },
@@ -839,37 +115,161 @@
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/ai-requests/ai-request.repository.ts": {
+  "src/modules/ai/infrastructure/repositories/ai-requests/ai-request.repository.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/analytics/user-event.mapper.ts": {
+  "src/modules/analytics/infrastructure/repositories/user-event.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/analytics/user-preference.mapper.ts": {
+  "src/modules/analytics/infrastructure/repositories/user-preference.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/authors/author.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
+  "src/modules/auth/application/auth/commands/resend-otp/resend-otp.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/bookmarks/bookmark.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
+  "src/modules/auth/application/auth/commands/reset-password/reset-password.handler.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/books/book-query.provider.ts": {
+  "src/modules/auth/application/auth/services/auth-cookie.service.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/application/otp/commands/send-otp/send-otp.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/domain/auth/otp/entities/otp.entity.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/infrastructure/auth/adapters/redis-oauth-state.adapter.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/infrastructure/auth/services/github-oauth.strategy.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/auth/infrastructure/auth/services/google-oauth.strategy.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/infrastructure/auth/strategies/jwt-refresh.strategy.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/infrastructure/repositories/otp/otp.repository.ts": {
+    "@typescript-eslint/no-unused-expressions": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/presentation/auth/guards/login.guard.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/auth/presentation/auth/oauth.controller.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/authors/application/commands/create-author/create-author.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/commands/create-book/create-book.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/commands/delete-book/delete-book.handler.ts": {
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/commands/toggle-book-like/toggle-book-like.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/queries/get-book-filters/get-book-filters.handler.ts": {
+    "@typescript-eslint/no-unused-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/queries/get-book-filters/get-book-filters.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/queries/get-books/get-books.query.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/queries/get-filters/get-filters.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/books/application/books/queries/get-top-read-books/get-top-read-books.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    },
+    "@typescript-eslint/return-await": {
+      "count": 1
+    }
+  },
+  "src/modules/books/domain/books/value-objects/book-status.vo.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/books/infrastructure/repositories/books/book-query.provider.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
     }
   },
-  "src/infrastructure/database/repositories/books/book.mapper.ts": {
+  "src/modules/books/infrastructure/repositories/books/book.mapper.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
     },
@@ -880,7 +280,7 @@
       "count": 9
     }
   },
-  "src/infrastructure/database/repositories/books/book.repository.ts": {
+  "src/modules/books/infrastructure/repositories/books/book.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 15
     },
@@ -888,7 +288,95 @@
       "count": 3
     }
   },
-  "src/infrastructure/database/repositories/chapters/chapter-knowledge.mapper.ts": {
+  "src/modules/books/presentation/books/books.controller.ts": {
+    "@typescript-eslint/no-misused-spread": {
+      "count": 5
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    }
+  },
+  "src/modules/books/presentation/books/dto/create-book.dto.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/modules/books/presentation/books/dto/filter-book.dto.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/modules/books/presentation/books/dto/update-book.dto.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/modules/chapters/application/chapters/commands/create-chapter/create-chapter.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/application/chapters/commands/import-epub-preview/import-epub-preview.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/application/chapters/commands/update-chapter/update-chapter.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/application/chapters/mappers/chapter.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/application/chapters/queries/get-chapter-knowledge/get-chapter-knowledge.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/application/chapters/queries/record-chapter-view/record-chapter-view.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/domain/chapters/entities/chapter-knowledge.entity.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/domain/chapters/value-objects/paragraph.vo.ts": {
+    "@typescript-eslint/no-deprecated": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/infrastructure/queues/chapters-import/chapters-import.adapter.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 6
+    }
+  },
+  "src/modules/chapters/infrastructure/repositories/chapters/chapter-knowledge.mapper.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
@@ -899,7 +387,7 @@
       "count": 2
     }
   },
-  "src/infrastructure/database/repositories/chapters/chapter.mapper.ts": {
+  "src/modules/chapters/infrastructure/repositories/chapters/chapter.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
     },
@@ -907,7 +395,7 @@
       "count": 3
     }
   },
-  "src/infrastructure/database/repositories/chapters/chapter.repository.ts": {
+  "src/modules/chapters/infrastructure/repositories/chapters/chapter.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 21
     },
@@ -915,7 +403,130 @@
       "count": 9
     }
   },
-  "src/infrastructure/database/repositories/chroma/chroma-vector.repository.ts": {
+  "src/modules/chapters/presentation/chapters/chapters.controller.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/chroma-reconciliation.cron.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/chroma/application/commands/ask-chatbot/ask-chatbot.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 7
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/commands/batch-index/batch-index.handler.ts": {
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
+    }
+  },
+  "src/modules/chroma/application/commands/clear-collection/clear-collection.command.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/commands/index-document/index-document.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/commands/index-document/index-document.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-assignment": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/commands/reindex-all/reindex-all.command.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/commands/reindex-all/reindex-all.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 8
+    }
+  },
+  "src/modules/chroma/application/commands/search/search.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/commands/search/search.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-assignment": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/processors/chroma.processor.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/queries/get-collection-stats/get-collection-stats.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/application/queries/get-collection-stats/get-collection-stats.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/domain/entities/search-query.entity.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/domain/entities/vector-document.entity.ts": {
+    "@typescript-eslint/no-dynamic-delete": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/domain/value-objects/content-type.vo.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/domain/value-objects/embedding-vector.vo.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/chroma/infrastructure/repositories/chroma-vector.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 9
     },
@@ -929,7 +540,37 @@
       "count": 3
     }
   },
-  "src/infrastructure/database/repositories/comments/comment.mapper.ts": {
+  "src/modules/chroma/presentation/chroma.controller.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/comments/application/queries/get-comment-count/get-comment-count.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/comments/application/queries/get-comments/get-comments.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/comments/domain/value-objects/comment-depth.vo.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/comments/domain/value-objects/comment-target-type.vo.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/modules/comments/domain/value-objects/moderation-status.vo.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/comments/infrastructure/repositories/comment.mapper.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
     },
@@ -940,7 +581,7 @@
       "count": 3
     }
   },
-  "src/infrastructure/database/repositories/comments/comment.repository.ts": {
+  "src/modules/comments/infrastructure/repositories/comment.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
@@ -951,332 +592,86 @@
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/follows/follow.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "src/infrastructure/database/repositories/follows/follow.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 8
-    }
-  },
-  "src/infrastructure/database/repositories/genres/genre.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/genres/genres.repository.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "src/infrastructure/database/repositories/library/collection.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/library/library.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/library/reading-list.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/library/reading-list.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 6
-    }
-  },
-  "src/infrastructure/database/repositories/library/reading-progress.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/library/reading-progress.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/infrastructure/database/repositories/likes/like.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/likes/like.repository.ts": {
-    "@typescript-eslint/no-unused-expressions": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/notifications/notification.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    }
-  },
-  "src/infrastructure/database/repositories/otp/otp.repository.ts": {
-    "@typescript-eslint/no-unused-expressions": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/posts/post.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    }
-  },
-  "src/infrastructure/database/repositories/posts/post.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 4
-    },
-    "@typescript-eslint/no-misused-spread": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
-    }
-  },
-  "src/infrastructure/database/repositories/reading-rooms/reading-room.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/reading-rooms/reading-room.repository.ts": {
+  "src/modules/comments/presentation/comments.controller.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/reviews/review.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    }
-  },
-  "src/infrastructure/database/repositories/roles/role.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
+  "src/modules/content-moderation/application/commands/add-toxic-word/add-toxic-word.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
       "count": 1
     }
   },
-  "src/infrastructure/database/repositories/text-to-speech/text-to-speech.repository.ts": {
+  "src/modules/content-moderation/application/commands/add-toxic-word/add-toxic-word.handler.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/user-highlights/user-highlight.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/database/repositories/users/user.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    }
-  },
-  "src/infrastructure/database/schemas/notification.schema.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/files/epub-parser.adapter.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/infrastructure/queue/notification-queue.adapter.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/queues/chapters-import/chapters-import.adapter.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/queues/chapters-import/chapters-import.processor.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 6
-    }
-  },
-  "src/infrastructure/queues/post-moderation/post-moderation.processor.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/infrastructure/recommendations/recommendation-data.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 6
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/recommendations/recommendation.factory.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/infrastructure/recommendations/strategies/ai-recommendation.strategy.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 6
-    }
-  },
-  "src/infrastructure/recommendations/strategies/fallback-recommendation.strategy.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 3
-    }
-  },
-  "src/infrastructure/text-to-speech/elevenlabs.adapter.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/main.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
-  "src/presentation/auth/guards/login.guard.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/presentation/auth/oauth.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/presentation/books/books.controller.ts": {
-    "@typescript-eslint/no-misused-spread": {
       "count": 5
     },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unsafe-assignment": {
+      "count": 4
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 5
+    }
+  },
+  "src/modules/content-moderation/application/commands/check-content/check-content.command.ts": {
+    "@typescript-eslint/no-useless-constructor": {
       "count": 1
     }
   },
-  "src/presentation/books/dto/create-book.dto.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
+  "src/modules/content-moderation/application/commands/delete-toxic-word/delete-toxic-word.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
     }
   },
-  "src/presentation/books/dto/filter-book.dto.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/presentation/books/dto/update-book.dto.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/presentation/chapters/chapters.controller.ts": {
+  "src/modules/content-moderation/application/commands/delete-toxic-word/delete-toxic-word.handler.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
-    "@typescript-eslint/no-unnecessary-condition": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
       "count": 1
     }
   },
-  "src/presentation/chroma/chroma.controller.ts": {
+  "src/modules/content-moderation/application/listeners/refresh-toxic-words.listener.ts": {
     "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    },
+    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
       "count": 2
     }
   },
-  "src/presentation/comments/comments.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
+  "src/modules/content-moderation/application/queries/get-toxic-words/get-toxic-words.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
       "count": 1
     }
   },
-  "src/presentation/content-moderation/admin-toxic-words.controller.ts": {
+  "src/modules/content-moderation/application/services/content-moderation.service.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    }
+  },
+  "src/modules/content-moderation/domain/utils/vietnamese-profanity.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    }
+  },
+  "src/modules/content-moderation/domain/utils/vietnamese-regex-builder.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/content-moderation/presentation/admin-toxic-words.controller.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
@@ -1293,14 +688,680 @@
       "count": 10
     }
   },
-  "src/presentation/gateways/core/redis-io.adapter.ts": {
+  "src/modules/follows/application/commands/create-follow/create-follow.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/follows/application/queries/get-followers-with-user-info/get-followers.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/follows/application/queries/get-following-with-user-info/get-following.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/follows/application/queries/get-follows/get-follows.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/follows/infrastructure/repositories/follow.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    }
+  },
+  "src/modules/follows/infrastructure/repositories/follow.repository.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 8
+    }
+  },
+  "src/modules/genres/application/commands/create-genre/create-genre.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/genres/application/commands/delete-genre/delete-genre.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/genres/application/commands/update-genre/update-genre.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    }
+  },
+  "src/modules/genres/application/queries/get-genre-by-id/get-genre-by-id.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/genres/infrastructure/repositories/genre.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/genres/infrastructure/repositories/genres.repository.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    }
+  },
+  "src/modules/library/application/library/commands/process-reading-session/process-reading-session.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/library/application/library/mappers/library.mapper.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 3
+    }
+  },
+  "src/modules/library/application/library/queries/get-knowledge-graph/get-knowledge-graph.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 4
+    }
+  },
+  "src/modules/library/infrastructure/repositories/library/collection.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/library/infrastructure/repositories/library/library.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/library/infrastructure/repositories/library/reading-list.repository.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 6
+    }
+  },
+  "src/modules/library/infrastructure/repositories/library/reading-progress.mapper.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/library/infrastructure/repositories/library/reading-progress.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
     }
   },
-  "src/presentation/gateways/core/ws-room.guard.ts": {
+  "src/modules/library/presentation/library/library.controller.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    }
+  },
+  "src/modules/likes/infrastructure/repositories/like.mapper.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
+    },
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/likes/infrastructure/repositories/like.repository.ts": {
+    "@typescript-eslint/no-unused-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/likes/presentation/likes.controller.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 3
+    }
+  },
+  "src/modules/media/infrastructure/files/epub-parser.adapter.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/notifications/application/commands/create-notification/create-notification.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/notifications/application/commands/mark-notification/mark-all-notifications-read.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 1
+    }
+  },
+  "src/modules/notifications/application/commands/mark-notification/mark-notification-read.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 1
+    }
+  },
+  "src/modules/notifications/application/queries/get-user-notification/get-user-notifications.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 5
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 5
+    }
+  },
+  "src/modules/notifications/infrastructure/repositories/notification.mapper.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 3
+    }
+  },
+  "src/modules/notifications/infrastructure/schemas/notification.schema.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/notifications/presentation/dto/notification.response.dto.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    }
+  },
+  "src/modules/notifications/presentation/notification.controller.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 1
+    }
+  },
+  "src/modules/posts/application/posts/commands/process-post-moderation/process-post-moderation.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 2
+    }
+  },
+  "src/modules/posts/application/posts/commands/reject-post/reject-post.handler.ts": {
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    }
+  },
+  "src/modules/posts/application/posts/commands/remove-post-image/remove-post-image.handler.ts": {
+    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
+      "count": 1
+    }
+  },
+  "src/modules/posts/application/posts/commands/update-post/update-post.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/posts/application/posts/queries/get-moderation-stats/get-moderation-stats.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/posts/infrastructure/queues/post-moderation/post-moderation.processor.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/posts/infrastructure/repositories/posts/post.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    }
+  },
+  "src/modules/posts/infrastructure/repositories/posts/post.repository.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 4
+    },
+    "@typescript-eslint/no-misused-spread": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
+    }
+  },
+  "src/modules/posts/presentation/posts/dto/post.response.dto.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    }
+  },
+  "src/modules/posts/presentation/posts/posts.controller.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 4
+    }
+  },
+  "src/modules/reading-rooms/application/commands/generate-highlight-insight/generate-highlight-insight.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 3
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 1
+    }
+  },
+  "src/modules/reading-rooms/application/mappers/reading-room.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 2
+    }
+  },
+  "src/modules/reading-rooms/domain/entities/reading-room.entity.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/reading-rooms/domain/value-objects/room-mode.vo.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.mapper.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.repository.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/reading-rooms/presentation/websocket/core/ws-room.guard.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/reading-rooms/presentation/websocket/reading-room.gateway.ts": {
+    "@typescript-eslint/no-misused-promises": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/recommendations/application/queries/get-personalized-recommendations/get-personalized-recommendations.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 7
+    },
+    "@typescript-eslint/no-unsafe-assignment": {
+      "count": 2
+    },
+    "@typescript-eslint/restrict-plus-operands": {
+      "count": 1
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
+    }
+  },
+  "src/modules/recommendations/application/queries/get-personalized-recommendations/get-personalized-recommendations.query.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/recommendations/infrastructure/recommendation-data.repository.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 6
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    }
+  },
+  "src/modules/recommendations/infrastructure/recommendation.factory.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/recommendations/infrastructure/strategies/ai-recommendation.strategy.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 3
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 2
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 6
+    }
+  },
+  "src/modules/recommendations/infrastructure/strategies/fallback-recommendation.strategy.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 3
+    }
+  },
+  "src/modules/recommendations/presentation/recommendations.controller.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unsafe-assignment": {
+      "count": 4
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 3
+    }
+  },
+  "src/modules/reviews/application/commands/create-review/create-review.handler.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 3
+    }
+  },
+  "src/modules/reviews/application/queries/get-review/get-review.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/reviews/infrastructure/repositories/review.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    }
+  },
+  "src/modules/reviews/presentation/dto/review.response.dto.ts": {
+    "@typescript-eslint/no-unnecessary-type-conversion": {
+      "count": 1
+    }
+  },
+  "src/modules/reviews/presentation/reviews.controller.ts": {
+    "@typescript-eslint/no-misused-spread": {
+      "count": 1
+    }
+  },
+  "src/modules/roles/infrastructure/repositories/role.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/search/application/queries/intelligent-search/intelligent-search.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 2
+    },
+    "@typescript-eslint/no-useless-default-assignment": {
+      "count": 3
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 4
+    },
+    "@typescript-eslint/use-unknown-in-catch-callback-variable": {
+      "count": 1
+    }
+  },
+  "src/modules/search/application/queries/intelligent-search/intelligent-search.query.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    }
+  },
+  "src/modules/search/application/services/search-ranking.service.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/statistics/application/commands/check-user-locations/check-user-locations.command.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/statistics/application/queries/get-book-stats/get-book-stats.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/statistics/application/queries/get-growth-stats/get-growth-stats.handler.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 3
+    },
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/statistics/application/queries/get-growth-stats/get-growth-stats.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/statistics/application/queries/get-overview-stats/get-overview-stats.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/statistics/application/queries/get-user-stats/get-user-stats.query.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/statistics/presentation/statistics.controller.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/application/commands/delete-chapter-audio/delete-chapter-audio.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/application/commands/generate-book-audio/generate-book-audio.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/application/commands/generate-book-audio/generate-book-audio.handler.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
+    },
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/application/commands/generate-chapter-audio/generate-chapter-audio.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/application/commands/increment-play-count/increment-play-count.command.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/application/queries/get-chapter-audio/get-chapter-audio.query.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/infrastructure/adapters/elevenlabs.adapter.ts": {
+    "@typescript-eslint/restrict-template-expressions": {
+      "count": 2
+    }
+  },
+  "src/modules/text-to-speech/infrastructure/repositories/text-to-speech.repository.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/presentation/dto/text-to-speech.dto.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/text-to-speech/presentation/text-to-speech.controller.ts": {
+    "@typescript-eslint/no-floating-promises": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-argument": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unsafe-assignment": {
+      "count": 4
+    }
+  },
+  "src/modules/user-highlights/infrastructure/repositories/user-highlight.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    }
+  },
+  "src/modules/user-highlights/presentation/user-highlights.controller.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unsafe-assignment": {
+      "count": 18
+    },
+    "@typescript-eslint/no-unsafe-member-access": {
+      "count": 18
+    }
+  },
+  "src/modules/users/application/users/commands/check-user-exist/check-user-exist.command.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/users/application/users/commands/search-users/search-users.command.ts": {
+    "@typescript-eslint/no-useless-constructor": {
+      "count": 1
+    }
+  },
+  "src/modules/users/application/users/commands/update-user-image/update-user-image.handler.ts": {
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 1
+    }
+  },
+  "src/modules/users/domain/users/entities/user.entity.ts": {
+    "@typescript-eslint/no-misused-spread": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 3
+    }
+  },
+  "src/modules/users/infrastructure/repositories/users/user.mapper.ts": {
+    "@typescript-eslint/no-extraneous-class": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unnecessary-condition": {
+      "count": 4
+    }
+  },
+  "src/presentation/gateways/core/redis-io.adapter.ts": {
+    "@typescript-eslint/consistent-type-assertions": {
+      "count": 2
     }
   },
   "src/presentation/gateways/notifications/notifications.gateway.ts": {
@@ -1325,14 +1386,6 @@
       "count": 1
     }
   },
-  "src/presentation/gateways/reading-room/reading-room.gateway.ts": {
-    "@typescript-eslint/no-misused-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
   "src/presentation/gateways/workers/audio.worker.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -1347,110 +1400,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    }
-  },
-  "src/presentation/library/library.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/presentation/likes/likes.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 3
-    }
-  },
-  "src/presentation/notification/dto/notification.response.dto.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    }
-  },
-  "src/presentation/notification/notification.controller.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    }
-  },
-  "src/presentation/posts/dto/post.response.dto.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    }
-  },
-  "src/presentation/posts/posts.controller.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 4
-    }
-  },
-  "src/presentation/recommendations/recommendations.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 4
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 3
-    }
-  },
-  "src/presentation/reviews/dto/review.response.dto.ts": {
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
-    }
-  },
-  "src/presentation/reviews/reviews.controller.ts": {
-    "@typescript-eslint/no-misused-spread": {
-      "count": 1
-    }
-  },
-  "src/presentation/statistics/statistics.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/presentation/text-to-speech/dto/text-to-speech.dto.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/presentation/text-to-speech/text-to-speech.controller.ts": {
-    "@typescript-eslint/no-floating-promises": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 4
-    }
-  },
-  "src/presentation/user-highlights/user-highlights.controller.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 18
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 18
     }
   },
   "src/shared/database/seeds/book-post-likes.seeder.ts": {
@@ -1659,7 +1608,7 @@
   },
   "test/unit/application/auth/oauth-auth.use-case.spec.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 6
+      "count": 2
     }
   },
   "test/unit/application/auth/oauth-provider.strategy.spec.ts": {
@@ -1675,14 +1624,6 @@
   "test/unit/application/auth/refresh-token.use-case.spec.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 11
-    }
-  },
-  "test/unit/application/auth/register/register.use-case.spec.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 5
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
     }
   },
   "test/unit/application/books/create-book/create-book.use-case.spec.ts": {

@@ -7,15 +7,23 @@ export interface RoomResponse {
   mode: 'sync' | 'free' | 'discussion';
   status: string;
   currentChapterSlug: string;
-  highlights?: Array<{
+}
+
+export interface RoomHighlightPage {
+  items: Array<{
     id: string;
     userId: string;
+    displayName: string;
+    avatarUrl: string;
     chapterSlug: string;
     paragraphId: string;
     content: string;
     aiInsight?: string;
     createdAt: string;
   }>;
+  total: number;
+  offset: number;
+  limit: number;
 }
 
 export interface CreateRoomPayload {
@@ -34,6 +42,18 @@ export async function getRoom(code: string): Promise<RoomResponse> {
   return apiRequest<RoomResponse>({
     url: `/reading-rooms/${code}`,
     method: 'GET',
+  });
+}
+
+export async function getRoomHighlights(
+  code: string,
+  offset: number,
+  limit = 20,
+): Promise<RoomHighlightPage> {
+  return apiRequest<RoomHighlightPage>({
+    url: `/reading-rooms/${code}/highlights`,
+    method: 'GET',
+    params: { offset, limit },
   });
 }
 

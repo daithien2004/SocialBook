@@ -1,6 +1,6 @@
 import { ICachePort } from '@/shared/domain/cache.port';
-import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
-import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
+import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
+import { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
 
 export function createMockCacheService(): jest.Mocked<ICachePort> {
   return {

@@ -1,0 +1,76 @@
+import {
+  Controller,
+  Get,
+  Query,
+  Post,
+  Body,
+  HttpCode,
+  RequestTimeoutException,
+} from '@nestjs/common';
+import { IntelligentSearchHandler } from '@/modules/search';
+import { IntelligentSearchQuery } from '@/modules/search';
+import { Public } from '@/common/decorators/custom.decorator';
+import { SearchQueryDto } from '@/modules/chroma/presentation/public-api';
+import { ITrendingKeywordCachePort } from '@/modules/search/domain/interfaces/trending-keyword-cache.port';
+
+@Controller('search')
+export class SearchController {
+  constructor(
+    private readonly intelligentSearchUseCase: IntelligentSearchHandler,
+    private readonly trendingKeywordCache: ITrendingKeywordCachePort,
+  ) {}
+
+  @Public()
+  @Get()
+  async search(@Query() searchQuery: SearchQueryDto) {
+    const query = new IntelligentSearchQuery({
+      query: searchQuery.query,
+      limit: searchQuery.limit,
+    });
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(
+          new RequestTimeoutException(
+            'Tìm kiếm quá thời gian (vượt quá 8 giây), vui lòng thử lại sau.',
+          ),
+        );
+      }, 8000);
+    });
+
+    const result = await Promise.race([
+      this.intelligentSearchUseCase.execute(query),
+      timeoutPromise,
+    ]);
+
+    return {
+      message: 'Search completed successfully',
+      data: result.data,
+      meta: result.meta,
+    };
+  }
+
+  @Public()
+  @Get('trending-keywords')
+  async getTrendingKeywords() {
+    const keywords = await this.trendingKeywordCache.getTrendingKeywords();
+
+    return {
+      message: 'Lấy từ khóa tìm kiếm thịnh hành thành công',
+      data: keywords,
+    };
+  }
+
+  @Public()
+  @Post('record')
+  @HttpCode(200)
+  async recordSearch(@Body('keyword') keyword: string) {
+    if (keyword) {
+      await this.intelligentSearchUseCase.recordSearch(keyword);
+    }
+    return {
+      message: 'Đã ghi nhận từ khóa tìm kiếm',
+      data: null,
+    };
+  }
+}

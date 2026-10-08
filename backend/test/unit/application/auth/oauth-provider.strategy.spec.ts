@@ -1,4 +1,4 @@
-import { OAuthProviderError } from '@/domain/auth/exceptions/oauth-exceptions';
+import { OAuthProviderError } from '@/modules/auth/domain/auth/exceptions/oauth-exceptions';
 
 describe('OAuthProviderError', () => {
   it('carries provider + cause for OAuthFailed mapping', () => {

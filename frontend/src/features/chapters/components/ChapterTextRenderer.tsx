@@ -4,7 +4,11 @@ import React, { useState, memo } from 'react';
 import { User, Trash2, Sparkles, Highlighter } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -31,7 +35,9 @@ export const ChapterTextRenderer = ({
   onRemoveUserHighlight,
   generateHighlightInsight,
 }: ChapterTextRendererProps) => {
-  const [generatingInsightId, setGeneratingInsightId] = useState<string | null>(null);
+  const [generatingInsightId, setGeneratingInsightId] = useState<string | null>(
+    null,
+  );
 
   let parts: (string | React.ReactNode)[] = [content];
 
@@ -73,21 +79,23 @@ export const ChapterTextRenderer = ({
                       <User className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <span className="text-[10px] font-black uppercase text-muted-foreground">
-                      {h.user?.displayName || 'Thành viên'} highlight
+                      {h.displayName || 'Thành viên'} highlight
                     </span>
                   </div>
-                  {currentUserId && h.userId === currentUserId && onRemoveHighlight && (
-                    <button
-                      className="p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveHighlight(h.id);
-                      }}
-                      title="Xóa highlight"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
+                  {currentUserId &&
+                    h.userId === currentUserId &&
+                    onRemoveHighlight && (
+                      <button
+                        className="p-1 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveHighlight(h.id);
+                        }}
+                        title="Xóa highlight"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
                 </div>
 
                 {h.aiInsight ? (
@@ -120,7 +128,7 @@ export const ChapterTextRenderer = ({
                 )}
               </motion.div>
             </PopoverContent>
-          </Popover>
+          </Popover>,
         );
         newParts.push(part.substring(index + h.content.length));
       }
@@ -148,7 +156,7 @@ export const ChapterTextRenderer = ({
               key={`uh-${h.id}-${index}`}
               highlight={h}
               onRemoveUserHighlight={onRemoveUserHighlight}
-            />
+            />,
           );
           newParts.push(part.substring(index + h.content.length));
         }
@@ -206,7 +214,10 @@ const PersonalHighlightPopover = memo(function PersonalHighlightPopover({
                 className="w-6 h-6 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: `${h.color}20` }}
               >
-                <Highlighter className="w-3.5 h-3.5" style={{ color: h.color }} />
+                <Highlighter
+                  className="w-3.5 h-3.5"
+                  style={{ color: h.color }}
+                />
               </div>
               <span className="text-[10px] font-black uppercase text-muted-foreground">
                 Highlight cá nhân
@@ -261,7 +272,9 @@ const PersonalHighlightPopover = memo(function PersonalHighlightPopover({
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
                 Ghi chú
               </span>
-              <p className="text-xs text-foreground leading-relaxed">{h.note}</p>
+              <p className="text-xs text-foreground leading-relaxed">
+                {h.note}
+              </p>
             </div>
           ) : (
             <div className="text-center py-2 space-y-2">

@@ -1,12 +1,12 @@
-import { GetBookBySlugHandler } from '@/application/books/queries/get-book-by-slug/get-book-by-slug.handler';
-import { GetBookBySlugQuery } from '@/application/books/queries/get-book-by-slug/get-book-by-slug.query';
+import { GetBookBySlugHandler } from '@/modules/books/application/books/queries/get-book-by-slug/get-book-by-slug.handler';
+import { GetBookBySlugQuery } from '@/modules/books/application/books/queries/get-book-by-slug/get-book-by-slug.query';
 import {
   BadRequestDomainException,
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
-import { IBookQueryProvider } from '@/domain/books/repositories/book-query.provider.interface';
-import { IReviewRepository } from '@/domain/reviews/repositories/review.repository.interface';
-import { BookDetailReadModel } from '@/domain/books/read-models/book-detail.read-model';
+import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
+import { IReviewRepository } from '@/modules/reviews';
+import { BookDetailReadModel } from '@/modules/books/domain/books/read-models/book-detail.read-model';
 import { createMockCacheService } from '../../../../helpers/mock-cache-service';
 
 function createMockBookQueryProvider(): jest.Mocked<IBookQueryProvider> {

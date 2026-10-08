@@ -4,19 +4,19 @@ import { Model, Types } from 'mongoose';
 import {
   Notification,
   NotificationDocument,
-} from '@/infrastructure/database/schemas/notification.schema';
+} from '@/modules/notifications/infrastructure/schemas/notification.schema';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 import {
   Post,
   PostDocument,
-} from '@/infrastructure/database/schemas/post.schema';
+} from '@/modules/posts/infrastructure/schemas/post.schema';
 import {
-  Comment,
+  CommentSchemaModel as Comment,
   CommentDocument,
-} from '@/infrastructure/database/schemas/comment.schema';
+} from '@/modules/comments';
 
 interface NotificationSeedData {
   userId: Types.ObjectId;

@@ -1,6 +1,6 @@
-import { Book } from '@/domain/books/entities/book.entity';
-import { BookId } from '@/domain/books/value-objects/book-id.vo';
-import { GenreId } from '@/domain/books/value-objects/genre-id.vo';
+import { Book } from '@/modules/books/domain/books/entities/book.entity';
+import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
+import { GenreId } from '@/modules/books/domain/books/value-objects/genre-id.vo';
 
 describe('Book Entity (Unit)', () => {
   describe('create', () => {

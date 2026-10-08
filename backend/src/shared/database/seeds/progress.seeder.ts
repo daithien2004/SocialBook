@@ -4,20 +4,20 @@ import { Model, Types } from 'mongoose';
 import {
   Progress,
   ProgressDocument,
-} from '@/infrastructure/database/schemas/progress.schema';
+} from '@/modules/library/infrastructure/schemas/progress.schema';
 import {
   Chapter,
   ChapterDocument,
-} from '@/infrastructure/database/schemas/chapter.schema';
+} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
 import {
   Book,
   BookDocument,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
-import { ChapterStatus } from '@/domain/library/entities/reading-progress.entity';
+} from '@/modules/users/infrastructure/schemas/user.schema';
+import { ChapterStatus } from '@/modules/library/domain/library/entities/reading-progress.entity';
 
 interface ProgressSeedData {
   userId: Types.ObjectId;

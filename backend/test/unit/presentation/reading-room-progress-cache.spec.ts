@@ -1,8 +1,8 @@
 import { Logger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ReadingProgressTracker } from '@/presentation/gateways/reading-room/reading-progress.tracker';
-import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
-import type { RoomSocket } from '@/presentation/gateways/reading-room/reading-room.types';
+import { ReadingProgressTracker } from '@/modules/reading-rooms/presentation/websocket/reading-progress.tracker';
+import { UpdateProgressCommand } from '@/modules/library/application/library/commands/update-progress/update-progress.command';
+import type { RoomSocket } from '@/modules/reading-rooms/presentation/websocket/reading-room.types';
 import { fakeOf } from '../../support/typed-fake';
 
 /**

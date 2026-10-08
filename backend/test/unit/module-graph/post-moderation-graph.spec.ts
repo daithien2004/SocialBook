@@ -1,7 +1,7 @@
 const POST_MODERATION_MODULE_PATH =
-  '@/infrastructure/queues/post-moderation/post-moderation.module';
+  '@/modules/posts/infrastructure/queues/post-moderation/post-moderation.module';
 const POSTS_APPLICATION_MODULE_PATH =
-  '@/application/posts/posts-application.module';
+  '@/modules/posts/application/posts/posts-application.module';
 
 const getImports = (moduleClass: unknown): unknown[] => {
   const imports = Reflect.getMetadata('imports', moduleClass as object);

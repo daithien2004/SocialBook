@@ -1,54 +1,45 @@
-import { CommonModule } from '@/application/common/common.module';
+import { CqrsModule } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
-import { GetPostsHandler } from '@/application/posts/queries/get-posts/get-posts.handler';
-import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { PostRepository } from '@/infrastructure/database/repositories/posts/post.repository';
+import { GetPostsHandler } from '@/modules/posts/application/posts/queries/get-posts/get-posts.handler';
+import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
+import { PostRepository } from '@/modules/posts/infrastructure/repositories/posts/post.repository';
 import {
   Post,
   PostSchema,
-} from '@/infrastructure/database/schemas/post.schema';
+} from '@/modules/posts/infrastructure/schemas/post.schema';
 import {
   User,
   UserSchema,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 import {
   Book,
   BookSchema,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
+import { AuthorSchemaModel as Author, AuthorSchema } from '@/modules/authors';
+import { RoleSchemaModel as Role, RoleSchema } from '@/modules/roles';
 import {
-  Author,
-  AuthorSchema,
-} from '@/infrastructure/database/schemas/author.schema';
-import {
-  Role,
-  RoleSchema,
-} from '@/infrastructure/database/schemas/role.schema';
-import {
-  Comment,
+  CommentSchemaModel as Comment,
   CommentSchema,
-} from '@/infrastructure/database/schemas/comment.schema';
-import {
-  Like,
-  LikeSchema,
-} from '@/infrastructure/database/schemas/like.schema';
+} from '@/modules/comments';
+import { LikeSchemaModel as Like, LikeSchema } from '@/modules/likes';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { PostsController } from '@/presentation/posts/posts.controller';
+import { PostsController } from '@/modules/posts/presentation/posts/posts.controller';
 
-import { CreatePostHandler } from '@/application/posts/commands/create-post/create-post.handler';
-import { GetPostsByUserHandler } from '@/application/posts/queries/get-posts-by-user/get-posts-by-user.handler';
-import { GetPostHandler } from '@/application/posts/queries/get-post/get-post.handler';
-import { UpdatePostHandler } from '@/application/posts/commands/update-post/update-post.handler';
-import { DeletePostHandler } from '@/application/posts/commands/delete-post/delete-post.handler';
-import { RemovePostImageHandler } from '@/application/posts/commands/remove-post-image/remove-post-image.handler';
-import { GetFlaggedPostsHandler } from '@/application/posts/queries/get-flagged-posts/get-flagged-posts.handler';
-import { GetModerationStatsHandler } from '@/application/posts/queries/get-moderation-stats/get-moderation-stats.handler';
-import { ApprovePostHandler } from '@/application/posts/commands/approve-post/approve-post.handler';
-import { RejectPostHandler } from '@/application/posts/commands/reject-post/reject-post.handler';
+import { CreatePostHandler } from '@/modules/posts/application/posts/commands/create-post/create-post.handler';
+import { GetPostsByUserHandler } from '@/modules/posts/application/posts/queries/get-posts-by-user/get-posts-by-user.handler';
+import { GetPostHandler } from '@/modules/posts/application/posts/queries/get-post/get-post.handler';
+import { UpdatePostHandler } from '@/modules/posts/application/posts/commands/update-post/update-post.handler';
+import { DeletePostHandler } from '@/modules/posts/application/posts/commands/delete-post/delete-post.handler';
+import { RemovePostImageHandler } from '@/modules/posts/application/posts/commands/remove-post-image/remove-post-image.handler';
+import { GetFlaggedPostsHandler } from '@/modules/posts/application/posts/queries/get-flagged-posts/get-flagged-posts.handler';
+import { GetModerationStatsHandler } from '@/modules/posts/application/posts/queries/get-moderation-stats/get-moderation-stats.handler';
+import { ApprovePostHandler } from '@/modules/posts/application/posts/commands/approve-post/approve-post.handler';
+import { RejectPostHandler } from '@/modules/posts/application/posts/commands/reject-post/reject-post.handler';
 
 const ROLE_ID = new Types.ObjectId();
 const AUTHOR_ID = new Types.ObjectId();
@@ -64,7 +55,7 @@ describe('GET /posts (E2E)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        CommonModule,
+        CqrsModule.forRoot(),
         MongooseModule.forRoot(mongod.getUri()),
         MongooseModule.forFeature([
           { name: Post.name, schema: PostSchema },

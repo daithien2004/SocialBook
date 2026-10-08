@@ -1,0 +1,54 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { IToxicWordRepository } from '@/modules/content-moderation/domain/repositories/toxic-word.repository.interface';
+import { ToxicWord as ToxicWordEntity } from '@/modules/content-moderation/domain/entities/toxic-word.entity';
+import {
+  ToxicWordSchemaModel as ToxicWordSchema,
+  ToxicWordDocument,
+} from '@/modules/content-moderation/infrastructure';
+
+@Injectable()
+export class ToxicWordRepository implements IToxicWordRepository {
+  constructor(
+    @InjectModel(ToxicWordSchema.name)
+    private readonly toxicWordModel: Model<ToxicWordDocument>,
+  ) {}
+
+  async create(word: ToxicWordEntity): Promise<ToxicWordEntity> {
+    const created = new this.toxicWordModel({
+      _id: word.id,
+      pattern: word.pattern,
+      group: word.group,
+      originalWord: word.originalWord,
+    });
+    const saved = await created.save();
+    return this.toEntity(saved);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = await this.toxicWordModel.deleteOne({ _id: id }).exec();
+    return result.deletedCount > 0;
+  }
+
+  async findAll(): Promise<ToxicWordEntity[]> {
+    const documents = await this.toxicWordModel.find().exec();
+    return documents.map((doc) => this.toEntity(doc));
+  }
+
+  async existsByPattern(pattern: string): Promise<boolean> {
+    const count = await this.toxicWordModel.countDocuments({ pattern }).exec();
+    return count > 0;
+  }
+
+  private toEntity(doc: ToxicWordDocument): ToxicWordEntity {
+    return ToxicWordEntity.reconstitute({
+      id: String(doc._id),
+      pattern: doc.pattern,
+      group: doc.group,
+      originalWord: doc.originalWord,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    });
+  }
+}

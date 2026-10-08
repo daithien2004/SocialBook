@@ -4,15 +4,15 @@ import { Model, Types } from 'mongoose';
 import {
   Post,
   PostDocument,
-} from '@/infrastructure/database/schemas/post.schema';
+} from '@/modules/posts/infrastructure/schemas/post.schema';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 import {
   Book,
   BookDocument,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
 
 interface PostSeedData {
   userId: Types.ObjectId;

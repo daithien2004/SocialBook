@@ -1,4 +1,4 @@
-import { refreshTokenFromRequest } from '@/infrastructure/auth/strategies/jwt-refresh.strategy';
+import { refreshTokenFromRequest } from '@/modules/auth/infrastructure/auth/strategies/jwt-refresh.strategy';
 
 describe('refreshTokenFromRequest', () => {
   it('reads sb_refresh_token cookie first', () => {

@@ -1,5 +1,5 @@
-import { Book } from '@/domain/books/entities/book.entity';
-import { BookId } from '@/domain/books/value-objects/book-id.vo';
+import { Book } from '@/modules/books/domain/books/entities/book.entity';
+import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 
 interface BookFactoryOverrides {
   id?: string;

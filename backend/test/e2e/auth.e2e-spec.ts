@@ -1,5 +1,5 @@
-import { CommonModule } from '@/application/common/common.module';
 import { Test, TestingModule } from '@nestjs/testing';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   INestApplication,
   ValidationPipe,
@@ -11,15 +11,14 @@ import request from 'supertest';
 import { ConfigModule } from '@nestjs/config';
 import { AuthGuard, PassportModule } from '@nestjs/passport';
 import { APP_FILTER } from '@nestjs/core';
-import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
-import { AuthCookieService } from '@/application/auth/services/auth-cookie.service';
-import { LoginGuard } from '@/presentation/auth/guards/login.guard';
+import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
+import { AuthCookieService } from '@/modules/auth/application/auth/services/auth-cookie.service';
+import { LoginGuard } from '@/modules/auth/presentation/auth/guards/login.guard';
 import { Reflector } from '@nestjs/core';
 
-import { AuthController } from '@/presentation/auth/auth.controller';
+import { AuthController } from '@/modules/auth/presentation/auth/auth.controller';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
-import { Dispatcher } from '@/application/common/dispatcher';
 
 @Injectable()
 class MockGuard implements CanActivate {
@@ -36,7 +35,6 @@ describe('Auth API (E2E)', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        CommonModule,
         ConfigModule.forRoot({
           isGlobal: true,
           ignoreEnvFile: true,
@@ -68,10 +66,8 @@ describe('Auth API (E2E)', () => {
             reset: jest.fn(),
           },
         },
-        {
-          provide: Dispatcher,
-          useValue: { command: mockExecute, query: mockExecute },
-        },
+        { provide: CommandBus, useValue: { execute: mockExecute } },
+        { provide: QueryBus, useValue: { execute: mockExecute } },
         {
           provide: IUserRepository,
           useValue: {

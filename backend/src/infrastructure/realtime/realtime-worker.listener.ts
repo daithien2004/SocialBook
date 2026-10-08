@@ -4,7 +4,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { Emitter } from '@socket.io/redis-emitter';
 import { EventNames } from '@/common/constants/event-names.constant';
-import { ReadingRoomServerEvent } from '@/presentation/gateways/reading-room/reading-room.events';
+import { ReadingRoomServerEvent } from '@/modules/reading-rooms/reading-room.events';
 
 @Injectable()
 export class RealtimeWorkerListener {

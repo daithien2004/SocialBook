@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
-import { CreateNotificationCommand } from '@/application/notifications/commands/create-notification/create-notification.command';
+import { CreateNotificationCommand } from '@/modules/notifications/application/public-api';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
-import { NotificationResponseDto } from '@/presentation/notification/dto/notification.response.dto';
-import { CreateNotificationHandler } from '@/application/notifications/commands/create-notification/create-notification.handler';
-import { GetUserNotificationsHandler } from '@/application/notifications/queries/get-user-notification/get-user-notifications.handler';
-import { GetUserNotificationsQuery } from '@/application/notifications/queries/get-user-notification/get-user-notifications.query';
-import { MarkNotificationReadHandler } from '@/application/notifications/commands/mark-notification/mark-notification-read.handler';
-import { MarkNotificationReadCommand } from '@/application/notifications/commands/mark-notification/mark-notification-read.command';
-import { MarkAllNotificationsReadHandler } from '@/application/notifications/commands/mark-notification/mark-all-notifications-read.handler';
-import { MarkAllNotificationsReadCommand } from '@/application/notifications/commands/mark-notification/mark-all-notifications-read.command';
+import { NotificationResponseDto } from '@/modules/notifications/presentation/dto/notification.response.dto';
+import { CreateNotificationHandler } from '@/modules/notifications/application/public-api';
+import { GetUserNotificationsHandler } from '@/modules/notifications/application/public-api';
+import { GetUserNotificationsQuery } from '@/modules/notifications/application/public-api';
+import { MarkNotificationReadHandler } from '@/modules/notifications/application/public-api';
+import { MarkNotificationReadCommand } from '@/modules/notifications/application/public-api';
+import { MarkAllNotificationsReadHandler } from '@/modules/notifications/application/public-api';
+import { MarkAllNotificationsReadCommand } from '@/modules/notifications/application/public-api';
 
 @Injectable()
 export class NotificationsService {

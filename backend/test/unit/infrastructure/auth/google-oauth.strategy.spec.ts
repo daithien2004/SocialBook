@@ -1,4 +1,4 @@
-import { GoogleOAuthStrategy } from '@/infrastructure/auth/services/google-oauth.strategy';
+import { GoogleOAuthStrategy } from '@/modules/auth/infrastructure/auth/services/google-oauth.strategy';
 
 const config = {
   get: (k: string, d?: unknown) =>

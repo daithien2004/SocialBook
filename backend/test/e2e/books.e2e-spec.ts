@@ -5,7 +5,6 @@ import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
 import { ConfigModule } from '@nestjs/config';
-import { CommonModule } from '@/application/common/common.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_FILTER } from '@nestjs/core';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -14,42 +13,30 @@ import {
   Book,
   BookDocument,
   BookSchema,
-} from '@/infrastructure/database/schemas/book.schema';
-import {
-  Author,
-  AuthorSchema,
-} from '@/infrastructure/database/schemas/author.schema';
-import {
-  Genre,
-  GenreSchema,
-} from '@/infrastructure/database/schemas/genre.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
+import { AuthorSchemaModel as Author, AuthorSchema } from '@/modules/authors';
+import { GenreSchemaModel as Genre, GenreSchema } from '@/modules/genres';
 import {
   Chapter,
   ChapterSchema,
-} from '@/infrastructure/database/schemas/chapter.schema';
-import {
-  Review,
-  ReviewSchema,
-} from '@/infrastructure/database/schemas/review.schema';
+} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
+import { ReviewSchemaModel as Review, ReviewSchema } from '@/modules/reviews';
 import {
   User,
   UserSchema,
-} from '@/infrastructure/database/schemas/user.schema';
-import {
-  Role,
-  RoleSchema,
-} from '@/infrastructure/database/schemas/role.schema';
-import { BooksController } from '@/presentation/books/books.controller';
-import { BooksApplicationModule } from '@/application/books/books-application.module';
-import { BooksRepositoryModule } from '@/infrastructure/database/repositories/books/books-repository.module';
-import { AuthorsRepositoryModule } from '@/infrastructure/database/repositories/authors/authors-repository.module';
-import { GenresRepositoryModule } from '@/infrastructure/database/repositories/genres/genres-repository.module';
-import { ReviewsRepositoryModule } from '@/infrastructure/database/repositories/reviews/reviews-repository.module';
-import { LikesApplicationModule } from '@/application/likes/likes-application.module';
+} from '@/modules/users/infrastructure/schemas/user.schema';
+import { RoleSchemaModel as Role, RoleSchema } from '@/modules/roles';
+import { BooksController } from '@/modules/books/presentation/books/books.controller';
+import { BooksApplicationModule } from '@/modules/books/application/books/books-application.module';
+import { BooksRepositoryModule } from '@/modules/books/infrastructure/repositories/books/books-repository.module';
+import { AuthorsInfrastructureModule } from '@/modules/authors';
+import { GenresInfrastructureModule } from '@/modules/genres';
+import { ReviewsInfrastructureModule } from '@/modules/reviews';
+import { LikesApplicationModule } from '@/modules/likes';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { MockCacheModule } from '../helpers/mock-cache.module';
 import { envConfig } from '@/config';
-import { IntelligentSearchHandler } from '@/application/search/queries/intelligent-search/intelligent-search.handler';
+import { IntelligentSearchHandler } from '@/modules/search';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
 
@@ -144,7 +131,6 @@ describe('Books API (E2E)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        CommonModule,
         MongooseModule.forRoot(uri),
         MongooseModule.forFeature([
           { name: Book.name, schema: BookSchema },
@@ -158,9 +144,9 @@ describe('Books API (E2E)', () => {
         ConfigModule.forRoot({ isGlobal: true, load: [envConfig] }),
         BooksApplicationModule,
         BooksRepositoryModule,
-        AuthorsRepositoryModule,
-        GenresRepositoryModule,
-        ReviewsRepositoryModule,
+        AuthorsInfrastructureModule,
+        GenresInfrastructureModule,
+        ReviewsInfrastructureModule,
         LikesApplicationModule,
         IdGeneratorModule,
         MockCacheModule,

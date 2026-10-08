@@ -1,7 +1,7 @@
 import { ExecutionContext } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
-import { WsRoomGuard } from '@/presentation/gateways/core/ws-room.guard';
-import type { RoomSocket } from '@/presentation/gateways/reading-room/reading-room.types';
+import { WsRoomGuard } from '@/modules/reading-rooms/presentation/websocket/core/ws-room.guard';
+import type { RoomSocket } from '@/modules/reading-rooms/presentation/websocket/reading-room.types';
 import { fakeOf } from '../../support/typed-fake';
 
 /**
@@ -21,7 +21,12 @@ describe('WsRoomGuard — remove_highlight room guard', () => {
 
   const makeSocket = (joined: boolean): Partial<RoomSocket> => ({
     id: 'socket-1',
-    data: { userId: 'user-1', role: 'user', roomId: 'room-1' },
+    data: {
+      userId: 'user-1',
+      role: 'user',
+      displayName: 'Reader',
+      roomId: 'room-1',
+    },
     rooms: joined ? new Set(['room:room-1']) : new Set<string>(),
   });
 

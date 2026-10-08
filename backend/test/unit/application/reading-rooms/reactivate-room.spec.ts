@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { ReactivateRoomHandler } from '@/application/reading-rooms/commands/reactivate-room/reactivate-room.handler';
-import { ReactivateRoomCommand } from '@/application/reading-rooms/commands/reactivate-room/reactivate-room.command';
-import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
+import { ReactivateRoomHandler } from '@/modules/reading-rooms/application/commands/reactivate-room/reactivate-room.handler';
+import { ReactivateRoomCommand } from '@/modules/reading-rooms/application/commands/reactivate-room/reactivate-room.command';
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 import { FakeReadingRoomRepository } from '../../../helpers/fake-reading-room.repository';
 import {
   BadRequestDomainException,

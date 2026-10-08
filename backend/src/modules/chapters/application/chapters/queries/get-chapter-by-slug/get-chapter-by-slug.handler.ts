@@ -1,0 +1,25 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { ErrorMessages } from '@/common/constants/error-messages';
+import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
+import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { GetChapterBySlugQuery } from './get-chapter-by-slug.query';
+
+@QueryHandler(GetChapterBySlugQuery)
+export class GetChapterBySlugHandler implements IQueryHandler<
+  GetChapterBySlugQuery,
+  ChapterDetailReadModel
+> {
+  constructor(private readonly chapterRepository: IChapterRepository) {}
+
+  async execute(query: GetChapterBySlugQuery): Promise<ChapterDetailReadModel> {
+    const result = await this.chapterRepository.findDetailBySlug(
+      query.chapterSlug,
+      query.bookSlug,
+    );
+    if (!result) {
+      throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
+    }
+    return result;
+  }
+}

@@ -1,0 +1,55 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import {
+  NotFoundDomainException,
+  ConflictDomainException,
+} from '@/shared/domain/common-exceptions';
+import { IAuthorRepository } from '@/modules/authors/domain/repositories/author.repository.interface';
+import { Author } from '@/modules/authors/domain/entities/author.entity';
+import { AuthorId } from '@/modules/authors/domain/value-objects/author-id.vo';
+import { AuthorName } from '@/modules/authors/domain/value-objects/author-name.vo';
+import { UpdateAuthorCommand } from './update-author.command';
+import { ErrorMessages } from '@/common/constants/error-messages';
+
+@CommandHandler(UpdateAuthorCommand)
+export class UpdateAuthorHandler implements ICommandHandler<
+  UpdateAuthorCommand,
+  Author
+> {
+  constructor(private readonly authorRepository: IAuthorRepository) {}
+
+  async execute(command: UpdateAuthorCommand): Promise<Author> {
+    const authorId = AuthorId.create(command.id);
+
+    const author = await this.authorRepository.findById(authorId);
+    if (!author) {
+      throw new NotFoundDomainException(ErrorMessages.AUTHOR_NOT_FOUND);
+    }
+
+    // Check if name is being updated and if it conflicts with existing author
+    if (command.name && command.name.trim() !== author.name.toString()) {
+      const newName = AuthorName.create(command.name);
+      const exists = await this.authorRepository.existsByName(
+        newName,
+        authorId,
+      );
+
+      if (exists) {
+        throw new ConflictDomainException(ErrorMessages.AUTHOR_EXISTS);
+      }
+
+      author.changeName(command.name);
+    }
+
+    if (command.bio !== undefined) {
+      author.updateBio(command.bio);
+    }
+
+    if (command.photoUrl !== undefined) {
+      author.updatePhotoUrl(command.photoUrl);
+    }
+
+    await this.authorRepository.save(author);
+
+    return author;
+  }
+}

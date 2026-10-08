@@ -1,7 +1,7 @@
 import { Catch, ArgumentsHost, Logger } from '@nestjs/common';
 import { BaseWsExceptionFilter } from '@nestjs/websockets';
 import { Socket, DefaultEventsMap } from 'socket.io';
-import { ReadingRoomServerEvent } from '@/presentation/gateways/reading-room/reading-room.events';
+import { ReadingRoomServerEvent } from '@/modules/reading-rooms/reading-room.events';
 import { normalizeError } from '@/shared/presentation/error-normalizer';
 import { DomainException } from '@/shared/domain/domain-exception.base';
 

@@ -14,29 +14,29 @@ import { JwtService } from '@nestjs/jwt';
 import { getRedisConnectionToken } from '@nestjs-modules/ioredis';
 import { io, Socket } from 'socket.io-client';
 
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CommandBus } from '@nestjs/cqrs';
 
-import { ReadingRoomGateway } from '@/presentation/gateways/reading-room/reading-room.gateway';
-import { ReadingRoomPresenceService } from '@/application/reading-rooms/presence/reading-room-presence.service';
-import { Dispatcher } from '@/application/common/dispatcher';
-import { WsAuthService } from '@/presentation/gateways/core/ws-auth.service';
-import { WsRateLimiter } from '@/presentation/gateways/core/ws-rate-limiter.service';
-import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room/reading-room.emitter';
-import { ReadingRoomSystemListener } from '@/presentation/gateways/reading-room/reading-room-system.listener';
-import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room/reading-room-highlight.handler';
-import { ReadingProgressTracker } from '@/presentation/gateways/reading-room/reading-progress.tracker';
-import { ReadingRoomPresenceCoordinator } from '@/presentation/gateways/reading-room/reading-room-presence.coordinator';
-import { ReadingRoomConnectionHandler } from '@/presentation/gateways/reading-room/reading-room-connection.handler';
-import { ReadingRoomNamespaceProvider } from '@/presentation/gateways/reading-room/reading-room.namespace-provider';
-import { JoinRoomCommand } from '@/application/reading-rooms/commands/join-room/join-room.command';
-import { LeaveRoomCommand } from '@/application/reading-rooms/commands/leave-room/leave-room.command';
-import { AddHighlightCommand } from '@/application/reading-rooms/commands/add-highlight/add-highlight.command';
-import { RemoveHighlightCommand } from '@/application/reading-rooms/commands/remove-highlight/remove-highlight.command';
-import { GenerateHighlightInsightCommand } from '@/application/reading-rooms/commands/generate-highlight-insight/generate-highlight-insight.command';
-import { UpdateProgressCommand } from '@/application/library/commands/update-progress/update-progress.command';
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import type { PresenceData } from '@/domain/reading-rooms/interfaces/presence-cache.port';
-import { WS_MAX_HTTP_BUFFER_SIZE } from '@/presentation/gateways/reading-room/reading-room.constants';
+import { ReadingRoomGateway } from '@/modules/reading-rooms/presentation/websocket/reading-room.gateway';
+import { ReadingRoomPresenceService } from '@/modules/reading-rooms/application/presence/reading-room-presence.service';
+import { WsAuthService } from '@/modules/reading-rooms/presentation/websocket/core/ws-auth.service';
+import { WsRateLimiter } from '@/modules/reading-rooms/presentation/websocket/core/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from '@/modules/reading-rooms/presentation/websocket/reading-room.emitter';
+import { ReadingRoomSystemListener } from '@/modules/reading-rooms/presentation/websocket/reading-room-system.listener';
+import { ReadingRoomHighlightHandler } from '@/modules/reading-rooms/presentation/websocket/reading-room-highlight.handler';
+import { ReadingProgressTracker } from '@/modules/reading-rooms/presentation/websocket/reading-progress.tracker';
+import { ReadingRoomPresenceCoordinator } from '@/modules/reading-rooms/presentation/websocket/reading-room-presence.coordinator';
+import { ReadingRoomConnectionHandler } from '@/modules/reading-rooms/presentation/websocket/reading-room-connection.handler';
+import { ReadingRoomNamespaceProvider } from '@/modules/reading-rooms/presentation/websocket/reading-room.namespace-provider';
+import { UserOperationLock } from '@/modules/reading-rooms/presentation/websocket/user-operation-lock';
+import { JoinRoomCommand } from '@/modules/reading-rooms/application/commands/join-room/join-room.command';
+import { LeaveRoomCommand } from '@/modules/reading-rooms/application/commands/leave-room/leave-room.command';
+import { AddHighlightCommand } from '@/modules/reading-rooms/application/commands/add-highlight/add-highlight.command';
+import { RemoveHighlightCommand } from '@/modules/reading-rooms/application/commands/remove-highlight/remove-highlight.command';
+import { GenerateHighlightInsightCommand } from '@/modules/reading-rooms/application/commands/generate-highlight-insight/generate-highlight-insight.command';
+import { UpdateProgressCommand } from '@/modules/library/application/library/commands/update-progress/update-progress.command';
+import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
+import type { PresenceData } from '@/modules/reading-rooms/domain/interfaces/presence-cache.port';
+import { WS_MAX_HTTP_BUFFER_SIZE } from '@/modules/reading-rooms/presentation/websocket/reading-room.constants';
 
 /**
  * F1 — validate body ở biên WebSocket.
@@ -94,8 +94,8 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
   };
 
   /**
-   * Gateway sau refactor CQRS đi qua Dispatcher → CommandBus. Fake CommandBus
-   * chuyển từng command về đúng spy như cũ nên mọi assertion giữ nguyên.
+   * Gateway gọi trực tiếp CommandBus. Fake bus chuyển từng command về đúng
+   * spy như cũ nên mọi assertion giữ nguyên.
    */
   const routeCommand = async (cmd: unknown): Promise<unknown> => {
     if (cmd instanceof JoinRoomCommand) return joinRoom.execute(cmd);
@@ -112,7 +112,6 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
   };
 
   const commandBus = { execute: jest.fn((cmd: unknown) => routeCommand(cmd)) };
-  const queryBus = { execute: jest.fn() };
   const wsAuth = {
     authenticate: jest.fn(() =>
       Promise.resolve({
@@ -134,6 +133,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       (
         _roomId: string,
         _userId: string,
+        _socketId: string,
         _data: Omit<PresenceData, 'lastSeen'>,
       ): Promise<{ created: boolean; chapterChanged: boolean }> =>
         Promise.resolve({ created: true, chapterChanged: false }),
@@ -141,7 +141,10 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
     getRoomPresences: jest.fn((): Promise<PresenceData[]> =>
       Promise.resolve(emptyPresences),
     ),
-    removePresence: jest.fn(),
+    removeSocketPresence: jest.fn((): Promise<boolean> =>
+      Promise.resolve(false),
+    ),
+    removeUserPresences: jest.fn((): Promise<void> => Promise.resolve()),
     removeRoomPresences: jest.fn(),
   };
   const chapterRepository = {
@@ -222,6 +225,15 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
         ReadingRoomConnectionHandler,
         ReadingRoomNamespaceProvider,
         {
+          provide: UserOperationLock,
+          useValue: {
+            runExclusive: (
+              _userId: string,
+              operation: () => Promise<unknown>,
+            ) => operation(),
+          },
+        },
+        {
           provide: JwtService,
           useValue: {
             verifyAsync: jest.fn(() =>
@@ -243,15 +255,8 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
           },
         },
         { provide: ReadingRoomPresenceService, useValue: presence },
-        // 8 dependency mới của gateway (refactor CQRS) — Dispatcher/Coordinator/
-        // HighlightHandler/Tracker dùng bản thật, bus & auth/rate-limit là fake
-        {
-          provide: Dispatcher,
-          useFactory: (c: CommandBus, q: QueryBus) => new Dispatcher(c, q),
-          inject: [CommandBus, QueryBus],
-        },
+        // CQRS command bus routes commands to their test spies.
         { provide: CommandBus, useValue: commandBus },
-        { provide: QueryBus, useValue: queryBus },
         { provide: WsAuthService, useValue: wsAuth },
         { provide: WsRateLimiter, useValue: rateLimiter },
         ReadingRoomEmitter,
@@ -528,6 +533,7 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       expect(presence.upsertPresence).toHaveBeenCalledWith(
         ROOM_ID,
         USER_ID,
+        expect.any(String),
         expect.objectContaining({ progress: undefined }),
       );
     });
@@ -552,6 +558,28 @@ describe('ReadingRoomGateway WS payload validation (E2E)', () => {
       client.emit('leave_room', { roomId: ROOM_ID });
       await waitFor(() => leaveRoom.execute.mock.calls.length === 1);
       expect(leaveRoom.execute.mock.calls[0][0].roomId).toBe(ROOM_ID);
+    });
+
+    it('thông báo kết thúc phòng và xóa presence toàn phòng', async () => {
+      const joinAck = await emitAck('join_room', { roomCode: ROOM_ID });
+      expect(joinAck.err).toBeNull();
+
+      leaveRoom.execute.mockResolvedValueOnce({ roomEnded: true });
+      const endedEvent = new Promise<{ roomId: string }>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error('không nhận được room_ended'));
+        }, 3000);
+        client.once('room_ended', (payload: { roomId: string }) => {
+          clearTimeout(timer);
+          resolve(payload);
+        });
+      });
+
+      client.emit('leave_room', { roomId: ROOM_ID });
+
+      await expect(endedEvent).resolves.toEqual({ roomId: ROOM_ID });
+      await waitFor(() => presence.removeRoomPresences.mock.calls.length > 0);
+      expect(presence.removeRoomPresences).toHaveBeenCalledWith(ROOM_ID);
     });
   });
 

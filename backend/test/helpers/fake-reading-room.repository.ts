@@ -1,6 +1,9 @@
-import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
-import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
-import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
+import {
+  IReadingRoomRepository,
+  ReadingRoomHighlightPage,
+} from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 
 export class FakeReadingRoomRepository extends IReadingRoomRepository {
   readonly rooms = new Map<string, ReadingRoom>();
@@ -12,6 +15,15 @@ export class FakeReadingRoomRepository extends IReadingRoomRepository {
 
   findById(id: RoomId): Promise<ReadingRoom | null> {
     return Promise.resolve(this.rooms.get(id.toString()) ?? null);
+  }
+
+  findHighlightPage(
+    _id: RoomId,
+    _userId: string,
+    _offset: number,
+    _limit: number,
+  ): Promise<ReadingRoomHighlightPage | null> {
+    return Promise.resolve(null);
   }
 
   findActiveByCode(_code: string): Promise<ReadingRoom | null> {

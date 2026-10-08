@@ -7,10 +7,10 @@ import {
   ConcurrencyException,
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
-import { ReadingRoomHighlightHandler } from '@/presentation/gateways/reading-room/reading-room-highlight.handler';
-import { WsRateLimiter } from '@/presentation/gateways/core/ws-rate-limiter.service';
-import { ReadingRoomEmitter } from '@/presentation/gateways/reading-room/reading-room.emitter';
-import type { RoomSocket } from '@/presentation/gateways/reading-room/reading-room.types';
+import { ReadingRoomHighlightHandler } from '@/modules/reading-rooms/presentation/websocket/reading-room-highlight.handler';
+import { WsRateLimiter } from '@/modules/reading-rooms/presentation/websocket/core/ws-rate-limiter.service';
+import { ReadingRoomEmitter } from '@/modules/reading-rooms/presentation/websocket/reading-room.emitter';
+import type { RoomSocket } from '@/modules/reading-rooms/presentation/websocket/reading-room.types';
 import { fakeOf } from '../../support/typed-fake';
 
 type FakeHost = {

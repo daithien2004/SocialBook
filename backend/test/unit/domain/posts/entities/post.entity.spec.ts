@@ -1,4 +1,4 @@
-import { Post } from '@/domain/posts/entities/post.entity';
+import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 
 describe('Post Entity', () => {
   it('reject() should set rejected AND soft-delete', () => {

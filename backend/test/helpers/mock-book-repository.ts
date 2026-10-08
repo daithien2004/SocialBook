@@ -1,4 +1,4 @@
-import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
+import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 
 export function createMockBookRepository(): jest.Mocked<IBookRepository> {
   return {

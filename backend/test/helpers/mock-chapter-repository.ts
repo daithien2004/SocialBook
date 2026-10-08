@@ -1,4 +1,4 @@
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
 
 export function createMockChapterRepository(): jest.Mocked<IChapterRepository> {
   return {

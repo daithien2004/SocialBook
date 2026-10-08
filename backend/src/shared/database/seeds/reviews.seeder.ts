@@ -1,18 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import {
-  Review,
-  ReviewDocument,
-} from '@/infrastructure/database/schemas/review.schema';
+import { ReviewSchemaModel as Review, ReviewDocument } from '@/modules/reviews';
 import {
   Book,
   BookDocument,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 
 interface ReviewSeedData {
   userId: Types.ObjectId;

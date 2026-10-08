@@ -1,6 +1,6 @@
-import { ContentModerationService } from '@/application/content-moderation/services/content-moderation.service';
-import { IAIPort } from '@/domain/ai/interfaces/ai.port';
-import { updateToxicWordsCache } from '@/domain/content-moderation/utils/vietnamese-profanity';
+import { ContentModerationService } from '@/modules/content-moderation/application/public-api';
+import { IAIPort } from '@/modules/ai/domain';
+import { updateToxicWordsCache } from '@/modules/content-moderation/domain';
 
 describe('ContentModerationService', () => {
   let service: ContentModerationService;

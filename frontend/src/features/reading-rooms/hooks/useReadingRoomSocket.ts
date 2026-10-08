@@ -52,6 +52,7 @@ type ReadingRoomServerEvents = {
   [ReadingRoomServerEvent.PRESENCE_UPDATE]: unknown;
   [ReadingRoomServerEvent.MEMBER_JOINED]: { userId: string };
   [ReadingRoomServerEvent.MEMBER_LEFT]: { userId: string };
+  [ReadingRoomServerEvent.ROOM_ENDED]: { roomId: string };
   [ReadingRoomServerEvent.ERROR]: { message?: string };
   [ReadingRoomServerEvent.NEW_HIGHLIGHT]: RoomHighlight;
   [ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT]: {
@@ -193,6 +194,8 @@ export function useReadingRoomSocket(roomCode?: string) {
     },
     [ReadingRoomServerEvent.MEMBER_LEFT]: (payload) =>
       useReadingRoomStore.getState().removeMember(payload.userId),
+    [ReadingRoomServerEvent.ROOM_ENDED]: (payload) =>
+      useReadingRoomStore.getState().markRoomEnded(payload.roomId),
     [ReadingRoomServerEvent.ERROR]: (payload) => {
       if (
         payload.message?.includes('ended') &&
@@ -236,6 +239,7 @@ export function useReadingRoomSocket(roomCode?: string) {
   return {
     socket,
     leaveRoom,
+    joinRoom: join,
     sendHeartbeat,
     addHighlight,
     removeHighlight,

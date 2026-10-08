@@ -77,7 +77,7 @@ export function ReadingRoomPageClient({
   const savedProgress = progressData?.progress || 0;
 
   const shouldConnectSocket = isAuthenticated && !!initialRoom;
-  const { leaveRoom, sendHeartbeat } = useReadingRoomSocket(
+  const { leaveRoom, joinRoom, sendHeartbeat } = useReadingRoomSocket(
     shouldConnectSocket ? roomCode : undefined,
   );
 
@@ -95,6 +95,7 @@ export function ReadingRoomPageClient({
     bookData,
     chapter,
     leaveRoom,
+    joinRoom,
   });
 
   useReadingRoomEffects({

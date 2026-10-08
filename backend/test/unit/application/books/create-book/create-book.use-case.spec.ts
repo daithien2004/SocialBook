@@ -1,12 +1,12 @@
-import { CreateBookHandler } from '@/application/books/commands/create-book/create-book.handler';
-import { CreateBookCommand } from '@/application/books/commands/create-book/create-book.command';
+import { CreateBookHandler } from '@/modules/books/application/books/commands/create-book/create-book.handler';
+import { CreateBookCommand } from '@/modules/books/application/books/commands/create-book/create-book.command';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { createMockBookRepository } from '../../../../helpers/mock-book-repository';
 import { createMockBookCacheService } from '../../../../helpers/mock-cache-service';
 import { createMockIdGenerator } from '../../../../helpers/mock-id-generator';
-import { IAuthorRepository } from '@/domain/authors/repositories/author.repository.interface';
-import { IGenreRepository } from '@/domain/genres/repositories/genre.repository.interface';
-import { Book } from '@/domain/books/entities/book.entity';
+import { IAuthorRepository } from '@/modules/authors';
+import { IGenreRepository } from '@/modules/genres';
+import { Book } from '@/modules/books/domain/books/entities/book.entity';
 
 describe('CreateBookHandler (Unit)', () => {
   let useCase: CreateBookHandler;

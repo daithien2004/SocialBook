@@ -1,5 +1,5 @@
-import { Chapter } from '@/domain/chapters/entities/chapter.entity';
-import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
+import { Chapter } from '@/modules/chapters/domain/chapters/entities/chapter.entity';
+import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chapter-id.vo';
 
 interface ChapterFactoryOverrides {
   id?: string;

@@ -5,7 +5,7 @@ import { getErrorMessage } from '@/common/utils/error.util';
 import {
   FreshTokens,
   TokenRotationPort,
-} from '@/application/ports/token-rotation.port';
+} from '@/modules/auth/application/public-api';
 
 const LOCK_TTL_MS = 5_000;
 

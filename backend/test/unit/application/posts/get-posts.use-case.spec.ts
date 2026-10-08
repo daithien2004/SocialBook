@@ -1,6 +1,6 @@
-import { GetPostsHandler } from '@/application/posts/queries/get-posts/get-posts.handler';
-import { GetPostsQuery } from '@/application/posts/queries/get-posts/get-posts.query';
-import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
+import { GetPostsHandler } from '@/modules/posts/application/posts/queries/get-posts/get-posts.handler';
+import { GetPostsQuery } from '@/modules/posts/application/posts/queries/get-posts/get-posts.query';
+import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 
 describe('GetPostsHandler (Unit)', () => {
   let useCase: GetPostsHandler;

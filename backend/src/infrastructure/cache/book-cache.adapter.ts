@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
+import type { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
 import { ICachePort } from '@/shared/domain/cache.port';
 import { CACHE_TTL } from '@/common/constants/cache.constants';
-import { Book } from '@/domain/books/entities/book.entity';
+import { Book } from '@/modules/books/domain/books/entities/book.entity';
 
 interface BookCacheData {
   id: string;

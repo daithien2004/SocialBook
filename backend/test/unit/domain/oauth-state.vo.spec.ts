@@ -1,4 +1,4 @@
-import { OAuthFlowState } from '@/domain/auth/tokens/oauth-state.vo';
+import { OAuthFlowState } from '@/modules/auth/domain/auth/tokens/oauth-state.vo';
 
 describe('OAuthFlowState', () => {
   it('accepts a relative same-origin callbackUrl', () => {

@@ -1,12 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
 import mongoose from 'mongoose';
-import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
-import { ReadingRoomApplicationMapper } from '@/application/reading-rooms/mappers/reading-room.mapper';
-import { ReadingRoomMapper } from '@/infrastructure/database/repositories/reading-rooms/reading-room.mapper';
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
+import { ReadingRoomApplicationMapper } from '@/modules/reading-rooms/application/mappers/reading-room.mapper';
+import { ReadingRoomMapper } from '@/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.mapper';
 import {
   ReadingRoom as ReadingRoomMongo,
   ReadingRoomSchema,
-} from '@/infrastructure/database/schemas/reading-room.schema';
+} from '@/modules/reading-rooms/infrastructure/mongo/schemas/reading-room.schema';
 
 describe('ReadingRoomMapper & Highlight Denormalization (T10)', () => {
   it('ReadingRoomApplicationMapper.toResult excludes departed members and maps highlight user info', () => {

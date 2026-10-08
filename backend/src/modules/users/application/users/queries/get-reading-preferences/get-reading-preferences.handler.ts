@@ -1,0 +1,24 @@
+import { GetReadingPreferencesQuery } from './get-reading-preferences.query';
+import { QueryHandler } from '@nestjs/cqrs';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
+import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
+import { ReadingPreferences } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
+
+@QueryHandler(GetReadingPreferencesQuery)
+export class GetReadingPreferencesHandler {
+  constructor(private readonly userRepository: IUserRepository) {}
+
+  async execute(
+    query: GetReadingPreferencesQuery,
+  ): Promise<ReadingPreferences> {
+    const userId = UserId.create(query.userId);
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundDomainException('User not found');
+    }
+
+    return user.readingPreferences || ReadingPreferences.createDefault();
+  }
+}

@@ -1,5 +1,5 @@
-import { RedisOAuthStateAdapter } from '@/infrastructure/auth/adapters/redis-oauth-state.adapter';
-import { OAuthFlowState } from '@/domain/auth/tokens/oauth-state.vo';
+import { RedisOAuthStateAdapter } from '@/modules/auth/infrastructure/auth/adapters/redis-oauth-state.adapter';
+import { OAuthFlowState } from '@/modules/auth/domain/auth/tokens/oauth-state.vo';
 
 describe('RedisOAuthStateAdapter', () => {
   it('creates then consumes state (delete-after-read)', async () => {

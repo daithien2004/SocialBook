@@ -1,0 +1,40 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { IReadingProgressRepository } from '@/modules/library/domain/library/repositories/reading-progress.repository.interface';
+import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
+import { ChapterId } from '@/modules/library/domain/library/value-objects/chapter-id.vo';
+import { GetChapterProgressQuery } from './get-chapter-progress.query';
+import { ReadingProgressResult } from '../../dto/library.dto';
+import { LibraryApplicationMapper } from '../../mappers/library.mapper';
+
+@QueryHandler(GetChapterProgressQuery)
+export class GetChapterProgressHandler implements IQueryHandler<
+  GetChapterProgressQuery,
+  ReadingProgressResult | null
+> {
+  constructor(
+    private readonly readingProgressRepository: IReadingProgressRepository,
+  ) {}
+
+  async execute(
+    query: GetChapterProgressQuery,
+  ): Promise<ReadingProgressResult | null> {
+    if (!query.bookId || !query.chapterId) {
+      return null;
+    }
+
+    const userId = UserId.create(query.userId);
+    const chapterId = ChapterId.create(query.chapterId);
+
+    const progress =
+      await this.readingProgressRepository.findByUserIdAndChapterId(
+        userId,
+        chapterId,
+      );
+
+    if (!progress) {
+      return null;
+    }
+
+    return LibraryApplicationMapper.toProgressResult(progress);
+  }
+}

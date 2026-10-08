@@ -1,9 +1,22 @@
 import {
   ReadingProgress,
   ChapterStatus,
-} from '@/domain/library/entities/reading-progress.entity';
+} from '@/modules/library/domain/library/entities/reading-progress.entity';
 
 describe('ReadingProgress Monotonic & Units (T7)', () => {
+  it('creates an initially complete progress as COMPLETED', () => {
+    const progress = ReadingProgress.create({
+      id: 'rp-initially-completed',
+      userId: '507f1f77bcf86cd799439011',
+      bookId: '507f1f77bcf86cd799439012',
+      chapterId: '507f1f77bcf86cd799439013',
+      progress: 100,
+    });
+
+    expect(progress.progress).toBe(100);
+    expect(progress.status).toBe(ChapterStatus.COMPLETED);
+  });
+
   it('updates progress in 0..100 range and marks COMPLETED at 100', () => {
     const progress = ReadingProgress.create({
       id: 'rp-1',

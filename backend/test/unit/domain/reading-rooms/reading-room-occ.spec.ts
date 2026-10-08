@@ -1,8 +1,8 @@
-import { ReadingRoom } from '@/domain/reading-rooms/entities/reading-room.entity';
-import { ReadingRoomRepository } from '@/infrastructure/database/repositories/reading-rooms/reading-room.repository';
-import { ReadingRoom as ReadingRoomSchema } from '@/infrastructure/database/schemas/reading-room.schema';
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.repository';
+import { ReadingRoom as ReadingRoomSchema } from '@/modules/reading-rooms/infrastructure/mongo/schemas/reading-room.schema';
 import { ConcurrencyException } from '@/shared/domain/common-exceptions';
-import { withOptimisticRetry } from '@/application/shared/utils/with-retries.util';
+import { withOptimisticRetry } from '@/common/utils/with-retries.util';
 import {
   afterEach,
   beforeEach,

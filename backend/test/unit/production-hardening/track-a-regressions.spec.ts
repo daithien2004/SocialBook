@@ -8,16 +8,16 @@ import {
   POST_MODERATION_JOB,
   PostModerationProcessor,
   type PostModerationJobData,
-} from '@/infrastructure/queues/post-moderation/post-moderation.processor';
-import { ChaptersImportProcessor } from '@/infrastructure/queues/chapters-import/chapters-import.processor';
-import { CREATE_SINGLE_CHAPTER_JOB_OPTIONS } from '@/infrastructure/queues/chapters-import/chapters-import.module';
-import { GenerateAudioJobPayload } from '@/application/text-to-speech/jobs/tts-job.payload';
-import { TTSStatus } from '@/domain/text-to-speech/entities/text-to-speech.entity';
-import type { ImportChaptersJobData } from '@/domain/chapters/interfaces/chapters-import.types';
-import type { CreateSingleChapterJobData } from '@/application/chapters/processors/single-chapter.processor';
-import type { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
-import type { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import type { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
+} from '@/modules/posts/infrastructure/queues/post-moderation/post-moderation.processor';
+import { ChaptersImportProcessor } from '@/modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor';
+import { CREATE_SINGLE_CHAPTER_JOB_OPTIONS } from '@/modules/chapters/infrastructure/queues/chapters-import/chapters-import.module';
+import { GenerateAudioJobPayload } from '@/modules/text-to-speech/application/public-api';
+import { TTSStatus } from '@/modules/text-to-speech/domain/entities/text-to-speech.entity';
+import type { ImportChaptersJobData } from '@/modules/chapters/domain/chapters/interfaces/chapters-import.types';
+import type { CreateSingleChapterJobData } from '@/modules/chapters/application/chapters/processors/single-chapter.processor';
+import type { ITextToSpeechRepository } from '@/modules/text-to-speech/domain/repositories/text-to-speech.repository.interface';
+import type { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
+import type { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 
 /**
  * Regression test cho A1–A3 của docs/ecommerce_production_standard.md §11.

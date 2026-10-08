@@ -1,13 +1,13 @@
-import { RoomId } from '@/domain/reading-rooms/value-objects/room-id.vo';
+import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 import {
   BadRequestDomainException,
   ConflictDomainException,
 } from '@/shared/domain/common-exceptions';
-import { CreateRoomHandler } from '@/application/reading-rooms/commands/create-room/create-room.handler';
-import { CreateRoomCommand } from '@/application/reading-rooms/commands/create-room/create-room.command';
-import { IReadingRoomRepository } from '@/domain/reading-rooms/repositories/reading-room.repository.interface';
-import { IBookRepository } from '@/domain/books/repositories/book.repository.interface';
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
+import { CreateRoomHandler } from '@/modules/reading-rooms/application/commands/create-room/create-room.handler';
+import { CreateRoomCommand } from '@/modules/reading-rooms/application/commands/create-room/create-room.command';
+import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
+import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
 
 describe('RoomId & Collision Retries (T4)', () => {
   describe('RoomId Value Object', () => {

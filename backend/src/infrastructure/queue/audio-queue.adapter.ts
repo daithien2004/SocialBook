@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { IAudioQueuePort } from '@/application/ports/audio-queue.port';
-import { GenerateAudioJobPayload } from '@/application/text-to-speech/jobs/tts-job.payload';
+import { IAudioQueuePort } from '@/modules/text-to-speech/application/public-api';
+import { GenerateAudioJobPayload } from '@/modules/text-to-speech/application/public-api';
 
 // Giới hạn tổng số job đang chờ trong queue — bảo vệ toàn hệ thống.
 // TODO: Thêm per-user limit khi ITextToSpeechRepository có method countByUserAndStatus.

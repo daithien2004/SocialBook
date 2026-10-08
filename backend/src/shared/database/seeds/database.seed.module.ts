@@ -5,51 +5,39 @@ import { envConfig } from '@/config';
 import {
   User,
   UserSchema,
-} from '@/infrastructure/database/schemas/user.schema';
-import {
-  Role,
-  RoleSchema,
-} from '@/infrastructure/database/schemas/role.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
+import { RoleSchemaModel as Role, RoleSchema } from '@/modules/roles';
 import {
   Book,
   BookSchema,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
 import {
   Chapter,
   ChapterSchema,
-} from '@/infrastructure/database/schemas/chapter.schema';
+} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
+import { ReviewSchemaModel as Review, ReviewSchema } from '@/modules/reviews';
 import {
-  Review,
-  ReviewSchema,
-} from '@/infrastructure/database/schemas/review.schema';
-import {
-  Comment,
+  CommentSchemaModel as Comment,
   CommentSchema,
-} from '@/infrastructure/database/schemas/comment.schema';
-import {
-  Follow,
-  FollowSchema,
-} from '@/infrastructure/database/schemas/follow.schema';
-import {
-  Like,
-  LikeSchema,
-} from '@/infrastructure/database/schemas/like.schema';
+} from '@/modules/comments';
+import { FollowSchemaModel as Follow, FollowSchema } from '@/modules/follows';
+import { LikeSchemaModel as Like, LikeSchema } from '@/modules/likes';
 import {
   Progress,
   ProgressSchema,
-} from '@/infrastructure/database/schemas/progress.schema';
+} from '@/modules/library/infrastructure/schemas/progress.schema';
 import {
   Post,
   PostSchema,
-} from '@/infrastructure/database/schemas/post.schema';
+} from '@/modules/posts/infrastructure/schemas/post.schema';
 import {
   Notification,
   NotificationSchema,
-} from '@/infrastructure/database/schemas/notification.schema';
+} from '@/modules/notifications/infrastructure/schemas/notification.schema';
 import {
-  ToxicWord,
+  ToxicWordSchemaModel as ToxicWord,
   ToxicWordSchema,
-} from '@/infrastructure/database/schemas/toxic-word.schema';
+} from '@/modules/content-moderation/infrastructure';
 
 import { SeederService } from './seeder.service';
 import { RolesSeed } from './roles.seed';
@@ -69,7 +57,7 @@ import { BookPostLikesSeed } from './book-post-likes.seeder';
 import {
   ReadingRoom,
   ReadingRoomSchema,
-} from '@/infrastructure/database/schemas/reading-room.schema';
+} from '@/modules/reading-rooms/infrastructure/mongo/schemas/reading-room.schema';
 
 import { ReadingRoomsSeed } from './reading-rooms.seeder';
 

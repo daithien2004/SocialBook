@@ -4,7 +4,6 @@ import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 import type { RoomResponse } from '@/features/reading-rooms/api/reading-rooms.api';
 
 interface UseReadingRoomEffectsOptions {
-
   isEnded: boolean;
   initialRoom: RoomResponse | undefined;
   chapterId: string | undefined;
@@ -12,20 +11,14 @@ interface UseReadingRoomEffectsOptions {
 }
 
 export function useReadingRoomEffects({
-
   isEnded,
   initialRoom,
   chapterId,
   savedProgress,
 }: UseReadingRoomEffectsOptions) {
-
-
   useEffect(() => {
     if (isEnded && initialRoom) {
-      useReadingRoomStore.getState().setRoom({
-        ...initialRoom,
-        highlights: initialRoom.highlights || [],
-      });
+      useReadingRoomStore.getState().setRoom(initialRoom);
     }
   }, [isEnded, initialRoom]);
 

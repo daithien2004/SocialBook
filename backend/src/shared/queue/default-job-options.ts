@@ -1,4 +1,4 @@
-﻿import type { JobsOptions } from 'bullmq';
+import type { JobsOptions } from 'bullmq';
 
 /**
  * Cau hinh job mac dinh dung chung cho moi queue chua co defaultJobOptions.

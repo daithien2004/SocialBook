@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { INotificationQueuePort } from '@/application/ports/notification-queue.port';
+import { INotificationQueuePort } from '@/modules/notifications/application/public-api';
 import {
   CommentCreatedJobPayload,
   LikeToggledJobPayload,
   UserFollowedJobPayload,
   PostModeratedJobPayload,
-} from '@/application/notifications/jobs/notification-job.payload';
+} from '@/modules/notifications/application/public-api';
 import { DEFAULT_JOB_OPTIONS } from '@/shared/queue/default-job-options';
 import { EventNames } from '@/common/constants/event-names.constant';
 

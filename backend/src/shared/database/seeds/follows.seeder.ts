@@ -1,14 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import {
-  Follow,
-  FollowDocument,
-} from '@/infrastructure/database/schemas/follow.schema';
+import { FollowSchemaModel as Follow, FollowDocument } from '@/modules/follows';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 
 interface FollowSeedData {
   userId: Types.ObjectId;

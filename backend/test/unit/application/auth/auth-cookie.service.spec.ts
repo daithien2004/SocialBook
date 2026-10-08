@@ -1,4 +1,4 @@
-import { AuthCookieService } from '@/application/auth/services/auth-cookie.service';
+import { AuthCookieService } from '@/modules/auth/application/auth/services/auth-cookie.service';
 
 describe('AuthCookieService', () => {
   const config = {

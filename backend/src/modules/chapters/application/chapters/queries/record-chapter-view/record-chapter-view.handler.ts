@@ -1,0 +1,35 @@
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
+import { ICachePort } from '@/shared/domain/cache.port';
+import { RecordChapterViewQuery } from './record-chapter-view.query';
+
+const VIEW_DEDUP_TTL = 30 * 60; // 30 phút
+
+@QueryHandler(RecordChapterViewQuery)
+export class RecordChapterViewHandler implements IQueryHandler<
+  RecordChapterViewQuery,
+  void
+> {
+  constructor(
+    private readonly chapterRepository: IChapterRepository,
+    private readonly cacheService: ICachePort,
+  ) {}
+
+  async execute(query: RecordChapterViewQuery): Promise<void> {
+    const identity = query.userId ?? `ip:${query.clientIp}`;
+    const dedupKey = `chapter_view:${query.bookSlug}:${query.chapterSlug}:${identity}`;
+
+    const isNew = await this.cacheService.setIfNotExists(
+      dedupKey,
+      '1',
+      VIEW_DEDUP_TTL,
+    );
+
+    if (!isNew) return;
+
+    await this.chapterRepository.incrementViewsBySlug(
+      query.bookSlug,
+      query.chapterSlug,
+    );
+  }
+}

@@ -2,39 +2,30 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { Model, Types } from 'mongoose';
-import { GetPostsHandler } from '@/application/posts/queries/get-posts/get-posts.handler';
-import { GetPostsQuery } from '@/application/posts/queries/get-posts/get-posts.query';
-import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { Post as PostEntity } from '@/domain/posts/entities/post.entity';
-import { PostRepository } from '@/infrastructure/database/repositories/posts/post.repository';
+import { GetPostsHandler } from '@/modules/posts/application/posts/queries/get-posts/get-posts.handler';
+import { GetPostsQuery } from '@/modules/posts/application/posts/queries/get-posts/get-posts.query';
+import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
+import { Post as PostEntity } from '@/modules/posts/domain/posts/entities/post.entity';
+import { PostRepository } from '@/modules/posts/infrastructure/repositories/posts/post.repository';
 import {
   Post,
   PostSchema,
-} from '@/infrastructure/database/schemas/post.schema';
+} from '@/modules/posts/infrastructure/schemas/post.schema';
 import {
   User,
   UserSchema,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 import {
   Book,
   BookSchema,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
+import { AuthorSchemaModel as Author, AuthorSchema } from '@/modules/authors';
+import { RoleSchemaModel as Role, RoleSchema } from '@/modules/roles';
 import {
-  Author,
-  AuthorSchema,
-} from '@/infrastructure/database/schemas/author.schema';
-import {
-  Role,
-  RoleSchema,
-} from '@/infrastructure/database/schemas/role.schema';
-import {
-  Comment,
+  CommentSchemaModel as Comment,
   CommentSchema,
-} from '@/infrastructure/database/schemas/comment.schema';
-import {
-  Like,
-  LikeSchema,
-} from '@/infrastructure/database/schemas/like.schema';
+} from '@/modules/comments';
+import { LikeSchemaModel as Like, LikeSchema } from '@/modules/likes';
 
 const ROLE_ID = new Types.ObjectId();
 const AUTHOR_ID = new Types.ObjectId();

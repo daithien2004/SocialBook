@@ -1,0 +1,3 @@
+export const PRESENCE_HASH_TTL_SECONDS = 90;
+
+export const ROOM_MEMBERS_SET_TTL_SECONDS = 10 * 60;

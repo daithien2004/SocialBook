@@ -1,13 +1,13 @@
-import { RefreshTokenHandler } from '@/application/auth/commands/refresh-token/refresh-token.handler';
-import { RefreshTokenCommand } from '@/application/auth/commands/refresh-token/refresh-token.command';
-import { TokenRotationPort } from '@/application/ports/token-rotation.port';
-import { TokenService } from '@/application/auth/services/token.service';
-import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
-import { IRoleRepository } from '@/domain/roles/repositories/role.repository.interface';
+import { RefreshTokenHandler } from '@/modules/auth/application/auth/commands/refresh-token/refresh-token.handler';
+import { RefreshTokenCommand } from '@/modules/auth/application/auth/commands/refresh-token/refresh-token.command';
+import { TokenRotationPort } from '@/modules/auth/application/public-api';
+import { TokenService } from '@/modules/auth/application/auth/services/token.service';
+import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
+import { IRoleRepository } from '@/modules/roles';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
-import { UnauthorizedDomainException } from '@/domain/auth/exceptions/auth-exceptions';
-import { User } from '@/domain/users/entities/user.entity';
-import { Role } from '@/domain/roles/entities/role.entity';
+import { UnauthorizedDomainException } from '@/modules/auth/domain/auth/exceptions/auth-exceptions';
+import { User } from '@/modules/users/domain/users/entities/user.entity';
+import { RoleEntity as Role } from '@/modules/roles';
 
 const USER_ID = 'user-1';
 const EMAIL = 'user@example.com';

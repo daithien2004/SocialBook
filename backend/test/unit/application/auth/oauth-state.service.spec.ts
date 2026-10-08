@@ -1,5 +1,5 @@
-import { OAuthStateService } from '@/application/auth/services/oauth-state.service';
-import { OAuthStateStorePort } from '@/application/ports/oauth-state-store.port';
+import { OAuthStateService } from '@/modules/auth/application/auth/services/oauth-state.service';
+import { OAuthStateStorePort } from '@/modules/auth/application/auth/oauth-state-store.port';
 
 describe('OAuthStateService', () => {
   const store = {

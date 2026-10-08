@@ -1,12 +1,12 @@
-import { toErrorCode } from '@/presentation/auth/oauth.controller';
+import { toErrorCode } from '@/modules/auth/presentation/auth/oauth.controller';
 import {
   OAuthProviderError,
   OAuthErrorCode,
-} from '@/domain/auth/exceptions/oauth-exceptions';
+} from '@/modules/auth/domain/auth/exceptions/oauth-exceptions';
 import {
   UnauthorizedDomainException,
   UserBannedDomainException,
-} from '@/domain/auth/exceptions/auth-exceptions';
+} from '@/modules/auth/domain/auth/exceptions/auth-exceptions';
 import { ConflictException } from '@nestjs/common';
 
 describe('toErrorCode', () => {

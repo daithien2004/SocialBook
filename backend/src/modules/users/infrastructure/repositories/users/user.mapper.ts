@@ -1,0 +1,98 @@
+import { User as UserEntity } from '@/modules/users/domain/users/entities/user.entity';
+import { UserDocument } from '@/modules/users/infrastructure/schemas/user.schema';
+import { Types } from 'mongoose';
+import { ReadingPreferencesProps } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
+
+export interface UserPersistence {
+  _id: Types.ObjectId;
+  roleId: Types.ObjectId;
+  username: string;
+  email: string;
+  password?: string;
+  isVerified: boolean;
+  isBanned: boolean;
+  violationCount: number;
+  provider: string;
+  providerId?: string;
+  image?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  hashedRt?: string;
+  previousHashedRt?: string;
+  refreshRotatedAt?: Date;
+  lastLoginIp?: string;
+  lastLoginUa?: string;
+  favoriteGenres: Types.ObjectId[];
+  readingPreferences?: ReadingPreferencesProps;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export class UserMapper {
+  static toDomain(doc: UserDocument): UserEntity {
+    return UserEntity.reconstitute({
+      id: doc._id.toString(),
+      roleId: doc.roleId.toString(),
+      username: doc.username,
+      email: doc.email,
+      password: doc.password,
+      isVerified: doc.isVerified,
+      isBanned: doc.isBanned,
+      violationCount: doc.violationCount,
+      provider: doc.provider,
+      providerId: doc.providerId,
+      image: doc.image,
+      bio: doc.bio,
+      location: doc.location,
+      website: doc.website,
+      hashedRt: doc.hashedRt,
+      previousHashedRt: doc.previousHashedRt,
+      refreshRotatedAt: doc.refreshRotatedAt,
+      lastLoginIp: doc.lastLoginIp,
+      lastLoginUa: doc.lastLoginUa,
+      favoriteGenres: (doc.favoriteGenres || []).map((g: Types.ObjectId) =>
+        g.toString(),
+      ),
+      readingPreferences: doc.readingPreferences
+        ? {
+            ...doc.readingPreferences,
+            warmth: doc.readingPreferences.warmth ?? 0,
+            brightness: doc.readingPreferences.brightness ?? 100,
+          }
+        : undefined,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    });
+  }
+
+  static toPersistence(entity: UserEntity): UserPersistence {
+    return {
+      _id: new Types.ObjectId(entity.id.toString()),
+      roleId: new Types.ObjectId(entity.roleId),
+      username: entity.username,
+      email: entity.email.toString(),
+      password: entity.password,
+      isVerified: entity.isVerified,
+      isBanned: entity.isBanned,
+      violationCount: entity.violationCount,
+      provider: entity.provider,
+      providerId: entity.providerId,
+      image: entity.image,
+      bio: entity.bio,
+      location: entity.location,
+      website: entity.website,
+      hashedRt: entity.hashedRt,
+      previousHashedRt: entity.previousHashedRt,
+      refreshRotatedAt: entity.refreshRotatedAt,
+      lastLoginIp: entity.lastLoginIp,
+      lastLoginUa: entity.lastLoginUa,
+      favoriteGenres: (entity.favoriteGenres || []).map(
+        (g) => new Types.ObjectId(g),
+      ),
+      readingPreferences: entity.readingPreferences,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    };
+  }
+}

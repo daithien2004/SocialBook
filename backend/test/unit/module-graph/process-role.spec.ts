@@ -37,14 +37,15 @@ interface ProcessorGate {
  */
 const PROCESSOR_GATES: ProcessorGate[] = [
   {
-    modulePath: '@/application/chapters/chapters-application.module',
+    modulePath:
+      '@/modules/chapters/application/chapters/chapters-application.module',
     exportName: 'ChaptersApplicationModule',
     processorName: 'SingleChapterProcessor',
     queueName: 'create-single-chapter',
     expectedIn: 'worker',
   },
   {
-    modulePath: '@/application/chroma/chroma-application.module',
+    modulePath: '@/modules/chroma/application/chroma-application.module',
     exportName: 'ChromaApplicationModule',
     processorName: 'ChromaProcessor',
     queueName: 'chroma',
@@ -52,14 +53,15 @@ const PROCESSOR_GATES: ProcessorGate[] = [
   },
   {
     modulePath:
-      '@/infrastructure/queues/chapters-import/chapters-import.module',
+      '@/modules/chapters/infrastructure/queues/chapters-import/chapters-import.module',
     exportName: 'ChaptersImportModule',
     processorName: 'ChaptersImportProcessor',
     queueName: 'chapters-import',
     expectedIn: 'worker',
   },
   {
-    modulePath: '@/application/posts/post-moderation.application.module',
+    modulePath:
+      '@/modules/posts/application/posts/post-moderation.application.module',
     exportName: 'PostModerationApplicationModule',
     processorName: 'PostModerationProcessor',
     queueName: 'post-moderation',

@@ -1,9 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { ICachePort } from '@/shared/domain/cache.port';
-import { IBookCachePort } from '@/domain/books/interfaces/book-cache.port';
-import { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
-import { IMediaPort } from '@/domain/cloudinary/interfaces/media.port';
-import { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';
+import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
+import { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
+import { IMediaPort } from '@/modules/media/domain/media.port';
+import { ITrendingKeywordCachePort } from '@/modules/search/domain';
 import {
   createMockCacheService,
   createMockBookCacheService,

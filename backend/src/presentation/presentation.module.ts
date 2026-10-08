@@ -1,126 +1,70 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth/auth.controller';
-import { OAuthController } from './auth/oauth.controller';
-import { AuthorsController } from './authors/authors.controller';
-import { BooksController } from './books/books.controller';
-import { ChaptersController } from './chapters/chapters.controller';
-import { ChromaController } from './chroma/chroma.controller';
-import { CommentsController } from './comments/comments.controller';
-import { CollectionsController } from './collections/collections.controller';
-import { FollowsController } from './follows/follows.controller';
-import { AIController } from './ai/ai.controller';
-import { GenresController } from './genres/genres.controller';
-import { LibraryController } from './library/library.controller';
-import { LikesController } from './likes/likes.controller';
-import { NotificationController } from './notification/notification.controller';
-import { PostsController } from './posts/posts.controller';
-import { RecommendationsController } from './recommendations/recommendations.controller';
-import { ReviewsController } from './reviews/reviews.controller';
-import { SearchController } from './search/search.controller';
-import { StatisticsController } from './statistics/statistics.controller';
-import { TextToSpeechController } from './text-to-speech/text-to-speech.controller';
-import { UsersController } from './users/users.controller';
-import { AdminToxicWordsController } from './content-moderation/admin-toxic-words.controller';
 import { AdminRateLimitController } from './admin/rate-limit.controller';
-import { BookmarkController } from './bookmarks/bookmark.controller';
-import { UserHighlightsController } from './user-highlights/user-highlights.controller';
-import { ReadingRoomsController } from './reading-rooms/reading-rooms.controller';
-
-import { AnalyticsController } from './analytics/analytics.controller';
 
 import { RateLimitConfigService } from '@/shared/infrastructure/rate-limit-config.service';
 import { GatewaysModule } from './gateways/gateways.module';
 
-import { UsersApplicationModule } from '@/application/users/users-application.module';
-import { BooksApplicationModule } from '@/application/books/books-application.module';
-import { AuthorsApplicationModule } from '@/application/authors/authors-application.module';
-import { ChaptersApplicationModule } from '@/application/chapters/chapters-application.module';
-import { CommentsApplicationModule } from '@/application/comments/comments-application.module';
-import { GenresApplicationModule } from '@/application/genres/genres-application.module';
-import { PostsApplicationModule } from '@/application/posts/posts-application.module';
-import { ReviewsApplicationModule } from '@/application/reviews/reviews-application.module';
-import { AuthApplicationModule } from '@/application/auth/auth-application.module';
-import { FollowsApplicationModule } from '@/application/follows/follows-application.module';
-import { LibraryApplicationModule } from '@/application/library/library-application.module';
-import { LikesApplicationModule } from '@/application/likes/likes-application.module';
-import { StatisticsApplicationModule } from '@/application/statistics/statistics-application.module';
-import { ChromaApplicationModule } from '@/application/chroma/chroma-application.module';
-import { SearchApplicationModule } from '@/application/search/search-application.module';
-import { TextToSpeechApplicationModule } from '@/application/text-to-speech/text-to-speech-application.module';
-import { AIApplicationModule } from '@/application/ai/ai-application.module';
-import { RecommendationsApplicationModule } from '@/application/recommendations/recommendations-application.module';
-import { NotificationsApplicationModule } from '@/application/notifications/notifications-application.module';
-import { ContentModerationApplicationModule } from '@/application/content-moderation/content-moderation-application.module';
-import { BookmarksApplicationModule } from '@/application/bookmarks/bookmarks-application.module';
-import { UserHighlightsApplicationModule } from '@/application/user-highlights/user-highlights-application.module';
-import { ReadingRoomsApplicationModule } from '@/application/reading-rooms/reading-rooms-application.module';
+import { UsersModule } from '@/modules/users';
+import { BooksModule } from '@/modules/books';
+import { ChaptersModule } from '@/modules/chapters';
+import { PostsModule } from '@/modules/posts';
+import { AuthModule } from '@/modules/auth';
+import { LibraryModule } from '@/modules/library';
+import { ChromaModule } from '@/modules/chroma';
+import { TextToSpeechModule } from '@/modules/text-to-speech';
+import { NotificationsModule } from '@/modules/notifications';
+import { ContentModerationModule } from '@/modules/content-moderation';
+import { ReadingRoomsModule } from '@/modules/reading-rooms';
+import { BookmarksModule } from '@/modules/bookmarks';
+import { UserHighlightsModule } from '@/modules/user-highlights';
+import { AuthorsModule } from '@/modules/authors';
+import { FollowsModule } from '@/modules/follows';
+import { LikesModule } from '@/modules/likes';
+import { GenresModule } from '@/modules/genres';
+import { ReviewsModule } from '@/modules/reviews';
+import { CommentsModule } from '@/modules/comments';
+import { SearchModule } from '@/modules/search';
+import { StatisticsModule } from '@/modules/statistics';
+import { RecommendationsModule } from '@/modules/recommendations';
+import { AIModule } from '@/modules/ai';
 
-import { AnalyticsApplicationModule } from '@/application/analytics/analytics-application.module';
+import { AnalyticsModule } from '@/modules/analytics';
 
 import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
-    UsersApplicationModule,
-    BooksApplicationModule,
-    AuthorsApplicationModule,
-    ChaptersApplicationModule,
-    CommentsApplicationModule,
-    GenresApplicationModule,
-    PostsApplicationModule,
-    ReviewsApplicationModule,
-    AuthApplicationModule,
-    FollowsApplicationModule,
-    LibraryApplicationModule,
-    LikesApplicationModule,
-    StatisticsApplicationModule,
-    ChromaApplicationModule,
-    SearchApplicationModule,
-    TextToSpeechApplicationModule,
-    AIApplicationModule,
-    RecommendationsApplicationModule,
-    NotificationsApplicationModule,
-    ContentModerationApplicationModule,
-    BookmarksApplicationModule,
-    UserHighlightsApplicationModule,
-    ReadingRoomsApplicationModule,
+    UsersModule,
+    BooksModule,
+    AuthorsModule,
+    ChaptersModule,
+    GenresModule,
+    PostsModule,
+    ReviewsModule,
+    CommentsModule,
+    AuthModule,
+    FollowsModule,
+    LibraryModule,
+    LikesModule,
+    StatisticsModule,
+    ChromaModule,
+    SearchModule,
+    TextToSpeechModule,
+    AIModule,
+    RecommendationsModule,
+    NotificationsModule,
+    ContentModerationModule,
+    BookmarksModule,
+    UserHighlightsModule,
+    ReadingRoomsModule,
 
-    AnalyticsApplicationModule,
+    AnalyticsModule,
     GatewaysModule,
     InfrastructureModule,
     HealthModule,
   ],
-  controllers: [
-    AuthController,
-    OAuthController,
-    AuthorsController,
-    BooksController,
-    ChaptersController,
-    ChromaController,
-    CommentsController,
-    CollectionsController,
-    FollowsController,
-    AIController,
-    GenresController,
-    LibraryController,
-    LikesController,
-    NotificationController,
-    PostsController,
-    RecommendationsController,
-    ReviewsController,
-    SearchController,
-    StatisticsController,
-    TextToSpeechController,
-    UsersController,
-    AdminToxicWordsController,
-    AdminRateLimitController,
-    BookmarkController,
-    UserHighlightsController,
-    ReadingRoomsController,
-
-    AnalyticsController,
-  ],
+  controllers: [AdminRateLimitController],
   providers: [RateLimitConfigService],
 })
 export class PresentationModule {}

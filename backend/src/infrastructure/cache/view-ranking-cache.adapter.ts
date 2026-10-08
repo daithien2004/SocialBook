@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
-import type { IViewRankingCachePort } from '@/domain/books/interfaces/view-ranking-cache.port';
+import type { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
 
 function getISOWeek(date: Date) {
   const d = new Date(

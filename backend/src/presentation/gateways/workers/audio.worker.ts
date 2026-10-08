@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { ITextToSpeechRepository } from '@/domain/text-to-speech/repositories/text-to-speech.repository.interface';
-import { ITextToSpeechPort } from '@/domain/text-to-speech/interfaces/text-to-speech.port';
-import { IChapterRepository } from '@/domain/chapters/repositories/chapter.repository.interface';
-import { TTSStatus } from '@/domain/text-to-speech/entities/text-to-speech.entity';
+import { ITextToSpeechRepository } from '@/modules/text-to-speech/domain/repositories/text-to-speech.repository.interface';
+import { ITextToSpeechPort } from '@/modules/text-to-speech/domain/interfaces/text-to-speech.port';
+import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
+import { TTSStatus } from '@/modules/text-to-speech/domain/entities/text-to-speech.entity';
 import { getErrorMessage } from '@/common/utils/error.util';
-import { ChapterId } from '@/domain/chapters/value-objects/chapter-id.vo';
-import { GenerateAudioJobPayload } from '@/application/text-to-speech/jobs/tts-job.payload';
+import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chapter-id.vo';
+import { GenerateAudioJobPayload } from '@/modules/text-to-speech/application/public-api';
 
 @Processor('audio-generation', {
   concurrency: 2,

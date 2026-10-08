@@ -38,11 +38,6 @@ export interface RoomHighlight {
   content: string;
   aiInsight?: string;
   createdAt: string;
-  user?: {
-    userId: string;
-    displayName: string;
-    avatarUrl: string;
-  };
 }
 
 interface ReadingRoomState {
@@ -63,6 +58,7 @@ interface ReadingRoomState {
   updatePresences: (presences: PresenceData[]) => void;
   applyPresenceChanges: (changes: PresenceChange[]) => void;
   updateChapter: (chapterSlug: string) => void;
+  markRoomEnded: (roomId: string) => void;
   setHighlights: (highlights: RoomHighlight[]) => void;
   addHighlight: (highlight: RoomHighlight) => void;
   removeHighlight: (id: string) => void;
@@ -86,7 +82,7 @@ export const useReadingRoomStore = create<ReadingRoomState>((set, get) => ({
   setRoom: (room) =>
     set({
       room,
-      highlights: room.highlights || [],
+      highlights: [],
     }),
 
   setConnection: (connection, errorCode = null) =>
@@ -187,6 +183,17 @@ export const useReadingRoomStore = create<ReadingRoomState>((set, get) => ({
         ? { ...state.room, currentChapterSlug: chapterSlug }
         : null,
     })),
+  markRoomEnded: (roomId) =>
+    set((state) => {
+      if (!state.room || state.room.roomId !== roomId) return state;
+      return {
+        room: { ...state.room, status: 'ended' },
+        connection: 'idle',
+        members: [],
+        presences: {},
+        byParagraph: {},
+      };
+    }),
   setHighlights: (highlights) => set({ highlights }),
   addHighlight: (highlight) =>
     set((state) => ({

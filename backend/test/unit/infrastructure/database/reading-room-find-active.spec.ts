@@ -1,6 +1,6 @@
-import { ReadingRoomRepository } from '@/infrastructure/database/repositories/reading-rooms/reading-room.repository';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.repository';
 import { Model } from 'mongoose';
-import { ReadingRoomDocument } from '@/infrastructure/database/schemas/reading-room.schema';
+import { ReadingRoomDocument } from '@/modules/reading-rooms/infrastructure/mongo/schemas/reading-room.schema';
 
 describe('ReadingRoomRepository findActiveByUser & findHistoryByUser (T11)', () => {
   let repository: ReadingRoomRepository;

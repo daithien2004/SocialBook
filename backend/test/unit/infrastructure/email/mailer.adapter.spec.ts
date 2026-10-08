@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { MailerAdapter } from '@/infrastructure/email/mailer.adapter';
+import { MailerAdapter } from '@/modules/auth/infrastructure/email/mailer.adapter';
 
 jest.mock('resend', () => {
   const send = jest.fn();

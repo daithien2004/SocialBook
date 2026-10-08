@@ -2,14 +2,14 @@
 
 ## Quick Reference
 
-- Trước khi làm việc, đọc `.agents/rules/AGENT_TYPE_RULES.md` (luật type safety bắt buộc)
+- Trước khi làm việc, đọc `.claude/rules/AGENT_TYPE_RULES.md` (luật type safety bắt buộc)
 - Đọc `.claude/rules/craftsman.md` và áp dụng cho toàn bộ quy hoạch/hiện thực/kiểm thử
 - Chạy `npm run check --workspace=backend` trước khi báo "xong"
 - Prefer repo-specific instructions over generic habits; keep changes scoped
 
 ## Type safety (bắt buộc)
 
-Nguồn chuẩn: `.agents/rules/AGENT_TYPE_RULES.md` (khối dưới đây phải khớp với file đó).
+Nguồn chuẩn: `.claude/rules/AGENT_TYPE_RULES.md` (khối dưới đây phải khớp với file đó).
 
 Dự án này cấm "ép kiểu cho qua". Compiler và lint là nguồn sự thật; không hạ chuẩn chúng.
 
@@ -201,7 +201,7 @@ export const getErrorMessage = (error: any): string => {
 
 **Prettier**: `singleQuote: true`, `trailingComma: "all"`
 
-**Backend ESLint** (`backend/eslint.config.mjs`, theo `.agents/skills/nestjs-type-safety-enforcement`):
+**Backend ESLint** (`backend/eslint.config.mjs`, theo `.claude/skills/nestjs-type-safety-enforcement`):
 - `strictTypeChecked` + `consistent-type-assertions: never`, `no-explicit-any`, `no-non-null-assertion`, `ban-ts-comment`, `switch-exhaustiveness-check`, `no-floating-promises: error`
 - Chỉ `src/shared/typing/unsafe.ts` và `test/support/typed-fake.ts` được cast
 - Violation cũ nằm trong `backend/eslint-suppressions.json` — chỉ được giảm, không được tăng

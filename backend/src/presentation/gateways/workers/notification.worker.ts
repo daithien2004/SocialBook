@@ -2,18 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job, UnrecoverableError } from 'bullmq';
 import { NotificationsService } from '../notifications/notifications.service';
-import { IPostRepository } from '@/domain/posts/repositories/post.repository.interface';
-import { ICommentRepository } from '@/domain/comments/repositories/comment.repository.interface';
-import { CommentId } from '@/domain/comments/value-objects/comment-id.vo';
-import { IUserRepository } from '@/domain/users/repositories/user.repository.interface';
-import { UserId } from '@/domain/users/value-objects/user-id.vo';
-import { TargetResolverRegistry } from '@/application/target-resolution/target-resolution.registry';
+import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
+import { ICommentRepository } from '@/modules/comments';
+import { CommentId } from '@/modules/comments';
+import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
+import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
+import { TargetResolverRegistry } from '@/modules/target-resolution/application/target-resolution/target-resolution.registry';
 import {
   CommentCreatedJobPayload,
   LikeToggledJobPayload,
   UserFollowedJobPayload,
   PostModeratedJobPayload,
-} from '@/application/notifications/jobs/notification-job.payload';
+} from '@/modules/notifications/application/public-api';
 import { EventNames } from '@/common/constants/event-names.constant';
 import {
   LikeToggledJobSchema,

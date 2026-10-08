@@ -1,0 +1,38 @@
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
+import { ReadingRoomResult } from '../reading-room.interface';
+
+export class ReadingRoomApplicationMapper {
+  static toResult(room: ReadingRoom): ReadingRoomResult {
+    return {
+      roomId: room.roomId,
+      bookId: room.bookId,
+      hostId: room.hostId,
+      mode: room.mode,
+      status: room.status,
+      currentChapterSlug: room.currentChapterSlug,
+      maxMembers: room.maxMembers,
+      membersCount: room.activeMembers.length,
+      createdAt: room.createdAt,
+      updatedAt: room.updatedAt,
+      members: room.activeMembers.map((m) => ({
+        userId: m.userId,
+        role: m.role,
+      })),
+      highlights: room.highlights.map((h) => ({
+        id: h.id!,
+        userId: h.userId,
+        displayName: h.displayName,
+        avatarUrl: h.avatarUrl,
+        chapterSlug: h.chapterSlug,
+        paragraphId: h.paragraphId,
+        content: h.content,
+        aiInsight: h.aiInsight,
+        createdAt: h.createdAt!,
+      })),
+    };
+  }
+
+  static toResultArray(rooms: ReadingRoom[]): ReadingRoomResult[] {
+    return rooms.map((room) => this.toResult(room));
+  }
+}

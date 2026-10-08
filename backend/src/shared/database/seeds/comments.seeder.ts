@@ -2,17 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
-  Comment,
+  CommentSchemaModel as Comment,
   CommentDocument,
-} from '@/infrastructure/database/schemas/comment.schema';
+} from '@/modules/comments';
 import {
   Chapter,
   ChapterDocument,
-} from '@/infrastructure/database/schemas/chapter.schema';
+} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 
 interface CommentSeedData {
   userId: Types.ObjectId;

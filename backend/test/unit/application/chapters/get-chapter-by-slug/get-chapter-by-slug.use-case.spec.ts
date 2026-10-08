@@ -1,7 +1,7 @@
-import { GetChapterBySlugHandler } from '@/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.handler';
-import { GetChapterBySlugQuery } from '@/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.query';
+import { GetChapterBySlugHandler } from '@/modules/chapters/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.handler';
+import { GetChapterBySlugQuery } from '@/modules/chapters/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.query';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { ChapterDetailReadModel } from '@/domain/chapters/read-models/chapter-detail.read-model';
+import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
 import { createMockChapterRepository } from '../../../../helpers/mock-chapter-repository';
 
 function createMockChapterDetail(

@@ -22,8 +22,8 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { configSwagger } from './config/swagger.config';
 import { isWorkerProcess } from './common/utils/process-role.util';
 import { timingSafeEqual } from 'crypto';
-import { POST_MODERATION_QUEUE } from './infrastructure/queues/post-moderation/post-moderation.processor';
-import { CHAPTERS_IMPORT_QUEUE } from './infrastructure/queues/chapters-import/chapters-import.processor';
+import { POST_MODERATION_QUEUE } from './modules/posts/infrastructure/queues/post-moderation/post-moderation.processor';
+import { CHAPTERS_IMPORT_QUEUE } from './modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor';
 
 async function bootstrap() {
   // A7: entry point của API không bao giờ được chạy ở worker mode. Nếu không có

@@ -13,6 +13,7 @@ interface UseReadingRoomActionsOptions {
   bookData?: { id: string; title: string; slug: string } | null;
   chapter?: { id: string; title: string } | null;
   leaveRoom: (newHostId?: string) => void;
+  joinRoom: () => void;
 }
 
 export function useReadingRoomActions({
@@ -20,6 +21,7 @@ export function useReadingRoomActions({
   bookData,
   chapter,
   leaveRoom,
+  joinRoom,
 }: UseReadingRoomActionsOptions) {
   const router = useRouter();
   const { copy, copiedText } = useCopyToClipboard();
@@ -92,12 +94,13 @@ export function useReadingRoomActions({
     try {
       const result = await reactivateRoom.mutateAsync(roomCode);
       useReadingRoomStore.getState().setRoom(result);
+      joinRoom();
       toast.success('Phòng đã được mở lại!');
       router.refresh();
     } catch {
       toast.error('Không thể mở lại phòng');
     }
-  }, [reactivateRoom, roomCode, router]);
+  }, [joinRoom, reactivateRoom, roomCode, router]);
 
   const onAddToLibrary = useCallback(() => {
     if (bookData) {

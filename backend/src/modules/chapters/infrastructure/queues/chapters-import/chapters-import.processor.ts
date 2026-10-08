@@ -1,0 +1,155 @@
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import { BadRequestException } from '@nestjs/common';
+import type { Job, Queue } from 'bullmq';
+import { InjectRedis } from '@nestjs-modules/ioredis';
+import Redis from 'ioredis';
+
+import type {
+  ImportChaptersJobData,
+  ImportChaptersJobProgress,
+  ImportChaptersJobResult,
+} from '@/modules/chapters/domain/chapters/interfaces/chapters-import.types';
+import {
+  CREATE_SINGLE_CHAPTER_QUEUE,
+  CREATE_SINGLE_CHAPTER_JOB,
+  CreateSingleChapterJobData,
+} from '@/modules/chapters/application/chapters/processors/single-chapter.processor';
+
+const JOB_NAME = 'import-chapters';
+const QUEUE_NAME = 'chapters-import';
+
+@Processor(QUEUE_NAME, {
+  // lockDuration: 2 phút — tránh BullMQ tưởng Worker chết khi đang parse file lớn (CPU-bound > 30s).
+  lockDuration: 120_000,
+  // maxStalledCount: 1 — lỡ Worker chết thật thì chỉ cho làm lại 1 lần,
+  // tránh vòng lặp vô hạn nếu file bị lỗi cấu trúc.
+  maxStalledCount: 1,
+})
+export class ChaptersImportProcessor extends WorkerHost {
+  constructor(
+    @InjectQueue(CREATE_SINGLE_CHAPTER_QUEUE)
+    private readonly chapterCreationQueue: Queue<CreateSingleChapterJobData>,
+    @InjectRedis() private readonly redis: Redis,
+  ) {
+    super();
+  }
+
+  async process(
+    job: Job<ImportChaptersJobData>,
+  ): Promise<ImportChaptersJobResult> {
+    if (job.name !== JOB_NAME) {
+      return {
+        total: 0,
+        successful: 0,
+        failed: 0,
+        failures: [{ title: job.name, reason: 'Unknown job name' }],
+      };
+    }
+
+    const { bookId, redisKey } = job.data;
+    let chapters = job.data.chapters;
+
+    if (redisKey) {
+      const redisData = await this.redis.get(redisKey);
+      if (redisData) {
+        chapters = JSON.parse(redisData) as typeof job.data.chapters;
+      }
+    }
+
+    if (!Array.isArray(chapters)) {
+      throw new BadRequestException('Invalid import payload: expected array');
+    }
+
+    const total = chapters.length;
+    const initialProgress: ImportChaptersJobProgress = {
+      total,
+      processed: 0,
+      successful: 0,
+      failed: 0,
+    };
+    await job.updateProgress(initialProgress);
+
+    const failures: Array<{ title: string; reason: string }> = [];
+    let successful = 0;
+    let failed = 0;
+
+    for (let i = 0; i < chapters.length; i++) {
+      const item = chapters[i];
+      const title = (item?.title ?? '').trim();
+      const content = (item?.content ?? '').trim();
+
+      const currentProgress: ImportChaptersJobProgress = {
+        total,
+        processed: i,
+        currentTitle: title || `Chapter ${i + 1}`,
+        successful,
+        failed,
+      };
+      await job.updateProgress(currentProgress);
+
+      if (!content) {
+        failed++;
+        failures.push({
+          title: title || `Chapter ${i + 1}`,
+          reason: 'Empty content',
+        });
+        continue;
+      }
+
+      const paragraphs = content
+        .split(/(?<=[.!?])\s+|\n+/)
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0)
+        .map((p) => ({ content: p }));
+
+      if (paragraphs.length === 0) {
+        failed++;
+        failures.push({
+          title: title || `Chapter ${i + 1}`,
+          reason: 'No paragraphs after splitting',
+        });
+        continue;
+      }
+
+      try {
+        // jobId tất định = nếu job cha bị stalled và chạy lại,
+        // BullMQ sẽ tự từ chối job con trùng ID — chống tạo chương trùng lặp.
+        await this.chapterCreationQueue.add(
+          CREATE_SINGLE_CHAPTER_JOB,
+          {
+            bookId,
+            title: title || `Chapter ${i + 1}`,
+            paragraphs,
+          },
+          { jobId: `chapter-${bookId}-${i}` },
+        );
+        successful++;
+      } catch (error: unknown) {
+        failed++;
+        const reason = error instanceof Error ? error.message : 'Unknown error';
+        failures.push({
+          title: title || `Chapter ${i + 1}`,
+          reason,
+        });
+      }
+    }
+
+    const finalProgress: ImportChaptersJobProgress = {
+      total,
+      processed: total,
+      successful,
+      failed,
+    };
+    await job.updateProgress(finalProgress);
+
+    return {
+      total,
+      successful,
+      failed,
+      failures,
+    };
+  }
+}
+
+export const CHAPTERS_IMPORT_QUEUE = QUEUE_NAME;
+export const CHAPTERS_IMPORT_JOB_NAME = JOB_NAME;

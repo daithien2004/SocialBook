@@ -16,7 +16,7 @@ import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { JwtService } from '@nestjs/jwt';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EventNames } from '@/common/constants/event-names.constant';
-import { UserRoleChangedEvent } from '@/application/users/events/user-role-changed.event';
+import { UserRoleChangedEvent } from '@/modules/users/application/users/events/user-role-changed.event';
 
 interface SocketData {
   userId: string;

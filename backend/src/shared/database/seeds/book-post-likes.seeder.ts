@@ -1,22 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import {
-  Like,
-  LikeDocument,
-} from '@/infrastructure/database/schemas/like.schema';
+import { LikeSchemaModel as Like, LikeDocument } from '@/modules/likes';
 import {
   Book,
   BookDocument,
-} from '@/infrastructure/database/schemas/book.schema';
+} from '@/modules/books/infrastructure/schemas/book.schema';
 import {
   Post,
   PostDocument,
-} from '@/infrastructure/database/schemas/post.schema';
+} from '@/modules/posts/infrastructure/schemas/post.schema';
 import {
   User,
   UserDocument,
-} from '@/infrastructure/database/schemas/user.schema';
+} from '@/modules/users/infrastructure/schemas/user.schema';
 
 interface LikeSeedData {
   userId: Types.ObjectId;

@@ -1,4 +1,4 @@
-import { accessTokenFromRequest } from '@/infrastructure/auth/strategies/jwt.strategy';
+import { accessTokenFromRequest } from '@/modules/auth/infrastructure/auth/strategies/jwt.strategy';
 
 describe('accessTokenFromRequest', () => {
   it('extracts from bearer header', () => {

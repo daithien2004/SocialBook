@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
-import type { ITrendingKeywordCachePort } from '@/domain/search/interfaces/trending-keyword-cache.port';
+import type { ITrendingKeywordCachePort } from '@/modules/search/domain';
 
 @Injectable()
 export class TrendingKeywordCacheAdapter implements ITrendingKeywordCachePort {
