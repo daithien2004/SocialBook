@@ -6,7 +6,8 @@ import {
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
 import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chapter-id.vo';
 import { DeleteChapterCommand } from './delete-chapter.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
+import { ErrorMessages } from '@/shared/platform/constants/error-messages';
 
 @CommandHandler(DeleteChapterCommand)
 export class DeleteChapterHandler implements ICommandHandler<
@@ -24,7 +25,7 @@ export class DeleteChapterHandler implements ICommandHandler<
     const chapter = await this.chapterRepository.findById(chapterId);
 
     if (!chapter) {
-      throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
+      throw new NotFoundDomainException(ChapterErrorMessages.CHAPTER_NOT_FOUND);
     }
 
     await this.chapterRepository.delete(chapterId);

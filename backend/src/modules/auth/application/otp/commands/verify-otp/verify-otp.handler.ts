@@ -1,6 +1,6 @@
 import { VerifyOtpCommand } from './verify-otp.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { getErrorMessage } from '@/common/utils/error.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
 import {
   BadRequestDomainException,
@@ -32,7 +32,7 @@ export class VerifyOtpHandler {
           await this.otpRepository.deleteByEmail(email);
           await this.otpRepository.clearVerifyAttempts(email);
           throw new BadRequestDomainException(
-            'Bạn đã nhập sai quá 5 lần. Mã OTP đã bị hủy để bảo mật.',
+            'Báº¡n Ä‘Ã£ nháº­p sai quÃ¡ 5 láº§n. MÃ£ OTP Ä‘Ã£ bá»‹ há»§y Ä‘á»ƒ báº£o máº­t.',
           );
         }
         throw new BadRequestDomainException('Invalid OTP');

@@ -15,9 +15,9 @@ import { UpdateReadingPreferencesHandler } from './commands/update-reading-prefe
 import { UpdateUserHandler } from './commands/update-user/update-user.handler';
 import { UpdateUserImageHandler } from './commands/update-user-image/update-user-image.handler';
 import { UsersRepositoryModule } from '@/modules/users/infrastructure/repositories/users/users-repository.module';
-import { PostsRepositoryModule } from '@/modules/posts/infrastructure/repositories/posts/posts-repository.module';
-import { FollowsInfrastructureModule } from '@/modules/follows/infrastructure/follows-infrastructure.module';
-import { LibraryRepositoryModule } from '@/modules/library/infrastructure/repositories/library/library-repository.module';
+import { PostsRepositoryModule } from '@/modules/posts/infrastructure/public-api';
+import { FollowsInfrastructureModule } from '@/modules/follows/infrastructure/public-api';
+import { LibraryRepositoryModule } from '@/modules/library/infrastructure/public-api';
 import { MediaInfrastructureModule } from '@/modules/media/infrastructure/public-api';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';

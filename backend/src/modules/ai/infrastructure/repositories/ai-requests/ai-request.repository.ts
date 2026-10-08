@@ -1,7 +1,7 @@
 import {
   PaginatedResult,
   PaginationOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { AIRequest, AIRequestType } from '@/modules/ai/domain';
 import { AIRequestFilter, IAIRequestRepository } from '@/modules/ai/domain';
 import { AIRequestId } from '@/modules/ai/domain';

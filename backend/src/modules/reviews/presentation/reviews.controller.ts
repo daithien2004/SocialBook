@@ -11,9 +11,9 @@ import {
 
 import { CreateReviewDto } from '@/modules/reviews/presentation/dto/create-review.dto';
 import { UpdateReviewDto } from '@/modules/reviews/presentation/dto/update-review.dto';
-import { Public } from '@/common/decorators/custom.decorator';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
 import { Review } from '@/modules/reviews/domain/entities/review.entity';
 import { ReviewResponseDto } from '@/modules/reviews/presentation/dto/review.response.dto';

@@ -3,7 +3,7 @@ import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { UserId } from '@/modules/users/domain/public-api';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { RejectPostCommand } from './reject-post.command';
 
 @CommandHandler(RejectPostCommand)
@@ -18,10 +18,11 @@ export class RejectPostHandler implements ICommandHandler<
 
   async execute(command: RejectPostCommand) {
     const post = await this.postRepository.findById(command.postId);
-    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    if (!post)
+      throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
 
     await this.postRepository.delete(command.postId);
-    // vi phạm 10 lần là tự động khóa acc
+    // vi pháº¡m 10 láº§n lÃ  tá»± Ä‘á»™ng khÃ³a acc
     const user = await this.userRepository.findById(
       UserId.create(post.userId.toString()),
     );

@@ -2,7 +2,7 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Comment as CommentEntity } from '@/modules/comments/domain/entities/comment.entity';
 import { CommentModel } from '@/modules/comments/domain/read-models/comment-model';
 import {

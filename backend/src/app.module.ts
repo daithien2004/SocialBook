@@ -1,11 +1,11 @@
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
 import { LoggerModule } from '@/shared/logger/logger.module';
 import { getRedisConnectionToken, RedisModule } from '@nestjs-modules/ioredis';
 import { Logger, Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { CsrfGuard } from '@/common/guards/csrf.guard';
-import { CsrfMiddleware } from '@/common/middlewares/csrf.middleware';
+import { CsrfGuard } from '@/shared/platform/guards/csrf.guard';
+import { CsrfMiddleware } from '@/shared/platform/middlewares/csrf.middleware';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -14,12 +14,12 @@ import Redis from 'ioredis';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CqrsModule } from '@nestjs/cqrs';
-import { isWorkerProcess } from '@/common/utils/process-role.util';
+import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config';
 import { validateEnv } from './config/env.validation';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { HttpExceptionFilter } from './shared/platform/filters/http-exception.filter';
 
 // Clean Architecture Modules
 import { ApplicationModule } from './application/application.module';
@@ -89,8 +89,8 @@ import { PresentationModule } from './presentation/presentation.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        // Worker cần null để BLPOP blocking hoạt động đúng.
-        // API phải fail-fast (2 lần) khi redis-queue sập — tránh treo vô hạn làm chết API.
+        // Worker cáº§n null Ä‘á»ƒ BLPOP blocking hoáº¡t Ä‘á»™ng Ä‘Ãºng.
+        // API pháº£i fail-fast (2 láº§n) khi redis-queue sáº­p â€” trÃ¡nh treo vÃ´ háº¡n lÃ m cháº¿t API.
         const isWorker = process.env.WORKER_MODE === 'true';
         return {
           connection: {
@@ -98,7 +98,7 @@ import { PresentationModule } from './presentation/presentation.module';
             port: configService.get<number>('env.BULL_REDIS_PORT', 6379),
             password: configService.get<string>('env.BULL_REDIS_PASSWORD'),
             maxRetriesPerRequest: isWorker ? null : 2,
-            // API không tích trữ lệnh trong RAM khi Redis sập — trả 503 ngay lập tức.
+            // API khÃ´ng tÃ­ch trá»¯ lá»‡nh trong RAM khi Redis sáº­p â€” tráº£ 503 ngay láº­p tá»©c.
             enableOfflineQueue: isWorker,
           },
         };
@@ -118,8 +118,8 @@ import { PresentationModule } from './presentation/presentation.module';
       }),
     }),
     EventEmitterModule.forRoot({ verboseMemoryLeak: true }),
-    // A8: cron chỉ chạy ở tiến trình worker (đúng 1 replica). Nếu đăng ký ở mọi
-    // replica API thì mỗi @Cron sẽ bắn N lần — đối soát đơn hàng sẽ chạy trùng.
+    // A8: cron chá»‰ cháº¡y á»Ÿ tiáº¿n trÃ¬nh worker (Ä‘Ãºng 1 replica). Náº¿u Ä‘Äƒng kÃ½ á»Ÿ má»i
+    // replica API thÃ¬ má»—i @Cron sáº½ báº¯n N láº§n â€” Ä‘á»‘i soÃ¡t Ä‘Æ¡n hÃ ng sáº½ cháº¡y trÃ¹ng.
     ...(isWorkerProcess() ? [ScheduleModule.forRoot()] : []),
     CqrsModule.forRoot(),
     LoggerModule,

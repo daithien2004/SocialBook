@@ -1,4 +1,4 @@
-﻿export { AuthModule } from './auth.module';
+export { AuthModule } from './auth.module';
 export { AuthApplicationModule } from './application/auth/auth-application.module';
 export { OtpApplicationModule } from './application/otp/otp-application.module';
 export { AuthInfrastructureModule } from './infrastructure/auth/auth-infrastructure.module';

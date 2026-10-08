@@ -1,4 +1,4 @@
-import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
 import {
   IsBoolean,
   IsEnum,

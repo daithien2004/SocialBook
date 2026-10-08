@@ -1,7 +1,7 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Public } from '@/common/decorators/custom.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import {
   BadRequestException,
   Body,
@@ -22,10 +22,10 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
 import { ChapterResponseDto } from '@/modules/chapters/presentation/chapters/dto/chapter.response.dto';
 import { CreateChapterDto } from '@/modules/chapters/presentation/chapters/dto/create-chapter.dto';
 import { FilterChapterDto } from '@/modules/chapters/presentation/chapters/dto/filter-chapter.dto';
@@ -45,7 +45,7 @@ import { GetChapterKnowledgeQuery } from '@/modules/chapters/application/chapter
 import { AskChapterAICommand } from '@/modules/chapters/application/chapters/commands/ask-ai/ask-chapter-ai.command';
 import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dto';
 import { RecordChapterViewQuery } from '@/modules/chapters/application/chapters/queries/record-chapter-view/record-chapter-view.query';
-import { AIThrottleGuard } from '@/common/guards/ai-throttle.guard';
+import { AIThrottleGuard } from '@/shared/platform/guards/ai-throttle.guard';
 import { ImportEpubPreviewCommand } from '@/modules/chapters/application/chapters/commands/import-epub-preview/import-epub-preview.command';
 
 @Controller('books/:bookSlug/chapters')
@@ -279,7 +279,7 @@ export class ChaptersController {
 
     const chapterResult = await this.commandBus.execute(command);
     return {
-      message: 'Tạo chương thành công',
+      message: 'Táº¡o chÆ°Æ¡ng thÃ nh cÃ´ng',
       data: ChapterResponseDto.fromResult(chapterResult),
     };
   }
@@ -302,7 +302,7 @@ export class ChaptersController {
 
     const chapterResult = await this.commandBus.execute(command);
     return {
-      message: 'Cập nhật chương thành công',
+      message: 'Cáº­p nháº­t chÆ°Æ¡ng thÃ nh cÃ´ng',
       data: ChapterResponseDto.fromResult(chapterResult),
     };
   }
@@ -314,7 +314,7 @@ export class ChaptersController {
     const command = new DeleteChapterCommand(chapterId);
     await this.commandBus.execute(command);
     return {
-      message: 'Xóa chương thành công',
+      message: 'XÃ³a chÆ°Æ¡ng thÃ nh cÃ´ng',
     };
   }
 }

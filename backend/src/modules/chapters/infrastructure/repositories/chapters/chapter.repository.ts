@@ -2,7 +2,7 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Chapter as ChapterEntity } from '@/modules/chapters/domain/chapters/entities/chapter.entity';
 import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
 import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
@@ -197,7 +197,7 @@ export class ChapterRepository
     const total = paginatedResult.meta.total;
     const chapterDocs = paginatedResult.data;
 
-    // Lấy tất cả ttsStatus cho các chapter trong 1 query
+    // Láº¥y táº¥t cáº£ ttsStatus cho cÃ¡c chapter trong 1 query
     const chapterIds = chapterDocs.map((ch) => ch._id);
     const ttsDocs = await this.ttsModel
       .find({ chapterId: { $in: chapterIds }, status: 'completed' })
@@ -205,7 +205,7 @@ export class ChapterRepository
       .lean()
       .exec();
 
-    // Map chapterId -> TTS record mới nhất
+    // Map chapterId -> TTS record má»›i nháº¥t
     const ttsMap = new Map<string, { audioUrl?: string }>();
     for (const tts of ttsDocs) {
       const key = tts.chapterId.toString();

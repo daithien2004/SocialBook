@@ -1,5 +1,5 @@
 import { Query } from '@nestjs/cqrs';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
 import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
 

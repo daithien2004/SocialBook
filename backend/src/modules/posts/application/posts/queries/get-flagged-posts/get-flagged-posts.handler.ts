@@ -1,7 +1,7 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { GetFlaggedPostsQuery } from './get-flagged-posts.query';
 
 @QueryHandler(GetFlaggedPostsQuery)

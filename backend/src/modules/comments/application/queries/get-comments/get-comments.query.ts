@@ -1,5 +1,5 @@
 import { Query } from '@nestjs/cqrs';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { CommentModel } from '@/modules/comments/domain/read-models/comment-model';
 
 export class GetCommentsQuery extends Query<PaginatedResult<CommentModel>> {

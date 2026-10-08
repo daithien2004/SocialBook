@@ -5,7 +5,7 @@ import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo'
 import { ReadingRoomResult } from '../../reading-room.interface';
 import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
 import { ReactivateRoomCommand } from './reactivate-room.command';
-import { withOptimisticRetry } from '@/common/utils/with-retries.util';
+import { withOptimisticRetry } from '@/shared/platform/utils/with-retries.util';
 
 @CommandHandler(ReactivateRoomCommand)
 export class ReactivateRoomHandler implements ICommandHandler<
@@ -20,7 +20,7 @@ export class ReactivateRoomHandler implements ICommandHandler<
         RoomId.create(command.roomId),
       );
       if (!room) {
-        throw new NotFoundDomainException('Phòng không tồn tại');
+        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
       }
 
       room.reactivate(command.userId);

@@ -1,10 +1,10 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 
-import { Public } from '@/common/decorators/custom.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
-import { AIThrottleGuard } from '@/common/guards/ai-throttle.guard';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
+import { AIThrottleGuard } from '@/shared/platform/guards/ai-throttle.guard';
 
 import { BatchIndexDto } from '@/modules/chroma/presentation/dto/batch-index.dto';
 import { IndexDocumentDto } from '@/modules/chroma/presentation/dto/index-document.dto';

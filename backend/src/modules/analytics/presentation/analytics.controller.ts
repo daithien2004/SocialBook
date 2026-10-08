@@ -5,8 +5,8 @@ import { TrackUserEventDto } from './dto/track-user-event.dto';
 import { TrackUserEventCommand } from '@/modules/analytics/application/commands/track-user-event/track-user-event.command';
 import { GetTrendingBooksQuery } from '@/modules/analytics/application/queries/get-trending-books/get-trending-books.query';
 import { GetTopActiveReadersQuery } from '@/modules/analytics/application/queries/get-top-active-readers/get-top-active-readers.query';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { Public } from '@/common/decorators/custom.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
 
 @Controller('analytics')
 export class AnalyticsController {

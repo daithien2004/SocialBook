@@ -7,7 +7,7 @@ import {
 import { OnEvent } from '@nestjs/event-emitter';
 import { IToxicWordRepository } from '@/modules/content-moderation/domain/repositories/toxic-word.repository.interface';
 import { updateToxicWordsCache } from '@/modules/content-moderation/domain/utils/vietnamese-profanity';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 
@@ -47,9 +47,9 @@ export class RefreshToxicWordsListener
 
   @OnEvent(EventNames.TOXIC_WORDS_UPDATED)
   async handleToxicWordsUpdatedEvent() {
-    // Gọi tự làm mới local trước
+    // Gá»i tá»± lÃ m má»›i local trÆ°á»›c
     await this.refreshCache();
-    // Phát tín hiệu cho các process khác (worker, backend2, ...) làm mới
+    // PhÃ¡t tÃ­n hiá»‡u cho cÃ¡c process khÃ¡c (worker, backend2, ...) lÃ m má»›i
     this.redis
       .publish('cache-invalidate:toxic-words', 'refresh')
       .catch((err) => {

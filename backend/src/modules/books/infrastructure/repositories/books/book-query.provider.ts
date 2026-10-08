@@ -2,13 +2,13 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { BookDetailReadModel } from '@/modules/books/domain/books/read-models/book-detail.read-model';
 import { BookListReadModel } from '@/modules/books/domain/books/read-models/book-list.read-model';
 import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
 import { BookFilter } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
-import { getErrorMessage } from '@/common/utils/error.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';

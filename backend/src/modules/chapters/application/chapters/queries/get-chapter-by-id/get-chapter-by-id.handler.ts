@@ -5,7 +5,8 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
 import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chapter-id.vo';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
+import { ErrorMessages } from '@/shared/platform/constants/error-messages';
 import { GetChapterByIdQuery } from './get-chapter-by-id.query';
 import { ChapterResult } from '../get-chapters/get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
@@ -26,7 +27,7 @@ export class GetChapterByIdHandler implements IQueryHandler<
     const chapter = await this.chapterRepository.findById(chapterId);
 
     if (!chapter) {
-      throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
+      throw new NotFoundDomainException(ChapterErrorMessages.CHAPTER_NOT_FOUND);
     }
 
     await this.chapterRepository.incrementViews(chapterId);

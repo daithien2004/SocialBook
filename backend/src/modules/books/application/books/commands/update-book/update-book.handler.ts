@@ -10,9 +10,9 @@ import { Book } from '@/modules/books/domain/books/entities/book.entity';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { BookErrorMessages } from '@/modules/books/application/error-messages';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @CommandHandler(UpdateBookCommand)
 export class UpdateBookHandler implements ICommandHandler<
@@ -30,7 +30,7 @@ export class UpdateBookHandler implements ICommandHandler<
 
     const book = await this.bookRepository.findById(bookId);
     if (!book) {
-      throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
+      throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
     }
 
     // Check if title is being updated and if it conflicts with existing book
@@ -85,7 +85,7 @@ export class UpdateBookHandler implements ICommandHandler<
 
     await this.bookRepository.save(book);
 
-    // Sử dụng service chuyên biệt để cập nhật và xóa cache liên quan
+    // Sá»­ dá»¥ng service chuyÃªn biá»‡t Ä‘á»ƒ cáº­p nháº­t vÃ  xÃ³a cache liÃªn quan
     await this.bookCache.setDetail(book);
     await this.bookCache.invalidateDetail(book.id.toString(), book.slug);
 

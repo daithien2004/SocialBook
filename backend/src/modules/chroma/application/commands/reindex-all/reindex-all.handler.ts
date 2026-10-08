@@ -1,6 +1,6 @@
 import { ReindexAllCommand } from './reindex-all.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { getErrorMessage } from '@/common/utils/error.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
 import { IAuthorRepository } from '@/modules/authors/domain/public-api';
 import { IBookRepository } from '@/modules/books/domain/public-api';
@@ -36,29 +36,29 @@ export class ReindexAllHandler {
 
   async execute(): Promise<ReindexResult> {
     try {
-      this.logger.log('🚀 Starting full reindexing process...');
+      this.logger.log('ðŸš€ Starting full reindexing process...');
 
       // 1. Clear existing collection
-      // Lưu ý: Hiện tại Repository chưa hỗ trợ cơ chế Swap Collection (Blue-Green).
-      // Chúng ta chấp nhận rủi ro downtime ngắn trong lúc reindex.
+      // LÆ°u Ã½: Hiá»‡n táº¡i Repository chÆ°a há»— trá»£ cÆ¡ cháº¿ Swap Collection (Blue-Green).
+      // ChÃºng ta cháº¥p nháº­n rá»§i ro downtime ngáº¯n trong lÃºc reindex.
       await this.vectorRepository.clearCollection();
-      this.logger.log('🗑️ Vector collection cleared.');
+      this.logger.log('ðŸ—‘ï¸ Vector collection cleared.');
 
       // 2. Run Reindexing in Parallel for performance
-      this.logger.log('⚡ Running Author and Book reindexing in parallel...');
+      this.logger.log('âš¡ Running Author and Book reindexing in parallel...');
       const [authorStats, bookStats] = await Promise.all([
         this.reindexAuthors(),
         this.reindexBooks(),
       ]);
 
-      this.logger.log('✨ Full reindexing process completed!');
+      this.logger.log('âœ¨ Full reindexing process completed!');
 
       return {
         success: true,
         details: { authors: authorStats, books: bookStats },
       };
     } catch (error: unknown) {
-      this.logger.error('❌ Full reindexing failed:', error);
+      this.logger.error('âŒ Full reindexing failed:', error);
       throw error;
     }
   }
@@ -75,7 +75,7 @@ export class ReindexAllHandler {
     let batchBuffer: VectorDocument[] = [];
     const failedEntityIds = new Set<string>();
 
-    this.logger.log('📚 Starting author reindexing...');
+    this.logger.log('ðŸ“š Starting author reindexing...');
 
     do {
       const result = await this.authorRepository.findAll(
@@ -88,14 +88,14 @@ export class ReindexAllHandler {
       if (currentPage === 1) {
         stats.total = result.meta.total;
         this.logger.log(
-          `📚 Total authors: ${stats.total} (${totalPages} pages)`,
+          `ðŸ“š Total authors: ${stats.total} (${totalPages} pages)`,
         );
       }
 
       for (const author of authors) {
         try {
           const bioClean = this.stripHtml(author.bio);
-          const content = `Tác giả: ${author.name.toString()}\nTiểu sử: ${bioClean}`;
+          const content = `TÃ¡c giáº£: ${author.name.toString()}\nTiá»ƒu sá»­: ${bioClean}`;
 
           const document = VectorDocument.createAuthorDocument(
             this.idGenerator.generate(),
@@ -142,7 +142,7 @@ export class ReindexAllHandler {
     let batchBuffer: VectorDocument[] = [];
     const failedEntityIds = new Set<string>();
 
-    this.logger.log('📖 Starting book reindexing...');
+    this.logger.log('ðŸ“– Starting book reindexing...');
 
     do {
       const result = await this.bookRepository.findAll(
@@ -154,17 +154,19 @@ export class ReindexAllHandler {
 
       if (currentPage === 1) {
         stats.total = result.meta.total;
-        this.logger.log(`📖 Total books: ${stats.total} (${totalPages} pages)`);
+        this.logger.log(
+          `ðŸ“– Total books: ${stats.total} (${totalPages} pages)`,
+        );
       }
 
       for (const book of books) {
         try {
           const titleStr = book.title.toString();
-          const authorStr = book.authorName || 'Không rõ';
+          const authorStr = book.authorName || 'KhÃ´ng rÃµ';
           const genreStr =
             book.genreObjects?.map((g) => g.name).join(', ') || '';
 
-          const contextHeader = `Sách: ${titleStr} | Tác giả: ${authorStr} | Thể loại: ${genreStr}\nNội dung: `;
+          const contextHeader = `SÃ¡ch: ${titleStr} | TÃ¡c giáº£: ${authorStr} | Thá»ƒ loáº¡i: ${genreStr}\nNá»™i dung: `;
 
           const descriptionClean = this.stripHtml(book.description);
           const chunks = this.chunkText(descriptionClean, 500);

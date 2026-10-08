@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 
 import { GetBookStatsHandler } from '@/modules/statistics/application/queries/get-book-stats/get-book-stats.handler';
 import { GetEngagementStatsHandler } from '@/modules/statistics/application/queries/get-engagement-stats/get-engagement-stats.handler';

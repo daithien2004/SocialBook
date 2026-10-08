@@ -2,7 +2,7 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { GetPostQuery } from './get-post.query';
 
 @QueryHandler(GetPostQuery)
@@ -15,12 +15,12 @@ export class GetPostHandler implements IQueryHandler<GetPostQuery, Post> {
       query.viewerUserId,
     );
     if (!post) {
-      throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+      throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
     }
 
     // Visibility logic: Flagged posts are only visible to the author
     if (post.isFlagged && post.userId !== query.viewerUserId) {
-      throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+      throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
     }
     return post;
   }

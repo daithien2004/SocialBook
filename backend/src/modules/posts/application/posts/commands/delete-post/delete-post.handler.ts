@@ -4,7 +4,7 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { DeletePostCommand } from './delete-post.command';
 
 import { Action, Subject } from '@socialbook/shared';
@@ -19,10 +19,13 @@ export class DeletePostHandler implements ICommandHandler<
 
   async execute(command: DeletePostCommand): Promise<void> {
     const post = await this.postRepository.findById(command.postId);
-    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    if (!post)
+      throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
 
     if (!command.ability.can(Action.Delete, subject(Subject.Post, post))) {
-      throw new ForbiddenDomainException(ErrorMessages.POST_DELETE_FORBIDDEN);
+      throw new ForbiddenDomainException(
+        PostErrorMessages.POST_DELETE_FORBIDDEN,
+      );
     }
 
     if (command.isHardDelete) {

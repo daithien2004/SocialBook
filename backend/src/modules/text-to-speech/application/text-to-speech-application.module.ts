@@ -6,7 +6,7 @@ import { GenerateChapterAudioHandler } from './commands/generate-chapter-audio/g
 import { GetChapterAudioHandler } from './queries/get-chapter-audio/get-chapter-audio.handler';
 import { IncrementPlayCountHandler } from './commands/increment-play-count/increment-play-count.handler';
 import { TextToSpeechInfrastructureModule } from '../infrastructure/text-to-speech-infrastructure.module';
-import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/repositories/chapters/chapters-repository.module';
+import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { LanguageDetectorService } from './services/language-detector.service';
 import { QueueModule } from '@/infrastructure/queue/queue.module';

@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { BookId } from '@/modules/books/domain/public-api';
 import { BookViewedEvent } from '../events/book-viewed.event';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @Injectable()
 export class BookAnalyticsListener {

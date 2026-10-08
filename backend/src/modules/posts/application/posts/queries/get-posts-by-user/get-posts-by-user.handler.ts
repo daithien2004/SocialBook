@@ -1,6 +1,6 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { ErrorMessages } from '@/common/constants/error-messages';
-import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
+import { ErrorMessages } from '@/shared/platform/constants/error-messages';
+import { CursorPaginatedResult } from '@/shared/domain/pagination.types';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';

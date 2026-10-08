@@ -1,8 +1,11 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { SkipThrottle } from '@nestjs/throttler';
-import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
-import { ApiFileUpload, Public } from '@/common/decorators/custom.decorator';
+import { RequireAuth } from '@/shared/platform/decorators/auth-swagger.decorator';
+import {
+  ApiFileUpload,
+  Public,
+} from '@/shared/platform/decorators/custom.decorator';
 import {
   Body,
   Controller,
@@ -37,7 +40,7 @@ import { ToggleBookLikeCommand } from '@/modules/books/application/books/command
 import { RecordBookViewCommand } from '@/modules/books/application/books/commands/record-book-view/record-book-view.command';
 import { GetTopReadBooksQuery } from '@/modules/books/application/books/queries/get-top-read-books/get-top-read-books.query';
 import { IMediaPort } from '@/modules/media/domain/public-api';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 @Controller('books')
 @SkipThrottle({ global: true })
@@ -58,7 +61,7 @@ export class BooksController {
     @Body() createBookDto: CreateBookDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    // Xử lý upload file trước khi tạo command
+    // Xá»­ lÃ½ upload file trÆ°á»›c khi táº¡o command
     const coverUrl = file
       ? await this.uploadFile(file)
       : createBookDto.coverUrl;
@@ -70,7 +73,7 @@ export class BooksController {
 
     const book = await this.commandBus.execute(command);
     return {
-      message: 'Tạo sách thành công',
+      message: 'Táº¡o sÃ¡ch thÃ nh cÃ´ng',
       data: BookResponseDto.fromEntity(book),
     };
   }
@@ -87,7 +90,7 @@ export class BooksController {
     const result = await this.queryBus.execute(query);
 
     return {
-      message: 'Lấy danh sách sách (Admin) thành công',
+      message: 'Láº¥y danh sÃ¡ch sÃ¡ch (Admin) thÃ nh cÃ´ng',
       data: BookResponseDto.fromArray(result.data),
       meta: result.meta,
     };
@@ -100,7 +103,7 @@ export class BooksController {
     const data = await this.queryBus.execute(query);
 
     return {
-      message: 'Lấy danh sách bộ lọc thành công',
+      message: 'Láº¥y danh sÃ¡ch bá»™ lá»c thÃ nh cÃ´ng',
       data,
     };
   }
@@ -115,7 +118,7 @@ export class BooksController {
     const result = await this.queryBus.execute(query);
 
     return {
-      message: 'Lấy danh sách top đọc nhiều thành công',
+      message: 'Láº¥y danh sÃ¡ch top Ä‘á»c nhiá»u thÃ nh cÃ´ng',
       data: BookResponseDto.fromArray(result),
     };
   }
@@ -123,7 +126,7 @@ export class BooksController {
   @Public()
   @Get()
   async findAll(@Query() filter: FilterBookDto) {
-    // Nếu có từ khóa tìm kiếm, sử dụng Intelligent Search
+    // Náº¿u cÃ³ tá»« khÃ³a tÃ¬m kiáº¿m, sá»­ dá»¥ng Intelligent Search
     if (filter.search) {
       const query = new IntelligentSearchQuery({
         query: filter.search,
@@ -134,13 +137,13 @@ export class BooksController {
       const result = await this.intelligentSearchUseCase.execute(query);
 
       return {
-        message: 'Tìm kiếm sách thành công',
+        message: 'TÃ¬m kiáº¿m sÃ¡ch thÃ nh cÃ´ng',
         data: BookResponseDto.fromSearchResults(result.data),
         meta: result.meta,
       };
     }
 
-    // Nếu không search, dùng logic GetBooks bình thường (Danh sách trang chủ)
+    // Náº¿u khÃ´ng search, dÃ¹ng logic GetBooks bÃ¬nh thÆ°á»ng (Danh sÃ¡ch trang chá»§)
     const query = new GetBooksQuery({
       ...filter,
       search: undefined, // Explicitly clear search for fallback flow
@@ -149,7 +152,7 @@ export class BooksController {
     const result = await this.queryBus.execute(query);
 
     return {
-      message: 'Lấy danh sách sách thành công',
+      message: 'Láº¥y danh sÃ¡ch sÃ¡ch thÃ nh cÃ´ng',
       data: BookResponseDto.fromArray(result.data),
       meta: result.meta,
     };
@@ -162,7 +165,7 @@ export class BooksController {
     const book = await this.queryBus.execute(query);
 
     return {
-      message: 'Lấy thông tin sách thành công',
+      message: 'Láº¥y thÃ´ng tin sÃ¡ch thÃ nh cÃ´ng',
       data: BookDetailResponseDto.fromReadModel(book),
     };
   }
@@ -208,7 +211,7 @@ export class BooksController {
     const book = await this.queryBus.execute(query);
 
     return {
-      message: 'Lấy thông tin sách thành công',
+      message: 'Láº¥y thÃ´ng tin sÃ¡ch thÃ nh cÃ´ng',
       data: BookResponseDto.fromEntity(book),
     };
   }
@@ -222,7 +225,7 @@ export class BooksController {
     @Body() updateBookDto: UpdateBookDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    // Xử lý upload file nếu có
+    // Xá»­ lÃ½ upload file náº¿u cÃ³
     const coverUrl = file
       ? await this.uploadFile(file)
       : updateBookDto.coverUrl;
@@ -235,7 +238,7 @@ export class BooksController {
 
     const book = await this.commandBus.execute(command);
     return {
-      message: 'Cập nhật sách thành công',
+      message: 'Cáº­p nháº­t sÃ¡ch thÃ nh cÃ´ng',
       data: BookResponseDto.fromEntity(book),
     };
   }
@@ -247,7 +250,7 @@ export class BooksController {
     const command = new DeleteBookCommand(id);
     await this.commandBus.execute(command);
     return {
-      message: 'Xóa sách thành công',
+      message: 'XÃ³a sÃ¡ch thÃ nh cÃ´ng',
     };
   }
 

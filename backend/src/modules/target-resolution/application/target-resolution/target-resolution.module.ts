@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { BooksRepositoryModule } from '@/modules/books/infrastructure/repositories/books/books-repository.module';
-import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/repositories/chapters/chapters-repository.module';
-import { CommentsInfrastructureModule } from '@/modules/comments/infrastructure/comments-infrastructure.module';
-import { PostsRepositoryModule } from '@/modules/posts/infrastructure/repositories/posts/posts-repository.module';
+import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
+import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
+import { CommentsInfrastructureModule } from '@/modules/comments/infrastructure/public-api';
+import { PostsRepositoryModule } from '@/modules/posts/infrastructure/public-api';
 import { BookTargetHandler } from './handlers/book-target.handler';
 import { ChapterTargetHandler } from './handlers/chapter-target.handler';
 import { CommentTargetHandler } from './handlers/comment-target.handler';

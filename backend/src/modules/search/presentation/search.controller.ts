@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { IntelligentSearchHandler } from '@/modules/search';
 import { IntelligentSearchQuery } from '@/modules/search';
-import { Public } from '@/common/decorators/custom.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { SearchQueryDto } from '@/modules/chroma/presentation/public-api';
 import { ITrendingKeywordCachePort } from '@/modules/search/domain/interfaces/trending-keyword-cache.port';
 
@@ -32,7 +32,7 @@ export class SearchController {
       setTimeout(() => {
         reject(
           new RequestTimeoutException(
-            'Tìm kiếm quá thời gian (vượt quá 8 giây), vui lòng thử lại sau.',
+            'TÃ¬m kiáº¿m quÃ¡ thá»i gian (vÆ°á»£t quÃ¡ 8 giÃ¢y), vui lÃ²ng thá»­ láº¡i sau.',
           ),
         );
       }, 8000);
@@ -56,7 +56,7 @@ export class SearchController {
     const keywords = await this.trendingKeywordCache.getTrendingKeywords();
 
     return {
-      message: 'Lấy từ khóa tìm kiếm thịnh hành thành công',
+      message: 'Láº¥y tá»« khÃ³a tÃ¬m kiáº¿m thá»‹nh hÃ nh thÃ nh cÃ´ng',
       data: keywords,
     };
   }
@@ -69,7 +69,7 @@ export class SearchController {
       await this.intelligentSearchUseCase.recordSearch(keyword);
     }
     return {
-      message: 'Đã ghi nhận từ khóa tìm kiếm',
+      message: 'ÄÃ£ ghi nháº­n tá»« khÃ³a tÃ¬m kiáº¿m',
       data: null,
     };
   }

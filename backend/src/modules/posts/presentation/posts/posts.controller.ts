@@ -19,16 +19,16 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
-import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
 import { CreatePostDto } from '@/modules/posts/presentation/posts/dto/create-post.dto';
 import { PaginationUserDto } from '@/modules/posts/presentation/posts/dto/pagination.dto';
 import { UpdatePostDto } from '@/modules/posts/presentation/posts/dto/update-post.dto';
 
-import { Public } from '@/common/decorators/custom.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
 
 // Use Cases
@@ -154,7 +154,7 @@ export class PostsController {
 
     const responseDto = new PostResponseDto(post);
     return {
-      message: moderationMessage ? undefined : 'Đăng bài viết thành công',
+      message: moderationMessage ? undefined : 'ÄÄƒng bÃ i viáº¿t thÃ nh cÃ´ng',
       data: responseDto,
       warning: moderationMessage,
     };
@@ -187,7 +187,9 @@ export class PostsController {
     );
     const { post, moderationMessage } = await this.commandBus.execute(command);
     return {
-      message: moderationMessage ? undefined : 'Cập nhật bài viết thành công',
+      message: moderationMessage
+        ? undefined
+        : 'Cáº­p nháº­t bÃ i viáº¿t thÃ nh cÃ´ng',
       data: new PostResponseDto(post),
       warning: moderationMessage,
     };

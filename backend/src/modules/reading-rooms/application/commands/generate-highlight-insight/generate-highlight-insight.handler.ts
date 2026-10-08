@@ -13,7 +13,7 @@ import { BookId } from '@/modules/books/domain/public-api';
 import { IAIPort } from '@/modules/ai/domain';
 import { getChapterContext } from '@/modules/chapters/application/public-api';
 import { GenerateHighlightInsightCommand } from './generate-highlight-insight.command';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 
@@ -53,12 +53,12 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
     );
 
     if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
+      throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
     }
 
     if (!room.isMember(command.userId)) {
       throw new ForbiddenDomainException(
-        'Bạn không phải là thành viên của phòng này',
+        'Báº¡n khÃ´ng pháº£i lÃ  thÃ nh viÃªn cá»§a phÃ²ng nÃ y',
       );
     }
 
@@ -66,7 +66,7 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
       (h) => h.id === command.highlightId,
     );
     if (highlightIndex === -1) {
-      throw new NotFoundDomainException('Highlight không tồn tại');
+      throw new NotFoundDomainException('Highlight khÃ´ng tá»“n táº¡i');
     }
 
     const highlight = room.highlights[highlightIndex];
@@ -77,7 +77,7 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
     }
 
     if (room.status === 'ended') {
-      throw new ForbiddenDomainException('Phòng đã kết thúc');
+      throw new ForbiddenDomainException('PhÃ²ng Ä‘Ã£ káº¿t thÃºc');
     }
 
     const lockKey = `insight:lock:${command.highlightId}`;
@@ -89,7 +89,7 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
       'NX',
     );
     if (!gotLock) {
-      return room; // Đang sinh bởi người khác, bỏ qua
+      return room; // Äang sinh bá»Ÿi ngÆ°á»i khÃ¡c, bá» qua
     }
 
     try {
@@ -109,18 +109,18 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
       let contextBlock = '';
       if (chapter?.paragraphs?.length) {
         const context = getChapterContext(chapter.paragraphs, content);
-        contextBlock = `\nNgữ cảnh xung quanh đoạn văn:\n${context}\n`;
+        contextBlock = `\nNgá»¯ cáº£nh xung quanh Ä‘oáº¡n vÄƒn:\n${context}\n`;
       }
 
       const prompt = `
-Phân tích đoạn văn sau từ cuốn sách "${bookTitle}" (chương: "${chapterTitle}").
-Nội dung có thể là một câu nói hay, một ẩn dụ, một sự kiện lịch sử hoặc một khái niệm khó hiểu.
-Hãy giải thích ý nghĩa hoặc cung cấp thêm thông tin thú vị liên quan.
+PhÃ¢n tÃ­ch Ä‘oáº¡n vÄƒn sau tá»« cuá»‘n sÃ¡ch "${bookTitle}" (chÆ°Æ¡ng: "${chapterTitle}").
+Ná»™i dung cÃ³ thá»ƒ lÃ  má»™t cÃ¢u nÃ³i hay, má»™t áº©n dá»¥, má»™t sá»± kiá»‡n lá»‹ch sá»­ hoáº·c má»™t khÃ¡i niá»‡m khÃ³ hiá»ƒu.
+HÃ£y giáº£i thÃ­ch Ã½ nghÄ©a hoáº·c cung cáº¥p thÃªm thÃ´ng tin thÃº vá»‹ liÃªn quan.
 ${contextBlock}
-Ngôn ngữ: Tiếng Việt.
-Độ dài: Tối đa 2 câu.
+NgÃ´n ngá»¯: Tiáº¿ng Viá»‡t.
+Äá»™ dÃ i: Tá»‘i Ä‘a 2 cÃ¢u.
 
-Đoạn văn cần phân tích:
+Äoáº¡n vÄƒn cáº§n phÃ¢n tÃ­ch:
 """
 ${content}
 """
@@ -148,14 +148,14 @@ ${content}
           },
         );
 
-        // Cập nhật memory object để trả về kết quả mới nhất cho caller (tuy caller không bắt buộc dùng insight từ returned room)
+        // Cáº­p nháº­t memory object Ä‘á»ƒ tráº£ vá» káº¿t quáº£ má»›i nháº¥t cho caller (tuy caller khÃ´ng báº¯t buá»™c dÃ¹ng insight tá»« returned room)
         room.updateHighlightInsight(highlightIndex, insight);
       }
     } catch (error) {
       this.logger.warn(
         `AI failed for highlight ${command.highlightId}. ${error instanceof Error ? error.message : String(error)}`,
       );
-      throw error; // Ném ra để gateway bắt và emit ERROR cho user
+      throw error; // NÃ©m ra Ä‘á»ƒ gateway báº¯t vÃ  emit ERROR cho user
     } finally {
       await this.redis.del(lockKey);
     }

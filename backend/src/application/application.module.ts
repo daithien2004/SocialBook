@@ -1,4 +1,4 @@
-﻿import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { UsersApplicationModule } from '@/modules/users/application/users/users-application.module';
 import { BooksApplicationModule } from '@/modules/books/application/books/books-application.module';
 import { ChaptersApplicationModule } from '@/modules/chapters/application/chapters/chapters-application.module';

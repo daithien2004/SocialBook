@@ -10,9 +10,9 @@ import {
   Delete,
 } from '@nestjs/common';
 
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
 import { CreateUserHighlightCommand } from '@/modules/user-highlights/application/commands/create-user-highlight/create-user-highlight.command';
 import { UpdateUserHighlightCommand } from '@/modules/user-highlights/application/commands/update-user-highlight/update-user-highlight.command';

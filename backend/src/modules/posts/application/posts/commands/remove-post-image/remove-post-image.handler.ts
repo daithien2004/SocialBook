@@ -6,7 +6,7 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { IMediaPort } from '@/modules/media/domain/public-api';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { RemovePostImageCommand } from './remove-post-image.command';
 
 import { Action, Subject } from '@socialbook/shared';
@@ -26,10 +26,13 @@ export class RemovePostImageHandler implements ICommandHandler<
 
   async execute(command: RemovePostImageCommand) {
     const post = await this.postRepository.findById(command.postId);
-    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    if (!post)
+      throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
 
     if (!command.ability.can(Action.Update, subject(Subject.Post, post))) {
-      throw new ForbiddenDomainException(ErrorMessages.POST_UPDATE_FORBIDDEN);
+      throw new ForbiddenDomainException(
+        PostErrorMessages.POST_UPDATE_FORBIDDEN,
+      );
     }
 
     post.removeImage(command.imageUrl);

@@ -4,7 +4,7 @@ import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/modules/comments/domain/repositories/comment.repository.interface';
 import { CommentId } from '@/modules/comments/domain/value-objects/comment-id.vo';
 import { ModerateCommentCommand } from './moderate-comment.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { CommentErrorMessages } from '@/modules/comments/application/error-messages';
 
 @CommandHandler(ModerateCommentCommand)
 export class ModerateCommentHandler implements ICommandHandler<ModerateCommentCommand> {
@@ -19,7 +19,9 @@ export class ModerateCommentHandler implements ICommandHandler<ModerateCommentCo
       // Find the comment
       const comment = await this.commentRepository.findById(commentId);
       if (!comment) {
-        throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
+        throw new NotFoundDomainException(
+          CommentErrorMessages.COMMENT_NOT_FOUND,
+        );
       }
 
       // Update moderation status

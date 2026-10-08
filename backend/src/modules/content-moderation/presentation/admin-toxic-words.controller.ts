@@ -10,9 +10,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RolesGuard } from '@/common/guards/roles.guard';
-import { Roles } from '@/common/decorators/roles.decorator';
+import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
 import { AddToxicWordDto } from './dto/add-toxic-word.dto';
 import { AddToxicWordCommand } from '@/modules/content-moderation/application/commands/add-toxic-word/add-toxic-word.command';
 import { DeleteToxicWordCommand } from '@/modules/content-moderation/application/commands/delete-toxic-word/delete-toxic-word.command';
@@ -30,12 +30,12 @@ export class AdminToxicWordsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Lấy danh sách các từ khóa toxic' })
+  @ApiOperation({ summary: 'Láº¥y danh sÃ¡ch cÃ¡c tá»« khÃ³a toxic' })
   async getToxicWords() {
     const query = new GetToxicWordsQuery();
     const words = await this.queryBus.execute(query);
     return {
-      message: 'Lấy danh sách từ khóa toxic thành công',
+      message: 'Láº¥y danh sÃ¡ch tá»« khÃ³a toxic thÃ nh cÃ´ng',
       data: words.map((w: any) => ({
         id: w.id,
         pattern: w.pattern,
@@ -47,7 +47,7 @@ export class AdminToxicWordsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Thêm một từ khóa toxic mới' })
+  @ApiOperation({ summary: 'ThÃªm má»™t tá»« khÃ³a toxic má»›i' })
   async addToxicWord(@Body() dto: AddToxicWordDto) {
     const command = new AddToxicWordCommand(
       dto.pattern,
@@ -56,7 +56,7 @@ export class AdminToxicWordsController {
     );
     const word = await this.commandBus.execute(command);
     return {
-      message: 'Thêm từ khóa toxic thành công',
+      message: 'ThÃªm tá»« khÃ³a toxic thÃ nh cÃ´ng',
       data: {
         id: word.id,
         pattern: word.pattern,
@@ -67,12 +67,12 @@ export class AdminToxicWordsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Xóa một từ khóa toxic' })
+  @ApiOperation({ summary: 'XÃ³a má»™t tá»« khÃ³a toxic' })
   async deleteToxicWord(@Param('id') id: string) {
     const command = new DeleteToxicWordCommand(id);
     await this.commandBus.execute(command);
     return {
-      message: 'Xóa từ khóa toxic thành công',
+      message: 'XÃ³a tá»« khÃ³a toxic thÃ nh cÃ´ng',
     };
   }
 }

@@ -27,6 +27,9 @@ jobs:
       - name: Lint
         run: cd backend && npm run lint
 
+      - name: Check module boundaries
+        run: cd backend && npm run lint:architecture
+
       - name: Unit tests
         run: cd backend && npm run test:unit
 

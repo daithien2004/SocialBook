@@ -22,7 +22,7 @@ import { GetRoomByCodeQuery } from '@/modules/reading-rooms/application/queries/
 import { GetRoomHighlightsQuery } from '@/modules/reading-rooms/application/queries/get-room-highlights/get-room-highlights.query';
 
 import { ReactivateRoomCommand } from '@/modules/reading-rooms/application/commands/reactivate-room/reactivate-room.command';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 import { CreateRoomDto } from './dto/create-room.dto';
 import { ReadingRoomResponseDto } from './dto/reading-room.response.dto';
@@ -49,7 +49,7 @@ export class ReadingRoomsController {
     );
     const result = await this.commandBus.execute(command);
     return {
-      message: 'Tạo phòng đọc sách thành công',
+      message: 'Táº¡o phÃ²ng Ä‘á»c sÃ¡ch thÃ nh cÃ´ng',
       data: ReadingRoomResponseDto.fromResult(result),
     };
   }
@@ -60,7 +60,7 @@ export class ReadingRoomsController {
       new GetMyActiveRoomsQuery(userId),
     );
     return {
-      message: 'Lấy danh sách phòng hoạt động thành công',
+      message: 'Láº¥y danh sÃ¡ch phÃ²ng hoáº¡t Ä‘á»™ng thÃ nh cÃ´ng',
       data: ReadingRoomResponseDto.fromArray(results),
     };
   }
@@ -69,7 +69,7 @@ export class ReadingRoomsController {
   async getMyHistory(@CurrentUser('id') userId: string) {
     const result = await this.queryBus.execute(new GetMyHistoryQuery(userId));
     return {
-      message: 'Lấy lịch sử phòng đọc thành công',
+      message: 'Láº¥y lá»‹ch sá»­ phÃ²ng Ä‘á»c thÃ nh cÃ´ng',
       data: {
         items: ReadingRoomResponseDto.fromArray(result.items),
         total: result.total,
@@ -85,7 +85,7 @@ export class ReadingRoomsController {
     const command = new ReactivateRoomCommand(userId, code);
     const result = await this.commandBus.execute(command);
     return {
-      message: 'Phòng đã được mở lại thành công',
+      message: 'PhÃ²ng Ä‘Ã£ Ä‘Æ°á»£c má»Ÿ láº¡i thÃ nh cÃ´ng',
       data: ReadingRoomResponseDto.fromResult(result),
     };
   }
@@ -113,7 +113,7 @@ export class ReadingRoomsController {
       new GetRoomHighlightsQuery(code, userId, offset, limit),
     );
     return {
-      message: 'Lấy highlights thành công',
+      message: 'Láº¥y highlights thÃ nh cÃ´ng',
       data: {
         items: page.items.map((highlight) => ({
           ...highlight,
@@ -139,12 +139,12 @@ export class ReadingRoomsController {
     );
     if (!result.isMember) {
       return {
-        message: 'Lấy thông tin xem trước phòng thành công',
+        message: 'Láº¥y thÃ´ng tin xem trÆ°á»›c phÃ²ng thÃ nh cÃ´ng',
         data: result,
       };
     }
     return {
-      message: 'Lấy thông tin phòng thành công',
+      message: 'Láº¥y thÃ´ng tin phÃ²ng thÃ nh cÃ´ng',
       data: ReadingRoomResponseDto.fromResult(result),
     };
   }

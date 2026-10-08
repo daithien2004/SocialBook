@@ -35,6 +35,7 @@ jobs:
         run: |
           cd backend
           npm run lint
+          npm run lint:architecture
           npm run test:unit
 
       - name: Frontend - Lint, Typecheck & Build

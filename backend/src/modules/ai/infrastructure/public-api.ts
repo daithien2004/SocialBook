@@ -1,1 +1,1 @@
-﻿export { AIInfrastructureModule } from './ai/ai-infrastructure.module';
+export { AIInfrastructureModule } from './ai/ai-infrastructure.module';

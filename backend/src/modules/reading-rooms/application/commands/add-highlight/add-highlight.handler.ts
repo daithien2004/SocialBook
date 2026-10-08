@@ -7,7 +7,7 @@ import {
 import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 
-import { withRetries } from '@/common/utils/with-retries.util';
+import { withRetries } from '@/shared/platform/utils/with-retries.util';
 import { AddHighlightCommand } from './add-highlight.command';
 
 @CommandHandler(AddHighlightCommand)
@@ -24,18 +24,18 @@ export class AddHighlightHandler implements ICommandHandler<
       );
 
       if (!room) {
-        throw new NotFoundDomainException('Phòng không tồn tại');
+        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
       }
 
       if (room.status === 'ended') {
         throw new BadRequestDomainException(
-          'Phòng đã kết thúc, không thể thêm highlight',
+          'PhÃ²ng Ä‘Ã£ káº¿t thÃºc, khÃ´ng thá»ƒ thÃªm highlight',
         );
       }
 
       if (!room.isMember(command.userId)) {
         throw new ForbiddenDomainException(
-          'Bạn không phải là thành viên của phòng này',
+          'Báº¡n khÃ´ng pháº£i lÃ  thÃ nh viÃªn cá»§a phÃ²ng nÃ y',
         );
       }
 

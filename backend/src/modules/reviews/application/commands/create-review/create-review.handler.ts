@@ -10,7 +10,7 @@ import { CreateReviewDto } from '@/modules/reviews/application/dto/create-review
 import { containsVietnameseToxicWords } from '@/modules/content-moderation/domain';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Review } from '@/modules/reviews/domain/entities/review.entity';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ReviewErrorMessages } from '@/modules/reviews/application/error-messages';
 import { IReadingProgressRepository } from '@/modules/library/domain/public-api';
 import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { UserId } from '@/modules/library/domain/public-api';
@@ -51,7 +51,7 @@ export class CreateReviewHandler {
 
     if (completedChaptersCount < requiredChapters) {
       throw new BadRequestDomainException(
-        `Bạn cần đọc ít nhất ${requiredChapters} chương để có thể đánh giá cuốn sách này (Hiện tại: ${completedChaptersCount}/${requiredChapters}).`,
+        `Báº¡n cáº§n Ä‘á»c Ã­t nháº¥t ${requiredChapters} chÆ°Æ¡ng Ä‘á»ƒ cÃ³ thá»ƒ Ä‘Ã¡nh giÃ¡ cuá»‘n sÃ¡ch nÃ y (Hiá»‡n táº¡i: ${completedChaptersCount}/${requiredChapters}).`,
       );
     }
 
@@ -60,13 +60,15 @@ export class CreateReviewHandler {
       dto.bookId,
     );
     if (exists) {
-      throw new ConflictDomainException(ErrorMessages.REVIEW_ALREADY_EXISTS);
+      throw new ConflictDomainException(
+        ReviewErrorMessages.REVIEW_ALREADY_EXISTS,
+      );
     }
 
     const quickCheck = containsVietnameseToxicWords(dto.content);
     if (quickCheck) {
       throw new BadRequestDomainException(
-        `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
+        `Ná»™i dung chá»©a tá»« ngá»¯ thÃ´ tá»¥c khÃ´ng phÃ¹ há»£p: "${quickCheck.matchedWord}" (nhÃ³m: ${quickCheck.group}).`,
       );
     }
 

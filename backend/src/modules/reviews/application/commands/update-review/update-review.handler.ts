@@ -1,6 +1,6 @@
 import { UpdateReviewCommand } from './update-review.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ReviewErrorMessages } from '@/modules/reviews/application/error-messages';
 import {
   BadRequestDomainException,
   NotFoundDomainException,
@@ -24,11 +24,13 @@ export class UpdateReviewHandler {
   ): Promise<Review> {
     const review = await this.reviewRepository.findById(reviewId);
     if (!review) {
-      throw new NotFoundDomainException(ErrorMessages.REVIEW_NOT_FOUND);
+      throw new NotFoundDomainException(ReviewErrorMessages.REVIEW_NOT_FOUND);
     }
 
     if (!ability.can(Action.Update, subject(Subject.Review, review))) {
-      throw new ForbiddenDomainException(ErrorMessages.REVIEW_UPDATE_FORBIDDEN);
+      throw new ForbiddenDomainException(
+        ReviewErrorMessages.REVIEW_UPDATE_FORBIDDEN,
+      );
     }
 
     let updated = false;
@@ -37,7 +39,7 @@ export class UpdateReviewHandler {
       const quickCheck = containsVietnameseToxicWords(dto.content);
       if (quickCheck) {
         throw new BadRequestDomainException(
-          `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
+          `Ná»™i dung chá»©a tá»« ngá»¯ thÃ´ tá»¥c khÃ´ng phÃ¹ há»£p: "${quickCheck.matchedWord}" (nhÃ³m: ${quickCheck.group}).`,
         );
       }
       review.updateContent(dto.content);

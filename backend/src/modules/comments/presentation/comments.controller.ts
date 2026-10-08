@@ -13,11 +13,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { Public } from '@/common/decorators/custom.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
 
 import {

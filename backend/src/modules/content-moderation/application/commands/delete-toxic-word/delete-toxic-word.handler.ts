@@ -3,7 +3,7 @@ import { DeleteToxicWordCommand } from './delete-toxic-word.command';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IToxicWordRepository } from '@/modules/content-moderation/domain/repositories/toxic-word.repository.interface';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @CommandHandler(DeleteToxicWordCommand)
 export class DeleteToxicWordHandler {
@@ -17,7 +17,7 @@ export class DeleteToxicWordHandler {
 
     if (!deleted) {
       throw new NotFoundDomainException(
-        'Không tìm thấy từ khóa toxic cần xóa.',
+        'KhÃ´ng tÃ¬m tháº¥y tá»« khÃ³a toxic cáº§n xÃ³a.',
       );
     }
 

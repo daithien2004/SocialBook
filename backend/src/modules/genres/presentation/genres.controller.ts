@@ -1,14 +1,5 @@
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-
-import { CreateGenreCommand } from '@/modules/genres/application/commands/create-genre/create-genre.command';
-
-import { DeleteGenreCommand } from '@/modules/genres/application/commands/delete-genre/delete-genre.command';
-
-import { GetGenresQuery } from '@/modules/genres/application/queries/get-genres/get-genres.query';
-
-import { UpdateGenreCommand } from '@/modules/genres/application/commands/update-genre/update-genre.command';
-
-import { Public } from '@/common/decorators/custom.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { GenresService } from '../application/genres.service';
 import { CreateGenreDto } from '@/modules/genres/presentation/dto/create-genre.dto';
 import { FilterGenreDto } from '@/modules/genres/presentation/dto/filter-genre.dto';
 import { GenreResponseDto } from '@/modules/genres/presentation/dto/genre.response.dto';
@@ -25,27 +16,21 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { GetGenreByIdQuery } from '@/modules/genres/application/queries/get-genre-by-id/get-genre-by-id.query';
-
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 
 @Controller('genres')
 export class GenresController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+  constructor(private readonly genresService: GenresService) {}
 
   @Post()
   @Roles('admin')
   @UseGuards(RolesGuard)
   async create(@Body() createGenreDto: CreateGenreDto) {
-    const command = new CreateGenreCommand(
+    const genre = await this.genresService.create(
       createGenreDto.name,
       createGenreDto.description,
     );
-    const genre = await this.commandBus.execute(command);
     return {
       message: 'Genre created successfully',
       data: new GenreResponseDto(genre),
@@ -55,12 +40,11 @@ export class GenresController {
   @Public()
   @Get()
   async findAll(@Query() filter: FilterGenreDto) {
-    const query = new GetGenresQuery(
+    const result = await this.genresService.findAll(
       filter.actualPage,
       filter.actualLimit,
       filter.name,
     );
-    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get genres successfully',
@@ -73,12 +57,11 @@ export class GenresController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   async findAllAdmin(@Query() filter: FilterGenreDto) {
-    const query = new GetGenresQuery(
+    const result = await this.genresService.findAll(
       filter.actualPage,
       filter.actualLimit,
       filter.name,
     );
-    const result = await this.queryBus.execute(query);
 
     return {
       message: 'Get genres (Admin) successfully',
@@ -90,8 +73,7 @@ export class GenresController {
   @Public()
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const query = new GetGenreByIdQuery(id);
-    const genre = await this.queryBus.execute(query);
+    const genre = await this.genresService.findById(id);
     return {
       message: 'Get genre successfully',
       data: new GenreResponseDto(genre),
@@ -105,12 +87,11 @@ export class GenresController {
     @Param('id') id: string,
     @Body() updateGenreDto: UpdateGenreDto,
   ) {
-    const command = new UpdateGenreCommand(
+    const genre = await this.genresService.update(
       id,
       updateGenreDto.name,
       updateGenreDto.description,
     );
-    const genre = await this.commandBus.execute(command);
     return {
       message: 'Genre updated successfully',
       data: new GenreResponseDto(genre),
@@ -121,8 +102,7 @@ export class GenresController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   async remove(@Param('id') id: string) {
-    const command = new DeleteGenreCommand(id);
-    await this.commandBus.execute(command);
+    await this.genresService.delete(id);
     return { message: 'Genre deleted successfully' };
   }
 }

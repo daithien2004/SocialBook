@@ -6,7 +6,7 @@ import { IUserRepository } from '@/modules/users/domain/users/repositories/user.
 import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
 import { User } from '@/modules/users/domain/users/entities/user.entity';
 import { UserRoleChangedEvent } from '../../events/user-role-changed.event';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @CommandHandler(ToggleBanCommand)
 export class ToggleBanHandler {
@@ -31,7 +31,7 @@ export class ToggleBanHandler {
 
     await this.userRepository.save(user);
 
-    // Đổi trạng thái authz → listener xoá cache role/ban + CASL + (tương lai) tăng version.
+    // Äá»•i tráº¡ng thÃ¡i authz â†’ listener xoÃ¡ cache role/ban + CASL + (tÆ°Æ¡ng lai) tÄƒng version.
     this.eventEmitter.emit(
       EventNames.USER_ROLE_CHANGED,
       new UserRoleChangedEvent(command.userId, user.roleId),

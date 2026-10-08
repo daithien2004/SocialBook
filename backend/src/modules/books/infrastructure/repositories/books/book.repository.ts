@@ -2,7 +2,7 @@ import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Book as BookEntity } from '@/modules/books/domain/books/entities/book.entity';
 import { BookListReadModel } from '@/modules/books/domain/books/read-models/book-list.read-model';
 import {

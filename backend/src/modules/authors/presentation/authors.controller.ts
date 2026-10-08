@@ -1,8 +1,9 @@
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-
-import { ApiFileUpload, Public } from '@/common/decorators/custom.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
+import {
+  ApiFileUpload,
+  Public,
+} from '@/shared/platform/decorators/custom.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import {
   Body,
   Controller,
@@ -21,20 +22,13 @@ import { CreateAuthorDto } from './dto/create-author.dto';
 import { FilterAuthorDto } from './dto/filter-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 
-import { CreateAuthorCommand } from '@/modules/authors/application/commands/create-author/create-author.command';
-import { DeleteAuthorCommand } from '@/modules/authors/application/commands/delete-author/delete-author.command';
-import { GetAuthorByIdQuery } from '@/modules/authors/application/queries/get-author-by-id/get-author-by-id.query';
-import { GetAuthorsQuery } from '@/modules/authors/application/queries/get-authors/get-authors.query';
-import { UpdateAuthorCommand } from '@/modules/authors/application/commands/update-author/update-author.command';
-
 import { IMediaPort } from '@/modules/media/domain/public-api';
+import { AuthorsService } from '../application/authors.service';
 
 @Controller('authors')
 export class AuthorsController {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-
+    private readonly authorsService: AuthorsService,
     private readonly mediaService: IMediaPort,
   ) {}
 
@@ -46,15 +40,13 @@ export class AuthorsController {
     @Body() createAuthorDto: CreateAuthorDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const command = new CreateAuthorCommand(
+    const author = await this.authorsService.create(
       createAuthorDto.name,
       createAuthorDto.bio,
       file ? await this.uploadFile(file) : createAuthorDto.photoUrl,
     );
-
-    const author = await this.commandBus.execute(command);
     return {
-      message: 'Tạo tác giả thành công',
+      message: 'Táº¡o tÃ¡c giáº£ thÃ nh cÃ´ng',
       data: new AuthorResponseDto(author),
     };
   }
@@ -63,17 +55,15 @@ export class AuthorsController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   async findAll(@Query() filter: FilterAuthorDto) {
-    const query = new GetAuthorsQuery(
+    const result = await this.authorsService.findAll(
       filter.actualPage,
       filter.actualLimit,
       filter.name,
       filter.bio,
     );
 
-    const result = await this.queryBus.execute(query);
-
     return {
-      message: 'Lấy danh sách tác giả thành công',
+      message: 'Láº¥y danh sÃ¡ch tÃ¡c giáº£ thÃ nh cÃ´ng',
       data: result.data.map((author) => new AuthorResponseDto(author)),
       meta: result.meta,
     };
@@ -82,10 +72,9 @@ export class AuthorsController {
   @Get(':id')
   @Public()
   async findOne(@Param('id') id: string) {
-    const query = new GetAuthorByIdQuery(id);
-    const author = await this.queryBus.execute(query);
+    const author = await this.authorsService.findById(id);
     return {
-      message: 'Lấy thông tin tác giả thành công',
+      message: 'Láº¥y thÃ´ng tin tÃ¡c giáº£ thÃ nh cÃ´ng',
       data: new AuthorResponseDto(author),
     };
   }
@@ -99,16 +88,14 @@ export class AuthorsController {
     @Body() updateAuthorDto: UpdateAuthorDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const command = new UpdateAuthorCommand(
+    const author = await this.authorsService.update(
       id,
       updateAuthorDto.name,
       updateAuthorDto.bio,
       file ? await this.uploadFile(file) : updateAuthorDto.photoUrl,
     );
-
-    const author = await this.commandBus.execute(command);
     return {
-      message: 'Cập nhật tác giả thành công',
+      message: 'Cáº­p nháº­t tÃ¡c giáº£ thÃ nh cÃ´ng',
       data: new AuthorResponseDto(author),
     };
   }
@@ -117,21 +104,19 @@ export class AuthorsController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   async remove(@Param('id') id: string) {
-    const command = new DeleteAuthorCommand(id);
-    await this.commandBus.execute(command);
+    await this.authorsService.delete(id);
     return {
-      message: 'Xóa tác giả thành công',
+      message: 'XÃ³a tÃ¡c giáº£ thÃ nh cÃ´ng',
     };
   }
 
   @Get()
   @Public()
   async getForSelect() {
-    const query = new GetAuthorsQuery(1, 1000);
-    const result = await this.queryBus.execute(query);
+    const result = await this.authorsService.findAll(1, 1000);
 
     return {
-      message: 'Lấy danh sách tác giả thành công',
+      message: 'Láº¥y danh sÃ¡ch tÃ¡c giáº£ thÃ nh cÃ´ng',
       data: result.data.map((author) => new AuthorResponseDto(author)),
     };
   }

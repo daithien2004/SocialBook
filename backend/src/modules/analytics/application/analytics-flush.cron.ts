@@ -6,10 +6,10 @@ import { IUserAnalyticsRepository } from '@/modules/analytics/domain/repositorie
 import { UserEvent } from '@/modules/analytics/domain/entities/user-event.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { isWorkerProcess } from '@/common/utils/process-role.util';
+import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { TrackEventPayloadSchema } from '@/shared/queue/job-payload.schemas';
 import { UserEventType } from '@/modules/analytics/domain/enums/user-event-type.enum';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @Injectable()
 export class AnalyticsFlushCron {
@@ -30,7 +30,7 @@ export class AnalyticsFlushCron {
     }
 
     try {
-      // Dùng transaction (multi/exec) để lấy toàn bộ List ra và xóa List atomic
+      // DÃ¹ng transaction (multi/exec) Ä‘á»ƒ láº¥y toÃ n bá»™ List ra vÃ  xÃ³a List atomic
       const [results] =
         (await this.redis
           .multi()
@@ -91,7 +91,7 @@ export class AnalyticsFlushCron {
 
           entitiesToInsert.push(event);
 
-          // Phát ra event nội bộ cho các listener khác (như cập nhật preference, stats)
+          // PhÃ¡t ra event ná»™i bá»™ cho cÃ¡c listener khÃ¡c (nhÆ° cáº­p nháº­t preference, stats)
           this.eventEmitter.emit(EventNames.USER_EVENT_TRACKED, {
             userId: command.userId,
             event,

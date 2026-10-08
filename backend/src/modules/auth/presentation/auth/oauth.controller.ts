@@ -12,7 +12,7 @@ import {
 
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
-import { Public } from '@/common/decorators/custom.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { OAuthProviderStrategy } from '@/modules/auth/application/auth/services/oauth-provider.strategy';
 import { OAuthStateService } from '@/modules/auth/application/auth/services/oauth-state.service';
 import { OAuthAuthCommand } from '@/modules/auth/application/auth/commands/oauth-auth/oauth-auth.command';
@@ -56,7 +56,7 @@ export class OAuthController {
     const found = this.strategies.find((s) => s.provider === provider);
     if (!found)
       throw new NotFoundException(
-        `OAuth provider ${provider} chưa được cấu hình`,
+        `OAuth provider ${provider} chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh`,
       );
     return found;
   }

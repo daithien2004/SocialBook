@@ -1,6 +1,6 @@
 import { GenerateChapterAudioCommand } from './generate-chapter-audio.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { getErrorMessage } from '@/common/utils/error.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Inject } from '@nestjs/common';
 import {
   BadRequestDomainException,

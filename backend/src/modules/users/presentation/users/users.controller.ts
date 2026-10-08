@@ -17,10 +17,10 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { Public } from '@/common/decorators/custom.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 import { FilterUserDto } from '@/modules/users/presentation/users/dto/filter-user.dto';
 import { UpdateReadingPreferencesDto } from '@/modules/users/presentation/users/dto/update-reading-preferences.dto';

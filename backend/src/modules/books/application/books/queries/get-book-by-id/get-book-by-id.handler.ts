@@ -1,6 +1,7 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { BookErrorMessages } from '@/modules/books/application/error-messages';
+import { ErrorMessages } from '@/shared/platform/constants/error-messages';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { Book } from '@/modules/books/domain/books/entities/book.entity';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
@@ -12,7 +13,7 @@ import {
 } from '@/shared/domain/common-exceptions';
 
 import { BookViewedEvent } from '@/modules/analytics/application/public-api';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @QueryHandler(GetBookByIdQuery)
 export class GetBookByIdHandler implements IQueryHandler<
@@ -39,7 +40,7 @@ export class GetBookByIdHandler implements IQueryHandler<
       (await (async (): Promise<Book> => {
         const found = await this.bookRepository.findById(bookId);
         if (!found) {
-          throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
+          throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
         }
         await this.bookCache.setDetail(found);
         return found;

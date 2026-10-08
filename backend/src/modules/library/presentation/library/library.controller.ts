@@ -33,7 +33,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 @Controller('library')
 export class LibraryController {

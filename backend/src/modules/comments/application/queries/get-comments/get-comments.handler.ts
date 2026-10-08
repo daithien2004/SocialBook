@@ -5,7 +5,7 @@ import {
   CommentFilter,
 } from '@/modules/comments/domain/repositories/comment.repository.interface';
 import { GetCommentsQuery } from './get-comments.query';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { CommentModel } from '@/modules/comments/domain/read-models/comment-model';
 
 @QueryHandler(GetCommentsQuery)

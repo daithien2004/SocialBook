@@ -9,7 +9,7 @@ import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper'
 import { JoinRoomCommand } from './join-room.command';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 
-import { withRetries } from '@/common/utils/with-retries.util';
+import { withRetries } from '@/shared/platform/utils/with-retries.util';
 
 @CommandHandler(JoinRoomCommand)
 export class JoinRoomHandler implements ICommandHandler<
@@ -24,12 +24,12 @@ export class JoinRoomHandler implements ICommandHandler<
         RoomId.create(command.roomCode),
       );
       if (!room) {
-        throw new NotFoundDomainException('Phòng không tồn tại');
+        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
       }
 
       if (room.status === 'ended') {
         if (!room.isMember(command.userId)) {
-          throw new ForbiddenDomainException('Phòng đã kết thúc');
+          throw new ForbiddenDomainException('PhÃ²ng Ä‘Ã£ káº¿t thÃºc');
         }
       } else {
         room.addMember(command.userId);

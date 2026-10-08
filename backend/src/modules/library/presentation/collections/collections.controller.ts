@@ -5,9 +5,9 @@ import { GetAllCollectionsQuery } from '@/modules/library/application/library/qu
 import { DeleteCollectionCommand } from '@/modules/library/application/library/commands/delete-collection/delete-collection.command';
 import { CreateCollectionCommand } from '@/modules/library/application/library/commands/create-collection/create-collection.command';
 
-import { Public } from '@/common/decorators/custom.decorator';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { CurrentAbility } from '@/common/decorators/current-ability.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
 import type { AppAbility } from '@socialbook/shared';
 import {
   CreateCollectionDto,

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 import { UserEventType } from '@/modules/analytics/domain/enums/user-event-type.enum';
 import { ScoringService } from '../services/scoring.service';
 import { IBookRepository } from '@/modules/books/domain/public-api';

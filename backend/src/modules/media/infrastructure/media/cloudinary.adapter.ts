@@ -1,4 +1,4 @@
-import { getErrorMessage } from '@/common/utils/error.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
@@ -69,8 +69,8 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: 'tts', // hoặc 'socialbook/audios'
-          resource_type: 'video', // Cloudinary dùng 'video' for audio
+          folder: 'tts', // hoáº·c 'socialbook/audios'
+          resource_type: 'video', // Cloudinary dÃ¹ng 'video' for audio
           format: 'mp3',
         },
         (error, result) => {

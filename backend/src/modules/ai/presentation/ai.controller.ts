@@ -11,8 +11,8 @@ import {
 
 import { GenerateTextCommand } from '@/modules/ai/application/commands/generate-text/generate-text.command';
 import { SummarizeChapterCommand } from '@/modules/ai/application/commands/summarize-chapter/summarize-chapter.command';
-import { Public } from '@/common/decorators/custom.decorator';
-import { AIThrottleGuard } from '@/common/guards/ai-throttle.guard';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { AIThrottleGuard } from '@/shared/platform/guards/ai-throttle.guard';
 
 @Controller('ai')
 export class AIController {
@@ -51,6 +51,6 @@ export class AIController {
       req.user?.id ?? 'GUEST',
     );
     const result = await this.commandBus.execute(command);
-    return { data: result, message: 'Tóm tắt chương thành công' };
+    return { data: result, message: 'TÃ³m táº¯t chÆ°Æ¡ng thÃ nh cÃ´ng' };
   }
 }

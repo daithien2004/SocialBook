@@ -22,7 +22,11 @@ import {
 } from '@/modules/genres/infrastructure/schemas/public-api';
 import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
 
-import { ChromaInfrastructureModule } from '@/modules/chroma/infrastructure/chroma-infrastructure.module';
+import { ChromaInfrastructureModule } from '@/modules/chroma/infrastructure/public-api';
+import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
+import { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
+import { BookCacheAdapter } from '../../cache/book-cache.adapter';
+import { ViewRankingCacheAdapter } from '../../cache/view-ranking-cache.adapter';
 
 @Module({
   imports: [
@@ -36,6 +40,14 @@ import { ChromaInfrastructureModule } from '@/modules/chroma/infrastructure/chro
   ],
   providers: [
     TextSimilarityService,
+    {
+      provide: IBookCachePort,
+      useClass: BookCacheAdapter,
+    },
+    {
+      provide: IViewRankingCachePort,
+      useClass: ViewRankingCacheAdapter,
+    },
     {
       provide: IBookRepository,
       useClass: BookRepository,

@@ -6,7 +6,7 @@ import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo'
 import { RemoveHighlightCommand } from './remove-highlight.command';
 import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 
-import { withOptimisticRetry } from '@/common/utils/with-retries.util';
+import { withOptimisticRetry } from '@/shared/platform/utils/with-retries.util';
 
 @CommandHandler(RemoveHighlightCommand)
 export class RemoveHighlightHandler implements ICommandHandler<
@@ -24,7 +24,7 @@ export class RemoveHighlightHandler implements ICommandHandler<
       );
 
       if (!room) {
-        throw new NotFoundDomainException('Phòng không tồn tại');
+        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
       }
 
       room.removeHighlight(command.highlightId, command.userId);

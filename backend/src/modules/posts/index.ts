@@ -1,4 +1,4 @@
-﻿export { PostsModule } from './posts.module';
+export { PostsModule } from './posts.module';
 export { PostsApplicationModule } from './application/posts/posts-application.module';
 export { PostModerationApplicationModule } from './application/posts/post-moderation.application.module';
 export { PostsRepositoryModule } from './infrastructure/repositories/posts/posts-repository.module';

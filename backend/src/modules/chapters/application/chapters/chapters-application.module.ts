@@ -13,8 +13,8 @@ import { ImportEpubPreviewHandler } from './commands/import-epub-preview/import-
 import { RecordChapterViewHandler } from './queries/record-chapter-view/record-chapter-view.handler';
 import { GetChapterKnowledgeHandler } from './queries/get-chapter-knowledge/get-chapter-knowledge.handler';
 import { AskChapterAIHandler } from './commands/ask-ai/ask-chapter-ai.handler';
-import { AIApplicationModule } from '@/modules/ai/application/ai-application.module';
-import { BooksRepositoryModule } from '@/modules/books/infrastructure/repositories/books/books-repository.module';
+import { AIApplicationModule } from '@/modules/ai/application/public-api';
+import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
 import { FilesInfrastructureModule } from '@/modules/media/infrastructure/public-api';
 import { StartChaptersImportHandler } from './commands/start-chapters-import/start-chapters-import.handler';
 import { GetChaptersImportStatusHandler } from './queries/get-chapters-import-status/get-chapters-import-status.handler';
@@ -23,7 +23,7 @@ import {
   SingleChapterProcessor,
   CREATE_SINGLE_CHAPTER_QUEUE,
 } from './processors/single-chapter.processor';
-import { isWorkerProcess } from '@/common/utils/process-role.util';
+import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
 @Module({
   imports: [

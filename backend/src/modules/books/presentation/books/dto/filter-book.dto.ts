@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsArray, IsEnum, IsOptional, IsString } from 'class-validator';
-import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
 
 export class FilterBookDto extends PaginationQueryDto {
   @IsOptional()
@@ -8,7 +8,7 @@ export class FilterBookDto extends PaginationQueryDto {
   title?: string;
 
   @IsOptional()
-  @IsString({ message: 'Author ID không hợp lệ' })
+  @IsString({ message: 'Author ID khÃ´ng há»£p lá»‡' })
   authorId?: string;
 
   @Transform(({ value }: { value: unknown }) => {
@@ -26,7 +26,7 @@ export class FilterBookDto extends PaginationQueryDto {
   @IsArray()
   @IsString({
     each: true,
-    message: 'Mỗi genre phải là một chuỗi (ID hoặc slug)',
+    message: 'Má»—i genre pháº£i lÃ  má»™t chuá»—i (ID hoáº·c slug)',
   })
   genres?: string[];
 
@@ -48,7 +48,7 @@ export class FilterBookDto extends PaginationQueryDto {
 
   @IsOptional()
   @IsEnum(['draft', 'published', 'completed'], {
-    message: 'Status phải là draft, published hoặc completed',
+    message: 'Status pháº£i lÃ  draft, published hoáº·c completed',
   })
   status?: 'draft' | 'published' | 'completed';
 
@@ -77,7 +77,7 @@ export class FilterBookDto extends PaginationQueryDto {
       'score',
     ],
     {
-      message: 'Trường sắp xếp không hợp lệ',
+      message: 'TrÆ°á»ng sáº¯p xáº¿p khÃ´ng há»£p lá»‡',
     },
   )
   override sortBy?:
@@ -91,6 +91,8 @@ export class FilterBookDto extends PaginationQueryDto {
     | 'score' = undefined;
 
   @IsOptional()
-  @IsEnum(['asc', 'desc'], { message: 'Thứ tự sắp xếp phải là asc hoặc desc' })
+  @IsEnum(['asc', 'desc'], {
+    message: 'Thá»© tá»± sáº¯p xáº¿p pháº£i lÃ  asc hoáº·c desc',
+  })
   override order: 'asc' | 'desc' = 'desc';
 }

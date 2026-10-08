@@ -1,4 +1,4 @@
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { User as UserEntity } from '@/modules/users/domain/users/entities/user.entity';
 import {
   IUserRepository,

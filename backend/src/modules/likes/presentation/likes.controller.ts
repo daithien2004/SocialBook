@@ -13,10 +13,10 @@ import {
   Query,
 } from '@nestjs/common';
 
-import { RequireAuth } from '@/common/decorators/auth-swagger.decorator';
-import { Public } from '@/common/decorators/custom.decorator';
+import { RequireAuth } from '@/shared/platform/decorators/auth-swagger.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { TargetType } from '@/modules/likes/domain/value-objects/target-type.vo';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 @Controller('likes')
 export class LikesController {

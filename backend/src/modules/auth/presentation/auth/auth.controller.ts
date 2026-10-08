@@ -1,5 +1,5 @@
 import { CommandBus } from '@nestjs/cqrs';
-import { Public } from '@/common/decorators/custom.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { User } from '@/modules/users/domain/public-api';
 
 import {
@@ -31,9 +31,9 @@ import { ResendOtpCommand } from '@/modules/auth/application/auth/commands/resen
 import { ResetPasswordCommand } from '@/modules/auth/application/auth/commands/reset-password/reset-password.command';
 import { VerifyOtpCommand } from '@/modules/auth/application/otp/commands/verify-otp/verify-otp.command';
 
-import type { JwtValidatedUser } from '@/common/interfaces/jwt-validated-user.interface';
+import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 import type { JwtPayload } from '@/modules/auth/infrastructure/auth/strategies/jwt.strategy';
-import type { ApiResponse } from '@/common/interfaces/api-response.interface';
+import type { ApiResponse } from '@/shared/platform/interfaces/api-response.interface';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { UserId } from '@/modules/users/domain/public-api';
 import { AuthCookieService } from '@/modules/auth/application/auth/services/auth-cookie.service';
@@ -88,7 +88,7 @@ export class AuthController {
     );
 
     return {
-      message: 'Đăng nhập thành công',
+      message: 'ÄÄƒng nháº­p thÃ nh cÃ´ng',
       data: { accessToken: result.accessToken },
     };
   }
@@ -157,7 +157,7 @@ export class AuthController {
     await this.commandBus.execute(command);
 
     return {
-      message: 'Mã OTP đã được gửi đến email của bạn',
+      message: 'MÃ£ OTP Ä‘Ã£ Ä‘Æ°á»£c gá»­i Ä‘áº¿n email cá»§a báº¡n',
     };
   }
 
@@ -177,7 +177,7 @@ export class AuthController {
     const command = new ResendOtpCommand(body.email);
     const result = await this.commandBus.execute(command);
     return {
-      message: 'Gửi lại mã OTP thành công',
+      message: 'Gá»­i láº¡i mÃ£ OTP thÃ nh cÃ´ng',
       data: {
         resendCooldown: result.resendCooldown,
       },
@@ -202,7 +202,7 @@ export class AuthController {
     const refreshToken = body.refreshToken ?? req.cookies?.sb_refresh_token;
     if (!refreshToken) {
       throw new HttpException(
-        'Vui lòng cung cấp Refresh token',
+        'Vui lÃ²ng cung cáº¥p Refresh token',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -224,7 +224,7 @@ export class AuthController {
     );
 
     return {
-      message: 'Làm mới token thành công',
+      message: 'LÃ m má»›i token thÃ nh cÃ´ng',
       data: { accessToken },
     };
   }
@@ -236,7 +236,8 @@ export class AuthController {
     const command = new ForgotPasswordCommand(dto.email);
     await this.commandBus.execute(command);
     return {
-      message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
+      message:
+        'MÃ£ OTP Ä‘áº·t láº¡i máº­t kháº©u Ä‘Ã£ Ä‘Æ°á»£c gá»­i Ä‘áº¿n email cá»§a báº¡n',
     };
   }
 

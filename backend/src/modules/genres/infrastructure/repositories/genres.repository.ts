@@ -1,7 +1,7 @@
 import {
   PaginatedResult,
   PaginationOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Genre as GenreEntity } from '@/modules/genres/domain/entities/genre.entity';
 import {
   GenreFilter,

@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException } from '@nestjs/common';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import {
@@ -117,10 +117,10 @@ export class CreateBookHandler implements ICommandHandler<
 
     await this.bookRepository.save(book);
 
-    // cập nhật lại cache thông qua service chuyên biệt
+    // cáº­p nháº­t láº¡i cache thÃ´ng qua service chuyÃªn biá»‡t
     await this.bookCache.setDetail(book);
 
-    // Emit event để ChromaDB listener (và các listener khác) bắt và xử lý
+    // Emit event Ä‘á»ƒ ChromaDB listener (vÃ  cÃ¡c listener khÃ¡c) báº¯t vÃ  xá»­ lÃ½
     this.eventEmitter.emit(EventNames.BOOK_CREATED, {
       bookId: book.id.toString(),
     });

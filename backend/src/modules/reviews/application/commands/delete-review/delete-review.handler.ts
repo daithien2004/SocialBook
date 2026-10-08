@@ -1,6 +1,6 @@
 import { DeleteReviewCommand } from './delete-review.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ReviewErrorMessages } from '@/modules/reviews/application/error-messages';
 import {
   NotFoundDomainException,
   ForbiddenDomainException,
@@ -16,11 +16,11 @@ export class DeleteReviewHandler {
   async execute(id: string, ability: AppAbility): Promise<void> {
     const review = await this.reviewRepository.findById(id);
     if (!review)
-      throw new NotFoundDomainException(ErrorMessages.REVIEW_NOT_FOUND);
+      throw new NotFoundDomainException(ReviewErrorMessages.REVIEW_NOT_FOUND);
 
     if (!ability.can(Action.Delete, subject(Subject.Review, review))) {
       throw new ForbiddenDomainException(
-        'Bạn chỉ có thể xóa bình luận của chính mình',
+        'Báº¡n chá»‰ cÃ³ thá»ƒ xÃ³a bÃ¬nh luáº­n cá»§a chÃ­nh mÃ¬nh',
       );
     }
 

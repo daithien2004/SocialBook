@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { IBookRepository } from '@/modules/books/domain/public-api';
-import { isWorkerProcess } from '@/common/utils/process-role.util';
+import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
 @Injectable()
 export class ChromaReconciliationCron {
@@ -14,17 +14,17 @@ export class ChromaReconciliationCron {
     @InjectQueue('chroma') private readonly chromaQueue: Queue,
   ) {}
 
-  // Chạy mỗi 10 phút, tự động dò tìm những quyển sách đã publish nhưng chưa có vectorIndexedAt
+  // Cháº¡y má»—i 10 phÃºt, tá»± Ä‘á»™ng dÃ² tÃ¬m nhá»¯ng quyá»ƒn sÃ¡ch Ä‘Ã£ publish nhÆ°ng chÆ°a cÃ³ vectorIndexedAt
   @Cron(CronExpression.EVERY_10_MINUTES)
   async reconcileUnindexedBooks() {
     if (!isWorkerProcess()) {
-      return; // Đảm bảo chỉ chạy ở Worker (nếu cron module được nạp cả ở API thì đây là lớp bảo vệ thứ 2)
+      return; // Äáº£m báº£o chá»‰ cháº¡y á»Ÿ Worker (náº¿u cron module Ä‘Æ°á»£c náº¡p cáº£ á»Ÿ API thÃ¬ Ä‘Ã¢y lÃ  lá»›p báº£o vá»‡ thá»© 2)
     }
 
     this.logger.log('Starting Chroma vector index reconciliation...');
 
     try {
-      // Giới hạn 50 cuốn mỗi lần chạy để tránh tạo quá nhiều job cùng lúc
+      // Giá»›i háº¡n 50 cuá»‘n má»—i láº§n cháº¡y Ä‘á»ƒ trÃ¡nh táº¡o quÃ¡ nhiá»u job cÃ¹ng lÃºc
       const unindexedBooks = await this.bookRepository.findUnindexedBooks(50);
 
       if (unindexedBooks.length === 0) {
@@ -37,7 +37,7 @@ export class ChromaReconciliationCron {
       );
 
       for (const book of unindexedBooks) {
-        // Enqueue với jobId để dedup
+        // Enqueue vá»›i jobId Ä‘á»ƒ dedup
         await this.chromaQueue.add(
           'index-book',
           { bookId: book.id.toString() },

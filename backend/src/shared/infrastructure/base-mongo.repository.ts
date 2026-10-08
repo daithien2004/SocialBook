@@ -4,7 +4,7 @@ import {
   PaginationMeta,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Entity } from '@/shared/domain/entity.base';
 import { Identifier } from '@/shared/domain/identifier.base';
 import {

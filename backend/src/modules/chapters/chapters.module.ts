@@ -1,4 +1,4 @@
-﻿import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ChaptersApplicationModule } from './application/chapters/chapters-application.module';
 import { ChaptersController } from './presentation/chapters/chapters.controller';
 

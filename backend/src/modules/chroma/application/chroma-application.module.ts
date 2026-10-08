@@ -9,14 +9,14 @@ import { ReindexAllHandler } from './commands/reindex-all/reindex-all.handler';
 import { AskChatbotHandler } from './commands/ask-chatbot/ask-chatbot.handler';
 import { BookVectorIndexListener } from './listeners/book-vector-index.listener';
 import { ChromaInfrastructureModule } from '../infrastructure/chroma-infrastructure.module';
-import { BooksRepositoryModule } from '@/modules/books/infrastructure/repositories/books/books-repository.module';
-import { AuthorsInfrastructureModule } from '@/modules/authors/infrastructure/authors-infrastructure.module';
-import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/repositories/chapters/chapters-repository.module';
+import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
+import { AuthorsInfrastructureModule } from '@/modules/authors/infrastructure/public-api';
+import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
 import { BullModule } from '@nestjs/bullmq';
 import { ChromaProcessor } from './processors/chroma.processor';
-import { isWorkerProcess } from '@/common/utils/process-role.util';
+import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
 
 @Module({

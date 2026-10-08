@@ -14,9 +14,9 @@ import {
   GenerateBookAudioDto,
   TextToSpeechResponseDto,
 } from '@/modules/text-to-speech/presentation/dto/text-to-speech.dto';
-import { Public } from '@/common/decorators/custom.decorator';
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import { GenerateChapterAudioCommand } from '@/modules/text-to-speech/application/commands/generate-chapter-audio/generate-chapter-audio.command';
 import { GetChapterAudioQuery } from '@/modules/text-to-speech/application/queries/get-chapter-audio/get-chapter-audio.query';
 import { DeleteChapterAudioCommand } from '@/modules/text-to-speech/application/commands/delete-chapter-audio/delete-chapter-audio.command';

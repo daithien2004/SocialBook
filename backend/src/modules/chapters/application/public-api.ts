@@ -1,4 +1,4 @@
-﻿export {
+export {
   getChapterContext,
   extractKeywords,
   selectRelevantContent,

@@ -2,7 +2,7 @@ import {
   buildPaginationMeta,
   CursorPaginatedResult,
   PaginatedResult,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Post as PostEntity } from '@/modules/posts/domain/posts/entities/post.entity';
 import {
   FindAllOptions,
@@ -469,7 +469,7 @@ export class PostRepository implements IPostRepository {
                   {
                     $regexMatch: {
                       input: { $ifNull: ['$moderationReason', ''] },
-                      regex: /thô tục|toxic/i,
+                      regex: /thÃ´ tá»¥c|toxic/i,
                     },
                   },
                   1,
@@ -483,7 +483,7 @@ export class PostRepository implements IPostRepository {
                   {
                     $regexMatch: {
                       input: { $ifNull: ['$moderationReason', ''] },
-                      regex: /spoiler|tiết lộ/i,
+                      regex: /spoiler|tiáº¿t lá»™/i,
                     },
                   },
                   1,

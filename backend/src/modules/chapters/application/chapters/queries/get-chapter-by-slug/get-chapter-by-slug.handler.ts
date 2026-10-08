@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
 import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
@@ -18,7 +18,7 @@ export class GetChapterBySlugHandler implements IQueryHandler<
       query.bookSlug,
     );
     if (!result) {
-      throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
+      throw new NotFoundDomainException(ChapterErrorMessages.CHAPTER_NOT_FOUND);
     }
     return result;
   }

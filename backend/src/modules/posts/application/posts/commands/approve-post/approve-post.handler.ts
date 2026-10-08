@@ -4,7 +4,7 @@ import {
   BadRequestDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { ApprovePostCommand } from './approve-post.command';
 
 @CommandHandler(ApprovePostCommand)
@@ -16,7 +16,8 @@ export class ApprovePostHandler implements ICommandHandler<
 
   async execute(command: ApprovePostCommand) {
     const post = await this.postRepository.findById(command.postId);
-    if (!post) throw new NotFoundDomainException(ErrorMessages.POST_NOT_FOUND);
+    if (!post)
+      throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
 
     if (!post.isFlagged) {
       throw new BadRequestDomainException('Post is not flagged');

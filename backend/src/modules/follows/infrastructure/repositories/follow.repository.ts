@@ -3,7 +3,7 @@ import {
   PaginationMeta,
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 
 import { FollowWithUserInfo } from './follow.mapper';
 import { Follow as FollowEntity } from '@/modules/follows/domain/entities/follow.entity';

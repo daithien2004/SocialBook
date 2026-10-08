@@ -9,7 +9,7 @@ import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chap
 import { ChapterTitle } from '@/modules/chapters/domain/chapters/value-objects/chapter-title.vo';
 import { BookId } from '@/modules/chapters/domain/chapters/value-objects/book-id.vo';
 import { UpdateChapterCommand } from './update-chapter.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
 import { ChapterResult } from '../../queries/get-chapters/get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 
@@ -25,7 +25,7 @@ export class UpdateChapterHandler implements ICommandHandler<
 
     const chapter = await this.chapterRepository.findById(chapterId);
     if (!chapter) {
-      throw new NotFoundDomainException(ErrorMessages.CHAPTER_NOT_FOUND);
+      throw new NotFoundDomainException(ChapterErrorMessages.CHAPTER_NOT_FOUND);
     }
 
     // Check if title is being updated and if it conflicts with existing chapter

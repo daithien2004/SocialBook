@@ -1,1 +1,1 @@
-﻿export { RecommendationsInfrastructureModule } from './recommendations-infrastructure.module';
+export { RecommendationsInfrastructureModule } from './recommendations-infrastructure.module';

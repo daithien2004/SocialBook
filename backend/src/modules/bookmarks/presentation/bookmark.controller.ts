@@ -1,7 +1,4 @@
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { GetBookmarksByBookQuery } from '../application/queries/get-bookmarks-by-book/get-bookmarks-by-book.query';
-import { DeleteBookmarkCommand } from '../application/commands/delete-bookmark/delete-bookmark.command';
-import { CreateBookmarkCommand } from '../application/commands/create-bookmark/create-bookmark.command';
+import { BookmarksService } from '../application/bookmarks.service';
 
 import {
   Controller,
@@ -12,16 +9,13 @@ import {
   Body,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 @Controller('bookmarks')
 @UseGuards(JwtAuthGuard)
 export class BookmarkController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+  constructor(private readonly bookmarksService: BookmarksService) {}
 
   @Post()
   async createBookmark(
@@ -35,16 +29,7 @@ export class BookmarkController {
       textPreview: string;
     },
   ) {
-    const bookmark = await this.commandBus.execute(
-      new CreateBookmarkCommand(
-        userId,
-        body.bookId,
-        body.chapterId,
-        body.chapterSlug,
-        body.paragraphId,
-        body.textPreview,
-      ),
-    );
+    const bookmark = await this.bookmarksService.create({ userId, ...body });
     return {
       message: 'Bookmark created successfully',
       data: {
@@ -64,9 +49,7 @@ export class BookmarkController {
     @CurrentUser('id') userId: string,
     @Param('paragraphId') paragraphId: string,
   ) {
-    await this.commandBus.execute(
-      new DeleteBookmarkCommand(userId, paragraphId),
-    );
+    await this.bookmarksService.delete(userId, paragraphId);
     return {
       message: 'Bookmark deleted successfully',
     };
@@ -77,9 +60,7 @@ export class BookmarkController {
     @CurrentUser('id') userId: string,
     @Param('bookId') bookId: string,
   ) {
-    const bookmarks = await this.queryBus.execute(
-      new GetBookmarksByBookQuery(userId, bookId),
-    );
+    const bookmarks = await this.bookmarksService.findByBook(userId, bookId);
     return {
       message: 'Get bookmarks successfully',
       data: bookmarks.map((b) => ({

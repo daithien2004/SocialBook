@@ -1,4 +1,4 @@
-﻿export { UsersModule } from './users.module';
+export { UsersModule } from './users.module';
 export { UsersApplicationModule } from './application/users/users-application.module';
 export { UsersRepositoryModule } from './infrastructure/repositories/users/users-repository.module';
 export { User } from './domain/users/entities/user.entity';

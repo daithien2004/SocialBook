@@ -8,13 +8,13 @@ import { GetMyHistoryHandler } from './queries/get-my-history/get-my-history.han
 import { GetRoomByCodeHandler } from './queries/get-room-by-code/get-room-by-code.handler';
 import { GetRoomHighlightsHandler } from './queries/get-room-highlights/get-room-highlights.handler';
 import { ReadingRoomsInfrastructureModule } from '@/modules/reading-rooms/infrastructure/reading-rooms-infrastructure.module';
-import { BooksRepositoryModule } from '@/modules/books/infrastructure/repositories/books/books-repository.module';
+import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
 
 import { AddHighlightHandler } from './commands/add-highlight/add-highlight.handler';
 import { GenerateHighlightInsightHandler } from './commands/generate-highlight-insight/generate-highlight-insight.handler';
 import { RemoveHighlightHandler } from './commands/remove-highlight/remove-highlight.handler';
-import { AIApplicationModule } from '@/modules/ai/application/ai-application.module';
-import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/repositories/chapters/chapters-repository.module';
+import { AIApplicationModule } from '@/modules/ai/application/public-api';
+import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 
 import { IPresencePort } from '@/modules/reading-rooms/domain/interfaces/presence.port';
 import { ReadingRoomPresenceService } from './presence/reading-room-presence.service';

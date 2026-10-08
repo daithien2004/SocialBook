@@ -4,7 +4,7 @@ import { IBookRepository } from '@/modules/books/domain/books/repositories/book.
 import { RecordBookViewCommand } from './record-book-view.command';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
 import { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { BookErrorMessages } from '@/modules/books/application/error-messages';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
 @CommandHandler(RecordBookViewCommand)
@@ -24,7 +24,7 @@ export class RecordBookViewHandler implements ICommandHandler<
     try {
       const book = await this.bookRepository.findBySlug(command.slug);
       if (!book) {
-        throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
+        throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
       }
 
       await this.bookRepository.incrementViews(book.id);

@@ -1,6 +1,6 @@
 import { CommandHandler } from '@nestjs/cqrs';
-import { getErrorMessage } from '@/common/utils/error.util';
-import { calculateFuzzyScore } from '@/common/utils/string.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
+import { calculateFuzzyScore } from '@/shared/platform/utils/string.util';
 import { Logger } from '@nestjs/common';
 import { IntelligentSearchQuery } from './intelligent-search.query';
 import {
@@ -58,7 +58,7 @@ export class IntelligentSearchHandler {
     const normalizedQuery = query.toLowerCase().trim();
     const mode = queryDto.mode ?? 'hybrid';
 
-    // 1. Kiểm tra cache trong Redis
+    // 1. Kiá»ƒm tra cache trong Redis
     const cacheKey = `search:${mode}:${encodeURIComponent(normalizedQuery)}:page:${page}:limit:${limit}:genres:${genres?.join(',') || 'all'}:order:${order}`;
 
     try {
@@ -76,7 +76,7 @@ export class IntelligentSearchHandler {
     }
 
     try {
-      // 1. KIỂM TRA TÁC GIẢ & TÊN SÁCH (Local DB)
+      // 1. KIá»‚M TRA TÃC GIáº¢ & TÃŠN SÃCH (Local DB)
       const [authors, exactBook] = await Promise.all([
         this.authorRepository.searchByName(query, 1),
         this.bookRepository.findByTitle(BookTitle.create(query)),
@@ -86,7 +86,7 @@ export class IntelligentSearchHandler {
         (a) => a.name.toString().toLowerCase() === normalizedQuery,
       );
 
-      // 2. Chạy tìm kiếm tuỳ theo mode
+      // 2. Cháº¡y tÃ¬m kiáº¿m tuá»³ theo mode
       let keywordPromise: Promise<Map<string, number>> = Promise.resolve(
         new Map<string, number>(),
       );
@@ -132,7 +132,7 @@ export class IntelligentSearchHandler {
         resolvedGenreIds = await this.resolveGenreIds(genres, analysis);
       }
 
-      // 4. MÀN LỌC QUYẾT ĐỊNH (Luôn chạy để đảm bảo total khớp với thực tế DB)
+      // 4. MÃ€N Lá»ŒC QUYáº¾T Äá»ŠNH (LuÃ´n cháº¡y Ä‘á»ƒ Ä‘áº£m báº£o total khá»›p vá»›i thá»±c táº¿ DB)
       candidateIds = await this.bookRepository.findIdsByFilter({
         ids: candidateIds,
         genres: resolvedGenreIds,
@@ -169,7 +169,7 @@ export class IntelligentSearchHandler {
         },
       };
 
-      // 4. Lưu cache vào Redis (TTL 24 giờ)
+      // 4. LÆ°u cache vÃ o Redis (TTL 24 giá»)
       this.cacheService.set(cacheKey, resultToReturn, 86400).catch((err) => {
         this.logger.warn(
           `Failed to set search cache to Redis for key: ${cacheKey}`,
@@ -191,7 +191,7 @@ export class IntelligentSearchHandler {
   ): Promise<Map<string, number>> {
     const results = new Map<string, number>();
 
-    // 1. Tìm tác giả theo tên
+    // 1. TÃ¬m tÃ¡c giáº£ theo tÃªn
     const authors = await this.authorRepository.searchByName(query, 5);
     const authorIds = authors.map((a) => a.id.toString());
 
@@ -206,7 +206,7 @@ export class IntelligentSearchHandler {
       description?: string;
     }> = [];
 
-    // Tìm kiếm song song
+    // TÃ¬m kiáº¿m song song
     const [booksByTitle, booksByAuthor] = await Promise.all([
       this.bookRepository.findSearchCandidates(
         { search: query, status: 'published' },
@@ -243,7 +243,7 @@ export class IntelligentSearchHandler {
         calculateFuzzyScore(query, author),
       );
 
-      // Nếu search trúng đích danh tác giả hoặc đích danh sách, cộng kịch trần
+      // Náº¿u search trÃºng Ä‘Ã­ch danh tÃ¡c giáº£ hoáº·c Ä‘Ã­ch danh sÃ¡ch, cá»™ng ká»‹ch tráº§n
       if (
         exactAuthor &&
         calculateFuzzyScore(exactAuthor.name.toString(), author) >= 90
@@ -297,7 +297,7 @@ export class IntelligentSearchHandler {
       }
     }
 
-    // Bộ lọc sàn: Lập tức loại bỏ những sách có tổng điểm dưới 25 (điểm liệt)
+    // Bá»™ lá»c sÃ n: Láº­p tá»©c loáº¡i bá» nhá»¯ng sÃ¡ch cÃ³ tá»•ng Ä‘iá»ƒm dÆ°á»›i 25 (Ä‘iá»ƒm liá»‡t)
     for (const [id, score] of hybridMap.entries()) {
       if (score.finalScore < IntelligentSearchHandler.MIN_FINAL_SCORE) {
         hybridMap.delete(id);

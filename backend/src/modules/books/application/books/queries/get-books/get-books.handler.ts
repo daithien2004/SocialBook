@@ -2,7 +2,7 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import {
   PaginationOptions,
   SortOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
 import { BookFilter } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { GetBooksQuery } from './get-books.query';

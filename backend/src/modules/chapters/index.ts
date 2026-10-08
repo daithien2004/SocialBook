@@ -1,4 +1,4 @@
-﻿export { ChaptersModule } from './chapters.module';
+export { ChaptersModule } from './chapters.module';
 export { ChaptersApplicationModule } from './application/chapters/chapters-application.module';
 export { ChaptersRepositoryModule } from './infrastructure/repositories/chapters/chapters-repository.module';
 export { Chapter } from './domain/chapters/entities/chapter.entity';

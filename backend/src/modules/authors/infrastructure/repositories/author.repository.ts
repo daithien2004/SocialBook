@@ -1,7 +1,7 @@
 import {
   PaginatedResult,
   PaginationOptions,
-} from '@/common/interfaces/pagination.interface';
+} from '@/shared/domain/pagination.types';
 import { Author as AuthorEntity } from '../../domain/entities/author.entity';
 import {
   AuthorFilter,

@@ -20,13 +20,13 @@ import { TokenService } from './services/token.service';
 import { OAuthStateService } from './services/oauth-state.service';
 import { AuthCookieService } from './services/auth-cookie.service';
 
-import { UsersApplicationModule } from '@/modules/users/application/users/users-application.module';
+import { UsersApplicationModule } from '@/modules/users/application/public-api';
 import {
   RolesApplicationModule,
   RolesInfrastructureModule,
 } from '@/modules/roles';
 import { OtpApplicationModule } from '@/modules/auth/application/otp/otp-application.module';
-import { UsersRepositoryModule } from '@/modules/users/infrastructure/repositories/users/users-repository.module';
+import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api';
 import { OtpRepositoryModule } from '@/modules/auth/infrastructure/repositories/otp/otp-repository.module';
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 import { OAuthStateStorePort } from '@/modules/auth/application/auth/oauth-state-store.port';

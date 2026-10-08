@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 import { UserRoleChangedEvent } from '@/modules/users/application/public-api';
 import { TOKEN_REVOCATION_TTL_SECONDS } from './reading-room.constants';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';

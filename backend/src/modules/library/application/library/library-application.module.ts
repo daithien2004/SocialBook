@@ -12,9 +12,9 @@ import { UpdateCollectionsHandler } from './commands/update-collections/update-c
 import { UpdateProgressHandler } from './commands/update-progress/update-progress.handler';
 import { UpdateStatusHandler } from './commands/update-status/update-status.handler';
 import { LibraryRepositoryModule } from '@/modules/library/infrastructure/repositories/library/library-repository.module';
-import { BooksRepositoryModule } from '@/modules/books/infrastructure/repositories/books/books-repository.module';
-import { UsersRepositoryModule } from '@/modules/users/infrastructure/repositories/users/users-repository.module';
-import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/genres-infrastructure.module';
+import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
+import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api';
+import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/public-api';
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 
@@ -22,7 +22,7 @@ import { ProcessReadingSessionHandler } from './commands/process-reading-session
 import { UpdateCollectionHandler } from './commands/update-collection/update-collection.handler';
 import { DeleteCollectionHandler } from './commands/delete-collection/delete-collection.handler';
 import { GetKnowledgeGraphHandler } from './queries/get-knowledge-graph/get-knowledge-graph.handler';
-import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/repositories/chapters/chapters-repository.module';
+import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 import { RecommendationsInfrastructureModule } from '@/modules/recommendations/infrastructure/public-api';
 
 @Module({

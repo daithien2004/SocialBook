@@ -4,7 +4,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
 import { getAuthUserCacheKey } from '@/shared/domain/auth-cache.keys';
 import { UserRoleChangedEvent } from '../events/user-role-changed.event';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @Injectable()
 export class CaslCacheListener {
@@ -16,8 +16,8 @@ export class CaslCacheListener {
   async handleUserRoleChangedEvent(event: UserRoleChangedEvent) {
     try {
       this.logger.debug(`Clearing authz caches for user: ${event.userId}`);
-      // Xoá cache role/ban mà JwtStrategy.validate đọc (auth:user:{id})
-      // và cache permissions CASL (permissions:{id}) để role mới có hiệu lực sớm.
+      // XoÃ¡ cache role/ban mÃ  JwtStrategy.validate Ä‘á»c (auth:user:{id})
+      // vÃ  cache permissions CASL (permissions:{id}) Ä‘á»ƒ role má»›i cÃ³ hiá»‡u lá»±c sá»›m.
       await Promise.all([
         this.redis.del(getAuthUserCacheKey(event.userId)),
         this.redis.del(`permissions:${event.userId}`),

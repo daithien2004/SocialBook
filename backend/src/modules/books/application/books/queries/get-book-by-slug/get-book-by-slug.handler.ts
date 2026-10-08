@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { BookErrorMessages } from '@/modules/books/application/error-messages';
 import { BookDetailReadModel } from '@/modules/books/domain/books/read-models/book-detail.read-model';
 import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
 import { IReviewRepository } from '@/modules/reviews/domain/public-api';
@@ -8,7 +8,7 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { ICachePort } from '@/shared/domain/cache.port';
-import { CACHE_TTL } from '@/common/constants/cache.constants';
+import { CACHE_TTL } from '@/shared/platform/constants/cache.constants';
 import { GetBookBySlugQuery } from './get-book-by-slug.query';
 
 @QueryHandler(GetBookBySlugQuery)
@@ -38,7 +38,7 @@ export class GetBookBySlugHandler implements IQueryHandler<
     const book = await this.bookQueryProvider.findDetailBySlug(query.slug);
 
     if (!book) {
-      throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
+      throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
     }
 
     const ratingStats = await this.reviewRepository.getStatsForBooks([book.id]);

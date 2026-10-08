@@ -6,7 +6,7 @@ import { ToxicWord } from '@/modules/content-moderation/domain/entities/toxic-wo
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { VietnameseRegexBuilder } from '@/modules/content-moderation/domain/utils/vietnamese-regex-builder';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @CommandHandler(AddToxicWordCommand)
 export class AddToxicWordHandler {
@@ -25,7 +25,7 @@ export class AddToxicWordHandler {
     const exists = await this.toxicWordRepository.existsByPattern(finalPattern);
     if (exists) {
       throw new BadRequestDomainException(
-        'Từ khóa hoặc pattern này đã tồn tại.',
+        'Tá»« khÃ³a hoáº·c pattern nÃ y Ä‘Ã£ tá»“n táº¡i.',
       );
     }
 

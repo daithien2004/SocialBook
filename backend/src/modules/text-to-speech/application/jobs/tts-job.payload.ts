@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export class GenerateAudioJobPayload {
   constructor(
     public readonly ttsRecordId: string,
@@ -8,3 +10,12 @@ export class GenerateAudioJobPayload {
     public readonly format: string,
   ) {}
 }
+
+export const GenerateAudioJobPayloadSchema = z.object({
+  ttsRecordId: z.string().min(1),
+  chapterId: z.string().min(1),
+  voice: z.string().min(1),
+  language: z.string().min(1),
+  speed: z.number(),
+  format: z.string().min(1),
+});

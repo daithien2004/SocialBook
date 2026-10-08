@@ -4,9 +4,10 @@ import { IBookRepository } from '@/modules/books/domain/books/repositories/book.
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { DeleteBookCommand } from './delete-book.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { BookErrorMessages } from '@/modules/books/application/error-messages';
+import { ErrorMessages } from '@/shared/platform/constants/error-messages';
 import { ICachePort } from '@/shared/domain/cache.port';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @CommandHandler(DeleteBookCommand)
 export class DeleteBookHandler implements ICommandHandler<
@@ -28,7 +29,7 @@ export class DeleteBookHandler implements ICommandHandler<
     const book = await this.bookRepository.findById(bookId);
 
     if (!book) {
-      throw new NotFoundException(ErrorMessages.BOOK_NOT_FOUND);
+      throw new NotFoundException(BookErrorMessages.BOOK_NOT_FOUND);
     }
 
     await this.bookRepository.softDelete(bookId);

@@ -10,9 +10,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { Roles } from '@/common/decorators/roles.decorator';
-import { RolesGuard } from '@/common/guards/roles.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 import { CreateNotificationCommand } from '@/modules/notifications/application/commands/create-notification/create-notification.command';
 import { GetUserNotificationsQuery } from '@/modules/notifications/application/queries/get-user-notification/get-user-notifications.query';

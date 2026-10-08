@@ -10,8 +10,8 @@ import {
   Query,
 } from '@nestjs/common';
 
-import { Public } from '@/common/decorators/custom.decorator';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 
 import {
   CreateFollowDto,

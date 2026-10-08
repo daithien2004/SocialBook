@@ -9,11 +9,11 @@ import { IMediaPort } from '@/modules/media/domain/public-api';
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { CreatePostCommand } from './create-post.command';
 import { containsVietnameseToxicWords } from '@/modules/content-moderation/domain';
 import { IPostModerationPort } from '@/modules/posts/domain/posts/interfaces/post-moderation.port';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @CommandHandler(CreatePostCommand)
 export class CreatePostHandler implements ICommandHandler<
@@ -35,13 +35,13 @@ export class CreatePostHandler implements ICommandHandler<
     // Validate Book
     const bookExists = await this.bookRepository.existsById(command.bookId);
     if (!bookExists)
-      throw new NotFoundDomainException(ErrorMessages.BOOK_NOT_FOUND);
+      throw new NotFoundDomainException(PostErrorMessages.BOOK_NOT_FOUND);
 
-    // Layer 1: Quick regex check (obvious profanity) — SYNCHRONOUS, immediate
+    // Layer 1: Quick regex check (obvious profanity) â€” SYNCHRONOUS, immediate
     const quickCheck = containsVietnameseToxicWords(command.content);
     if (quickCheck) {
       throw new BadRequestDomainException(
-        `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
+        `Ná»™i dung chá»©a tá»« ngá»¯ thÃ´ tá»¥c khÃ´ng phÃ¹ há»£p: "${quickCheck.matchedWord}" (nhÃ³m: ${quickCheck.group}).`,
       );
     }
 
@@ -51,7 +51,7 @@ export class CreatePostHandler implements ICommandHandler<
       imageUrls = await this.mediaService.uploadMultipleImages(command.files);
     }
 
-    // Create and save the post immediately (PENDING status — visible to user)
+    // Create and save the post immediately (PENDING status â€” visible to user)
     const post = Post.create({
       id: this.idGenerator.generate(),
       userId: command.userId,

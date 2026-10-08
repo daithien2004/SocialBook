@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { CursorPaginatedResult } from '@/common/interfaces/pagination.interface';
+import { CursorPaginatedResult } from '@/shared/domain/pagination.types';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { GetPostsQuery } from './get-posts.query';

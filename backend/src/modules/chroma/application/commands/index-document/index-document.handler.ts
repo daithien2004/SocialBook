@@ -1,6 +1,6 @@
 import { IndexDocumentCommand } from './index-document.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { getErrorMessage } from '@/common/utils/error.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/modules/chroma/domain/repositories/vector.repository.interface';
 import { VectorDocument } from '@/modules/chroma/domain/entities/vector-document.entity';

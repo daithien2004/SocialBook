@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { EventNames } from '@/common/constants/event-names.constant';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 @Injectable()
 export class BookVectorIndexListener {
@@ -15,9 +15,9 @@ export class BookVectorIndexListener {
   async handleBookUpserted(payload: { bookId: string }) {
     try {
       await this.chromaQueue.add('index-book', payload, {
-        // jobId tất định + delay: Nếu user sửa sách 5 lần trong 5 giây,
-        // chỉ có 1 job index duy nhất được tạo (job cũ bị ghi đè).
-        // Processor sẽ đọc lại sách từ DB tại thời điểm chạy — luôn là dữ liệu mới nhất.
+        // jobId táº¥t Ä‘á»‹nh + delay: Náº¿u user sá»­a sÃ¡ch 5 láº§n trong 5 giÃ¢y,
+        // chá»‰ cÃ³ 1 job index duy nháº¥t Ä‘Æ°á»£c táº¡o (job cÅ© bá»‹ ghi Ä‘Ã¨).
+        // Processor sáº½ Ä‘á»c láº¡i sÃ¡ch tá»« DB táº¡i thá»i Ä‘iá»ƒm cháº¡y â€” luÃ´n lÃ  dá»¯ liá»‡u má»›i nháº¥t.
         jobId: `index-book-${payload.bookId}`,
         delay: 5000,
         removeOnComplete: { age: 3600, count: 1000 },
@@ -26,7 +26,7 @@ export class BookVectorIndexListener {
         backoff: { type: 'exponential', delay: 2000 },
       });
     } catch (err: unknown) {
-      // Không re-throw — listener async không được làm crash process.
+      // KhÃ´ng re-throw â€” listener async khÃ´ng Ä‘Æ°á»£c lÃ m crash process.
       this.logger.error(
         `Failed to enqueue index-book for ${payload.bookId}`,
         err,

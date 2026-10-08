@@ -7,7 +7,7 @@ import {
 import { ICommentRepository } from '@/modules/comments/domain/repositories/comment.repository.interface';
 import { CommentId } from '@/modules/comments/domain/value-objects/comment-id.vo';
 import { DeleteCommentCommand } from './delete-comment.command';
-import { ErrorMessages } from '@/common/constants/error-messages';
+import { CommentErrorMessages } from '@/modules/comments/application/error-messages';
 
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
@@ -25,7 +25,9 @@ export class DeleteCommentHandler implements ICommandHandler<DeleteCommentComman
       // Find the comment
       const comment = await this.commentRepository.findById(commentId);
       if (!comment) {
-        throw new NotFoundDomainException(ErrorMessages.COMMENT_NOT_FOUND);
+        throw new NotFoundDomainException(
+          CommentErrorMessages.COMMENT_NOT_FOUND,
+        );
       }
 
       // Check if user can delete this comment via CASL

@@ -1,6 +1,6 @@
 import { SendOtpCommand } from './send-otp.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { getErrorMessage } from '@/common/utils/error.util';
+import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
 import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { IMailerPort } from '@/modules/auth/domain/auth/otp/interfaces/mailer.port';

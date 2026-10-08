@@ -4,7 +4,7 @@ import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.
 import { UserId } from '@/modules/follows/domain/value-objects/user-id.vo';
 import { TargetId } from '@/modules/follows/domain/value-objects/target-id.vo';
 import { Follow } from '@/modules/follows/domain/entities/follow.entity';
-import { PaginatedResult } from '@/common/interfaces/pagination.interface';
+import { PaginatedResult } from '@/shared/domain/pagination.types';
 import { GetFollowsQuery } from './get-follows.query';
 
 @QueryHandler(GetFollowsQuery)
