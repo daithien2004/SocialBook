@@ -1,5 +1,6 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
+  HttpCode,
   Controller,
   Post,
   Get,
@@ -22,7 +23,10 @@ import { GetChapterAudioQuery } from '@/modules/text-to-speech/application/queri
 import { DeleteChapterAudioCommand } from '@/modules/text-to-speech/application/commands/delete-chapter-audio/delete-chapter-audio.command';
 import { GenerateBookAudioCommand } from '@/modules/text-to-speech/application/commands/generate-book-audio/generate-book-audio.command';
 import { IncrementPlayCountCommand } from '@/modules/text-to-speech/application/commands/increment-play-count/increment-play-count.command';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
+import { ApiNoContentResponse } from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('text-to-speech')
 export class TextToSpeechController {
   constructor(
@@ -43,10 +47,7 @@ export class TextToSpeechController {
       dto.voice,
     );
     const result = await this.commandBus.execute(command);
-    return {
-      message: 'Audio generated successfully',
-      data: TextToSpeechResponseDto.fromEntity(result),
-    };
+    return TextToSpeechResponseDto.fromEntity(result);
   }
 
   @Roles('admin')
@@ -62,10 +63,7 @@ export class TextToSpeechController {
       dto.voice,
     );
     const result = await this.commandBus.execute(command);
-    return {
-      message: 'Batch audio generation completed',
-      data: result,
-    };
+    return result;
   }
 
   @Public()
@@ -75,37 +73,27 @@ export class TextToSpeechController {
     const result = await this.queryBus.execute(query);
 
     if (!result) {
-      return {
-        message: 'No audio found for this chapter',
-        data: null,
-      };
+      return null;
     }
 
-    return {
-      message: 'Audio retrieved successfully',
-      data: TextToSpeechResponseDto.fromEntity(result),
-    };
+    return TextToSpeechResponseDto.fromEntity(result);
   }
 
+  @HttpCode(204)
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Delete('chapter/:chapterId')
   async deleteChapterAudio(@Param('chapterId') chapterId: string) {
     const command = new DeleteChapterAudioCommand(chapterId);
     await this.commandBus.execute(command);
-    return {
-      message: 'Audio deleted successfully',
-      data: { success: true },
-    };
   }
 
   @Public()
   @Post('chapter/:chapterId/play')
-  incrementPlayCount(@Param('chapterId') chapterId: string) {
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async incrementPlayCount(@Param('chapterId') chapterId: string) {
     const command = new IncrementPlayCountCommand(chapterId);
-    this.commandBus.execute(command);
-    return {
-      message: 'Play count incremented',
-    };
+    await this.commandBus.execute(command);
   }
 }

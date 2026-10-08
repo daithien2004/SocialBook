@@ -18,15 +18,22 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+  FormLabel,
+} from '@/components/ui/form';
 import { useCreatePost } from '@/features/posts/hooks/useCreatePost';
-import { AppButton } from "@/components/shared/AppButton";
+import { AppButton } from '@/components/shared/AppButton';
 import { useCreatePost as useCreatePostMutation } from '@/features/posts/api/post.mutations';
 import BookSelector from './BookSelector';
 
 export default function CreatePostModal() {
-  const modals = useModalStore(s => s.modals);
-  const closeCreatePost = useModalStore(s => s.closeCreatePost);
+  const modals = useModalStore((s) => s.modals);
+  const closeCreatePost = useModalStore((s) => s.closeCreatePost);
   const { isOpen: isCreatePostOpen, data: createPostData } = modals.createPost;
   const {
     title = 'Tạo bài viết mới',
@@ -44,7 +51,16 @@ export default function CreatePostModal() {
 
   const createPost = useCreatePostMutation();
 
-  const { form, previewUrls, isSubmitting, handleFileSelect, handleRemoveImage, canAddMore, totalImages, onSubmit } = useCreatePost({
+  const {
+    form,
+    previewUrls,
+    isSubmitting,
+    handleFileSelect,
+    handleRemoveImage,
+    canAddMore,
+    totalImages,
+    onSubmit,
+  } = useCreatePost({
     defaultContent,
     defaultBookId,
     defaultBookTitle,
@@ -60,12 +76,15 @@ export default function CreatePostModal() {
             images: Array.from(values.images ?? []) as unknown as FileList,
           });
 
-          const postData = response.data;
-          const warningMessage = response.warning;
+          const postData = response;
+          const warningMessage = response.warnings?.[0];
 
           if (warningMessage || postData.isFlagged) {
             toast.warning('Bài viết đang được xem xét', {
-              description: warningMessage || postData.moderationReason || 'Bài viết của bạn đang được hệ thống kiểm duyệt.',
+              description:
+                warningMessage ||
+                postData.moderationReason ||
+                'Bài viết của bạn đang được hệ thống kiểm duyệt.',
               duration: 6000,
             });
           }
@@ -93,7 +112,10 @@ export default function CreatePostModal() {
   if (!isAuthenticated) return null;
 
   return (
-    <Dialog open={isCreatePostOpen} onOpenChange={(open) => !open && closeCreatePost()}>
+    <Dialog
+      open={isCreatePostOpen}
+      onOpenChange={(open) => !open && closeCreatePost()}
+    >
       <DialogContent className="w-[95vw] sm:max-w-2xl p-0 gap-0 overflow-hidden bg-card rounded-2xl">
         <DialogHeader className="px-6 py-4 border-b border-white/5 dark:border-gray-800">
           <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
@@ -154,7 +176,10 @@ export default function CreatePostModal() {
                   {previewUrls.length > 0 && (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-md border border-white/5 dark:border-gray-800 p-2">
                       {previewUrls.map((url, index) => (
-                        <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border border-border">
+                        <div
+                          key={index}
+                          className="relative aspect-square group rounded-lg overflow-hidden border border-border"
+                        >
                           <Image
                             src={url}
                             alt={`Preview ${index}`}
@@ -209,7 +234,12 @@ export default function CreatePostModal() {
             <Separator className="my-2 bg-white/5 dark:bg-gray-800" />
 
             <DialogFooter className="px-6 py-4 pt-2">
-              <Button type="button" variant="ghost" onClick={closeCreatePost} disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={closeCreatePost}
+                disabled={isSubmitting}
+              >
                 Hủy
               </Button>
               <AppButton

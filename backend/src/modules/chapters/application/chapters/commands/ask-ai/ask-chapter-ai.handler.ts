@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
 import { IBookRepository } from '@/modules/books/domain/public-api';
-import { IAIPort } from '@/modules/ai/domain';
+import { IAIPort } from '@/modules/ai';
 import { getChapterContext } from '@/modules/chapters/application/public-api';
 import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chapter-id.vo';
 import { AskChapterAICommand } from './ask-chapter-ai.command';

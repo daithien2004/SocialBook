@@ -5,11 +5,13 @@ import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
 import { RateLimitConfigService } from '@/shared/infrastructure/rate-limit-config.service';
 import { UpdateRateLimitDto } from './dto/update-rate-limit.dto';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
 @ApiTags('Admin Rate Limits')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
+@ApiProblemResponses()
 @Controller('admin/rate-limits')
 export class AdminRateLimitController {
   constructor(
@@ -20,16 +22,13 @@ export class AdminRateLimitController {
   @ApiOperation({ summary: 'Láº¥y cáº¥u hÃ¬nh rate limit cho AI' })
   async getAIConfig() {
     const config = await this.rateLimitConfigService.getAIConfig();
-    return { data: config };
+    return config;
   }
 
   @Put('ai')
   @ApiOperation({ summary: 'Cáº­p nháº­t cáº¥u hÃ¬nh rate limit cho AI' })
   async updateAIConfig(@Body() dto: UpdateRateLimitDto) {
     const config = await this.rateLimitConfigService.updateAIConfig(dto);
-    return {
-      message: 'Cáº­p nháº­t cáº¥u hÃ¬nh rate limit thÃ nh cÃ´ng',
-      data: config,
-    };
+    return config;
   }
 }

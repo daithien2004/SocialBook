@@ -1,13 +1,7 @@
 import { apiRequest } from '@/lib/api-client';
+import type { ApiRequestBody, ApiResponse } from '@/lib/api-types';
 
-export interface RoomResponse {
-  roomId: string;
-  bookId: string;
-  hostId: string;
-  mode: 'sync' | 'free' | 'discussion';
-  status: string;
-  currentChapterSlug: string;
-}
+export type RoomResponse = ApiResponse<'/api/v1/reading-rooms/{code}', 'get'>;
 
 export interface RoomHighlightPage {
   items: Array<{
@@ -26,17 +20,27 @@ export interface RoomHighlightPage {
   limit: number;
 }
 
-export interface CreateRoomPayload {
-  bookId: string;
-  currentChapterSlug: string;
-  mode: string;
-  maxMembers?: number;
-}
+export type CreateRoomPayload = ApiRequestBody<'/api/v1/reading-rooms', 'post'>;
 
-export interface RoomHistoryResponse {
-  items: RoomResponse[];
-  total: number;
-}
+export type RoomHistoryResponse = ApiResponse<
+  '/api/v1/reading-rooms/my-history',
+  'get'
+>;
+
+type ActiveRoomsResponse = ApiResponse<
+  '/api/v1/reading-rooms/my-active',
+  'get'
+>;
+
+type RoomHighlightsResponse = ApiResponse<
+  '/api/v1/reading-rooms/{code}/highlights',
+  'get'
+>;
+
+type ReactivatedRoomResponse = ApiResponse<
+  '/api/v1/reading-rooms/{code}/reactivate',
+  'patch'
+>;
 
 export async function getRoom(code: string): Promise<RoomResponse> {
   return apiRequest<RoomResponse>({
@@ -50,18 +54,25 @@ export async function getRoomHighlights(
   offset: number,
   limit = 20,
 ): Promise<RoomHighlightPage> {
-  return apiRequest<RoomHighlightPage>({
+  const response = await apiRequest<RoomHighlightsResponse>({
     url: `/reading-rooms/${code}/highlights`,
     method: 'GET',
     params: { offset, limit },
   });
+  return {
+    items: response.data,
+    total: response.meta.total,
+    offset,
+    limit,
+  };
 }
 
 export async function getMyActiveRooms(): Promise<RoomResponse[]> {
-  return apiRequest<RoomResponse[]>({
+  const response = await apiRequest<ActiveRoomsResponse>({
     url: '/reading-rooms/my-active',
     method: 'GET',
   });
+  return response.data;
 }
 
 export async function getMyHistory(): Promise<RoomHistoryResponse> {
@@ -82,7 +93,7 @@ export async function createRoom(
 }
 
 export async function reactivateRoom(code: string): Promise<RoomResponse> {
-  return apiRequest<RoomResponse>({
+  return apiRequest<ReactivatedRoomResponse>({
     url: `/reading-rooms/${code}/reactivate`,
     method: 'PATCH',
   });

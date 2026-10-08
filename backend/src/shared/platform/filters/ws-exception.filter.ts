@@ -4,12 +4,13 @@ import { Socket, DefaultEventsMap } from 'socket.io';
 import { ReadingRoomServerEvent } from '@/modules/reading-rooms/reading-room.events';
 import { normalizeError } from '@/shared/presentation/error-normalizer';
 import { DomainException } from '@/shared/domain/domain-exception.base';
+import { randomUUID } from 'node:crypto';
 
 interface WsErrorAcknowledgement {
   ok: false;
   code: string;
-  message: string;
-  data: unknown;
+  detail: string;
+  traceId: string;
 }
 
 function isWsAcknowledgement(
@@ -39,13 +40,15 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
     const ack = isWsAcknowledgement(lastArg) ? lastArg : undefined;
     const event = ctx.getPattern();
 
-    const { code, message, data, isSystemError } = normalizeError(exception);
+    const { code, message, isSystemError } = normalizeError(exception);
+    const traceId = randomUUID();
 
     const logCtx = {
       userId: client.data.userId,
       socketId: client.id,
       event,
       code,
+      traceId,
     };
 
     if (isSystemError) {
@@ -60,23 +63,8 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
       this.logger.debug({ ...logCtx, details });
     }
 
-    let finalData = data;
-    const reqData: unknown = ctx.getData();
-    if (
-      reqData &&
-      typeof reqData === 'object' &&
-      'roomId' in reqData &&
-      typeof reqData.roomId === 'string'
-    ) {
-      finalData = {
-        ...(typeof finalData === 'object' && finalData !== null
-          ? finalData
-          : {}),
-        roomId: reqData.roomId,
-      };
-    }
-
-    const payload = { code, message, data: finalData };
+    const detail = isSystemError ? 'Internal server error' : message;
+    const payload = { code, detail, traceId };
 
     try {
       if (ack) {
@@ -86,7 +74,7 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
       }
     } catch (sendErr) {
       this.logger.debug(
-        { ...logCtx, sendErr: String(sendErr) },
+        { ...logCtx, traceId, sendErr: String(sendErr) },
         'Failed to deliver error to client',
       );
     }

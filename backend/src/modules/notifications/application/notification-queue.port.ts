@@ -1,9 +1,9 @@
-import {
+import type {
   CommentCreatedJobPayload,
   LikeToggledJobPayload,
   UserFollowedJobPayload,
   PostModeratedJobPayload,
-} from '@/modules/notifications/application/public-api';
+} from './jobs/notification-job.payload';
 
 export const INotificationQueuePort = Symbol('INotificationQueuePort');
 

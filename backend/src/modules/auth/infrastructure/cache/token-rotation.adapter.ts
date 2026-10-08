@@ -2,10 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
-import {
-  FreshTokens,
-  TokenRotationPort,
-} from '@/modules/auth/application/public-api';
+import { TokenRotationPort } from '../../application/auth/token-rotation.port';
+import type { FreshTokens } from '../../application/auth/token-rotation.port';
 
 const LOCK_TTL_MS = 5_000;
 

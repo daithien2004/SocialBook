@@ -12,10 +12,7 @@ import type {
   DeletePostResult,
   UpdatePostPayload,
 } from './post.api';
-import type {
-  Post,
-  PostWithModerationResult,
-} from '@/features/posts/schemas/post.schema';
+import type { PostWithModerationResult } from '@/features/posts/schemas/post.schema';
 
 export function useCreatePost() {
   const queryClient = useQueryClient();
@@ -66,7 +63,7 @@ export function useDeletePostPermanent() {
 
 export function useDeletePostImage() {
   const queryClient = useQueryClient();
-  return useMutation<Post, Error, { id: string; imageUrl: string }>({
+  return useMutation<void, Error, { id: string; imageUrl: string }>({
     mutationFn: deletePostImage,
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: postKeys.detail(id) });

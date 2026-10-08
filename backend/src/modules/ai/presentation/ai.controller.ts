@@ -13,7 +13,9 @@ import { GenerateTextCommand } from '@/modules/ai/application/commands/generate-
 import { SummarizeChapterCommand } from '@/modules/ai/application/commands/summarize-chapter/summarize-chapter.command';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { AIThrottleGuard } from '@/shared/platform/guards/ai-throttle.guard';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
+@ApiProblemResponses()
 @Controller('ai')
 export class AIController {
   constructor(private readonly commandBus: CommandBus) {}
@@ -51,6 +53,6 @@ export class AIController {
       req.user?.id ?? 'GUEST',
     );
     const result = await this.commandBus.execute(command);
-    return { data: result, message: 'TÃ³m táº¯t chÆ°Æ¡ng thÃ nh cÃ´ng' };
+    return result;
   }
 }

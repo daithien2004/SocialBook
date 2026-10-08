@@ -18,7 +18,7 @@ export interface BookRecommendation {
 }
 
 export interface RecommendationsResponse {
-  recommendations: BookRecommendation[];
+  data: BookRecommendation[];
   analysis: RecommendationAnalysis;
   meta: PaginationMetaData;
 }

@@ -7,7 +7,7 @@ import { UserId } from '@/modules/users/domain/public-api';
 import { BookId } from '@/modules/books/domain/public-api';
 import { ReadingStatus } from '@/modules/library/domain/library/enums/reading-status.enum';
 import { GetKnowledgeGraphQuery } from './get-knowledge-graph.query';
-import { IAIPort } from '@/modules/ai/domain';
+import { IAIPort } from '@/modules/ai';
 import { IGenreRepository } from '@/modules/genres/domain/public-api';
 import slugify from 'slugify';
 

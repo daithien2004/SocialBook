@@ -79,7 +79,7 @@ jobs:
           push: true
           tags: daithien/socialbook-fe:dev
           build-args: |
-            NEXT_PUBLIC_NEST_API_URL=/api
+            NEXT_PUBLIC_NEST_API_URL=/api/v1
             NEXT_PUBLIC_SOCKET_URL=/
           cache-from: type=registry,ref=daithien/socialbook-fe:cache
           cache-to: type=registry,ref=daithien/socialbook-fe:cache,mode=max

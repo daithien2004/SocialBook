@@ -1,3 +1,4 @@
+import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
@@ -42,7 +43,13 @@ import { UpdateUserImageCommand } from '@/modules/users/application/users/comman
 import { UpdateUserCommand } from '@/modules/users/application/users/commands/update-user/update-user.command';
 
 import { User } from '@/modules/users/domain/users/entities/user.entity';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('users')
 export class UsersController {
   constructor(
@@ -51,6 +58,7 @@ export class UsersController {
   ) {}
 
   @Post()
+  @ApiCreatedResponse({ type: UserResponseDto })
   async create(@Body() createUserDto: CreateUserDto) {
     const command = new CreateUserCommand(
       createUserDto.username,
@@ -62,13 +70,11 @@ export class UsersController {
       createUserDto.providerId,
     );
     const user = await this.commandBus.execute(command);
-    return {
-      message: 'User created successfully',
-      data: new UserResponseDto(user),
-    };
+    return new UserResponseDto(user);
   }
 
   @Get('admin')
+  @ApiPaginatedResponse(UserResponseDto, 'offset')
   @Roles('admin')
   @UseGuards(RolesGuard)
   async findAllAdmin(@Query() filter: FilterUserDto) {
@@ -82,15 +88,15 @@ export class UsersController {
       filter.isVerified,
     );
     const result = await this.queryBus.execute(getUsersQuery);
-    return {
-      message: 'Get users successfully',
-      data: result.data.map((user: User) => new UserResponseDto(user)),
-      meta: result.meta,
-    };
+    return paginated(
+      result.data.map((user: User) => new UserResponseDto(user)),
+      result.meta,
+    );
   }
 
   @Public()
   @Get()
+  @ApiPaginatedResponse(UserResponseDto, 'offset')
   async findAll(@Query() filter: FilterUserDto) {
     const getUsersQuery = new GetUsersQuery(
       filter.actualPage,
@@ -102,48 +108,66 @@ export class UsersController {
       undefined,
     );
     const result = await this.queryBus.execute(getUsersQuery);
-    return {
-      message: 'Get users successfully',
-      data: result.data.map((user: User) => new UserResponseDto(user)),
-      meta: result.meta,
-    };
+    return paginated(
+      result.data.map((user: User) => new UserResponseDto(user)),
+      result.meta,
+    );
   }
 
   @Patch(':id/ban')
+  @ApiOkResponse({ type: UserResponseDto })
   @UseGuards(RolesGuard)
   @Roles('admin')
   async toggleBan(@Param('id') id: string) {
     const command = new ToggleBanCommand(id);
     const user = await this.commandBus.execute(command);
-    return {
-      message: `User ${user.isBanned ? 'banned' : 'unbanned'} successfully`,
-      data: new UserResponseDto(user),
-    };
+    return new UserResponseDto(user);
   }
 
   @Public()
   @Get(':id/overview')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: [
+        'id',
+        'username',
+        'createdAt',
+        'postCount',
+        'readingListCount',
+        'followersCount',
+      ],
+      properties: {
+        id: { type: 'string' },
+        username: { type: 'string' },
+        image: { type: 'string', nullable: true },
+        bio: { type: 'string', nullable: true },
+        location: { type: 'string', nullable: true },
+        website: { type: 'string', nullable: true },
+        createdAt: { type: 'string', format: 'date-time' },
+        postCount: { type: 'integer' },
+        readingListCount: { type: 'integer' },
+        followersCount: { type: 'integer' },
+      },
+    },
+  })
   async getUserProfileOverview(@Param('id') id: string) {
     const query = new GetUserProfileQuery(id);
     const data = await this.queryBus.execute(query);
-    return {
-      message: 'Get user profile overview successfully',
-      data,
-    };
+    return data;
   }
 
   @Public()
   @Get(':id/exist')
+  @ApiOkResponse({ schema: { type: 'boolean' } })
   async isUserExist(@Param('id') id: string) {
     const query = new CheckUserExistQuery(undefined, undefined, id);
     const exists = await this.queryBus.execute(query);
-    return {
-      message: 'Check user exist successfully',
-      data: exists,
-    };
+    return exists;
   }
 
   @Patch('me/overview')
+  @ApiOkResponse({ type: UserResponseDto })
   async updateMyProfileOverview(
     @CurrentUser('id') userId: string,
     @Body() dto: UpdateUserOverviewDto,
@@ -156,13 +180,17 @@ export class UsersController {
       dto.website,
     );
     const user = await this.commandBus.execute(command);
-    return {
-      message: 'Profile overview updated successfully',
-      data: new UserResponseDto(user),
-    };
+    return new UserResponseDto(user);
   }
 
   @Patch('me/avatar')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['url'],
+      properties: { url: { type: 'string', format: 'uri' } },
+    },
+  })
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 5 * 1024 * 1024 },
@@ -184,20 +212,14 @@ export class UsersController {
   ) {
     const command = new UpdateUserImageCommand(userId, file);
     const result = await this.commandBus.execute(command);
-    return {
-      message: 'Update avatar successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Get('me/reading-preferences')
   async getMyReadingPreferences(@CurrentUser('id') userId: string) {
     const query = new GetReadingPreferencesQuery(userId);
     const data = await this.queryBus.execute(query);
-    return {
-      message: 'Get reading preferences successfully',
-      data,
-    };
+    return data;
   }
 
   @Put('me/reading-preferences')
@@ -224,14 +246,12 @@ export class UsersController {
 
     const user = await this.commandBus.execute(command);
 
-    return {
-      message: 'Reading preferences updated successfully',
-      data: user.readingPreferences,
-    };
+    return user.readingPreferences;
   }
 
   @Public()
   @Get('search')
+  @ApiPaginatedResponse(UserResponseDto, 'offset')
   async searchUsers(@Query() filter: FilterUserDto) {
     const keyword = filter.username || filter.email || '';
     const query = new SearchUsersQuery(
@@ -241,10 +261,9 @@ export class UsersController {
     );
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Search users successfully',
-      data: result.data.map((user: User) => new UserResponseDto(user)),
-      meta: result.meta,
-    };
+    return paginated(
+      result.data.map((user: User) => new UserResponseDto(user)),
+      result.meta,
+    );
   }
 }

@@ -31,6 +31,7 @@ import { OtpRepositoryModule } from '@/modules/auth/infrastructure/repositories/
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 import { OAuthStateStorePort } from '@/modules/auth/application/auth/oauth-state-store.port';
 import { RedisOAuthStateAdapter } from '@/modules/auth/infrastructure/auth/adapters/redis-oauth-state.adapter';
+import { TokenRotationModule } from '@/modules/auth/infrastructure/cache/token-rotation.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { RedisOAuthStateAdapter } from '@/modules/auth/infrastructure/auth/adapt
     RolesInfrastructureModule,
     OtpRepositoryModule,
     PasswordHasherModule,
+    TokenRotationModule,
   ],
   providers: [
     TokenService,

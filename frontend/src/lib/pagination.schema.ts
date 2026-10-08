@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const paginationMetaSchema = z.object({
-  current: z.number(),
+  page: z.number(),
   pageSize: z.number(),
   total: z.number(),
   totalPages: z.number(),

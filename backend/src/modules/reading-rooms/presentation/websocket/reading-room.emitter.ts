@@ -3,6 +3,7 @@ import { Namespace } from 'socket.io';
 import { RoomSocket } from './reading-room.types';
 import { ReadingRoomServerEvent } from '../../reading-room.events';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class ReadingRoomEmitter {
@@ -15,6 +16,10 @@ export class ReadingRoomEmitter {
   }
 
   emitError(socket: RoomSocket, code: string, message: string) {
-    socket.emit(ReadingRoomServerEvent.ERROR, { code, message });
+    socket.emit(ReadingRoomServerEvent.ERROR, {
+      code,
+      detail: message,
+      traceId: randomUUID(),
+    });
   }
 }

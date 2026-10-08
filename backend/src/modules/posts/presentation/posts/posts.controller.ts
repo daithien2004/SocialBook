@@ -1,13 +1,16 @@
+import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetModerationStatsQuery } from '@/modules/posts/application/posts/queries/get-moderation-stats/get-moderation-stats.query';
 
 import {
+  HttpCode,
   BadRequestException,
   Body,
   Controller,
   Delete,
   FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
   ParseFilePipe,
   Patch,
@@ -44,6 +47,15 @@ import { RemovePostImageCommand } from '@/modules/posts/application/posts/comman
 import { UpdatePostCommand } from '@/modules/posts/application/posts/commands/update-post/update-post.command';
 import { PostResponseDto } from '@/modules/posts/presentation/posts/dto/post.response.dto';
 import { IsOptional, IsString, IsEnum, IsDateString } from 'class-validator';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
 export class FlaggedPostsQueryDto extends PaginationQueryDto {
   @IsOptional()
@@ -63,6 +75,7 @@ export class FlaggedPostsQueryDto extends PaginationQueryDto {
   declare sortBy?: 'newest' | 'oldest' | 'violations';
 }
 
+@ApiProblemResponses()
 @Controller('posts')
 export class PostsController {
   constructor(
@@ -71,6 +84,7 @@ export class PostsController {
   ) {}
 
   @Public()
+  @ApiPaginatedResponse(PostResponseDto, 'cursor')
   @Get()
   async findAll(
     @CurrentUser('id') userId: string,
@@ -79,18 +93,15 @@ export class PostsController {
     const limit = Math.min(query.actualLimit || 10, 100);
     const postsQuery = new GetPostsQuery(limit, query.cursor, userId);
     const result = await this.queryBus.execute(postsQuery);
-    return {
-      message: 'Get posts successfully',
-      data: PostResponseDto.fromArray(result.data),
-      meta: {
-        limit,
-        nextCursor: result.nextCursor,
-        hasMore: result.hasMore,
-      },
-    };
+    return paginated(PostResponseDto.fromArray(result.data), {
+      limit,
+      nextCursor: result.nextCursor,
+      hasMore: result.hasMore,
+    });
   }
 
   @Public()
+  @ApiPaginatedResponse(PostResponseDto, 'cursor')
   @Get('user')
   async findAllByUser(
     @CurrentUser('id') currentUserId: string,
@@ -104,40 +115,40 @@ export class PostsController {
       currentUserId,
     );
     const result = await this.queryBus.execute(postsQuery);
-    return {
-      message: 'Get posts successfully',
-      data: PostResponseDto.fromArray(result.data),
-      meta: {
-        limit,
-        nextCursor: result.nextCursor,
-        hasMore: result.hasMore,
-      },
-    };
+    return paginated(PostResponseDto.fromArray(result.data), {
+      limit,
+      nextCursor: result.nextCursor,
+      hasMore: result.hasMore,
+    });
   }
 
   @Public()
   @Get(':id')
+  @ApiOkResponse({ type: PostResponseDto })
   async findOne(
     @Query('userId') userId: string | undefined,
     @Param('id') id: string,
   ) {
     const query = new GetPostQuery(id, userId);
     const data = await this.queryBus.execute(query);
-    return {
-      message: 'Get post detail successfully',
-      data: new PostResponseDto(data),
-    };
+    return new PostResponseDto(data);
   }
 
   @Post()
-  @UseInterceptors(FilesInterceptor('images', 10))
+  @ApiCreatedResponse({ type: PostResponseDto })
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async create(
     @CurrentUser('id') userId: string,
     @Body() dto: CreatePostDto,
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp)$/ }),
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /^image\/(jpeg|png|gif|webp)$/ }),
         ],
         fileIsRequired: false,
       }),
@@ -152,23 +163,27 @@ export class PostsController {
     );
     const { post, moderationMessage } = await this.commandBus.execute(command);
 
-    const responseDto = new PostResponseDto(post);
-    return {
-      message: moderationMessage ? undefined : 'ÄÄƒng bÃ i viáº¿t thÃ nh cÃ´ng',
-      data: responseDto,
-      warning: moderationMessage,
-    };
+    return new PostResponseDto(
+      post,
+      moderationMessage ? [moderationMessage] : undefined,
+    );
   }
 
   @Patch(':id')
-  @UseInterceptors(FilesInterceptor('images', 10))
+  @ApiOkResponse({ type: PostResponseDto })
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async update(
     @Param('id') id: string,
     @Body() dto: UpdatePostDto,
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp)$/ }),
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /^image\/(jpeg|png|gif|webp)$/ }),
         ],
         fileIsRequired: false,
       }),
@@ -186,16 +201,15 @@ export class PostsController {
       dto.imageUrls,
     );
     const { post, moderationMessage } = await this.commandBus.execute(command);
-    return {
-      message: moderationMessage
-        ? undefined
-        : 'Cáº­p nháº­t bÃ i viáº¿t thÃ nh cÃ´ng',
-      data: new PostResponseDto(post),
-      warning: moderationMessage,
-    };
+    return new PostResponseDto(
+      post,
+      moderationMessage ? [moderationMessage] : undefined,
+    );
   }
 
+  @HttpCode(204)
   @Delete(':id')
+  @ApiNoContentResponse()
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -203,12 +217,12 @@ export class PostsController {
   ) {
     const command = new DeletePostCommand(userId, id, ability, false);
     await this.commandBus.execute(command);
-    return {
-      message: 'Delete post successfully',
-    };
+    return undefined;
   }
 
+  @HttpCode(204)
   @Delete(':id/permanent')
+  @ApiNoContentResponse()
   @UseGuards(RolesGuard)
   @Roles('admin')
   async removeHard(
@@ -218,12 +232,12 @@ export class PostsController {
   ) {
     const command = new DeletePostCommand(userId, id, ability, true);
     await this.commandBus.execute(command);
-    return {
-      message: 'Permanently deleted post',
-    };
+    return undefined;
   }
 
+  @HttpCode(204)
   @Delete(':id/images')
+  @ApiNoContentResponse()
   async removeImage(
     @Param('id') id: string,
     @Body('imageUrl') imageUrl: string,
@@ -233,16 +247,13 @@ export class PostsController {
     if (!imageUrl) throw new BadRequestException('imageUrl is required');
 
     const command = new RemovePostImageCommand(userId, id, ability, imageUrl);
-    const data = await this.commandBus.execute(command);
-    return {
-      message: 'Image removed successfully',
-      data,
-    };
+    await this.commandBus.execute(command);
   }
 
   // ===== ADMIN ENDPOINTS =====
 
   @Get('admin/flagged')
+  @ApiPaginatedResponse(PostResponseDto, 'offset')
   @UseGuards(RolesGuard)
   @Roles('admin')
   async getFlaggedPosts(@Query() query: FlaggedPostsQueryDto) {
@@ -256,47 +267,63 @@ export class PostsController {
       query.sortBy,
     );
     const result = await this.queryBus.execute(flaggedQuery);
-    return {
-      message: 'Get flagged posts successfully',
-      data: PostResponseDto.fromArray(result.data),
-      meta: result.meta,
-    };
+    return paginated(PostResponseDto.fromArray(result.data), result.meta);
   }
 
   @Get('admin/moderation/stats')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['total', 'toxic', 'spoiler', 'other'],
+      properties: {
+        total: { type: 'integer' },
+        toxic: { type: 'integer' },
+        spoiler: { type: 'integer' },
+        other: { type: 'integer' },
+      },
+    },
+  })
   @UseGuards(RolesGuard)
   @Roles('admin')
   async getModerationStats() {
     const data = await this.queryBus.execute(new GetModerationStatsQuery());
-    return {
-      message: 'Get moderation stats successfully',
-      data,
-    };
+    return data;
   }
 
   @Patch('admin/:id/approve')
+  @HttpCode(204)
+  @ApiNoContentResponse()
   @UseGuards(RolesGuard)
   @Roles('admin')
   async approvePost(@Param('id') id: string) {
     const command = new ApprovePostCommand(id);
-    const result = await this.commandBus.execute(command);
-    return {
-      message: result.message,
-    };
+    await this.commandBus.execute(command);
+    return undefined;
   }
 
+  @HttpCode(204)
   @Delete('admin/:id/reject')
+  @ApiNoContentResponse()
   @UseGuards(RolesGuard)
   @Roles('admin')
   async rejectPost(@Param('id') id: string) {
     const command = new RejectPostCommand(id, 'Rejected by admin');
-    const result = await this.commandBus.execute(command);
-    return {
-      message: result.message,
-    };
+    await this.commandBus.execute(command);
+    return undefined;
   }
 
   @Post('admin/bulk-approve')
+  @HttpCode(200)
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['successCount', 'total'],
+      properties: {
+        successCount: { type: 'integer' },
+        total: { type: 'integer' },
+      },
+    },
+  })
   @UseGuards(RolesGuard)
   @Roles('admin')
   async bulkApprovePosts(@Body('postIds') postIds: string[]) {
@@ -308,12 +335,21 @@ export class PostsController {
     );
 
     const successCount = results.filter((r) => r.status === 'fulfilled').length;
-    return {
-      message: `Approved ${successCount}/${postIds.length} posts`,
-    };
+    return { successCount, total: postIds.length };
   }
 
   @Post('admin/bulk-reject')
+  @HttpCode(200)
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['successCount', 'total'],
+      properties: {
+        successCount: { type: 'integer' },
+        total: { type: 'integer' },
+      },
+    },
+  })
   @UseGuards(RolesGuard)
   @Roles('admin')
   async bulkRejectPosts(@Body('postIds') postIds: string[]) {
@@ -327,8 +363,6 @@ export class PostsController {
     );
 
     const successCount = results.filter((r) => r.status === 'fulfilled').length;
-    return {
-      message: `Rejected ${successCount}/${postIds.length} posts`,
-    };
+    return { successCount, total: postIds.length };
   }
 }

@@ -1,5 +1,7 @@
+import { unpaginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
+  HttpCode,
   Body,
   Controller,
   Delete,
@@ -22,7 +24,17 @@ import { GetBookReviewsQuery } from '@/modules/reviews/application/queries/get-b
 import { UpdateReviewCommand } from '@/modules/reviews/application/commands/update-review/update-review.command';
 import { DeleteReviewCommand } from '@/modules/reviews/application/commands/delete-review/delete-review.command';
 import { ToggleReviewLikeCommand } from '@/modules/reviews/application/commands/toggle-review-like/toggle-review-like.command';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('reviews')
 export class ReviewsController {
   constructor(
@@ -32,6 +44,7 @@ export class ReviewsController {
 
   @Public()
   @Get('book/:bookId')
+  @ApiPaginatedResponse(ReviewResponseDto, 'offset')
   async findAllByBook(
     @CurrentUser('id') userId: string | undefined,
     @Param('bookId') bookId: string,
@@ -48,13 +61,11 @@ export class ReviewsController {
       };
     });
 
-    return {
-      message: 'Get reviews successfully',
-      data: responseDtos,
-    };
+    return unpaginated(responseDtos);
   }
 
   @Post()
+  @ApiCreatedResponse({ type: ReviewResponseDto })
   async create(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateReviewDto,
@@ -62,13 +73,11 @@ export class ReviewsController {
     const review = await this.commandBus.execute(
       new CreateReviewCommand(userId, dto),
     );
-    return {
-      message: 'Review created successfully',
-      data: this.toResponse(review),
-    };
+    return this.toResponse(review);
   }
 
   @Patch(':id')
+  @ApiOkResponse({ type: ReviewResponseDto })
   async update(
     @Param('id') id: string,
     @CurrentAbility() ability: AppAbility,
@@ -77,33 +86,37 @@ export class ReviewsController {
     const review = await this.commandBus.execute(
       new UpdateReviewCommand(id, dto, ability),
     );
-    return {
-      message: 'Review updated successfully',
-      data: this.toResponse(review),
-    };
+    return this.toResponse(review);
   }
 
   @Patch(':id/like')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['likesCount', 'isLiked'],
+      properties: {
+        likesCount: { type: 'integer' },
+        isLiked: { type: 'boolean' },
+      },
+    },
+  })
   async toggleLike(@CurrentUser('id') userId: string, @Param('id') id: string) {
     const review = await this.commandBus.execute(
       new ToggleReviewLikeCommand(id, userId),
     );
     const isLiked = review.likedBy.includes(userId);
     return {
-      message: 'Toggle like review successfully',
-      data: {
-        likesCount: review.likesCount,
-        isLiked: isLiked,
-      },
+      likesCount: review.likesCount,
+      isLiked: isLiked,
     };
   }
 
+  @HttpCode(204)
   @Delete(':id')
+  @ApiNoContentResponse()
   async remove(@Param('id') id: string, @CurrentAbility() ability: AppAbility) {
     await this.commandBus.execute(new DeleteReviewCommand(id, ability));
-    return {
-      message: 'Review deleted successfully',
-    };
+    return undefined;
   }
 
   private toResponse(review: Review): ReviewResponseDto {

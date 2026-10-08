@@ -39,12 +39,18 @@ export const bookQueries = {
     const limit = params?.limit ?? 12;
     return {
       queryKey: bookKeys.list(params),
-      queryFn: ({ pageParam = 1, signal }: { pageParam?: number; signal?: AbortSignal }): Promise<BookSummaryPage> =>
+      queryFn: ({
+        pageParam = 1,
+        signal,
+      }: {
+        pageParam?: number;
+        signal?: AbortSignal;
+      }): Promise<BookSummaryPage> =>
         getBooks({ ...params, page: pageParam, limit }, signal),
       initialPageParam: 1,
       getNextPageParam: (lastPage: BookSummaryPage) =>
-        lastPage.meta.current < lastPage.meta.totalPages
-          ? lastPage.meta.current + 1
+        lastPage.meta.page < lastPage.meta.totalPages
+          ? lastPage.meta.page + 1
           : undefined,
       staleTime: STALE_TIME.SEMI_STATIC,
       gcTime: GC_TIME.SEMI_STATIC,

@@ -8,7 +8,10 @@ import { Button } from '@/components/ui/button';
 import { History, ArrowRight, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RoomHistoryResponse } from '@/features/reading-rooms/api/reading-rooms.api';
-import type { BookSummaryPage, BookSummary } from '@/features/books/schemas/book.schema';
+import type {
+  BookSummaryPage,
+  BookSummary,
+} from '@/features/books/schemas/book.schema';
 
 export function HistoryRoomsTab({
   isHistoryLoading,
@@ -16,7 +19,7 @@ export function HistoryRoomsTab({
   booksData,
   user,
   isReactivating,
-  reactivateRoom
+  reactivateRoom,
 }: {
   isHistoryLoading: boolean;
   myHistory?: RoomHistoryResponse;
@@ -30,7 +33,7 @@ export function HistoryRoomsTab({
   if (isHistoryLoading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3].map(i => (
+        {[1, 2, 3].map((i) => (
           <Card key={`history-skeleton-${i}`}>
             <CardContent className="p-0 flex">
               <Skeleton className="w-16 h-20 rounded-l-xl rounded-r-none shrink-0" />
@@ -48,11 +51,13 @@ export function HistoryRoomsTab({
     );
   }
 
-  if (myHistory && myHistory.items.length > 0) {
+  if (myHistory && myHistory.data.length > 0) {
     return (
       <div className="space-y-2">
-        {myHistory.items.map((room) => {
-          const book = booksData?.data.find((b: BookSummary) => b.id === room.bookId);
+        {myHistory.data.map((room) => {
+          const book = booksData?.data.find(
+            (b: BookSummary) => b.id === room.bookId,
+          );
           const isHost = room.hostId === user?.id;
           return (
             <Card
@@ -80,7 +85,10 @@ export function HistoryRoomsTab({
                     <span className="font-mono text-xs text-muted-foreground">
                       #{room.roomId}
                     </span>
-                    <Badge variant="secondary" className="text-[10px] h-5 bg-muted-foreground/10 text-muted-foreground hover:bg-muted-foreground/20 border-0">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] h-5 bg-muted-foreground/10 text-muted-foreground hover:bg-muted-foreground/20 border-0"
+                    >
                       Đã kết thúc
                     </Badge>
                     <span className="text-[10px] text-muted-foreground font-medium border-l border-border pl-2">
@@ -117,7 +125,12 @@ export function HistoryRoomsTab({
                         }
                       }}
                     >
-                      <RefreshCw className={cn("w-4 h-4 mr-2 text-primary", isReactivating && "animate-spin")} />
+                      <RefreshCw
+                        className={cn(
+                          'w-4 h-4 mr-2 text-primary',
+                          isReactivating && 'animate-spin',
+                        )}
+                      />
                       {isReactivating ? 'Đang mở...' : 'Mở lại'}
                     </Button>
                   )}

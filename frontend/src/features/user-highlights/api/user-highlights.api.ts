@@ -15,18 +15,24 @@ export const USER_HIGHLIGHTS_TAGS = {
   HIGHLIGHTS: 'UserHighlights',
 } as const;
 
-export async function getHighlightsByBook(bookId: string): Promise<UserHighlight[]> {
-  return apiRequest<UserHighlight[]>({
+export async function getHighlightsByBook(
+  bookId: string,
+): Promise<UserHighlight[]> {
+  const response = await apiRequest<{ data: UserHighlight[] }>({
     url: `/user-highlights/book/${bookId}`,
     method: 'GET',
   });
+  return response.data;
 }
 
-export async function getHighlightsByChapter(chapterId: string): Promise<UserHighlight[]> {
-  return apiRequest<UserHighlight[]>({
+export async function getHighlightsByChapter(
+  chapterId: string,
+): Promise<UserHighlight[]> {
+  const response = await apiRequest<{ data: UserHighlight[] }>({
     url: `/user-highlights/chapter/${chapterId}`,
     method: 'GET',
   });
+  return response.data;
 }
 
 export async function createHighlight(

@@ -11,7 +11,7 @@ export async function getFollowingList(
 ): Promise<FollowingUser[]> {
   const response = await apiRequest<{
     data: unknown[];
-    meta: { current: number; pageSize: number; total: number; totalPages: number };
+    meta: { page: number; pageSize: number; total: number; totalPages: number };
   }>({
     url: `/follows/following?userId=${userId}`,
     method: 'GET',
@@ -24,7 +24,7 @@ export async function getFollowersList(
 ): Promise<FollowingUser[]> {
   const response = await apiRequest<{
     data: unknown[];
-    meta: { current: number; pageSize: number; total: number; totalPages: number };
+    meta: { page: number; pageSize: number; total: number; totalPages: number };
   }>({
     url: `/follows/followers?targetUserId=${targetUserId}`,
     method: 'GET',

@@ -1,22 +1,54 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ChapterKnowledge } from '@/modules/chapters/domain/chapters/entities/chapter-knowledge.entity';
 
+class KnowledgeEntityResponseDto {
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty()
+  type!: string;
+
+  @ApiProperty()
+  description!: string;
+
+  @ApiProperty()
+  importance!: number;
+}
+
+class KnowledgeRelationshipResponseDto {
+  @ApiProperty()
+  source!: string;
+
+  @ApiProperty()
+  target!: string;
+
+  @ApiProperty()
+  type!: string;
+
+  @ApiPropertyOptional()
+  description?: string;
+}
+
 export class ChapterKnowledgeResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   chapterId: string;
-  entities: Array<{
-    name: string;
-    type: string;
-    description: string;
-    importance: number;
-  }>;
-  relationships: Array<{
-    source: string;
-    target: string;
-    type: string;
-    description?: string;
-  }>;
+
+  @ApiProperty({ type: KnowledgeEntityResponseDto, isArray: true })
+  entities: KnowledgeEntityResponseDto[];
+
+  @ApiProperty({ type: KnowledgeRelationshipResponseDto, isArray: true })
+  relationships: KnowledgeRelationshipResponseDto[];
+
+  @ApiPropertyOptional()
   summary?: string;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
 
   constructor(entity: ChapterKnowledge) {

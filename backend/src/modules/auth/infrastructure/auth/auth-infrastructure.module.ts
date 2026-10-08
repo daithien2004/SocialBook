@@ -10,8 +10,7 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { GoogleOAuthStrategy } from './services/google-oauth.strategy';
 import { GitHubOAuthStrategy } from './services/github-oauth.strategy';
-import { TokenRotationPort } from '@/modules/auth/application/public-api';
-import { TokenRotationAdapter } from '../cache/token-rotation.adapter';
+import { TokenRotationModule } from '../cache/token-rotation.module';
 
 @Module({
   imports: [
@@ -20,6 +19,7 @@ import { TokenRotationAdapter } from '../cache/token-rotation.adapter';
     UsersRepositoryModule,
     RolesInfrastructureModule,
     AuthApplicationModule,
+    TokenRotationModule,
   ],
   providers: [
     JwtStrategy,
@@ -27,11 +27,6 @@ import { TokenRotationAdapter } from '../cache/token-rotation.adapter';
     LocalStrategy,
     GoogleOAuthStrategy,
     GitHubOAuthStrategy,
-    TokenRotationAdapter,
-    {
-      provide: TokenRotationPort,
-      useExisting: TokenRotationAdapter,
-    },
     {
       provide: OAuthProviderStrategy,
       useFactory: (
@@ -48,7 +43,7 @@ import { TokenRotationAdapter } from '../cache/token-rotation.adapter';
     GoogleOAuthStrategy,
     GitHubOAuthStrategy,
     OAuthProviderStrategy,
-    TokenRotationPort,
+    TokenRotationModule,
   ],
 })
 export class AuthInfrastructureModule {}

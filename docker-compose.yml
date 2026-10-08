@@ -88,6 +88,8 @@ services:
       - '3000'
     env_file:
       - frontend.env
+    environment:
+      NEST_API_INTERNAL_URL: http://backend1:5000/api/v1
     depends_on:
       - backend1
 

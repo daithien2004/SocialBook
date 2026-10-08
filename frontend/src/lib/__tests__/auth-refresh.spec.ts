@@ -2,10 +2,10 @@
 import { refreshAuthSession } from '@/lib/auth-refresh';
 
 jest.mock('@/env', () => ({
-  env: { NEXT_PUBLIC_NEST_API_URL: 'http://localhost:5000/api' },
+  env: { NEXT_PUBLIC_NEST_API_URL: 'http://localhost:5000/api/v1' },
 }));
 
-const REFRESH_URL = 'http://localhost:5000/api/auth/refresh';
+const REFRESH_URL = 'http://localhost:5000/api/v1/auth/refresh';
 
 function jsonResponse(status: number): Response {
   return {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { env } from '@/env';
 
 export async function POST() {
   const cookieStore = await cookies();
@@ -11,9 +12,7 @@ export async function POST() {
 
   try {
     const backendUrl =
-      process.env.NEST_API_INTERNAL_URL ||
-      process.env.NEXT_PUBLIC_NEST_API_URL ||
-      'http://localhost:5000/api';
+      env.NEST_API_INTERNAL_URL || env.NEXT_PUBLIC_NEST_API_URL;
 
     const res = await fetch(`${backendUrl}/auth/ws-ticket`, {
       method: 'POST',
@@ -26,8 +25,17 @@ export async function POST() {
       return NextResponse.json({ ok: false, token: null }, { status: 401 });
     }
 
-    const data = await res.json();
-    return NextResponse.json({ ok: true, ticket: data.data.ticket });
+    const body: unknown = await res.json();
+    if (
+      typeof body !== 'object' ||
+      body === null ||
+      !('ticket' in body) ||
+      typeof body.ticket !== 'string'
+    ) {
+      return NextResponse.json({ ok: false, token: null }, { status: 502 });
+    }
+
+    return NextResponse.json({ ok: true, ticket: body.ticket });
   } catch {
     return NextResponse.json({ ok: false, token: null }, { status: 500 });
   }

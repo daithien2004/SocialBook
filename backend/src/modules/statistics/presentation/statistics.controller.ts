@@ -9,7 +9,9 @@ import { GetGrowthStatsHandler } from '@/modules/statistics/application/queries/
 import { GetOverviewStatsHandler } from '@/modules/statistics/application/queries/get-overview-stats/get-overview-stats.handler';
 import { GetUserStatsHandler } from '@/modules/statistics/application/queries/get-user-stats/get-user-stats.handler';
 import { CheckUserLocationsHandler } from '@/modules/statistics/application/commands/check-user-locations/check-user-locations.handler';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
+@ApiProblemResponses()
 @Controller('statistics')
 @UseGuards(RolesGuard)
 @Roles('admin', 'editor')
@@ -26,28 +28,19 @@ export class StatisticsController {
   @Get('overview')
   async getOverview() {
     const data = await this.getOverviewStatsUseCase.execute();
-    return {
-      message: 'Get overview statistics successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('users')
   async getUserStats() {
     const data = await this.getUserStatsUseCase.execute();
-    return {
-      message: 'Get user statistics successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('books')
   async getBookStats() {
     const data = await this.getBookStatsUseCase.execute();
-    return {
-      message: 'Get book statistics successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('growth')
@@ -61,19 +54,13 @@ export class StatisticsController {
       numDays,
       groupByValue,
     );
-    return {
-      message: 'Get growth statistics successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('analytics/reading-heatmap')
   async getReadingHeatmap() {
     const data = await this.getEngagementStatsUseCase.getReadingHeatmap();
-    return {
-      message: 'Get reading heatmap successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('analytics/chapter-engagement')
@@ -81,47 +68,32 @@ export class StatisticsController {
     const numLimit = limit ? parseInt(limit, 10) : 10;
     const data =
       await this.getEngagementStatsUseCase.getChapterEngagement(numLimit);
-    return {
-      message: 'Get chapter engagement successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('analytics/reading-speed')
   async getReadingSpeed(@Query('days') days?: string) {
     const numDays = days ? parseInt(days, 10) : 30;
     const data = await this.getEngagementStatsUseCase.getReadingSpeed(numDays);
-    return {
-      message: 'Get reading speed successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('analytics/active-users')
   async getActiveUsers() {
     const data = await this.getEngagementStatsUseCase.getActiveUsers();
-    return {
-      message: 'Get active users successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('analytics/geographic')
   async getGeographicDistribution() {
     const data =
       await this.getEngagementStatsUseCase.getGeographicDistribution();
-    return {
-      message: 'Get geographic distribution successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('check-locations')
   async checkLocations() {
     const result = await this.checkUserLocationsUseCase.execute();
-    return {
-      message: 'Location check completed',
-      data: result,
-    };
+    return result;
   }
 }

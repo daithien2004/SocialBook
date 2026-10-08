@@ -12,12 +12,17 @@ interface UseCommentListOptions {
   limit?: number;
 }
 
-export function useCommentList({ targetId, isCommentOpen, parentId, limit = 20 }: UseCommentListOptions) {
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+export function useCommentList({
+  targetId,
+  isCommentOpen,
+  parentId,
+  limit = 20,
+}: UseCommentListOptions) {
+  const [page, setPage] = useState(1);
   const [allComments, setAllComments] = useState<CommentItem[]>([]);
 
   const { data, isLoading, isError, isFetching } = useQuery({
-    ...commentQueries.byTarget({ targetId, parentId, cursor, limit }),
+    ...commentQueries.byTarget({ targetId, parentId, page, limit }),
     enabled: isCommentOpen && !!targetId,
     placeholderData: keepPreviousData,
   });
@@ -29,7 +34,7 @@ export function useCommentList({ targetId, isCommentOpen, parentId, limit = 20 }
     if (isCommentOpen && targetId) {
       queueMicrotask(() => {
         setAllComments([]);
-        setCursor(undefined);
+        setPage(1);
       });
     }
   }, [isCommentOpen, targetId, parentId, limit]);
@@ -37,15 +42,16 @@ export function useCommentList({ targetId, isCommentOpen, parentId, limit = 20 }
   useEffect(() => {
     if (data?.comments) {
       queueMicrotask(() => {
-        setAllComments(data.comments);
-        setCursor(data.nextCursor ?? undefined);
+        setAllComments((previous) =>
+          page === 1 ? data.comments : [...previous, ...data.comments],
+        );
       });
     }
-  }, [data]);
+  }, [data, page]);
 
   const handleLoadMore = () => {
-    if (cursor && targetId && data?.hasMore) {
-      setCursor(data.nextCursor ?? cursor);
+    if (targetId && data?.hasMore) {
+      setPage((previousPage) => previousPage + 1);
     }
   };
 
@@ -55,7 +61,7 @@ export function useCommentList({ targetId, isCommentOpen, parentId, limit = 20 }
     isError,
     isFetching,
     hasMore: data?.hasMore ?? false,
-    cursor,
+    cursor: data?.nextCursor ?? undefined,
     loadMore: handleLoadMore,
   };
 }

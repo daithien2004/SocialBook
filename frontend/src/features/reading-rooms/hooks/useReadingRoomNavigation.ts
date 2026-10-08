@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 interface NavigationDeps {
   roomCode: string;
   isEnded: boolean;
-  roomMode: 'sync' | 'free' | 'discussion' | undefined;
+  roomMode: 'sync' | 'free' | undefined;
   isHost: boolean;
 }
 

@@ -37,7 +37,7 @@ export async function getLibraryBooks(params: {
   status: LibraryStatus | string;
   limit?: number;
 }): Promise<LibraryItem[]> {
-  return apiRequest<LibraryItem[]>({
+  const response = await apiRequest<{ data: LibraryItem[] }>({
     url: NESTJS_LIBRARY_ENDPOINTS.getLibrary,
     method: 'GET',
     params: {
@@ -45,9 +45,12 @@ export async function getLibraryBooks(params: {
       ...(params.limit ? { limit: params.limit } : {}),
     },
   });
+  return response.data;
 }
 
-export async function updateLibraryStatus(data: UpdateStatusRequest): Promise<LibraryItem> {
+export async function updateLibraryStatus(
+  data: UpdateStatusRequest,
+): Promise<LibraryItem> {
   return apiRequest<LibraryItem>({
     url: NESTJS_LIBRARY_ENDPOINTS.updateStatus,
     method: 'POST',
@@ -76,7 +79,9 @@ export async function updateReadingProgress(
   });
 }
 
-export async function addBookToCollections(data: AddToCollectionsRequest): Promise<LibraryItem> {
+export async function addBookToCollections(
+  data: AddToCollectionsRequest,
+): Promise<LibraryItem> {
   return apiRequest<LibraryItem>({
     url: NESTJS_LIBRARY_ENDPOINTS.updateBookCollections,
     method: 'PATCH',
@@ -91,21 +96,28 @@ export async function removeBookFromLibrary(bookId: string): Promise<null> {
   });
 }
 
-export async function getBookLibraryInfo(bookId: string): Promise<GetBookLibraryInfoResult> {
+export async function getBookLibraryInfo(
+  bookId: string,
+): Promise<GetBookLibraryInfoResult> {
   return apiRequest<GetBookLibraryInfoResult>({
     url: NESTJS_LIBRARY_ENDPOINTS.getBookLibraryInfo(bookId),
     method: 'GET',
   });
 }
 
-export async function getCollections(userId?: string | null): Promise<Collection[]> {
-  return apiRequest<Collection[]>({
+export async function getCollections(
+  userId?: string | null,
+): Promise<Collection[]> {
+  const response = await apiRequest<{ data: Collection[] }>({
     url: `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId ?? ''}`,
     method: 'GET',
   });
+  return response.data;
 }
 
-export async function getCollectionDetail(id: string): Promise<CollectionDetailResponse> {
+export async function getCollectionDetail(
+  id: string,
+): Promise<CollectionDetailResponse> {
   return apiRequest<CollectionDetailResponse>({
     url: NESTJS_LIBRARY_ENDPOINTS.collectionDetail(id),
     method: 'GET',
@@ -117,12 +129,17 @@ export async function getCollectionDetailUser(params: {
   userId: string;
 }): Promise<CollectionDetailResponse> {
   return apiRequest<CollectionDetailResponse>({
-    url: NESTJS_LIBRARY_ENDPOINTS.collectionDetailUser(params.userId, params.id),
+    url: NESTJS_LIBRARY_ENDPOINTS.collectionDetailUser(
+      params.userId,
+      params.id,
+    ),
     method: 'GET',
   });
 }
 
-export async function createCollection(data: CreateCollectionRequest): Promise<Collection> {
+export async function createCollection(
+  data: CreateCollectionRequest,
+): Promise<Collection> {
   return apiRequest<Collection>({
     url: NESTJS_LIBRARY_ENDPOINTS.collections,
     method: 'POST',

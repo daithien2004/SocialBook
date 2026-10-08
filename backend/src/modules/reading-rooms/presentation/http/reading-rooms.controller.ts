@@ -23,10 +23,23 @@ import { GetRoomHighlightsQuery } from '@/modules/reading-rooms/application/quer
 
 import { ReactivateRoomCommand } from '@/modules/reading-rooms/application/commands/reactivate-room/reactivate-room.command';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { paginated, unpaginated } from '@/shared/platform/dto/paginated.dto';
 
 import { CreateRoomDto } from './dto/create-room.dto';
 import { ReadingRoomResponseDto } from './dto/reading-room.response.dto';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiOkResponse,
+  getSchemaPath,
+} from '@nestjs/swagger';
+import { ReadingRoomHighlightResponseDto } from './dto/reading-room.response.dto';
 
+@ApiProblemResponses()
 @Controller('reading-rooms')
 export class ReadingRoomsController {
   constructor(
@@ -36,6 +49,7 @@ export class ReadingRoomsController {
 
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post()
+  @ApiCreatedResponse({ type: ReadingRoomResponseDto })
   async createRoom(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateRoomDto,
@@ -48,50 +62,47 @@ export class ReadingRoomsController {
       dto.maxMembers,
     );
     const result = await this.commandBus.execute(command);
-    return {
-      message: 'Táº¡o phÃ²ng Ä‘á»c sÃ¡ch thÃ nh cÃ´ng',
-      data: ReadingRoomResponseDto.fromResult(result),
-    };
+    return ReadingRoomResponseDto.fromResult(result);
   }
 
   @Get('my-active')
+  @ApiPaginatedResponse(ReadingRoomResponseDto, 'offset')
   async getMyActiveRooms(@CurrentUser('id') userId: string) {
     const results = await this.queryBus.execute(
       new GetMyActiveRoomsQuery(userId),
     );
-    return {
-      message: 'Láº¥y danh sÃ¡ch phÃ²ng hoáº¡t Ä‘á»™ng thÃ nh cÃ´ng',
-      data: ReadingRoomResponseDto.fromArray(results),
-    };
+    return unpaginated(ReadingRoomResponseDto.fromArray(results));
   }
 
   @Get('my-history')
+  @ApiPaginatedResponse(ReadingRoomResponseDto, 'offset')
   async getMyHistory(@CurrentUser('id') userId: string) {
-    const result = await this.queryBus.execute(new GetMyHistoryQuery(userId));
-    return {
-      message: 'Láº¥y lá»‹ch sá»­ phÃ²ng Ä‘á»c thÃ nh cÃ´ng',
-      data: {
-        items: ReadingRoomResponseDto.fromArray(result.items),
-        total: result.total,
-      },
-    };
+    const limit = 10;
+    const result = await this.queryBus.execute(
+      new GetMyHistoryQuery(userId, 0, limit),
+    );
+    return paginated(ReadingRoomResponseDto.fromArray(result.items), {
+      page: 1,
+      pageSize: limit,
+      total: result.total,
+      totalPages: Math.ceil(result.total / limit),
+    });
   }
 
   @Patch(':code/reactivate')
+  @ApiOkResponse({ type: ReadingRoomResponseDto })
   async reactivateRoom(
     @CurrentUser('id') userId: string,
     @Param('code') code: string,
   ) {
     const command = new ReactivateRoomCommand(userId, code);
     const result = await this.commandBus.execute(command);
-    return {
-      message: 'PhÃ²ng Ä‘Ã£ Ä‘Æ°á»£c má»Ÿ láº¡i thÃ nh cÃ´ng',
-      data: ReadingRoomResponseDto.fromResult(result),
-    };
+    return ReadingRoomResponseDto.fromResult(result);
   }
 
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Get(':code/highlights')
+  @ApiPaginatedResponse(ReadingRoomHighlightResponseDto, 'offset')
   async getRoomHighlights(
     @CurrentUser('id') userId: string,
     @Param('code') code: string,
@@ -112,24 +123,59 @@ export class ReadingRoomsController {
     const page = await this.queryBus.execute(
       new GetRoomHighlightsQuery(code, userId, offset, limit),
     );
-    return {
-      message: 'Láº¥y highlights thÃ nh cÃ´ng',
-      data: {
-        items: page.items.map((highlight) => ({
-          ...highlight,
-          displayName: highlight.displayName ?? '',
-          avatarUrl: highlight.avatarUrl ?? '',
-          createdAt: highlight.createdAt.toISOString(),
-        })),
+    return paginated(
+      page.items.map((highlight) => ({
+        ...highlight,
+        displayName: highlight.displayName ?? '',
+        avatarUrl: highlight.avatarUrl ?? '',
+        createdAt: highlight.createdAt.toISOString(),
+      })),
+      {
+        page: Math.floor(offset / limit) + 1,
+        pageSize: limit,
         total: page.total,
-        offset,
-        limit,
+        totalPages: Math.ceil(page.total / limit),
       },
-    };
+    );
   }
 
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Get(':code')
+  @ApiExtraModels(ReadingRoomResponseDto)
+  @ApiOkResponse({
+    schema: {
+      oneOf: [
+        { $ref: getSchemaPath(ReadingRoomResponseDto) },
+        {
+          type: 'object',
+          required: [
+            'roomId',
+            'bookId',
+            'mode',
+            'status',
+            'currentChapterSlug',
+            'maxMembers',
+            'membersCount',
+            'isFull',
+            'isMember',
+            'createdAt',
+          ],
+          properties: {
+            roomId: { type: 'string' },
+            bookId: { type: 'string' },
+            mode: { type: 'string' },
+            status: { type: 'string' },
+            currentChapterSlug: { type: 'string' },
+            maxMembers: { type: 'integer' },
+            membersCount: { type: 'integer' },
+            isFull: { type: 'boolean' },
+            isMember: { type: 'boolean', enum: [false] },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      ],
+    },
+  })
   async getRoom(
     @CurrentUser('id') userId: string,
     @Param('code') code: string,
@@ -138,14 +184,8 @@ export class ReadingRoomsController {
       new GetRoomByCodeQuery(code, userId),
     );
     if (!result.isMember) {
-      return {
-        message: 'Láº¥y thÃ´ng tin xem trÆ°á»›c phÃ²ng thÃ nh cÃ´ng',
-        data: result,
-      };
+      return result;
     }
-    return {
-      message: 'Láº¥y thÃ´ng tin phÃ²ng thÃ nh cÃ´ng',
-      data: ReadingRoomResponseDto.fromResult(result),
-    };
+    return ReadingRoomResponseDto.fromResult(result);
   }
 }

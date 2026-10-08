@@ -7,7 +7,7 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/modules/reviews/domain/repositories/review.repository.interface';
 import { CreateReviewDto } from '@/modules/reviews/application/dto/create-review.dto';
-import { containsVietnameseToxicWords } from '@/modules/content-moderation/domain';
+import { containsVietnameseToxicWords } from '@/modules/content-moderation';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Review } from '@/modules/reviews/domain/entities/review.entity';
 import { ReviewErrorMessages } from '@/modules/reviews/application/error-messages';

@@ -1,15 +1,43 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.interface';
 
+class ReadingRoomMemberResponseDto {
+  @ApiProperty()
+  userId!: string;
+
+  @ApiProperty({ enum: ['host', 'member'] })
+  role!: string;
+}
+
 export class ReadingRoomResponseDto {
+  @ApiProperty()
   roomId: string;
+
+  @ApiProperty()
   bookId: string;
+
+  @ApiProperty()
   hostId: string;
+
+  @ApiProperty({ enum: ['sync', 'free'] })
   mode: string;
+
+  @ApiProperty()
   status: string;
+
+  @ApiProperty()
   currentChapterSlug: string;
+
+  @ApiProperty()
   maxMembers: number;
+
+  @ApiProperty()
   membersCount: number;
-  members: Array<{ userId: string; role: string }>;
+
+  @ApiProperty({ type: ReadingRoomMemberResponseDto, isArray: true })
+  members: ReadingRoomMemberResponseDto[];
+
+  @ApiProperty()
   createdAt: Date;
 
   constructor(room: ReadingRoomResult) {
@@ -32,4 +60,33 @@ export class ReadingRoomResponseDto {
   static fromArray(rooms: ReadingRoomResult[]): ReadingRoomResponseDto[] {
     return rooms.map((room) => new ReadingRoomResponseDto(room));
   }
+}
+
+export class ReadingRoomHighlightResponseDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  userId!: string;
+
+  @ApiProperty()
+  displayName!: string;
+
+  @ApiProperty()
+  avatarUrl!: string;
+
+  @ApiProperty()
+  chapterSlug!: string;
+
+  @ApiProperty()
+  paragraphId!: string;
+
+  @ApiProperty()
+  content!: string;
+
+  @ApiPropertyOptional()
+  aiInsight?: string;
+
+  @ApiProperty({ format: 'date-time' })
+  createdAt!: string;
 }

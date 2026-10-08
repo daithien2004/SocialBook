@@ -4,7 +4,9 @@ import type {
   CreateBookmarkRequest,
 } from '@/features/bookmarks/schemas/bookmark.schema';
 
-export async function createBookmark(request: CreateBookmarkRequest): Promise<Bookmark> {
+export async function createBookmark(
+  request: CreateBookmarkRequest,
+): Promise<Bookmark> {
   return apiRequest<Bookmark>({
     url: '/bookmarks',
     method: 'POST',
@@ -13,15 +15,16 @@ export async function createBookmark(request: CreateBookmarkRequest): Promise<Bo
 }
 
 export async function deleteBookmark(paragraphId: string): Promise<void> {
-  await apiRequest<{ message?: string }>({
+  await apiRequest<void>({
     url: `/bookmarks/${paragraphId}`,
     method: 'DELETE',
   });
 }
 
 export async function getBookmarksByBook(bookId: string): Promise<Bookmark[]> {
-  return apiRequest<Bookmark[]>({
+  const response = await apiRequest<{ data: Bookmark[] }>({
     url: `/bookmarks/book/${bookId}`,
     method: 'GET',
   });
+  return response.data;
 }

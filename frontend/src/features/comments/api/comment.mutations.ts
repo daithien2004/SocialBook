@@ -1,11 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { commentKeys, likeKeys, postKeys } from '@/lib/query-keys';
 import { toggleLike } from '@/features/likes/api/like.api';
-import {
-  createComment,
-  deleteComment,
-  updateComment,
-} from './comment.api';
+import { createComment, deleteComment, updateComment } from './comment.api';
 import type {
   CreateCommentRequest,
   CreatedComment,
@@ -43,9 +39,9 @@ export function useCreateComment() {
       });
 
       if (variables.targetType === 'post' && !variables.parentId) {
-        queryClient.setQueriesData<
-          { data: Array<{ id: string; commentsCount?: number }> }
-        >({ queryKey: postKeys.lists() }, (old) => {
+        queryClient.setQueriesData<{
+          data: Array<{ id: string; commentsCount?: number }>;
+        }>({ queryKey: postKeys.lists() }, (old) => {
           if (!old?.data) return old;
           return {
             ...old,
@@ -57,9 +53,9 @@ export function useCreateComment() {
           };
         });
 
-        queryClient.setQueriesData<
-          { data: Array<{ id: string; commentsCount?: number }> }
-        >({ queryKey: postKeys.byUserLists() }, (old) => {
+        queryClient.setQueriesData<{
+          data: Array<{ id: string; commentsCount?: number }>;
+        }>({ queryKey: postKeys.byUserLists() }, (old) => {
           if (!old?.data) return old;
           return {
             ...old,
@@ -71,9 +67,10 @@ export function useCreateComment() {
           };
         });
 
-        queryClient.setQueriesData<
-          { id: string; commentsCount?: number } | null
-        >({ queryKey: postKeys.details() }, (old) => {
+        queryClient.setQueriesData<{
+          id: string;
+          commentsCount?: number;
+        } | null>({ queryKey: postKeys.details() }, (old) => {
           if (!old || old.id !== variables.targetId) return old;
           return {
             ...old,
@@ -90,17 +87,25 @@ export function useUpdateComment() {
   return useMutation<CreatedComment, Error, EditCommentRequest>({
     mutationFn: updateComment,
     onSuccess: (_data, variables) => {
-      invalidateCommentTarget(queryClient, variables.targetId, variables.parentId);
+      invalidateCommentTarget(
+        queryClient,
+        variables.targetId,
+        variables.parentId,
+      );
     },
   });
 }
 
 export function useDeleteComment() {
   const queryClient = useQueryClient();
-  return useMutation<{ message?: string }, Error, DeleteCommentRequest>({
+  return useMutation<void, Error, DeleteCommentRequest>({
     mutationFn: deleteComment,
     onSuccess: (_data, variables) => {
-      invalidateCommentTarget(queryClient, variables.targetId, variables.parentId);
+      invalidateCommentTarget(
+        queryClient,
+        variables.targetId,
+        variables.parentId,
+      );
     },
   });
 }
@@ -111,7 +116,11 @@ export function useToggleCommentLike() {
     mutationFn: ({ targetId, targetType }) =>
       toggleLike({ targetId, targetType }),
     onSuccess: (_data, variables) => {
-      invalidateCommentTarget(queryClient, variables.targetId, variables.parentId);
+      invalidateCommentTarget(
+        queryClient,
+        variables.targetId,
+        variables.parentId,
+      );
       queryClient.invalidateQueries({
         queryKey: likeKeys.status({
           targetId: variables.targetId,

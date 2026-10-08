@@ -1,31 +1,87 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpException,
   HttpStatus,
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { MongoServerError } from 'mongodb';
+import mongoose from 'mongoose';
+import multer from 'multer';
 import { Request, Response } from 'express';
-import { ErrorResponseDto } from '../dto/response.dto';
+import { randomUUID } from 'node:crypto';
 import { DomainException } from '@/shared/domain/domain-exception.base';
+import {
+  ProblemDetailsDto,
+  ProblemFieldErrorDto,
+} from '../dto/problem-details.dto';
+
+interface ExceptionBody {
+  code?: unknown;
+  message?: unknown;
+  detail?: unknown;
+  errors?: unknown;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function messageFrom(value: unknown): string | string[] | undefined {
-  if (typeof value === 'string') return value;
-  if (
+function isExceptionBody(value: unknown): value is ExceptionBody {
+  return isRecord(value);
+}
+
+function isFieldErrors(value: unknown): value is ProblemFieldErrorDto[] {
+  return (
     Array.isArray(value) &&
-    value.every((item: unknown): item is string => typeof item === 'string')
-  ) {
-    return value;
+    value.every(
+      (item: unknown) =>
+        isRecord(item) &&
+        typeof item.field === 'string' &&
+        typeof item.code === 'string' &&
+        typeof item.message === 'string',
+    )
+  );
+}
+
+function titleForStatus(status: number): string {
+  switch (status) {
+    case 400:
+      return 'Bad Request';
+    case 401:
+      return 'Unauthorized';
+    case 403:
+      return 'Forbidden';
+    case 404:
+      return 'Not Found';
+    case 409:
+      return 'Conflict';
+    case 429:
+      return 'Too Many Requests';
+    default:
+      return status >= 500 ? 'Internal Server Error' : 'Request Failed';
   }
-  return undefined;
+}
+
+function defaultCodeForStatus(status: number): string {
+  switch (status) {
+    case 400:
+      return 'BAD_REQUEST';
+    case 401:
+      return 'UNAUTHORIZED';
+    case 403:
+      return 'FORBIDDEN';
+    case 404:
+      return 'NOT_FOUND';
+    case 409:
+      return 'CONFLICT';
+    case 429:
+      return 'TOO_MANY_REQUESTS';
+    default:
+      return status >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_FAILED';
+  }
 }
 
 @Injectable()
@@ -33,76 +89,119 @@ function messageFrom(value: unknown): string | string[] | undefined {
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const context = host.switchToHttp();
+    const response = context.getResponse<Response>();
+    const request = context.getRequest<Request>();
+    const traceId = typeof request.id === 'string' ? request.id : randomUUID();
 
-  catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
+    let code = 'INTERNAL_ERROR';
+    let detail = 'Internal server error';
+    let errors: ProblemFieldErrorDto[] | undefined;
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message: string | string[] = 'Internal server error';
-    let error = 'Internal Server Error';
-
-    if (exception instanceof MongoServerError) {
-      if (exception.code === 11000) {
-        const keyPattern: unknown = exception.keyPattern;
-        const field = isRecord(keyPattern)
-          ? Object.keys(keyPattern).join(', ')
-          : '';
-        status = HttpStatus.CONFLICT;
-        message = `Giá trị đã tồn tại: ${field}`;
-        error = 'Conflict';
-      } else {
-        this.logger.error(
-          `Unhandled MongoDB error: ${exception.message}`,
-          exception.stack,
-        );
-      }
+    if (exception instanceof DomainException) {
+      status = this.statusForDomainCode(exception.code);
+      code = exception.code;
+      detail = status >= 500 ? 'Internal server error' : exception.message;
+    } else if (
+      exception instanceof MongoServerError &&
+      Number(exception.code) === 11000
+    ) {
+      status = HttpStatus.CONFLICT;
+      code = 'DUPLICATE_KEY';
+      detail = 'A record with the same unique value already exists';
+    } else if (exception instanceof mongoose.Error.CastError) {
+      status = HttpStatus.BAD_REQUEST;
+      code = 'INVALID_ID';
+      detail = `Invalid value for ${exception.path}`;
+    } else if (exception instanceof mongoose.Error.ValidationError) {
+      status = HttpStatus.BAD_REQUEST;
+      code = 'VALIDATION_ERROR';
+      detail = 'Data validation failed';
+      errors = Object.values(exception.errors).map((validationError) => ({
+        field: validationError.path,
+        code: 'VALIDATION_ERROR',
+        message: validationError.message,
+      }));
+    } else if (
+      exception instanceof multer.MulterError &&
+      exception.code === 'LIMIT_FILE_SIZE'
+    ) {
+      status = HttpStatus.PAYLOAD_TOO_LARGE;
+      code = 'FILE_TOO_LARGE';
+      detail = 'Uploaded file exceeds the allowed size';
     } else if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const exceptionResponse = exception.getResponse();
-
-      if (typeof exceptionResponse === 'string') {
-        message = exceptionResponse;
-        error = exception.name;
-      } else if (isRecord(exceptionResponse)) {
-        message = messageFrom(exceptionResponse.message) ?? message;
-        error =
-          typeof exceptionResponse.error === 'string'
-            ? exceptionResponse.error
-            : exception.name;
+      code = defaultCodeForStatus(status);
+      const body = exception.getResponse();
+      if (typeof body === 'string') {
+        detail = status >= 500 ? 'Internal server error' : body;
+      } else if (isExceptionBody(body)) {
+        if (typeof body.code === 'string') code = body.code;
+        const candidateDetail =
+          typeof body.detail === 'string'
+            ? body.detail
+            : typeof body.message === 'string'
+              ? body.message
+              : undefined;
+        if (status < 500 && candidateDetail) detail = candidateDetail;
+        if (isFieldErrors(body.errors)) errors = body.errors;
+        if (
+          status === 400 &&
+          Array.isArray(body.message) &&
+          body.message.every((item: unknown) => typeof item === 'string')
+        ) {
+          errors = body.message.map((message) => ({
+            field: '',
+            code: 'VALIDATION_ERROR',
+            message,
+          }));
+          code = 'VALIDATION_ERROR';
+          detail = 'Request validation failed';
+        }
+        if (status === 400 && typeof body.message === 'string') {
+          if (body.message.includes('file type')) {
+            code = 'FILE_TYPE_NOT_ALLOWED';
+            detail = 'Uploaded file type is not allowed';
+          } else if (body.message.includes('file size')) {
+            status = HttpStatus.PAYLOAD_TOO_LARGE;
+            code = 'FILE_TOO_LARGE';
+            detail = 'Uploaded file exceeds the allowed size';
+          }
+        }
       }
-    } else if (exception instanceof DomainException) {
-      status = this.mapErrorCodeToHttpStatus(exception.code);
-      message = exception.message;
-      error = exception.code;
-    } else if (exception instanceof Error) {
-      message = exception.message;
-      error = exception.name;
-      this.logger.error(
-        `Unhandled exception: ${exception.message}`,
-        exception.stack,
-      );
-    } else {
-      this.logger.error('Unknown exception type', exception);
     }
 
-    const errorResponse: ErrorResponseDto = {
-      success: false,
-      statusCode: status,
-      message,
-      error,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      ...(this.configService.get('env.NODE_ENV') === 'development' &&
-        exception instanceof Error && { stack: exception.stack }),
+    if (status >= 500) {
+      this.logger.error(
+        `traceId=${traceId} code=${code} ${exception instanceof Error ? exception.message : String(exception)}`,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    } else {
+      this.logger.warn(
+        `traceId=${traceId} code=${code} status=${String(status)}`,
+      );
+    }
+
+    const problem: ProblemDetailsDto = {
+      type: 'about:blank',
+      title: titleForStatus(status),
+      status,
+      code,
+      detail,
+      traceId,
+      ...(errors ? { errors } : {}),
     };
 
-    response.status(status).json(errorResponse);
+    response
+      .status(status)
+      .setHeader('x-request-id', traceId)
+      .type('application/problem+json')
+      .json(problem);
   }
 
-  private mapErrorCodeToHttpStatus(code: string): number {
+  private statusForDomainCode(code: string): number {
     switch (code) {
       case 'NOT_FOUND':
         return HttpStatus.NOT_FOUND;

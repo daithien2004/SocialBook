@@ -15,18 +15,28 @@ export async function getCommentsByTarget(
   const response = await apiRequest<unknown>({
     url: '/comments/target',
     method: 'GET',
-    params: request,
+    params: {
+      targetId: request.targetId,
+      parentId: request.parentId,
+      page: request.page,
+      limit: request.limit,
+    },
   });
 
   const parsed = commentsTargetResponseSchema.parse(response);
   return {
-    comments: parsed.comments,
-    nextCursor: parsed.meta.nextCursor,
-    hasMore: parsed.meta.hasMore,
+    comments: parsed.data,
+    nextCursor:
+      parsed.meta.page < parsed.meta.totalPages
+        ? String(parsed.meta.page + 1)
+        : null,
+    hasMore: parsed.meta.page < parsed.meta.totalPages,
   };
 }
 
-export async function createComment(request: CreateCommentRequest): Promise<CreatedComment> {
+export async function createComment(
+  request: CreateCommentRequest,
+): Promise<CreatedComment> {
   return apiRequest<CreatedComment>({
     url: '/comments',
     method: 'POST',
@@ -34,7 +44,9 @@ export async function createComment(request: CreateCommentRequest): Promise<Crea
   });
 }
 
-export async function updateComment(request: EditCommentRequest): Promise<CreatedComment> {
+export async function updateComment(
+  request: EditCommentRequest,
+): Promise<CreatedComment> {
   return apiRequest<CreatedComment>({
     url: `/comments/${request.id}`,
     method: 'PUT',
@@ -42,8 +54,10 @@ export async function updateComment(request: EditCommentRequest): Promise<Create
   });
 }
 
-export async function deleteComment(request: DeleteCommentRequest): Promise<{ message?: string }> {
-  return apiRequest<{ message?: string }>({
+export async function deleteComment(
+  request: DeleteCommentRequest,
+): Promise<void> {
+  await apiRequest<void>({
     url: `/comments/${request.id}`,
     method: 'DELETE',
   });

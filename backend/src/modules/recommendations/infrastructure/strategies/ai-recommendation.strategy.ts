@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { IAIPort } from '@/modules/ai/domain';
+import { IAIPort } from '@/modules/ai';
 import {
   IRecommendationStrategy,
   UserProfile,

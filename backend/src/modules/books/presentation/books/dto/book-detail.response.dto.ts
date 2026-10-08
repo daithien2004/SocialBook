@@ -1,16 +1,32 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   BookDetailReadModel,
   ChapterSummary,
 } from '@/modules/books/domain/books/read-models/book-detail.read-model';
 
 export class ChapterResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   title: string;
+
+  @ApiProperty()
   slug: string;
+
+  @ApiProperty()
   content: string;
+
+  @ApiProperty()
   orderIndex: number;
+
+  @ApiProperty()
   viewsCount: number;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiPropertyOptional()
   updatedAt?: Date;
 
   private constructor(chapter: ChapterSummary) {
@@ -30,17 +46,71 @@ export class ChapterResponseDto {
 }
 
 export class BookDetailResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   title: string;
+
+  @ApiProperty()
   slug: string;
+
+  @ApiProperty({
+    type: 'object',
+    required: ['id', 'name'],
+    properties: { id: { type: 'string' }, name: { type: 'string' } },
+  })
   authorId: { id: string; name: string };
+
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'object',
+      required: ['id', 'name', 'slug'],
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        slug: { type: 'string' },
+      },
+    },
+  })
   genres: { id: string; name: string; slug: string }[];
+
+  @ApiProperty()
   description: string;
+
+  @ApiProperty()
   publishedYear: string;
+
+  @ApiProperty()
   coverUrl: string;
+
+  @ApiProperty()
   status: string;
+
+  @ApiProperty({ type: [String] })
   tags: string[];
+
+  @ApiProperty({ type: [String] })
   likedBy: string[];
+
+  @ApiProperty({
+    type: 'object',
+    required: [
+      'views',
+      'likes',
+      'chapterCount',
+      'averageRating',
+      'totalRatings',
+    ],
+    properties: {
+      views: { type: 'integer' },
+      likes: { type: 'integer' },
+      chapterCount: { type: 'integer' },
+      averageRating: { type: 'number' },
+      totalRatings: { type: 'integer' },
+    },
+  })
   stats: {
     views: number;
     likes: number;
@@ -48,8 +118,14 @@ export class BookDetailResponseDto {
     averageRating: number;
     totalRatings: number;
   };
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
+
+  @ApiProperty({ type: () => ChapterResponseDto, isArray: true })
   chapters: ChapterResponseDto[];
 
   private constructor(readModel: BookDetailReadModel) {

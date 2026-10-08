@@ -1,13 +1,24 @@
 import { createEnv } from '@t3-oss/env-nextjs';
 import { z } from 'zod';
 
+const absoluteVersionedApiBaseUrl = z
+  .url()
+  .refine((value) =>
+    new URL(value).pathname.replace(/\/+$/, '').endsWith('/api/v1'),
+  )
+  .transform((value) => value.replace(/\/+$/, ''));
+const versionedApiBaseUrl = z.union([
+  absoluteVersionedApiBaseUrl,
+  z.literal('/api/v1'),
+]);
+
 export const env = createEnv({
   /*
    * Serverside Environment variables, not available on the client.
    * Will throw if you access these variables on the client.
    */
   server: {
-    NEST_API_INTERNAL_URL: z.url().optional(),
+    NEST_API_INTERNAL_URL: versionedApiBaseUrl.optional(),
     // Phải trùng secret với backend. Cố ý không có giá trị mặc định: thiếu biến
     // này thì proxy không verify được token, phải fail loudly lúc khởi động
     // thay vì âm thầm rơi về một khoá ai cũng biết.
@@ -18,7 +29,7 @@ export const env = createEnv({
    * 💡 You'll get type errors if these are not prefixed with NEXT_PUBLIC_.
    */
   client: {
-    NEXT_PUBLIC_NEST_API_URL: z.string().url(),
+    NEXT_PUBLIC_NEST_API_URL: versionedApiBaseUrl,
     NEXT_PUBLIC_SOCKET_URL: z.string().url(),
     NEXT_PUBLIC_ENABLE_CONTENT_PROTECTION: z.enum(['true', 'false']).optional(),
   },

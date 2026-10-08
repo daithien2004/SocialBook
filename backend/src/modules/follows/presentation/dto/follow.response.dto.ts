@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Follow } from '@/modules/follows/domain/entities/follow.entity';
 
 interface RawFollowData {
@@ -16,17 +17,40 @@ interface RawFollowData {
 }
 
 export class FollowResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   userId: string;
+
+  @ApiProperty()
   targetId: string;
+
+  @ApiProperty()
   status: boolean;
+
+  @ApiProperty()
   isActive: boolean;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
+
+  @ApiPropertyOptional()
   username?: string;
+
+  @ApiPropertyOptional()
   image?: string;
+
+  @ApiPropertyOptional()
   postCount!: number;
+
+  @ApiPropertyOptional()
   readingListCount!: number;
+
+  @ApiPropertyOptional()
   followersCount!: number;
 
   constructor(
@@ -82,19 +106,49 @@ export class FollowStatusResponseDto {
     this.followId = followId;
   }
 
+  @ApiProperty()
   userId: string;
+
+  @ApiProperty()
   targetId: string;
+
+  @ApiProperty()
   isFollowing: boolean;
+
+  @ApiProperty()
   isOwner: boolean;
+
+  @ApiPropertyOptional()
   followId?: string;
 }
 
 export class FollowStatsResponseDto {
+  @ApiProperty()
+  totalFollowing: number;
+
+  @ApiProperty()
+  totalFollowers: number;
+
+  @ApiProperty()
+  followingCount: number;
+
+  @ApiProperty()
+  followersCount: number;
+
+  @ApiProperty({ type: [FollowResponseDto] })
+  recentFollows: FollowResponseDto[];
+
   constructor(
-    public totalFollowing: number,
-    public totalFollowers: number,
-    public followingCount: number,
-    public followersCount: number,
-    public recentFollows: FollowResponseDto[],
-  ) {}
+    totalFollowing: number,
+    totalFollowers: number,
+    followingCount: number,
+    followersCount: number,
+    recentFollows: FollowResponseDto[],
+  ) {
+    this.totalFollowing = totalFollowing;
+    this.totalFollowers = totalFollowers;
+    this.followingCount = followingCount;
+    this.followersCount = followersCount;
+    this.recentFollows = recentFollows;
+  }
 }

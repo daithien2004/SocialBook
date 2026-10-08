@@ -8,7 +8,7 @@ import {
   InternalServerDomainException,
 } from '@/shared/domain/common-exceptions';
 import { ITextToSpeechRepository } from '@/modules/text-to-speech/domain/repositories/text-to-speech.repository.interface';
-import { IAudioQueuePort } from '@/modules/text-to-speech/application/public-api';
+import { IAudioQueuePort } from '@/modules/text-to-speech/application/audio-queue.port';
 import { GenerateAudioJobPayload } from '@/modules/text-to-speech/application/jobs/tts-job.payload';
 import { LanguageDetectorService } from '@/modules/text-to-speech/application/services/language-detector.service';
 import { IChapterRepository } from '@/modules/chapters/domain/public-api';

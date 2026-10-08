@@ -18,10 +18,11 @@ export interface ToggleLikeReviewResult {
 }
 
 export async function getReviewsByBook(bookId: string): Promise<Review[]> {
-  return apiRequest<Review[]>({
+  const response = await apiRequest<{ data: Review[] }>({
     url: NESTJS_REVIEWS_ENDPOINTS.getByBook(bookId),
     method: 'GET',
   });
+  return response.data;
 }
 
 export async function createReview(data: CreateReviewRequest): Promise<Review> {

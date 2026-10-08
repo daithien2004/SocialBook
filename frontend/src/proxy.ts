@@ -51,9 +51,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (!jwtPayload && refreshToken) {
     try {
       const backendUrl =
-        process.env.NEST_API_INTERNAL_URL ||
-        process.env.NEXT_PUBLIC_NEST_API_URL ||
-        'http://localhost:5000/api';
+        env.NEST_API_INTERNAL_URL || env.NEXT_PUBLIC_NEST_API_URL;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
 

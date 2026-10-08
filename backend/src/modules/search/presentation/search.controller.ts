@@ -1,3 +1,4 @@
+import { paginated, unpaginated } from '@/shared/platform/dto/paginated.dto';
 import {
   Controller,
   Get,
@@ -7,12 +8,19 @@ import {
   HttpCode,
   RequestTimeoutException,
 } from '@nestjs/common';
-import { IntelligentSearchHandler } from '@/modules/search';
-import { IntelligentSearchQuery } from '@/modules/search';
+import { IntelligentSearchHandler } from '@/modules/search/application/queries/intelligent-search/intelligent-search.handler';
+import { IntelligentSearchQuery } from '@/modules/search/application/queries/intelligent-search/intelligent-search.query';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { SearchQueryDto } from '@/modules/chroma/presentation/public-api';
 import { ITrendingKeywordCachePort } from '@/modules/search/domain/interfaces/trending-keyword-cache.port';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import { ApiNoContentResponse } from '@nestjs/swagger';
+import { SearchBookResponseDto } from './dto/search-book.response.dto';
 
+@ApiProblemResponses()
 @Controller('search')
 export class SearchController {
   constructor(
@@ -22,6 +30,7 @@ export class SearchController {
 
   @Public()
   @Get()
+  @ApiPaginatedResponse(SearchBookResponseDto, 'offset')
   async search(@Query() searchQuery: SearchQueryDto) {
     const query = new IntelligentSearchQuery({
       query: searchQuery.query,
@@ -43,34 +52,26 @@ export class SearchController {
       timeoutPromise,
     ]);
 
-    return {
-      message: 'Search completed successfully',
-      data: result.data,
-      meta: result.meta,
-    };
+    return paginated(result.data, result.meta);
   }
 
   @Public()
   @Get('trending-keywords')
+  @ApiPaginatedResponse('string', 'offset')
   async getTrendingKeywords() {
     const keywords = await this.trendingKeywordCache.getTrendingKeywords();
 
-    return {
-      message: 'Láº¥y tá»« khÃ³a tÃ¬m kiáº¿m thá»‹nh hÃ nh thÃ nh cÃ´ng',
-      data: keywords,
-    };
+    return unpaginated(keywords);
   }
 
   @Public()
   @Post('record')
-  @HttpCode(200)
+  @HttpCode(204)
+  @ApiNoContentResponse()
   async recordSearch(@Body('keyword') keyword: string) {
     if (keyword) {
       await this.intelligentSearchUseCase.recordSearch(keyword);
     }
-    return {
-      message: 'ÄÃ£ ghi nháº­n tá»« khÃ³a tÃ¬m kiáº¿m',
-      data: null,
-    };
+    return undefined;
   }
 }

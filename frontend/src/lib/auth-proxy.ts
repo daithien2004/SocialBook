@@ -6,6 +6,10 @@ const authAxios = axios.create({
   baseURL: env.NEST_API_INTERNAL_URL || env.NEXT_PUBLIC_NEST_API_URL,
 });
 
+const versionedApiBaseUrl =
+  env.NEST_API_INTERNAL_URL || env.NEXT_PUBLIC_NEST_API_URL;
+const neutralApiBaseUrl = versionedApiBaseUrl?.replace(/\/v1$/, '');
+
 export interface RelayTarget {
   method?: 'GET' | 'POST';
   url: string;
@@ -37,11 +41,17 @@ export async function relayAuthRequest(
     const response = await authAxios.request({
       method,
       url: target.url,
+      ...((target.url.startsWith('/auth/google') ||
+        target.url.startsWith('/auth/github')) &&
+      neutralApiBaseUrl
+        ? { baseURL: neutralApiBaseUrl }
+        : {}),
       data: body,
       headers: {
         cookie: request.headers.get('cookie') ?? '',
         'x-csrf-token': request.headers.get('x-csrf-token') ?? '',
-        'x-forwarded-for': request.headers.get('x-forwarded-for') ?? '127.0.0.1',
+        'x-forwarded-for':
+          request.headers.get('x-forwarded-for') ?? '127.0.0.1',
         ...(body != null ? { 'content-type': 'application/json' } : {}),
       },
       maxRedirects: 0,
@@ -78,7 +88,10 @@ export async function relayAuthRequest(
       reason,
     );
     return NextResponse.json(
-      { message: 'Backend service is starting up or unavailable. Please try again later.' },
+      {
+        message:
+          'Backend service is starting up or unavailable. Please try again later.',
+      },
       { status: 503 },
     );
   }

@@ -18,7 +18,14 @@ const envValidationSchema = z.object({
   // sẽ fallback về 5000, nên chỉ reject giá trị âm/không phải số.
   PORT: z.coerce.number().int().nonnegative().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
-  FRONTEND_URL: z.string().url().optional(),
+  FRONTEND_URL: z
+    .string()
+    .refine((value) =>
+      value
+        .split(',')
+        .every((origin) => z.string().url().safeParse(origin.trim()).success),
+    )
+    .optional(),
   REDIS_HOST: z.string().optional(),
   REDIS_PORT: z.coerce.number().int().positive().optional(),
   REDIS_PASSWORD: z.string().optional(),

@@ -27,10 +27,13 @@ interface SearchUsersRawPage {
     bio?: string | null;
     createdAt: string;
   }[];
-  meta: { current: number; pageSize: number; total: number; totalPages: number };
+  meta: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
-export async function getUsersAdmin(query: string, signal?: AbortSignal): Promise<UserListResponse> {
+export async function getUsersAdmin(
+  query: string,
+  signal?: AbortSignal,
+): Promise<UserListResponse> {
   const response = await apiRequest<UserListResponse>({
     url: `${NESTJS_USERS_ENDPOINTS.getUsersAdmin}?${query}`,
     method: 'GET',

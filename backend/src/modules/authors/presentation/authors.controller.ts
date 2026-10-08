@@ -1,3 +1,4 @@
+import { paginated } from '@/shared/platform/dto/paginated.dto';
 import {
   ApiFileUpload,
   Public,
@@ -5,6 +6,7 @@ import {
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
 import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import {
+  HttpCode,
   Body,
   Controller,
   Delete,
@@ -24,7 +26,15 @@ import { UpdateAuthorDto } from './dto/update-author.dto';
 
 import { IMediaPort } from '@/modules/media/domain/public-api';
 import { AuthorsService } from '../application/authors.service';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
+import { ApiPaginatedResponse } from '@/shared/platform/decorators/api-response.decorators';
 
+@ApiProblemResponses()
 @Controller('authors')
 export class AuthorsController {
   constructor(
@@ -33,6 +43,7 @@ export class AuthorsController {
   ) {}
 
   @Post()
+  @ApiCreatedResponse({ type: AuthorResponseDto })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @ApiFileUpload('photoUrl')
@@ -45,13 +56,11 @@ export class AuthorsController {
       createAuthorDto.bio,
       file ? await this.uploadFile(file) : createAuthorDto.photoUrl,
     );
-    return {
-      message: 'Táº¡o tÃ¡c giáº£ thÃ nh cÃ´ng',
-      data: new AuthorResponseDto(author),
-    };
+    return new AuthorResponseDto(author);
   }
 
   @Get('admin')
+  @ApiPaginatedResponse(AuthorResponseDto, 'offset')
   @Roles('admin')
   @UseGuards(RolesGuard)
   async findAll(@Query() filter: FilterAuthorDto) {
@@ -62,24 +71,22 @@ export class AuthorsController {
       filter.bio,
     );
 
-    return {
-      message: 'Láº¥y danh sÃ¡ch tÃ¡c giáº£ thÃ nh cÃ´ng',
-      data: result.data.map((author) => new AuthorResponseDto(author)),
-      meta: result.meta,
-    };
+    return paginated(
+      result.data.map((author) => new AuthorResponseDto(author)),
+      result.meta,
+    );
   }
 
   @Get(':id')
   @Public()
+  @ApiOkResponse({ type: AuthorResponseDto })
   async findOne(@Param('id') id: string) {
     const author = await this.authorsService.findById(id);
-    return {
-      message: 'Láº¥y thÃ´ng tin tÃ¡c giáº£ thÃ nh cÃ´ng',
-      data: new AuthorResponseDto(author),
-    };
+    return new AuthorResponseDto(author);
   }
 
   @Put(':id')
+  @ApiOkResponse({ type: AuthorResponseDto })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @ApiFileUpload('photoUrl')
@@ -94,31 +101,29 @@ export class AuthorsController {
       updateAuthorDto.bio,
       file ? await this.uploadFile(file) : updateAuthorDto.photoUrl,
     );
-    return {
-      message: 'Cáº­p nháº­t tÃ¡c giáº£ thÃ nh cÃ´ng',
-      data: new AuthorResponseDto(author),
-    };
+    return new AuthorResponseDto(author);
   }
 
+  @HttpCode(204)
   @Delete(':id')
+  @ApiNoContentResponse()
   @Roles('admin')
   @UseGuards(RolesGuard)
   async remove(@Param('id') id: string) {
     await this.authorsService.delete(id);
-    return {
-      message: 'XÃ³a tÃ¡c giáº£ thÃ nh cÃ´ng',
-    };
+    return undefined;
   }
 
   @Get()
   @Public()
+  @ApiPaginatedResponse(AuthorResponseDto, 'offset')
   async getForSelect() {
     const result = await this.authorsService.findAll(1, 1000);
 
-    return {
-      message: 'Láº¥y danh sÃ¡ch tÃ¡c giáº£ thÃ nh cÃ´ng',
-      data: result.data.map((author) => new AuthorResponseDto(author)),
-    };
+    return paginated(
+      result.data.map((author) => new AuthorResponseDto(author)),
+      result.meta,
+    );
   }
 
   private async uploadFile(file: Express.Multer.File): Promise<string> {

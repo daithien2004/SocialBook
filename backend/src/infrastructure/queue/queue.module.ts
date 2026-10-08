@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { NotificationQueueAdapter } from './notification-queue.adapter';
-import { INotificationQueuePort } from '@/modules/notifications/application/public-api';
+import { INotificationQueuePort } from '@/modules/notifications/application/notification-queue.port';
 import { AudioQueueAdapter } from './audio-queue.adapter';
-import { IAudioQueuePort } from '@/modules/text-to-speech/application/public-api';
+import { IAudioQueuePort } from '@/modules/text-to-speech/application/audio-queue.port';
 import { DEFAULT_JOB_OPTIONS } from '@/shared/queue/default-job-options';
 
 @Module({

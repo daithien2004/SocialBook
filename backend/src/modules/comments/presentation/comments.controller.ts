@@ -1,7 +1,9 @@
 import { Comment } from '@/modules/comments/domain/entities/comment.entity';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { paginated } from '@/shared/platform/dto/paginated.dto';
 
 import {
+  HttpCode,
   Body,
   Controller,
   Delete,
@@ -38,7 +40,17 @@ import { GetCommentCountQuery } from '@/modules/comments/application/queries/get
 import { GetCommentsQuery } from '@/modules/comments/application/queries/get-comments/get-comments.query';
 import { ModerateCommentCommand } from '@/modules/comments/application/commands/moderate-comment/moderate-comment.command';
 import { UpdateCommentCommand } from '@/modules/comments/application/commands/update-comment/update-comment.command';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('comments')
 export class CommentsController {
   constructor(
@@ -47,6 +59,7 @@ export class CommentsController {
   ) {}
 
   @Post()
+  @ApiCreatedResponse({ type: CommentResponseDto })
   async create(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateCommentDto,
@@ -61,13 +74,11 @@ export class CommentsController {
 
     const comment = await this.commandBus.execute(command);
 
-    return {
-      message: 'Comment created successfully',
-      data: new CommentResponseDto(comment),
-    };
+    return new CommentResponseDto(comment);
   }
 
   @Public()
+  @ApiPaginatedResponse(CommentResponseDto, 'cursor')
   @Get('target')
   async getByTarget(
     @CurrentUser('id') userId: string | undefined,
@@ -85,17 +96,12 @@ export class CommentsController {
     );
     const result = await this.queryBus.execute(getQuery);
 
-    return {
-      message: 'Comments retrieved successfully',
-      data: {
-        comments: result.data,
-        meta: result.meta,
-      },
-    };
+    return paginated(result.data, result.meta);
   }
 
   @Public()
   @Get('count')
+  @ApiOkResponse({ schema: { type: 'integer' } })
   async getCount(@Query() query: CommentCountDto) {
     const countQuery = new GetCommentCountQuery(
       query.targetId,
@@ -104,22 +110,20 @@ export class CommentsController {
     );
     const result = await this.queryBus.execute(countQuery);
 
-    return {
-      message: 'Comment count retrieved successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Get(':id')
   @Public()
+  @ApiOkResponse({
+    schema: { type: 'object', nullable: true, example: null },
+  })
   getById() {
-    return {
-      message: 'Get comment by ID not yet implemented',
-      data: null,
-    };
+    return null;
   }
 
   @Put(':id')
+  @ApiOkResponse({ type: CommentResponseDto })
   async update(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -130,13 +134,12 @@ export class CommentsController {
 
     const comment = await this.commandBus.execute(command);
 
-    return {
-      message: 'Comment updated successfully',
-      data: new CommentResponseDto(comment),
-    };
+    return new CommentResponseDto(comment);
   }
 
+  @HttpCode(204)
   @Delete(':id')
+  @ApiNoContentResponse()
   async remove(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -146,20 +149,20 @@ export class CommentsController {
 
     await this.commandBus.execute(command);
 
-    return {
-      message: 'Comment deleted successfully',
-    };
+    return undefined;
   }
 
   @Post(':id/flag')
+  @ApiCreatedResponse({
+    schema: { type: 'object', nullable: true, example: null },
+  })
   flag() {
-    return {
-      message: 'Flag comment not yet implemented',
-      data: null,
-    };
+    return null;
   }
 
   @Post(':id/moderate')
+  @HttpCode(204)
+  @ApiNoContentResponse()
   @Roles('admin')
   @UseGuards(RolesGuard)
   async moderate(@Param('id') id: string, @Body() dto: ModerateCommentDto) {
@@ -167,44 +170,30 @@ export class CommentsController {
 
     await this.commandBus.execute(command);
 
-    return {
-      message: `Comment ${dto.status} successfully`,
-    };
+    return undefined;
   }
 
   @Get('stats')
+  @ApiOkResponse({ type: CommentStatsDto })
   @Roles('admin')
   @UseGuards(RolesGuard)
   getStats() {
-    return {
-      message: 'Get comment stats not yet implemented',
-      data: new CommentStatsDto(0, 0, 0, 0, 0, {}),
-    };
+    return new CommentStatsDto(0, 0, 0, 0, 0, {});
   }
 
   @Get('moderation/pending')
+  @ApiPaginatedResponse(CommentResponseDto, 'offset')
   @Roles('admin')
   @UseGuards(RolesGuard)
   getPendingModeration() {
-    return {
-      message: 'Get pending moderation not yet implemented',
-      data: {
-        comments: [],
-        meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 },
-      },
-    };
+    return paginated([], { page: 1, pageSize: 10, total: 0, totalPages: 0 });
   }
 
   @Get('moderation/flagged')
+  @ApiPaginatedResponse(CommentResponseDto, 'offset')
   @Roles('admin')
   @UseGuards(RolesGuard)
   getFlagged() {
-    return {
-      message: 'Get flagged comments not yet implemented',
-      data: {
-        comments: [],
-        meta: { current: 1, pageSize: 10, total: 0, totalPages: 0 },
-      },
-    };
+    return paginated([], { page: 1, pageSize: 10, total: 0, totalPages: 0 });
   }
 }

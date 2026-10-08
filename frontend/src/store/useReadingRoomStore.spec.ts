@@ -13,6 +13,10 @@ describe('useReadingRoomStore.markRoomEnded', () => {
       mode: 'sync',
       status: 'active',
       currentChapterSlug: 'chapter-1',
+      maxMembers: 10,
+      membersCount: 1,
+      members: [{ userId: 'user-1', role: 'host' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
     });
     useReadingRoomStore
       .getState()
@@ -44,6 +48,10 @@ describe('useReadingRoomStore.markRoomEnded', () => {
       mode: 'sync',
       status: 'active',
       currentChapterSlug: 'chapter-1',
+      maxMembers: 10,
+      membersCount: 1,
+      members: [{ userId: 'user-1', role: 'host' }],
+      createdAt: '2026-01-01T00:00:00.000Z',
     });
 
     useReadingRoomStore.getState().markRoomEnded('room-2');

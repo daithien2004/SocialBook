@@ -1,3 +1,4 @@
+import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
@@ -47,7 +48,10 @@ import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dt
 import { RecordChapterViewQuery } from '@/modules/chapters/application/chapters/queries/record-chapter-view/record-chapter-view.query';
 import { AIThrottleGuard } from '@/shared/platform/guards/ai-throttle.guard';
 import { ImportEpubPreviewCommand } from '@/modules/chapters/application/chapters/commands/import-epub-preview/import-epub-preview.command';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
+import { ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
   constructor(
@@ -62,14 +66,22 @@ export class ChaptersController {
   ) {
     const query = new GetChapterKnowledgeQuery(chapterId, force === 'true');
     const result = await this.queryBus.execute(query);
-    return {
-      message: 'Get chapter knowledge successfully',
-      data: ChapterKnowledgeResponseDto.fromEntity(result),
-    };
+    return ChapterKnowledgeResponseDto.fromEntity(result);
   }
 
   @UseGuards(AIThrottleGuard)
   @Post(':chapterId/ask-ai')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['answer', 'createdAt'],
+      properties: {
+        answer: { type: 'string' },
+        createdAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   async askAI(
     @Param('bookSlug') bookSlug: string,
     @Param('chapterId') chapterId: string,
@@ -80,10 +92,7 @@ export class ChaptersController {
       new AskChapterAICommand(chapterId, bookSlug, userId, question),
     );
 
-    return {
-      message: 'AI response generated successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Post('import/preview')
@@ -115,10 +124,7 @@ export class ChaptersController {
     const result = await this.commandBus.execute(
       new ImportEpubPreviewCommand(file.buffer, file.originalname),
     );
-    return {
-      message: 'File parsed successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Post('import/start')
@@ -127,10 +133,7 @@ export class ChaptersController {
   async startImport(@Body() dto: StartChaptersImportDto) {
     const command = new StartChaptersImportCommand(dto.bookId, dto.chapters);
     const result = await this.commandBus.execute(command);
-    return {
-      message: 'Import job started successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Get('import/status/:jobId')
@@ -139,10 +142,7 @@ export class ChaptersController {
   async getImportStatus(@Param('jobId') jobId: string) {
     const query = new GetChaptersImportStatusQuery(jobId);
     const result = await this.queryBus.execute(query);
-    return {
-      message: 'Get import status successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Public()
@@ -161,10 +161,7 @@ export class ChaptersController {
 
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get list chapters successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Public()
@@ -174,10 +171,7 @@ export class ChaptersController {
 
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get all chapters successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Roles('admin')
@@ -204,18 +198,14 @@ export class ChaptersController {
     const result = await this.queryBus.execute(query);
 
     if ('book' in result && 'chapters' in result) {
-      return {
-        message: 'Get all chapters successfully',
-        data: result,
-      };
+      return result;
     }
 
     const paginatedResult = result;
-    return {
-      message: 'Get all chapters successfully',
-      data: ChapterResponseDto.fromArray(paginatedResult.data),
-      meta: paginatedResult.meta,
-    };
+    return paginated(
+      ChapterResponseDto.fromArray(paginatedResult.data),
+      paginatedResult.meta,
+    );
   }
 
   @Get('id/:chapterId')
@@ -224,10 +214,7 @@ export class ChaptersController {
   async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
     const query = new GetChapterByIdQuery(chapterId);
     const chapter = await this.queryBus.execute(query);
-    return {
-      message: 'Get chapter successfully',
-      data: new ChapterResponseDto(chapter),
-    };
+    return new ChapterResponseDto(chapter);
   }
 
   @Public()
@@ -238,15 +225,13 @@ export class ChaptersController {
   ) {
     const query = new GetChapterBySlugQuery(chapterSlug, bookSlug);
     const result = await this.queryBus.execute(query);
-    return {
-      message: 'Get chapter successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Public()
   @Post(':chapterSlug/view')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
   async recordChapterView(
     @Param('chapterSlug') chapterSlug: string,
     @Param('bookSlug') bookSlug: string,
@@ -260,9 +245,7 @@ export class ChaptersController {
       clientIp,
     );
     await this.queryBus.execute(query);
-    return {
-      message: 'View recorded successfully',
-    };
+    return undefined;
   }
 
   @Post()
@@ -278,10 +261,7 @@ export class ChaptersController {
     );
 
     const chapterResult = await this.commandBus.execute(command);
-    return {
-      message: 'Táº¡o chÆ°Æ¡ng thÃ nh cÃ´ng',
-      data: ChapterResponseDto.fromResult(chapterResult),
-    };
+    return ChapterResponseDto.fromResult(chapterResult);
   }
 
   @Put(':chapterId')
@@ -301,20 +281,16 @@ export class ChaptersController {
     );
 
     const chapterResult = await this.commandBus.execute(command);
-    return {
-      message: 'Cáº­p nháº­t chÆ°Æ¡ng thÃ nh cÃ´ng',
-      data: ChapterResponseDto.fromResult(chapterResult),
-    };
+    return ChapterResponseDto.fromResult(chapterResult);
   }
 
+  @HttpCode(204)
   @Delete(':chapterId')
   @Roles('admin')
   @UseGuards(RolesGuard)
   async remove(@Param('chapterId') chapterId: string) {
     const command = new DeleteChapterCommand(chapterId);
     await this.commandBus.execute(command);
-    return {
-      message: 'XÃ³a chÆ°Æ¡ng thÃ nh cÃ´ng',
-    };
+    return undefined;
   }
 }

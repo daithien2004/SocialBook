@@ -10,7 +10,7 @@ import { IBookRepository } from '@/modules/books/domain/public-api';
 import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 import { BookId } from '@/modules/books/domain/public-api';
-import { IAIPort } from '@/modules/ai/domain';
+import { IAIPort } from '@/modules/ai';
 import { getChapterContext } from '@/modules/chapters/application/public-api';
 import { GenerateHighlightInsightCommand } from './generate-highlight-insight.command';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';

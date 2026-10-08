@@ -3,7 +3,7 @@ import './worker-mode';
 
 import { NestFactory } from '@nestjs/core';
 
-import { Logger } from '@/shared/logger/logger.service';
+import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 

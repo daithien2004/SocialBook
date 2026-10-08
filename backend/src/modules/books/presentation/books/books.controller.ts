@@ -1,3 +1,4 @@
+import { paginated, unpaginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { SkipThrottle } from '@nestjs/throttler';
@@ -7,6 +8,7 @@ import {
   Public,
 } from '@/shared/platform/decorators/custom.decorator';
 import {
+  HttpCode,
   Body,
   Controller,
   Delete,
@@ -41,7 +43,17 @@ import { RecordBookViewCommand } from '@/modules/books/application/books/command
 import { GetTopReadBooksQuery } from '@/modules/books/application/books/queries/get-top-read-books/get-top-read-books.query';
 import { IMediaPort } from '@/modules/media/domain/public-api';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('books')
 @SkipThrottle({ global: true })
 export class BooksController {
@@ -54,6 +66,7 @@ export class BooksController {
   ) {}
 
   @Post()
+  @ApiCreatedResponse({ type: BookResponseDto })
   @RequireAuth('admin')
   @SkipThrottle({ global: false })
   @ApiFileUpload('coverUrl')
@@ -72,12 +85,10 @@ export class BooksController {
     });
 
     const book = await this.commandBus.execute(command);
-    return {
-      message: 'Táº¡o sÃ¡ch thÃ nh cÃ´ng',
-      data: BookResponseDto.fromEntity(book),
-    };
+    return BookResponseDto.fromEntity(book);
   }
 
+  @ApiPaginatedResponse(BookResponseDto, 'offset')
   @Get('admin/all')
   @RequireAuth('admin')
   @SkipThrottle({ global: false })
@@ -89,26 +100,52 @@ export class BooksController {
 
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Láº¥y danh sÃ¡ch sÃ¡ch (Admin) thÃ nh cÃ´ng',
-      data: BookResponseDto.fromArray(result.data),
-      meta: result.meta,
-    };
+    return paginated(BookResponseDto.fromArray(result.data), result.meta);
   }
 
   @Public()
   @Get('filters/all')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['genres', 'tags'],
+      properties: {
+        genres: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['id', 'name', 'slug', 'count'],
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              slug: { type: 'string' },
+              count: { type: 'integer' },
+            },
+          },
+        },
+        tags: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['name', 'count'],
+            properties: {
+              name: { type: 'string' },
+              count: { type: 'integer' },
+            },
+          },
+        },
+      },
+    },
+  })
   async getFilters() {
     const query = new GetBookFiltersQuery();
     const data = await this.queryBus.execute(query);
 
-    return {
-      message: 'Láº¥y danh sÃ¡ch bá»™ lá»c thÃ nh cÃ´ng',
-      data,
-    };
+    return data;
   }
 
   @Public()
+  @ApiPaginatedResponse(BookResponseDto, 'offset')
   @Get('top-read')
   async getTopReadBooks(
     @Query('timeRange') timeRange: 'weekly' | 'monthly' | 'all' = 'all',
@@ -117,13 +154,11 @@ export class BooksController {
     const query = new GetTopReadBooksQuery(timeRange, Number(limit));
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Láº¥y danh sÃ¡ch top Ä‘á»c nhiá»u thÃ nh cÃ´ng',
-      data: BookResponseDto.fromArray(result),
-    };
+    return unpaginated(BookResponseDto.fromArray(result));
   }
 
   @Public()
+  @ApiPaginatedResponse(BookResponseDto, 'offset')
   @Get()
   async findAll(@Query() filter: FilterBookDto) {
     // Náº¿u cÃ³ tá»« khÃ³a tÃ¬m kiáº¿m, sá»­ dá»¥ng Intelligent Search
@@ -136,11 +171,10 @@ export class BooksController {
 
       const result = await this.intelligentSearchUseCase.execute(query);
 
-      return {
-        message: 'TÃ¬m kiáº¿m sÃ¡ch thÃ nh cÃ´ng',
-        data: BookResponseDto.fromSearchResults(result.data),
-        meta: result.meta,
-      };
+      return paginated(
+        BookResponseDto.fromSearchResults(result.data),
+        result.meta,
+      );
     }
 
     // Náº¿u khÃ´ng search, dÃ¹ng logic GetBooks bÃ¬nh thÆ°á»ng (Danh sÃ¡ch trang chá»§)
@@ -151,26 +185,31 @@ export class BooksController {
 
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Láº¥y danh sÃ¡ch sÃ¡ch thÃ nh cÃ´ng',
-      data: BookResponseDto.fromArray(result.data),
-      meta: result.meta,
-    };
+    return paginated(BookResponseDto.fromArray(result.data), result.meta);
   }
 
   @Get(':slug')
   @Public()
+  @ApiOkResponse({ type: BookDetailResponseDto })
   async findOne(@Param('slug') slug: string) {
     const query = new GetBookBySlugQuery(slug);
     const book = await this.queryBus.execute(query);
 
-    return {
-      message: 'Láº¥y thÃ´ng tin sÃ¡ch thÃ nh cÃ´ng',
-      data: BookDetailResponseDto.fromReadModel(book),
-    };
+    return BookDetailResponseDto.fromReadModel(book);
   }
 
   @Patch(':slug/like')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['slug', 'isLiked', 'likes'],
+      properties: {
+        slug: { type: 'string' },
+        isLiked: { type: 'boolean' },
+        likes: { type: 'integer' },
+      },
+    },
+  })
   @RequireAuth()
   @SkipThrottle({ global: false })
   async toggleLike(
@@ -186,37 +225,33 @@ export class BooksController {
     const result = await this.commandBus.execute(command);
 
     return {
-      message: result.isLiked ? 'Liked successfully' : 'Unliked successfully',
-      data: {
-        slug: book.slug,
-        isLiked: result.isLiked,
-        likes: result.likes,
-      },
+      slug: book.slug,
+      isLiked: result.isLiked,
+      likes: result.likes,
     };
   }
 
   @Post(':slug/views')
   @Public()
+  @HttpCode(204)
+  @ApiNoContentResponse()
   async recordView(@Param('slug') slug: string) {
     await this.commandBus.execute(new RecordBookViewCommand(slug));
-    return {
-      message: 'Recorded view successfully',
-    };
+    return undefined;
   }
 
   @Get('id/:id')
   @Public()
+  @ApiOkResponse({ type: BookResponseDto })
   async findOneById(@Param('id') id: string) {
     const query = new GetBookByIdQuery(id);
     const book = await this.queryBus.execute(query);
 
-    return {
-      message: 'Láº¥y thÃ´ng tin sÃ¡ch thÃ nh cÃ´ng',
-      data: BookResponseDto.fromEntity(book),
-    };
+    return BookResponseDto.fromEntity(book);
   }
 
   @Put(':id')
+  @ApiOkResponse({ type: BookResponseDto })
   @RequireAuth('admin')
   @SkipThrottle({ global: false })
   @ApiFileUpload('coverUrl')
@@ -237,21 +272,18 @@ export class BooksController {
     });
 
     const book = await this.commandBus.execute(command);
-    return {
-      message: 'Cáº­p nháº­t sÃ¡ch thÃ nh cÃ´ng',
-      data: BookResponseDto.fromEntity(book),
-    };
+    return BookResponseDto.fromEntity(book);
   }
 
+  @HttpCode(204)
   @Delete(':id')
+  @ApiNoContentResponse()
   @RequireAuth('admin')
   @SkipThrottle({ global: false })
   async remove(@Param('id') id: string) {
     const command = new DeleteBookCommand(id);
     await this.commandBus.execute(command);
-    return {
-      message: 'XÃ³a sÃ¡ch thÃ nh cÃ´ng',
-    };
+    return undefined;
   }
 
   private async uploadFile(file: Express.Multer.File): Promise<string> {

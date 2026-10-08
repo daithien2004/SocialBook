@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { recommendationsQueries } from '@/features/recommendations/api/recommendations.queries';
 import { useAppAuth } from '@/features/auth/hooks';
 import { ChevronRight, LogIn, BookOpen } from 'lucide-react';
-import { SafeImage } from "@/components/shared/SafeImage";
+import { SafeImage } from '@/components/shared/SafeImage';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -44,9 +44,13 @@ export const RecommendedForYouSection = () => {
                 Đăng nhập để nhận gợi ý cá nhân hóa
               </h3>
               <p className="text-xs text-muted-foreground mb-4 max-w-xs">
-                Khám phá những cuốn sách phù hợp với sở thích của bạn dựa trên lịch sử đọc và đánh giá
+                Khám phá những cuốn sách phù hợp với sở thích của bạn dựa trên
+                lịch sử đọc và đánh giá
               </p>
-              <Button asChild className="rounded-full shadow-sm hover:shadow-md bg-brand hover:bg-brand/90 h-8 text-xs px-4 text-brand-foreground">
+              <Button
+                asChild
+                className="rounded-full shadow-sm hover:shadow-md bg-brand hover:bg-brand/90 h-8 text-xs px-4 text-brand-foreground"
+              >
                 <Link href="/login" className="flex items-center gap-2">
                   Đăng nhập ngay
                   <ChevronRight size={14} />
@@ -114,9 +118,8 @@ export const RecommendedForYouSection = () => {
     );
   }
 
-
   // Hiển thị đúng số lượng từ API (limit)
-  const displayedBooks = data?.recommendations || [];
+  const displayedBooks = data?.data || [];
 
   return (
     <section className="mb-0 xl:mb-12">
@@ -138,7 +141,8 @@ export const RecommendedForYouSection = () => {
                 Chưa có gợi ý
               </h3>
               <p className="text-xs text-muted-foreground max-w-xs">
-                Hãy theo dõi, đọc hoặc đánh giá thêm các sách để nhận được những gợi ý tác phẩm phù hợp nhất với bạn nhé!
+                Hãy theo dõi, đọc hoặc đánh giá thêm các sách để nhận được những
+                gợi ý tác phẩm phù hợp nhất với bạn nhé!
               </p>
             </div>
           ) : (

@@ -20,13 +20,17 @@ export const commentItemSchema = z.object({
 export type CommentItem = z.infer<typeof commentItemSchema>;
 
 export const commentsTargetResponseSchema = z.object({
-  comments: z.array(commentItemSchema),
+  data: z.array(commentItemSchema),
   meta: z.object({
-    nextCursor: z.string().nullable(),
-    hasMore: z.boolean(),
+    page: z.number(),
+    pageSize: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
   }),
 });
-export type CommentsTargetResponse = z.infer<typeof commentsTargetResponseSchema>;
+export type CommentsTargetResponse = z.infer<
+  typeof commentsTargetResponseSchema
+>;
 
 export interface GetCommentsResponse {
   comments: CommentItem[];
@@ -37,7 +41,7 @@ export interface GetCommentsResponse {
 export const getCommentsRequestSchema = z.object({
   targetId: z.string(),
   parentId: z.string().nullable(),
-  cursor: z.string().optional(),
+  page: z.number().optional(),
   limit: z.number(),
 });
 export type GetCommentsRequest = z.infer<typeof getCommentsRequestSchema>;

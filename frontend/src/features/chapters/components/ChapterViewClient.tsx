@@ -83,7 +83,6 @@ export default function ChapterViewClient({
   const [viewMode, setViewMode] = useState<'read' | 'listen'>('read');
   const [showAISidebar, setShowAISidebar] = useState(false);
 
-
   const contentRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   // savedProgress đổi liên tục trong lúc cuộn, nên nếu không chốt lại thì mỗi
@@ -160,9 +159,9 @@ ${book.description?.slice(0, 100)}...`;
             images: Array.from(data.images ?? []) as unknown as FileList,
           });
 
-          if (result.warning) {
+          if (result.warnings?.[0]) {
             toast.warning('Bài viết đang được xem xét', {
-              description: result.warning,
+              description: result.warnings?.[0],
               duration: 5000,
             });
           } else {

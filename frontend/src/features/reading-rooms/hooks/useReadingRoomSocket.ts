@@ -42,7 +42,8 @@ type JoinAck =
   | {
       ok: false;
       code: string;
-      message?: string;
+      detail: string;
+      traceId: string;
     };
 
 type ReadingRoomServerEvents = {
@@ -53,7 +54,11 @@ type ReadingRoomServerEvents = {
   [ReadingRoomServerEvent.MEMBER_JOINED]: { userId: string };
   [ReadingRoomServerEvent.MEMBER_LEFT]: { userId: string };
   [ReadingRoomServerEvent.ROOM_ENDED]: { roomId: string };
-  [ReadingRoomServerEvent.ERROR]: { message?: string };
+  [ReadingRoomServerEvent.ERROR]: {
+    code: string;
+    detail: string;
+    traceId: string;
+  };
   [ReadingRoomServerEvent.NEW_HIGHLIGHT]: RoomHighlight;
   [ReadingRoomServerEvent.UPDATE_HIGHLIGHT_INSIGHT]: {
     highlightId: string;
@@ -156,7 +161,11 @@ export function useReadingRoomSocket(roomCode?: string) {
             return store.setConnection('error', 'TIMEOUT');
           }
           if (!ack.ok) {
-            if (ack.message) toast.error(ack.message);
+            toast.error(
+              ack.code === 'INTERNAL_ERROR'
+                ? 'An error occurred. Reference: ' + ack.traceId
+                : ack.detail,
+            );
             return store.setConnection('error', ack.code);
           }
           store.hydrate(ack.snapshot);
@@ -198,11 +207,15 @@ export function useReadingRoomSocket(roomCode?: string) {
       useReadingRoomStore.getState().markRoomEnded(payload.roomId),
     [ReadingRoomServerEvent.ERROR]: (payload) => {
       if (
-        payload.message?.includes('ended') &&
+        payload.detail.includes('ended') &&
         useReadingRoomStore.getState().room?.status === 'ended'
       )
         return;
-      toast.error(payload.message || 'Lỗi kết nối phòng đọc');
+      toast.error(
+        payload.code === 'INTERNAL_ERROR'
+          ? 'An error occurred. Reference: ' + payload.traceId
+          : payload.detail,
+      );
     },
     [ReadingRoomServerEvent.NEW_HIGHLIGHT]: (payload) => {
       useReadingRoomStore.getState().addHighlight(payload);

@@ -3,8 +3,7 @@ import { toast } from 'sonner';
 import { env } from '@/env';
 import { refreshAuthSession } from '@/lib/auth-refresh';
 import { getCsrfToken } from '@/lib/utils';
-import { ErrorResponseDto } from '../types/response';
-import { unwrapApiResponse } from './api-response';
+import { ProblemDetailsDto } from '../types/response';
 
 const clientApi = axios.create({
   baseURL: env.NEXT_PUBLIC_NEST_API_URL,
@@ -30,7 +29,7 @@ clientApi.interceptors.request.use(
 
 clientApi.interceptors.response.use(
   (response) => response,
-  async (axiosError: AxiosError<ErrorResponseDto>) => {
+  async (axiosError: AxiosError<ProblemDetailsDto>) => {
     const originalRequest = axiosError.config as
       | (AxiosRequestConfig & { _retry?: boolean; skipAuthRedirect?: boolean })
       | undefined;
@@ -42,18 +41,22 @@ clientApi.interceptors.response.use(
       if (ok) {
         return clientApi(originalRequest);
       }
-      if (!originalRequest.skipAuthRedirect && typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      if (
+        !originalRequest.skipAuthRedirect &&
+        typeof window !== 'undefined' &&
+        !window.location.pathname.startsWith('/login')
+      ) {
         // Full page reload is intentional here to clear out React Query cache and Zustand stores on logout
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/login?error=SessionExpired';
       }
     }
 
-    if (status === 403 && (axiosError.response?.data as { error?: string })?.error === 'USER_BANNED') {
+    if (status === 403 && axiosError.response?.data?.code === 'USER_BANNED') {
       toast.error('Tài khoản đã bị cấm', {
         id: 'user-banned',
         description:
-          axiosError.response?.data?.message ||
+          axiosError.response?.data?.detail ||
           'Tài khoản của bạn đã bị cấm. Vui lòng liên hệ quản trị viên.',
         duration: 1000,
       });
@@ -70,8 +73,8 @@ export type ApiRequestConfig = AxiosRequestConfig & {
 export async function apiRequest<T = unknown>(
   config: ApiRequestConfig,
 ): Promise<T> {
-  const result = await clientApi(config);
-  return unwrapApiResponse<T>(result.data);
+  const result = await clientApi<T>(config);
+  return result.data;
 }
 
 export default clientApi;

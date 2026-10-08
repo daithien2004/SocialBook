@@ -1,4 +1,7 @@
-import type { GetAdminBooksParams, GetBooksParams } from '@/features/books/types/book.interface';
+import type {
+  GetAdminBooksParams,
+  GetBooksParams,
+} from '@/features/books/types/book.interface';
 import type { GetChaptersParams } from '@/features/chapters/types/chapter.interface';
 import type {
   CommentRequest,
@@ -65,9 +68,21 @@ export const chapterKeys = {
   detail: (bookSlug: string, chapterSlug: string) =>
     [...chapterKeys.all, 'detail', bookSlug, chapterSlug] as const,
   list: (params: GetChaptersParams) =>
-    [...chapterKeys.all, 'list', params.bookSlug, params.page, params.limit] as const,
+    [
+      ...chapterKeys.all,
+      'list',
+      params.bookSlug,
+      params.page,
+      params.limit,
+    ] as const,
   adminList: (params: GetChaptersParams) =>
-    [...chapterKeys.all, 'admin-list', params.bookSlug, params.page, params.limit] as const,
+    [
+      ...chapterKeys.all,
+      'admin-list',
+      params.bookSlug,
+      params.page,
+      params.limit,
+    ] as const,
   byId: (bookSlug: string, chapterId: string) =>
     [...chapterKeys.all, 'by-id', bookSlug, chapterId] as const,
   importStatus: (bookSlug: string, jobId: string, timestamp?: number) =>
@@ -84,7 +99,7 @@ export const commentKeys = {
       'by-target',
       req.targetId,
       req.parentId ?? 'root',
-      req.cursor,
+      req.page,
       req.limit,
     ] as const,
   byTargetPrefix: (targetId: string, parentId?: string | null) =>
@@ -99,7 +114,8 @@ export const followKeys = {
     [...followKeys.all, 'following', userId] as const,
   followers: (targetUserId: string) =>
     [...followKeys.all, 'followers', targetUserId] as const,
-  status: (targetId: string) => [...followKeys.all, 'status', targetId] as const,
+  status: (targetId: string) =>
+    [...followKeys.all, 'status', targetId] as const,
 };
 
 export const genreKeys = {
@@ -183,7 +199,8 @@ export const reviewKeys = {
 
 export const roomInteractionKeys = {
   all: ['room-interactions'] as const,
-  quotes: (code: string) => [...roomInteractionKeys.all, 'quotes', code] as const,
+  quotes: (code: string) =>
+    [...roomInteractionKeys.all, 'quotes', code] as const,
   comments: (code: string, chapterSlug?: string) =>
     [...roomInteractionKeys.all, 'comments', code, chapterSlug] as const,
   reactions: (code: string, chapterSlug?: string) =>
@@ -204,7 +221,8 @@ export const ttsKeys = {
 
 export const userHighlightKeys = {
   all: ['user-highlights'] as const,
-  byBook: (bookId: string) => [...userHighlightKeys.all, 'book', bookId] as const,
+  byBook: (bookId: string) =>
+    [...userHighlightKeys.all, 'book', bookId] as const,
   byChapter: (chapterId: string) =>
     [...userHighlightKeys.all, 'chapter', chapterId] as const,
 };
@@ -214,8 +232,7 @@ export const userKeys = {
   adminLists: () => [...userKeys.all, 'admin-list'] as const,
   adminList: (query: string) => [...userKeys.adminLists(), query] as const,
   overview: (userId: string) => [...userKeys.all, 'overview', userId] as const,
-  readingPreferences: () =>
-    [...userKeys.all, 'reading-preferences'] as const,
+  readingPreferences: () => [...userKeys.all, 'reading-preferences'] as const,
   search: (params: SearchUsersParams) =>
     [...userKeys.all, 'search', params] as const,
 };

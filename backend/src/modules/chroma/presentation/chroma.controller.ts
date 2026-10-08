@@ -1,5 +1,12 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
@@ -18,7 +25,10 @@ import { AskChatbotCommand } from '@/modules/chroma/application/commands/ask-cha
 import { ClearCollectionCommand } from '@/modules/chroma/application/commands/clear-collection/clear-collection.command';
 import { ReindexAllCommand } from '@/modules/chroma/application/commands/reindex-all/reindex-all.command';
 import { GetCollectionStatsQuery } from '@/modules/chroma/application/queries/get-collection-stats/get-collection-stats.query';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
+import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('chroma')
 export class ChromaController {
   constructor(
@@ -40,15 +50,23 @@ export class ChromaController {
 
     const result = await this.commandBus.execute(command);
 
-    return {
-      message: 'Search completed successfully',
-      data: new SearchResponseDto(result.results, result.query, result.total),
-    };
+    return new SearchResponseDto(result.results, result.query, result.total);
   }
 
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('index')
+  @ApiCreatedResponse({
+    schema: {
+      type: 'object',
+      required: ['success'],
+      properties: {
+        success: { type: 'boolean' },
+        documentId: { type: 'string' },
+        error: { type: 'string' },
+      },
+    },
+  })
   async indexDocument(@Body() indexDocumentDto: IndexDocumentDto) {
     const command = new IndexDocumentCommand(
       indexDocumentDto.contentId,
@@ -60,17 +78,35 @@ export class ChromaController {
 
     const result = await this.commandBus.execute(command);
 
-    return {
-      message: result.success
-        ? 'Document indexed successfully'
-        : 'Failed to index document',
-      data: result,
-    };
+    return result;
   }
 
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('batch-index')
+  @HttpCode(200)
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['totalProcessed', 'successful', 'failed', 'errors'],
+      properties: {
+        totalProcessed: { type: 'integer' },
+        successful: { type: 'integer' },
+        failed: { type: 'integer' },
+        errors: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['contentId', 'error'],
+            properties: {
+              contentId: { type: 'string' },
+              error: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+  })
   async batchIndex(@Body() batchIndexDto: BatchIndexDto) {
     const command = new BatchIndexCommand(
       batchIndexDto.contentIds,
@@ -80,10 +116,7 @@ export class ChromaController {
 
     const result = await this.commandBus.execute(command);
 
-    return {
-      message: `Batch indexing completed: ${result.successful}/${result.totalProcessed} successful`,
-      data: result,
-    };
+    return result;
   }
 
   @Roles('admin')
@@ -93,23 +126,25 @@ export class ChromaController {
     const command = new ReindexAllCommand();
     const result = await this.commandBus.execute(command);
 
-    return {
-      message: 'Successfully reindexed all content types',
-      data: result,
-    };
+    return result;
   }
 
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('clear')
+  @HttpCode(200)
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['success'],
+      properties: { success: { type: 'boolean' } },
+    },
+  })
   async clearCollection() {
     const command = new ClearCollectionCommand();
     const result = await this.commandBus.execute(command);
 
-    return {
-      message: 'Collection cleared successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Public()
@@ -118,21 +153,25 @@ export class ChromaController {
     const query = new GetCollectionStatsQuery();
     const stats = await this.queryBus.execute(query);
 
-    return {
-      message: 'Collection stats retrieved successfully',
-      data: stats,
-    };
+    return stats;
   }
 
   @Public()
   @Get('health')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['status', 'timestamp'],
+      properties: {
+        status: { type: 'string', enum: ['healthy'] },
+        timestamp: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
   health() {
     return {
-      message: 'Vector store is operational',
-      data: {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-      },
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -142,9 +181,6 @@ export class ChromaController {
   async askChatbot(@Body() body: { question: string }) {
     const command = new AskChatbotCommand(body.question);
     const result = await this.commandBus.execute(command);
-    return {
-      message: 'Chatbot answered successfully',
-      data: result,
-    };
+    return result;
   }
 }

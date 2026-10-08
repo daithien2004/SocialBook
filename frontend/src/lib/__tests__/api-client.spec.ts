@@ -1,13 +1,10 @@
 /** @jest-environment jsdom */
-import clientApi, {
-  apiRequest,
-  type ApiRequestConfig,
-} from '@/lib/api-client';
+import clientApi, { apiRequest, type ApiRequestConfig } from '@/lib/api-client';
 import { refreshAuthSession } from '@/lib/auth-refresh';
 import { toast } from 'sonner';
 
 jest.mock('@/env', () => ({
-  env: { NEXT_PUBLIC_NEST_API_URL: 'http://localhost:5000/api' },
+  env: { NEXT_PUBLIC_NEST_API_URL: 'http://localhost:5000/api/v1' },
 }));
 
 jest.mock('@/lib/auth-refresh', () => ({
@@ -76,7 +73,7 @@ function makeAxiosError(
 
 describe('clientApi configuration', () => {
   it('targets the backend with credentials enabled', () => {
-    expect(clientApi.defaults.baseURL).toBe('http://localhost:5000/api');
+    expect(clientApi.defaults.baseURL).toBe('http://localhost:5000/api/v1');
     expect(clientApi.defaults.withCredentials).toBe(true);
   });
 });
@@ -171,8 +168,12 @@ describe('response interceptor', () => {
 
   it('shows a toast when the account is banned', async () => {
     const error = makeAxiosError({ headers: {} }, 403, {
-      error: 'USER_BANNED',
-      message: 'Đã bị cấm',
+      type: 'about:blank',
+      title: 'Forbidden',
+      status: 403,
+      code: 'USER_BANNED',
+      detail: 'Tài khoản đã bị cấm',
+      traceId: 'trace-1',
     });
 
     await expect(responseOnRejected(error)).rejects.toBe(error);
@@ -193,9 +194,9 @@ describe('apiRequest', () => {
     );
   });
 
-  it('unwraps a plain data envelope', async () => {
+  it('returns a resource body directly', async () => {
     adapter.mockImplementation((config) =>
-      Promise.resolve(okResponse({ data: { id: 'u1' } }, config)),
+      Promise.resolve(okResponse({ id: 'u1' }, config)),
     );
 
     await expect(apiRequest({ url: '/auth/me' })).resolves.toEqual({
@@ -214,9 +215,7 @@ describe('apiRequest', () => {
 
   it('returns a message-only body unchanged', async () => {
     adapter.mockImplementation((config) =>
-      Promise.resolve(
-        okResponse({ message: 'Đăng nhập thành công' }, config),
-      ),
+      Promise.resolve(okResponse({ message: 'Đăng nhập thành công' }, config)),
     );
 
     await expect(apiRequest({ url: '/auth/login' })).resolves.toEqual({

@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { UserId } from '@/modules/users/domain/public-api';
-import { Logger } from '@/shared/logger';
+import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class TokenService {
@@ -12,7 +12,7 @@ export class TokenService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userRepository: IUserRepository,
-    private readonly logger: Logger,
+    private readonly logger: PinoLogger,
     private readonly passwordHasher: IPasswordHasher,
   ) {
     this.logger.setContext(TokenService.name);

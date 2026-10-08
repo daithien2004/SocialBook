@@ -1,17 +1,49 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
 
+class ChapterParagraphResponseDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  content!: string;
+}
+
 export class ChapterResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   title: string;
+
+  @ApiProperty()
   slug: string;
+
+  @ApiProperty()
   bookId: string;
-  paragraphs: Array<{ id: string; content: string }>;
+
+  @ApiProperty({ type: ChapterParagraphResponseDto, isArray: true })
+  paragraphs: ChapterParagraphResponseDto[];
+
+  @ApiProperty()
   paragraphsCount: number;
+
+  @ApiProperty()
   viewsCount: number;
+
+  @ApiProperty()
   orderIndex: number;
+
+  @ApiProperty()
   characterCount: number;
+
+  @ApiProperty()
   contentPreview: string;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
 
   constructor(chapter: ChapterResult) {

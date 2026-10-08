@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, VERSION_NEUTRAL, Version } from '@nestjs/common';
 import {
   HealthCheck,
   HealthCheckService,
@@ -7,7 +7,12 @@ import {
 } from '@nestjs/terminus';
 import { RedisOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
+import { ApiOkResponse } from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('health')
 export class HealthController {
   constructor(
@@ -17,13 +22,37 @@ export class HealthController {
     private readonly configService: ConfigService,
   ) {}
 
-  @Get('liveness')
-  @HealthCheck()
+  @Get('live')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['status'],
+      properties: { status: { type: 'string', enum: ['ok'] } },
+    },
+  })
+  @Version(VERSION_NEUTRAL)
+  @Public()
+  @SkipThrottle()
   checkLiveness() {
-    return this.health.check([() => this.mongoose.pingCheck('mongodb')]);
+    return { status: 'ok' };
   }
 
-  @Get('readiness')
+  @Get('ready')
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['status', 'info', 'error', 'details'],
+      properties: {
+        status: { type: 'string', enum: ['ok', 'error'] },
+        info: { type: 'object', additionalProperties: { type: 'object' } },
+        error: { type: 'object', additionalProperties: { type: 'object' } },
+        details: { type: 'object', additionalProperties: { type: 'object' } },
+      },
+    },
+  })
+  @Version(VERSION_NEUTRAL)
+  @Public()
+  @SkipThrottle()
   @HealthCheck()
   checkReadiness() {
     const redisHost = this.configService.get<string>(

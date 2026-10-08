@@ -13,51 +13,73 @@ export const formatCompact = (num: number) => {
 };
 
 export function formatDate(date: Date | string | null | undefined) {
-  if (!date) return "";
+  if (!date) return '';
 
   const d = date instanceof Date ? date : new Date(date);
 
   if (isNaN(d.getTime())) {
-    return "";
+    return '';
   }
 
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
   }).format(d);
 }
 
 export function formatDateTime(date: Date | string | null | undefined) {
-  if (!date) return "";
+  if (!date) return '';
   const d = date instanceof Date ? date : new Date(date);
-  if (isNaN(d.getTime())) return "";
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(d);
 }
 
 export function formatNumber(num?: number): string {
-  if (!num) return "0";
-  if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-  if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  if (!num) return '0';
+  if (num >= 1_000_000)
+    return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
   return num.toString();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 export const getErrorMessage = (error: unknown): string => {
   if (typeof error === 'string') return error;
-  const err = error as {
-    response?: { data?: { message?: string | string[] } };
-    data?: { message?: string | string[] };
-    message?: string;
-  } | undefined;
-  const data = err?.response?.data ?? err?.data;
-  if (Array.isArray(data?.message)) return data.message.join(', ');
-  return data?.message ?? err?.message ?? 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+  if (!isRecord(error)) return 'An error occurred. Please try again.';
+
+  const response = isRecord(error.response) ? error.response : undefined;
+  const data = response && isRecord(response.data) ? response.data : undefined;
+
+  if (data?.code === 'USER_BANNED') {
+    return 'Your account is banned. Contact an administrator.';
+  }
+  if (data && Array.isArray(data.errors)) {
+    const messages = data.errors.flatMap((item: unknown) =>
+      isRecord(item) && typeof item.message === 'string' ? [item.message] : [],
+    );
+    if (messages.length > 0) return messages.join(', ');
+  }
+  if (data && typeof data.detail === 'string') {
+    if (typeof data.status === 'number' && data.status >= 500) {
+      return typeof data.traceId === 'string'
+        ? 'An error occurred. Reference: ' + data.traceId
+        : 'An error occurred. Please try again.';
+    }
+    return data.detail;
+  }
+  return typeof error.message === 'string'
+    ? error.message
+    : 'An error occurred. Please try again.';
 };
 
 export const getCsrfToken = (): string | null => {
@@ -80,16 +102,16 @@ export function timeAgo(dateString: string) {
   const now = Date.now();
   const diff = (now - date.getTime()) / 1000;
 
-  if (diff < 60) return "Vừa xong";
-  if (diff < 3600) return Math.floor(diff / 60) + " phút trước";
-  if (diff < 86400) return Math.floor(diff / 3600) + " giờ trước";
+  if (diff < 60) return 'Vừa xong';
+  if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
 
-  return Math.floor(diff / 86400) + " ngày trước";
+  return Math.floor(diff / 86400) + ' ngày trước';
 }
 
 export function buildFormData(
   data: object,
-  formData: FormData = new FormData()
+  formData: FormData = new FormData(),
 ): FormData {
   Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
     if (value === undefined || value === null) {

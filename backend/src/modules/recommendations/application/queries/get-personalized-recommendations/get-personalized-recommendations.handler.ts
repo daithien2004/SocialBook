@@ -23,7 +23,7 @@ export class GetPersonalizedRecommendationsHandler {
   async execute(
     query: GetPersonalizedRecommendationsQuery,
   ): Promise<PaginatedRecommendationResult> {
-    const { userId, page = 1, limit = 10 } = query as any;
+    const { userId, page, limit } = query;
     this.logger.log(
       `Getting recommendations for user ${userId} (page ${page}, limit ${limit})`,
     );

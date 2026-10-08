@@ -6,6 +6,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Post,
@@ -13,6 +14,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
 
 import type { Response } from 'express';
 
@@ -33,7 +35,6 @@ import { VerifyOtpCommand } from '@/modules/auth/application/otp/commands/verify
 
 import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 import type { JwtPayload } from '@/modules/auth/infrastructure/auth/strategies/jwt.strategy';
-import type { ApiResponse } from '@/shared/platform/interfaces/api-response.interface';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { UserId } from '@/modules/users/domain/public-api';
 import { AuthCookieService } from '@/modules/auth/application/auth/services/auth-cookie.service';
@@ -47,10 +48,15 @@ import {
   VerifyOtpDto,
 } from '@/modules/auth/presentation/auth/dto/auth.dto';
 import {
+  AccessTokenResponseDto,
   MeResponseDto,
   ProfileResponseDto,
+  ResendOtpResponseDto,
+  WsTicketResponseDto,
 } from '@/modules/auth/presentation/auth/dto/auth-response.dto';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
+@ApiProblemResponses()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -74,10 +80,12 @@ export class AuthController {
   @Throttle({ global: { limit: 5 } })
   @UseGuards(LoginGuard)
   @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AccessTokenResponseDto })
   async login(
     @Req() req: { user: User; ip: string; headers: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse<{ accessToken: string }>> {
+  ): Promise<{ accessToken: string }> {
     const userAgent = req.headers['user-agent'] || 'unknown';
     const command = new LoginCommand(req.user, req.ip, userAgent);
     const result = await this.commandBus.execute(command);
@@ -87,100 +95,94 @@ export class AuthController {
       this.cookieService.refreshTokenCookie(result.refreshToken),
     );
 
-    return {
-      message: 'ÄÄƒng nháº­p thÃ nh cÃ´ng',
-      data: { accessToken: result.accessToken },
-    };
+    return { accessToken: result.accessToken };
   }
 
   @Get('profile')
-  getProfile(
-    @Req() req: { user: JwtValidatedUser },
-  ): ApiResponse<ProfileResponseDto> {
+  @ApiOkResponse({ type: ProfileResponseDto })
+  getProfile(@Req() req: { user: JwtValidatedUser }): ProfileResponseDto {
     const { id, email, role } = req.user;
     return {
-      data: {
-        id,
-        email,
-        role,
-      },
+      id,
+      email,
+      role,
     };
   }
 
   @Get('me')
-  async getMe(
-    @Req() req: { user: JwtValidatedUser },
-  ): Promise<ApiResponse<MeResponseDto>> {
+  @ApiOkResponse({ type: MeResponseDto })
+  async getMe(@Req() req: { user: JwtValidatedUser }): Promise<MeResponseDto> {
     const user = await this.userRepository.findById(UserId.create(req.user.id));
     return {
-      data: {
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role,
-        username: user?.username ?? '',
-        image: user?.image,
-      },
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role,
+      username: user?.username ?? '',
+      image: user?.image,
     };
   }
 
+  @HttpCode(204)
   @Post('logout')
+  @ApiNoContentResponse()
   async logout(
     @Req() req: { user: { id: string } },
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse> {
+  ): Promise<void> {
     const command = new LogoutCommand(req.user.id);
-    const result = await this.commandBus.execute(command);
+    await this.commandBus.execute(command);
 
     const refresh = this.cookieService.clearRefreshToken();
     const oauthState = this.cookieService.clearOauthState();
     res.clearCookie(refresh.name, { path: refresh.path });
     res.clearCookie(oauthState.name, { path: oauthState.path });
-
-    return result;
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Post('ws-ticket')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WsTicketResponseDto })
   async getWsTicket(
     @Req() req: { user: JwtPayload },
-  ): Promise<ApiResponse<{ ticket: string }>> {
+  ): Promise<{ ticket: string }> {
     const command = new GenerateWsTicketCommand(req.user.sub, req.user.role);
     const ticket = await this.commandBus.execute(command);
-    return { data: { ticket } };
+    return { ticket };
   }
 
   @Public()
   @Throttle({ global: { limit: 5 } })
   @Post('signup')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
   async signup(@Body() dto: SignupLocalDto) {
     const command = new RegisterCommand(dto.email, dto.username, dto.password);
     await this.commandBus.execute(command);
 
-    return {
-      message: 'MÃ£ OTP Ä‘Ã£ Ä‘Æ°á»£c gá»­i Ä‘áº¿n email cá»§a báº¡n',
-    };
+    return undefined;
   }
 
   @Public()
   @Throttle({ global: { limit: 5 } })
   @Post('verify-otp')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
   async verifyOtp(@Body() body: VerifyOtpDto) {
     const command = new VerifyOtpCommand(body.email, body.otp);
-    const result = await this.commandBus.execute(command);
-    return { message: result };
+    await this.commandBus.execute(command);
+    return undefined;
   }
 
   @Public()
   @Throttle({ global: { limit: 3 } })
   @Post('resend-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: ResendOtpResponseDto })
   async resendOtp(@Body() body: ResendOtpDto) {
     const command = new ResendOtpCommand(body.email);
     const result = await this.commandBus.execute(command);
     return {
-      message: 'Gá»­i láº¡i mÃ£ OTP thÃ nh cÃ´ng',
-      data: {
-        resendCooldown: result.resendCooldown,
-      },
+      resendCooldown: result.resendCooldown,
     };
   }
 
@@ -188,6 +190,8 @@ export class AuthController {
   @Public()
   @Throttle({ global: { limit: 10 } })
   @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AccessTokenResponseDto })
   async refresh(
     @Req()
     req: {
@@ -198,7 +202,7 @@ export class AuthController {
     },
     @Body() body: RefreshTokenDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse<{ accessToken: string }>> {
+  ): Promise<{ accessToken: string }> {
     const refreshToken = body.refreshToken ?? req.cookies?.sb_refresh_token;
     if (!refreshToken) {
       throw new HttpException(
@@ -223,33 +227,31 @@ export class AuthController {
       this.cookieService.refreshTokenCookie(newRefreshToken),
     );
 
-    return {
-      message: 'LÃ m má»›i token thÃ nh cÃ´ng',
-      data: { accessToken },
-    };
+    return { accessToken };
   }
 
   @Public()
   @Throttle({ global: { limit: 3 } })
   @Post('forgot-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     const command = new ForgotPasswordCommand(dto.email);
     await this.commandBus.execute(command);
-    return {
-      message:
-        'MÃ£ OTP Ä‘áº·t láº¡i máº­t kháº©u Ä‘Ã£ Ä‘Æ°á»£c gá»­i Ä‘áº¿n email cá»§a báº¡n',
-    };
+    return undefined;
   }
 
   @Public()
   @Post('reset-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
   async resetPassword(@Body() dto: ResetPasswordDto) {
     const command = new ResetPasswordCommand(
       dto.email,
       dto.otp,
       dto.newPassword,
     );
-    const result = await this.commandBus.execute(command);
-    return { message: result };
+    await this.commandBus.execute(command);
+    return undefined;
   }
 }

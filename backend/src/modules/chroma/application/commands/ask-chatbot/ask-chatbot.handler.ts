@@ -2,7 +2,7 @@ import { AskChatbotCommand } from './ask-chatbot.command';
 import { CommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/modules/chroma/domain/repositories/vector.repository.interface';
-import { IAIPort } from '@/modules/ai/domain';
+import { IAIPort } from '@/modules/ai';
 import { SearchQuery } from '@/modules/chroma/domain/entities/search-query.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { IBookRepository } from '@/modules/books/domain/public-api';

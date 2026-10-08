@@ -1,5 +1,5 @@
 import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
-import { LoggerModule } from '@/shared/logger/logger.module';
+import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 import { getRedisConnectionToken, RedisModule } from '@nestjs-modules/ioredis';
 import { Logger, Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -14,12 +14,14 @@ import Redis from 'ioredis';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CqrsModule } from '@nestjs/cqrs';
+import { randomUUID } from 'node:crypto';
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config';
 import { validateEnv } from './config/env.validation';
 import { HttpExceptionFilter } from './shared/platform/filters/http-exception.filter';
+import { RateLimitConfigModule } from './shared/infrastructure/rate-limit-config.module';
 
 // Clean Architecture Modules
 import { ApplicationModule } from './application/application.module';
@@ -34,6 +36,7 @@ import { PresentationModule } from './presentation/presentation.module';
       validate:
         process.env.SKIP_ENV_VALIDATION === 'true' ? undefined : validateEnv,
     }),
+    RateLimitConfigModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -122,7 +125,40 @@ import { PresentationModule } from './presentation/presentation.module';
     // replica API thÃ¬ má»—i @Cron sáº½ báº¯n N láº§n â€” Ä‘á»‘i soÃ¡t Ä‘Æ¡n hÃ ng sáº½ cháº¡y trÃ¹ng.
     ...(isWorkerProcess() ? [ScheduleModule.forRoot()] : []),
     CqrsModule.forRoot(),
-    LoggerModule,
+    PinoLoggerModule.forRoot({
+      pinoHttp: {
+        genReqId: (request, response) => {
+          const header = request.headers['x-request-id'];
+          const requestId =
+            typeof header === 'string' && /^[a-zA-Z0-9._-]{1,128}$/.test(header)
+              ? header
+              : randomUUID();
+          response.setHeader('x-request-id', requestId);
+          return requestId;
+        },
+        customProps: (request) => ({ traceId: request.id }),
+        redact: {
+          paths: [
+            'req.headers.authorization',
+            'req.headers.cookie',
+            'req.headers.x-csrf-token',
+            'req.body.password',
+            'req.body.refreshToken',
+            'req.body.accessToken',
+            'req.body.token',
+          ],
+          remove: true,
+        },
+        ...(process.env.NODE_ENV !== 'production'
+          ? {
+              transport: {
+                target: 'pino-pretty',
+                options: { colorize: true },
+              },
+            }
+          : {}),
+      },
+    }),
     // Clean Architecture - 3 layers
     InfrastructureModule,
     ApplicationModule,

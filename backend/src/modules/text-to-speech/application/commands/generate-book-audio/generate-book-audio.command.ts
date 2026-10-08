@@ -1,5 +1,7 @@
 import { Command } from '@nestjs/cqrs';
-export class GenerateBookAudioCommand extends Command<any> {
+import type { GenerateBookResult } from './generate-book-audio.handler';
+
+export class GenerateBookAudioCommand extends Command<GenerateBookResult> {
   constructor(
     public readonly bookId: string,
     public readonly forceRegenerate?: boolean,

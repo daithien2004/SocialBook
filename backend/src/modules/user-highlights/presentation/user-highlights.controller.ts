@@ -1,5 +1,7 @@
+import { unpaginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
+  HttpCode,
   Controller,
   Post,
   Body,
@@ -20,7 +22,48 @@ import { DeleteUserHighlightCommand } from '@/modules/user-highlights/applicatio
 import { GetUserHighlightsQuery } from '@/modules/user-highlights/application/queries/get-user-highlights/get-user-highlights.query';
 import { CreateUserHighlightDto } from './dto/create-user-highlight.dto';
 import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 
+class UserHighlightResponseDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiPropertyOptional()
+  bookId?: string;
+
+  @ApiPropertyOptional()
+  chapterId?: string;
+
+  @ApiPropertyOptional()
+  paragraphId?: string;
+
+  @ApiPropertyOptional()
+  content?: string;
+
+  @ApiPropertyOptional()
+  color?: string;
+
+  @ApiPropertyOptional()
+  note?: string;
+
+  @ApiPropertyOptional()
+  createdAt?: Date;
+
+  @ApiPropertyOptional()
+  updatedAt?: Date;
+}
+
+@ApiProblemResponses()
 @Controller('user-highlights')
 @UseGuards(JwtAuthGuard)
 export class UserHighlightsController {
@@ -30,6 +73,7 @@ export class UserHighlightsController {
   ) {}
 
   @Post()
+  @ApiCreatedResponse({ type: UserHighlightResponseDto })
   async createHighlight(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateUserHighlightDto,
@@ -46,28 +90,27 @@ export class UserHighlightsController {
     const highlight = await this.commandBus.execute(command);
 
     return {
-      data: {
-        id: highlight.id,
-        bookId: highlight.bookId,
-        chapterId: highlight.chapterId,
-        paragraphId: highlight.paragraphId,
-        content: highlight.content,
-        color: highlight.color,
-        note: highlight.note,
-        createdAt: highlight.createdAt,
-      },
+      id: highlight.id,
+      bookId: highlight.bookId,
+      chapterId: highlight.chapterId,
+      paragraphId: highlight.paragraphId,
+      content: highlight.content,
+      color: highlight.color,
+      note: highlight.note,
+      createdAt: highlight.createdAt,
     };
   }
 
   @Get('book/:bookId')
+  @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByBook(
     @CurrentUser('id') userId: string,
     @Param('bookId') bookId: string,
   ) {
     const query = new GetUserHighlightsQuery(userId, bookId, undefined);
     const highlights = await this.queryBus.execute(query);
-    return {
-      data: highlights.map((h: any) => ({
+    return unpaginated(
+      highlights.map((h: any) => ({
         id: h.id,
         bookId: h.bookId,
         chapterId: h.chapterId,
@@ -78,18 +121,19 @@ export class UserHighlightsController {
         createdAt: h.createdAt,
         updatedAt: h.updatedAt,
       })),
-    };
+    );
   }
 
   @Get('chapter/:chapterId')
+  @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByChapter(
     @CurrentUser('id') userId: string,
     @Param('chapterId') chapterId: string,
   ) {
     const query = new GetUserHighlightsQuery(userId, undefined, chapterId);
     const highlights = await this.queryBus.execute(query);
-    return {
-      data: highlights.map((h: any) => ({
+    return unpaginated(
+      highlights.map((h: any) => ({
         id: h.id,
         bookId: h.bookId,
         chapterId: h.chapterId,
@@ -100,10 +144,11 @@ export class UserHighlightsController {
         createdAt: h.createdAt,
         updatedAt: h.updatedAt,
       })),
-    };
+    );
   }
 
   @Patch(':id')
+  @ApiOkResponse({ type: UserHighlightResponseDto })
   async updateHighlight(
     @CurrentUser('id') userId: string,
     @Param('id') highlightId: string,
@@ -120,16 +165,16 @@ export class UserHighlightsController {
     const highlight = await this.commandBus.execute(command);
 
     return {
-      data: {
-        id: highlight.id,
-        color: highlight.color,
-        note: highlight.note,
-        updatedAt: highlight.updatedAt,
-      },
+      id: highlight.id,
+      color: highlight.color,
+      note: highlight.note,
+      updatedAt: highlight.updatedAt,
     };
   }
 
+  @HttpCode(204)
   @Delete(':id')
+  @ApiNoContentResponse()
   async deleteHighlight(
     @CurrentUser('id') userId: string,
     @Param('id') highlightId: string,
@@ -141,6 +186,5 @@ export class UserHighlightsController {
       ability,
     );
     await this.commandBus.execute(command);
-    return { success: true };
   }
 }

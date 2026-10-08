@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AdminRateLimitController } from './admin/rate-limit.controller';
 
-import { RateLimitConfigService } from '@/shared/infrastructure/rate-limit-config.service';
 import { GatewaysModule } from './gateways/gateways.module';
 
 import { UsersModule } from '@/modules/users';
@@ -65,6 +64,5 @@ import { HealthModule } from './health/health.module';
     HealthModule,
   ],
   controllers: [AdminRateLimitController],
-  providers: [RateLimitConfigService],
 })
 export class PresentationModule {}

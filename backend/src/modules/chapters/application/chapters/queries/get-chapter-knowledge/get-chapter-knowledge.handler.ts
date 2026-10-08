@@ -4,7 +4,7 @@ import { Logger, NotFoundException } from '@nestjs/common';
 
 import { IChapterKnowledgeRepository } from '@/modules/chapters/domain/chapters/repositories/chapter-knowledge.repository.interface';
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
-import { IAIPort } from '@/modules/ai/domain';
+import { IAIPort } from '@/modules/ai';
 import {
   ChapterKnowledge,
   KnowledgeEntityType,

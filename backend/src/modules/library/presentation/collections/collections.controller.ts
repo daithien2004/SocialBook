@@ -1,3 +1,4 @@
+import { unpaginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateCollectionCommand } from '@/modules/library/application/library/commands/update-collection/update-collection.command';
 import { GetCollectionByIdQuery } from '@/modules/library/application/library/queries/get-collection-by-id/get-collection-by-id.query';
@@ -31,7 +32,19 @@ import {
   Req,
 } from '@nestjs/common';
 import { Request } from 'express';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  getSchemaPath,
+} from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('collections')
 export class CollectionsController {
   constructor(
@@ -40,6 +53,7 @@ export class CollectionsController {
   ) {}
 
   @Post()
+  @ApiCreatedResponse({ type: CollectionResponseDto })
   async create(
     @Req() req: Request & { user: { id: string } },
     @Body() dto: CreateCollectionDto,
@@ -52,14 +66,12 @@ export class CollectionsController {
         dto.isPublic,
       ),
     );
-    return {
-      message: 'Collection created successfully',
-      data: CollectionResponseDto.fromResult(collection),
-    };
+    return CollectionResponseDto.fromResult(collection);
   }
 
   @Public()
   @Get()
+  @ApiPaginatedResponse(CollectionResponseDto, 'offset')
   @HttpCode(HttpStatus.OK)
   async findAll(
     @Query('userId') userId?: string,
@@ -68,17 +80,23 @@ export class CollectionsController {
     const results = await this.queryBus.execute(
       new GetAllCollectionsQuery(userId || '', viewerId),
     );
-    return {
-      message: 'Get collections successfully',
-      data: results.map((r) =>
+    return unpaginated(
+      results.map((r) =>
         CollectionResponseDto.fromResult(r.collection, r.bookCount),
       ),
-    };
+    );
   }
 
   @Public()
   @Get('detail')
   @HttpCode(HttpStatus.OK)
+  @ApiExtraModels(CollectionDetailResponseDto)
+  @ApiOkResponse({
+    schema: {
+      allOf: [{ $ref: getSchemaPath(CollectionDetailResponseDto) }],
+      nullable: true,
+    },
+  })
   async findOneByQuery(
     @Query('userId') userId: string,
     @Query('id') id: string,
@@ -86,19 +104,23 @@ export class CollectionsController {
     const result = await this.queryBus.execute(
       new GetCollectionByIdQuery(userId, id),
     );
-    return {
-      message: 'Get collection successfully',
-      data: result
-        ? CollectionDetailResponseDto.fromResultDetail(
-            result.collection,
-            result.books,
-          )
-        : null,
-    };
+    return result
+      ? CollectionDetailResponseDto.fromResultDetail(
+          result.collection,
+          result.books,
+        )
+      : null;
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiExtraModels(CollectionDetailResponseDto)
+  @ApiOkResponse({
+    schema: {
+      allOf: [{ $ref: getSchemaPath(CollectionDetailResponseDto) }],
+      nullable: true,
+    },
+  })
   async findOne(
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
@@ -106,19 +128,17 @@ export class CollectionsController {
     const result = await this.queryBus.execute(
       new GetCollectionByIdQuery(req.user.id, id),
     );
-    return {
-      message: 'Get collection successfully',
-      data: result
-        ? CollectionDetailResponseDto.fromResultDetail(
-            result.collection,
-            result.books,
-          )
-        : null,
-    };
+    return result
+      ? CollectionDetailResponseDto.fromResultDetail(
+          result.collection,
+          result.books,
+        )
+      : null;
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: CollectionResponseDto })
   async update(
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
@@ -134,14 +154,12 @@ export class CollectionsController {
       dto.isPublic,
     );
     const collection = await this.commandBus.execute(command);
-    return {
-      message: 'Collection updated successfully',
-      data: CollectionResponseDto.fromResult(collection),
-    };
+    return CollectionResponseDto.fromResult(collection);
   }
 
+  @HttpCode(204)
   @Delete(':id')
-  @HttpCode(HttpStatus.OK)
+  @ApiNoContentResponse()
   async remove(
     @Req() req: Request & { user: { id: string } },
     @Param('id') id: string,
@@ -150,8 +168,6 @@ export class CollectionsController {
     await this.commandBus.execute(
       new DeleteCollectionCommand(id, req.user.id, ability),
     );
-    return {
-      message: 'Collection deleted successfully',
-    };
+    return undefined;
   }
 }

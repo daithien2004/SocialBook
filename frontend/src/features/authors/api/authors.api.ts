@@ -32,7 +32,7 @@ export async function getAllAuthors(): Promise<Author[]> {
     method: 'GET',
     params: { limit: 1000 },
   });
-  return authorSchema.array().parse(payload);
+  return authorPageSchema.parse(payload).data;
 }
 
 export async function getAuthor(id: string): Promise<Author> {
@@ -43,7 +43,9 @@ export async function getAuthor(id: string): Promise<Author> {
   return authorSchema.parse(payload);
 }
 
-export async function createAuthor(body: CreateAuthorRequest | FormData): Promise<Author> {
+export async function createAuthor(
+  body: CreateAuthorRequest | FormData,
+): Promise<Author> {
   const payload = await apiRequest<unknown>({
     url: NESTJS_AUTHORS_ENDPOINTS.create,
     method: 'POST',
@@ -52,7 +54,10 @@ export async function createAuthor(body: CreateAuthorRequest | FormData): Promis
   return authorSchema.parse(payload);
 }
 
-export async function updateAuthor({ id, data }: UpdateAuthorRequest): Promise<Author> {
+export async function updateAuthor({
+  id,
+  data,
+}: UpdateAuthorRequest): Promise<Author> {
   const payload = await apiRequest<unknown>({
     url: NESTJS_AUTHORS_ENDPOINTS.update(id),
     method: 'PUT',

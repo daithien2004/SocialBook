@@ -4,20 +4,34 @@ import {
   GenreSummary,
 } from '@/modules/books/domain/books/read-models/book-list.read-model';
 import { SearchBookResult } from '@/modules/search/application/public-api';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class BookResponseDto {
+  @ApiProperty()
   id: string;
+  @ApiProperty()
   title: string;
+  @ApiProperty()
   slug: string;
+  @ApiProperty({ type: Object })
   authorId: { id: string; name: string };
+  @ApiPropertyOptional()
   chapterCount?: number;
+  @ApiProperty({ type: [Object] })
   genres: GenreSummary[];
+  @ApiProperty()
   description: string;
+  @ApiProperty()
   publishedYear: string;
+  @ApiProperty()
   coverUrl: string;
+  @ApiProperty()
   status: string;
+  @ApiProperty({ type: [String] })
   tags: string[];
+  @ApiProperty({ type: [String] })
   likedBy: string[];
+  @ApiProperty({ type: Object })
   stats: {
     views: number;
     likes: number;
@@ -25,10 +39,12 @@ export class BookResponseDto {
     averageRating: number;
     totalRatings: number;
   };
+  @ApiProperty()
   createdAt: Date;
+  @ApiProperty()
   updatedAt: Date;
 
-  private constructor(
+  constructor(
     readModel: BookListReadModel & {
       chapterCount?: number;
       authorName?: string;

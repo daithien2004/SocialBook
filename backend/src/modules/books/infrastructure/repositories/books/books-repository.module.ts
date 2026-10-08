@@ -57,6 +57,11 @@ import { ViewRankingCacheAdapter } from '../../cache/view-ranking-cache.adapter'
       useClass: BookQueryProvider,
     },
   ],
-  exports: [IBookRepository, IBookQueryProvider],
+  exports: [
+    IBookRepository,
+    IBookQueryProvider,
+    IBookCachePort,
+    IViewRankingCachePort,
+  ],
 })
 export class BooksRepositoryModule {}

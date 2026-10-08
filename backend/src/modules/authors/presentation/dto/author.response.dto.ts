@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Author } from '@/modules/authors/domain/entities/author.entity';
 
 export class AuthorResponseDto {
@@ -11,11 +12,24 @@ export class AuthorResponseDto {
     this.updatedAt = author.updatedAt;
   }
 
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   name: string;
+
+  @ApiProperty()
   slug: string;
+
+  @ApiProperty()
   bio: string;
+
+  @ApiProperty()
   photoUrl: string;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
 }

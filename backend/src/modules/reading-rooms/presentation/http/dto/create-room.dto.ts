@@ -7,6 +7,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRoomDto {
   @IsString()
@@ -19,6 +20,7 @@ export class CreateRoomDto {
 
   @IsEnum(['sync', 'free'])
   @IsNotEmpty()
+  @ApiProperty({ enum: ['sync', 'free'] })
   mode!: 'sync' | 'free';
 
   @IsInt()

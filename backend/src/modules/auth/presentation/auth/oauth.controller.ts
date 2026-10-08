@@ -8,6 +8,8 @@ import {
   Query,
   Req,
   Res,
+  VERSION_NEUTRAL,
+  Version,
 } from '@nestjs/common';
 
 import { ConfigService } from '@nestjs/config';
@@ -28,6 +30,7 @@ import {
   UnauthorizedDomainException,
   UserBannedDomainException,
 } from '@/modules/auth/domain/auth/exceptions/auth-exceptions';
+import { ApiResponse } from '@nestjs/swagger';
 
 export function toErrorCode(error: unknown): OAuthErrorCode {
   if (error instanceof ConflictException)
@@ -99,7 +102,13 @@ export class OAuthController {
   }
 
   @Public()
+  @Version(VERSION_NEUTRAL)
   @Get('google')
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects the browser to the Google authorization page.',
+    headers: { Location: { schema: { type: 'string', format: 'uri' } } },
+  })
   startGoogle(
     @Query('callbackUrl') callbackUrl: string | undefined,
     @Res() res: Response,
@@ -108,7 +117,13 @@ export class OAuthController {
   }
 
   @Public()
+  @Version(VERSION_NEUTRAL)
   @Get('github')
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects the browser to the GitHub authorization page.',
+    headers: { Location: { schema: { type: 'string', format: 'uri' } } },
+  })
   startGithub(
     @Query('callbackUrl') callbackUrl: string | undefined,
     @Res() res: Response,
@@ -142,7 +157,13 @@ export class OAuthController {
   }
 
   @Public()
+  @Version(VERSION_NEUTRAL)
   @Get('google/callback')
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects the browser to the frontend OAuth result page.',
+    headers: { Location: { schema: { type: 'string', format: 'uri' } } },
+  })
   callbackGoogle(
     @Query('code') code: string | undefined,
     @Query('state') state: string | undefined,
@@ -153,7 +174,13 @@ export class OAuthController {
   }
 
   @Public()
+  @Version(VERSION_NEUTRAL)
   @Get('github/callback')
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects the browser to the frontend OAuth result page.',
+    headers: { Location: { schema: { type: 'string', format: 'uri' } } },
+  })
   callbackGithub(
     @Query('code') code: string | undefined,
     @Query('state') state: string | undefined,

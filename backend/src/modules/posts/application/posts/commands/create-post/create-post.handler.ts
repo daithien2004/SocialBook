@@ -11,7 +11,7 @@ import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { CreatePostCommand } from './create-post.command';
-import { containsVietnameseToxicWords } from '@/modules/content-moderation/domain';
+import { containsVietnameseToxicWords } from '@/modules/content-moderation';
 import { IPostModerationPort } from '@/modules/posts/domain/posts/interfaces/post-moderation.port';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
 

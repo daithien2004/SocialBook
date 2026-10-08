@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReadingStatus } from '@/modules/library/domain/library/entities/reading-list.entity';
 import {
   ReadingListResult,
@@ -17,9 +18,16 @@ type CollectionInput = {
 };
 
 export class BookLibraryInfoResponseDto {
+  @ApiProperty({ enum: ReadingStatus, nullable: true })
   status: ReadingStatus | null;
+
+  @ApiProperty({ type: () => CollectionResponseDto, isArray: true })
   collections: CollectionResponseDto[];
+
+  @ApiProperty()
   completedChaptersCount: number;
+
+  @ApiProperty()
   totalChapters: number;
 
   constructor(
@@ -56,6 +64,7 @@ export class BookLibraryInfoResponseDto {
 }
 
 export class ChapterProgressResponseDto {
+  @ApiProperty()
   progress: number;
 
   constructor(readingProgress: ReadingProgressResult | null) {
@@ -70,7 +79,10 @@ export class ChapterProgressResponseDto {
 }
 
 export class RecordReadingTimeResponseDto {
+  @ApiProperty()
   success: boolean;
+
+  @ApiProperty()
   timeSpentMinutes: number;
 
   constructor(timeSpentMinutes: number) {
@@ -84,13 +96,28 @@ export class RecordReadingTimeResponseDto {
 }
 
 export class CollectionResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   name: string;
+
+  @ApiProperty({ nullable: true })
   description: string | null;
+
+  @ApiProperty()
   isPublic: boolean;
+
+  @ApiProperty()
   userId: string;
+
+  @ApiPropertyOptional()
   bookCount?: number;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
 
   constructor(props: {
@@ -131,6 +158,7 @@ export class CollectionResponseDto {
 }
 
 export class CollectionDetailResponseDto extends CollectionResponseDto {
+  @ApiProperty({ type: [Object] })
   books: LibraryItemReadModel[];
 
   constructor(props: {
@@ -165,8 +193,13 @@ export class CollectionDetailResponseDto extends CollectionResponseDto {
 }
 
 export class LibraryItemResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   userId: string;
+
+  @ApiProperty({ type: Object })
   bookId: {
     id: string;
     title: string;
@@ -174,17 +207,31 @@ export class LibraryItemResponseDto {
     coverUrl: string;
     authorName: string;
   };
+
+  @ApiProperty({ enum: ReadingStatus })
   status: ReadingStatus;
+
+  @ApiProperty({ type: Object, nullable: true })
   lastReadChapterId: {
     id: string;
     title: string;
     slug: string;
     orderIndex: number;
   } | null;
+
+  @ApiProperty({ type: [String] })
   collectionIds: string[];
+
+  @ApiPropertyOptional()
   totalChapters?: number;
+
+  @ApiPropertyOptional()
   completedChapters?: number;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
 
   constructor(readModel: LibraryItemReadModel) {

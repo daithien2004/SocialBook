@@ -1,21 +1,53 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Comment } from '@/modules/comments/domain/entities/comment.entity';
 
 export class CommentResponseDto {
+  @ApiProperty()
   id: string;
+
+  @ApiProperty()
   targetType: string;
+
+  @ApiProperty()
   targetId: string;
+
+  @ApiProperty({ nullable: true })
   parentId: string | null;
+
+  @ApiProperty()
   content: string;
+
+  @ApiProperty()
   likesCount: number;
+
+  @ApiProperty()
   isFlagged: boolean;
+
+  @ApiProperty()
   moderationReason: string;
+
+  @ApiProperty()
   moderationStatus: string;
+
+  @ApiProperty()
   createdAt: Date;
+
+  @ApiProperty()
   updatedAt: Date;
+
+  @ApiProperty()
   contentPreview: string;
+
+  @ApiProperty()
   wordCount: number;
+
+  @ApiProperty()
   characterCount: number;
+
+  @ApiProperty()
   isReply: boolean;
+
+  @ApiProperty()
   isTopLevel: boolean;
 
   constructor(comment: Comment) {
@@ -56,12 +88,37 @@ export class CommentWithRepliesDto {
 }
 
 export class CommentStatsDto {
+  @ApiProperty()
+  totalComments: number;
+
+  @ApiProperty()
+  pendingModeration: number;
+
+  @ApiProperty()
+  approvedComments: number;
+
+  @ApiProperty()
+  rejectedComments: number;
+
+  @ApiProperty()
+  flaggedComments: number;
+
+  @ApiProperty({ type: 'object', additionalProperties: { type: 'integer' } })
+  commentsByType: Record<string, number>;
+
   constructor(
-    public totalComments: number,
-    public pendingModeration: number,
-    public approvedComments: number,
-    public rejectedComments: number,
-    public flaggedComments: number,
-    public commentsByType: Record<string, number>,
-  ) {}
+    totalComments: number,
+    pendingModeration: number,
+    approvedComments: number,
+    rejectedComments: number,
+    flaggedComments: number,
+    commentsByType: Record<string, number>,
+  ) {
+    this.totalComments = totalComments;
+    this.pendingModeration = pendingModeration;
+    this.approvedComments = approvedComments;
+    this.rejectedComments = rejectedComments;
+    this.flaggedComments = flaggedComments;
+    this.commentsByType = commentsByType;
+  }
 }

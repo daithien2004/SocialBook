@@ -1,17 +1,29 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 
 export class PostResponseDto {
+  @ApiProperty()
   id: string;
 
+  @ApiProperty()
   content: string;
 
+  @ApiProperty({ type: [String] })
   imageUrls: string[];
 
+  @ApiProperty()
   isFlagged: boolean;
 
+  @ApiPropertyOptional()
   moderationStatus?: string;
+
+  @ApiPropertyOptional()
   moderationReason?: string;
 
+  @ApiPropertyOptional({ type: [String] })
+  warnings?: string[];
+
+  @ApiPropertyOptional({ type: Object })
   user?: {
     id: string;
     username: string;
@@ -19,6 +31,7 @@ export class PostResponseDto {
     violationCount?: number;
   };
 
+  @ApiPropertyOptional({ type: Object })
   book?: {
     id: string;
     title: string;
@@ -27,23 +40,29 @@ export class PostResponseDto {
     authorId?: { name: string; bio: string };
   };
 
+  @ApiPropertyOptional()
   likesCount?: number;
 
+  @ApiPropertyOptional()
   commentsCount?: number;
 
+  @ApiPropertyOptional()
   likedByCurrentUser?: boolean;
 
+  @ApiProperty()
   createdAt: Date;
 
+  @ApiProperty()
   updatedAt: Date;
 
-  constructor(post: Post) {
+  constructor(post: Post, warnings?: string[]) {
     this.id = post.id.toString();
     this.content = post.content;
     this.imageUrls = post.imageUrls || [];
     this.isFlagged = post.isFlagged || false;
     this.moderationStatus = post.moderationStatus;
     this.moderationReason = post.moderationReason;
+    this.warnings = warnings;
     this.createdAt = post.createdAt;
     this.updatedAt = post.updatedAt;
 

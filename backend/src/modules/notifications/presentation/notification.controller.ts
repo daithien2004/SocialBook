@@ -1,8 +1,11 @@
+import { unpaginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -22,7 +25,13 @@ import { CreateNotificationDto } from '@/modules/notifications/presentation/dto/
 
 import { FilterNotificationDto } from '@/modules/notifications/presentation/dto/filter-notification.dto';
 import { NotificationResponseDto } from '@/modules/notifications/presentation/dto/notification.response.dto';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import { ApiCreatedResponse, ApiNoContentResponse } from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('notifications')
 export class NotificationController {
   constructor(
@@ -31,6 +40,7 @@ export class NotificationController {
   ) {}
 
   @Get()
+  @ApiPaginatedResponse(NotificationResponseDto, 'offset')
   async getMyNotifications(
     @CurrentUser('id') userId: string,
     @Query() filter: FilterNotificationDto,
@@ -44,33 +54,33 @@ export class NotificationController {
 
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get notifications successfully',
-      data: result.map(
+    return unpaginated(
+      result.map(
         (notification: any) => new NotificationResponseDto(notification),
       ),
-    };
+    );
   }
 
   @Patch('read-all')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
   async markAllRead(@CurrentUser('id') userId: string) {
     const command = new MarkAllNotificationsReadCommand(userId);
     await this.commandBus.execute(command);
-    return {
-      message: 'All notifications marked as read',
-    };
+    return undefined;
   }
 
   @Patch(':id/read')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
   async markRead(@Param('id') id: string, @CurrentUser('id') userId: string) {
     const command = new MarkNotificationReadCommand(userId, id);
     await this.commandBus.execute(command);
-    return {
-      message: 'Notification marked as read',
-    };
+    return undefined;
   }
 
   @Post()
+  @ApiCreatedResponse({ type: NotificationResponseDto })
   @Roles('admin')
   @UseGuards(RolesGuard)
   async create(@Body() dto: CreateNotificationDto) {
@@ -85,9 +95,6 @@ export class NotificationController {
 
     const notification = await this.commandBus.execute(command);
 
-    return {
-      message: 'Notification created successfully',
-      data: new NotificationResponseDto(notification),
-    };
+    return new NotificationResponseDto(notification);
   }
 }

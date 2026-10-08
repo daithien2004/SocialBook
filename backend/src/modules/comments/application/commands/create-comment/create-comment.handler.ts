@@ -10,7 +10,7 @@ import { CommentId } from '@/modules/comments/domain/value-objects/comment-id.vo
 import { TargetId } from '@/modules/comments/domain/value-objects/target-id.vo';
 import { CommentTargetType } from '@/modules/comments/domain/value-objects/comment-target-type.vo';
 import { CreateCommentCommand } from './create-comment.command';
-import { containsVietnameseToxicWords } from '@/modules/content-moderation/domain';
+import { containsVietnameseToxicWords } from '@/modules/content-moderation';
 
 @CommandHandler(CreateCommentCommand)
 export class CreateCommentHandler implements ICommandHandler<

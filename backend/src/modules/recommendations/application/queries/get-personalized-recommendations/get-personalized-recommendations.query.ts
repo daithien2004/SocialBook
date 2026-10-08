@@ -1,5 +1,7 @@
 import { Query } from '@nestjs/cqrs';
-export class GetPersonalizedRecommendationsQuery extends Query<any> {
+import type { PaginatedRecommendationResult } from '@/modules/recommendations/domain/interfaces/recommendation-result';
+
+export class GetPersonalizedRecommendationsQuery extends Query<PaginatedRecommendationResult> {
   constructor(
     public readonly userId: string,
     public readonly page: number,

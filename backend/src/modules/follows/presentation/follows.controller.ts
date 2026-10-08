@@ -1,6 +1,8 @@
+import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import {
+  HttpCode,
   Body,
   Controller,
   Delete,
@@ -29,7 +31,17 @@ import { GetFollowStatusQuery } from '@/modules/follows/application/queries/get-
 import { GetFollowsQuery } from '@/modules/follows/application/queries/get-follows/get-follows.query';
 import { GetFollowingQuery } from '@/modules/follows/application/queries/get-following-with-user-info/get-following.query';
 import { GetFollowersQuery } from '@/modules/follows/application/queries/get-followers-with-user-info/get-followers.query';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
+@ApiProblemResponses()
 @Controller('follows')
 export class FollowsController {
   constructor(
@@ -39,30 +51,31 @@ export class FollowsController {
 
   @Public()
   @Get('following')
+  @ApiPaginatedResponse(FollowResponseDto, 'offset')
   async getFollowingList(@Query('userId') userId: string) {
     const query = new GetFollowingQuery(userId);
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get following list successfully',
-      data: result.data.map((item) => new FollowResponseDto(item)),
-      meta: result.meta,
-    };
+    return paginated(
+      result.data.map((item) => new FollowResponseDto(item)),
+      result.meta,
+    );
   }
 
   @Get('followers')
+  @ApiPaginatedResponse(FollowResponseDto, 'offset')
   async getFollowersList(@Query('targetUserId') targetUserId: string) {
     const query = new GetFollowersQuery(targetUserId);
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get followers list successfully',
-      data: result.data.map((item) => new FollowResponseDto(item)),
-      meta: result.meta,
-    };
+    return paginated(
+      result.data.map((item) => new FollowResponseDto(item)),
+      result.meta,
+    );
   }
 
   @Get('status')
+  @ApiOkResponse({ type: FollowStatusResponseDto })
   async getStatus(
     @CurrentUser('id') userId: string,
     @Query('targetId') targetId: string,
@@ -70,19 +83,17 @@ export class FollowsController {
     const query = new GetFollowStatusQuery(userId, targetId);
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get follow status successfully',
-      data: new FollowStatusResponseDto(
-        result.userId,
-        result.targetId,
-        result.isFollowing,
-        result.isOwner,
-        result.followId,
-      ),
-    };
+    return new FollowStatusResponseDto(
+      result.userId,
+      result.targetId,
+      result.isFollowing,
+      result.isOwner,
+      result.followId,
+    );
   }
 
   @Post()
+  @ApiCreatedResponse({ type: FollowResponseDto })
   async create(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateFollowDto,
@@ -90,13 +101,12 @@ export class FollowsController {
     const command = new CreateFollowCommand(userId, dto.targetId, dto.status);
     const follow = await this.commandBus.execute(command);
 
-    return {
-      message: 'Follow created successfully',
-      data: new FollowResponseDto(follow),
-    };
+    return new FollowResponseDto(follow);
   }
 
+  @HttpCode(204)
   @Delete(':targetId')
+  @ApiNoContentResponse()
   async unfollow(
     @CurrentUser('id') userId: string,
     @Param('targetId') targetId: string,
@@ -104,22 +114,19 @@ export class FollowsController {
     const command = new DeleteFollowCommand(userId, targetId);
     await this.commandBus.execute(command);
 
-    return {
-      message: 'Unfollowed successfully',
-    };
+    return undefined;
   }
 
   @Get('stats')
   @Public()
+  @ApiOkResponse({ type: FollowStatsResponseDto })
   getStats() {
-    return {
-      message: 'Get follow stats not yet implemented',
-      data: new FollowStatsResponseDto(0, 0, 0, 0, []),
-    };
+    return new FollowStatsResponseDto(0, 0, 0, 0, []);
   }
 
   @Get('all')
   @Public()
+  @ApiPaginatedResponse(FollowResponseDto, 'offset')
   async getAll(@Query() filter: FilterFollowDto) {
     const query = new GetFollowsQuery(
       filter.userId,
@@ -129,10 +136,9 @@ export class FollowsController {
     );
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get all follows successfully',
-      data: result.data.map((follow) => new FollowResponseDto(follow)),
-      meta: result.meta,
-    };
+    return paginated(
+      result.data.map((follow) => new FollowResponseDto(follow)),
+      result.meta,
+    );
   }
 }

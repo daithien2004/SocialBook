@@ -1,4 +1,4 @@
-import { GenerateAudioJobPayload } from '@/modules/text-to-speech/application/public-api';
+import type { GenerateAudioJobPayload } from './jobs/tts-job.payload';
 
 export const IAudioQueuePort = Symbol('IAudioQueuePort');
 

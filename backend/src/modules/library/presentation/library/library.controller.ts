@@ -1,3 +1,4 @@
+import { unpaginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateStatusCommand } from '@/modules/library/application/library/commands/update-status/update-status.command';
 import { ProcessReadingSessionCommand } from '@/modules/library/application/library/commands/process-reading-session/process-reading-session.command';
@@ -24,6 +25,7 @@ import {
   RecordReadingTimeResponseDto,
 } from '@/modules/library/presentation/library/dto/library.response.dto';
 import {
+  HttpCode,
   Body,
   Controller,
   Delete,
@@ -34,7 +36,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
 
+@ApiProblemResponses()
 @Controller('library')
 export class LibraryController {
   constructor(
@@ -43,6 +51,7 @@ export class LibraryController {
   ) {}
 
   @Get()
+  @ApiPaginatedResponse(LibraryItemResponseDto, 'offset')
   async getLibrary(
     @CurrentUser('id') userId: string,
     @Query('status') status?: string,
@@ -61,24 +70,23 @@ export class LibraryController {
     const query = new GetLibraryQuery(userId, readingStatuses, limitNumber);
     const readingLists = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get library list successfully',
-      data: readingLists.map((rl) => LibraryItemResponseDto.fromReadModel(rl)),
-    };
+    return unpaginated(
+      readingLists.map((rl) => LibraryItemResponseDto.fromReadModel(rl)),
+    );
   }
 
   @Get('knowledge-graph')
+  @ApiOkResponse({ schema: { type: 'object', additionalProperties: true } })
   async getKnowledgeGraph(@CurrentUser('id') userId: string) {
     const query = new GetKnowledgeGraphQuery(userId);
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get knowledge graph successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Post('status')
+  @HttpCode(200)
+  @ApiOkResponse({ type: LibraryItemResponseDto })
   async updateStatus(
     @CurrentUser('id') userId: string,
     @Body() dto: UpdateLibraryStatusDto,
@@ -86,13 +94,11 @@ export class LibraryController {
     const command = new UpdateStatusCommand(userId, dto.bookId, dto.status);
     const readingList = await this.commandBus.execute(command);
 
-    return {
-      message: 'Update library status successfully',
-      data: LibraryItemResponseDto.fromReadModel(readingList),
-    };
+    return LibraryItemResponseDto.fromReadModel(readingList);
   }
 
   @Get('progress')
+  @ApiOkResponse({ type: ChapterProgressResponseDto })
   async getChapterProgress(
     @CurrentUser('id') userId: string,
     @Query('bookId') bookId: string,
@@ -100,13 +106,22 @@ export class LibraryController {
   ) {
     const query = new GetChapterProgressQuery(userId, bookId, chapterId);
     const result = await this.queryBus.execute(query);
-    return {
-      message: 'Get chapter progress successfully',
-      data: ChapterProgressResponseDto.fromResult(result),
-    };
+    return ChapterProgressResponseDto.fromResult(result);
   }
 
   @Post('progress')
+  @HttpCode(200)
+  @ApiExtraModels(LibraryItemResponseDto, ChapterProgressResponseDto)
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      required: ['readingList', 'readingProgress'],
+      properties: {
+        readingList: { $ref: getSchemaPath(LibraryItemResponseDto) },
+        readingProgress: { $ref: getSchemaPath(ChapterProgressResponseDto) },
+      },
+    },
+  })
   async updateProgress(
     @CurrentUser('id') userId: string,
     @Body() updateProgressDto: UpdateProgressDto,
@@ -120,16 +135,16 @@ export class LibraryController {
 
     const result = await this.commandBus.execute(command);
     return {
-      data: {
-        readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
-        readingProgress: ChapterProgressResponseDto.fromResult(
-          result.readingProgress,
-        ),
-      },
+      readingList: LibraryItemResponseDto.fromReadModel(result.readingList),
+      readingProgress: ChapterProgressResponseDto.fromResult(
+        result.readingProgress,
+      ),
     };
   }
 
   @Post('reading-time')
+  @HttpCode(200)
+  @ApiOkResponse({ type: RecordReadingTimeResponseDto })
   async recordReadingTime(
     @CurrentUser('id') userId: string,
     @Body() dto: UpdateReadingTimeDto,
@@ -142,12 +157,11 @@ export class LibraryController {
     );
     const result = await this.commandBus.execute(command);
 
-    return {
-      data: RecordReadingTimeResponseDto.fromResult(result.timeSpentMinutes),
-    };
+    return RecordReadingTimeResponseDto.fromResult(result.timeSpentMinutes);
   }
 
   @Patch('collections')
+  @ApiOkResponse({ type: LibraryItemResponseDto })
   async updateCollections(
     @CurrentUser('id') userId: string,
     @Body() dto: AddToCollectionsDto,
@@ -159,12 +173,10 @@ export class LibraryController {
     );
     const readingList = await this.commandBus.execute(command);
 
-    return {
-      message: 'Update book collections successfully',
-      data: LibraryItemResponseDto.fromReadModel(readingList),
-    };
+    return LibraryItemResponseDto.fromReadModel(readingList);
   }
 
+  @HttpCode(204)
   @Delete(':bookId')
   async remove(
     @CurrentUser('id') userId: string,
@@ -173,12 +185,11 @@ export class LibraryController {
     const command = new RemoveFromLibraryCommand(userId, bookId);
     await this.commandBus.execute(command);
 
-    return {
-      message: 'Remove book from library successfully',
-    };
+    return undefined;
   }
 
   @Get('book/:bookId')
+  @ApiOkResponse({ type: BookLibraryInfoResponseDto })
   async getBookLibraryInfo(
     @CurrentUser('id') userId: string,
     @Param('bookId') bookId: string,
@@ -186,9 +197,6 @@ export class LibraryController {
     const query = new GetBookLibraryInfoQuery(userId, bookId);
     const result = await this.queryBus.execute(query);
 
-    return {
-      message: 'Get book library info successfully',
-      data: BookLibraryInfoResponseDto.fromResult(result),
-    };
+    return BookLibraryInfoResponseDto.fromResult(result);
   }
 }

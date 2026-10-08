@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { ITextToSpeechRepository } from '@/modules/text-to-speech/domain';
+import { ITextToSpeechRepository } from '@/modules/text-to-speech';
 import { AudioPlayedEvent } from '../events/audio-played.event';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
 

@@ -90,9 +90,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   private throwBanned(): never {
     throw new ForbiddenException({
-      statusCode: 403,
+      code: 'USER_BANNED',
       message: 'Tài khoản của bạn đã bị cấm. Vui lòng liên hệ quản trị viên.',
-      error: 'USER_BANNED',
     });
   }
 }

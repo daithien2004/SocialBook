@@ -29,11 +29,12 @@ export function TransferHostModal({
   const members = useReadingRoomStore((s) => s.members);
   const presences = useReadingRoomStore((s) => s.presences);
   const room = useReadingRoomStore((s) => s.room);
+  const hostId = room && 'hostId' in room ? room.hostId : undefined;
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const activeMembers = members.filter((m) => {
     const presence = presences[m.userId];
-    return m.userId !== room?.hostId && !!presence;
+    return m.userId !== hostId && !!presence;
   });
 
   const handleConfirm = () => {
@@ -103,10 +104,7 @@ export function TransferHostModal({
         )}
 
         <div className="flex flex-col gap-2">
-          <Button
-            onClick={handleConfirm}
-            className="w-full gap-2"
-          >
+          <Button onClick={handleConfirm} className="w-full gap-2">
             {selectedId ? (
               <>
                 <Crown size={15} />

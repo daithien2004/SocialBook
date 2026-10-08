@@ -9,7 +9,7 @@ import {
 import { IReviewRepository } from '@/modules/reviews/domain/repositories/review.repository.interface';
 import { Review } from '@/modules/reviews/domain/entities/review.entity';
 import { UpdateReviewDto } from '@/modules/reviews/application/dto/update-review.dto';
-import { containsVietnameseToxicWords } from '@/modules/content-moderation/domain';
+import { containsVietnameseToxicWords } from '@/modules/content-moderation';
 import { Action, Subject, AppAbility } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 

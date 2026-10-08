@@ -29,6 +29,7 @@ export const postSummarySchema = z.object({
   isFlagged: z.boolean(),
   moderationStatus: z.string().optional(),
   moderationReason: z.string().optional(),
+  warnings: z.array(z.string()).optional(),
   user: postAuthorSchema.optional(),
   book: postBookSchema.optional(),
   likesCount: z.number().optional(),
@@ -46,17 +47,14 @@ export type Post = PostDetail;
 export const paginatedPostsSchema = z.object({
   data: z.array(postSummarySchema),
   meta: z.object({
+    limit: z.number(),
     nextCursor: z.string().nullable(),
     hasMore: z.boolean(),
   }),
 });
 export type PaginatedPostsResponse = z.infer<typeof paginatedPostsSchema>;
 
-export const postWithModerationSchema = z.object({
-  data: postDetailSchema,
-  warning: z.string().optional(),
-  message: z.string().optional(),
-});
+export const postWithModerationSchema = postDetailSchema;
 export type PostWithModerationResult = z.infer<typeof postWithModerationSchema>;
 
 export const createPostRequestSchema = z.object({
@@ -83,7 +81,9 @@ export type PaginationParams = z.infer<typeof paginationParamsSchema>;
 export const paginationParamsByUserSchema = paginationParamsSchema.extend({
   userId: z.string(),
 });
-export type PaginationParamsByUser = z.infer<typeof paginationParamsByUserSchema>;
+export type PaginationParamsByUser = z.infer<
+  typeof paginationParamsByUserSchema
+>;
 
 export const deleteImageRequestSchema = z.object({
   imageUrl: z.string(),

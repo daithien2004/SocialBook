@@ -5,5 +5,6 @@ import { SearchController } from './presentation/search.controller';
 @Module({
   imports: [SearchApplicationModule],
   controllers: [SearchController],
+  exports: [SearchApplicationModule],
 })
 export class SearchModule {}

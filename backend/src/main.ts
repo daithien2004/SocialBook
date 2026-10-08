@@ -6,8 +6,12 @@ import {
   Response,
   NextFunction,
 } from 'express';
-import { Logger } from '@/shared/logger/logger.service';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
+import {
+  BadRequestException,
+  ValidationPipe,
+  VersioningType,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
@@ -18,12 +22,12 @@ import { ExpressAdapter } from '@bull-board/express';
 import { Queue } from 'bullmq';
 import { AppModule } from './app.module';
 import { RedisIoAdapter } from './presentation/gateways/core/redis-io.adapter';
-import { TransformInterceptor } from './shared/platform/interceptors/transform.interceptor';
 import { configSwagger } from './config/swagger.config';
 import { isWorkerProcess } from './shared/platform/utils/process-role.util';
 import { timingSafeEqual } from 'crypto';
 import { POST_MODERATION_QUEUE } from './modules/posts/infrastructure/queues/post-moderation/post-moderation.processor';
 import { CHAPTERS_IMPORT_QUEUE } from './modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor';
+import { mapValidationErrors } from './shared/platform/mappers/validation-error.mapper';
 
 async function bootstrap() {
   // A7: entry point của API không bao giờ được chạy ở worker mode. Nếu không có
@@ -59,6 +63,10 @@ async function bootstrap() {
 
   // Set global prefix 'api' for all routes
   app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
 
   // Configure ValidationPipe
   app.useGlobalPipes(
@@ -66,6 +74,12 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
+      exceptionFactory: (errors) =>
+        new BadRequestException({
+          code: 'VALIDATION_ERROR',
+          detail: 'Request validation failed',
+          errors: mapValidationErrors(errors),
+        }),
     }),
   );
 
@@ -98,9 +112,9 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis(redisUrl);
   app.useWebSocketAdapter(redisIoAdapter);
 
-  app.useGlobalInterceptors(new TransformInterceptor());
-
-  configSwagger(app);
+  if (configService.get<string>('env.NODE_ENV') !== 'production') {
+    configSwagger(app);
+  }
 
   // Mục 6: Bull Board — giao diện giám sát queue cho Admin nội bộ.
   // Truy cập tại /queues (BasicAuth bảo vệ, không cần JWT).

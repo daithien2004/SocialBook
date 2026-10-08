@@ -17,9 +17,9 @@ export function useBookShare(book?: Book | null) {
         images: data.images,
       });
 
-      if (result.warning) {
+      if (result.warnings?.[0]) {
         toast.warning('Bài viết đang được xem xét', {
-          description: result.warning,
+          description: result.warnings?.[0],
           duration: 5000,
         });
       } else {

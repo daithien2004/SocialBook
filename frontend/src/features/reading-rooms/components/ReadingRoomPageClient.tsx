@@ -71,7 +71,7 @@ export function ReadingRoomPageClient({
 
   const room = storeRoom || initialRoom;
   const isEnded = room?.status === 'ended';
-  const isHost = room?.hostId === user?.id;
+  const isHost = Boolean(room && 'hostId' in room && room.hostId === user?.id);
   const chapter = chapterData?.chapter;
   const navigation = chapterData?.navigation;
   const savedProgress = progressData?.progress || 0;
@@ -123,7 +123,8 @@ export function ReadingRoomPageClient({
   const { navigateChapter } = useReadingRoomNavigation({
     roomCode,
     isEnded,
-    roomMode: room?.mode,
+    roomMode:
+      room?.mode === 'sync' || room?.mode === 'free' ? room.mode : undefined,
     isHost,
   });
 

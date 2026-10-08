@@ -31,6 +31,6 @@ import { SearchCacheModule } from '@/modules/search/infrastructure/cache/search-
     SearchQueryExpansionService,
     SearchRankingService,
   ],
-  exports: [IntelligentSearchHandler],
+  exports: [IntelligentSearchHandler, SearchCacheModule],
 })
 export class SearchApplicationModule {}

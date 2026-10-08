@@ -17,7 +17,9 @@ import { RequireAuth } from '@/shared/platform/decorators/auth-swagger.decorator
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { TargetType } from '@/modules/likes/domain/value-objects/target-type.vo';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
+@ApiProblemResponses()
 @Controller('likes')
 export class LikesController {
   constructor(
@@ -36,10 +38,7 @@ export class LikesController {
       new ToggleLikeCommand(userId, dto.targetId, dto.targetType as TargetType),
     );
 
-    return {
-      message: result.isLiked ? 'Liked successfully' : 'Unliked successfully',
-      data: result,
-    };
+    return result;
   }
 
   @Public()
@@ -49,10 +48,7 @@ export class LikesController {
     const data = await this.queryBus.execute(
       new GetLikeCountQuery(dto.targetId, dto.targetType as TargetType),
     );
-    return {
-      message: 'Get like count successfully',
-      data,
-    };
+    return data;
   }
 
   @Get('status')
@@ -69,9 +65,6 @@ export class LikesController {
         dto.targetType as TargetType,
       ),
     );
-    return {
-      message: 'Get like status successfully',
-      data,
-    };
+    return data;
   }
 }

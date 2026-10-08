@@ -23,10 +23,7 @@ const CSRF_COOKIES = {
   sb_csrf_token: 'token-1',
 };
 
-function makeRequest(
-  cookies: Record<string, string>,
-  path = '/',
-): NextRequest {
+function makeRequest(cookies: Record<string, string>, path = '/'): NextRequest {
   const cookie = Object.entries(cookies)
     .map(([name, value]) => `${name}=${value}`)
     .join('; ');
@@ -57,7 +54,7 @@ describe('proxy silent refresh', () => {
   let mockFetch: jest.Mock;
 
   beforeEach(() => {
-    process.env.NEST_API_INTERNAL_URL = 'http://backend:5000/api';
+    process.env.NEST_API_INTERNAL_URL = 'http://backend:5000/api/v1';
     mockFetch = jest.fn();
     global.fetch = mockFetch as unknown as typeof fetch;
     jwtVerify.mockImplementation(async (token: string) => {
@@ -299,7 +296,9 @@ describe('proxy silent refresh', () => {
   it('does not redirect public routes when the session is gone', async () => {
     mockFetch.mockResolvedValue(makeRefreshResponse(403, { message: 'nope' }));
 
-    const res = await proxy(makeRequest({ sb_access_token: EXPIRED }, '/books'));
+    const res = await proxy(
+      makeRequest({ sb_access_token: EXPIRED }, '/books'),
+    );
 
     expect(res.status).toBe(200);
   });

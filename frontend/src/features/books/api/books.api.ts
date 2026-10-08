@@ -80,23 +80,23 @@ export async function getBookStats(bookId: string): Promise<BookViewStats> {
 }
 
 export async function getTrendingSearches(): Promise<string[]> {
-  const payload = await apiRequest<unknown>({
+  const payload = await apiRequest<{ data: unknown }>({
     url: '/search/trending-keywords',
     method: 'GET',
   });
-  return z.array(z.string()).parse(payload);
+  return z.array(z.string()).parse(payload.data);
 }
 
 export async function getTopReadBooks(params: {
   timeRange: string;
   limit?: number;
 }): Promise<BookSummary[]> {
-  const payload = await apiRequest<unknown>({
+  const payload = await apiRequest<{ data: unknown }>({
     url: '/books/top-read',
     method: 'GET',
     params,
   });
-  return z.array(bookSummarySchema).parse(payload);
+  return z.array(bookSummarySchema).parse(payload.data);
 }
 
 export async function createBook(formData: FormData): Promise<BookForAdmin> {
