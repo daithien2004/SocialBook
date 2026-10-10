@@ -1,6 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.interface';
 
+type ReadingRoomResponseSource = Pick<
+  ReadingRoomResult,
+  | 'roomId'
+  | 'bookId'
+  | 'hostId'
+  | 'mode'
+  | 'status'
+  | 'currentChapterSlug'
+  | 'maxMembers'
+  | 'membersCount'
+  | 'members'
+  | 'createdAt'
+>;
+
 class ReadingRoomMemberResponseDto {
   @ApiProperty()
   userId!: string;
@@ -40,7 +54,7 @@ export class ReadingRoomResponseDto {
   @ApiProperty()
   createdAt: Date;
 
-  constructor(room: ReadingRoomResult) {
+  constructor(room: ReadingRoomResponseSource) {
     this.roomId = room.roomId;
     this.bookId = room.bookId;
     this.hostId = room.hostId;
@@ -53,11 +67,13 @@ export class ReadingRoomResponseDto {
     this.createdAt = room.createdAt;
   }
 
-  static fromResult(room: ReadingRoomResult): ReadingRoomResponseDto {
+  static fromResult(room: ReadingRoomResponseSource): ReadingRoomResponseDto {
     return new ReadingRoomResponseDto(room);
   }
 
-  static fromArray(rooms: ReadingRoomResult[]): ReadingRoomResponseDto[] {
+  static fromArray(
+    rooms: ReadingRoomResponseSource[],
+  ): ReadingRoomResponseDto[] {
     return rooms.map((room) => new ReadingRoomResponseDto(room));
   }
 }

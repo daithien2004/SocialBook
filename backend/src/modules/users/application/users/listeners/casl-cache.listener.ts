@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
-import { getAuthUserCacheKey } from '@/shared/domain/auth-cache.keys';
+import { getAuthUserCacheKey } from '@/shared/platform/cache/auth-cache.keys';
 import { UserRoleChangedEvent } from '../events/user-role-changed.event';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
@@ -12,7 +12,10 @@ export class CaslCacheListener {
 
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
-  @OnEvent(EventNames.USER_ROLE_CHANGED, { async: true })
+  @OnEvent(EventNames.USER_ROLE_CHANGED, {
+    async: true,
+    suppressErrors: false,
+  })
   async handleUserRoleChangedEvent(event: UserRoleChangedEvent) {
     try {
       this.logger.debug(`Clearing authz caches for user: ${event.userId}`);
@@ -29,6 +32,7 @@ export class CaslCacheListener {
         `Failed to clear authz caches for user ${event.userId}`,
         error,
       );
+      throw error;
     }
   }
 }

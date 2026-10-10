@@ -1,10 +1,11 @@
 import { ForgotPasswordCommand } from './forgot-password.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { BadRequestException } from '@nestjs/common';
-import { IUserRepository } from '@/modules/users/domain/public-api';
-import { UserEmail } from '@/modules/users/domain/public-api';
+import { IUserRepository, UserEmail } from '@/modules/users/domain/public-api';
 import { SendOtpHandler } from '@/modules/auth/application/otp/commands/send-otp/send-otp.handler';
 import { SendOtpCommand } from '@/modules/auth/application/otp/commands/send-otp/send-otp.command';
+
+const RECOVERY_REQUEST_MESSAGE =
+  'If an account supports password recovery, an OTP will be sent.';
 
 @CommandHandler(ForgotPasswordCommand)
 export class ForgotPasswordHandler {
@@ -15,18 +16,13 @@ export class ForgotPasswordHandler {
 
   async execute(command: ForgotPasswordCommand): Promise<string> {
     const emailVO = UserEmail.create(command.email);
-    const existingUser = await this.userRepository.findByEmail(emailVO);
-    if (!existingUser) {
-      throw new BadRequestException('Người dùng không tồn tại');
+    const user = await this.userRepository.findByEmail(emailVO);
+
+    if (!user?.password) {
+      return RECOVERY_REQUEST_MESSAGE;
     }
 
-    if (!existingUser.password) {
-      throw new BadRequestException(
-        'Tài khoản này đăng nhập bằng bên thứ ba nên không thể đổi mật khẩu',
-      );
-    }
-
-    const sendOtpCommand = new SendOtpCommand(command.email);
-    return this.sendOtpUseCase.execute(sendOtpCommand);
+    await this.sendOtpUseCase.execute(new SendOtpCommand(command.email));
+    return RECOVERY_REQUEST_MESSAGE;
   }
 }

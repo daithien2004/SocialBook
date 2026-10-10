@@ -72,3 +72,5 @@ export class TextToSpeech {
 }
 
 export const TextToSpeechSchema = SchemaFactory.createForClass(TextToSpeech);
+
+TextToSpeechSchema.index({ chapterId: 1, status: 1, createdAt: -1, _id: -1 });

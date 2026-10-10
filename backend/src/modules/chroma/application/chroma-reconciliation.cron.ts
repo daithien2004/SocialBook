@@ -37,12 +37,21 @@ export class ChromaReconciliationCron {
       );
 
       for (const book of unindexedBooks) {
+        const jobId = `index-book-${book.id.toString()}`;
+        const existingJob = await this.chromaQueue.getJob(jobId);
+        if (existingJob) {
+          if ((await existingJob.getState()) === 'failed') {
+            await existingJob.retry('failed');
+          }
+          continue;
+        }
+
         // Enqueue vá»›i jobId Ä‘á»ƒ dedup
         await this.chromaQueue.add(
           'index-book',
           { bookId: book.id.toString() },
           {
-            jobId: `index-book-${book.id.toString()}`,
+            jobId,
             delay: 5000,
           },
         );

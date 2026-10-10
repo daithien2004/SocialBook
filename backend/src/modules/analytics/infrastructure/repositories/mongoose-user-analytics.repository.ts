@@ -3,14 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { IUserAnalyticsRepository } from '@/modules/analytics/domain/repositories/user-analytics.repository.interface';
 import { UserEvent as UserEventEntity } from '@/modules/analytics/domain/entities/user-event.entity';
-import { UserPreference as UserPreferenceEntity } from '@/modules/analytics/domain/entities/user-preference.entity';
 import { UserEvent, UserEventDocument } from '../schemas/user-event.schema';
 import {
   UserPreference,
   UserPreferenceDocument,
 } from '../schemas/user-preference.schema';
 import { UserEventMapper } from './user-event.mapper';
-import { UserPreferenceMapper } from './user-preference.mapper';
 
 @Injectable()
 export class MongooseUserAnalyticsRepository implements IUserAnalyticsRepository {
@@ -53,35 +51,6 @@ export class MongooseUserAnalyticsRepository implements IUserAnalyticsRepository
       },
       { upsert: true },
     );
-  }
-
-  async getTopGenresForUser(
-    userId: string,
-    limit = 5,
-  ): Promise<UserPreferenceEntity[]> {
-    const documents = await this.preferenceModel
-      .find({ userId: new Types.ObjectId(userId) })
-      .sort({ score: -1 })
-      .limit(limit)
-      .lean()
-      .exec();
-
-    return documents.map((doc) => UserPreferenceMapper.toDomain(doc));
-  }
-
-  async findPreference(
-    userId: string,
-    genreId: string,
-  ): Promise<UserPreferenceEntity | null> {
-    const document = await this.preferenceModel
-      .findOne({
-        userId: new Types.ObjectId(userId),
-        genreId: new Types.ObjectId(genreId),
-      })
-      .lean()
-      .exec();
-
-    return document ? UserPreferenceMapper.toDomain(document) : null;
   }
 
   async getTrendingBooks(

@@ -12,7 +12,7 @@ export interface CommentReadModelRaw {
   repliesCount?: number;
   isLiked?: boolean;
   isFlagged: boolean;
-  moderationStatus: string;
+  moderationStatus?: string;
   createdAt: Date;
   updatedAt: Date;
   userId: {

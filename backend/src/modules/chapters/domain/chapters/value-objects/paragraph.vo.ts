@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class Paragraph {
   private constructor(
     public readonly id: string,
@@ -6,11 +8,11 @@ export class Paragraph {
 
   static create(id: string, content: string): Paragraph {
     if (!id || id.trim().length === 0) {
-      throw new Error('Paragraph ID cannot be empty');
+      throw new BadRequestDomainException('Paragraph ID cannot be empty');
     }
 
     if (!content || content.trim().length === 0) {
-      throw new Error('Paragraph content cannot be empty');
+      throw new BadRequestDomainException('Paragraph content cannot be empty');
     }
 
     return new Paragraph(id.trim(), content.trim());
@@ -27,13 +29,15 @@ export class Paragraph {
 
   updateContent(newContent: string): void {
     if (!newContent || newContent.trim().length === 0) {
-      throw new Error('Paragraph content cannot be empty');
+      throw new BadRequestDomainException('Paragraph content cannot be empty');
     }
     this._content = newContent.trim();
   }
 
   private static generateId(): string {
-    return Math.random().toString(36).substr(2, 9);
+    return Array.from({ length: 24 }, () =>
+      Math.floor(Math.random() * 16).toString(16),
+    ).join('');
   }
 
   toString(): string {

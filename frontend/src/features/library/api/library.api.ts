@@ -89,8 +89,8 @@ export async function addBookToCollections(
   });
 }
 
-export async function removeBookFromLibrary(bookId: string): Promise<null> {
-  return apiRequest<null>({
+export async function removeBookFromLibrary(bookId: string): Promise<void> {
+  return apiRequest<void>({
     url: NESTJS_LIBRARY_ENDPOINTS.removeBook(bookId),
     method: 'DELETE',
   });
@@ -158,8 +158,8 @@ export async function updateCollection(payload: {
   });
 }
 
-export async function deleteCollection(id: string): Promise<null> {
-  return apiRequest<null>({
+export async function deleteCollection(id: string): Promise<void> {
+  return apiRequest<void>({
     url: NESTJS_LIBRARY_ENDPOINTS.collectionDetail(id),
     method: 'DELETE',
   });

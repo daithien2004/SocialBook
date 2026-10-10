@@ -8,6 +8,8 @@ export class StartChaptersImportHandler implements ICommandHandler<StartChapters
 
   async execute(command: StartChaptersImportCommand) {
     return this.chaptersImportQueue.startImport({
+      actorId: command.actorId,
+      idempotencyKey: command.idempotencyKey,
       bookId: command.bookId,
       chapters: command.chapters,
     });

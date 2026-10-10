@@ -104,7 +104,9 @@ export class AudioWorker extends WorkerHost {
           ChapterId.create(payload.chapterId),
         );
         if (!chapter) {
-          throw new Error(`Chapter ${payload.chapterId} not found`);
+          throw new UnrecoverableError(
+            `Chapter ${payload.chapterId} not found`,
+          );
         }
 
         const text = chapter.paragraphs.map((p) => p.content).join('\n\n');

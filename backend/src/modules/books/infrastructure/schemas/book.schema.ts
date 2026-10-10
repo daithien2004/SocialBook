@@ -5,7 +5,7 @@ import { BaseSoftDeleteSchema } from '@/shared/schemas/base.schema';
 
 export type BookDocument = Book & Document;
 
-@Schema({ timestamps: true }) // tự sinh createdAt, updatedAt
+@Schema({ timestamps: true, versionKey: false }) // tự sinh createdAt, updatedAt
 export class Book extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'Author', required: true })
   authorId!: Types.ObjectId;
@@ -48,6 +48,9 @@ export class Book extends BaseSoftDeleteSchema {
 
   @Prop({ type: Date, default: null })
   vectorIndexedAt!: Date | null;
+
+  @Prop({ type: Number, default: 0 })
+  version!: number;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);

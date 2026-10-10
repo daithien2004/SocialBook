@@ -7,7 +7,20 @@ export default registerAs('env', () => ({
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
 
   // Database
-  MONGO_URI: process.env.MONGO_URI || 'mongodb://localhost:27017/socialbook',
+  MONGO_URI:
+    process.env.MONGO_URI ||
+    'mongodb://localhost:27017/socialbook?replicaSet=rs0&directConnection=true',
+  MONGO_MAX_POOL_SIZE:
+    parseInt(process.env.MONGO_MAX_POOL_SIZE ?? '', 10) || 20,
+  MONGO_MIN_POOL_SIZE: parseInt(process.env.MONGO_MIN_POOL_SIZE ?? '', 10) || 0,
+  MONGO_CONNECT_TIMEOUT_MS:
+    parseInt(process.env.MONGO_CONNECT_TIMEOUT_MS ?? '', 10) || 10000,
+  MONGO_SERVER_SELECTION_TIMEOUT_MS:
+    parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS ?? '', 10) || 10000,
+  MONGO_SOCKET_TIMEOUT_MS:
+    parseInt(process.env.MONGO_SOCKET_TIMEOUT_MS ?? '', 10) || 45000,
+  MONGO_WAIT_QUEUE_TIMEOUT_MS:
+    parseInt(process.env.MONGO_WAIT_QUEUE_TIMEOUT_MS ?? '', 10) || 5000,
 
   // Redis
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
@@ -80,6 +93,12 @@ export default registerAs('env', () => ({
   // Chroma
   CHROMA_URL: process.env.CHROMA_URL || 'http://localhost:8000',
   CHROMA_COLLECTION: process.env.CHROMA_COLLECTION || 'socialbook_vectors',
+  CHROMA_CONNECT_TIMEOUT_MS:
+    parseInt(process.env.CHROMA_CONNECT_TIMEOUT_MS ?? '', 10) || 10_000,
+  CHROMA_HEADERS_TIMEOUT_MS:
+    parseInt(process.env.CHROMA_HEADERS_TIMEOUT_MS ?? '', 10) || 15_000,
+  CHROMA_BODY_TIMEOUT_MS:
+    parseInt(process.env.CHROMA_BODY_TIMEOUT_MS ?? '', 10) || 30_000,
 
   // Cache
   CACHE_TTL: parseInt(process.env.CACHE_TTL ?? '', 10) || 900,

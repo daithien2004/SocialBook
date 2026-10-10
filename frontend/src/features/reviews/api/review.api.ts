@@ -53,8 +53,8 @@ export async function deleteReview({
 }: {
   id: string;
   bookId: string;
-}): Promise<null> {
-  return apiRequest<null>({
+}): Promise<void> {
+  return apiRequest<void>({
     url: NESTJS_REVIEWS_ENDPOINTS.delete(id),
     method: 'DELETE',
   });

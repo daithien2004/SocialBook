@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class CommentDepth {
   static readonly MAX_LEVEL = 3;
 
@@ -5,7 +7,7 @@ export class CommentDepth {
 
   static create(value: number): CommentDepth {
     if (value < 1 || value > CommentDepth.MAX_LEVEL) {
-      throw new Error(
+      throw new BadRequestDomainException(
         `Comment depth must be between 1 and ${CommentDepth.MAX_LEVEL}, got ${value}`,
       );
     }

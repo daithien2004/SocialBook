@@ -11,6 +11,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import Redis from 'ioredis';
+import type { Connection } from 'mongoose';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -19,9 +20,9 @@ import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { envConfig } from './config';
-import { validateEnv } from './config/env.validation';
+import { shouldSkipEnvValidation, validateEnv } from './config/env.validation';
 import { HttpExceptionFilter } from './shared/platform/filters/http-exception.filter';
-import { RateLimitConfigModule } from './shared/infrastructure/rate-limit-config.module';
+import { assertMongoTransactionCapability } from './shared/infrastructure/mongo-transaction-capability';
 
 // Clean Architecture Modules
 import { ApplicationModule } from './application/application.module';
@@ -33,18 +34,44 @@ import { PresentationModule } from './presentation/presentation.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [envConfig],
-      validate:
-        process.env.SKIP_ENV_VALIDATION === 'true' ? undefined : validateEnv,
+      validate: shouldSkipEnvValidation(
+        process.env.NODE_ENV,
+        process.env.SKIP_ENV_VALIDATION,
+      )
+        ? undefined
+        : validateEnv,
     }),
-    RateLimitConfigModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>(
           'env.MONGO_URI',
-          'mongodb://localhost:27017/socialbook',
+          'mongodb://localhost:27017/socialbook?replicaSet=rs0&directConnection=true',
         ),
+        autoIndex: configService.get<string>('env.NODE_ENV') !== 'production',
+        maxPoolSize: configService.get<number>('env.MONGO_MAX_POOL_SIZE', 20),
+        minPoolSize: configService.get<number>('env.MONGO_MIN_POOL_SIZE', 0),
+        connectTimeoutMS: configService.get<number>(
+          'env.MONGO_CONNECT_TIMEOUT_MS',
+          10000,
+        ),
+        serverSelectionTimeoutMS: configService.get<number>(
+          'env.MONGO_SERVER_SELECTION_TIMEOUT_MS',
+          10000,
+        ),
+        socketTimeoutMS: configService.get<number>(
+          'env.MONGO_SOCKET_TIMEOUT_MS',
+          45000,
+        ),
+        waitQueueTimeoutMS: configService.get<number>(
+          'env.MONGO_WAIT_QUEUE_TIMEOUT_MS',
+          5000,
+        ),
+        connectionFactory: async (connection: Connection) => {
+          await assertMongoTransactionCapability(connection);
+          return connection;
+        },
       }),
     }),
     RedisModule.forRootAsync({
@@ -64,7 +91,7 @@ import { PresentationModule } from './presentation/presentation.module';
             db: 0,
             tls:
               host.includes('upstash') || host.includes('rediss')
-                ? { rejectUnauthorized: false }
+                ? {}
                 : undefined,
             connectTimeout: 10000,
             maxRetriesPerRequest: 5,

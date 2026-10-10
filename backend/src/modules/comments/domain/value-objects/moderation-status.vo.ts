@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class ModerationStatus {
   private readonly value: 'pending' | 'approved' | 'rejected';
 
@@ -9,7 +11,7 @@ export class ModerationStatus {
     const validStatuses = ['pending', 'approved', 'rejected'];
 
     if (!status || !validStatuses.includes(status)) {
-      throw new Error(
+      throw new BadRequestDomainException(
         `Moderation status must be one of: ${validStatuses.join(', ')}`,
       );
     }

@@ -86,18 +86,15 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
         return;
       }
 
-      this.logger.log(
-        `🔑 Using HuggingFace API Key: ${hfKey.substring(0, 5)}...${hfKey.substring(hfKey.length - 4)}`,
-      );
+      this.logger.log('Hugging Face API key is configured');
 
       // model cho tiếng Việt
       this._embeddings = this.chromaConnectionFactory.createEmbeddings();
 
-      const chromaUrl = this.chromaConnectionFactory.getChromaUrl();
       const collectionName = this.chromaConnectionFactory.getCollectionName();
 
       this.logger.log(
-        `🌐 Connecting to Chroma at: ${chromaUrl}, Collection: ${collectionName}`,
+        `Connecting to configured Chroma collection: ${collectionName}`,
       );
 
       this._chromaClient = this.chromaConnectionFactory.createChromaClient();
@@ -144,7 +141,9 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
   async save(document: VectorDocument): Promise<void> {
     await this.ensureInitialized();
 
-    await this.vectorStore.addDocuments([this.toLangchainDocument(document)]);
+    await this.vectorStore.addDocuments([this.toLangchainDocument(document)], {
+      ids: [document.id.toString()],
+    });
   }
 
   async saveBatch(documents: VectorDocument[]): Promise<BatchIndexResult> {
@@ -158,7 +157,9 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
       const langchainDocs = documents.map((doc) =>
         this.toLangchainDocument(doc),
       );
-      await this.vectorStore.addDocuments(langchainDocs);
+      await this.vectorStore.addDocuments(langchainDocs, {
+        ids: documents.map((document) => document.id.toString()),
+      });
 
       return {
         totalProcessed: documents.length,
@@ -168,20 +169,16 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(
-        `Batch save failed for ${documents.length} docs, attempting split-and-retry. Error: ${message}`,
-      );
-
-      // Granular Error Handling: Split and retry if batch is large
-      if (documents.length > 1) {
+      if (documents.length > 1 && this.isBatchSizeError(error)) {
+        this.logger.warn(
+          `Chroma rejected a batch of ${documents.length} documents due to its size; splitting it.`,
+        );
         const mid = Math.floor(documents.length / 2);
         const leftHalf = documents.slice(0, mid);
         const rightHalf = documents.slice(mid);
 
-        const [leftResult, rightResult] = await Promise.all([
-          this.saveBatch(leftHalf),
-          this.saveBatch(rightHalf),
-        ]);
+        const leftResult = await this.saveBatch(leftHalf);
+        const rightResult = await this.saveBatch(rightHalf);
 
         return {
           totalProcessed:
@@ -194,12 +191,23 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
 
       // If single document failed, return it as failure
       return {
-        totalProcessed: 1,
+        totalProcessed: documents.length,
         successful: 0,
-        failed: 1,
-        errors: [{ contentId: documents[0].contentId, error: message }],
+        failed: documents.length,
+        errors: documents.map((document) => ({
+          contentId: document.contentId,
+          error: message,
+        })),
       };
     }
+  }
+
+  private isBatchSizeError(error: unknown): boolean {
+    if (!(error instanceof Error)) return false;
+
+    return /(?:batch|request).{0,40}(?:size|too large|too many)|(?:too large|maximum).{0,40}(?:batch|request)/i.test(
+      error.message,
+    );
   }
 
   async findById(id: VectorId): Promise<VectorDocument | null> {
@@ -337,79 +345,6 @@ export class ChromaVectorRepository implements IVectorRepository, OnModuleInit {
         .sort((a, b) => b.score - a.score);
     } catch (error) {
       this.logger.error(`Search failed for query: ${query.query}`, error);
-      throw error;
-    }
-  }
-
-  async searchByContent(
-    content: string,
-    contentType?: ContentType,
-    limit?: number,
-  ): Promise<SearchResult[]> {
-    await this.ensureInitialized();
-
-    try {
-      const filter: Where = {};
-      if (contentType) {
-        filter.contentType = contentType.toString();
-      }
-
-      const results = await this.vectorStore.similaritySearchWithScore(
-        content,
-        limit || 10,
-        Object.keys(filter).length > 0 ? filter : undefined,
-      );
-
-      return results.map(([doc, distance]) => ({
-        document: this.mapToVectorDocument(
-          doc.pageContent,
-          doc.metadata as ChromaMetadata,
-        ),
-        score: this.calculateSimilarityScore(distance),
-      }));
-    } catch (error) {
-      this.logger.error(`Content search failed for: ${content}`, error);
-      throw error;
-    }
-  }
-
-  async findSimilar(
-    documentId: VectorId,
-    limit?: number,
-    threshold?: number,
-  ): Promise<SearchResult[]> {
-    await this.ensureInitialized();
-
-    try {
-      const document = await this.findById(documentId);
-      if (!document) {
-        return [];
-      }
-
-      const filter: Where = {
-        contentType: document.contentType.toString(),
-      };
-
-      const results = await this.vectorStore.similaritySearchWithScore(
-        document.content,
-        limit || this.DEFAULT_SEARCH_LIMIT,
-        filter,
-      );
-
-      return results
-        .map(([doc, distance]) => ({
-          document: this.mapToVectorDocument(
-            doc.pageContent,
-            doc.metadata as ChromaMetadata,
-          ),
-          score: this.calculateSimilarityScore(distance),
-        }))
-        .filter((result) => result.score >= (threshold || 0.7));
-    } catch (error) {
-      this.logger.error(
-        `Similarity search failed for document: ${documentId.toString()}`,
-        error,
-      );
       throw error;
     }
   }

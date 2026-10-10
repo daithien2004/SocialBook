@@ -11,7 +11,6 @@ export abstract class ITextToSpeechRepository {
     language: string,
     voice: string,
   ): Promise<TextToSpeech | null>;
-  abstract findAllByBookId(bookId: string): Promise<TextToSpeech[]>;
   abstract save(tts: TextToSpeech): Promise<TextToSpeech>; // Return updated entity usually
   abstract updateStatus(
     id: string,

@@ -5,6 +5,106 @@ on:
     branches: [develop, main]
 
 jobs:
+  api-contract:
+    name: API Contract - Drift & Breaking Change Check
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      PORT: '5000'
+      MONGO_URI: 'mongodb://localhost:27017/socialbook?replicaSet=rs0&directConnection=true'
+      JWT_ACCESS_SECRET: contract-check-access-secret-at-least-32-chars
+      JWT_REFRESH_SECRET: contract-check-refresh-secret-at-least-32-chars
+      GOOGLE_CLIENT_ID: contract-check-client
+      GOOGLE_CLIENT_SECRET: contract-check-secret
+      GOOGLE_CALLBACK_URL: http://localhost:5000/api/v1/auth/google/callback
+      FRONTEND_URL: http://localhost:3000
+      REDIS_HOST: localhost
+      REDIS_PORT: '6379'
+      BULL_REDIS_HOST: localhost
+      BULL_REDIS_PORT: '6380'
+      BULL_BOARD_PASSWORD: contract-check-bull-board-password
+      CHROMA_URL: http://localhost:8000
+      OPENAPI_CONTRACT_API_URL: http://localhost:5000
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      - name: Start API contract dependencies
+        run: docker compose -f backend/docker-compose.openapi.yml up -d
+
+      - name: Initialize MongoDB replica set
+        run: |
+          mongo_container="$(docker compose -f backend/docker-compose.openapi.yml ps -q mongo)"
+          for attempt in $(seq 1 60); do
+            if docker exec "$mongo_container" mongosh --quiet --eval \
+              "db.adminCommand('ping').ok" | grep -q 1; then
+              break
+            fi
+            sleep 1
+          done
+          docker exec "$mongo_container" mongosh --quiet --eval \
+            "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"
+          for attempt in $(seq 1 30); do
+            if docker exec "$mongo_container" mongosh --quiet --eval \
+              "rs.status().myState === 1" | grep -q true; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'MongoDB replica set did not become primary.'
+          exit 1
+
+      - name: Build backend
+        run: npm run build --workspace=backend
+
+      - name: Export OpenAPI and regenerate frontend types
+        run: |
+          node backend/dist/main.js > /tmp/socialbook-openapi-api.log 2>&1 &
+          api_pid=$!
+          trap 'kill "$api_pid" 2>/dev/null || true; docker compose -f backend/docker-compose.openapi.yml down -v' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:5000/docs/openApi.json > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          if ! curl --fail --silent http://localhost:5000/docs/openApi.json > /dev/null; then
+            cat /tmp/socialbook-openapi-api.log
+            echo 'Backend did not expose the OpenAPI document.'
+            exit 1
+          fi
+          npm run openapi:export --workspace=backend
+          npm run api:generate --workspace=frontend
+          npm test --workspace=backend -- --selectProjects e2e --runInBand --runTestsByPath test/e2e/openapi-runtime-contract.e2e-spec.ts
+          git diff --exit-code -- backend/openapi.json frontend/src/lib/api.generated.ts
+
+      - name: Fetch target branch contract
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_BRANCH"
+          git show FETCH_HEAD:backend/openapi.json > /tmp/base-openapi.json
+
+      - name: Reject breaking OpenAPI changes
+        run: |
+          docker run --rm \
+            -v "$PWD/backend:/revision:ro" \
+            -v "/tmp:/base:ro" \
+            tufin/oasdiff:v1.32.1 breaking \
+            /base/base-openapi.json /revision/openapi.json
+
   backend:
     name: Backend - Lint & Test & Build
     runs-on: ubuntu-latest
@@ -32,6 +132,9 @@ jobs:
 
       - name: Unit tests
         run: cd backend && npm run test:unit
+
+      - name: Integration tests
+        run: cd backend && npm run test:integration -- --runInBand
 
       - name: Build
         run: cd backend && npm run build

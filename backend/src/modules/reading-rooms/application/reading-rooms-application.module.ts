@@ -16,9 +16,6 @@ import { RemoveHighlightHandler } from './commands/remove-highlight/remove-highl
 import { AIApplicationModule } from '@/modules/ai/application/public-api';
 import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 
-import { IPresencePort } from '@/modules/reading-rooms/domain/interfaces/presence.port';
-import { ReadingRoomPresenceService } from './presence/reading-room-presence.service';
-
 export const CommandHandlers = [
   CreateRoomHandler,
   JoinRoomHandler,
@@ -43,15 +40,7 @@ export const QueryHandlers = [
     ChaptersRepositoryModule,
     AIApplicationModule,
   ],
-  providers: [
-    ...CommandHandlers,
-    ...QueryHandlers,
-    ReadingRoomPresenceService,
-    {
-      provide: IPresencePort,
-      useExisting: ReadingRoomPresenceService,
-    },
-  ],
+  providers: [...CommandHandlers, ...QueryHandlers],
   exports: [...CommandHandlers, ...QueryHandlers],
 })
 export class ReadingRoomsApplicationModule {}

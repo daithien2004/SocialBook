@@ -31,15 +31,23 @@ export interface PostProps {
 
 export class Post extends Entity<string> {
   private _props: PostProps;
+  private _loadedVersion: number;
+  private _isNew: boolean;
+  private _dirty: boolean;
 
   private constructor(
     id: string,
     props: PostProps,
     createdAt?: Date,
     updatedAt?: Date,
+    isNew = true,
+    loadedVersion = 0,
   ) {
     super(id, createdAt, updatedAt);
     this._props = props;
+    this._isNew = isNew;
+    this._loadedVersion = loadedVersion;
+    this._dirty = isNew;
   }
 
   static create(props: {
@@ -89,6 +97,7 @@ export class Post extends Entity<string> {
     likedByCurrentUser?: boolean;
     createdAt: Date;
     updatedAt: Date;
+    version?: number;
     author?: {
       id: string;
       username: string;
@@ -123,7 +132,32 @@ export class Post extends Entity<string> {
       },
       props.createdAt,
       props.updatedAt,
+      false,
+      props.version ?? 0,
     );
+  }
+
+  get loadedVersion(): number {
+    return this._loadedVersion;
+  }
+
+  get isNew(): boolean {
+    return this._isNew;
+  }
+
+  get isDirty(): boolean {
+    return this._dirty;
+  }
+
+  markPersisted(version: number): void {
+    this._loadedVersion = version;
+    this._isNew = false;
+    this._dirty = false;
+  }
+
+  protected override markAsUpdated(): void {
+    super.markAsUpdated();
+    this._dirty = true;
   }
 
   get userId(): string {

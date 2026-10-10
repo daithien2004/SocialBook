@@ -1,4 +1,5 @@
 import { VectorId } from '../value-objects/vector-id.vo';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { EmbeddingVector } from '../value-objects/embedding-vector.vo';
 import { ContentType } from '../value-objects/content-type.vo';
 
@@ -36,7 +37,7 @@ export class SearchQuery {
     threshold?: number;
   }): SearchQuery {
     if (!props.query || props.query.trim().length === 0) {
-      throw new Error('Query cannot be empty');
+      throw new BadRequestDomainException('Query cannot be empty');
     }
 
     return new SearchQuery(
@@ -132,14 +133,14 @@ export class SearchQuery {
 
   updateLimit(newLimit: number): void {
     if (newLimit <= 0) {
-      throw new Error('Limit must be greater than 0');
+      throw new BadRequestDomainException('Limit must be greater than 0');
     }
     this._props.limit = newLimit;
   }
 
   updateThreshold(newThreshold: number): void {
     if (newThreshold < 0 || newThreshold > 1) {
-      throw new Error('Threshold must be between 0 and 1');
+      throw new BadRequestDomainException('Threshold must be between 0 and 1');
     }
     this._props.threshold = newThreshold;
   }

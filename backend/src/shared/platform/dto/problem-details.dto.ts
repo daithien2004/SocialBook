@@ -12,7 +12,11 @@ export class ProblemFieldErrorDto {
 }
 
 export class ProblemDetailsDto {
-  @ApiProperty({ example: 'about:blank' })
+  @ApiProperty({
+    type: String,
+    enum: ['about:blank'],
+    example: 'about:blank',
+  })
   type = 'about:blank' as const;
 
   @ApiProperty({ example: 'Not Found' })

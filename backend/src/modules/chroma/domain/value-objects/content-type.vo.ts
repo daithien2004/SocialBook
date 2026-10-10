@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class ContentType {
   private readonly value: 'book' | 'author' | 'chapter';
 
@@ -9,7 +11,9 @@ export class ContentType {
     const validTypes = ['book', 'author', 'chapter'];
 
     if (!type || !validTypes.includes(type)) {
-      throw new Error('Content type must be book, author, or chapter');
+      throw new BadRequestDomainException(
+        'Content type must be book, author, or chapter',
+      );
     }
 
     return new ContentType(type as 'book' | 'author' | 'chapter');

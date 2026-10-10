@@ -1,4 +1,5 @@
 import {
+  buildPaginationMeta,
   PaginatedResult,
   PaginationMeta,
   PaginationOptions,
@@ -9,24 +10,19 @@ import { FollowWithUserInfo } from './follow.mapper';
 import { Follow as FollowEntity } from '@/modules/follows/domain/entities/follow.entity';
 import {
   FollowFilter,
-  FollowStats,
   FollowStatusResult,
   IFollowRepository,
 } from '@/modules/follows/domain/repositories/follow.repository.interface';
-import { FollowId } from '@/modules/follows/domain/value-objects/follow-id.vo';
 import { TargetId } from '@/modules/follows/domain/value-objects/target-id.vo';
 import { UserId } from '@/modules/follows/domain/value-objects/user-id.vo';
 import {
   Follow,
   FollowDocument,
 } from '@/modules/follows/infrastructure/schemas/follow.schema';
-import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { FollowMapper } from './follow.mapper';
-
-import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
 
 interface AggregationFollowRow {
   _id: Types.ObjectId;
@@ -44,25 +40,11 @@ interface AggregationFollowRow {
 }
 
 @Injectable()
-export class FollowRepository
-  extends BaseMongoRepository<FollowEntity, FollowDocument, FollowId>
-  implements IFollowRepository
-{
+export class FollowRepository implements IFollowRepository {
   constructor(
     @InjectModel(Follow.name)
     private readonly followModel: Model<FollowDocument>,
-    private readonly idGenerator: IIdGenerator,
-  ) {
-    super(followModel);
-  }
-
-  async findById(id: FollowId): Promise<FollowEntity | null> {
-    const document = await this.followModel
-      .findById(id.toString())
-      .lean()
-      .exec();
-    return document ? this.toDomain(document) : null;
-  }
+  ) {}
 
   async findByUser(
     userId: UserId,
@@ -74,7 +56,7 @@ export class FollowRepository
       status: true,
     };
 
-    return this.executePaginatedQuery(queryFilter, pagination, sort);
+    return this.paginate(queryFilter, pagination, sort);
   }
 
   async findByUserWithUserInfo(
@@ -277,7 +259,7 @@ export class FollowRepository
       status: true,
     };
 
-    return this.executePaginatedQuery(queryFilter, pagination, sort);
+    return this.paginate(queryFilter, pagination, sort);
   }
 
   async findAll(
@@ -310,23 +292,20 @@ export class FollowRepository
       }
     }
 
-    return this.executePaginatedQuery(queryFilter, pagination, sort);
+    return this.paginate(queryFilter, pagination, sort);
   }
 
   async save(follow: FollowEntity): Promise<void> {
-    return this.baseSave(follow);
-  }
-
-  async delete(id: FollowId): Promise<void> {
-    return this.baseDelete(id);
-  }
-
-  async softDelete(id: FollowId): Promise<void> {
+    const id = new Types.ObjectId(follow.id.toString());
     await this.followModel
-      .findByIdAndUpdate(id.toString(), {
-        status: false,
-        updatedAt: new Date(),
-      })
+      .findByIdAndUpdate(
+        id,
+        {
+          $set: FollowMapper.toPersistence(follow),
+          $setOnInsert: { _id: id },
+        },
+        { upsert: true },
+      )
       .exec();
   }
 
@@ -338,6 +317,31 @@ export class FollowRepository
     entity: FollowEntity,
   ): ReturnType<typeof FollowMapper.toPersistence> {
     return FollowMapper.toPersistence(entity);
+  }
+
+  private async paginate(
+    filter: FilterQuery<FollowDocument>,
+    pagination: PaginationOptions = { page: 1, limit: 10 },
+    sort?: SortOptions,
+  ): Promise<PaginatedResult<FollowEntity>> {
+    const skip = (pagination.page - 1) * pagination.limit;
+    const sortField = sort?.sortBy ?? 'createdAt';
+    const sortDirection = sort?.order === 'asc' ? 1 : -1;
+    const [documents, total] = await Promise.all([
+      this.followModel
+        .find(filter)
+        .sort({ [sortField]: sortDirection })
+        .skip(skip)
+        .limit(pagination.limit)
+        .lean()
+        .exec(),
+      this.followModel.countDocuments(filter).exec(),
+    ]);
+
+    return {
+      data: documents.map((document) => FollowMapper.toDomain(document)),
+      meta: buildPaginationMeta(pagination.page, pagination.limit, total),
+    };
   }
 
   async exists(
@@ -376,15 +380,6 @@ export class FollowRepository
     };
   }
 
-  async countFollowing(userId: UserId): Promise<number> {
-    return await this.followModel
-      .countDocuments({
-        userId: new Types.ObjectId(userId.toString()),
-        status: true,
-      })
-      .exec();
-  }
-
   async countFollowers(targetId: TargetId): Promise<number> {
     return await this.followModel
       .countDocuments({
@@ -392,169 +387,5 @@ export class FollowRepository
         status: true,
       })
       .exec();
-  }
-
-  async countActiveFollows(): Promise<number> {
-    return await this.followModel.countDocuments({ status: true }).exec();
-  }
-
-  async countInactiveFollows(): Promise<number> {
-    return await this.followModel.countDocuments({ status: false }).exec();
-  }
-
-  async getFollowingIds(userId: UserId): Promise<string[]> {
-    const documents = await this.followModel
-      .find({
-        userId: new Types.ObjectId(userId.toString()),
-        status: true,
-      })
-      .select('targetId')
-      .lean()
-      .exec();
-
-    return documents.map((doc) => doc.targetId.toString());
-  }
-
-  async getFollowerIds(targetId: TargetId): Promise<string[]> {
-    const documents = await this.followModel
-      .find({
-        targetId: new Types.ObjectId(targetId.toString()),
-        status: true,
-      })
-      .select('userId')
-      .lean()
-      .exec();
-
-    return documents.map((doc) => doc.userId.toString());
-  }
-
-  async findMutualFollows(
-    userId1: UserId,
-    userId2: UserId,
-  ): Promise<FollowEntity[]> {
-    // Find users that both userId1 and userId2 are following
-    const following1 = await this.getFollowingIds(userId1);
-    const following2 = await this.getFollowingIds(userId2);
-
-    const mutualIds = following1.filter((id) => following2.includes(id));
-
-    if (mutualIds.length === 0) return [];
-
-    const documents = await this.followModel
-      .find({
-        userId: new Types.ObjectId(userId1.toString()),
-        targetId: { $in: mutualIds.map((id) => new Types.ObjectId(id)) },
-        status: true,
-      })
-      .lean()
-      .exec();
-
-    return documents.map((doc) => this.toDomain(doc));
-  }
-
-  async getFollowStats(userId: UserId): Promise<FollowStats> {
-    const [totalFollowing, totalFollowers, recentFollows] = await Promise.all([
-      this.countFollowing(userId),
-      this.countFollowers(TargetId.create(userId.toString())),
-      this.getRecentFollows({ page: 1, limit: 5 }),
-    ]);
-
-    return {
-      totalFollowing,
-      totalFollowers,
-      followingCount: totalFollowing,
-      followersCount: totalFollowers,
-      recentFollows: recentFollows.data,
-    };
-  }
-
-  async batchDelete(ids: FollowId[]): Promise<void> {
-    const objectIds = ids.map((id) => new Types.ObjectId(id.toString()));
-    await this.followModel.deleteMany({ _id: { $in: objectIds } }).exec();
-  }
-
-  async batchUpdateStatus(ids: FollowId[], status: boolean): Promise<void> {
-    const objectIds = ids.map((id) => new Types.ObjectId(id.toString()));
-    await this.followModel
-      .updateMany(
-        { _id: { $in: objectIds } },
-        { status, updatedAt: new Date() },
-      )
-      .exec();
-  }
-
-  async getRecentFollows(
-    pagination?: PaginationOptions,
-  ): Promise<PaginatedResult<FollowEntity>> {
-    const queryFilter: FilterQuery<FollowDocument> = { status: true };
-    const sortOptions: SortOptions = { sortBy: 'createdAt', order: 'desc' };
-
-    return this.executePaginatedQuery(queryFilter, pagination, sortOptions);
-  }
-
-  async getPopularFollows(
-    pagination?: PaginationOptions,
-  ): Promise<PaginatedResult<FollowEntity>> {
-    // For follows, "popular" could mean most followed targets
-    // This would require aggregation, but for now we'll just return recent follows
-    return this.getRecentFollows(pagination);
-  }
-
-  async followUser(userId: UserId, targetId: TargetId): Promise<FollowEntity> {
-    const existingFollow = await this.exists(userId, targetId);
-
-    if (existingFollow) {
-      existingFollow.activate();
-      await this.save(existingFollow);
-      return existingFollow;
-    }
-
-    const follow = FollowEntity.create({
-      id: FollowId.create(this.idGenerator.generate()),
-      userId: userId.toString(),
-      targetId: targetId.toString(),
-      status: true,
-    });
-
-    await this.save(follow);
-    return follow;
-  }
-
-  async unfollowUser(
-    userId: UserId,
-    targetId: TargetId,
-  ): Promise<FollowEntity> {
-    const existingFollow = await this.exists(userId, targetId);
-
-    if (existingFollow) {
-      existingFollow.deactivate();
-      await this.save(existingFollow);
-      return existingFollow;
-    }
-
-    const follow = FollowEntity.create({
-      id: FollowId.create(this.idGenerator.generate()),
-      userId: userId.toString(),
-      targetId: targetId.toString(),
-      status: false,
-    });
-
-    await this.save(follow);
-    return follow;
-  }
-
-  async toggleFollow(
-    userId: UserId,
-    targetId: TargetId,
-  ): Promise<FollowEntity> {
-    const existingFollow = await this.exists(userId, targetId);
-
-    if (existingFollow) {
-      existingFollow.toggleStatus();
-      await this.save(existingFollow);
-      return existingFollow;
-    }
-
-    return this.followUser(userId, targetId);
   }
 }

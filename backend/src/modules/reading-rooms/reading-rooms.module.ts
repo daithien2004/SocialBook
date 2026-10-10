@@ -8,7 +8,6 @@ import { WsAuthService } from './presentation/websocket/core/ws-auth.service';
 import { WsRateLimiter } from './presentation/websocket/core/ws-rate-limiter.service';
 import { WsRoomGuard } from './presentation/websocket/core/ws-room.guard';
 import { WsThrottleGuard } from './presentation/websocket/core/ws-throttle.guard';
-import { ReadingProgressTracker } from './presentation/websocket/reading-progress.tracker';
 import { ReadingRoomConnectionHandler } from './presentation/websocket/reading-room-connection.handler';
 import { ReadingRoomEmitter } from './presentation/websocket/reading-room.emitter';
 import { ReadingRoomGateway } from './presentation/websocket/reading-room.gateway';
@@ -30,7 +29,6 @@ import { UserOperationLock } from './presentation/websocket/user-operation-lock'
     ReadingRoomConnectionHandler,
     ReadingRoomHighlightHandler,
     ReadingRoomPresenceCoordinator,
-    ReadingProgressTracker,
     ReadingRoomEmitter,
     ReadingRoomSystemListener,
     ReadingRoomNamespaceProvider,

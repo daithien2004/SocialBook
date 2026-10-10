@@ -7,6 +7,8 @@ import {
   AudioGenerationOptions,
 } from '@/modules/text-to-speech/domain/interfaces/text-to-speech.port';
 
+const AUDIO_GENERATION_TIMEOUT_MS = 60_000;
+
 @Injectable()
 export class ElevenLabsAdapter implements ITextToSpeechPort {
   constructor(
@@ -53,6 +55,7 @@ export class ElevenLabsAdapter implements ITextToSpeechPort {
             similarity_boost: 0.75,
           },
         }),
+        signal: AbortSignal.timeout(AUDIO_GENERATION_TIMEOUT_MS),
       });
 
       if (!response.ok) {

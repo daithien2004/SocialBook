@@ -34,6 +34,7 @@ COPY backend/package.json ./backend/package.json
 COPY shared/package.json ./shared/package.json
 RUN npm ci --omit=dev --ignore-scripts --workspace=backend
 COPY --from=builder /app/backend/dist ./backend/dist
+COPY backend/healthcheck.js ./backend/healthcheck.js
 COPY --from=builder /app/shared ./shared
 USER node
 CMD ["node", "backend/dist/main.js"]

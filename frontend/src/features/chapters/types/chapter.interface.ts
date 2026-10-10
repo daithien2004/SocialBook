@@ -14,7 +14,7 @@ export interface Chapter {
   updatedAt: string;
   paragraphs: Paragraph[];
   paragraphsCount?: number;
-  ttsStatus?: "pending" | "processing" | "completed" | "failed";
+  ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
   audioUrl?: string;
 }
 
@@ -119,6 +119,7 @@ export interface ChapterPreview {
 // xử lí tác vụ chạy ngầm để import chương
 export interface StartChaptersImportParams {
   bookSlug: string;
+  idempotencyKey: string;
   data: {
     bookId: string;
     chapters: { title: string; content: string }[];
@@ -151,13 +152,13 @@ export interface ChaptersImportProgress {
 
 export interface ChaptersImportStatus {
   state:
-    | "completed"
-    | "failed"
-    | "active"
-    | "waiting"
-    | "delayed"
-    | "paused"
-    | "unknown";
+    | 'completed'
+    | 'failed'
+    | 'active'
+    | 'waiting'
+    | 'delayed'
+    | 'paused'
+    | 'unknown';
   progress: number | ChaptersImportProgress | null;
   result?: ChaptersImportResult;
   failedReason?: string;
@@ -172,12 +173,7 @@ export interface GetChaptersImportStatusParams {
 export interface KnowledgeEntity {
   name: string;
   type:
-    | "character"
-    | "location"
-    | "concept"
-    | "event"
-    | "vocabulary"
-    | "reference";
+    'character' | 'location' | 'concept' | 'event' | 'vocabulary' | 'reference';
   description: string;
   importance: number;
 }

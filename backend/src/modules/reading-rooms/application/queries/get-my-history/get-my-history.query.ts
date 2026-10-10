@@ -1,8 +1,8 @@
 import { Query } from '@nestjs/cqrs';
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.interface';
+import { ReadingRoomSummaryResult } from '@/modules/reading-rooms/application/reading-room.interface';
 
 export class GetMyHistoryQuery extends Query<{
-  items: ReadingRoomResult[];
+  items: ReadingRoomSummaryResult[];
   total: number;
 }> {
   constructor(

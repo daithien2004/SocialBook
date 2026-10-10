@@ -1,6 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException } from '@nestjs/common';
-import { EventNames } from '@/shared/platform/constants/event-names.constant';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import {
@@ -16,7 +15,9 @@ import {
   GenreName,
 } from '@/modules/genres';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { randomUUID } from 'node:crypto';
+import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
+import { BookOutboxPort } from '@/modules/books/application/public-api';
 import { Book } from '@/modules/books/domain/books/entities/book.entity';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
@@ -34,7 +35,8 @@ export class CreateBookHandler implements ICommandHandler<
     private readonly genreRepository: IGenreRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly bookCache: IBookCachePort,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly unitOfWork: UnitOfWorkPort,
+    private readonly bookOutbox: BookOutboxPort,
   ) {}
 
   async execute(command: CreateBookCommand): Promise<Book> {
@@ -56,75 +58,82 @@ export class CreateBookHandler implements ICommandHandler<
       throw new BadRequestException('Book cannot have more than 5 genres');
     }
 
-    let finalAuthorId = command.authorId;
+    const book = await this.unitOfWork.execute(async () => {
+      let finalAuthorId = command.authorId;
 
-    // Handle automatic author creation if authorId is a new name or is explicitly requested
-    if (
-      command.authorName &&
-      (!finalAuthorId || finalAuthorId.startsWith('new:'))
-    ) {
-      const authorName = AuthorName.create(command.authorName);
-      const existingAuthor = await this.authorRepository.findByName(authorName);
+      // Handle automatic author creation if authorId is a new name or is explicitly requested
+      if (
+        command.authorName &&
+        (!finalAuthorId || finalAuthorId.startsWith('new:'))
+      ) {
+        const authorName = AuthorName.create(command.authorName);
+        const existingAuthor =
+          await this.authorRepository.findByName(authorName);
 
-      if (existingAuthor) {
-        finalAuthorId = existingAuthor.id.toString();
-      } else {
-        const newAuthor = Author.create({
-          id: AuthorId.create(this.idGenerator.generate()),
-          name: command.authorName,
-          bio: '',
-          photoUrl: '',
-        });
-        await this.authorRepository.save(newAuthor);
-        finalAuthorId = newAuthor.id.toString();
-      }
-    }
-
-    // Handle automatic genre creation
-    const finalGenreIds: string[] = [];
-    for (const genreIdOrName of command.genres) {
-      if (genreIdOrName.startsWith('new:')) {
-        const genreNameStr = genreIdOrName.replace('new:', '');
-        const genreName = GenreName.create(genreNameStr);
-        const existingGenre = await this.genreRepository.findByName(genreName);
-
-        if (existingGenre) {
-          finalGenreIds.push(existingGenre.id.toString());
+        if (existingAuthor) {
+          finalAuthorId = existingAuthor.id.toString();
         } else {
-          const newGenre = Genre.create({
-            id: GenreId.create(this.idGenerator.generate()),
-            name: genreNameStr,
+          const newAuthor = Author.create({
+            id: AuthorId.create(this.idGenerator.generate()),
+            name: command.authorName,
+            bio: '',
+            photoUrl: '',
           });
-          await this.genreRepository.save(newGenre);
-          finalGenreIds.push(newGenre.id.toString());
+          await this.authorRepository.save(newAuthor);
+          finalAuthorId = newAuthor.id.toString();
         }
-      } else {
-        finalGenreIds.push(genreIdOrName);
       }
-    }
 
-    const book = Book.create({
-      id: BookId.create(this.idGenerator.generate()),
-      title: command.title,
-      authorId: finalAuthorId,
-      genres: finalGenreIds,
-      description: command.description,
-      publishedYear: command.publishedYear,
-      coverUrl: command.coverUrl,
-      status: command.status,
-      tags: command.tags,
+      // Handle automatic genre creation
+      const finalGenreIds: string[] = [];
+      for (const genreIdOrName of command.genres) {
+        if (genreIdOrName.startsWith('new:')) {
+          const genreNameStr = genreIdOrName.replace('new:', '');
+          const genreName = GenreName.create(genreNameStr);
+          const existingGenre =
+            await this.genreRepository.findByName(genreName);
+
+          if (existingGenre) {
+            finalGenreIds.push(existingGenre.id.toString());
+          } else {
+            const newGenre = Genre.create({
+              id: GenreId.create(this.idGenerator.generate()),
+              name: genreNameStr,
+            });
+            await this.genreRepository.save(newGenre);
+            finalGenreIds.push(newGenre.id.toString());
+          }
+        } else {
+          finalGenreIds.push(genreIdOrName);
+        }
+      }
+
+      const book = Book.create({
+        id: BookId.create(this.idGenerator.generate()),
+        title: command.title,
+        authorId: finalAuthorId,
+        genres: finalGenreIds,
+        description: command.description,
+        publishedYear: command.publishedYear,
+        coverUrl: command.coverUrl,
+        status: command.status,
+        tags: command.tags,
+      });
+
+      await this.bookRepository.save(book);
+      await this.bookOutbox.append({
+        id: randomUUID(),
+        type: 'book.created',
+        bookId: book.id.toString(),
+      });
+      return book;
     });
-
-    await this.bookRepository.save(book);
+    book.markPersisted(0);
 
     // cáº­p nháº­t láº¡i cache thÃ´ng qua service chuyÃªn biá»‡t
     await this.bookCache.setDetail(book);
 
     // Emit event Ä‘á»ƒ ChromaDB listener (vÃ  cÃ¡c listener khÃ¡c) báº¯t vÃ  xá»­ lÃ½
-    this.eventEmitter.emit(EventNames.BOOK_CREATED, {
-      bookId: book.id.toString(),
-    });
-
     return book;
   }
 }

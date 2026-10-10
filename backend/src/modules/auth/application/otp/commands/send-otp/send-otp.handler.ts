@@ -1,4 +1,5 @@
 import { SendOtpCommand } from './send-otp.command';
+import { randomInt } from 'node:crypto';
 import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
@@ -24,7 +25,7 @@ export class SendOtpHandler {
     await this.otpRepository.checkRateLimit(email);
 
     // 2. Generate OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = randomInt(100_000, 1_000_000).toString();
     const expiredAt = new Date(
       Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000,
     );

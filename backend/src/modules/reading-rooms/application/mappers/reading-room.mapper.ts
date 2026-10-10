@@ -13,26 +13,10 @@ export class ReadingRoomApplicationMapper {
       maxMembers: room.maxMembers,
       membersCount: room.activeMembers.length,
       createdAt: room.createdAt,
-      updatedAt: room.updatedAt,
       members: room.activeMembers.map((m) => ({
         userId: m.userId,
         role: m.role,
       })),
-      highlights: room.highlights.map((h) => ({
-        id: h.id!,
-        userId: h.userId,
-        displayName: h.displayName,
-        avatarUrl: h.avatarUrl,
-        chapterSlug: h.chapterSlug,
-        paragraphId: h.paragraphId,
-        content: h.content,
-        aiInsight: h.aiInsight,
-        createdAt: h.createdAt!,
-      })),
     };
-  }
-
-  static toResultArray(rooms: ReadingRoom[]): ReadingRoomResult[] {
-    return rooms.map((room) => this.toResult(room));
   }
 }

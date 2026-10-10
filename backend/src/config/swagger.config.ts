@@ -1,15 +1,18 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { normalizeOpenApi31 } from './openapi-31';
 
 export const configSwagger = (app: INestApplication) => {
   const config = new DocumentBuilder()
     .setTitle('SocialBook API')
     .setDescription('The SocialBook API description')
     .setVersion('1.0')
+    .setOpenAPIVersion('3.1.0')
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  normalizeOpenApi31(document);
 
   const oauthRedirectPaths = [
     '/api/auth/google',

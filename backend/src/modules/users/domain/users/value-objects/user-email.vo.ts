@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class UserEmail {
   private readonly _value: string;
 
@@ -7,14 +9,14 @@ export class UserEmail {
 
   static create(email: string): UserEmail {
     if (!email || email.trim().length === 0) {
-      throw new Error('Email cannot be empty');
+      throw new BadRequestDomainException('Email cannot be empty');
     }
 
     const trimmed = email.trim().toLowerCase();
 
     const emailRegex = /^[^\s@]+@[^\s@]+$/;
     if (!emailRegex.test(trimmed)) {
-      throw new Error('Invalid email format');
+      throw new BadRequestDomainException('Invalid email format');
     }
 
     return new UserEmail(trimmed);

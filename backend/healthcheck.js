@@ -24,7 +24,7 @@ async function check() {
   try {
     await client.connect();
     const pong = await client.ping();
-    if (pong !== 'PONG') throw new Error(Expected PONG, got );
+    if (pong !== 'PONG') throw new Error(`Expected PONG, got ${pong}`);
     console.log('Worker healthcheck: OK');
     await client.quit();
     process.exit(0);

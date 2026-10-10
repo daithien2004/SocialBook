@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class OAuthFlowState {
   constructor(
     public readonly provider: 'google' | 'github',
@@ -9,7 +11,9 @@ export class OAuthFlowState {
       callbackUrl.startsWith('//') ||
       callbackUrl.startsWith('/\\')
     ) {
-      throw new Error('callbackUrl must be a same-origin relative path');
+      throw new BadRequestDomainException(
+        'callbackUrl must be a same-origin relative path',
+      );
     }
   }
 }

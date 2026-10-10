@@ -1,50 +1,22 @@
-import {
-  PaginatedResult,
-  PaginationOptions,
-} from '@/shared/domain/pagination.types';
-import { AIRequest, AIRequestType } from '@/modules/ai/domain';
-import { AIRequestFilter, IAIRequestRepository } from '@/modules/ai/domain';
-import { AIRequestId } from '@/modules/ai/domain';
-import { UserId } from '@/modules/ai/domain';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
+import { AIRequest, IAIRequestRepository } from '@/modules/ai/domain';
 import {
   AIRequestDocument,
   AIRequest as AIRequestModelClass,
 } from '../../schemas/ai-request.schema';
 import { AIRequestPersistence } from './ai-request.mapper';
 
-import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
-
 @Injectable()
-export class AIRequestRepository
-  extends BaseMongoRepository<AIRequest, AIRequestDocument, AIRequestId>
-  implements IAIRequestRepository
-{
+export class AIRequestRepository implements IAIRequestRepository {
   constructor(
     @InjectModel(AIRequestModelClass.name)
     private readonly aiRequestModel: Model<AIRequestDocument>,
-  ) {
-    super(aiRequestModel);
-  }
+  ) {}
 
-  protected toDomain(doc: AIRequestDocument): AIRequest {
-    return AIRequest.reconstitute({
-      id: doc._id.toString(),
-      prompt: doc.prompt,
-      response: doc.response || null,
-      type: doc.type,
-      userId: doc.userId,
-      metadata: doc.metadata || {},
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
-    });
-  }
-
-  protected toPersistence(request: AIRequest): AIRequestPersistence {
+  private toPersistence(request: AIRequest): AIRequestPersistence {
     return {
-      _id: new Types.ObjectId(request.id.toString()),
       prompt: request.prompt,
       response: request.response,
       type: request.type,
@@ -56,148 +28,12 @@ export class AIRequestRepository
   }
 
   async save(request: AIRequest): Promise<void> {
-    return this.baseSave(request);
-  }
-
-  async findById(id: AIRequestId): Promise<AIRequest | null> {
-    const doc = await this.aiRequestModel.findById(id.toString()).lean().exec();
-    return doc ? this.toDomain(doc) : null;
-  }
-
-  async findByUserId(
-    userId: UserId,
-    pagination: PaginationOptions = { page: 1, limit: 10 },
-  ): Promise<PaginatedResult<AIRequest>> {
-    const query: FilterQuery<AIRequestDocument> = { userId: userId.toString() };
-
-    const skip = (pagination.page - 1) * pagination.limit;
-
-    const [docs, total] = await Promise.all([
-      this.aiRequestModel
-        .find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pagination.limit)
-        .lean()
-        .exec(),
-      this.aiRequestModel.countDocuments(query).exec(),
-    ]);
-
-    return {
-      data: docs.map((doc) => this.toDomain(doc)),
-      meta: this.buildMeta(pagination.page, pagination.limit, total),
-    };
-  }
-
-  async findByType(
-    type: AIRequestType,
-    pagination: PaginationOptions = { page: 1, limit: 10 },
-  ): Promise<PaginatedResult<AIRequest>> {
-    const query: FilterQuery<AIRequestDocument> = { type };
-
-    const skip = (pagination.page - 1) * pagination.limit;
-
-    const [docs, total] = await Promise.all([
-      this.aiRequestModel
-        .find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pagination.limit)
-        .lean()
-        .exec(),
-      this.aiRequestModel.countDocuments(query).exec(),
-    ]);
-
-    return {
-      data: docs.map((doc) => this.toDomain(doc)),
-      meta: this.buildMeta(pagination.page, pagination.limit, total),
-    };
-  }
-
-  async findAll(
-    filter: AIRequestFilter,
-    pagination: PaginationOptions,
-  ): Promise<PaginatedResult<AIRequest>> {
-    const query: FilterQuery<AIRequestDocument> = {};
-
-    if (filter.type) {
-      query.type = filter.type;
-    }
-
-    if (filter.userId) {
-      query.userId = filter.userId;
-    }
-
-    if (filter.isCompleted !== undefined) {
-      query.response = filter.isCompleted ? { $ne: null } : null;
-    }
-
-    if (filter.dateFrom || filter.dateTo) {
-      const createdAtFilter: Record<string, Date> = {};
-      if (filter.dateFrom) {
-        createdAtFilter.$gte = filter.dateFrom;
-      }
-      if (filter.dateTo) {
-        createdAtFilter.$lte = filter.dateTo;
-      }
-      query.createdAt = createdAtFilter;
-    }
-
-    const skip = (pagination.page - 1) * pagination.limit;
-
-    const [docs, total] = await Promise.all([
-      this.aiRequestModel
-        .find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pagination.limit)
-        .lean()
-        .exec(),
-      this.aiRequestModel.countDocuments(query).exec(),
-    ]);
-
-    return {
-      data: docs.map((doc) => this.toDomain(doc)),
-      meta: this.buildMeta(pagination.page, pagination.limit, total),
-    };
-  }
-
-  async delete(id: AIRequestId): Promise<void> {
-    return this.baseDelete(id);
-  }
-
-  async countByUserId(userId: UserId): Promise<number> {
-    return await this.aiRequestModel
-      .countDocuments({ userId: userId.toString() })
+    await this.aiRequestModel
+      .findByIdAndUpdate(
+        request.id.toString(),
+        { $set: this.toPersistence(request) },
+        { upsert: true },
+      )
       .exec();
-  }
-
-  async countByType(type: AIRequestType): Promise<number> {
-    return await this.aiRequestModel.countDocuments({ type }).exec();
-  }
-
-  async count(filter?: AIRequestFilter): Promise<number> {
-    const query: FilterQuery<AIRequestDocument> = {};
-
-    if (filter) {
-      if (filter.type) query.type = filter.type;
-      if (filter.userId) query.userId = filter.userId;
-      if (filter.isCompleted !== undefined) {
-        query.response = filter.isCompleted ? { $ne: null } : null;
-      }
-      if (filter.dateFrom || filter.dateTo) {
-        const createdAtFilter: Record<string, Date> = {};
-        if (filter.dateFrom) createdAtFilter.$gte = filter.dateFrom;
-        if (filter.dateTo) createdAtFilter.$lte = filter.dateTo;
-        query.createdAt = createdAtFilter;
-      }
-    }
-
-    return await this.aiRequestModel.countDocuments(query).exec();
-  }
-
-  async existsById(id: AIRequestId): Promise<boolean> {
-    const result = await this.aiRequestModel.exists({ _id: id.toString() });
-    return !!result;
   }
 }

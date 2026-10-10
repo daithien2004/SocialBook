@@ -5,9 +5,6 @@ export const HIGHLIGHT_ID_PATTERN =
 
 export const OBJECT_ID_PATTERN = /^[0-9a-f]{24}$/i;
 
-export const isObjectId = (value: unknown): value is string =>
-  typeof value === 'string' && OBJECT_ID_PATTERN.test(value);
-
 export const HIGHLIGHT_CONTENT_MIN_LENGTH = 1;
 export const HIGHLIGHT_CONTENT_MAX_LENGTH = 1000;
 
@@ -35,8 +32,6 @@ export const MAX_CONNECTIONS_PER_USER = 5;
 export const RATE_LIMIT_WINDOW_SECONDS = 60;
 
 export const PRESENCE_BROADCAST_DEBOUNCE_MS = 3_000;
-
-export const PROGRESS_FLUSH_INTERVAL_MS = 10_000;
 
 export const PRESENCE_HASH_TTL_SECONDS = 90;
 

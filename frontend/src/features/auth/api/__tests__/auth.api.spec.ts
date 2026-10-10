@@ -21,9 +21,7 @@ describe('auth api functions', () => {
   });
 
   it('signup posts directly to the backend', async () => {
-    mockedApiRequest.mockResolvedValue({
-      message: 'Mã OTP đã được gửi đến email của bạn',
-    });
+    mockedApiRequest.mockResolvedValue(undefined);
 
     const payload = {
       username: 'u',
@@ -32,9 +30,7 @@ describe('auth api functions', () => {
       confirmPassword: 'password',
     };
 
-    await expect(signup(payload)).resolves.toEqual({
-      message: 'Mã OTP đã được gửi đến email của bạn',
-    });
+    await expect(signup(payload)).resolves.toBeUndefined();
     expect(mockedApiRequest).toHaveBeenCalledWith({
       url: '/auth/signup',
       method: 'POST',
@@ -43,11 +39,11 @@ describe('auth api functions', () => {
   });
 
   it('verifyOtp posts directly to the backend', async () => {
-    mockedApiRequest.mockResolvedValue({ message: 'Xác thực thành công' });
+    mockedApiRequest.mockResolvedValue(undefined);
 
     await expect(
       verifyOtp({ email: 'a@b.co', otp: '123456' }),
-    ).resolves.toEqual({ message: 'Xác thực thành công' });
+    ).resolves.toBeUndefined();
     expect(mockedApiRequest).toHaveBeenCalledWith({
       url: '/auth/verify-otp',
       method: 'POST',
@@ -69,13 +65,9 @@ describe('auth api functions', () => {
   });
 
   it('forgotPassword posts directly to the backend', async () => {
-    mockedApiRequest.mockResolvedValue({
-      message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
-    });
+    mockedApiRequest.mockResolvedValue(undefined);
 
-    await expect(forgotPassword({ email: 'a@b.co' })).resolves.toEqual({
-      message: 'Mã OTP đặt lại mật khẩu đã được gửi đến email của bạn',
-    });
+    await expect(forgotPassword({ email: 'a@b.co' })).resolves.toBeUndefined();
     expect(mockedApiRequest).toHaveBeenCalledWith({
       url: '/auth/forgot-password',
       method: 'POST',
@@ -84,7 +76,7 @@ describe('auth api functions', () => {
   });
 
   it('resetPassword posts directly to the backend', async () => {
-    mockedApiRequest.mockResolvedValue({ message: 'Đổi mật khẩu thành công' });
+    mockedApiRequest.mockResolvedValue(undefined);
 
     await expect(
       resetPassword({
@@ -92,7 +84,7 @@ describe('auth api functions', () => {
         otp: '123456',
         newPassword: 'newpassword',
       }),
-    ).resolves.toEqual({ message: 'Đổi mật khẩu thành công' });
+    ).resolves.toBeUndefined();
     expect(mockedApiRequest).toHaveBeenCalledWith({
       url: '/auth/reset-password',
       method: 'POST',
@@ -105,11 +97,11 @@ describe('auth api functions', () => {
   });
 
   it('login posts directly to the backend', async () => {
-    mockedApiRequest.mockResolvedValue({ message: 'Đăng nhập thành công' });
+    mockedApiRequest.mockResolvedValue({ accessToken: 'access-token' });
 
     await expect(
       login({ email: 'a@b.co', password: 'password' }),
-    ).resolves.toEqual({ message: 'Đăng nhập thành công' });
+    ).resolves.toEqual({ accessToken: 'access-token' });
     expect(mockedApiRequest).toHaveBeenCalledWith({
       url: '/auth/login',
       method: 'POST',
@@ -124,8 +116,8 @@ describe('auth api functions', () => {
     };
     mockedApiRequest.mockRejectedValue(rejection);
 
-    await expect(
-      login({ email: 'a@b.co', password: 'wrong' }),
-    ).rejects.toBe(rejection);
+    await expect(login({ email: 'a@b.co', password: 'wrong' })).rejects.toBe(
+      rejection,
+    );
   });
 });

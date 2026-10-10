@@ -49,16 +49,6 @@ export abstract class IVectorRepository {
 
   // Search operations
   abstract search(query: SearchQuery): Promise<SearchResult[]>;
-  abstract searchByContent(
-    content: string,
-    contentType?: ContentType,
-    limit?: number,
-  ): Promise<SearchResult[]>;
-  abstract findSimilar(
-    documentId: VectorId,
-    limit?: number,
-    threshold?: number,
-  ): Promise<SearchResult[]>;
 
   // Collection operations
   abstract clearCollection(): Promise<void>;

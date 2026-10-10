@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class GenreName {
   private readonly value: string;
 
@@ -7,21 +9,27 @@ export class GenreName {
 
   static create(name: string): GenreName {
     if (!name || name.trim().length === 0) {
-      throw new Error('Genre name cannot be empty');
+      throw new BadRequestDomainException('Genre name cannot be empty');
     }
 
     const trimmed = name.trim();
 
     if (trimmed.length < 2) {
-      throw new Error('Genre name must be at least 2 characters');
+      throw new BadRequestDomainException(
+        'Genre name must be at least 2 characters',
+      );
     }
 
     if (trimmed.length > 50) {
-      throw new Error('Genre name must not exceed 50 characters');
+      throw new BadRequestDomainException(
+        'Genre name must not exceed 50 characters',
+      );
     }
 
     if (!/^[\p{L}\p{N}\s-]+$/u.test(trimmed)) {
-      throw new Error('Genre name contains invalid characters');
+      throw new BadRequestDomainException(
+        'Genre name contains invalid characters',
+      );
     }
 
     return new GenreName(trimmed);

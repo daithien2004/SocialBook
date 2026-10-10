@@ -4,7 +4,7 @@ import { HydratedDocument, Types } from 'mongoose';
 import { BaseSoftDeleteSchema } from '@/shared/schemas/base.schema';
 import { ModerationStatus } from '@/modules/posts/domain/posts/enums/moderation-status.enum';
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, versionKey: false })
 export class Post extends BaseSoftDeleteSchema {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId!: Types.ObjectId;
@@ -30,6 +30,9 @@ export class Post extends BaseSoftDeleteSchema {
     default: ModerationStatus.PENDING,
   })
   moderationStatus?: ModerationStatus;
+
+  @Prop({ type: Number, default: 0 })
+  version!: number;
 }
 export type PostDocument = HydratedDocument<Post>;
 

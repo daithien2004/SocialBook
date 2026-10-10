@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class ChapterOrderIndex {
   private readonly value: number;
 
@@ -7,11 +9,15 @@ export class ChapterOrderIndex {
 
   static create(orderIndex: number): ChapterOrderIndex {
     if (orderIndex < 0) {
-      throw new Error('Chapter order index cannot be negative');
+      throw new BadRequestDomainException(
+        'Chapter order index cannot be negative',
+      );
     }
 
     if (orderIndex > 9999) {
-      throw new Error('Chapter order index cannot exceed 9999');
+      throw new BadRequestDomainException(
+        'Chapter order index cannot exceed 9999',
+      );
     }
 
     return new ChapterOrderIndex(orderIndex);

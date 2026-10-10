@@ -28,5 +28,4 @@ export abstract class IGenreRepository {
   abstract delete(id: GenreId): Promise<void>;
 
   abstract existsByName(name: GenreName, excludeId?: GenreId): Promise<boolean>;
-  abstract countActive(): Promise<number>;
 }

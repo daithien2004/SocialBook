@@ -6,7 +6,6 @@ export abstract class IReviewRepository {
   abstract delete(id: string): Promise<void>;
   abstract findById(id: string): Promise<Review | null>;
   abstract findByBookId(bookId: string): Promise<Review[]>;
-  abstract findByUserId(userId: string): Promise<Review[]>;
   abstract toggleLike(reviewId: string, userId: string): Promise<Review | null>;
   abstract existsByUserAndBook(
     userId: string,

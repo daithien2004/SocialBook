@@ -29,9 +29,9 @@ export const CHAPTER_TAGS = {
 
 export type ChapterTagType = (typeof CHAPTER_TAGS)[keyof typeof CHAPTER_TAGS];
 
-
-
-export function getChapter(params: GetChapterParams): Promise<ChapterDetailData> {
+export function getChapter(
+  params: GetChapterParams,
+): Promise<ChapterDetailData> {
   return apiRequest<ChapterDetailData>({
     url: NESTJS_CHAPTERS_ENDPOINTS.getChapterBySlug(
       params.bookSlug,
@@ -56,7 +56,11 @@ export function recordChapterView(
 const fetchChapters = async (
   params: GetChaptersParams,
 ): Promise<ChaptersListData> => {
-  const response = await apiRequest<{ data?: Chapter[]; meta?: PaginationMeta } | Chapter[] | { chapters?: Chapter[]; meta?: PaginationMeta }>({
+  const response = await apiRequest<
+    | { data?: Chapter[]; meta?: PaginationMeta }
+    | Chapter[]
+    | { chapters?: Chapter[]; meta?: PaginationMeta }
+  >({
     url: NESTJS_CHAPTERS_ENDPOINTS.getChapters(params.bookSlug),
     method: 'GET',
     params: {
@@ -69,14 +73,21 @@ const fetchChapters = async (
     return { chapters: response, total: response.length };
   }
 
-  const chaptersData = 'data' in response ? response.data : ('chapters' in response ? response.chapters : []);
+  const chaptersData =
+    'data' in response
+      ? response.data
+      : 'chapters' in response
+        ? response.chapters
+        : [];
   return {
     chapters: chaptersData || [],
     total: response.meta?.total ?? chaptersData?.length ?? 0,
   };
 };
 
-export function getChapters(params: GetChaptersParams): Promise<ChaptersListData> {
+export function getChapters(
+  params: GetChaptersParams,
+): Promise<ChaptersListData> {
   return fetchChapters(params);
 }
 
@@ -106,7 +117,10 @@ export function createChapter(params: CreateChapterParams): Promise<Chapter> {
 
 export function updateChapter(params: UpdateChapterParams): Promise<Chapter> {
   return apiRequest<Chapter>({
-    url: NESTJS_CHAPTERS_ENDPOINTS.updateChapter(params.bookSlug, params.chapterId),
+    url: NESTJS_CHAPTERS_ENDPOINTS.updateChapter(
+      params.bookSlug,
+      params.chapterId,
+    ),
     method: 'PUT',
     data: params.data,
   });
@@ -114,7 +128,10 @@ export function updateChapter(params: UpdateChapterParams): Promise<Chapter> {
 
 export function deleteChapter(params: DeleteChapterParams): Promise<void> {
   return apiRequest<void>({
-    url: NESTJS_CHAPTERS_ENDPOINTS.deleteChapter(params.bookSlug, params.chapterId),
+    url: NESTJS_CHAPTERS_ENDPOINTS.deleteChapter(
+      params.bookSlug,
+      params.chapterId,
+    ),
     method: 'DELETE',
   });
 }
@@ -139,6 +156,7 @@ export function startChaptersImport(
   return apiRequest<StartChaptersImportResponse>({
     url: NESTJS_CHAPTERS_ENDPOINTS.importStart(params.bookSlug),
     method: 'POST',
+    headers: { 'Idempotency-Key': params.idempotencyKey },
     data: params.data,
   });
 }

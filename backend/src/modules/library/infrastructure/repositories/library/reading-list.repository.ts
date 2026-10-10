@@ -14,36 +14,40 @@ import {
   ReadingList as ReadingListSchemaClass,
 } from '../../schemas/reading-list.schema';
 import { LibraryMapper, PopulatedReadingListDocument } from './library.mapper';
+import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
 
 @Injectable()
 export class ReadingListRepository implements IReadingListRepository {
   constructor(
     @InjectModel(ReadingListSchemaClass.name)
     private readonly readingListModel: Model<ReadingListDocument>,
+    private readonly sessionContext: MongoSessionContext,
   ) {}
 
   async save(readingList: ReadingList): Promise<void> {
     const persistenceData = LibraryMapper.toPersistence(readingList);
 
-    await this.readingListModel
-      .findOneAndUpdate(
-        { _id: persistenceData._id },
-        { $set: persistenceData },
-        { upsert: true, new: true },
-      )
-      .exec();
+    const query = this.readingListModel.findOneAndUpdate(
+      { _id: persistenceData._id },
+      { $set: persistenceData },
+      { upsert: true, new: true },
+    );
+    const session = this.sessionContext.currentSession;
+    if (session) query.session(session);
+    await query.exec();
   }
 
   async findByUserIdAndBookId(
     userId: UserId,
     bookId: BookId,
   ): Promise<ReadingList | null> {
-    const doc = await this.readingListModel
-      .findOne({
-        userId: new Types.ObjectId(userId.toString()),
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .exec();
+    const query = this.readingListModel.findOne({
+      userId: new Types.ObjectId(userId.toString()),
+      bookId: new Types.ObjectId(bookId.toString()),
+    });
+    const session = this.sessionContext.currentSession;
+    if (session) query.session(session);
+    const doc = await query.exec();
 
     return doc ? LibraryMapper.toDomain(doc) : null;
   }
@@ -64,12 +68,6 @@ export class ReadingListRepository implements IReadingListRepository {
     });
 
     return !!result;
-  }
-
-  async countByUser(userId: string): Promise<number> {
-    return this.readingListModel
-      .countDocuments({ userId: new Types.ObjectId(userId) })
-      .exec();
   }
 
   async countByCollectionId(collectionId: string): Promise<number> {

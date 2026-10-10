@@ -10,23 +10,8 @@ export abstract class ILikeRepository {
     targetId: TargetId,
     targetType: TargetType,
   ): Promise<Like | null>;
-  abstract findByTarget(
-    targetId: TargetId,
-    targetType: TargetType,
-  ): Promise<Like[]>;
   abstract countByTarget(
     targetId: TargetId,
     targetType: TargetType,
   ): Promise<number>;
-  abstract findLikedTargets(
-    userId: UserId,
-    targetIds: TargetId[],
-    targetType: TargetType,
-  ): Promise<string[]>;
-  abstract deleteById(id: string): Promise<void>;
-  abstract exists(
-    userId: UserId,
-    targetId: TargetId,
-    targetType: TargetType,
-  ): Promise<boolean>;
 }

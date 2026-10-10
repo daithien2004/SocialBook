@@ -46,28 +46,13 @@
       "count": 1
     }
   },
-  "src/modules/ai/infrastructure/repositories/ai-requests/ai-request.repository.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
   "src/modules/analytics/infrastructure/repositories/user-event.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/analytics/infrastructure/repositories/user-preference.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
     }
   },
   "src/modules/auth/application/auth/commands/resend-otp/resend-otp.handler.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/modules/auth/application/auth/commands/reset-password/reset-password.handler.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     }
   },
@@ -208,10 +193,7 @@
   },
   "src/modules/books/infrastructure/repositories/books/book.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 15
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
+      "count": 6
     }
   },
   "src/modules/books/presentation/books/books.controller.ts": {
@@ -275,22 +257,6 @@
       "count": 1
     }
   },
-  "src/modules/chapters/domain/chapters/value-objects/paragraph.vo.ts": {
-    "@typescript-eslint/no-deprecated": {
-      "count": 1
-    }
-  },
-  "src/modules/chapters/infrastructure/queues/chapters-import/chapters-import.adapter.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
   "src/modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
@@ -323,10 +289,10 @@
   },
   "src/modules/chapters/infrastructure/repositories/chapters/chapter.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 21
+      "count": 10
     },
     "@typescript-eslint/no-unnecessary-condition": {
-      "count": 9
+      "count": 4
     }
   },
   "src/modules/chapters/presentation/chapters/chapters.controller.ts": {
@@ -454,7 +420,7 @@
   },
   "src/modules/chroma/infrastructure/repositories/chroma-vector.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 9
+      "count": 7
     },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 13
@@ -504,12 +470,6 @@
   },
   "src/modules/comments/infrastructure/repositories/comment.repository.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-expressions": {
       "count": 1
     }
   },
@@ -914,9 +874,6 @@
   "src/modules/reading-rooms/application/mappers/reading-room.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 2
     }
   },
   "src/modules/reading-rooms/domain/entities/reading-room.entity.ts": {
@@ -944,11 +901,6 @@
     }
   },
   "src/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/modules/reading-rooms/presentation/websocket/core/ws-room.guard.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
@@ -1346,25 +1298,6 @@
   },
   "src/shared/domain/identifier.base.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/shared/infrastructure/base-mongo.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 26
-    },
-    "@typescript-eslint/no-unnecessary-type-parameters": {
-      "count": 2
-    }
-  },
-  "src/shared/infrastructure/rate-limit-config.service.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    },
-    "@typescript-eslint/return-await": {
       "count": 1
     }
   },

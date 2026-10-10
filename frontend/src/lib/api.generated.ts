@@ -2390,8 +2390,9 @@ export interface components {
       /**
        * @default about:blank
        * @example about:blank
+       * @enum {string}
        */
-      type: Record<string, never>;
+      type: 'about:blank';
       /** @example Not Found */
       title: string;
       /** @example 404 */
@@ -2943,8 +2944,7 @@ export interface components {
       collectionIds: string[];
     };
     BookLibraryInfoResponseDto: {
-      /** @enum {string|null} */
-      status: 'READING' | 'COMPLETED' | 'ARCHIVED' | 'NONE' | null;
+      status: ('READING' | 'COMPLETED' | 'ARCHIVED' | 'NONE') | null;
       collections: components['schemas']['CollectionResponseDto'][];
       completedChaptersCount: number;
       totalChapters: number;
@@ -3248,6 +3248,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3256,6 +3258,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3339,6 +3352,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3347,6 +3362,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3434,6 +3460,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3442,6 +3470,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3553,6 +3592,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3561,6 +3602,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3648,6 +3700,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3656,6 +3710,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3767,6 +3832,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3775,6 +3842,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3860,6 +3938,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3868,6 +3948,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3965,6 +4056,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -3973,6 +4066,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4058,6 +4162,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4066,6 +4172,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4153,6 +4270,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4161,6 +4280,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4247,6 +4377,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4255,6 +4387,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4338,6 +4481,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4346,6 +4491,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4433,6 +4589,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4441,6 +4599,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4552,6 +4721,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4560,6 +4731,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4674,6 +4856,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4682,6 +4866,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4769,6 +4964,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4777,6 +4974,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4891,6 +5099,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4899,6 +5109,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -4993,6 +5214,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5001,6 +5224,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5099,6 +5333,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5107,6 +5343,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5192,6 +5439,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5200,6 +5449,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5289,6 +5549,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5297,6 +5559,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5380,6 +5653,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5388,6 +5663,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5473,6 +5759,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5481,6 +5769,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5570,6 +5869,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5578,6 +5879,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5661,6 +5973,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5669,6 +5983,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5771,6 +6096,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5779,6 +6106,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5874,6 +6212,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5882,6 +6222,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5963,6 +6314,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -5971,6 +6324,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6066,6 +6430,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6074,6 +6440,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6161,6 +6538,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6169,6 +6548,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6278,6 +6668,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6286,6 +6678,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6371,6 +6774,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6379,6 +6784,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6468,6 +6884,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6476,6 +6894,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6559,6 +6988,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6567,6 +6998,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6654,6 +7096,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6662,6 +7106,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6752,6 +7207,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6760,6 +7217,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6843,6 +7311,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6857,12 +7327,26 @@ export interface operations {
           'application/problem+json': components['schemas']['ProblemDetailsDto'];
         };
       };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
     };
   };
   ChaptersController_startImport_v1: {
     parameters: {
       query?: never;
-      header?: never;
+      header: {
+        /** @description Unique key for this chapter import request; reuse it to retry within 23 hours. */
+        'Idempotency-Key': string;
+      };
       path?: never;
       cookie?: never;
     };
@@ -6938,6 +7422,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -6946,6 +7432,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7031,6 +7528,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7039,6 +7538,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7135,6 +7645,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7143,6 +7655,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7230,6 +7753,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7238,6 +7763,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7323,6 +7859,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7331,6 +7869,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7428,6 +7977,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7436,6 +7987,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7521,6 +8083,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7529,6 +8093,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7615,6 +8190,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7623,6 +8200,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7707,6 +8295,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7715,6 +8305,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7804,6 +8405,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7812,6 +8415,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7895,6 +8509,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -7903,6 +8519,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8010,6 +8637,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8018,6 +8647,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8105,6 +8745,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8113,6 +8755,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8220,6 +8873,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8228,6 +8883,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8313,6 +8979,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8321,6 +8989,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8404,6 +9083,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8412,6 +9093,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8501,6 +9193,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8509,6 +9203,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8612,6 +9317,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8620,6 +9327,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8707,6 +9425,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8715,6 +9435,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8819,6 +9550,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8827,6 +9560,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8912,6 +9656,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -8920,6 +9666,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9003,6 +9760,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9011,6 +9770,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9100,6 +9870,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9108,6 +9880,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9191,6 +9974,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9199,6 +9984,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9282,6 +10078,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9290,6 +10088,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9396,6 +10205,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9404,6 +10215,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9492,6 +10314,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9500,6 +10324,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9583,6 +10418,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9591,6 +10428,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9674,6 +10522,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9682,6 +10532,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9768,6 +10629,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9776,6 +10639,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9862,6 +10736,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9870,6 +10746,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9967,6 +10854,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -9975,6 +10864,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10062,6 +10962,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10070,6 +10972,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10153,6 +11066,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10161,6 +11076,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10250,6 +11176,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10258,6 +11186,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10346,6 +11285,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10354,6 +11295,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10441,6 +11393,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10449,6 +11403,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10549,6 +11514,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10557,6 +11524,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10644,6 +11622,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10652,6 +11632,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10735,6 +11726,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10743,6 +11736,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10832,6 +11836,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10840,6 +11846,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10923,6 +11940,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -10931,6 +11950,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11014,6 +12044,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11022,6 +12054,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11109,6 +12152,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11117,6 +12162,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11200,6 +12256,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11208,6 +12266,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11303,6 +12372,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11311,6 +12382,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11406,6 +12488,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11414,6 +12498,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11497,6 +12592,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11505,6 +12602,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11588,6 +12696,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11596,6 +12706,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11679,6 +12800,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11687,6 +12810,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11768,6 +12902,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11776,6 +12912,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11859,6 +13006,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11867,6 +13016,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11952,6 +13112,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -11960,6 +13122,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12045,6 +13218,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12053,6 +13228,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12140,6 +13326,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12148,6 +13336,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12235,6 +13434,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12243,6 +13444,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12328,6 +13540,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12336,6 +13550,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12421,6 +13646,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12429,6 +13656,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12602,6 +13840,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12610,6 +13850,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12707,6 +13958,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12715,6 +13968,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12800,6 +14064,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12808,6 +14074,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12895,6 +14172,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12903,6 +14182,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12986,6 +14276,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -12994,6 +14286,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13077,6 +14380,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13085,6 +14390,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13196,6 +14512,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13204,6 +14522,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13301,6 +14630,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13309,6 +14640,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13396,6 +14738,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13404,6 +14748,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13491,6 +14846,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13499,6 +14856,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13585,6 +14953,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13593,6 +14963,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13676,6 +15057,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13684,6 +15067,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13773,6 +15167,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13781,6 +15177,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13879,6 +15286,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13887,6 +15296,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13972,6 +15392,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -13980,6 +15402,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14067,6 +15500,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14075,6 +15510,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14161,6 +15607,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14169,6 +15617,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14259,6 +15718,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14267,6 +15728,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14354,6 +15826,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14362,6 +15836,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14449,6 +15934,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14457,6 +15944,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14540,6 +16038,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14548,6 +16048,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14633,6 +16144,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14641,6 +16154,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14724,6 +16248,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14732,6 +16258,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14815,6 +16352,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14823,6 +16362,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14906,6 +16456,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14914,6 +16466,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -14997,6 +16560,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15005,6 +16570,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15088,6 +16664,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15096,6 +16674,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15179,6 +16768,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15187,6 +16778,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15273,6 +16875,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15281,6 +16885,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15364,6 +16979,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15372,6 +16989,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15457,6 +17085,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15465,6 +17095,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15550,6 +17191,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15558,6 +17201,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15641,6 +17295,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15649,6 +17305,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15732,6 +17399,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15740,6 +17409,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15823,6 +17503,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15831,6 +17513,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15918,6 +17611,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -15926,6 +17621,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16017,6 +17723,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16025,6 +17733,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16120,6 +17839,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16128,6 +17849,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16211,6 +17943,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16219,6 +17953,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16304,6 +18049,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16312,6 +18059,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16395,6 +18153,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16403,6 +18163,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16491,6 +18262,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16499,6 +18272,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16582,6 +18366,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16590,6 +18376,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16675,6 +18472,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16683,6 +18482,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16772,6 +18582,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16780,6 +18592,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16863,6 +18686,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16871,6 +18696,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16960,6 +18796,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -16968,6 +18806,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17051,6 +18900,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17059,6 +18910,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17142,6 +19004,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17150,6 +19014,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17235,6 +19110,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17243,6 +19120,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17372,6 +19260,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17380,6 +19270,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17487,6 +19388,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17495,6 +19398,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17582,6 +19496,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17590,6 +19506,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17671,6 +19598,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17679,6 +19608,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17762,6 +19702,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17770,6 +19712,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17865,6 +19818,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17873,6 +19828,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17960,6 +19926,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -17968,6 +19936,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18051,6 +20030,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18059,6 +20040,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18142,6 +20134,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18150,6 +20144,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18233,6 +20238,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18241,6 +20248,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18338,6 +20356,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18346,6 +20366,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18433,6 +20464,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18441,6 +20474,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18538,6 +20582,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18546,6 +20592,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18643,6 +20700,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18651,6 +20710,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18734,6 +20804,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18742,6 +20814,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18831,6 +20914,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18839,6 +20924,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18926,6 +21022,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -18934,6 +21032,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19029,6 +21138,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19037,6 +21148,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19132,6 +21254,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19140,6 +21264,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19225,6 +21360,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19233,6 +21370,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19330,6 +21478,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19338,6 +21488,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19438,6 +21599,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19446,6 +21609,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19531,6 +21705,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19539,6 +21715,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19637,6 +21824,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19645,6 +21834,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19743,6 +21943,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19751,6 +21953,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19837,6 +22050,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19845,6 +22060,17 @@ export interface operations {
       };
       500: {
         headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetailsDto'];
+        };
+      };
+      /** @description Service unavailable. Retry after the interval in Retry-After. */
+      503: {
+        headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19940,6 +22166,8 @@ export interface operations {
       };
       429: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {
@@ -19957,6 +22185,8 @@ export interface operations {
       /** @description The Health Check is not successful */
       503: {
         headers: {
+          /** @description Seconds to wait before retrying the request. */
+          'Retry-After'?: string;
           [name: string]: unknown;
         };
         content: {

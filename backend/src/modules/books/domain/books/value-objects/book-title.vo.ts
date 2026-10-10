@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class BookTitle {
   private readonly value: string;
 
@@ -7,15 +9,19 @@ export class BookTitle {
 
   static create(title: string): BookTitle {
     if (!title || title.trim().length === 0) {
-      throw new Error('Book title cannot be empty');
+      throw new BadRequestDomainException('Book title cannot be empty');
     }
 
     if (title.trim().length < 5) {
-      throw new Error('Book title must be at least 5 characters long');
+      throw new BadRequestDomainException(
+        'Book title must be at least 5 characters long',
+      );
     }
 
     if (title.trim().length > 200) {
-      throw new Error('Book title cannot exceed 200 characters');
+      throw new BadRequestDomainException(
+        'Book title cannot exceed 200 characters',
+      );
     }
 
     return new BookTitle(title.trim());

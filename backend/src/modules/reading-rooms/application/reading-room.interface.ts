@@ -8,20 +8,22 @@ export interface ReadingRoomResult {
   maxMembers: number;
   membersCount: number;
   createdAt: Date;
-  updatedAt: Date;
   members: Array<{ userId: string; role: 'host' | 'member' }>;
-  highlights: Array<{
-    id: string;
-    userId: string;
-    displayName?: string;
-    avatarUrl?: string;
-    chapterSlug: string;
-    paragraphId: string;
-    content: string;
-    aiInsight?: string;
-    createdAt: Date;
-  }>;
 }
+
+export type ReadingRoomSummaryResult = Pick<
+  ReadingRoomResult,
+  | 'roomId'
+  | 'bookId'
+  | 'hostId'
+  | 'mode'
+  | 'status'
+  | 'currentChapterSlug'
+  | 'maxMembers'
+  | 'membersCount'
+  | 'createdAt'
+  | 'members'
+>;
 
 export interface LeaveRoomResult extends ReadingRoomResult {
   roomEnded: boolean;

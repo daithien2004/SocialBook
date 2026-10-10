@@ -47,7 +47,7 @@ export class ReadingRoomsController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({ global: { limit: 10, ttl: 60000 } })
   @Post()
   @ApiCreatedResponse({ type: ReadingRoomResponseDto })
   async createRoom(
@@ -100,7 +100,7 @@ export class ReadingRoomsController {
     return ReadingRoomResponseDto.fromResult(result);
   }
 
-  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @Throttle({ global: { limit: 20, ttl: 60000 } })
   @Get(':code/highlights')
   @ApiPaginatedResponse(ReadingRoomHighlightResponseDto, 'offset')
   async getRoomHighlights(
@@ -139,7 +139,7 @@ export class ReadingRoomsController {
     );
   }
 
-  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @Throttle({ global: { limit: 20, ttl: 60000 } })
   @Get(':code')
   @ApiExtraModels(ReadingRoomResponseDto)
   @ApiOkResponse({

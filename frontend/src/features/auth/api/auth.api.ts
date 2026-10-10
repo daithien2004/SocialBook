@@ -1,8 +1,8 @@
 import { apiRequest } from '@/lib/api-client';
 import {
-  AuthMessageResponse,
+  AccessTokenResponse,
   ResendOtpResponse,
-  authMessageResponseSchema,
+  accessTokenResponseSchema,
   resendOtpResponseSchema,
 } from '../schemas/auth.schema';
 import {
@@ -25,21 +25,12 @@ async function authPost<T = unknown>(
   });
 }
 
-export async function signup(
-  payload: SignupRequest,
-): Promise<AuthMessageResponse> {
-  const response = await authPost<Record<string, unknown>>('/signup', payload);
-  return authMessageResponseSchema.parse(response);
+export async function signup(payload: SignupRequest): Promise<void> {
+  await authPost('/signup', payload);
 }
 
-export async function verifyOtp(
-  payload: VerifyOtpRequest,
-): Promise<AuthMessageResponse> {
-  const response = await authPost<Record<string, unknown>>(
-    '/verify-otp',
-    payload,
-  );
-  return authMessageResponseSchema.parse(response);
+export async function verifyOtp(payload: VerifyOtpRequest): Promise<void> {
+  await authPost('/verify-otp', payload);
 }
 
 export async function resendOtp(
@@ -54,24 +45,19 @@ export async function resendOtp(
 
 export async function forgotPassword(
   payload: ForgotPasswordRequest,
-): Promise<AuthMessageResponse> {
-  const response = await authPost<Record<string, unknown>>(
-    '/forgot-password',
-    payload,
-  );
-  return authMessageResponseSchema.parse(response);
+): Promise<void> {
+  await authPost('/forgot-password', payload);
 }
 
 export async function resetPassword(
   payload: ResetPasswordRequest,
-): Promise<AuthMessageResponse> {
-  const response = await authPost<Record<string, unknown>>(
-    '/reset-password',
-    payload,
-  );
-  return authMessageResponseSchema.parse(response);
+): Promise<void> {
+  await authPost('/reset-password', payload);
 }
 
-export async function login(payload: LoginRequest): Promise<AuthMessageResponse> {
-  return authPost<AuthMessageResponse>('/login', payload);
+export async function login(
+  payload: LoginRequest,
+): Promise<AccessTokenResponse> {
+  const response = await authPost<unknown>('/login', payload);
+  return accessTokenResponseSchema.parse(response);
 }

@@ -121,7 +121,7 @@ npm run test             # Jest unit tests
 ## 🛠️ Getting Started
 
 ### Prerequisites
-- Node.js v20+
+- Node.js v20.18.1+
 - MongoDB (local or Atlas)
 - Docker & Docker Compose
 

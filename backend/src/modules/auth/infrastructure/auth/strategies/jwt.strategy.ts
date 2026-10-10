@@ -12,7 +12,7 @@ import { ICachePort } from '@/shared/domain/cache.port';
 import {
   AUTH_USER_CACHE_TTL_SECONDS,
   getAuthUserCacheKey,
-} from '@/shared/domain/auth-cache.keys';
+} from '@/shared/platform/cache/auth-cache.keys';
 import { UserId } from '@/modules/users/domain/public-api';
 
 export interface JwtPayload {

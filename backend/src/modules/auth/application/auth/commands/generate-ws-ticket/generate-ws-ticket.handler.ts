@@ -5,6 +5,7 @@ import { randomBytes, createHash } from 'crypto';
 import { GenerateWsTicketCommand } from './generate-ws-ticket.command';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { UserId } from '@/modules/users/domain/public-api';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
 const WS_TICKET_TTL_SEC = 30;
 
@@ -20,7 +21,7 @@ export class GenerateWsTicketHandler implements ICommandHandler<GenerateWsTicket
       UserId.create(command.userId),
     );
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundDomainException('User not found');
     }
 
     const ticket = randomBytes(32).toString('base64url');

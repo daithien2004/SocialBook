@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class EmbeddingVector {
   private readonly value: number[];
 
@@ -7,14 +9,16 @@ export class EmbeddingVector {
 
   static create(vector: number[]): EmbeddingVector {
     if (!Array.isArray(vector)) {
-      throw new Error('Embedding vector must be an array');
+      throw new BadRequestDomainException('Embedding vector must be an array');
     }
 
     if (
       vector.length > 0 &&
       !vector.every((element) => typeof element === 'number' && !isNaN(element))
     ) {
-      throw new Error('All elements in embedding vector must be valid numbers');
+      throw new BadRequestDomainException(
+        'All elements in embedding vector must be valid numbers',
+      );
     }
 
     return new EmbeddingVector([...vector]);
@@ -25,7 +29,7 @@ export class EmbeddingVector {
       const vector: number[] = JSON.parse(vectorString) as number[];
       return EmbeddingVector.create(vector);
     } catch {
-      throw new Error('Invalid vector string format');
+      throw new BadRequestDomainException('Invalid vector string format');
     }
   }
 

@@ -59,14 +59,6 @@ export class ReviewRepository implements IReviewRepository {
     return reviews.map((r) => ReviewMapper.toDomain(r));
   }
 
-  async findByUserId(userId: string): Promise<ReviewEntity[]> {
-    const reviews = await this.reviewModel
-      .find({ userId: new Types.ObjectId(userId) })
-      .sort({ createdAt: -1 })
-      .populate('bookId', 'title coverUrl');
-    return reviews.map((r) => ReviewMapper.toDomain(r));
-  }
-
   async toggleLike(
     reviewId: string,
     userId: string,

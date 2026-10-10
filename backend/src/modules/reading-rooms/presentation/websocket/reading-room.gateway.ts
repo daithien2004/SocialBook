@@ -1,4 +1,4 @@
-import {
+﻿import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayConnection,
@@ -31,6 +31,7 @@ import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 import { WsExceptionFilter } from '@/shared/platform/filters/ws-exception.filter';
 import { WsValidationPipe } from '@/presentation/gateways/pipes/ws-validation.pipe';
+import { joinUserControlRoom } from '@/shared/platform/websocket/join-user-control-room';
 import { toHandshakeError } from './reading-room.handshake';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { LeaveRoomDto } from './dto/leave-room.dto';
@@ -104,13 +105,20 @@ export class ReadingRoomGateway
    * Hook cháº¡y khi user káº¿t ná»‘i thÃ nh cÃ´ng.
    * GÃ¡n socket vÃ o room "user:{userId}" Ä‘á»ƒ tiá»‡n gá»­i thÃ´ng bÃ¡o cÃ¡ nhÃ¢n (vÃ­ dá»¥ bá»‹ kick).
    */
-  handleConnection(socket: RoomSocket) {
-    void socket.join(`user:${socket.data.userId}`);
+  async handleConnection(socket: RoomSocket): Promise<void> {
+    await joinUserControlRoom(
+      socket,
+      socket.data.userId,
+      'reading-rooms',
+      (message) => {
+        this.logger.error(message);
+      },
+    );
   }
 
   /**
    * Dá»n cÃ¡c tráº¡ng thÃ¡i gáº¯n vá»›i socket khi káº¿t ná»‘i bá»‹ ngáº¯t:
-   * 1. LÆ°u ngay tiáº¿n Ä‘á»™ Ä‘á»c Ä‘ang chá», rá»“i xÃ³a state/socket khá»i tracker trong RAM.
+   * 1. Progress is enqueued in BullMQ when a heartbeat is accepted; no snapshot remains in process memory.
    * 2. Náº¿u socket Ä‘ang á»Ÿ phÃ²ng Ä‘á»c, cáº­p nháº­t presence; chá»‰ xÃ³a presence khi user
    *    khÃ´ng cÃ²n tab nÃ o khÃ¡c trong cÃ¹ng phÃ²ng.
    * 3. LuÃ´n nháº£ slot cá»§a socket trong Redis Ä‘á»ƒ khÃ´ng tÃ­nh nÃ³ vÃ o giá»›i háº¡n káº¿t ná»‘i.

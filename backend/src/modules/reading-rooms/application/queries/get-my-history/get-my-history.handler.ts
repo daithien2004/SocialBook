@@ -1,26 +1,23 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
-import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
-import { ReadingRoomResult } from '../../reading-room.interface';
+import { IReadingRoomReadRepository } from '../../ports/reading-room-read.repository';
+import { ReadingRoomSummaryResult } from '../../reading-room.interface';
 import { GetMyHistoryQuery } from './get-my-history.query';
 
 @QueryHandler(GetMyHistoryQuery)
 export class GetMyHistoryHandler implements IQueryHandler<
   GetMyHistoryQuery,
-  void
+  { items: ReadingRoomSummaryResult[]; total: number }
 > {
-  constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
+  constructor(
+    private readonly readingRoomReadRepository: IReadingRoomReadRepository,
+  ) {}
 
   async execute(
     query: GetMyHistoryQuery,
-  ): Promise<{ items: ReadingRoomResult[]; total: number }> {
-    const result = await this.readingRoomRepository.findHistoryByUser(
+  ): Promise<{ items: ReadingRoomSummaryResult[]; total: number }> {
+    return this.readingRoomReadRepository.findHistorySummariesByUser(
       query.userId,
       { skip: query.skip, limit: query.limit },
     );
-    return {
-      items: ReadingRoomApplicationMapper.toResultArray(result.items),
-      total: result.total,
-    };
   }
 }

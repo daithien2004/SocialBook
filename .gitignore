@@ -2,7 +2,10 @@
 UML
 CODING_RULESET.md
 .gitignore
-docs
+docs/*
+!docs/audit/
+docs/audit/*
+!docs/audit/*.md
 ports.env
 mongo.env
 backend.env

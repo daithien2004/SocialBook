@@ -1,6 +1,6 @@
 import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
-import { calculateFuzzyScore } from '@/shared/platform/utils/string.util';
+import { calculateFuzzyScore } from './fuzzy-search.util';
 import { Logger } from '@nestjs/common';
 import { IntelligentSearchQuery } from './intelligent-search.query';
 import {

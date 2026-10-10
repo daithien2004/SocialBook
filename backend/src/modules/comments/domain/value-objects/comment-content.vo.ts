@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class CommentContent {
   private readonly value: string;
 
@@ -7,11 +9,13 @@ export class CommentContent {
 
   static create(content: string): CommentContent {
     if (!content || content.trim().length === 0) {
-      throw new Error('Comment content cannot be empty');
+      throw new BadRequestDomainException('Comment content cannot be empty');
     }
 
     if (content.trim().length > 2000) {
-      throw new Error('Comment content cannot exceed 2000 characters');
+      throw new BadRequestDomainException(
+        'Comment content cannot exceed 2000 characters',
+      );
     }
 
     return new CommentContent(content.trim());

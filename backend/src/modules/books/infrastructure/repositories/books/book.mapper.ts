@@ -17,6 +17,7 @@ export interface BookPersistence {
   likedBy: Types.ObjectId[];
   updatedAt: Date;
   vectorIndexedAt?: Date | null;
+  version: number;
 }
 
 export interface RawGenre {
@@ -59,6 +60,7 @@ export interface RawBookDocument {
   updatedAt: Date;
   chapterCount?: number;
   vectorIndexedAt?: Date | null;
+  version?: number;
 }
 
 export interface RawBookDetailAggregation extends Omit<
@@ -120,6 +122,7 @@ export class BookMapper {
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
       vectorIndexedAt: document.vectorIndexedAt,
+      version: document.version,
       authorName,
       genreObjects: (document.genres || [])
         .filter((g): g is RawGenre => typeof g === 'object' && 'name' in g)
@@ -180,6 +183,7 @@ export class BookMapper {
       likedBy: book.likedBy.map((id) => new Types.ObjectId(id)),
       updatedAt: book.updatedAt,
       vectorIndexedAt: book.vectorIndexedAt,
+      version: book.loadedVersion,
     };
   }
 

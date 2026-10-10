@@ -78,15 +78,6 @@ export class ReadingRoomRepository implements IReadingRoomRepository {
     };
   }
 
-  async findActiveByCode(code: string): Promise<DomainReadingRoom | null> {
-    const doc = await this.roomModel
-      .findOne({ _id: code, status: 'active' })
-      .lean()
-      .exec();
-    if (!doc) return null;
-    return ReadingRoomMapper.toDomain(doc);
-  }
-
   async findActiveByUser(userId: string): Promise<DomainReadingRoom[]> {
     const docs = await this.roomModel
       .find({
@@ -102,31 +93,6 @@ export class ReadingRoomRepository implements IReadingRoomRepository {
       .lean()
       .exec();
     return docs.map((doc) => ReadingRoomMapper.toDomain(doc));
-  }
-
-  async findHistoryByUser(
-    userId: string,
-    options: { skip?: number; limit?: number } = {},
-  ): Promise<{ items: DomainReadingRoom[]; total: number }> {
-    const query = { 'members.userId': userId, status: 'ended' };
-    const skip = options.skip || 0;
-    const limit = options.limit || 10;
-
-    const [items, total] = await Promise.all([
-      this.roomModel
-        .find(query)
-        .sort({ endedAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec(),
-      this.roomModel.countDocuments(query).exec(),
-    ]);
-
-    return {
-      items: items.map((doc) => ReadingRoomMapper.toDomain(doc)),
-      total,
-    };
   }
 
   async save(room: DomainReadingRoom): Promise<void> {

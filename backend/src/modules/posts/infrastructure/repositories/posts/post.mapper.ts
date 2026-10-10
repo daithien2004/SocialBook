@@ -128,6 +128,7 @@ export class PostMapper {
       likedByCurrentUser: postDoc.likedByCurrentUser,
       createdAt: postDoc.createdAt,
       updatedAt: postDoc.updatedAt,
+      version: postDoc.version,
       author,
       book,
     });

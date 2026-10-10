@@ -16,7 +16,7 @@ export class ReadingRoomSystemListener {
     private readonly namespaceProvider: ReadingRoomNamespaceProvider,
   ) {}
 
-  @OnEvent(EventNames.USER_ROLE_CHANGED)
+  @OnEvent(EventNames.USER_ROLE_CHANGED, { suppressErrors: false })
   async handleUserRoleChanged(event: UserRoleChangedEvent) {
     this.logger.debug(
       `User ${event.userId} role changed, revoking tokens and forcing socket disconnect.`,
@@ -30,6 +30,7 @@ export class ReadingRoomSystemListener {
       );
     } catch (e: unknown) {
       this.logger.error('Failed to set token revocation timestamp', e);
+      throw e;
     }
 
     try {
@@ -37,8 +38,9 @@ export class ReadingRoomSystemListener {
         .getServer()
         .in(`user:${event.userId}`)
         .disconnectSockets(true);
-    } catch {
-      // server is not initialized yet
+    } catch (error: unknown) {
+      this.logger.error('Failed to disconnect reading room sockets', error);
+      throw error;
     }
   }
 }

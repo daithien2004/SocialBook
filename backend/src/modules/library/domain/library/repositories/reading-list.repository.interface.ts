@@ -11,7 +11,6 @@ export abstract class IReadingListRepository {
   ): Promise<ReadingList | null>;
   abstract remove(userId: UserId, bookId: BookId): Promise<void>;
   abstract exists(userId: UserId, bookId: BookId): Promise<boolean>;
-  abstract countByUser(userId: string): Promise<number>;
   abstract countByCollectionId(collectionId: string): Promise<number>;
   abstract findByCollectionId(
     collectionId: string,

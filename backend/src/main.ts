@@ -28,6 +28,7 @@ import { timingSafeEqual } from 'crypto';
 import { POST_MODERATION_QUEUE } from './modules/posts/infrastructure/queues/post-moderation/post-moderation.processor';
 import { CHAPTERS_IMPORT_QUEUE } from './modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor';
 import { mapValidationErrors } from './shared/platform/mappers/validation-error.mapper';
+import { isChapterImportStartRequest } from '@/modules/chapters/presentation/public-api';
 
 async function bootstrap() {
   // A7: entry point của API không bao giờ được chạy ở worker mode. Nếu không có
@@ -46,8 +47,16 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   app.use(helmet());
 
-  // Tăng giới hạn payload riêng cho endpoint import, mặc định các API khác là 1mb (S11)
-  app.use('/api/chapters/import', json({ limit: '50mb' }));
+  // Tăng giới hạn payload riêng cho endpoint bắt đầu import chương.
+  const chapterImportJsonParser = json({ limit: '50mb' });
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (isChapterImportStartRequest(req.method, req.path)) {
+      chapterImportJsonParser(req, res, next);
+      return;
+    }
+    next();
+  });
+  // Các API còn lại giới hạn body JSON ở 1mb.
   app.use(json({ limit: '1mb' }));
   app.use(urlencoded({ limit: '1mb', extended: true }));
 

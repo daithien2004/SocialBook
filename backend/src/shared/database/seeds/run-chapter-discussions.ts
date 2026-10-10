@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { INestApplicationContext, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DatabaseSeedModule } from './database.seed.module';
 import { ChapterDiscussionsSeed } from './chapter-discussions.seeder';
@@ -6,20 +6,28 @@ import { ChapterDiscussionsSeed } from './chapter-discussions.seeder';
 const logger = new Logger('ChapterDiscussionsSeed');
 
 async function bootstrap() {
-  const app = await NestFactory.createApplicationContext(DatabaseSeedModule);
-
-  const seed = app.get(ChapterDiscussionsSeed);
+  let app: INestApplicationContext | undefined;
 
   try {
+    app = await NestFactory.createApplicationContext(DatabaseSeedModule);
+    const seed = app.get(ChapterDiscussionsSeed);
     await seed.run();
     logger.log('Chapter discussions seeded successfully!');
-    process.exit(0);
-  } catch (error) {
-    logger.error('Seeding failed:', error);
-    process.exit(1);
+  } catch (error: unknown) {
+    logger.error(
+      'Seeding failed:',
+      error instanceof Error ? error.stack : String(error),
+    );
+    process.exitCode = 1;
   } finally {
-    await app.close();
+    await app?.close();
   }
 }
 
-void bootstrap();
+void bootstrap().catch((error: unknown) => {
+  logger.error(
+    'Seed process failed:',
+    error instanceof Error ? error.stack : String(error),
+  );
+  process.exitCode = 1;
+});

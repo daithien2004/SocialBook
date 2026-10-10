@@ -36,6 +36,7 @@ type NotificationsSocket = Socket<
 >;
 
 import { WsExceptionFilter } from '@/shared/platform/filters/ws-exception.filter';
+import { joinUserControlRoom } from '@/shared/platform/websocket/join-user-control-room';
 
 @WebSocketGateway({
   namespace: '/notifications',
@@ -104,7 +105,7 @@ export class NotificationsGateway
     });
   }
 
-  @OnEvent(EventNames.USER_ROLE_CHANGED)
+  @OnEvent(EventNames.USER_ROLE_CHANGED, { suppressErrors: false })
   handleUserRoleChanged(event: UserRoleChangedEvent) {
     this.logger.debug(
       `User ${event.userId} role changed, forcing socket disconnect.`,
@@ -112,10 +113,12 @@ export class NotificationsGateway
     this.server.in(`user:${event.userId}`).disconnectSockets(true);
   }
 
-  handleConnection(socket: NotificationsSocket) {
+  async handleConnection(socket: NotificationsSocket): Promise<void> {
     const userId = socket.data.userId;
     if (userId) {
-      void socket.join(`user:${userId}`);
+      await joinUserControlRoom(socket, userId, 'notifications', (message) => {
+        this.logger.error(message);
+      });
     }
   }
 

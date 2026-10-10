@@ -10,6 +10,7 @@ import { OAuthProviderError } from '@/modules/auth/domain/auth/exceptions/oauth-
 
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
+const TOKEN_EXCHANGE_TIMEOUT_MS = 10_000;
 
 @Injectable()
 export class GoogleOAuthStrategy implements OAuthProviderStrategy {
@@ -48,6 +49,7 @@ export class GoogleOAuthStrategy implements OAuthProviderStrategy {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body,
+      signal: AbortSignal.timeout(TOKEN_EXCHANGE_TIMEOUT_MS),
     });
     if (!res.ok) {
       throw new OAuthProviderError(

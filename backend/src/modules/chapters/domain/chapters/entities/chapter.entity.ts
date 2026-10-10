@@ -1,4 +1,8 @@
 import { Entity } from '@/shared/domain/entity.base';
+import {
+  BadRequestDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import slugify from 'slugify';
 import { BookId } from '../value-objects/book-id.vo';
 import { ChapterId } from '../value-objects/chapter-id.vo';
@@ -19,15 +23,23 @@ export interface ChapterProps {
 
 export class Chapter extends Entity<ChapterId> {
   private _props: ChapterProps;
+  private _loadedVersion: number;
+  private _isNew: boolean;
+  private _dirty: boolean;
 
   private constructor(
     id: ChapterId,
     props: ChapterProps,
     createdAt?: Date,
     updatedAt?: Date,
+    isNew = true,
+    loadedVersion = 0,
   ) {
     super(id, createdAt, updatedAt);
     this._props = props;
+    this._isNew = isNew;
+    this._loadedVersion = loadedVersion;
+    this._dirty = isNew;
   }
 
   static create(props: {
@@ -49,7 +61,9 @@ export class Chapter extends Entity<ChapterId> {
     );
 
     if (paragraphs.length === 0) {
-      throw new Error('Chapter must have at least one paragraph');
+      throw new BadRequestDomainException(
+        'Chapter must have at least one paragraph',
+      );
     }
 
     return new Chapter(props.id, {
@@ -74,6 +88,7 @@ export class Chapter extends Entity<ChapterId> {
     orderIndex: number;
     createdAt: Date;
     updatedAt: Date;
+    version?: number;
     ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
     audioUrl?: string;
   }): Chapter {
@@ -81,6 +96,7 @@ export class Chapter extends Entity<ChapterId> {
       Paragraph.create(p.id, p.content),
     );
 
+    const loadedVersion = props.version ?? 0;
     return new Chapter(
       ChapterId.create(props.id),
       {
@@ -95,7 +111,32 @@ export class Chapter extends Entity<ChapterId> {
       },
       props.createdAt,
       props.updatedAt,
+      false,
+      loadedVersion,
     );
+  }
+
+  get loadedVersion(): number {
+    return this._loadedVersion;
+  }
+
+  get isNew(): boolean {
+    return this._isNew;
+  }
+
+  get isDirty(): boolean {
+    return this._dirty;
+  }
+
+  markPersisted(version: number): void {
+    this._loadedVersion = version;
+    this._isNew = false;
+    this._dirty = false;
+  }
+
+  protected override markAsUpdated(): void {
+    super.markAsUpdated();
+    this._dirty = true;
   }
 
   // Getters
@@ -155,10 +196,25 @@ export class Chapter extends Entity<ChapterId> {
     );
 
     if (paragraphIndex === -1) {
-      throw new Error('Paragraph not found');
+      throw new NotFoundDomainException('Paragraph not found');
     }
 
     this._props.paragraphs[paragraphIndex].updateContent(newContent);
+    this.markAsUpdated();
+  }
+
+  replaceParagraphs(paragraphs: Array<{ id?: string; content: string }>): void {
+    if (paragraphs.length === 0) {
+      throw new BadRequestDomainException(
+        'Chapter must have at least one paragraph',
+      );
+    }
+
+    this._props.paragraphs = paragraphs.map((paragraph) =>
+      paragraph.id
+        ? Paragraph.create(paragraph.id, paragraph.content)
+        : Paragraph.createWithoutId(paragraph.content),
+    );
     this.markAsUpdated();
   }
 
@@ -168,11 +224,13 @@ export class Chapter extends Entity<ChapterId> {
     );
 
     if (paragraphIndex === -1) {
-      throw new Error('Paragraph not found');
+      throw new NotFoundDomainException('Paragraph not found');
     }
 
     if (this._props.paragraphs.length === 1) {
-      throw new Error('Chapter must have at least one paragraph');
+      throw new BadRequestDomainException(
+        'Chapter must have at least one paragraph',
+      );
     }
 
     this._props.paragraphs.splice(paragraphIndex, 1);
@@ -185,13 +243,15 @@ export class Chapter extends Entity<ChapterId> {
     for (const id of newOrder) {
       const paragraph = this._props.paragraphs.find((p) => p.id === id);
       if (!paragraph) {
-        throw new Error(`Paragraph with ID ${id} not found`);
+        throw new NotFoundDomainException(`Paragraph with ID ${id} not found`);
       }
       reorderedParagraphs.push(paragraph);
     }
 
     if (reorderedParagraphs.length !== this._props.paragraphs.length) {
-      throw new Error('All paragraphs must be included in the reorder');
+      throw new BadRequestDomainException(
+        'All paragraphs must be included in the reorder',
+      );
     }
 
     this._props.paragraphs = reorderedParagraphs;

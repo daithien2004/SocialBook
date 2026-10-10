@@ -6,9 +6,11 @@ import {
 } from '@/modules/genres/infrastructure/schemas/genre.schema';
 import { IGenreRepository } from '@/modules/genres/domain/repositories/genre.repository.interface';
 import { GenresRepository } from './genres.repository';
+import { MongoPersistenceModule } from '@/shared/infrastructure/mongo-persistence.module';
 
 @Module({
   imports: [
+    MongoPersistenceModule,
     MongooseModule.forFeature([{ name: Genre.name, schema: GenreSchema }]),
   ],
   providers: [

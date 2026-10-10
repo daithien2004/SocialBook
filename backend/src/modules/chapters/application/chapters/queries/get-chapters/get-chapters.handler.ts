@@ -5,12 +5,8 @@ import {
   SortOptions,
 } from '@/shared/domain/pagination.types';
 import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
-import {
-  ChapterFilter,
-  IChapterRepository,
-} from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
-import { BookId } from '@/modules/chapters/domain/chapters/value-objects/book-id.vo';
-import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
+import { ChapterFilter } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
+import { IChapterReadRepository } from '@/modules/chapters/application/ports/chapter-read.repository';
 import { GetChaptersQuery } from './get-chapters.query';
 import { ChapterResult } from './get-chapters.result';
 
@@ -19,7 +15,7 @@ export class GetChaptersHandler implements IQueryHandler<
   GetChaptersQuery,
   ChapterListReadModel | PaginatedResult<ChapterResult>
 > {
-  constructor(private readonly chapterRepository: IChapterRepository) {}
+  constructor(private readonly chapterReadRepository: IChapterReadRepository) {}
 
   async execute(
     query: GetChaptersQuery,
@@ -41,36 +37,12 @@ export class GetChaptersHandler implements IQueryHandler<
     };
 
     if (query.bookSlug) {
-      return await this.chapterRepository.findListByBookSlug(
+      return await this.chapterReadRepository.findListByBookSlug(
         query.bookSlug,
         pagination,
-        sort,
       );
-    } else if (query.bookId) {
-      const bookId = BookId.create(query.bookId);
-      const result = await this.chapterRepository.findByBook(
-        bookId,
-        pagination,
-        sort,
-      );
-      return {
-        data: result.data.map((chapter) =>
-          ChapterApplicationMapper.toResult(chapter),
-        ),
-        meta: result.meta,
-      };
-    } else {
-      const result = await this.chapterRepository.findAll(
-        filter,
-        pagination,
-        sort,
-      );
-      return {
-        data: result.data.map((chapter) =>
-          ChapterApplicationMapper.toResult(chapter),
-        ),
-        meta: result.meta,
-      };
     }
+
+    return this.chapterReadRepository.findPaginated(filter, pagination, sort);
   }
 }

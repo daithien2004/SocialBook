@@ -20,13 +20,19 @@ import {
   Genre,
   GenreSchema,
 } from '@/modules/genres/infrastructure/schemas/public-api';
-import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
 
 import { ChromaInfrastructureModule } from '@/modules/chroma/infrastructure/public-api';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
 import { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
 import { BookCacheAdapter } from '../../cache/book-cache.adapter';
 import { ViewRankingCacheAdapter } from '../../cache/view-ranking-cache.adapter';
+import {
+  BookOutboxRecord,
+  BookOutboxSchema,
+} from '../../outbox/book-outbox.schema';
+import { BookOutboxPort } from '@/modules/books/application/public-api';
+import { BookOutboxRepository } from '../../outbox/book-outbox.repository';
+import { MongoPersistenceModule } from '@/shared/infrastructure/mongo-persistence.module';
 
 @Module({
   imports: [
@@ -35,11 +41,14 @@ import { ViewRankingCacheAdapter } from '../../cache/view-ranking-cache.adapter'
       { name: Chapter.name, schema: ChapterSchema },
       { name: Author.name, schema: AuthorSchema },
       { name: Genre.name, schema: GenreSchema },
+      { name: BookOutboxRecord.name, schema: BookOutboxSchema },
     ]),
+    MongoPersistenceModule,
     ChromaInfrastructureModule,
   ],
   providers: [
-    TextSimilarityService,
+    BookOutboxRepository,
+    { provide: BookOutboxPort, useExisting: BookOutboxRepository },
     {
       provide: IBookCachePort,
       useClass: BookCacheAdapter,
@@ -62,6 +71,7 @@ import { ViewRankingCacheAdapter } from '../../cache/view-ranking-cache.adapter'
     IBookQueryProvider,
     IBookCachePort,
     IViewRankingCachePort,
+    BookOutboxPort,
   ],
 })
 export class BooksRepositoryModule {}

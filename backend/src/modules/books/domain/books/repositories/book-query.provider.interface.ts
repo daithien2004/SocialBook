@@ -5,7 +5,6 @@ import {
 } from '@/shared/domain/pagination.types';
 import { BookDetailReadModel } from '../read-models/book-detail.read-model';
 import { BookListReadModel } from '../read-models/book-list.read-model';
-import { BookId } from '../value-objects/book-id.vo';
 import { BookFilter } from './book.repository.interface';
 
 export abstract class IBookQueryProvider {
@@ -16,11 +15,6 @@ export abstract class IBookQueryProvider {
   ): Promise<PaginatedResult<BookListReadModel>>;
 
   abstract findDetailBySlug(slug: string): Promise<BookDetailReadModel | null>;
-
-  abstract searchByText(
-    query: string,
-    limit?: number,
-  ): Promise<Array<{ id: BookId; score: number }>>;
 
   abstract getGrowthMetrics(
     startDate: Date,

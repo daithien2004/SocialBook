@@ -226,11 +226,6 @@ export class User extends Entity<UserId> {
     this.markAsUpdated();
   }
 
-  updateFavoriteGenres(genres: string[]): void {
-    this._props.favoriteGenres = genres;
-    this.markAsUpdated();
-  }
-
   verify(): void {
     this._props.isVerified = true;
     this.markAsUpdated();

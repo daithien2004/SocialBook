@@ -60,27 +60,18 @@ export class UpdateChapterHandler implements ICommandHandler<
         );
       }
 
-      // Clear existing paragraphs and add new ones
-      const currentParagraphs = chapter.paragraphs;
-      for (const currentParagraph of currentParagraphs) {
-        try {
-          chapter.removeParagraph(currentParagraph.id);
-        } catch {
-          // Ignore if it's the last paragraph
-        }
-      }
-
-      for (const paragraphData of command.paragraphs) {
-        if (paragraphData.id) {
-          try {
-            chapter.updateParagraph(paragraphData.id, paragraphData.content);
-          } catch {
-            chapter.addParagraph(paragraphData.content);
-          }
-        } else {
-          chapter.addParagraph(paragraphData.content);
-        }
-      }
+      const existingParagraphIds = new Set(
+        chapter.paragraphs.map((paragraph) => paragraph.id),
+      );
+      chapter.replaceParagraphs(
+        command.paragraphs.map((paragraph) => ({
+          id:
+            paragraph.id && existingParagraphIds.has(paragraph.id)
+              ? paragraph.id
+              : undefined,
+          content: paragraph.content,
+        })),
+      );
     }
 
     if (command.orderIndex !== undefined) {

@@ -1,29 +1,27 @@
-import { useState, useRef, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { bookQueries } from "@/features/books/api/books.queries";
-import {
-  chaptersQueries,
-} from "@/features/chapters/api/chapters.queries";
+import { useState, useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { bookQueries } from '@/features/books/api/books.queries';
+import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
 import {
   getChapterById,
   getChaptersImportStatus,
-} from "@/features/chapters/api/chapters.api";
+} from '@/features/chapters/api/chapters.api';
 import {
   useCreateChapter,
   useDeleteChapter,
   useStartChaptersImport,
   useUpdateChapter,
-} from "@/features/chapters/api/chapters.mutations";
+} from '@/features/chapters/api/chapters.mutations';
 import {
   useGenerateBookAudio,
   useGenerateChapterAudio,
-} from "@/features/tts/api/tts.mutations";
+} from '@/features/tts/api/tts.mutations';
 import type {
   Chapter,
   Paragraph,
-} from "@/features/chapters/types/chapter.interface";
+} from '@/features/chapters/types/chapter.interface';
 import { getErrorMessage } from '@/lib/utils';
 
 export function useChapterManagement() {
@@ -36,8 +34,9 @@ export function useChapterManagement() {
   const observerTarget = useRef<HTMLDivElement>(null);
   const shouldRefetchRef = useRef(false);
 
-  const { data: bookData, isLoading: isLoadingBook } =
-    useQuery(bookQueries.byId(bookId));
+  const { data: bookData, isLoading: isLoadingBook } = useQuery(
+    bookQueries.byId(bookId),
+  );
 
   const {
     data: chaptersData,
@@ -46,7 +45,7 @@ export function useChapterManagement() {
     refetch: refetchChaptersQuery,
   } = useQuery({
     ...chaptersQueries.adminList({
-      bookSlug: bookData?.slug || "",
+      bookSlug: bookData?.slug || '',
       page,
       limit: 20,
     }),
@@ -95,7 +94,7 @@ export function useChapterManagement() {
           setPage((prev) => prev + 1);
         }
       },
-      { threshold: 0.1, rootMargin: "500px" },
+      { threshold: 0.1, rootMargin: '500px' },
     );
 
     if (observerTarget.current) {
@@ -105,8 +104,10 @@ export function useChapterManagement() {
     return () => observer.disconnect();
   }, [hasMore, isFetchingChapters]);
 
-  const { mutateAsync: createChapter, isPending: isCreating } = useCreateChapter();
-  const { mutateAsync: updateChapter, isPending: isUpdating } = useUpdateChapter();
+  const { mutateAsync: createChapter, isPending: isCreating } =
+    useCreateChapter();
+  const { mutateAsync: updateChapter, isPending: isUpdating } =
+    useUpdateChapter();
   const { mutateAsync: deleteChapter } = useDeleteChapter();
   const { mutateAsync: startChaptersImport, isPending: isStartingImport } =
     useStartChaptersImport();
@@ -120,12 +121,12 @@ export function useChapterManagement() {
     null,
   );
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState("");
+  const [editingTitle, setEditingTitle] = useState('');
   const [editingParagraphs, setEditingParagraphs] = useState<Paragraph[]>([]);
   const [showNewChapterForm, setShowNewChapterForm] = useState(false);
-  const [newChapterTitle, setNewChapterTitle] = useState("");
+  const [newChapterTitle, setNewChapterTitle] = useState('');
   const [newChapterParagraphs, setNewChapterParagraphs] = useState<Paragraph[]>(
-    [{ id: crypto.randomUUID(), content: "" }],
+    [{ id: crypto.randomUUID(), content: '' }],
   );
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
@@ -167,7 +168,7 @@ export function useChapterManagement() {
       const paras =
         fullChapter.paragraphs && fullChapter.paragraphs.length > 0
           ? fullChapter.paragraphs
-          : [{ id: crypto.randomUUID(), content: "" }];
+          : [{ id: crypto.randomUUID(), content: '' }];
       setEditingParagraphs(paras);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -179,7 +180,7 @@ export function useChapterManagement() {
 
   const handleCancelEdit = () => {
     setEditingChapterId(null);
-    setEditingTitle("");
+    setEditingTitle('');
     setEditingParagraphs([]);
   };
 
@@ -194,11 +195,11 @@ export function useChapterManagement() {
           paragraphs:
             editingParagraphs.filter((p) => p.content.trim()).length > 0
               ? editingParagraphs.filter((p) => p.content.trim())
-              : [{ id: crypto.randomUUID(), content: " " }],
+              : [{ id: crypto.randomUUID(), content: ' ' }],
         },
       });
       setEditingChapterId(null);
-      setEditingTitle("");
+      setEditingTitle('');
       setEditingParagraphs([]);
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -207,7 +208,7 @@ export function useChapterManagement() {
 
   const handleDeleteChapter = async (chapterId: string) => {
     if (!book?.slug) return;
-    if (!confirm("Bạn có chắc muốn xóa chương này?")) return;
+    if (!confirm('Bạn có chắc muốn xóa chương này?')) return;
 
     try {
       await deleteChapter({ bookSlug: book.slug, chapterId });
@@ -225,7 +226,7 @@ export function useChapterManagement() {
     onPaste?: () => void,
   ) => {
     const isPaste = content.length - paragraphs[index].content.length > 5;
-    if (content.includes("\n") || (isPaste && /[.!?]\s/.test(content))) {
+    if (content.includes('\n') || (isPaste && /[.!?]\s/.test(content))) {
       const segments = content
         .split(/(?<=[.!?])\s+|\n+/)
         .map((s) => s.trim())
@@ -255,7 +256,7 @@ export function useChapterManagement() {
     paragraphs: Paragraph[],
     setParagraphs: (p: Paragraph[]) => void,
   ) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const cursorPosition = e.currentTarget.selectionStart;
       const content = paragraphs[index].content;
@@ -263,11 +264,14 @@ export function useChapterManagement() {
       const rightPart = content.slice(cursorPosition);
       const newParagraphs = paragraphs.map((p) => ({ ...p }));
       newParagraphs[index].content = leftPart;
-      newParagraphs.splice(index + 1, 0, { id: crypto.randomUUID(), content: rightPart });
+      newParagraphs.splice(index + 1, 0, {
+        id: crypto.randomUUID(),
+        content: rightPart,
+      });
       setParagraphs(newParagraphs);
 
       setTimeout(() => {
-        const allTextareas = Array.from(document.querySelectorAll("textarea"));
+        const allTextareas = Array.from(document.querySelectorAll('textarea'));
         const currentIdx = allTextareas.indexOf(e.currentTarget);
         if (currentIdx !== -1 && currentIdx + 1 < allTextareas.length) {
           const nextTextarea = allTextareas[
@@ -278,8 +282,8 @@ export function useChapterManagement() {
         }
       }, 0);
     } else if (
-      e.key === "Backspace" &&
-      paragraphs[index].content === "" &&
+      e.key === 'Backspace' &&
+      paragraphs[index].content === '' &&
       paragraphs.length > 1
     ) {
       e.preventDefault();
@@ -288,7 +292,7 @@ export function useChapterManagement() {
         .filter((_, i) => i !== index);
       setParagraphs(newParagraphs);
       setTimeout(() => {
-        const newTextareas = document.querySelectorAll("textarea");
+        const newTextareas = document.querySelectorAll('textarea');
         if (index > 0 && newTextareas[index - 1]) {
           const el = newTextareas[index - 1] as HTMLTextAreaElement;
           el.focus();
@@ -311,13 +315,13 @@ export function useChapterManagement() {
   };
 
   const handleCreateChapter = async () => {
-    if (!bookId) return toast.error("Không tìm thấy ID sách.");
+    if (!bookId) return toast.error('Không tìm thấy ID sách.');
     if (!newChapterTitle.trim())
-      return toast.info("Vui lòng nhập tiêu đề chương");
+      return toast.info('Vui lòng nhập tiêu đề chương');
 
     try {
       await createChapter({
-        bookSlug: book?.slug || "",
+        bookSlug: book?.slug || '',
         data: {
           title: newChapterTitle,
           bookId,
@@ -325,8 +329,8 @@ export function useChapterManagement() {
         },
       });
       setShowNewChapterForm(false);
-      setNewChapterTitle("");
-      setNewChapterParagraphs([{ id: crypto.randomUUID(), content: "" }]);
+      setNewChapterTitle('');
+      setNewChapterParagraphs([{ id: crypto.randomUUID(), content: '' }]);
     } catch (error: unknown) {
       toast.error(`Tạo thất bại: ${getErrorMessage(error)}`);
     }
@@ -335,13 +339,13 @@ export function useChapterManagement() {
   const handleGenerateAudio = async (chapterId: string) => {
     try {
       const ttsResult = await generateChapterAudio({ chapterId });
-      toast.success("Tạo audio thành công!");
+      toast.success('Tạo audio thành công!');
       setChapters((prev) =>
         prev.map((ch) =>
           ch.id === chapterId
             ? {
                 ...ch,
-                ttsStatus: "completed" as const,
+                ttsStatus: 'completed' as const,
                 audioUrl: ttsResult.audioUrl,
               }
             : ch,
@@ -376,7 +380,7 @@ export function useChapterManagement() {
     importedChapters: { title: string; content: string }[],
   ) => {
     setIsImportModalOpen(false);
-    if (!book?.slug) return toast.error("Book information missing");
+    if (!book?.slug) return toast.error('Book information missing');
 
     const toastId = toast.loading(
       `Đang tạo job import ${importedChapters.length} chương...`,
@@ -384,6 +388,7 @@ export function useChapterManagement() {
     try {
       const { jobId } = await startChaptersImport({
         bookSlug: book.slug,
+        idempotencyKey: globalThis.crypto.randomUUID(),
         data: { bookId, chapters: importedChapters },
       });
 
@@ -394,12 +399,16 @@ export function useChapterManagement() {
 
       while (true) {
         if (Date.now() - startedAt > TIMEOUT_MS) {
-          toast.error("Import quá lâu, vui lòng thử lại.", { id: toastId });
+          toast.error('Import quá lâu, vui lòng thử lại.', { id: toastId });
           break;
         }
 
-        const status = await getChaptersImportStatus({ bookSlug: book.slug, jobId, timestamp: Date.now() });
-        if (status?.state === "completed") {
+        const status = await getChaptersImportStatus({
+          bookSlug: book.slug,
+          jobId,
+          timestamp: Date.now(),
+        });
+        if (status?.state === 'completed') {
           const result = status.result;
           if (result && result.failed > 0) {
             toast.warning(
@@ -407,21 +416,21 @@ export function useChapterManagement() {
               { id: toastId },
             );
           } else {
-            toast.success("Import hoàn tất!", { id: toastId });
+            toast.success('Import hoàn tất!', { id: toastId });
           }
           refetchChapters();
           break;
         }
 
-        if (status?.state === "unknown") {
-          toast.success("Import hoàn tất!", { id: toastId });
+        if (status?.state === 'unknown') {
+          toast.success('Import hoàn tất!', { id: toastId });
           refetchChapters();
           break;
         }
 
-        if (status?.state === "failed") {
+        if (status?.state === 'failed') {
           toast.error(
-            `Import thất bại: ${status.failedReason || "Lỗi không xác định"}`,
+            `Import thất bại: ${status.failedReason || 'Lỗi không xác định'}`,
             { id: toastId },
           );
           break;

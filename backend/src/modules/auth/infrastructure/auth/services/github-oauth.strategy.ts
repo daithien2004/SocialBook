@@ -10,6 +10,7 @@ import { OAuthProviderError } from '@/modules/auth/domain/auth/exceptions/oauth-
 const TOKEN_ENDPOINT = 'https://github.com/login/oauth/access_token';
 const AUTH_ENDPOINT = 'https://github.com/login/oauth/authorize';
 const API = 'https://api.github.com';
+const OAUTH_REQUEST_TIMEOUT_MS = 10_000;
 
 interface GitHubEmail {
   email: string;
@@ -59,6 +60,7 @@ export class GitHubOAuthStrategy implements OAuthProviderStrategy {
         Accept: 'application/json',
       },
       body,
+      signal: AbortSignal.timeout(OAUTH_REQUEST_TIMEOUT_MS),
     });
     if (!res.ok) {
       throw new OAuthProviderError(
@@ -73,12 +75,14 @@ export class GitHubOAuthStrategy implements OAuthProviderStrategy {
           Authorization: `Bearer ${token.access_token}`,
           'User-Agent': 'socialbook',
         },
+        signal: AbortSignal.timeout(OAUTH_REQUEST_TIMEOUT_MS),
       }),
       fetch(`${API}/user/emails`, {
         headers: {
           Authorization: `Bearer ${token.access_token}`,
           'User-Agent': 'socialbook',
         },
+        signal: AbortSignal.timeout(OAUTH_REQUEST_TIMEOUT_MS),
       }),
     ]);
     if (!userRes.ok) {

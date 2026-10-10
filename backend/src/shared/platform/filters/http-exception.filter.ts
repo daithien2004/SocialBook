@@ -23,6 +23,7 @@ interface ExceptionBody {
   message?: unknown;
   detail?: unknown;
   errors?: unknown;
+  retryAfter?: unknown;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -60,6 +61,8 @@ function titleForStatus(status: number): string {
       return 'Conflict';
     case 429:
       return 'Too Many Requests';
+    case 503:
+      return 'Service Unavailable';
     default:
       return status >= 500 ? 'Internal Server Error' : 'Request Failed';
   }
@@ -79,6 +82,8 @@ function defaultCodeForStatus(status: number): string {
       return 'CONFLICT';
     case 429:
       return 'TOO_MANY_REQUESTS';
+    case 503:
+      return 'SERVICE_UNAVAILABLE';
     default:
       return status >= 500 ? 'INTERNAL_ERROR' : 'REQUEST_FAILED';
   }
@@ -99,6 +104,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let code = 'INTERNAL_ERROR';
     let detail = 'Internal server error';
     let errors: ProblemFieldErrorDto[] | undefined;
+    let retryAfter: number | undefined;
 
     if (exception instanceof DomainException) {
       status = this.statusForDomainCode(exception.code);
@@ -139,6 +145,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
         detail = status >= 500 ? 'Internal server error' : body;
       } else if (isExceptionBody(body)) {
         if (typeof body.code === 'string') code = body.code;
+        if (
+          typeof body.retryAfter === 'number' &&
+          Number.isFinite(body.retryAfter) &&
+          body.retryAfter >= 0
+        ) {
+          retryAfter = Math.ceil(body.retryAfter);
+        }
         const candidateDetail =
           typeof body.detail === 'string'
             ? body.detail
@@ -193,6 +206,23 @@ export class HttpExceptionFilter implements ExceptionFilter {
       traceId,
       ...(errors ? { errors } : {}),
     };
+
+    if (
+      (status === 429 || status === 503) &&
+      !response.hasHeader('Retry-After')
+    ) {
+      const throttlerRetryAfter = response.getHeader('Retry-After-global');
+      const retryAfterValue =
+        typeof throttlerRetryAfter === 'string' ||
+        typeof throttlerRetryAfter === 'number'
+          ? throttlerRetryAfter.toString()
+          : undefined;
+      const retryAfterSeconds = retryAfterValue ?? retryAfter;
+      response.setHeader(
+        'Retry-After',
+        (retryAfterSeconds ?? (status === 429 ? 1 : 5)).toString(),
+      );
+    }
 
     response
       .status(status)

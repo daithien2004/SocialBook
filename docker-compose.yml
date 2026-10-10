@@ -42,17 +42,40 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
-      - backend1
-      - backend2
-      - frontend
+      backend1:
+        condition: service_healthy
+      backend2:
+        condition: service_healthy
+      frontend:
+        condition: service_started
 
   backend1:
     <<: *backend-common
     container_name: socialbook-backend1
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:5000/api/health/ready').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
 
   backend2:
     <<: *backend-common
     container_name: socialbook-backend2
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:5000/api/health/ready').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
 
   # Worker: cùng image với API, chỉ khác entry point (backend/dist/worker.js).
   # Chạy ĐÚNG 1 replica để các job nặng (TTS trả phí, import chương, chroma,
@@ -91,14 +114,15 @@ services:
     environment:
       NEST_API_INTERNAL_URL: http://backend1:5000/api/v1
     depends_on:
-      - backend1
+      backend1:
+        condition: service_healthy
 
   mongo:
     image: mongo:7
     container_name: socialbook-mongo
     restart: unless-stopped
     ports:
-      - '27017:27017'
+      - '127.0.0.1:27017:27017'
     volumes:
       - mongo_data:/data/db
       - mongo_keyfile:/data/keyfile
@@ -188,7 +212,7 @@ services:
     container_name: socialbook-chroma
     restart: unless-stopped
     ports:
-      - '8000:8000'
+      - '127.0.0.1:8000:8000'
     volumes:
       - chroma_data:/chroma/chroma
     environment:

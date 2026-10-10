@@ -20,6 +20,7 @@ import { FilterQuery, Model, Types, PipelineStage } from 'mongoose';
 import { CommentDocument } from '@/modules/comments/infrastructure/schemas/public-api';
 import { LikeDocument } from '@/modules/likes/infrastructure/schemas/public-api';
 import { Post, PostDocument } from '../../schemas/post.schema';
+import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 
 const POPULATE_USER = {
   path: 'userId',
@@ -52,19 +53,33 @@ export class PostRepository implements IPostRepository {
     const domain = PostMapper.toDomain(populated as PostDocument);
     if (!domain)
       throw new InternalServerErrorException('Failed to create post');
+    domain.markPersisted(created.version);
     return domain;
   }
 
   async update(post: PostEntity): Promise<PostEntity> {
     const persistenceModel = PostMapper.toPersistence(post);
+    const { _id, ...updateFields } = persistenceModel;
+    const filter: FilterQuery<PostDocument> = {
+      _id,
+      version: post.loadedVersion,
+    };
+    if (post.loadedVersion === 0) {
+      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
+    }
+
     const updated = await this.model
-      .findByIdAndUpdate(persistenceModel._id, persistenceModel, { new: true })
+      .findOneAndUpdate(
+        filter,
+        { $set: updateFields, $inc: { version: 1 } },
+        { new: true },
+      )
       .populate(POPULATE_USER)
       .populate(POPULATE_BOOK)
       .exec();
 
     if (!updated)
-      throw new InternalServerErrorException('Failed to update post');
+      throw new ConcurrencyException('Post changed after it was loaded');
     const domain = PostMapper.toDomain(updated);
     if (!domain)
       throw new InternalServerErrorException('Failed to map updated post');
@@ -366,14 +381,37 @@ export class PostRepository implements IPostRepository {
     };
   }
 
-  async delete(id: string): Promise<void> {
-    await this.model.findByIdAndDelete(id).exec();
+  async delete(id: string, expectedVersion: number): Promise<void> {
+    const filter: FilterQuery<PostDocument> = {
+      _id: new Types.ObjectId(id),
+      version: expectedVersion,
+    };
+    if (expectedVersion === 0) {
+      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
+    }
+    const result = await this.model.deleteOne(filter).exec();
+    if (result.deletedCount === 0) {
+      throw new ConcurrencyException('Post changed before it was deleted');
+    }
   }
 
-  async softDelete(id: string): Promise<void> {
-    await this.model
-      .findByIdAndUpdate(id, { isDeleted: true, updatedAt: new Date() })
+  async softDelete(id: string, expectedVersion: number): Promise<void> {
+    const filter: FilterQuery<PostDocument> = {
+      _id: new Types.ObjectId(id),
+      version: expectedVersion,
+    };
+    if (expectedVersion === 0) {
+      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
+    }
+    const result = await this.model
+      .updateOne(filter, {
+        $set: { isDeleted: true, updatedAt: new Date() },
+        $inc: { version: 1 },
+      })
       .exec();
+    if (result.matchedCount === 0) {
+      throw new ConcurrencyException('Post changed before it was deleted');
+    }
   }
 
   async findFlagged(
@@ -519,23 +557,12 @@ export class PostRepository implements IPostRepository {
       .exec();
   }
 
-  async exists(id: string): Promise<boolean> {
-    const count = await this.model
-      .countDocuments({ _id: id, isDeleted: false })
-      .exec();
-    return count > 0;
-  }
-
   async countTotal(): Promise<number> {
     return this.model.countDocuments().exec();
   }
 
   async countActive(): Promise<number> {
     return this.model.countDocuments({ isDeleted: false }).exec();
-  }
-
-  async countDeleted(): Promise<number> {
-    return this.model.countDocuments({ isDeleted: true }).exec();
   }
 
   async getGrowthMetrics(

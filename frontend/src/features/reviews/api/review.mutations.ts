@@ -26,7 +26,11 @@ export function useCreateReview() {
 
 export function useUpdateReview() {
   const queryClient = useQueryClient();
-  return useMutation<Review, Error, { id: string; data: UpdateReviewRequest; bookId: string }>({
+  return useMutation<
+    Review,
+    Error,
+    { id: string; data: UpdateReviewRequest; bookId: string }
+  >({
     mutationFn: updateReview,
     onSuccess: (_data, { bookId }) => {
       queryClient.invalidateQueries({ queryKey: reviewKeys.byBook(bookId) });
@@ -36,7 +40,7 @@ export function useUpdateReview() {
 
 export function useDeleteReview() {
   const queryClient = useQueryClient();
-  return useMutation<null, Error, { id: string; bookId: string }>({
+  return useMutation<void, Error, { id: string; bookId: string }>({
     mutationFn: deleteReview,
     onSuccess: (_data, { bookId }) => {
       queryClient.invalidateQueries({ queryKey: reviewKeys.byBook(bookId) });
@@ -46,7 +50,11 @@ export function useDeleteReview() {
 
 export function useToggleLikeReview() {
   const queryClient = useQueryClient();
-  return useMutation<ToggleLikeReviewResult, Error, { id: string; bookId: string }>({
+  return useMutation<
+    ToggleLikeReviewResult,
+    Error,
+    { id: string; bookId: string }
+  >({
     mutationFn: toggleLikeReview,
     onSuccess: (_data, { bookId }) => {
       queryClient.invalidateQueries({ queryKey: reviewKeys.byBook(bookId) });

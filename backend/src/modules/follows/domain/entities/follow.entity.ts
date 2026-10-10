@@ -1,4 +1,5 @@
 import { Entity } from '@/shared/domain/entity.base';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { FollowId } from '../value-objects/follow-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 import { TargetId } from '../value-objects/target-id.vo';
@@ -39,7 +40,7 @@ export class Follow extends Entity<FollowId> {
         : FollowStatus.active();
 
     if (userId.getValue() === targetId.getValue()) {
-      throw new Error('User cannot follow themselves');
+      throw new BadRequestDomainException('User cannot follow themselves');
     }
 
     return new Follow(props.id, {
@@ -109,7 +110,7 @@ export class Follow extends Entity<FollowId> {
     const targetId = TargetId.create(newTargetId);
 
     if (this._props.userId.getValue() === targetId.getValue()) {
-      throw new Error('User cannot follow themselves');
+      throw new BadRequestDomainException('User cannot follow themselves');
     }
 
     this._props.targetId = targetId;

@@ -1,8 +1,6 @@
 import { AIRequest, AIRequestType } from '@/modules/ai/domain';
 import { AIRequestDocument } from '@/modules/ai/infrastructure/schemas/ai-request.schema';
-import { Types } from 'mongoose';
 export interface AIRequestPersistence {
-  _id: Types.ObjectId;
   prompt: string;
   response: string | null;
   type: AIRequestType;
@@ -28,7 +26,6 @@ export class AIRequestMapper {
 
   static toPersistence(request: AIRequest): AIRequestPersistence {
     return {
-      _id: new Types.ObjectId(request.id.toString()),
       prompt: request.prompt,
       response: request.response,
       type: request.type,

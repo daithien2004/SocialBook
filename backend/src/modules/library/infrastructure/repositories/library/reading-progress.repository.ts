@@ -14,12 +14,14 @@ import {
   ProgressDocument,
 } from '@/modules/library/infrastructure/schemas/progress.schema';
 import { ReadingProgressPersistence } from './reading-progress.mapper';
+import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
 
 @Injectable()
 export class ReadingProgressRepository implements IReadingProgressRepository {
   constructor(
     @InjectModel(Progress.name)
     private readonly progressModel: Model<ProgressDocument>,
+    private readonly sessionContext: MongoSessionContext,
   ) {}
 
   private toDomain(doc: ProgressDocument): ReadingProgress {
@@ -66,29 +68,30 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
     const persistenceData = this.toPersistence(readingProgress);
     const { _id, ...updateData } = persistenceData;
 
-    await this.progressModel
-      .findOneAndUpdate(
-        {
-          userId: persistenceData.userId,
-          chapterId: persistenceData.chapterId,
-        },
-        { $set: updateData, $setOnInsert: { _id } },
-        { upsert: true, new: true },
-      )
-      .exec();
+    const query = this.progressModel.findOneAndUpdate(
+      {
+        userId: persistenceData.userId,
+        chapterId: persistenceData.chapterId,
+      },
+      { $set: updateData, $setOnInsert: { _id } },
+      { upsert: true, new: true },
+    );
+    const session = this.sessionContext.currentSession;
+    if (session) query.session(session);
+    await query.exec();
   }
 
   async findByUserIdAndChapterId(
     userId: UserId,
     chapterId: ChapterId,
   ): Promise<ReadingProgress | null> {
-    const doc = await this.progressModel
-      .findOne({
-        userId: new Types.ObjectId(userId.toString()),
-        chapterId: new Types.ObjectId(chapterId.toString()),
-      })
-      .lean()
-      .exec();
+    const query = this.progressModel.findOne({
+      userId: new Types.ObjectId(userId.toString()),
+      chapterId: new Types.ObjectId(chapterId.toString()),
+    });
+    const session = this.sessionContext.currentSession;
+    if (session) query.session(session);
+    const doc = await query.lean().exec();
 
     return doc ? this.toDomain(doc) : null;
   }
@@ -97,24 +100,13 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
     userId: UserId,
     bookId: BookId,
   ): Promise<ReadingProgress[]> {
-    const docs = await this.progressModel
-      .find({
-        userId: new Types.ObjectId(userId.toString()),
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .lean()
-      .exec();
-
-    return docs.map((doc) => this.toDomain(doc));
-  }
-
-  async findByUserId(userId: UserId): Promise<ReadingProgress[]> {
-    const docs = await this.progressModel
-      .find({
-        userId: new Types.ObjectId(userId.toString()),
-      })
-      .lean()
-      .exec();
+    const query = this.progressModel.find({
+      userId: new Types.ObjectId(userId.toString()),
+      bookId: new Types.ObjectId(bookId.toString()),
+    });
+    const session = this.sessionContext.currentSession;
+    if (session) query.session(session);
+    const docs = await query.lean().exec();
 
     return docs.map((doc) => this.toDomain(doc));
   }
@@ -151,14 +143,5 @@ export class ReadingProgressRepository implements IReadingProgressRepository {
         chapterId: new Types.ObjectId(chapterId.toString()),
       })
       .exec();
-  }
-
-  async exists(userId: UserId, chapterId: ChapterId): Promise<boolean> {
-    const result = await this.progressModel.exists({
-      userId: new Types.ObjectId(userId.toString()),
-      chapterId: new Types.ObjectId(chapterId.toString()),
-    });
-
-    return !!result;
   }
 }

@@ -37,10 +37,6 @@ export abstract class IUserRepository {
     username: string,
     excludeId?: UserId,
   ): Promise<boolean>;
-  abstract existsById(id: UserId): Promise<boolean>;
-  abstract findByIds(ids: UserId[]): Promise<User[]>;
-  abstract updateFavoriteGenres(id: UserId, genres: string[]): Promise<void>;
-
   // Statistics
   abstract countByDate(startDate: Date, endDate?: Date): Promise<number>;
   abstract countByProvider(): Promise<Map<string, number>>;

@@ -1,4 +1,5 @@
 import {
+  buildPaginationMeta,
   PaginatedResult,
   PaginationOptions,
   SortOptions,
@@ -11,48 +12,26 @@ import {
   BookSearchCandidate,
   IBookRepository,
 } from '@/modules/books/domain/books/repositories/book.repository.interface';
-import { AuthorId } from '@/modules/books/domain/books/value-objects/author-id.vo';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
 import { GenreId } from '@/modules/books/domain/books/value-objects/genre-id.vo';
-import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
 import { Injectable } from '@nestjs/common';
+import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';
 import { Book, BookDocument } from '../../schemas/book.schema';
-import { BookMapper, RawBookDocument, BookPersistence } from './book.mapper';
-import { TextSimilarityService } from '@/shared/domain/text-similarity.service';
+import { BookMapper, RawBookDocument } from './book.mapper';
+import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
 
 @Injectable()
-export class BookRepository
-  extends BaseMongoRepository<BookEntity, BookDocument, BookId>
-  implements IBookRepository
-{
+export class BookRepository implements IBookRepository {
   constructor(
     @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
-    private readonly textSimilarityService: TextSimilarityService,
-  ) {
-    super(bookModel);
-  }
-
-  protected toDomain(doc: BookDocument): BookEntity {
-    return BookMapper.toDomain(doc as RawBookDocument);
-  }
-
-  protected toPersistence(entity: BookEntity): BookPersistence {
-    return BookMapper.toPersistence(entity);
-  }
-
-  private normalizeText(text: string): string {
-    return this.textSimilarityService.normalizeText(text);
-  }
-
-  private calculateTextSimilarity(query: string, targetText: string): number {
-    return this.textSimilarityService.calculate(query, targetText);
-  }
+    private readonly sessionContext: MongoSessionContext,
+  ) {}
 
   async findUnindexedBooks(limit: number): Promise<BookEntity[]> {
-    const documents = (await this.bookModel
+    const documents = await this.bookModel
       .find({
         status: 'published',
         $or: [
@@ -62,36 +41,36 @@ export class BookRepository
       })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate('genres')
-      .lean()
-      .exec()) as unknown as RawBookDocument[];
+      .populate<{ genres: RawBookDocument['genres'] }>('genres')
+      .lean<RawBookDocument[]>()
+      .exec();
 
     return documents.map((doc) => BookMapper.toDomain(doc));
   }
 
   async findById(id: BookId): Promise<BookEntity | null> {
-    const document = (await this.bookModel
+    const document = await this.bookModel
       .findById(id.toString())
-      .populate('genres')
-      .lean()
-      .exec()) as unknown as RawBookDocument;
+      .populate<{ genres: RawBookDocument['genres'] }>('genres')
+      .lean<RawBookDocument>()
+      .exec();
     return document ? BookMapper.toDomain(document) : null;
   }
 
   async findBySlug(slug: string): Promise<BookEntity | null> {
-    const document = (await this.bookModel
+    const document = await this.bookModel
       .findOne({ slug, isDeleted: false })
-      .populate('genres')
-      .lean()
-      .exec()) as unknown as RawBookDocument;
+      .populate<{ genres: RawBookDocument['genres'] }>('genres')
+      .lean<RawBookDocument>()
+      .exec();
     return document ? BookMapper.toDomain(document) : null;
   }
 
   async findByTitle(title: BookTitle): Promise<BookEntity | null> {
-    const document = (await this.bookModel
+    const document = await this.bookModel
       .findOne({ title: title.toString(), isDeleted: false })
-      .lean()
-      .exec()) as unknown as RawBookDocument;
+      .lean<RawBookDocument>()
+      .exec();
     return document ? BookMapper.toDomain(document) : null;
   }
 
@@ -158,7 +137,7 @@ export class BookRepository
 
     return {
       data: documents.map((doc) => BookMapper.toDomain(doc)),
-      meta: this.buildMeta(pagination.page, pagination.limit, total),
+      meta: buildPaginationMeta(pagination.page, pagination.limit, total),
     };
   }
 
@@ -169,7 +148,7 @@ export class BookRepository
   ): Promise<PaginatedResult<BookListReadModel>> {
     const queryFilter = this.buildQueryFilter(filter);
 
-    const postFacetStages: PipelineStage[] = [
+    const postFacetStages: PipelineStage.FacetPipelineStage[] = [
       {
         $lookup: {
           from: 'genres',
@@ -209,22 +188,37 @@ export class BookRepository
       { $project: { _chapters: 0, _authorArr: 0 } },
     ];
 
-    return this.executePaginatedQuery<BookListReadModel, RawBookDocument>(
-      queryFilter,
-      pagination,
-      sort,
-      (doc: RawBookDocument) => BookMapper.toListReadModel(doc),
-      undefined, // no populateArgs
-      { postFacet: postFacetStages },
-    );
-  }
+    const page = Math.max(1, pagination.page || 1);
+    const limit = Math.min(Math.max(1, pagination.limit || 10), 10000);
+    const sortOrder = sort?.order === 'asc' ? 1 : -1;
+    const sortStage: Record<string, 1 | -1> = sort?.sortBy
+      ? { [sort.sortBy]: sortOrder }
+      : { createdAt: -1 };
+    const [result] = await this.bookModel
+      .aggregate<{
+        metadata: Array<{ total: number }>;
+        data: RawBookDocument[];
+      }>([
+        { $match: queryFilter },
+        {
+          $facet: {
+            metadata: [{ $count: 'total' }],
+            data: [
+              { $sort: sortStage },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+              ...postFacetStages,
+            ],
+          },
+        },
+      ])
+      .exec();
+    const total = result.metadata[0]?.total ?? 0;
 
-  async findByAuthor(
-    authorId: AuthorId,
-    pagination: PaginationOptions,
-    sort?: SortOptions,
-  ): Promise<PaginatedResult<BookEntity>> {
-    return this.findAll({ authorId: authorId.toString() }, pagination, sort);
+    return {
+      data: result.data.map((document) => BookMapper.toListReadModel(document)),
+      meta: buildPaginationMeta(page, limit, total),
+    };
   }
 
   async findByGenre(
@@ -241,41 +235,96 @@ export class BookRepository
     return this.findAll({}, pagination, { sortBy: 'likes', order: 'desc' });
   }
 
-  async findRecent(
-    pagination: PaginationOptions,
-  ): Promise<PaginatedResult<BookEntity>> {
-    return this.findAll({}, pagination, { sortBy: 'createdAt', order: 'desc' });
-  }
-
   async save(book: BookEntity): Promise<void> {
-    return this.baseSave(book);
+    const persistenceData = BookMapper.toPersistence(book);
+    const id = new Types.ObjectId(book.id.toString());
+
+    if (book.isNew) {
+      const session = this.sessionContext.currentSession;
+      await this.bookModel.create(
+        [{ ...persistenceData, _id: id, version: 0 }],
+        { session },
+      );
+      if (!session) book.markPersisted(0);
+      return;
+    }
+
+    if (!book.isDirty) return;
+
+    const nextVersion = book.loadedVersion + 1;
+    const filter: FilterQuery<BookDocument> = {
+      _id: id,
+      version: book.loadedVersion,
+    };
+    if (book.loadedVersion === 0) {
+      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
+    }
+
+    const query = this.bookModel.updateOne(filter, {
+      $set: { ...persistenceData, version: nextVersion },
+    });
+    if (this.sessionContext.currentSession) {
+      query.session(this.sessionContext.currentSession);
+    }
+    const result = await query.exec();
+
+    if (result.matchedCount === 0) {
+      throw new ConcurrencyException('Book changed after it was loaded');
+    }
+
+    if (!this.sessionContext.currentSession) {
+      book.markPersisted(nextVersion);
+    }
   }
 
-  async delete(id: BookId): Promise<void> {
-    return this.baseDelete(id);
+  async delete(id: BookId, expectedVersion: number): Promise<void> {
+    const filter: FilterQuery<BookDocument> = {
+      _id: new Types.ObjectId(id.toString()),
+      version: expectedVersion,
+    };
+    if (expectedVersion === 0) {
+      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
+    }
+
+    const query = this.bookModel.deleteOne(filter);
+    if (this.sessionContext.currentSession) {
+      query.session(this.sessionContext.currentSession);
+    }
+    const result = await query.exec();
+    if (result.deletedCount === 0) {
+      throw new ConcurrencyException('Book changed before it was deleted');
+    }
   }
 
-  async softDelete(id: BookId): Promise<void> {
-    return this.baseSoftDelete(id);
+  async softDelete(id: BookId, expectedVersion: number): Promise<void> {
+    const filter: FilterQuery<BookDocument> = {
+      _id: new Types.ObjectId(id.toString()),
+      version: expectedVersion,
+    };
+    if (expectedVersion === 0) {
+      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
+    }
+
+    const query = this.bookModel.updateOne(filter, {
+      $set: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+        version: expectedVersion + 1,
+      },
+    });
+    if (this.sessionContext.currentSession) {
+      query.session(this.sessionContext.currentSession);
+    }
+    const result = await query.exec();
+    if (result.matchedCount === 0) {
+      throw new ConcurrencyException('Book changed before it was deleted');
+    }
   }
 
   async existsByTitle(title: BookTitle, excludeId?: BookId): Promise<boolean> {
     const query: FilterQuery<BookDocument> = {
       title: title.toString(),
-      isDeleted: false,
-    };
-
-    if (excludeId) {
-      query._id = { $ne: excludeId.toString() };
-    }
-
-    const count = await this.bookModel.countDocuments(query).exec();
-    return count > 0;
-  }
-
-  async existsBySlug(slug: string, excludeId?: BookId): Promise<boolean> {
-    const query: FilterQuery<BookDocument> = {
-      slug,
       isDeleted: false,
     };
 
@@ -297,7 +346,7 @@ export class BookRepository
   async incrementViews(id: BookId): Promise<void> {
     await this.bookModel
       .findByIdAndUpdate(id.toString(), {
-        $inc: { views: 1 },
+        $inc: { views: 1, version: 1 },
         updatedAt: new Date(),
       })
       .exec();
@@ -306,7 +355,7 @@ export class BookRepository
   async addLike(id: BookId, userId: string): Promise<void> {
     await this.bookModel
       .findByIdAndUpdate(id.toString(), {
-        $inc: { likes: 1 },
+        $inc: { likes: 1, version: 1 },
         $addToSet: { likedBy: userId },
         updatedAt: new Date(),
       })
@@ -316,18 +365,9 @@ export class BookRepository
   async removeLike(id: BookId, userId: string): Promise<void> {
     await this.bookModel
       .findByIdAndUpdate(id.toString(), {
-        $inc: { likes: -1 },
+        $inc: { likes: -1, version: 1 },
         $pull: { likedBy: userId },
         updatedAt: new Date(),
-      })
-      .exec();
-  }
-
-  async countByAuthor(authorId: AuthorId): Promise<number> {
-    return await this.bookModel
-      .countDocuments({
-        authorId: authorId.toString(),
-        isDeleted: false,
       })
       .exec();
   }
@@ -336,17 +376,6 @@ export class BookRepository
     return await this.bookModel
       .countDocuments({
         genres: { $in: [genreId] },
-        isDeleted: false,
-      })
-      .exec();
-  }
-
-  async countByStatus(
-    status: 'draft' | 'published' | 'completed',
-  ): Promise<number> {
-    return await this.bookModel
-      .countDocuments({
-        status,
         isDeleted: false,
       })
       .exec();

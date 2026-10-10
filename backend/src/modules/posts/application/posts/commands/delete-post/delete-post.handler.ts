@@ -29,9 +29,9 @@ export class DeletePostHandler implements ICommandHandler<
     }
 
     if (command.isHardDelete) {
-      await this.postRepository.delete(command.postId);
+      await this.postRepository.delete(command.postId, post.loadedVersion);
     } else {
-      await this.postRepository.softDelete(command.postId);
+      await this.postRepository.softDelete(command.postId, post.loadedVersion);
     }
   }
 }

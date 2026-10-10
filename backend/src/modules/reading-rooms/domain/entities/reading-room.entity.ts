@@ -271,7 +271,7 @@ export class ReadingRoom extends Entity<RoomId> {
       throw new BadRequestDomainException('Không tìm thấy highlight');
     }
     if (this._props.highlights[index].userId !== userId) {
-      throw new BadRequestDomainException(
+      throw new ForbiddenDomainException(
         'Chỉ chủ sở hữu mới có thể gỡ highlight',
       );
     }

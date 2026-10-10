@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+﻿import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { WsAuthService } from './core/ws-auth.service';
 
 import { ReadingRoomPresenceCoordinator } from './reading-room-presence.coordinator';
-import { ReadingProgressTracker } from './reading-progress.tracker';
+import { ReadingProgressQueuePort } from '../../application/reading-progress-queue.port';
 
 import { JoinRoomCommand } from '@/modules/reading-rooms/application/commands/join-room/join-room.command';
 import { LeaveRoomCommand } from '@/modules/reading-rooms/application/commands/leave-room/leave-room.command';
@@ -29,7 +29,7 @@ export class ReadingRoomConnectionHandler {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly presenceCoordinator: ReadingRoomPresenceCoordinator,
-    private readonly progressTracker: ReadingProgressTracker,
+    private readonly progressQueue: ReadingProgressQueuePort,
     private readonly wsAuth: WsAuthService,
     private readonly namespaceProvider: ReadingRoomNamespaceProvider,
     private readonly userOperationLock: UserOperationLock,
@@ -106,7 +106,7 @@ export class ReadingRoomConnectionHandler {
   /**
    * Xử lý hành động người dùng chủ động rời phòng đọc.
    * Các bước:
-   * 1. Flush (lưu ngay lập tức) tiến độ đọc đang chờ (nếu có) vào DB.
+   * 1. Heartbeat progress is already enqueued before acknowledgement; no explicit flush is needed here.
    * 2. Gửi command `LeaveRoomCommand` để cập nhật trạng thái phòng (đổi host, đổi mode, hoặc kết thúc phòng) vào DB.
    * 3. Buộc gỡ bỏ sự hiện diện (presence) của user khỏi bộ đệm Redis.
    * 4. Ép tất cả các tab/thiết bị của user này (userChannel) rời khỏi room channel.
@@ -122,8 +122,6 @@ export class ReadingRoomConnectionHandler {
     sd: SocketData,
     body: LeaveRoomDto,
   ): Promise<void> {
-    await this.progressTracker.flush(socket);
-
     return this.userOperationLock.runExclusive(sd.userId, async () => {
       const userId = sd.userId;
       const roomId = body.roomId;
@@ -163,15 +161,6 @@ export class ReadingRoomConnectionHandler {
 
   async handleDisconnect(socket: RoomSocket): Promise<void> {
     const { userId, roomId } = socket.data;
-    try {
-      await this.progressTracker.dispose(socket);
-    } catch (error) {
-      this.logger.error(
-        'Error disposing progress tracker',
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
-
     if (!roomId) return;
 
     try {
@@ -205,7 +194,7 @@ export class ReadingRoomConnectionHandler {
    * 1. Cập nhật thời gian online cuối cùng của kết nối vào WsAuthService.
    * 2. Kiểm tra xem tab/socket này có đang bị "cướp quyền" bởi tab khác không (mất room channel). Nếu có, dừng xử lý.
    * 3. Ghi nhận thông tin hiện diện (tọa độ đọc, % tiến độ) vào PresenceCoordinator để không bị timeout.
-   * 4. Đặt lịch (schedule) lưu tiến độ đọc (progress) vào DB theo cơ chế debounce.
+   * 4. Enqueue progress for BullMQ debounce by user/book/chapter and worker persistence to MongoDB.
    *
    * @param socket Socket của client.
    * @param sd Thông tin phiên hiện tại.
@@ -246,7 +235,12 @@ export class ReadingRoomConnectionHandler {
       });
 
       if (sd.bookId && chapterId && progress !== undefined) {
-        this.progressTracker.schedule(socket, sd.bookId, chapterId, progress);
+        await this.progressQueue.enqueue({
+          userId,
+          bookId: sd.bookId,
+          chapterId,
+          progress,
+        });
       }
     }
   }

@@ -4,6 +4,8 @@ import { StartChaptersImportResult } from '@/modules/chapters/domain/chapters/in
 
 export class StartChaptersImportCommand extends Command<StartChaptersImportResult> {
   constructor(
+    public readonly actorId: string,
+    public readonly idempotencyKey: string,
     public readonly bookId: string,
     public readonly chapters: Array<{ title: string; content: string }>,
   ) {

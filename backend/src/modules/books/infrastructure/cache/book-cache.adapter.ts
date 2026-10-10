@@ -22,6 +22,7 @@ interface BookCacheData {
   updatedAt: string;
   authorName: string;
   chapterCount: number;
+  version?: number;
 }
 
 @Injectable()
@@ -74,6 +75,7 @@ export class BookCacheAdapter implements IBookCachePort {
       updatedAt: book.updatedAt.toISOString(),
       authorName: book.authorName,
       chapterCount: book.chapterCount,
+      version: book.loadedVersion,
     };
 
     await this.cache.set(key, cacheData, CACHE_TTL.DEFAULT);

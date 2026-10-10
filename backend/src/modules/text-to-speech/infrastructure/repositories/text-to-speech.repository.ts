@@ -63,14 +63,6 @@ export class TextToSpeechRepository implements ITextToSpeechRepository {
     return doc ? this.mapToEntity(doc) : null;
   }
 
-  async findAllByBookId(bookId: string): Promise<TextToSpeechEntity[]> {
-    const docs = await this.ttsModel
-      .find({ bookId: new Types.ObjectId(bookId) })
-      .lean()
-      .exec();
-    return docs.map((doc) => this.mapToEntity(doc));
-  }
-
   async save(tts: TextToSpeechEntity): Promise<TextToSpeechEntity> {
     const persistenceModel = this.mapToPersistence(tts);
     if (tts.id) {

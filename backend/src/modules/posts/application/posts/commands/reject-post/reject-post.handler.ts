@@ -21,7 +21,7 @@ export class RejectPostHandler implements ICommandHandler<
     if (!post)
       throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
 
-    await this.postRepository.delete(command.postId);
+    await this.postRepository.delete(command.postId, post.loadedVersion);
     // vi pháº¡m 10 láº§n lÃ  tá»± Ä‘á»™ng khÃ³a acc
     const user = await this.userRepository.findById(
       UserId.create(post.userId.toString()),

@@ -21,7 +21,6 @@ export abstract class IAuthorRepository {
     filter: AuthorFilter,
     pagination: PaginationOptions,
   ): Promise<PaginatedResult<Author>>;
-  abstract findAllSimple(): Promise<Author[]>;
 
   abstract save(author: Author): Promise<void>;
   abstract delete(id: AuthorId): Promise<void>;
@@ -30,6 +29,5 @@ export abstract class IAuthorRepository {
     name: AuthorName,
     excludeId?: AuthorId,
   ): Promise<boolean>;
-  abstract countActive(): Promise<number>;
   abstract searchByName(query: string, limit?: number): Promise<Author[]>;
 }

@@ -54,13 +54,23 @@ export function ApiPaginatedResponse(
 }
 
 export function ApiProblemResponses(
-  statuses: number[] = [400, 401, 403, 404, 409, 413, 422, 429, 500],
+  statuses: number[] = [400, 401, 403, 404, 409, 413, 422, 429, 500, 503],
 ) {
   return applyDecorators(
     ApiExtraModels(ProblemDetailsDto),
     ...statuses.map((status) =>
       ApiResponse({
         status,
+        ...(status === 429 || status === 503
+          ? {
+              headers: {
+                'Retry-After': {
+                  description: 'Seconds to wait before retrying the request.',
+                  schema: { type: 'string', example: '5' },
+                },
+              },
+            }
+          : {}),
         content: {
           'application/problem+json': {
             schema: { $ref: getSchemaPath(ProblemDetailsDto) },

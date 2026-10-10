@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class BookStatus {
   private readonly value: 'draft' | 'published' | 'completed';
 
@@ -9,7 +11,9 @@ export class BookStatus {
     const validStatuses = ['draft', 'published', 'completed'];
 
     if (!status || !validStatuses.includes(status)) {
-      throw new Error('Book status must be draft, published, or completed');
+      throw new BadRequestDomainException(
+        'Book status must be draft, published, or completed',
+      );
     }
 
     return new BookStatus(status as 'draft' | 'published' | 'completed');

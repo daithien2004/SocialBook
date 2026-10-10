@@ -22,6 +22,8 @@ import { MediaInfrastructureModule } from '@/modules/media/infrastructure/public
 import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
 import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
 import { CaslCacheListener } from './listeners/casl-cache.listener';
+import { UserRoleChangeOutboxRelay } from './user-role-change-outbox-relay';
+import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
 @Module({
   imports: [
@@ -49,6 +51,7 @@ import { CaslCacheListener } from './listeners/casl-cache.listener';
     UpdateUserHandler,
     UpdateUserImageHandler,
     CaslCacheListener,
+    ...(isWorkerProcess() ? [] : [UserRoleChangeOutboxRelay]),
   ],
   exports: [
     CheckUserExistHandler,

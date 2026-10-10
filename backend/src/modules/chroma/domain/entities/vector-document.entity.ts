@@ -1,4 +1,5 @@
 import { Entity } from '@/shared/domain/entity.base';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { VectorId } from '../value-objects/vector-id.vo';
 import { EmbeddingVector } from '../value-objects/embedding-vector.vo';
 import { ContentType } from '../value-objects/content-type.vo';
@@ -33,11 +34,11 @@ export class VectorDocument extends Entity<VectorId> {
     embedding: number[];
   }): VectorDocument {
     if (!props.contentId || props.contentId.trim().length === 0) {
-      throw new Error('Content ID cannot be empty');
+      throw new BadRequestDomainException('Content ID cannot be empty');
     }
 
     if (!props.content || props.content.trim().length === 0) {
-      throw new Error('Content cannot be empty');
+      throw new BadRequestDomainException('Content cannot be empty');
     }
 
     return new VectorDocument(VectorId.create(props.id), {
@@ -93,7 +94,7 @@ export class VectorDocument extends Entity<VectorId> {
   // Business methods
   updateContent(newContent: string): void {
     if (!newContent || newContent.trim().length === 0) {
-      throw new Error('Content cannot be empty');
+      throw new BadRequestDomainException('Content cannot be empty');
     }
 
     this._props.content = newContent.trim();

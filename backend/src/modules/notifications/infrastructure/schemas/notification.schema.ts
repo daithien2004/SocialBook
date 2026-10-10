@@ -68,7 +68,7 @@ NotificationSchema.index({ userId: 1, createdAt: -1 });
 // Tự động xóa notification cũ sau 30 ngày (2,592,000 giây)
 NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
 
-// Đếm / lọc notification chưa đọc — dùng bởi countUnread và findAllByUser(isRead)
+// Lọc notification theo trạng thái đọc — dùng bởi findAllByUser(isRead)
 NotificationSchema.index({ userId: 1, isRead: 1 });
 
 NotificationSchema.index(

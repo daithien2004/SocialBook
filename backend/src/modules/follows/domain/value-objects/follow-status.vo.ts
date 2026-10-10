@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export class FollowStatus {
   private readonly value: boolean;
 
@@ -7,7 +9,7 @@ export class FollowStatus {
 
   static create(status: boolean): FollowStatus {
     if (typeof status !== 'boolean') {
-      throw new Error('Follow status must be a boolean');
+      throw new BadRequestDomainException('Follow status must be a boolean');
     }
 
     return new FollowStatus(status);

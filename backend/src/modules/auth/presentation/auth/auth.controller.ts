@@ -242,6 +242,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ global: { limit: 3 } })
   @Post('reset-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()

@@ -11,7 +11,7 @@ import {
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
 import { RolesGuard } from '@/shared/platform/guards/roles.guard';
-import { AIThrottleGuard } from '@/shared/platform/guards/ai-throttle.guard';
+import { AIThrottleGuard } from '@/modules/ai/presentation/public-api';
 
 import { BatchIndexDto } from '@/modules/chroma/presentation/dto/batch-index.dto';
 import { IndexDocumentDto } from '@/modules/chroma/presentation/dto/index-document.dto';

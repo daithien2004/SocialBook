@@ -13,11 +13,13 @@ import { FilterQuery, Model, Types } from 'mongoose';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { UserMapper } from './user.mapper';
 import { UserPersistence } from './user.mapper';
+import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
 
 @Injectable()
 export class UsersRepository implements IUserRepository {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly sessionContext: MongoSessionContext,
   ) {}
 
   private toDomain(doc: UserDocument): UserEntity {
@@ -29,7 +31,11 @@ export class UsersRepository implements IUserRepository {
   }
 
   async findById(id: UserId): Promise<UserEntity | null> {
-    const doc = await this.userModel.findById(id.toString()).lean().exec();
+    const doc = await this.userModel
+      .findById(id.toString())
+      .session(this.sessionContext.currentSession ?? null)
+      .lean()
+      .exec();
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -109,7 +115,11 @@ export class UsersRepository implements IUserRepository {
       .findOneAndUpdate(
         { _id },
         { $set: updateData },
-        { upsert: true, new: true },
+        {
+          upsert: true,
+          new: true,
+          session: this.sessionContext.currentSession,
+        },
       )
       .exec();
   }
@@ -137,30 +147,6 @@ export class UsersRepository implements IUserRepository {
     }
     const result = await this.userModel.exists(query);
     return !!result;
-  }
-
-  async existsById(id: UserId): Promise<boolean> {
-    const result = await this.userModel.exists({ _id: id.toString() });
-    return !!result;
-  }
-
-  async findByIds(ids: UserId[]): Promise<UserEntity[]> {
-    const docs = await this.userModel
-      .find({
-        _id: { $in: ids.map((id) => id.toString()) },
-      })
-      .lean()
-      .exec();
-    return docs.map((doc) => this.toDomain(doc));
-  }
-
-  async updateFavoriteGenres(id: UserId, genres: string[]): Promise<void> {
-    const genreObjectIds = genres.map((g) => new Types.ObjectId(g));
-    await this.userModel
-      .findByIdAndUpdate(id.toString(), {
-        $set: { favoriteGenres: genreObjectIds },
-      })
-      .exec();
   }
 
   // Statistics

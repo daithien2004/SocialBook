@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from './common-exceptions';
+
 export abstract class Identifier {
   private readonly value: string;
 
@@ -7,7 +9,7 @@ export abstract class Identifier {
 
   protected static validate(id: string, name: string): string {
     if (!id || id.trim().length === 0) {
-      throw new Error(`${name} cannot be empty`);
+      throw new BadRequestDomainException(`${name} cannot be empty`);
     }
     return id.trim();
   }

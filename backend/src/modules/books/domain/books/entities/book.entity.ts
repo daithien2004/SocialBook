@@ -5,6 +5,7 @@ import { BookStatus } from '../value-objects/book-status.vo';
 import { BookTitle } from '../value-objects/book-title.vo';
 import { GenreId } from '../value-objects/genre-id.vo';
 import { Entity } from '@/shared/domain/entity.base';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 
 export interface BookProps {
   title: BookTitle;
@@ -28,15 +29,23 @@ export interface BookProps {
 
 export class Book extends Entity<BookId> {
   private _props: BookProps;
+  private _loadedVersion: number;
+  private _isNew: boolean;
+  private _dirty: boolean;
 
   private constructor(
     id: BookId,
     props: BookProps,
     createdAt?: Date,
     updatedAt?: Date,
+    isNew = true,
+    loadedVersion = 0,
   ) {
     super(id, createdAt, updatedAt);
     this._props = props;
+    this._isNew = isNew;
+    this._loadedVersion = loadedVersion;
+    this._dirty = isNew;
   }
 
   static create(props: {
@@ -100,7 +109,9 @@ export class Book extends Entity<BookId> {
     author?: { id: string; name: string };
     chapterCount?: number;
     vectorIndexedAt?: Date | null;
+    version?: number;
   }): Book {
+    const loadedVersion = props.version ?? 0;
     return new Book(
       BookId.create(props.id),
       {
@@ -124,7 +135,32 @@ export class Book extends Entity<BookId> {
       },
       props.createdAt,
       props.updatedAt,
+      false,
+      loadedVersion,
     );
+  }
+
+  get loadedVersion(): number {
+    return this._loadedVersion;
+  }
+
+  get isNew(): boolean {
+    return this._isNew;
+  }
+
+  get isDirty(): boolean {
+    return this._dirty;
+  }
+
+  markPersisted(version: number): void {
+    this._loadedVersion = version;
+    this._isNew = false;
+    this._dirty = false;
+  }
+
+  protected override markAsUpdated(): void {
+    super.markAsUpdated();
+    this._dirty = true;
   }
 
   // Getters
@@ -195,10 +231,12 @@ export class Book extends Entity<BookId> {
 
   updateGenres(newGenres: string[]): void {
     if (newGenres.length === 0) {
-      throw new Error('Book must have at least one genre');
+      throw new BadRequestDomainException('Book must have at least one genre');
     }
     if (newGenres.length > 5) {
-      throw new Error('Book cannot have more than 5 genres');
+      throw new BadRequestDomainException(
+        'Book cannot have more than 5 genres',
+      );
     }
     this._props.genres = newGenres.map((id) => GenreId.create(id));
     this.markAsUpdated();

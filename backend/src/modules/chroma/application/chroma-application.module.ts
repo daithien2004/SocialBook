@@ -7,7 +7,6 @@ import { IndexDocumentHandler } from './commands/index-document/index-document.h
 import { SearchHandler } from './commands/search/search.handler';
 import { ReindexAllHandler } from './commands/reindex-all/reindex-all.handler';
 import { AskChatbotHandler } from './commands/ask-chatbot/ask-chatbot.handler';
-import { BookVectorIndexListener } from './listeners/book-vector-index.listener';
 import { ChromaInfrastructureModule } from '../infrastructure/chroma-infrastructure.module';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
 import { AuthorsInfrastructureModule } from '@/modules/authors/infrastructure/public-api';
@@ -18,6 +17,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { ChromaProcessor } from './processors/chroma.processor';
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
+import { BookOutboxRelayCron } from './book-outbox-relay.cron';
+import { DEFAULT_JOB_OPTIONS } from '@/shared/queue/default-job-options';
 
 @Module({
   imports: [
@@ -30,10 +31,13 @@ import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
     AIInfrastructureModule,
     BullModule.registerQueue({
       name: 'chroma',
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
     }),
   ],
   providers: [
-    ...(isWorkerProcess() ? [ChromaProcessor, ChromaReconciliationCron] : []),
+    ...(isWorkerProcess()
+      ? [ChromaProcessor, ChromaReconciliationCron, BookOutboxRelayCron]
+      : []),
     GetCollectionStatsHandler,
     ClearCollectionHandler,
     BatchIndexHandler,
@@ -41,7 +45,6 @@ import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
     SearchHandler,
     ReindexAllHandler,
     AskChatbotHandler,
-    BookVectorIndexListener,
   ],
   exports: [
     GetCollectionStatsHandler,

@@ -1,4 +1,5 @@
 import {
+  buildPaginationMeta,
   PaginatedResult,
   PaginationOptions,
 } from '@/shared/domain/pagination.types';
@@ -16,18 +17,14 @@ import { Genre, GenreDocument } from '../schemas/genre.schema';
 import { GenreMapper } from './genre.mapper';
 import { GenrePersistence } from './genre.mapper';
 
-import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
+import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
 
 @Injectable()
-export class GenresRepository
-  extends BaseMongoRepository<GenreEntity, GenreDocument, GenreId>
-  implements IGenreRepository
-{
+export class GenresRepository implements IGenreRepository {
   constructor(
     @InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>,
-  ) {
-    super(genreModel);
-  }
+    private readonly sessionContext: MongoSessionContext,
+  ) {}
 
   protected toDomain(doc: GenreDocument): GenreEntity {
     return GenreMapper.toDomain(doc);
@@ -43,10 +40,11 @@ export class GenresRepository
   }
 
   async findByName(name: GenreName): Promise<GenreEntity | null> {
-    const doc = await this.genreModel
-      .findOne({ name: name.toString() })
-      .lean()
-      .exec();
+    const query = this.genreModel.findOne({ name: name.toString() });
+    if (this.sessionContext.currentSession) {
+      query.session(this.sessionContext.currentSession);
+    }
+    const doc = await query.lean().exec();
     return doc ? this.toDomain(doc) : null;
   }
 
@@ -83,7 +81,7 @@ export class GenresRepository
 
     return {
       data: docs.map((doc) => this.toDomain(doc)),
-      meta: this.buildMeta(pagination.page, pagination.limit, total),
+      meta: buildPaginationMeta(pagination.page, pagination.limit, total),
     };
   }
 
@@ -123,61 +121,20 @@ export class GenresRepository
     return !!result;
   }
 
-  async countActive(): Promise<number> {
-    return this.genreModel.countDocuments({}).exec();
-  }
-
   async save(genre: GenreEntity): Promise<void> {
-    return this.baseSave(genre);
+    const id = new Types.ObjectId(genre.id.toString());
+    const query = this.genreModel.findOneAndUpdate(
+      { _id: id },
+      { $set: this.toPersistence(genre), $setOnInsert: { _id: id } },
+      { upsert: true, new: true },
+    );
+    if (this.sessionContext.currentSession) {
+      query.session(this.sessionContext.currentSession);
+    }
+    await query.exec();
   }
 
   async delete(id: GenreId): Promise<void> {
-    return this.baseDelete(id);
-  }
-
-  async countByIds(ids: string[]): Promise<number> {
-    const objectIds = ids.map((id) => new Types.ObjectId(id));
-    return this.genreModel.countDocuments({ _id: { $in: objectIds } }).exec();
-  }
-
-  async getGenreBookCounts() {
-    return this.genreModel
-      .aggregate([
-        {
-          $lookup: {
-            from: 'books',
-            let: { genreId: '$_id' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $and: [
-                      { $in: ['$$genreId', '$genres'] },
-                      { $eq: ['$isDeleted', false] },
-                      { $in: ['$status', ['published', 'completed']] },
-                    ],
-                  },
-                },
-              },
-            ],
-            as: 'books',
-          },
-        },
-        {
-          $addFields: {
-            count: { $size: '$books' },
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            name: 1,
-            slug: 1,
-            count: 1,
-          },
-        },
-        { $sort: { name: 1 } },
-      ])
-      .exec();
+    await this.genreModel.findByIdAndDelete(id.toString()).exec();
   }
 }

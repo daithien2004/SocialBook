@@ -18,7 +18,7 @@ const ParagraphSchema = SchemaFactory.createForClass(Paragraph);
 
 import { BaseSchema } from '@/shared/schemas/base.schema';
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, versionKey: false })
 export class Chapter extends BaseSchema {
   @Prop({ type: Types.ObjectId, required: true, ref: 'Book' })
   bookId!: Types.ObjectId;
@@ -41,12 +41,15 @@ export class Chapter extends BaseSchema {
 
   @Prop({ required: true })
   orderIndex!: number;
+
+  @Prop({ type: Number, default: 0 })
+  version!: number;
 }
 
 export const ChapterSchema = SchemaFactory.createForClass(Chapter);
 
 // Lấy danh sách chapter của 1 cuốn sách, sắp theo thứ tự — query phổ biến nhất
-ChapterSchema.index({ bookId: 1, orderIndex: 1 });
+ChapterSchema.index({ bookId: 1, orderIndex: 1, _id: 1 });
 
 // Tìm chapter theo slug trong phạm vi 1 cuốn sách (findBySlug, findDetailBySlug)
 ChapterSchema.index({ bookId: 1, slug: 1 }, { unique: true });

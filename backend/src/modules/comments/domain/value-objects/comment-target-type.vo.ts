@@ -1,3 +1,5 @@
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+
 export enum TargetType {
   BOOK = 'book',
   CHAPTER = 'chapter',
@@ -17,7 +19,9 @@ export class CommentTargetType {
     const validTypes = Object.values(TargetType);
 
     if (!type || !validTypes.includes(type as TargetType)) {
-      throw new Error(`Target type must be one of: ${validTypes.join(', ')}`);
+      throw new BadRequestDomainException(
+        `Target type must be one of: ${validTypes.join(', ')}`,
+      );
     }
 
     return new CommentTargetType(type as TargetType);

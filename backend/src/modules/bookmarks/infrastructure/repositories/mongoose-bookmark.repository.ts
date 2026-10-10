@@ -22,13 +22,6 @@ export class MongooseBookmarkRepository implements IBookmarkRepository {
     );
   }
 
-  async findById(id: string): Promise<BookmarkEntity | null> {
-    const doc = await this.bookmarkModel
-      .findById(new Types.ObjectId(id))
-      .exec();
-    return doc ? BookmarkMapper.toDomain(doc) : null;
-  }
-
   async findByParagraph(
     userId: string,
     paragraphId: string,
@@ -51,10 +44,6 @@ export class MongooseBookmarkRepository implements IBookmarkRepository {
       .sort({ createdAt: -1 })
       .exec();
     return docs.map((doc) => BookmarkMapper.toDomain(doc));
-  }
-
-  async deleteById(id: string): Promise<void> {
-    await this.bookmarkModel.deleteOne({ _id: new Types.ObjectId(id) }).exec();
   }
 
   async deleteByParagraph(userId: string, paragraphId: string): Promise<void> {

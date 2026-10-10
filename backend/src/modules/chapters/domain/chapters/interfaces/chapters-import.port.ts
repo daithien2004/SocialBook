@@ -4,6 +4,8 @@ import {
 } from './chapters-import.types';
 
 export interface StartChaptersImportParams {
+  actorId: string;
+  idempotencyKey: string;
   bookId: string;
   chapters: ImportChaptersChapterInput[];
 }

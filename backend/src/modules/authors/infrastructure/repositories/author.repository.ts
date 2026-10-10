@@ -1,4 +1,5 @@
 import {
+  buildPaginationMeta,
   PaginatedResult,
   PaginationOptions,
 } from '@/shared/domain/pagination.types';
@@ -14,19 +15,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 
-import { BaseMongoRepository } from '@/shared/infrastructure/base-mongo.repository';
+import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
+import { Types } from 'mongoose';
 
 @Injectable()
-export class AuthorRepository
-  extends BaseMongoRepository<AuthorEntity, AuthorDocument, AuthorId>
-  implements IAuthorRepository
-{
+export class AuthorRepository implements IAuthorRepository {
   constructor(
     @InjectModel(Author.name)
     private readonly authorModel: Model<AuthorDocument>,
-  ) {
-    super(authorModel);
-  }
+    private readonly sessionContext: MongoSessionContext,
+  ) {}
 
   protected toDomain(doc: AuthorDocument): AuthorEntity {
     return this.mapToEntity(doc);
@@ -45,10 +43,11 @@ export class AuthorRepository
   }
 
   async findByName(name: AuthorName): Promise<AuthorEntity | null> {
-    const document = await this.authorModel
-      .findOne({ name: name.toString() })
-      .lean()
-      .exec();
+    const query = this.authorModel.findOne({ name: name.toString() });
+    if (this.sessionContext.currentSession) {
+      query.session(this.sessionContext.currentSession);
+    }
+    const document = await query.lean().exec();
     return document ? this.mapToEntity(document) : null;
   }
 
@@ -78,27 +77,25 @@ export class AuthorRepository
 
     return {
       data: documents.map((doc) => this.mapToEntity(doc)),
-      meta: this.buildMeta(pagination.page, pagination.limit, total),
+      meta: buildPaginationMeta(pagination.page, pagination.limit, total),
     };
   }
 
-  async findAllSimple(): Promise<AuthorEntity[]> {
-    const documents = await this.authorModel
-      .find()
-      .select('name bio photoUrl slug createdAt updatedAt')
-      .sort({ name: 1 })
-      .lean()
-      .exec();
-
-    return documents.map((doc) => this.mapToEntity(doc));
-  }
-
   async save(author: AuthorEntity): Promise<void> {
-    return this.baseSave(author);
+    const id = new Types.ObjectId(author.id.toString());
+    const query = this.authorModel.findOneAndUpdate(
+      { _id: id },
+      { $set: this.toPersistence(author), $setOnInsert: { _id: id } },
+      { upsert: true, new: true },
+    );
+    if (this.sessionContext.currentSession) {
+      query.session(this.sessionContext.currentSession);
+    }
+    await query.exec();
   }
 
   async delete(id: AuthorId): Promise<void> {
-    return this.baseDelete(id);
+    await this.authorModel.findByIdAndDelete(id.toString()).exec();
   }
 
   async existsByName(name: AuthorName, excludeId?: AuthorId): Promise<boolean> {
@@ -109,10 +106,6 @@ export class AuthorRepository
 
     const count = await this.authorModel.countDocuments(query).exec();
     return count > 0;
-  }
-
-  async countActive(): Promise<number> {
-    return await this.authorModel.countDocuments().exec();
   }
 
   private mapToEntity(document: AuthorDocument): AuthorEntity {

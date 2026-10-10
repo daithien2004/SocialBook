@@ -8,6 +8,7 @@ import {
   Body,
   Controller,
   Delete,
+  Headers,
   FileTypeValidator,
   Get,
   HttpCode,
@@ -19,6 +20,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -46,10 +48,15 @@ import { GetChapterKnowledgeQuery } from '@/modules/chapters/application/chapter
 import { AskChapterAICommand } from '@/modules/chapters/application/chapters/commands/ask-ai/ask-chapter-ai.command';
 import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dto';
 import { RecordChapterViewQuery } from '@/modules/chapters/application/chapters/queries/record-chapter-view/record-chapter-view.query';
-import { AIThrottleGuard } from '@/shared/platform/guards/ai-throttle.guard';
+import { AIThrottleGuard } from '@/modules/ai/presentation/public-api';
 import { ImportEpubPreviewCommand } from '@/modules/chapters/application/chapters/commands/import-epub-preview/import-epub-preview.command';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiHeader,
+  ApiNoContentResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
+import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 
 @ApiProblemResponses()
 @Controller('books/:bookSlug/chapters')
@@ -130,8 +137,35 @@ export class ChaptersController {
   @Post('import/start')
   @Roles('admin')
   @UseGuards(RolesGuard)
-  async startImport(@Body() dto: StartChaptersImportDto) {
-    const command = new StartChaptersImportCommand(dto.bookId, dto.chapters);
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    required: true,
+    description:
+      'Unique key for this chapter import request; reuse it to retry within 23 hours.',
+    schema: {
+      type: 'string',
+      minLength: 8,
+      maxLength: 128,
+      pattern: '^[A-Za-z0-9._~-]{8,128}$',
+    },
+  })
+  async startImport(
+    @Body() dto: StartChaptersImportDto,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Req() req: { user: JwtValidatedUser },
+  ) {
+    if (!idempotencyKey || !/^[A-Za-z0-9._~-]{8,128}$/.test(idempotencyKey)) {
+      throw new BadRequestException(
+        'Idempotency-Key must contain 8 to 128 safe characters.',
+      );
+    }
+
+    const command = new StartChaptersImportCommand(
+      req.user.id,
+      idempotencyKey,
+      dto.bookId,
+      dto.chapters,
+    );
     const result = await this.commandBus.execute(command);
     return result;
   }
@@ -271,14 +305,14 @@ export class ChaptersController {
     @Param('chapterId') chapterId: string,
     @Body() updateChapterDto: UpdateChapterDto,
   ) {
-    const command = new UpdateChapterCommand(
-      chapterId,
-      updateChapterDto.title,
-      updateChapterDto.bookId,
-      updateChapterDto.paragraphs,
-      updateChapterDto.slug,
-      updateChapterDto.orderIndex,
-    );
+    const command = new UpdateChapterCommand({
+      id: chapterId,
+      title: updateChapterDto.title,
+      bookId: updateChapterDto.bookId,
+      paragraphs: updateChapterDto.paragraphs,
+      slug: updateChapterDto.slug,
+      orderIndex: updateChapterDto.orderIndex,
+    });
 
     const chapterResult = await this.commandBus.execute(command);
     return ChapterResponseDto.fromResult(chapterResult);

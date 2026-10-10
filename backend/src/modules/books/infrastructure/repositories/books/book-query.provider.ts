@@ -7,8 +7,6 @@ import { BookDetailReadModel } from '@/modules/books/domain/books/read-models/bo
 import { BookListReadModel } from '@/modules/books/domain/books/read-models/book-list.read-model';
 import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
 import { BookFilter } from '@/modules/books/domain/books/repositories/book.repository.interface';
-import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
-import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';
@@ -342,66 +340,5 @@ export class BookQueryProvider implements IBookQueryProvider {
         { $sort: { _id: 1 } },
       ])
       .exec();
-  }
-
-  async searchByText(
-    query: string,
-    limit: number = 10,
-  ): Promise<Array<{ id: BookId; score: number }>> {
-    const results: Array<{ id: BookId; score: number }> = [];
-    if (!query || query.trim().length === 0) return results;
-
-    try {
-      const books = await this.bookModel
-        .find(
-          {
-            $text: { $search: query },
-            status: 'published',
-            isDeleted: false,
-          },
-          { score: { $meta: 'textScore' } }, // Projection for sorting score
-        )
-        .sort({ score: { $meta: 'textScore' } }) // Sort by MongoDB text match score
-        .limit(limit)
-        .select('_id')
-        .lean<Array<{ _id: Types.ObjectId; score: number }>>()
-        .exec();
-
-      for (const book of books) {
-        results.push({
-          id: BookId.create(book._id.toString()),
-          score: book.score, // The textScore returned by projection
-        });
-      }
-    } catch (error) {
-      this.logger.error(`Text search error: ${getErrorMessage(error)}`);
-    }
-
-    return results;
-  }
-
-  private normalizeText(text: string): string {
-    if (!text) return '';
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-  }
-
-  private calculateTextSimilarity(query: string, targetText: string): number {
-    if (!query || !targetText) return 0.0;
-
-    const normalizedQuery = this.normalizeText(query);
-    const normalizedTarget = this.normalizeText(targetText);
-
-    if (normalizedTarget === normalizedQuery) {
-      return 1.0;
-    } else if (normalizedTarget.startsWith(normalizedQuery)) {
-      return 0.8;
-    } else if (normalizedTarget.includes(normalizedQuery)) {
-      return 0.6;
-    }
-    return 0.0;
   }
 }

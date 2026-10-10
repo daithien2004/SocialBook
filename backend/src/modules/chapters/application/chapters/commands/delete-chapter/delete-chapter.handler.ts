@@ -28,6 +28,6 @@ export class DeleteChapterHandler implements ICommandHandler<
       throw new NotFoundDomainException(ChapterErrorMessages.CHAPTER_NOT_FOUND);
     }
 
-    await this.chapterRepository.delete(chapterId);
+    await this.chapterRepository.delete(chapterId, chapter.loadedVersion);
   }
 }

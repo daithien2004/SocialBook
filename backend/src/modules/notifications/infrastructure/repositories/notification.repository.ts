@@ -32,11 +32,6 @@ export class NotificationRepository implements INotificationRepository {
     }
   }
 
-  async findById(id: string): Promise<Notification | null> {
-    const doc = await this.notificationModel.findById(id).lean().exec();
-    return doc ? this.mapToDomain(doc) : null;
-  }
-
   async findAllByUser(
     userId: string,
     limit = 50,
@@ -80,15 +75,6 @@ export class NotificationRepository implements INotificationRepository {
         },
         { $set: { isRead: true } },
       )
-      .exec();
-  }
-
-  async countUnread(userId: string): Promise<number> {
-    return this.notificationModel
-      .countDocuments({
-        userId: new Types.ObjectId(userId),
-        isRead: false,
-      })
       .exec();
   }
 

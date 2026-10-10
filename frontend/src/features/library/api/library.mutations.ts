@@ -34,17 +34,24 @@ export function useUpdateLibraryStatus() {
 
 export function useUpdateReadingProgress() {
   const queryClient = useQueryClient();
-  return useMutation<UpdateReadingProgressResult, Error, UpdateProgressRequest>({
-    mutationFn: updateReadingProgress,
-    onSuccess: (_, variables) => {
-      // Client vừa gửi progress lên, server chắc chắn nhận đúng giá trị đó
-      // nên ghi thẳng vào cache thay vì invalidate để refetch lại.
-      queryClient.setQueryData(libraryKeys.chapterProgress(variables.bookId, variables.chapterId), {
-        progress: variables.progress,
-      });
-      queryClient.invalidateQueries({ queryKey: libraryKeys.bookInfo(variables.bookId) });
+  return useMutation<UpdateReadingProgressResult, Error, UpdateProgressRequest>(
+    {
+      mutationFn: updateReadingProgress,
+      onSuccess: (_, variables) => {
+        // Client vừa gửi progress lên, server chắc chắn nhận đúng giá trị đó
+        // nên ghi thẳng vào cache thay vì invalidate để refetch lại.
+        queryClient.setQueryData(
+          libraryKeys.chapterProgress(variables.bookId, variables.chapterId),
+          {
+            progress: variables.progress,
+          },
+        );
+        queryClient.invalidateQueries({
+          queryKey: libraryKeys.bookInfo(variables.bookId),
+        });
+      },
     },
-  });
+  );
 }
 
 export function useAddBookToCollections() {
@@ -59,7 +66,7 @@ export function useAddBookToCollections() {
 
 export function useRemoveBookFromLibrary() {
   const queryClient = useQueryClient();
-  return useMutation<null, Error, string>({
+  return useMutation<void, Error, string>({
     mutationFn: removeBookFromLibrary,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: libraryKeys.all });
@@ -79,10 +86,16 @@ export function useCreateCollection() {
 
 export function useUpdateCollection() {
   const queryClient = useQueryClient();
-  return useMutation<Collection, Error, { id: string; data: UpdateCollectionRequest }>({
+  return useMutation<
+    Collection,
+    Error,
+    { id: string; data: UpdateCollectionRequest }
+  >({
     mutationFn: updateCollection,
     onSuccess: (_data, { id }) => {
-      queryClient.invalidateQueries({ queryKey: libraryKeys.collectionDetail(id) });
+      queryClient.invalidateQueries({
+        queryKey: libraryKeys.collectionDetail(id),
+      });
       queryClient.invalidateQueries({ queryKey: libraryKeys.all });
     },
   });
@@ -90,7 +103,7 @@ export function useUpdateCollection() {
 
 export function useDeleteCollection() {
   const queryClient = useQueryClient();
-  return useMutation<null, Error, string>({
+  return useMutation<void, Error, string>({
     mutationFn: deleteCollection,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: libraryKeys.all });
@@ -99,7 +112,11 @@ export function useDeleteCollection() {
 }
 
 export function useRecordReadingTime() {
-  return useMutation<void, Error, { bookId: string; chapterId: string; durationInSeconds: number }>({
+  return useMutation<
+    void,
+    Error,
+    { bookId: string; chapterId: string; durationInSeconds: number }
+  >({
     mutationFn: recordReadingTime,
   });
 }

@@ -5,14 +5,15 @@ import {
   ConflictDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Book } from '@/modules/books/domain/books/entities/book.entity';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
 import { UpdateBookCommand } from './update-book.command';
 import { BookErrorMessages } from '@/modules/books/application/error-messages';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
-import { EventNames } from '@/shared/platform/constants/event-names.constant';
+import { randomUUID } from 'node:crypto';
+import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
+import { BookOutboxPort } from '@/modules/books/application/public-api';
 
 @CommandHandler(UpdateBookCommand)
 export class UpdateBookHandler implements ICommandHandler<
@@ -22,7 +23,8 @@ export class UpdateBookHandler implements ICommandHandler<
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly bookCache: IBookCachePort,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly unitOfWork: UnitOfWorkPort,
+    private readonly bookOutbox: BookOutboxPort,
   ) {}
 
   async execute(command: UpdateBookCommand): Promise<Book> {
@@ -83,15 +85,20 @@ export class UpdateBookHandler implements ICommandHandler<
       book.updateTags(command.tags);
     }
 
-    await this.bookRepository.save(book);
+    const persistedVersion = book.loadedVersion + (book.isDirty ? 1 : 0);
+    await this.unitOfWork.execute(async () => {
+      await this.bookRepository.save(book);
+      await this.bookOutbox.append({
+        id: randomUUID(),
+        type: 'book.updated',
+        bookId: book.id.toString(),
+      });
+    });
+    book.markPersisted(persistedVersion);
 
     // Sá»­ dá»¥ng service chuyÃªn biá»‡t Ä‘á»ƒ cáº­p nháº­t vÃ  xÃ³a cache liÃªn quan
     await this.bookCache.setDetail(book);
     await this.bookCache.invalidateDetail(book.id.toString(), book.slug);
-
-    this.eventEmitter.emit(EventNames.BOOK_UPDATED, {
-      bookId: book.id.toString(),
-    });
 
     return book;
   }
