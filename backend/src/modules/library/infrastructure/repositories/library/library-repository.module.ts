@@ -18,7 +18,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CollectionRepository } from './collection.repository';
 import { ReadingListRepository } from './reading-list.repository';
 import { ReadingProgressRepository } from './reading-progress.repository';
-import { MongoPersistenceModule } from '@/shared/infrastructure/mongo-persistence.module';
+import { MongoPersistenceModule } from '@/core/database/mongo-persistence.module';
 
 @Module({
   imports: [

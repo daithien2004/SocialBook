@@ -5,7 +5,7 @@ import { GetUserNotificationsHandler } from './queries/get-user-notification/get
 import { MarkNotificationReadHandler } from './commands/mark-notification/mark-notification-read.handler';
 import { MarkAllNotificationsReadHandler } from './commands/mark-notification/mark-all-notifications-read.handler';
 import { NotificationsInfrastructureModule } from '../infrastructure/notifications-infrastructure.module';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 
 @Module({
   imports: [CqrsModule, NotificationsInfrastructureModule, IdGeneratorModule],

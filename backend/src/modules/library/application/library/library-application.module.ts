@@ -16,7 +16,7 @@ import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api
 import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api';
 import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/public-api';
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 
 import { ProcessReadingSessionHandler } from './commands/process-reading-session/process-reading-session.handler';
 import { UpdateCollectionHandler } from './commands/update-collection/update-collection.handler';

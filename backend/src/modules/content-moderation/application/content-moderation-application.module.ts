@@ -6,7 +6,7 @@ import { DeleteToxicWordHandler } from './commands/delete-toxic-word/delete-toxi
 import { GetToxicWordsHandler } from './queries/get-toxic-words/get-toxic-words.handler';
 import { RefreshToxicWordsListener } from './listeners/refresh-toxic-words.listener';
 import { ContentModerationInfrastructureModule } from '../infrastructure/content-moderation-infrastructure.module';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
 import { ContentModerationService } from './services/content-moderation.service';
 

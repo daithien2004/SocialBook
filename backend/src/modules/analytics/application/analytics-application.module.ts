@@ -5,7 +5,7 @@ import { GetTrendingBooksHandler } from './queries/get-trending-books/get-trendi
 import { AnalyticsFlushCron } from './analytics-flush.cron';
 import { GetTopActiveReadersHandler } from './queries/get-top-active-readers/get-top-active-readers.handler';
 import { AnalyticsInfrastructureModule } from '../infrastructure/analytics-infrastructure.module';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
 import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/public-api';
 import { ScoringService } from './services/scoring.service';

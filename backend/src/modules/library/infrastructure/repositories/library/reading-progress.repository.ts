@@ -14,7 +14,7 @@ import {
   ProgressDocument,
 } from '@/modules/library/infrastructure/schemas/progress.schema';
 import { ReadingProgressPersistence } from './reading-progress.mapper';
-import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
+import { MongoSessionContext } from '@/core/database/mongo-session.context';
 
 @Injectable()
 export class ReadingProgressRepository implements IReadingProgressRepository {

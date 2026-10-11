@@ -15,7 +15,7 @@ import { HeartbeatDto } from './dto/heartbeat.dto';
 import { ReadingRoomServerEvent } from '../../reading-room.events';
 
 import { toReadingRoomSnapshot } from './reading-room-snapshot.mapper';
-import { WsAckResponse } from '@/shared/presentation/ws-ack.type';
+import { WsAckResponse } from '@/shared/platform/websocket/ws-ack.type';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';
 import { UserOperationLock } from './user-operation-lock';
 import { DISCONNECT_PRESENCE_GRACE_MS } from './reading-room.constants';

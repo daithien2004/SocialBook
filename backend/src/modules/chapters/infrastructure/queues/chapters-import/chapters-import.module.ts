@@ -6,7 +6,7 @@ import {
   CHAPTERS_IMPORT_QUEUE,
 } from './chapters-import.processor';
 import { ChaptersImportAdapter } from './chapters-import.adapter';
-import { CREATE_SINGLE_CHAPTER_QUEUE } from '@/modules/chapters/application/chapters/processors/single-chapter.processor';
+import { CREATE_SINGLE_CHAPTER_QUEUE } from '../single-chapter/single-chapter.processor';
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
 /**

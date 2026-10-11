@@ -1,4 +1,4 @@
-import { isMongoTransactionCapableTopology } from '@/shared/infrastructure/mongo-transaction-capability';
+import { isMongoTransactionCapableTopology } from '@/core/database/mongo-transaction-capability';
 
 describe('Mongo transaction topology validation', () => {
   it('accepts replica set members', () => {

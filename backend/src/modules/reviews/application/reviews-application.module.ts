@@ -10,7 +10,7 @@ import { LibraryRepositoryModule } from '@/modules/library/infrastructure/public
 import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 import { ReviewsInfrastructureModule } from '../infrastructure/reviews-infrastructure.module';
 import { ContentModerationApplicationModule } from '@/modules/content-moderation/application/public-api';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { RecommendationsInfrastructureModule } from '@/modules/recommendations/infrastructure/public-api';
 
 @Module({

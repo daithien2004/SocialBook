@@ -1,219 +1,57 @@
-import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
-import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
-import { getRedisConnectionToken, RedisModule } from '@nestjs-modules/ioredis';
-import { Logger, Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { CsrfGuard } from '@/shared/platform/guards/csrf.guard';
-import { CsrfMiddleware } from '@/shared/platform/middlewares/csrf.middleware';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
-import Redis from 'ioredis';
-import type { Connection } from 'mongoose';
-import { BullModule } from '@nestjs/bullmq';
-import { ScheduleModule } from '@nestjs/schedule';
-import { CqrsModule } from '@nestjs/cqrs';
-import { randomUUID } from 'node:crypto';
-import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { envConfig } from './config';
-import { shouldSkipEnvValidation, validateEnv } from './config/env.validation';
-import { HttpExceptionFilter } from './shared/platform/filters/http-exception.filter';
-import { assertMongoTransactionCapability } from './shared/infrastructure/mongo-transaction-capability';
-
-// Clean Architecture Modules
-import { ApplicationModule } from './application/application.module';
-import { InfrastructureModule } from './infrastructure/infrastructure.module';
-import { PresentationModule } from './presentation/presentation.module';
+import { Module } from '@nestjs/common';
+import { CoreModule } from './core/core.module';
+import { AIModule } from './modules/ai';
+import { AnalyticsModule } from './modules/analytics';
+import { AuthModule } from './modules/auth';
+import { AuthorsModule } from './modules/authors';
+import { BookmarksModule } from './modules/bookmarks';
+import { BooksModule } from './modules/books';
+import { ChaptersModule } from './modules/chapters';
+import { ChromaModule } from './modules/chroma';
+import { CommentsModule } from './modules/comments';
+import { ContentModerationModule } from './modules/content-moderation';
+import { FollowsModule } from './modules/follows';
+import { GenresModule } from './modules/genres';
+import { LibraryModule } from './modules/library';
+import { LikesModule } from './modules/likes';
+import { NotificationsModule } from './modules/notifications';
+import { PostsModule } from './modules/posts';
+import { RecommendationsModule } from './modules/recommendations';
+import { ReadingRoomsModule } from './modules/reading-rooms';
+import { ReviewsModule } from './modules/reviews';
+import { SearchModule } from './modules/search';
+import { StatisticsModule } from './modules/statistics';
+import { TextToSpeechModule } from './modules/text-to-speech';
+import { UserHighlightsModule } from './modules/user-highlights';
+import { UsersModule } from './modules/users';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [envConfig],
-      validate: shouldSkipEnvValidation(
-        process.env.NODE_ENV,
-        process.env.SKIP_ENV_VALIDATION,
-      )
-        ? undefined
-        : validateEnv,
-    }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>(
-          'env.MONGO_URI',
-          'mongodb://localhost:27017/socialbook?replicaSet=rs0&directConnection=true',
-        ),
-        autoIndex: configService.get<string>('env.NODE_ENV') !== 'production',
-        maxPoolSize: configService.get<number>('env.MONGO_MAX_POOL_SIZE', 20),
-        minPoolSize: configService.get<number>('env.MONGO_MIN_POOL_SIZE', 0),
-        connectTimeoutMS: configService.get<number>(
-          'env.MONGO_CONNECT_TIMEOUT_MS',
-          10000,
-        ),
-        serverSelectionTimeoutMS: configService.get<number>(
-          'env.MONGO_SERVER_SELECTION_TIMEOUT_MS',
-          10000,
-        ),
-        socketTimeoutMS: configService.get<number>(
-          'env.MONGO_SOCKET_TIMEOUT_MS',
-          45000,
-        ),
-        waitQueueTimeoutMS: configService.get<number>(
-          'env.MONGO_WAIT_QUEUE_TIMEOUT_MS',
-          5000,
-        ),
-        connectionFactory: async (connection: Connection) => {
-          await assertMongoTransactionCapability(connection);
-          return connection;
-        },
-      }),
-    }),
-    RedisModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const host = configService.get<string>('env.REDIS_HOST', 'localhost');
-        const port = configService.get<number>('env.REDIS_PORT', 6379);
-        const password = configService.get<string>('env.REDIS_PASSWORD');
-
-        return {
-          type: 'single',
-          options: {
-            host,
-            port,
-            password,
-            db: 0,
-            tls:
-              host.includes('upstash') || host.includes('rediss')
-                ? {}
-                : undefined,
-            connectTimeout: 10000,
-            maxRetriesPerRequest: 5,
-            retryStrategy: (times: number) => {
-              if (times > 5) {
-                new Logger(AppModule.name).error(
-                  '[Redis] Connection failed after 5 retries. Redis features will be disabled.',
-                );
-                return null;
-              }
-              return Math.min(times * 500, 2000);
-            },
-            reconnectOnError: (err) => {
-              const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT'];
-              if (targetErrors.some((e) => err.message.includes(e))) {
-                return true;
-              }
-              return false;
-            },
-          },
-        };
-      },
-    }),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        // Worker cáº§n null Ä‘á»ƒ BLPOP blocking hoáº¡t Ä‘á»™ng Ä‘Ãºng.
-        // API pháº£i fail-fast (2 láº§n) khi redis-queue sáº­p â€” trÃ¡nh treo vÃ´ háº¡n lÃ m cháº¿t API.
-        const isWorker = process.env.WORKER_MODE === 'true';
-        return {
-          connection: {
-            host: configService.get<string>('env.BULL_REDIS_HOST', 'localhost'),
-            port: configService.get<number>('env.BULL_REDIS_PORT', 6379),
-            password: configService.get<string>('env.BULL_REDIS_PASSWORD'),
-            maxRetriesPerRequest: isWorker ? null : 2,
-            // API khÃ´ng tÃ­ch trá»¯ lá»‡nh trong RAM khi Redis sáº­p â€” tráº£ 503 ngay láº­p tá»©c.
-            enableOfflineQueue: isWorker,
-          },
-        };
-      },
-    }),
-    ThrottlerModule.forRootAsync({
-      inject: [getRedisConnectionToken()],
-      useFactory: (redis: Redis) => ({
-        throttlers: [
-          {
-            name: 'global',
-            ttl: 60_000,
-            limit: 100,
-          },
-        ],
-        storage: new ThrottlerStorageRedisService(redis),
-      }),
-    }),
-    EventEmitterModule.forRoot({ verboseMemoryLeak: true }),
-    // A8: cron chá»‰ cháº¡y á»Ÿ tiáº¿n trÃ¬nh worker (Ä‘Ãºng 1 replica). Náº¿u Ä‘Äƒng kÃ½ á»Ÿ má»i
-    // replica API thÃ¬ má»—i @Cron sáº½ báº¯n N láº§n â€” Ä‘á»‘i soÃ¡t Ä‘Æ¡n hÃ ng sáº½ cháº¡y trÃ¹ng.
-    ...(isWorkerProcess() ? [ScheduleModule.forRoot()] : []),
-    CqrsModule.forRoot(),
-    PinoLoggerModule.forRoot({
-      pinoHttp: {
-        genReqId: (request, response) => {
-          const header = request.headers['x-request-id'];
-          const requestId =
-            typeof header === 'string' && /^[a-zA-Z0-9._-]{1,128}$/.test(header)
-              ? header
-              : randomUUID();
-          response.setHeader('x-request-id', requestId);
-          return requestId;
-        },
-        customProps: (request) => ({ traceId: request.id }),
-        redact: {
-          paths: [
-            'req.headers.authorization',
-            'req.headers.cookie',
-            'req.headers.x-csrf-token',
-            'req.body.password',
-            'req.body.refreshToken',
-            'req.body.accessToken',
-            'req.body.token',
-          ],
-          remove: true,
-        },
-        ...(process.env.NODE_ENV !== 'production'
-          ? {
-              transport: {
-                target: 'pino-pretty',
-                options: { colorize: true },
-              },
-            }
-          : {}),
-      },
-    }),
-    // Clean Architecture - 3 layers
-    InfrastructureModule,
-    ApplicationModule,
-    PresentationModule,
-  ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: CsrfGuard,
-    },
+    CoreModule,
+    UsersModule,
+    BooksModule,
+    AuthorsModule,
+    ChaptersModule,
+    GenresModule,
+    PostsModule,
+    ReviewsModule,
+    CommentsModule,
+    AuthModule,
+    FollowsModule,
+    LibraryModule,
+    LikesModule,
+    StatisticsModule,
+    ChromaModule,
+    SearchModule,
+    TextToSpeechModule,
+    AIModule,
+    RecommendationsModule,
+    NotificationsModule,
+    ContentModerationModule,
+    BookmarksModule,
+    UserHighlightsModule,
+    ReadingRoomsModule,
+    AnalyticsModule,
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CsrfMiddleware).forRoutes('{*path}');
-  }
-}
+export class AppModule {}

@@ -4,7 +4,7 @@
       "count": 7
     }
   },
-  "src/infrastructure/cache/redis-cache.adapter.ts": {
+  "src/core/redis/cache/redis-cache.adapter.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
@@ -1188,12 +1188,12 @@
       "count": 1
     }
   },
-  "src/shared/database/seeds/book-post-likes.seeder.ts": {
+  "src/seeds/book-post-likes.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 4
     }
   },
-  "src/shared/database/seeds/chapter-discussions.seeder.ts": {
+  "src/seeds/chapter-discussions.seeder.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     },
@@ -1201,7 +1201,7 @@
       "count": 6
     }
   },
-  "src/shared/database/seeds/comments.seeder.ts": {
+  "src/seeds/comments.seeder.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
@@ -1212,17 +1212,17 @@
       "count": 2
     }
   },
-  "src/shared/database/seeds/follows.seeder.ts": {
+  "src/seeds/follows.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
     }
   },
-  "src/shared/database/seeds/likes.seeder.ts": {
+  "src/seeds/likes.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
     }
   },
-  "src/shared/database/seeds/notifications.seeder.ts": {
+  "src/seeds/notifications.seeder.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     },
@@ -1230,7 +1230,7 @@
       "count": 2
     }
   },
-  "src/shared/database/seeds/posts-diverse.seeder.ts": {
+  "src/seeds/posts-diverse.seeder.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     },
@@ -1238,12 +1238,12 @@
       "count": 6
     }
   },
-  "src/shared/database/seeds/posts.seeder.ts": {
+  "src/seeds/posts.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
     }
   },
-  "src/shared/database/seeds/progress.seeder.ts": {
+  "src/seeds/progress.seeder.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     },
@@ -1251,7 +1251,7 @@
       "count": 2
     }
   },
-  "src/shared/database/seeds/read-progress-review.seeder.ts": {
+  "src/seeds/read-progress-review.seeder.ts": {
     "@typescript-eslint/no-non-null-assertion": {
       "count": 1
     },
@@ -1259,7 +1259,7 @@
       "count": 2
     }
   },
-  "src/shared/database/seeds/reading-rooms.seeder.ts": {
+  "src/seeds/reading-rooms.seeder.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
@@ -1273,12 +1273,12 @@
       "count": 3
     }
   },
-  "src/shared/database/seeds/reviews.seeder.ts": {
+  "src/seeds/reviews.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
     }
   },
-  "src/shared/database/seeds/users.seeder.ts": {
+  "src/seeds/users.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }

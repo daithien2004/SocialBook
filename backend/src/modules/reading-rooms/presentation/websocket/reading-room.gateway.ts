@@ -26,11 +26,11 @@ import type {
 import { WsUser } from './core/ws-user.decorator';
 import { WsThrottle, WsThrottleGuard } from './core/ws-throttle.guard';
 
-import { WsAckResponse } from '@/shared/presentation/ws-ack.type';
+import { WsAckResponse } from '@/shared/platform/websocket/ws-ack.type';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
 
 import { WsExceptionFilter } from '@/shared/platform/filters/ws-exception.filter';
-import { WsValidationPipe } from '@/presentation/gateways/pipes/ws-validation.pipe';
+import { WsValidationPipe } from '@/shared/platform/websocket/ws-validation.pipe';
 import { joinUserControlRoom } from '@/shared/platform/websocket/join-user-control-room';
 import { toHandshakeError } from './reading-room.handshake';
 import { JoinRoomDto } from './dto/join-room.dto';

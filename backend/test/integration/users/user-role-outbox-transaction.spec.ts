@@ -17,7 +17,7 @@ import {
 import { UserRoleChangeOutboxPort } from '@/modules/users/application/users/user-role-change-outbox.port';
 import { UsersRepositoryModule } from '@/modules/users/infrastructure/repositories/users/users-repository.module';
 import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
-import { assertMongoTransactionCapability } from '@/shared/infrastructure/mongo-transaction-capability';
+import { assertMongoTransactionCapability } from '@/core/database/mongo-transaction-capability';
 
 describe('user role outbox transaction', () => {
   let replicaSet: MongoMemoryReplSet;

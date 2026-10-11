@@ -5,7 +5,7 @@ import {
   BookOutboxEvent,
   BookOutboxPort,
 } from '../../application/outbox/book-outbox.port';
-import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
+import { MongoSessionContext } from '@/core/database/mongo-session.context';
 import { BookOutboxDocument, BookOutboxRecord } from './book-outbox.schema';
 
 @Injectable()

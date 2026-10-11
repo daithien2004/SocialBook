@@ -1,183 +1,121 @@
-# SocialBook 📚
+# SocialBook
 
-<div align="center">
+SocialBook is a social platform for book lovers. It combines book discovery and reading progress with community features, collaborative reading rooms, recommendations, and background processing.
 
-**A comprehensive, feature-rich social network platform for book lovers — combining advanced reading tracking, social interaction, real-time collaboration, and AI-powered capabilities.**
+## Tech stack
 
-[![NestJS](https://img.shields.io/badge/Backend-NestJS%2011-E0234E?style=flat-square&logo=nestjs)](https://nestjs.com/)
-[![Next.js](https://img.shields.io/badge/Frontend-Next.js%2016-000000?style=flat-square&logo=nextdotjs)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=flat-square&logo=mongodb)](https://www.mongodb.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+- **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS
+- **Backend:** NestJS 11, TypeScript, MongoDB/Mongoose, Redis, Socket.IO, BullMQ
+- **Search and AI:** MongoDB text search, ChromaDB vector search, AI and text-to-speech integrations
+- **Infrastructure:** Docker Compose, Nginx, GitHub Actions
 
-</div>
+## Repository layout
 
----
+```text
+backend/       NestJS API and worker
+frontend/      Next.js web application
+shared/        Shared workspace package
+docs/          Architecture notes, ADRs, and flow audits
+docker-compose.yml
+```
 
-## ✨ Features
+## Backend architecture
 
-| Feature | Description |
-|---|---|
-| 📚 **Advanced Book Management** | Browse, search (full-text + vector), filter by genre/tag. Supports importing multiple formats (EPUB, PDF, MOBI) with parsing capabilities. |
-| 📖 **Immersive Chapter Reading** | Rich reading experience with customizable themes/fonts, progress tracking, bookmarks, highlights, and AI-generated chapter summaries. |
-| 🤝 **Social & Community** | Follow users, like books/posts/comments, write reviews, rate books, and receive real-time notifications. |
-| 💬 **Real-time Reading Rooms** | Collaborative reading spaces with sync/free/discussion modes, real-time presence, highlights, and live interactions. |
-| 🤖 **AI-Powered Capabilities** | Google Gemini 2.5 Flash for summaries, LangChain integration, ChromaDB for semantic vector search, automated content moderation, and Text-to-Speech (Google Cloud & ElevenLabs). |
-| 🔐 **Security & Authentication** | JWT access/refresh tokens, OAuth (Google), OTP verification, and strictly enforced Role-Based Access Control (RBAC) via CASL. |
-| 🔍 **Discovery & Recommendations** | Multi-modal search (MongoDB text index + ChromaDB vector search) and AI-driven personalized book recommendations. |
-| 📊 **Analytics & Visualization** | Comprehensive reading stats, admin analytics dashboard with Recharts/D3 charts, and force-directed connection graphs. |
-| 📥 **Background Processing** | Asynchronous task execution using BullMQ for book imports (two-phase import), data scraping, and heavy background jobs. |
-
----
-
-## 🚀 Tech Stack
-
-### Frontend
-- **Framework:** Next.js 16 (App Router, Turbopack)
-- **Language:** TypeScript (strict mode)
-- **Styling:** TailwindCSS 4, Radix UI Primitives, Framer Motion, shadcn/ui
-- **State Management:** TanStack React Query (server state), Zustand (client/UI state), Context API
-- **Real-time:** Socket.IO Client (namespace-based)
-- **Data Visualization:** Recharts, D3.js, React Force Graph, React Map GL
-- **Security & Auth:** Next-Auth, CASL (RBAC)
-- **Testing:** Playwright (E2E), Jest + React Testing Library
-- **Design Tokens:** Style Dictionary (Amazon), DTCG format
-
-### Backend
-- **Framework:** NestJS 11 — **Clean Architecture** (domain/application/infrastructure/presentation)
-- **Language:** TypeScript
-- **Databases:** MongoDB 7 (Mongoose), Redis 7 (Caching, Queues, Presence), ChromaDB (Vector DB)
-- **Authentication:** JWT, Passport (Local, JWT strategies), OTP, bcrypt
-- **Real-time:** Socket.IO Gateway (Redis adapter for horizontal scaling)
-- **Background Jobs:** BullMQ (Redis-backed queues)
-- **File Upload:** Multer + Cloudinary (images, media)
-- **AI Integration:** Google Gemini 2.5 Flash, LangChain, HuggingFace, ChromaDB, ElevenLabs / Google Cloud TTS
-- **File Parsing:** `epub2`, `pdf-parse`, `@lingo-reader/mobi-parser`
-- **Email:** Resend / Nodemailer
-- **API Docs:** Swagger / OpenAPI
-- **Testing:** Jest (unit, integration, e2e), mongodb-memory-server
-
-### DevOps / Infrastructure
-- **Containerization:** Docker Compose (6 services: nginx, backend x2, frontend, mongo, redis, chroma)
-- **CI/CD:** GitHub Actions (linting, testing, building, deployment)
-- **Reverse Proxy:** Nginx with WebSocket support, load balancing, Gzip, security headers
-- **Monitoring:** Custom Logger, Global Exception Filters, Sentry integration on frontend
-
----
-
-## 🏗️ Architecture
-
-The backend strictly follows **Clean Architecture** and **Domain-Driven Design (DDD)** principles, separating concerns into four distinct layers:
+The backend is a feature-first modular monolith. Each bounded context owns its code and wiring; layers live inside the feature where they are useful.
 
 ```text
 backend/src/
-├── domain/            # 🔵 Enterprise Business Rules (Entities, Value Objects, Port Interfaces)
-├── application/       # 🟢 Application Business Rules (CQRS: Commands, Queries, Use Cases)
-├── infrastructure/    # 🟡 Frameworks & External Adapters (Mongoose, Redis, AI APIs, Gateways)
-├── presentation/      # 🔴 Delivery Mechanism (REST Controllers, WebSocket Gateways)
-└── shared/            # ⚪ Cross-cutting Concerns (Logger, Base Classes, Decorators)
+├── main.ts                 # HTTP API entry point
+├── worker.ts               # Background worker entry point
+├── app.module.ts           # Imports CoreModule and feature root modules
+├── core/                   # Application-wide infrastructure and configuration
+├── shared/                 # Reusable code without feature ownership
+├── seeds/                  # Database seed scripts
+└── modules/
+    └── reading-rooms/
+        ├── reading-rooms.module.ts
+        ├── presentation/
+        ├── application/
+        ├── domain/
+        └── infrastructure/
 ```
 
-### Domain Modules (29 distinct bounded contexts)
-`ai` · `analytics` · `auth` · `authors` · `bookmarks` · `books` · `chapters` · `chroma` · `cloudinary` · `comments` · `content-moderation` · `follows` · `genres` · `library` · `likes` · `notifications` · `posts` · `progress` · `reading-room-interactions` · `reading-rooms` · `recommendations` · `reviews` · `roles` · `scraper` · `search` · `statistics` · `text-to-speech` · `user-highlights` · `users`
+`core/queue` configures the BullMQ connection. A feature registers its own queues and workers. `shared/queue` contains only reusable payload schemas and job options. `CoreModule` composes the core modules; security providers and CQRS/event/scheduler setup are packaged in their own core modules. `src/migrations/` contains database migrations/maintenance scripts; `src/seeds/` contains seed entry points and may depend on feature APIs, while features must not depend on seeds.
 
----
+Feature code must use another feature's public API. The architecture checker enforces these boundaries, inward layer dependencies, and direct cycles between Nest modules. Domain code cannot import NestJS or Mongoose. The checker runs in pull request and deployment workflows.
 
-## 🧪 Testing
+### API and worker processes
 
-### Backend Tests
-```bash
-npm run test:unit        # Unit tests — entities, value objects, use cases (mocked deps)
-npm run test:integration # Integration tests — repositories with mongodb-memory-server
-npm run test:e2e         # E2E tests — full HTTP flow with Supertest
-npm run test:cov         # With coverage report
-```
+The API starts from `backend/src/main.ts`, loads `api-mode.ts` before `AppModule`, and serves versioned routes under `/api/v1`. The worker starts from `backend/src/worker.ts`, sets `WORKER_MODE=true` before loading `AppModule`, and does not open an HTTP listener. Queue consumers, scheduled jobs, and outbox relays are registered only in worker mode so adding API replicas does not add consumers. Socket.IO uses separate Redis publisher/subscriber clients, logs connection recovery events, and closes those clients during adapter shutdown.
 
-### Frontend Tests
-```bash
-npm run test:e2e         # Playwright E2E tests
-npm run test             # Jest unit tests
-```
-
----
-
-## 📊 Performance & Optimization
-
-### Frontend
-- **Rendering:** Server-Side Rendering (SSR) & Static Site Generation (SSG) via Next.js App Router.
-- **Dynamic Imports:** Heavy components (graphs, charts) loaded via `next/dynamic`.
-- **State Optimizations:** `React.memo` on lists, IntersectionObserver for infinite scroll, debounced inputs.
-- **Image Optimization:** Next.js `<Image>` integrated with Cloudinary for automatic format/size selection.
-
-### Backend
-- **Caching Strategy:** Cache-aside pattern via Redis with TTL-based eviction.
-- **Database Optimization:** MongoDB compound indexes, text indexes, and partial filters. Efficient aggregation pipelines (`$facet`).
-- **Pagination:** Cursor-based pagination (O(1) complexity).
-- **Rate Limiting:** Throttler applied globally (100 req/min) and aggressively on auth routes (5 req/min).
-- **Asynchronous Processing:** BullMQ delegates heavy CPU tasks (file parsing, PDF processing, AI generation) to background workers.
-
----
-
-## 🛠️ Getting Started
+## Local development
 
 ### Prerequisites
-- Node.js v20.18.1+
-- MongoDB (local or Atlas)
-- Docker & Docker Compose
 
-### 1. Clone the repository
+- Node.js 20.18.1 or later
+- npm
+- Docker Compose
+- Local environment files based on `backend/.env.example` and `frontend/.env.example`
+
+Install workspace dependencies from the repository root:
+
 ```bash
-git clone <repository_url>
-cd sb_develop
+npm ci
 ```
 
-### 2. Start infrastructure services (Redis, Mongo, Chroma, Nginx)
+Create `backend/.env` and `frontend/.env.local`, then start the required infrastructure. MongoDB runs as a single-node replica set so transaction-dependent backend features work locally.
+
 ```bash
-docker compose up -d
+docker compose up -d mongo mongo-init-replica redis redis-queue chroma
 ```
 
-### 3. Setup Backend
+Run the API, worker, and frontend together:
 
 ```bash
-cd backend
-cp .env.example .env    # Edit with your credentials/keys
-npm install
-npm run start:dev
-```
-> REST API available at `http://localhost:5000`
-> Swagger Docs at `http://localhost:5000/docs`
-
-### 4. Setup Frontend
-
-```bash
-cd frontend
-cp .env.example .env.local  # Edit with your URLs
-npm install
 npm run dev
 ```
-> Application available at `http://localhost:3000`
 
-### 5. Seed database (Optional)
+The web app is available at `http://localhost:3000`; the API is available at `http://localhost:5000/api/v1`. Swagger is available at `http://localhost:5000/docs`.
+
+To run a process separately:
+
 ```bash
-cd backend
-npm run seed
+npm run start:dev --workspace=backend       # API
+npm run start:worker:dev --workspace=backend # Worker
+npm run dev --workspace=frontend             # Frontend
 ```
 
----
+The API and worker use the same backend environment configuration. Keep `WORKER_MODE` unset or `false` for the API; `worker.ts` sets it before loading the application modules.
 
-## 🤝 Contributing
+## Backend checks
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Follow the strict architectural guidelines detailed in `AGENTS.md`.
-4. Run tests: `npm run test:unit && npm run lint`
-5. Commit with conventional commit messages
-6. Push and create a Pull Request
+Run the complete backend check before submitting backend changes:
 
-All PRs automatically run lint + unit tests + build via GitHub Actions.
+```bash
+npm run check --workspace=backend
+```
 
----
+It runs typecheck, lint, architecture checks, and Jest tests. Individual commands are available from the repository root:
 
-## 📄 License
+```bash
+npm run typecheck --workspace=backend
+npm run lint --workspace=backend
+npm run lint:architecture --workspace=backend
+npm run test:unit --workspace=backend
+npm run test:integration --workspace=backend
+npm run test:e2e --workspace=backend
+```
 
-This project is licensed under the [MIT License](LICENSE).
+See [AGENTS.md](AGENTS.md) for repository-specific implementation and type-safety rules, [the backend architecture overview](docs/backend-architecture-overview.md) for the current module map, and [the ADR directory](docs/adr/) for recorded architecture decisions.
+
+## Database seeding
+
+Seed scripts are maintained in `backend/src/seeds` and can be run with:
+
+```bash
+npm run seed --workspace=backend
+```
+
+## License
+
+See [LICENSE](LICENSE).

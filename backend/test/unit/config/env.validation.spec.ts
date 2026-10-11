@@ -1,4 +1,7 @@
-import { shouldSkipEnvValidation, validateEnv } from '@/config/env.validation';
+import {
+  shouldSkipEnvValidation,
+  validateEnv,
+} from '@/core/config/env.validation';
 
 const validEnvironment = {
   MONGO_URI: 'mongodb://localhost:27017/socialbook?replicaSet=rs0',

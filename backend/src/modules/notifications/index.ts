@@ -1,6 +1,7 @@
 export { NotificationsModule } from './notifications.module';
 export { NotificationsApplicationModule } from './application/notifications-application.module';
 export { NotificationsInfrastructureModule } from './infrastructure/notifications-infrastructure.module';
+export { NotificationQueueModule } from './infrastructure/queue/notification-queue.module';
 export * from './presentation/public-api';
 export { NotificationWorker } from './infrastructure/workers/notification.worker';
 export * from './application/public-api';

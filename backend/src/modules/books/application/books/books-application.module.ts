@@ -1,5 +1,5 @@
 import { CqrsModule } from '@nestjs/cqrs';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/repositories/books/books-repository.module';
 import { AuthorsInfrastructureModule } from '@/modules/authors/infrastructure/public-api';
 import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/public-api';

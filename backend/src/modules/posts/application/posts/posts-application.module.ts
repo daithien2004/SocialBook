@@ -17,9 +17,9 @@ import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api
 import { MediaInfrastructureModule } from '@/modules/media/infrastructure/public-api';
 import { ContentModerationApplicationModule } from '@/modules/content-moderation/application/public-api';
 import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { PostModerationQueueModule } from '@/modules/posts/infrastructure/queues/post-moderation/post-moderation.module';
-import { QueueModule } from '@/infrastructure/queue/queue.module';
+import { NotificationsInfrastructureModule } from '@/modules/notifications/infrastructure/public-api';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { QueueModule } from '@/infrastructure/queue/queue.module';
     ContentModerationApplicationModule,
     IdGeneratorModule,
     PostModerationQueueModule,
-    QueueModule,
+    NotificationsInfrastructureModule,
   ],
   providers: [
     ApprovePostHandler,

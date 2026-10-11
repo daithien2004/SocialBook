@@ -21,7 +21,7 @@ import {
 import { ProblemDetailsDto } from '@/shared/platform/dto/problem-details.dto';
 import { HttpExceptionFilter } from '@/shared/platform/filters/http-exception.filter';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
-import { normalizeOpenApi31 } from '@/config/openapi-31';
+import { normalizeOpenApi31 } from '@/core/config/openapi-31';
 
 @Controller('response-contract')
 @ApiProblemResponses()

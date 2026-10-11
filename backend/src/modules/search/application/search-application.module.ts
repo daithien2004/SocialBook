@@ -9,8 +9,7 @@ import { ReviewsInfrastructureModule } from '@/modules/reviews/infrastructure/pu
 import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/public-api';
 import { AuthorsInfrastructureModule } from '@/modules/authors/infrastructure/public-api';
 import { ChromaInfrastructureModule } from '@/modules/chroma/infrastructure/public-api';
-import { InfrastructureModule } from '@/infrastructure/infrastructure.module';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { SearchCacheModule } from '@/modules/search/infrastructure/cache/search-cache.module';
 
 @Module({
@@ -22,7 +21,6 @@ import { SearchCacheModule } from '@/modules/search/infrastructure/cache/search-
     GenresInfrastructureModule,
     AuthorsInfrastructureModule,
     ChromaInfrastructureModule,
-    InfrastructureModule,
     IdGeneratorModule,
     SearchCacheModule,
   ],

@@ -6,7 +6,7 @@ import {
 } from '@/modules/genres/infrastructure/schemas/genre.schema';
 import { IGenreRepository } from '@/modules/genres/domain/repositories/genre.repository.interface';
 import { GenresRepository } from './genres.repository';
-import { MongoPersistenceModule } from '@/shared/infrastructure/mongo-persistence.module';
+import { MongoPersistenceModule } from '@/core/database/mongo-persistence.module';
 
 @Module({
   imports: [

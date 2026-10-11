@@ -32,7 +32,7 @@ import {
 } from '../../outbox/book-outbox.schema';
 import { BookOutboxPort } from '@/modules/books/application/public-api';
 import { BookOutboxRepository } from '../../outbox/book-outbox.repository';
-import { MongoPersistenceModule } from '@/shared/infrastructure/mongo-persistence.module';
+import { MongoPersistenceModule } from '@/core/database/mongo-persistence.module';
 
 @Module({
   imports: [

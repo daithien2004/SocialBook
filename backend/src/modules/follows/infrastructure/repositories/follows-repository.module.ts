@@ -5,7 +5,7 @@ import {
   FollowSchema,
 } from '@/modules/follows/infrastructure/schemas/follow.schema';
 import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.repository.interface';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { FollowRepository } from './follow.repository';
 
 @Module({

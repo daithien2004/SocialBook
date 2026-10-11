@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Test } from '@nestjs/testing';
 import { IBookRepository } from '@/modules/books/domain/public-api';
-import { ChromaReconciliationCron } from '@/modules/chroma/application/chroma-reconciliation.cron';
+import { ChromaReconciliationCron } from '@/modules/chroma/infrastructure/queue/chroma-reconciliation.cron';
 
 jest.mock('@nestjs/schedule', () => ({
   Cron: () => () => undefined,

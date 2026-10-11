@@ -19,11 +19,9 @@ import { PostsRepositoryModule } from '@/modules/posts/infrastructure/public-api
 import { FollowsInfrastructureModule } from '@/modules/follows/infrastructure/public-api';
 import { LibraryRepositoryModule } from '@/modules/library/infrastructure/public-api';
 import { MediaInfrastructureModule } from '@/modules/media/infrastructure/public-api';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
-import { PasswordHasherModule } from '@/shared/infrastructure/password-hasher.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
+import { PasswordHasherModule } from '@/core/security/password-hasher.module';
 import { CaslCacheListener } from './listeners/casl-cache.listener';
-import { UserRoleChangeOutboxRelay } from './user-role-change-outbox-relay';
-import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
 @Module({
   imports: [
@@ -51,7 +49,6 @@ import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
     UpdateUserHandler,
     UpdateUserImageHandler,
     CaslCacheListener,
-    ...(isWorkerProcess() ? [] : [UserRoleChangeOutboxRelay]),
   ],
   exports: [
     CheckUserExistHandler,

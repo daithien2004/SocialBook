@@ -15,7 +15,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 
-import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
+import { MongoSessionContext } from '@/core/database/mongo-session.context';
 import { Types } from 'mongoose';
 
 @Injectable()

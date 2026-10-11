@@ -6,8 +6,8 @@ import { GetFollowsHandler } from './queries/get-follows/get-follows.handler';
 import { GetFollowingHandler } from './queries/get-following-with-user-info/get-following.handler';
 import { GetFollowersHandler } from './queries/get-followers-with-user-info/get-followers.handler';
 import { FollowsInfrastructureModule } from '../infrastructure/follows-infrastructure.module';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
-import { QueueModule } from '@/infrastructure/queue/queue.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
+import { NotificationsInfrastructureModule } from '@/modules/notifications/infrastructure/public-api';
 
 export const CommandHandlers = [CreateFollowHandler, DeleteFollowHandler];
 
@@ -19,7 +19,11 @@ export const QueryHandlers = [
 ];
 
 @Module({
-  imports: [FollowsInfrastructureModule, IdGeneratorModule, QueueModule],
+  imports: [
+    FollowsInfrastructureModule,
+    IdGeneratorModule,
+    NotificationsInfrastructureModule,
+  ],
   providers: [...CommandHandlers, ...QueryHandlers],
   exports: [
     CreateFollowHandler,

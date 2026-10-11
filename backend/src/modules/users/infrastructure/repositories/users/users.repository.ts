@@ -13,7 +13,7 @@ import { FilterQuery, Model, Types } from 'mongoose';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { UserMapper } from './user.mapper';
 import { UserPersistence } from './user.mapper';
-import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
+import { MongoSessionContext } from '@/core/database/mongo-session.context';
 
 @Injectable()
 export class UsersRepository implements IUserRepository {

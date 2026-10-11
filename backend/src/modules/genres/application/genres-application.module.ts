@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { GenresInfrastructureModule } from '../infrastructure/genres-infrastructure.module';
 import { GenresService } from './genres.service';
 

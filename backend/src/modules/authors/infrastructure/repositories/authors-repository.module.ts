@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Author, AuthorSchema } from '../schemas/author.schema';
 import { IAuthorRepository } from '../../domain/repositories/author.repository.interface';
 import { AuthorRepository } from './author.repository';
-import { MongoPersistenceModule } from '@/shared/infrastructure/mongo-persistence.module';
+import { MongoPersistenceModule } from '@/core/database/mongo-persistence.module';
 
 @Module({
   imports: [

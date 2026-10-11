@@ -13,7 +13,7 @@ import {
   CREATE_SINGLE_CHAPTER_QUEUE,
   CREATE_SINGLE_CHAPTER_JOB,
   CreateSingleChapterJobData,
-} from '@/modules/chapters/application/chapters/processors/single-chapter.processor';
+} from '@/modules/chapters/infrastructure/queues/single-chapter/single-chapter.processor';
 
 const JOB_NAME = 'import-chapters';
 const QUEUE_NAME = 'chapters-import';

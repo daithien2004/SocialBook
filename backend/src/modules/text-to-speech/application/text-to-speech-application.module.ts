@@ -7,9 +7,8 @@ import { GetChapterAudioHandler } from './queries/get-chapter-audio/get-chapter-
 import { IncrementPlayCountHandler } from './commands/increment-play-count/increment-play-count.handler';
 import { TextToSpeechInfrastructureModule } from '../infrastructure/text-to-speech-infrastructure.module';
 import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { LanguageDetectorService } from './services/language-detector.service';
-import { QueueModule } from '@/infrastructure/queue/queue.module';
 
 @Module({
   imports: [
@@ -17,7 +16,6 @@ import { QueueModule } from '@/infrastructure/queue/queue.module';
     TextToSpeechInfrastructureModule,
     ChaptersRepositoryModule,
     IdGeneratorModule,
-    QueueModule,
   ],
   providers: [
     DeleteChapterAudioHandler,

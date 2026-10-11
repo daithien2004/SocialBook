@@ -17,7 +17,7 @@ import { Genre, GenreDocument } from '../schemas/genre.schema';
 import { GenreMapper } from './genre.mapper';
 import { GenrePersistence } from './genre.mapper';
 
-import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
+import { MongoSessionContext } from '@/core/database/mongo-session.context';
 
 @Injectable()
 export class GenresRepository implements IGenreRepository {

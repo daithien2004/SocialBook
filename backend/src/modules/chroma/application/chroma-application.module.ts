@@ -11,14 +11,8 @@ import { ChromaInfrastructureModule } from '../infrastructure/chroma-infrastruct
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
 import { AuthorsInfrastructureModule } from '@/modules/authors/infrastructure/public-api';
 import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
-import { BullModule } from '@nestjs/bullmq';
-import { ChromaProcessor } from './processors/chroma.processor';
-import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
-import { ChromaReconciliationCron } from './chroma-reconciliation.cron';
-import { BookOutboxRelayCron } from './book-outbox-relay.cron';
-import { DEFAULT_JOB_OPTIONS } from '@/shared/queue/default-job-options';
 
 @Module({
   imports: [
@@ -29,15 +23,8 @@ import { DEFAULT_JOB_OPTIONS } from '@/shared/queue/default-job-options';
     ChaptersRepositoryModule,
     IdGeneratorModule,
     AIInfrastructureModule,
-    BullModule.registerQueue({
-      name: 'chroma',
-      defaultJobOptions: DEFAULT_JOB_OPTIONS,
-    }),
   ],
   providers: [
-    ...(isWorkerProcess()
-      ? [ChromaProcessor, ChromaReconciliationCron, BookOutboxRelayCron]
-      : []),
     GetCollectionStatsHandler,
     ClearCollectionHandler,
     BatchIndexHandler,

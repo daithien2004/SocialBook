@@ -11,7 +11,7 @@ jest.mock('@nestjs/schedule', () => ({
   CronExpression: { EVERY_10_SECONDS: '*/10 * * * * *' },
 }));
 
-import { BookOutboxRelayCron } from '@/modules/chroma/application/book-outbox-relay.cron';
+import { BookOutboxRelayCron } from '@/modules/chroma/infrastructure/queue/book-outbox-relay.cron';
 
 class FakeBookOutbox extends BookOutboxPort {
   published: string[] = [];

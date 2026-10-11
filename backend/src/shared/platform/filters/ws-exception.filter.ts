@@ -1,8 +1,7 @@
 import { Catch, ArgumentsHost, Logger } from '@nestjs/common';
 import { BaseWsExceptionFilter } from '@nestjs/websockets';
 import { Socket, DefaultEventsMap } from 'socket.io';
-import { ReadingRoomServerEvent } from '@/modules/reading-rooms/reading-room.events';
-import { normalizeError } from '@/shared/presentation/error-normalizer';
+import { normalizeError } from '@/shared/platform/errors/error-normalizer';
 import { DomainException } from '@/shared/domain/domain-exception.base';
 import { randomUUID } from 'node:crypto';
 
@@ -70,7 +69,7 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
       if (ack) {
         ack({ ok: false, ...payload });
       } else {
-        client.emit(ReadingRoomServerEvent.ERROR, payload);
+        client.emit('error', payload);
       }
     } catch (sendErr) {
       this.logger.debug(

@@ -14,7 +14,7 @@ import {
   ReadingList as ReadingListSchemaClass,
 } from '../../schemas/reading-list.schema';
 import { LibraryMapper, PopulatedReadingListDocument } from './library.mapper';
-import { MongoSessionContext } from '@/shared/infrastructure/mongo-session.context';
+import { MongoSessionContext } from '@/core/database/mongo-session.context';
 
 @Injectable()
 export class ReadingListRepository implements IReadingListRepository {

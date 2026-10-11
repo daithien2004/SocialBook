@@ -1,3 +1,6 @@
+// This side-effect import must precede AppModule and all feature imports.
+import './api-mode';
+
 import {
   json,
   urlencoded,
@@ -21,9 +24,8 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
 import { Queue } from 'bullmq';
 import { AppModule } from './app.module';
-import { RedisIoAdapter } from './presentation/gateways/core/redis-io.adapter';
-import { configSwagger } from './config/swagger.config';
-import { isWorkerProcess } from './shared/platform/utils/process-role.util';
+import { RedisIoAdapter } from './core/redis/redis-io.adapter';
+import { configSwagger } from './core/config/swagger.config';
 import { timingSafeEqual } from 'crypto';
 import { POST_MODERATION_QUEUE } from './modules/posts/infrastructure/queues/post-moderation/post-moderation.processor';
 import { CHAPTERS_IMPORT_QUEUE } from './modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor';
@@ -31,16 +33,6 @@ import { mapValidationErrors } from './shared/platform/mappers/validation-error.
 import { isChapterImportStartRequest } from '@/modules/chapters/presentation/public-api';
 
 async function bootstrap() {
-  // A7: entry point của API không bao giờ được chạy ở worker mode. Nếu không có
-  // chốt này, một biến WORKER_MODE lạc trong env dùng chung sẽ biến mọi replica
-  // API thành worker: mất NotificationWorker (realtime chết im lặng) và đăng ký
-  // trùng các consumer trả phí. Ở đây nó nổ to thay vì hỏng âm thầm.
-  if (isWorkerProcess()) {
-    throw new Error(
-      'main.ts (API entry) must not run with WORKER_MODE=true — use dist/worker.js',
-    );
-  }
-
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });

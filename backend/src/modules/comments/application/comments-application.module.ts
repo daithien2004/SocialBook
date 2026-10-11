@@ -7,9 +7,9 @@ import { ModerateCommentHandler } from './commands/moderate-comment/moderate-com
 import { UpdateCommentHandler } from './commands/update-comment/update-comment.handler';
 
 import { CommentsInfrastructureModule } from '../infrastructure/comments-infrastructure.module';
-import { IdGeneratorModule } from '@/infrastructure/database/id/id-generator.module';
+import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { ContentModerationApplicationModule } from '@/modules/content-moderation/application/public-api';
-import { QueueModule } from '@/infrastructure/queue/queue.module';
+import { NotificationsInfrastructureModule } from '@/modules/notifications/infrastructure/public-api';
 
 export const CommandHandlers = [
   CreateCommentHandler,
@@ -25,7 +25,7 @@ export const QueryHandlers = [GetCommentsHandler, GetCommentCountHandler];
     CommentsInfrastructureModule,
     IdGeneratorModule,
     ContentModerationApplicationModule,
-    QueueModule,
+    NotificationsInfrastructureModule,
   ],
   providers: [...CommandHandlers, ...QueryHandlers],
   exports: [

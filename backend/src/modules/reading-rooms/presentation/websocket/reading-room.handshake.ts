@@ -1,4 +1,4 @@
-import { normalizeError } from '@/shared/presentation/error-normalizer';
+import { normalizeError } from '@/shared/platform/errors/error-normalizer';
 
 export const toHandshakeError = (e: unknown): Error => {
   const { code, message } = normalizeError(e);

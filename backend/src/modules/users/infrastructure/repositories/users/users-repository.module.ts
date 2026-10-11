@@ -6,7 +6,7 @@ import {
 } from '@/modules/users/infrastructure/schemas/user.schema';
 import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
 import { UsersRepository } from './users.repository';
-import { MongoPersistenceModule } from '@/shared/infrastructure/mongo-persistence.module';
+import { MongoPersistenceModule } from '@/core/database/mongo-persistence.module';
 import {
   UserRoleChangeOutboxRecord,
   UserRoleChangeOutboxSchema,
