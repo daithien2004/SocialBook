@@ -77,4 +77,14 @@ export async function apiRequest<T = unknown>(
   return result.data;
 }
 
+export function idempotentApiRequest<T = unknown>(
+  config: ApiRequestConfig,
+  idempotencyKey: string,
+): Promise<T> {
+  return apiRequest<T>({
+    ...config,
+    headers: { ...config.headers, 'Idempotency-Key': idempotencyKey },
+  });
+}
+
 export default clientApi;

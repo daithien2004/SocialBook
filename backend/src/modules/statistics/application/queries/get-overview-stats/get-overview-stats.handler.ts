@@ -43,8 +43,8 @@ export class GetOverviewStatsHandler {
       this.userRepository.countByDate(new Date(0)),
       this.userRepository.countByDate(thirtyDaysAgo),
       this.userRepository
-        .findAll({ isBanned: true }, { page: 1, limit: 1 })
-        .then((r) => r.meta.total),
+        .findAll({ isBanned: true }, { offset: 0, limit: 1 })
+        .then((result) => result.total),
 
       this.bookRepository.countTotal(),
       this.chapterRepository.countTotal(),

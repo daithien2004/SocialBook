@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
 
@@ -86,7 +86,10 @@ export class AnalyticsController {
       limit ? parseInt(limit, 10) : undefined,
     );
     const data = await this.queryBus.execute(query);
-    return unpaginated(data);
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 
   @Public()
@@ -101,6 +104,9 @@ export class AnalyticsController {
       limit ? parseInt(limit, 10) : undefined,
     );
     const data = await this.queryBus.execute(query);
-    return unpaginated(data);
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 }

@@ -1,30 +1,24 @@
+import {
+  Genre as PrismaGenre,
+  Prisma,
+} from '@/core/database/generated/prisma/client';
 import { Genre as GenreEntity } from '@/modules/genres/domain/entities/genre.entity';
-import { GenreDocument } from '@/modules/genres/infrastructure/schemas/genre.schema';
-import { Types } from 'mongoose';
-export interface GenrePersistence {
-  _id: Types.ObjectId;
-  name: string;
-  slug: string;
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export class GenreMapper {
-  static toDomain(doc: GenreDocument): GenreEntity {
+  static toDomain(row: PrismaGenre): GenreEntity {
     return GenreEntity.reconstitute({
-      id: doc._id.toString(),
-      name: doc.name,
-      slug: doc.slug,
-      description: doc.description || '',
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      description: row.description,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 
-  static toPersistence(entity: GenreEntity): GenrePersistence {
+  static toPersistence(entity: GenreEntity): Prisma.GenreUncheckedCreateInput {
     return {
-      _id: new Types.ObjectId(entity.id.toString()),
+      id: entity.id.toString(),
       name: entity.name.toString(),
       slug: entity.slug,
       description: entity.description,

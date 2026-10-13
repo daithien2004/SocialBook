@@ -1,71 +1,35 @@
-import { IChapterReadRepository } from '@/modules/chapters/application/ports/chapter-read.repository';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
+import {
+  BOOK_WITH_RELATIONS,
+  PrismaBookMapper,
+} from '@/modules/books/infrastructure/public-api';
 import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
+import { IChapterReadRepository } from '@/modules/chapters/application/ports/chapter-read.repository';
 import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
+import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
 import {
   ChapterFilter,
   ChapterSortField,
 } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
-import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
 import {
-  Chapter,
-  ChapterDocument,
-} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
-import {
-  Book,
-  BookDocument,
-} from '@/modules/books/infrastructure/schemas/public-api';
-import {
-  BookMapper,
-  RawBookDocument,
-} from '@/modules/books/infrastructure/repositories/books/public-api';
-import {
-  TextToSpeech,
-  TextToSpeechDocument,
-} from '@/modules/text-to-speech/infrastructure/schemas/public-api';
+  Chapter as PrismaChapter,
+  Prisma as PrismaTypes,
+} from '@/core/database/generated/prisma/client';
 import {
   PaginatedResult,
   PaginationOptions,
   SortOptions,
+  buildPaginationMeta,
 } from '@/shared/domain/pagination.types';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import { RawChapterDocument } from './chapter.mapper';
+import { CHAPTER_WITH_PARAGRAPHS } from './chapter.mapper';
 
-interface ChapterListRow {
-  _id: Types.ObjectId;
-  title: string;
-  slug: string;
-  orderIndex: number;
-  viewsCount: number;
-  paragraphs: Array<{ _id: Types.ObjectId }>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface LatestChapterAudio {
-  _id: Types.ObjectId;
-  audioUrl?: string;
-}
-
-interface ChapterNavigationRow {
-  _id: Types.ObjectId;
-  title: string;
-  slug: string;
-  orderIndex: number;
-}
-
-interface PopulatedBookPaths {
-  genres: Array<{
-    _id: Types.ObjectId;
-    name: string;
-    slug: string;
-  }>;
-  authorId: { _id: Types.ObjectId; name: string };
+interface ChapterPageRow extends PrismaChapter {
+  paragraphs: Array<{ id: string; content: string; orderIndex: number }>;
 }
 
 const SORTABLE_FIELDS: ReadonlySet<string> = new Set<ChapterSortField>([
@@ -82,88 +46,55 @@ function isChapterSortField(value: string): value is ChapterSortField {
 
 @Injectable()
 export class ChapterReadRepository implements IChapterReadRepository {
-  constructor(
-    @InjectModel(Chapter.name)
-    private readonly chapterModel: Model<ChapterDocument>,
-    @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
-    @InjectModel(TextToSpeech.name)
-    private readonly ttsModel: Model<TextToSpeechDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findSlugsByIds(chapterIds: string[]): Promise<Map<string, string>> {
+    if (chapterIds.length === 0) return new Map();
+    const rows = await this.prisma.chapter.findMany({
+      where: { id: { in: chapterIds }, isDeleted: false },
+      select: { id: true, slug: true },
+    });
+    return new Map(rows.map((row) => [row.id, row.slug]));
+  }
 
   async findDetailBySlug(
     chapterSlug: string,
     bookSlug: string,
   ): Promise<ChapterDetailReadModel | null> {
-    const bookDocument = await this.bookModel
-      .findOne({ slug: bookSlug })
-      .populate<Pick<PopulatedBookPaths, 'genres'>>('genres')
-      .populate<Pick<PopulatedBookPaths, 'authorId'>>('authorId', 'name')
-      .lean<RawBookDocument>()
-      .exec();
-    if (!bookDocument) return null;
+    const book = await this.prisma.book.findFirst({
+      where: { slug: bookSlug, isDeleted: false },
+      include: BOOK_WITH_RELATIONS,
+    });
+    if (!book) return null;
 
-    const chapterDocument = await this.chapterModel
-      .findOne({ slug: chapterSlug, bookId: bookDocument._id })
-      .lean<RawChapterDocument>()
-      .exec();
-    if (!chapterDocument) return null;
+    const chapter = await this.prisma.chapter.findFirst({
+      where: { slug: chapterSlug, bookId: book.id, isDeleted: false },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    if (!chapter) return null;
 
-    const [previousChapter, nextChapter] = await Promise.all([
-      this.chapterModel
-        .findOne({
-          bookId: bookDocument._id,
-          orderIndex: { $lt: chapterDocument.orderIndex },
-        })
-        .sort({ orderIndex: -1, _id: -1 })
-        .select('title slug orderIndex')
-        .lean<ChapterNavigationRow>()
-        .exec(),
-      this.chapterModel
-        .findOne({
-          bookId: bookDocument._id,
-          orderIndex: { $gt: chapterDocument.orderIndex },
-        })
-        .sort({ orderIndex: 1, _id: 1 })
-        .select('title slug orderIndex')
-        .lean<ChapterNavigationRow>()
-        .exec(),
+    const navigation = await this.findNavigation(book.id, chapter.orderIndex);
+    return this.toDetail(book, chapter, navigation.previous, navigation.next);
+  }
+
+  async findCurrentRoomChapterById(
+    bookId: string,
+    chapterId: string,
+  ): Promise<ChapterDetailReadModel | null> {
+    const [book, chapter] = await Promise.all([
+      this.prisma.book.findUnique({
+        where: { id: bookId },
+        include: BOOK_WITH_RELATIONS,
+      }),
+      this.prisma.chapter.findFirst({
+        where: { id: chapterId, bookId },
+        include: CHAPTER_WITH_PARAGRAPHS,
+      }),
     ]);
+    if (!book || !chapter) return null;
 
-    return {
-      book: BookMapper.toListReadModel(bookDocument),
-      chapter: {
-        id: chapterDocument._id.toString(),
-        bookId: chapterDocument.bookId.toString(),
-        title: chapterDocument.title,
-        slug: chapterDocument.slug,
-        orderIndex: chapterDocument.orderIndex,
-        viewsCount: chapterDocument.viewsCount || 0,
-        paragraphs: chapterDocument.paragraphs.map((paragraph) => ({
-          id: paragraph._id.toString(),
-          content: paragraph.content,
-        })),
-        createdAt: chapterDocument.createdAt,
-        updatedAt: chapterDocument.updatedAt,
-      },
-      navigation: {
-        previous: previousChapter
-          ? {
-              id: previousChapter._id.toString(),
-              title: previousChapter.title,
-              slug: previousChapter.slug,
-              orderIndex: previousChapter.orderIndex,
-            }
-          : null,
-        next: nextChapter
-          ? {
-              id: nextChapter._id.toString(),
-              title: nextChapter.title,
-              slug: nextChapter.slug,
-              orderIndex: nextChapter.orderIndex,
-            }
-          : null,
-      },
-    };
+    const navigation = await this.findNavigation(book.id, chapter.orderIndex);
+    return this.toDetail(book, chapter, navigation.previous, navigation.next);
   }
 
   async findPaginated(
@@ -171,39 +102,33 @@ export class ChapterReadRepository implements IChapterReadRepository {
     pagination: PaginationOptions,
     sort?: SortOptions,
   ): Promise<PaginatedResult<ChapterResult>> {
-    const filter: FilterQuery<ChapterDocument> = {};
-    if (chapterFilter.title) {
-      filter.title = { $regex: chapterFilter.title, $options: 'i' };
-    }
-    if (chapterFilter.bookId) {
-      filter.bookId = new Types.ObjectId(chapterFilter.bookId);
-    }
-    if (chapterFilter.orderIndex !== undefined) {
-      filter.orderIndex = chapterFilter.orderIndex;
-    }
-
+    const where: PrismaTypes.ChapterWhereInput = {
+      isDeleted: false,
+      ...(chapterFilter.title
+        ? { title: { contains: chapterFilter.title, mode: 'insensitive' } }
+        : {}),
+      ...(chapterFilter.bookId ? { bookId: chapterFilter.bookId } : {}),
+      ...(chapterFilter.orderIndex === undefined
+        ? {}
+        : { orderIndex: chapterFilter.orderIndex }),
+    };
     const page = this.positiveInteger(pagination.page, 1);
     const limit = Math.min(this.positiveInteger(pagination.limit, 10), 1000);
     const { sortField, direction } = this.resolveSort(sort);
     const [rows, total] = await Promise.all([
-      this.chapterModel
-        .find(filter)
-        .sort({ [sortField]: direction, _id: direction })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean<RawChapterDocument[]>()
-        .exec(),
-      this.chapterModel.countDocuments(filter).exec(),
+      this.prisma.chapter.findMany({
+        where,
+        include: CHAPTER_WITH_PARAGRAPHS,
+        orderBy: [{ [sortField]: direction }, { id: direction }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.chapter.count({ where }),
     ]);
 
     return {
       data: rows.map((row) => this.toChapterResult(row)),
-      meta: {
-        current: page,
-        pageSize: limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      meta: buildPaginationMeta(page, limit, total),
     };
   }
 
@@ -211,82 +136,146 @@ export class ChapterReadRepository implements IChapterReadRepository {
     bookSlug: string,
     pagination: PaginationOptions,
   ): Promise<ChapterListReadModel> {
-    const book = await this.bookModel
-      .findOne({ slug: bookSlug })
-      .select('title slug coverUrl authorId')
-      .lean()
-      .exec();
-
+    const book = await this.prisma.book.findFirst({
+      where: { slug: bookSlug, isDeleted: false },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        coverUrl: true,
+        authorId: true,
+      },
+    });
     if (!book) throw new NotFoundException('Book not found');
 
     const page = this.positiveInteger(pagination.page, 1);
     const limit = Math.min(this.positiveInteger(pagination.limit, 10), 1000);
-    const filter: FilterQuery<ChapterDocument> = { bookId: book._id };
-
+    const where: PrismaTypes.ChapterWhereInput = {
+      bookId: book.id,
+      isDeleted: false,
+    };
     const [chapters, total] = await Promise.all([
-      this.chapterModel
-        .find(filter)
-        .select(
-          'title slug orderIndex viewsCount paragraphs._id createdAt updatedAt',
-        )
-        .sort({ orderIndex: 1, _id: 1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean<ChapterListRow[]>()
-        .exec(),
-      this.chapterModel.countDocuments(filter).exec(),
+      this.prisma.chapter.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          orderIndex: true,
+          viewsCount: true,
+          createdAt: true,
+          updatedAt: true,
+          _count: { select: { paragraphs: true } },
+        },
+        orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.chapter.count({ where }),
     ]);
 
-    const chapterIds = chapters.map((chapter) => chapter._id);
-    const ttsRows = chapterIds.length
-      ? await this.ttsModel
-          .aggregate<LatestChapterAudio>([
-            {
-              $match: {
-                chapterId: { $in: chapterIds },
-                status: 'completed',
-              },
-            },
-            { $sort: { createdAt: -1, _id: -1 } },
-            {
-              $group: {
-                _id: '$chapterId',
-                audioUrl: { $first: '$audioUrl' },
-              },
-            },
-          ])
-          .exec()
+    const ttsRows = chapters.length
+      ? await this.prisma.textToSpeech.findMany({
+          where: {
+            chapterId: { in: chapters.map((chapter) => chapter.id) },
+            status: 'completed',
+          },
+          select: { chapterId: true, audioUrl: true },
+          orderBy: [
+            { chapterId: 'asc' },
+            { createdAt: 'desc' },
+            { id: 'desc' },
+          ],
+        })
       : [];
-
-    const audioByChapter = new Map<string, { audioUrl?: string }>();
+    const audioByChapter = new Map<string, string | null>();
     for (const tts of ttsRows) {
-      audioByChapter.set(tts._id.toString(), { audioUrl: tts.audioUrl });
+      if (!audioByChapter.has(tts.chapterId)) {
+        audioByChapter.set(tts.chapterId, tts.audioUrl);
+      }
     }
 
     return {
       book: {
-        id: book._id.toString(),
+        id: book.id,
         title: book.title,
         slug: book.slug,
         coverUrl: book.coverUrl,
-        authorId: book.authorId.toString(),
+        authorId: book.authorId,
       },
       chapters: chapters.map((chapter) => {
-        const tts = audioByChapter.get(chapter._id.toString());
+        const audioUrl = audioByChapter.get(chapter.id);
         return {
-          id: chapter._id.toString(),
+          id: chapter.id,
           title: chapter.title,
           slug: chapter.slug,
           orderIndex: chapter.orderIndex,
-          viewsCount: chapter.viewsCount || 0,
-          paragraphsCount: chapter.paragraphs.length,
+          viewsCount: chapter.viewsCount,
+          paragraphsCount: chapter._count.paragraphs,
           createdAt: chapter.createdAt,
           updatedAt: chapter.updatedAt,
-          ttsStatus: tts ? 'completed' : undefined,
-          audioUrl: tts?.audioUrl,
+          ttsStatus: audioUrl ? 'completed' : undefined,
+          audioUrl,
         };
       }),
       total,
+    };
+  }
+
+  private async findNavigation(bookId: string, orderIndex: number) {
+    const [previous, next] = await Promise.all([
+      this.prisma.chapter.findFirst({
+        where: { bookId, isDeleted: false, orderIndex: { lt: orderIndex } },
+        select: { id: true, title: true, slug: true, orderIndex: true },
+        orderBy: [{ orderIndex: 'desc' }, { id: 'desc' }],
+      }),
+      this.prisma.chapter.findFirst({
+        where: { bookId, isDeleted: false, orderIndex: { gt: orderIndex } },
+        select: { id: true, title: true, slug: true, orderIndex: true },
+        orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+      }),
+    ]);
+    return { previous, next };
+  }
+
+  private toDetail(
+    book: PrismaTypes.BookGetPayload<{ include: typeof BOOK_WITH_RELATIONS }>,
+    chapter: PrismaTypes.ChapterGetPayload<{
+      include: typeof CHAPTER_WITH_PARAGRAPHS;
+    }>,
+    previous: {
+      id: string;
+      title: string;
+      slug: string;
+      orderIndex: number;
+    } | null,
+    next: {
+      id: string;
+      title: string;
+      slug: string;
+      orderIndex: number;
+    } | null,
+  ): ChapterDetailReadModel {
+    return {
+      book: PrismaBookMapper.toListReadModel(book),
+      chapter: {
+        id: chapter.id,
+        bookId: chapter.bookId,
+        title: chapter.title,
+        slug: chapter.slug,
+        orderIndex: chapter.orderIndex,
+        viewsCount: chapter.viewsCount,
+        paragraphs: chapter.paragraphs.map(({ id, content }) => ({
+          id,
+          content,
+        })),
+        createdAt: chapter.createdAt,
+        updatedAt: chapter.updatedAt,
+      },
+      navigation: {
+        previous: previous ? { ...previous } : null,
+        next: next ? { ...next } : null,
+      },
     };
   }
 
@@ -299,7 +288,7 @@ export class ChapterReadRepository implements IChapterReadRepository {
 
   private resolveSort(sort?: SortOptions): {
     sortField: ChapterSortField;
-    direction: 1 | -1;
+    direction: 'asc' | 'desc';
   } {
     const sortField = sort?.sortBy ?? 'orderIndex';
     if (!isChapterSortField(sortField)) {
@@ -307,28 +296,26 @@ export class ChapterReadRepository implements IChapterReadRepository {
         `Unsupported chapter sort field: ${sortField}`,
       );
     }
-
     return {
       sortField,
-      direction: sort?.sortBy ? (sort.order === 'desc' ? -1 : 1) : 1,
+      direction: sort?.sortBy && sort.order === 'desc' ? 'desc' : 'asc',
     };
   }
 
-  private toChapterResult(document: RawChapterDocument): ChapterResult {
-    const paragraphs = document.paragraphs.map((paragraph) => ({
-      id: paragraph._id.toString(),
-      content: paragraph.content,
+  private toChapterResult(row: ChapterPageRow): ChapterResult {
+    const paragraphs = row.paragraphs.map(({ id, content }) => ({
+      id,
+      content,
     }));
     const firstParagraph = paragraphs[0]?.content ?? '';
-
     return {
-      id: document._id.toString(),
-      title: document.title,
-      slug: document.slug,
-      bookId: document.bookId.toString(),
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      bookId: row.bookId,
       paragraphs,
-      viewsCount: document.viewsCount,
-      orderIndex: document.orderIndex,
+      viewsCount: row.viewsCount,
+      orderIndex: row.orderIndex,
       characterCount: paragraphs.reduce(
         (count, paragraph) => count + paragraph.content.length,
         0,
@@ -337,8 +324,8 @@ export class ChapterReadRepository implements IChapterReadRepository {
         firstParagraph.length <= 200
           ? firstParagraph
           : `${firstParagraph.substring(0, 200)}...`,
-      createdAt: document.createdAt,
-      updatedAt: document.updatedAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     };
   }
 }

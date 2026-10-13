@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # --- Mở cửa để CASL shared/ lọt vào image backend ---
@@ -16,6 +16,8 @@ RUN npm ci
 COPY shared ./shared
 RUN npm run build:shared
 COPY backend/src ./backend/src
+COPY backend/prisma ./backend/prisma
+COPY backend/prisma.config.ts ./backend/prisma.config.ts
 COPY backend/tsconfig*.json ./backend/
 COPY backend/nest-cli.json ./backend/
 
@@ -25,7 +27,7 @@ WORKDIR /app/backend
 # ngừng được tiêu thụ — mà deploy vẫn báo thành công. Fail ở build time.
 RUN npm run build && test -f dist/worker.js
 
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json ./package.json

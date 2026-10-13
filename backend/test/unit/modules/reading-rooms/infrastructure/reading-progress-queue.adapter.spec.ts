@@ -4,7 +4,7 @@ import { ReadingProgressQueueAdapter } from '@/modules/reading-rooms/infrastruct
 import {
   READING_PROGRESS_DEBOUNCE_MS,
   READING_PROGRESS_QUEUE,
-} from '@/modules/reading-rooms/application/reading-progress-queue.port';
+} from '@/modules/reading-rooms/infrastructure/queue/reading-progress-queue.constants';
 
 describe('ReadingProgressQueueAdapter', () => {
   it('queues the latest progress per user, book, and chapter for a delayed flush', async () => {

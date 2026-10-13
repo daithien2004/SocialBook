@@ -26641,7 +26641,20 @@
     "/api/v1/reading-rooms": {
       "post": {
         "operationId": "ReadingRoomsController_createRoom_v1",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "required": true,
+            "in": "header",
+            "description": "Reuse this key when retrying the same request.",
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9._~-]{8,128}$"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -26790,7 +26803,62 @@
     "/api/v1/reading-rooms/my-active": {
       "get": {
         "operationId": "ReadingRoomsController_getMyActiveRooms_v1",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "current",
+            "required": false,
+            "in": "query",
+            "description": "Alias for page, used by ProTable",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Alias for limit, used by ProTable",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -26968,7 +27036,62 @@
     "/api/v1/reading-rooms/my-history": {
       "get": {
         "operationId": "ReadingRoomsController_getMyHistory_v1",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "current",
+            "required": false,
+            "in": "query",
+            "description": "Alias for page, used by ProTable",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Alias for limit, used by ProTable",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -27296,11 +27419,57 @@
         "operationId": "ReadingRoomsController_getRoomHighlights_v1",
         "parameters": [
           {
-            "name": "code",
-            "required": true,
-            "in": "path",
+            "name": "page",
+            "required": false,
+            "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "current",
+            "required": false,
+            "in": "query",
+            "description": "Alias for page, used by ProTable",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "Alias for limit, used by ProTable",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
             }
           }
         ],
@@ -31273,7 +31442,7 @@
           "bookId": {
             "type": "string"
           },
-          "currentChapterSlug": {
+          "chapterId": {
             "type": "string"
           },
           "maxMembers": {
@@ -31285,7 +31454,7 @@
         "required": [
           "mode",
           "bookId",
-          "currentChapterSlug"
+          "chapterId"
         ]
       },
       "ReadingRoomMemberResponseDto": {

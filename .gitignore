@@ -19,6 +19,7 @@ frontend/src/app/tokens.generated.css
 # --- shared/ published build + deps (npm workspace) ---
 shared/dist
 shared/node_modules
+backend/src/core/database/generated/prisma
 
 # --- npm workspace: dep được hoist lên node_modules ROOT ---
 node_modules

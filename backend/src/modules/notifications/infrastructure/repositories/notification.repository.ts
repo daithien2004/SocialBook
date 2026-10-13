@@ -1,35 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
 import { INotificationRepository } from '@/modules/notifications/domain/repositories/notification.repository.interface';
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
-import {
-  NotificationDocument,
-  Notification as NotificationSchemaClass,
-} from '@/modules/notifications/infrastructure/schemas/notification.schema';
 import { NotificationMapper } from './notification.mapper';
 
 @Injectable()
 export class NotificationRepository implements INotificationRepository {
-  constructor(
-    @InjectModel(NotificationSchemaClass.name)
-    private readonly notificationModel: Model<NotificationDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async save(notification: Notification): Promise<Notification> {
-    const persistenceModel = this.mapToPersistence(notification);
-    if (notification.id && Types.ObjectId.isValid(notification.id)) {
-      await this.notificationModel
-        .findByIdAndUpdate(notification.id, persistenceModel, {
-          upsert: true,
-          new: true,
-        })
-        .exec();
-      return notification;
-    } else {
-      const created = await this.notificationModel.create(persistenceModel);
-      return this.mapToDomain(created);
-    }
+    const row = await this.prisma.notification.create({
+      data: NotificationMapper.toPersistence(notification),
+    });
+    return NotificationMapper.toDomain(row);
   }
 
   async findAllByUser(
@@ -38,53 +21,29 @@ export class NotificationRepository implements INotificationRepository {
     offset = 0,
     isRead?: boolean,
   ): Promise<Notification[]> {
-    const query: FilterQuery<NotificationDocument> = {
-      userId: new Types.ObjectId(userId),
-    };
-    if (isRead !== undefined) {
-      query.isRead = isRead;
-    }
-    const docs = await this.notificationModel
-      .find(query)
-      .sort({ createdAt: -1 })
-      .skip(offset)
-      .limit(limit)
-      .lean()
-      .exec();
-    return docs.map((doc) => this.mapToDomain(doc));
+    const rows = await this.prisma.notification.findMany({
+      where: {
+        userId,
+        ...(isRead === undefined ? {} : { isRead }),
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      skip: offset,
+      take: limit,
+    });
+    return rows.map((row) => NotificationMapper.toDomain(row));
   }
 
   async markAsRead(userId: string, notificationId: string): Promise<void> {
-    await this.notificationModel
-      .updateOne(
-        {
-          _id: new Types.ObjectId(notificationId),
-          userId: new Types.ObjectId(userId),
-        },
-        { $set: { isRead: true } },
-      )
-      .exec();
+    await this.prisma.notification.updateMany({
+      where: { id: notificationId, userId },
+      data: { isRead: true },
+    });
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    await this.notificationModel
-      .updateMany(
-        {
-          userId: new Types.ObjectId(userId),
-          isRead: false,
-        },
-        { $set: { isRead: true } },
-      )
-      .exec();
-  }
-
-  private mapToDomain(doc: NotificationDocument): Notification {
-    return NotificationMapper.toDomain(doc);
-  }
-
-  private mapToPersistence(
-    entity: Notification,
-  ): ReturnType<typeof NotificationMapper.toPersistence> {
-    return NotificationMapper.toPersistence(entity);
+    await this.prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: { isRead: true },
+    });
   }
 }

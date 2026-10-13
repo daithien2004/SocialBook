@@ -4,7 +4,7 @@ import {
 } from '@/core/config/env.validation';
 
 const validEnvironment = {
-  MONGO_URI: 'mongodb://localhost:27017/socialbook?replicaSet=rs0',
+  DATABASE_URL: 'postgresql://user:password@localhost:5432/socialbook',
   JWT_ACCESS_SECRET: 'a'.repeat(32),
   JWT_REFRESH_SECRET: 'b'.repeat(32),
   GOOGLE_CLIENT_ID: 'google-client-id',

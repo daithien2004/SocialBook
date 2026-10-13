@@ -10,6 +10,7 @@ import { PostsSeed } from './posts.seeder';
 import { NotificationSeed } from './notifications.seeder';
 import { ToxicWordsSeed } from './toxic-words.seeder';
 import { ChapterDiscussionsSeed } from './chapter-discussions.seeder';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
 
 @Injectable()
 export class SeederService {
@@ -27,6 +28,7 @@ export class SeederService {
     private readonly notificationSeed: NotificationSeed,
     private readonly toxicWordsSeed: ToxicWordsSeed,
     private readonly chapterDiscussionsSeed: ChapterDiscussionsSeed,
+    private readonly prisma: PrismaService,
   ) {}
 
   async seed() {
@@ -56,16 +58,19 @@ export class SeederService {
     try {
       this.logger.log('🗑️ Clearing all seed data...');
 
-      await this.rolesSeed['roleModel'].deleteMany({});
-      await this.usersSeed['userModel'].deleteMany({});
-      await this.postsSeed['postModel'].deleteMany({});
-      await this.reviewsSeed['reviewModel'].deleteMany({});
-      await this.commentsSeed['commentModel'].deleteMany({});
-      await this.followsSeed['followModel'].deleteMany({});
-      await this.likesSeed['likeModel'].deleteMany({});
-      await this.progressSeed['progressModel'].deleteMany({});
-      await this.notificationSeed['notificationModel'].deleteMany({});
-      await this.toxicWordsSeed['toxicWordModel'].deleteMany({});
+      await this.prisma.$transaction(async (transaction) => {
+        await transaction.comment.deleteMany({});
+        await transaction.like.deleteMany({});
+        await transaction.follow.deleteMany({});
+        await transaction.reviewLike.deleteMany({});
+        await transaction.readingProgress.deleteMany({});
+        await transaction.notification.deleteMany({});
+        await transaction.post.deleteMany({});
+        await transaction.review.deleteMany({});
+        await transaction.user.deleteMany({});
+        await transaction.role.deleteMany({});
+        await transaction.toxicWord.deleteMany({});
+      });
 
       this.logger.log('✅ All seed data cleared!');
     } catch (error) {

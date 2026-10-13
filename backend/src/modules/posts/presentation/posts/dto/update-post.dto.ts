@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsMongoId } from 'class-validator';
+import { IsString, IsOptional, IsUUID } from 'class-validator';
 
 export class UpdatePostDto {
   @IsOptional()
@@ -6,7 +6,7 @@ export class UpdatePostDto {
   content?: string;
 
   @IsOptional()
-  @IsMongoId()
+  @IsUUID('4')
   bookId?: string;
 
   @IsOptional()

@@ -1,157 +1,140 @@
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import {
-  buildPaginationMeta,
-  PaginatedResult,
-  PaginationOptions,
-} from '@/shared/domain/pagination.types';
-import { Author as AuthorEntity } from '../../domain/entities/author.entity';
+  Author as PrismaAuthor,
+  Prisma,
+} from '@/core/database/generated/prisma/client';
+import {
+  PrismaTransactionClient,
+  PrismaTransactionalAdapter,
+} from '@/core/database/postgres/prisma-transaction.types';
+import { Author as AuthorEntity } from '@/modules/authors/domain/entities/author.entity';
 import {
   AuthorFilter,
   IAuthorRepository,
-} from '../../domain/repositories/author.repository.interface';
-import { AuthorId } from '../../domain/value-objects/author-id.vo';
-import { AuthorName } from '../../domain/value-objects/author-name.vo';
-import { Author, AuthorDocument } from '../schemas/author.schema';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
-
-import { MongoSessionContext } from '@/core/database/mongo-session.context';
-import { Types } from 'mongoose';
+} from '@/modules/authors/domain/repositories/author.repository.interface';
+import { AuthorId } from '@/modules/authors/domain/value-objects/author-id.vo';
+import { AuthorName } from '@/modules/authors/domain/value-objects/author-name.vo';
+import { PageParams, PageResult } from '@/shared/domain/pagination.types';
+import { findPaginated } from '@/shared/infrastructure/database/find-paginated';
 
 @Injectable()
 export class AuthorRepository implements IAuthorRepository {
   constructor(
-    @InjectModel(Author.name)
-    private readonly authorModel: Model<AuthorDocument>,
-    private readonly sessionContext: MongoSessionContext,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
-  protected toDomain(doc: AuthorDocument): AuthorEntity {
-    return this.mapToEntity(doc);
-  }
-
-  protected toPersistence(entity: AuthorEntity): Partial<AuthorDocument> {
-    return this.mapToDocument(entity);
+  private get prisma(): PrismaTransactionClient {
+    return this.transactionHost.tx;
   }
 
   async findById(id: AuthorId): Promise<AuthorEntity | null> {
-    const document = await this.authorModel
-      .findById(id.toString())
-      .lean()
-      .exec();
-    return document ? this.mapToEntity(document) : null;
+    const row = await this.prisma.author.findUnique({
+      where: { id: id.toString() },
+    });
+    return row ? this.toDomain(row) : null;
   }
 
   async findByName(name: AuthorName): Promise<AuthorEntity | null> {
-    const query = this.authorModel.findOne({ name: name.toString() });
-    if (this.sessionContext.currentSession) {
-      query.session(this.sessionContext.currentSession);
-    }
-    const document = await query.lean().exec();
-    return document ? this.mapToEntity(document) : null;
+    const row = await this.prisma.author.findUnique({
+      where: { name: name.toString() },
+    });
+    return row ? this.toDomain(row) : null;
   }
 
   async findAll(
     filter: AuthorFilter,
-    pagination: PaginationOptions,
-  ): Promise<PaginatedResult<AuthorEntity>> {
-    const queryFilter: FilterQuery<AuthorDocument> = {};
-
-    if (filter.name) {
-      queryFilter.name = { $regex: filter.name, $options: 'i' };
-    }
-
-    if (filter.bio) {
-      queryFilter.bio = { $regex: filter.bio, $options: 'i' };
-    }
-
-    const skip = (pagination.page - 1) * pagination.limit;
-    const total = await this.authorModel.countDocuments(queryFilter).exec();
-    const documents = await this.authorModel
-      .find(queryFilter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(pagination.limit)
-      .lean()
-      .exec();
-
-    return {
-      data: documents.map((doc) => this.mapToEntity(doc)),
-      meta: buildPaginationMeta(pagination.page, pagination.limit, total),
+    pagination: PageParams,
+  ): Promise<PageResult<AuthorEntity>> {
+    const where: Prisma.AuthorWhereInput = {
+      ...(filter.name
+        ? { name: { contains: filter.name, mode: 'insensitive' } }
+        : {}),
+      ...(filter.bio
+        ? { bio: { contains: filter.bio, mode: 'insensitive' } }
+        : {}),
+      ...(filter.createdAfter || filter.createdBefore
+        ? {
+            createdAt: {
+              ...(filter.createdAfter ? { gte: filter.createdAfter } : {}),
+              ...(filter.createdBefore ? { lte: filter.createdBefore } : {}),
+            },
+          }
+        : {}),
     };
+
+    return findPaginated(
+      async () => {
+        const rows = await this.prisma.author.findMany({
+          where,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          skip: pagination.offset,
+          take: pagination.limit,
+        });
+        return rows.map((row) => this.toDomain(row));
+      },
+      () => this.prisma.author.count({ where }),
+    );
   }
 
   async save(author: AuthorEntity): Promise<void> {
-    const id = new Types.ObjectId(author.id.toString());
-    const query = this.authorModel.findOneAndUpdate(
-      { _id: id },
-      { $set: this.toPersistence(author), $setOnInsert: { _id: id } },
-      { upsert: true, new: true },
-    );
-    if (this.sessionContext.currentSession) {
-      query.session(this.sessionContext.currentSession);
-    }
-    await query.exec();
-  }
-
-  async delete(id: AuthorId): Promise<void> {
-    await this.authorModel.findByIdAndDelete(id.toString()).exec();
-  }
-
-  async existsByName(name: AuthorName, excludeId?: AuthorId): Promise<boolean> {
-    const query: FilterQuery<AuthorDocument> = { name: name.toString() };
-    if (excludeId) {
-      query._id = { $ne: excludeId.toString() };
-    }
-
-    const count = await this.authorModel.countDocuments(query).exec();
-    return count > 0;
-  }
-
-  private mapToEntity(document: AuthorDocument): AuthorEntity {
-    return AuthorEntity.reconstitute({
-      id: document._id.toString(),
-      name: document.name,
-      slug: document.slug || this.generateSlug(document.name),
-      bio: document.bio || '',
-      photoUrl: document.photoUrl || '',
-      createdAt: document.createdAt,
-      updatedAt: document.updatedAt,
-    });
-  }
-
-  private mapToDocument(author: AuthorEntity): Partial<AuthorDocument> {
-    return {
+    const data = {
       name: author.name.toString(),
       slug: author.slug,
       bio: author.bio,
       photoUrl: author.photoUrl,
+      createdAt: author.createdAt,
       updatedAt: author.updatedAt,
     };
+
+    await this.prisma.author.upsert({
+      where: { id: author.id.toString() },
+      create: { id: author.id.toString(), ...data },
+      update: {
+        name: data.name,
+        slug: data.slug,
+        bio: data.bio,
+        photoUrl: data.photoUrl,
+        updatedAt: data.updatedAt,
+      },
+    });
   }
 
-  async searchByName(
-    query: string,
-    limit: number = 10,
-  ): Promise<AuthorEntity[]> {
+  async delete(id: AuthorId): Promise<void> {
+    await this.prisma.author.deleteMany({ where: { id: id.toString() } });
+  }
+
+  async existsByName(name: AuthorName, excludeId?: AuthorId): Promise<boolean> {
+    const row = await this.prisma.author.findFirst({
+      where: {
+        name: name.toString(),
+        ...(excludeId ? { id: { not: excludeId.toString() } } : {}),
+      },
+      select: { id: true },
+    });
+    return row !== null;
+  }
+
+  async searchByName(query: string, limit = 10): Promise<AuthorEntity[]> {
     if (!query) return [];
 
-    // Normalize for better matching if needed, or simple regex
-    const regex = new RegExp(query, 'i');
-
-    const documents = await this.authorModel
-      .find({ name: { $regex: regex } })
-      .limit(limit)
-      .lean()
-      .exec();
-
-    return documents.map((doc) => this.mapToEntity(doc));
+    const rows = await this.prisma.author.findMany({
+      where: { name: { contains: query, mode: 'insensitive' } },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+      take: limit,
+    });
+    return rows.map((row) => this.toDomain(row));
   }
 
-  private generateSlug(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+  private toDomain(row: PrismaAuthor): AuthorEntity {
+    return AuthorEntity.reconstitute({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      bio: row.bio,
+      photoUrl: row.photoUrl,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    });
   }
 }

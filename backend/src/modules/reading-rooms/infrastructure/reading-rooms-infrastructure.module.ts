@@ -1,25 +1,32 @@
 import { Module } from '@nestjs/common';
 
-import { IPresenceCachePort } from '../domain/interfaces/presence-cache.port';
+import { IPresenceCachePort } from '../application/ports/external/presence-cache.port';
 import { PresenceCacheAdapter } from './cache/presence-cache.adapter';
-import { ReadingRoomsRepositoryModule } from './mongo/repositories/reading-rooms-repository.module';
+import { ReadingRoomsPostgresModule } from './postgres/reading-rooms-postgres.module';
 import { ReadingProgressQueueModule } from './queue/reading-progress-queue.module';
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { ReadingRoomRealtimeListener } from './realtime/reading-room-realtime.listener';
+import { IHighlightInsightLockPort } from '../application/ports/external/highlight-insight-lock.port';
+import { HighlightInsightLockAdapter } from './cache/highlight-insight-lock.adapter';
 
 @Module({
-  imports: [ReadingRoomsRepositoryModule, ReadingProgressQueueModule],
+  imports: [ReadingRoomsPostgresModule, ReadingProgressQueueModule],
   providers: [
     ...(isWorkerProcess() ? [ReadingRoomRealtimeListener] : []),
     {
       provide: IPresenceCachePort,
       useClass: PresenceCacheAdapter,
     },
+    {
+      provide: IHighlightInsightLockPort,
+      useClass: HighlightInsightLockAdapter,
+    },
   ],
   exports: [
-    ReadingRoomsRepositoryModule,
+    ReadingRoomsPostgresModule,
     ReadingProgressQueueModule,
     IPresenceCachePort,
+    IHighlightInsightLockPort,
   ],
 })
 export class ReadingRoomsInfrastructureModule {}

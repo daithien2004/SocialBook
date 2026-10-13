@@ -1,5 +1,5 @@
 import { Socket, DefaultEventsMap } from 'socket.io';
-import { PresenceData } from '@/modules/reading-rooms/domain/interfaces/presence-cache.port';
+import { PresenceData } from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
 
 /**
  * SocketData của namespace /reading-rooms.

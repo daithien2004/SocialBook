@@ -1,6 +1,6 @@
 // src/modules/reviews/dto/create-review.dto.ts
 import {
-  IsMongoId,
+  IsUUID,
   IsNotEmpty,
   IsNumber,
   IsString,
@@ -10,7 +10,7 @@ import {
 
 export class CreateReviewDto {
   @IsNotEmpty()
-  @IsMongoId()
+  @IsUUID('4')
   bookId!: string;
 
   @IsNotEmpty()

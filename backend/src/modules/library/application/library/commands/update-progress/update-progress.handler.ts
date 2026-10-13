@@ -106,12 +106,14 @@ export class UpdateProgressHandler implements ICommandHandler<
       const isCompletedNow = readingProgress.isCompleted();
 
       if (!wasCompleted && isCompletedNow) {
-        const [totalChapters, allProgresses] = await Promise.all([
-          this.chapterRepository.countByBook(
-            ChapterBookId.create(command.bookId),
-          ),
-          this.readingProgressRepository.findByUserIdAndBookId(userId, bookId),
-        ]);
+        const totalChapters = await this.chapterRepository.countByBook(
+          ChapterBookId.create(command.bookId),
+        );
+        const allProgresses =
+          await this.readingProgressRepository.findByUserIdAndBookId(
+            userId,
+            bookId,
+          );
 
         const completedChapterIds = new Set(
           allProgresses

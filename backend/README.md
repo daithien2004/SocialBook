@@ -1,6 +1,6 @@
 # SocialBook backend
 
-NestJS 11 backend for SocialBook. It is a feature-first modular monolith using MongoDB/Mongoose, Redis, Socket.IO, and BullMQ.
+NestJS 11 backend for SocialBook. It is a feature-first modular monolith using PostgreSQL/Prisma, Redis, Socket.IO, and BullMQ.
 
 ## Structure
 
@@ -19,7 +19,7 @@ src/
     └── infrastructure/
 ```
 
-`core/queue` owns the BullMQ connection only. Features register their own queues and consumers. `shared/queue` contains reusable job schemas and options. `src/migrations/` contains database maintenance/migration scripts; `src/seeds/` contains seed scripts. Seeds may import feature public APIs, but features must not import seeds.
+`core/queue` owns the BullMQ connection only. Features register their own queues and consumers. `shared/queue` contains reusable job schemas and options. PostgreSQL migrations live in `prisma/migrations/`; `src/seeds/` contains Prisma seed scripts. Seeds may import feature public APIs, but features must not import seeds.
 
 The API and worker use the same `AppModule`, but worker consumers, scheduled tasks, and outbox relays are registered only when `WORKER_MODE=true`. `main.ts` loads `api-mode.ts` before `AppModule` so API role is established before feature module metadata is evaluated. `worker.ts` similarly loads `worker-mode.ts` first.
 
@@ -33,10 +33,10 @@ From the repository root, install workspace dependencies:
 npm ci
 ```
 
-Create `backend/.env` from `.env.example` and configure the required variables. The local MongoDB URI must point to a replica set because the backend uses MongoDB transactions. To run the infrastructure with Docker Compose, configure the root `.env`, `backend.env`, and `frontend.env` files required by `docker-compose.yml`, then start MongoDB, its replica-set initializer, Redis, the BullMQ Redis instance, and ChromaDB:
+Create `backend/.env` from `.env.example` and configure the required variables. Set `DATABASE_URL` to PostgreSQL. To run the infrastructure with Docker Compose, configure the root `.env`, `backend.env`, and `frontend.env` files required by `docker-compose.yml`, then start PostgreSQL, Redis, the BullMQ Redis instance, and ChromaDB:
 
 ```bash
-docker compose up -d mongo mongo-init-replica redis redis-queue chroma
+docker compose up -d postgres redis redis-queue chroma
 ```
 
 Run the API and worker separately:
@@ -66,3 +66,7 @@ npm run seed --workspace=backend
 ```
 
 `check` runs typecheck, ESLint, architecture checks, and Jest. See the repository [AGENTS.md](../AGENTS.md) for coding and type-safety requirements, and [the architecture overview](../docs/backend-architecture-overview.md) for the current system map.
+
+## Application use-case conventions
+
+Handlers should first be classified as Query, Create, Single aggregate mutation, Multi-document command, or External service. The shared rules, failure protections, and Reading Rooms reference matrix are in the [application use-case conventions](../docs/audit/backend-application-use-case-conventions.md).

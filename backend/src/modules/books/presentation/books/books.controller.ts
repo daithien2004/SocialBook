@@ -1,4 +1,4 @@
-import { paginated, unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { SkipThrottle } from '@nestjs/throttler';
@@ -19,6 +19,7 @@ import {
   Put,
   Query,
   UploadedFile,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { BookDetailResponseDto } from '@/modules/books/presentation/books/dto/book-detail.response.dto';
@@ -100,7 +101,7 @@ export class BooksController {
 
     const result = await this.queryBus.execute(query);
 
-    return paginated(BookResponseDto.fromArray(result.data), result.meta);
+    return { data: BookResponseDto.fromArray(result.data), meta: result.meta };
   }
 
   @Public()
@@ -154,7 +155,11 @@ export class BooksController {
     const query = new GetTopReadBooksQuery(timeRange, Number(limit));
     const result = await this.queryBus.execute(query);
 
-    return unpaginated(BookResponseDto.fromArray(result));
+    const data = BookResponseDto.fromArray(result);
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 
   @Public()
@@ -171,10 +176,10 @@ export class BooksController {
 
       const result = await this.intelligentSearchUseCase.execute(query);
 
-      return paginated(
-        BookResponseDto.fromSearchResults(result.data),
-        result.meta,
-      );
+      return {
+        data: BookResponseDto.fromSearchResults(result.data),
+        meta: result.meta,
+      };
     }
 
     // Náº¿u khÃ´ng search, dÃ¹ng logic GetBooks bÃ¬nh thÆ°á»ng (Danh sÃ¡ch trang chá»§)
@@ -185,7 +190,7 @@ export class BooksController {
 
     const result = await this.queryBus.execute(query);
 
-    return paginated(BookResponseDto.fromArray(result.data), result.meta);
+    return { data: BookResponseDto.fromArray(result.data), meta: result.meta };
   }
 
   @Get(':slug')
@@ -243,7 +248,9 @@ export class BooksController {
   @Get('id/:id')
   @Public()
   @ApiOkResponse({ type: BookResponseDto })
-  async findOneById(@Param('id') id: string) {
+  async findOneById(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const query = new GetBookByIdQuery(id);
     const book = await this.queryBus.execute(query);
 
@@ -256,7 +263,7 @@ export class BooksController {
   @SkipThrottle({ global: false })
   @ApiFileUpload('coverUrl')
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateBookDto: UpdateBookDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
@@ -280,7 +287,7 @@ export class BooksController {
   @ApiNoContentResponse()
   @RequireAuth('admin')
   @SkipThrottle({ global: false })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     const command = new DeleteBookCommand(id);
     await this.commandBus.execute(command);
     return undefined;

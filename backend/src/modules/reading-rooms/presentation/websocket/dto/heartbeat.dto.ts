@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import {
   CHAPTER_SLUG_MAX_LENGTH,
-  OBJECT_ID_PATTERN,
+  UUID_PATTERN,
   PARAGRAPH_ID_MAX_LENGTH,
   PROGRESS_MAX,
   PROGRESS_MIN,
@@ -29,7 +29,7 @@ export class HeartbeatDto {
 
   @IsOptional()
   @IsString()
-  @Matches(OBJECT_ID_PATTERN, { message: 'chapterId không hợp lệ' })
+  @Matches(UUID_PATTERN, { message: 'chapterId không hợp lệ' })
   chapterId?: string;
 
   /** Client gửi `null` khi không có đoạn đang đọc — `@IsOptional` bỏ qua null. */

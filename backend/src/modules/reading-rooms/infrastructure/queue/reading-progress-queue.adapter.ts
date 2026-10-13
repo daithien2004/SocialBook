@@ -4,12 +4,12 @@ import type { Queue } from 'bullmq';
 import {
   READING_PROGRESS_DEBOUNCE_MS,
   READING_PROGRESS_QUEUE,
-  ReadingProgressQueuePort,
-} from '../../application/reading-progress-queue.port';
-import type { ReadingProgressJob } from '../../application/reading-progress-queue.port';
+} from './reading-progress-queue.constants';
+import { IReadingProgressQueuePort } from '../../application/ports/external/reading-progress-queue.port';
+import type { ReadingProgressJob } from '../../application/ports/external/reading-progress-queue.port';
 
 @Injectable()
-export class ReadingProgressQueueAdapter implements ReadingProgressQueuePort {
+export class ReadingProgressQueueAdapter implements IReadingProgressQueuePort {
   constructor(
     @InjectQueue(READING_PROGRESS_QUEUE)
     private readonly queue: Queue<ReadingProgressJob>,

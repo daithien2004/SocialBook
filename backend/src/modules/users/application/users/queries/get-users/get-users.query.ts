@@ -1,12 +1,9 @@
 import { Query } from '@nestjs/cqrs';
 import { User } from '@/modules/users/domain/users/entities/user.entity';
 
-import { PaginationMeta } from '@/shared/domain/pagination.types';
+import { PageResult } from '@/shared/domain/pagination.types';
 
-export class GetUsersQuery extends Query<{
-  data: User[];
-  meta: PaginationMeta;
-}> {
+export class GetUsersQuery extends Query<PageResult<User>> {
   constructor(
     public readonly page: number,
     public readonly limit: number,

@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateStatusCommand } from '@/modules/library/application/library/commands/update-status/update-status.command';
 import { ProcessReadingSessionCommand } from '@/modules/library/application/library/commands/process-reading-session/process-reading-session.command';
@@ -34,6 +34,7 @@ import {
   Patch,
   Post,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
@@ -70,9 +71,13 @@ export class LibraryController {
     const query = new GetLibraryQuery(userId, readingStatuses, limitNumber);
     const readingLists = await this.queryBus.execute(query);
 
-    return unpaginated(
-      readingLists.map((rl) => LibraryItemResponseDto.fromReadModel(rl)),
+    const data = readingLists.map((rl) =>
+      LibraryItemResponseDto.fromReadModel(rl),
     );
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 
   @Get('knowledge-graph')
@@ -180,7 +185,7 @@ export class LibraryController {
   @Delete(':bookId')
   async remove(
     @CurrentUser('id') userId: string,
-    @Param('bookId') bookId: string,
+    @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ) {
     const command = new RemoveFromLibraryCommand(userId, bookId);
     await this.commandBus.execute(command);
@@ -192,7 +197,7 @@ export class LibraryController {
   @ApiOkResponse({ type: BookLibraryInfoResponseDto })
   async getBookLibraryInfo(
     @CurrentUser('id') userId: string,
-    @Param('bookId') bookId: string,
+    @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ) {
     const query = new GetBookLibraryInfoQuery(userId, bookId);
     const result = await this.queryBus.execute(query);

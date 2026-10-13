@@ -1,116 +1,85 @@
-import { ReadingList } from '@/modules/library/domain/library/entities/reading-list.entity';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import {
+  ReadingList,
+  ReadingStatus,
+} from '@/modules/library/domain/library/entities/reading-list.entity';
 import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
-import { ReadingStatus } from '@/modules/library/domain/library/entities/reading-list.entity';
-import { Types } from 'mongoose';
 
-// ─── Raw Types ────────────────────────────────────────────────────────────────
+export const READING_LIST_WITH_RELATIONS = {
+  collections: { select: { collectionId: true } },
+} satisfies Prisma.ReadingListInclude;
 
-export interface RawReadingListDocument {
-  _id: Types.ObjectId;
-  userId: Types.ObjectId;
-  bookId: Types.ObjectId;
-  status: ReadingStatus;
-  lastReadChapterId: Types.ObjectId | null;
-  collectionIds: Types.ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
+export const LIBRARY_ITEM_WITH_RELATIONS = {
+  book: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      coverUrl: true,
+      author: { select: { name: true } },
+    },
+  },
+  lastReadChapter: {
+    select: { id: true, title: true, slug: true, orderIndex: true },
+  },
+  collections: { select: { collectionId: true } },
+} satisfies Prisma.ReadingListInclude;
+
+export type ReadingListWithRelations = Prisma.ReadingListGetPayload<{
+  include: typeof READING_LIST_WITH_RELATIONS;
+}>;
+
+export type LibraryItemWithRelations = Prisma.ReadingListGetPayload<{
+  include: typeof LIBRARY_ITEM_WITH_RELATIONS;
+}>;
+
+export function toReadingListDomain(
+  row: ReadingListWithRelations,
+): ReadingList {
+  return ReadingList.reconstitute({
+    id: row.id,
+    userId: row.userId,
+    bookId: row.bookId,
+    status: requireReadingStatus(row.status),
+    lastReadChapterId: row.lastReadChapterId,
+    collectionIds: row.collections.map(({ collectionId }) => collectionId),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  });
 }
 
-export interface ReadingListPersistence {
-  _id: Types.ObjectId;
-  userId: Types.ObjectId;
-  bookId: Types.ObjectId;
-  status: ReadingStatus;
-  lastReadChapterId: Types.ObjectId | null;
-  collectionIds: Types.ObjectId[];
-  createdAt: Date;
-  updatedAt: Date;
+export function toLibraryItemReadModel(
+  row: LibraryItemWithRelations,
+): LibraryItemReadModel {
+  return {
+    id: row.id,
+    userId: row.userId,
+    bookId: {
+      id: row.book.id,
+      title: row.book.title,
+      slug: row.book.slug,
+      coverUrl: row.book.coverUrl,
+      authorName: row.book.author.name,
+    },
+    status: requireReadingStatus(row.status),
+    lastReadChapterId: row.lastReadChapter
+      ? {
+          id: row.lastReadChapter.id,
+          title: row.lastReadChapter.title,
+          slug: row.lastReadChapter.slug,
+          orderIndex: row.lastReadChapter.orderIndex,
+        }
+      : null,
+    collectionIds: row.collections.map(({ collectionId }) => collectionId),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
-export interface PopulatedAuthor {
-  _id: Types.ObjectId;
-  name: string;
-}
-
-export interface PopulatedBook {
-  _id: Types.ObjectId;
-  title: string;
-  slug: string;
-  coverUrl: string;
-  authorId: PopulatedAuthor;
-}
-
-export interface PopulatedChapter {
-  _id: Types.ObjectId;
-  title: string;
-  slug: string;
-  orderIndex: number;
-}
-
-export interface PopulatedReadingListDocument extends Omit<
-  RawReadingListDocument,
-  'bookId' | 'lastReadChapterId'
-> {
-  bookId: PopulatedBook;
-  lastReadChapterId: PopulatedChapter | null;
-}
-
-// ─── Mapper ───────────────────────────────────────────────────────────────────
-
-export class LibraryMapper {
-  static toDomain(doc: RawReadingListDocument): ReadingList {
-    return ReadingList.reconstitute({
-      id: doc._id.toString(),
-      userId: doc.userId.toString(),
-      bookId: doc.bookId.toString(),
-      status: doc.status,
-      lastReadChapterId: doc.lastReadChapterId?.toString() || null,
-      collectionIds: doc.collectionIds.map((id) => id.toString()),
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
-    });
-  }
-
-  static toReadModel(doc: PopulatedReadingListDocument): LibraryItemReadModel {
-    return {
-      id: doc._id.toString(),
-      userId: doc.userId.toString(),
-      bookId: {
-        id: doc.bookId._id.toString(),
-        title: doc.bookId.title,
-        slug: doc.bookId.slug,
-        coverUrl: doc.bookId.coverUrl,
-        authorName: doc.bookId.authorId.name,
-      },
-      status: doc.status,
-      lastReadChapterId: doc.lastReadChapterId
-        ? {
-            id: doc.lastReadChapterId._id.toString(),
-            title: doc.lastReadChapterId.title,
-            slug: doc.lastReadChapterId.slug,
-            orderIndex: doc.lastReadChapterId.orderIndex,
-          }
-        : null,
-      collectionIds: doc.collectionIds.map((id) => id.toString()),
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
-    };
-  }
-
-  static toPersistence(readingList: ReadingList): ReadingListPersistence {
-    return {
-      _id: new Types.ObjectId(readingList.id),
-      userId: new Types.ObjectId(readingList.userId.toString()),
-      bookId: new Types.ObjectId(readingList.bookId.toString()),
-      status: readingList.status,
-      lastReadChapterId: readingList.lastReadChapterId
-        ? new Types.ObjectId(readingList.lastReadChapterId.toString())
-        : null,
-      collectionIds: readingList.collectionIds.map(
-        (id) => new Types.ObjectId(id),
-      ),
-      createdAt: readingList.createdAt,
-      updatedAt: readingList.updatedAt,
-    };
-  }
+export function requireReadingStatus(value: string): ReadingStatus {
+  if (value === 'READING') return ReadingStatus.READING;
+  if (value === 'COMPLETED') return ReadingStatus.COMPLETED;
+  if (value === 'ARCHIVED') return ReadingStatus.ARCHIVED;
+  if (value === 'NONE') return ReadingStatus.NONE;
+  throw new Error(`Invalid persisted reading status: ${value}`);
 }

@@ -4,27 +4,26 @@ import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 import { RemoveHighlightCommand } from './remove-highlight.command';
-import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 
-import { withOptimisticRetry } from '@/shared/platform/utils/with-retries.util';
+import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry';
 
 @CommandHandler(RemoveHighlightCommand)
 export class RemoveHighlightHandler implements ICommandHandler<
   RemoveHighlightCommand,
-  ReadingRoom
+  void
 > {
   private readonly logger = new Logger(RemoveHighlightHandler.name);
 
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
-  async execute(command: RemoveHighlightCommand): Promise<ReadingRoom> {
+  async execute(command: RemoveHighlightCommand): Promise<void> {
     return withOptimisticRetry(async () => {
       const room = await this.readingRoomRepository.findById(
         RoomId.create(command.roomId),
       );
 
       if (!room) {
-        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
+        throw new NotFoundDomainException('Phòng không tồn tại');
       }
 
       room.removeHighlight(command.highlightId, command.userId);
@@ -33,8 +32,6 @@ export class RemoveHighlightHandler implements ICommandHandler<
       this.logger.log(
         `Highlight ${command.highlightId} removed from room ${command.roomId} by user ${command.userId}`,
       );
-
-      return room;
     });
   }
 }

@@ -1,21 +1,28 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { NotFoundException } from '@nestjs/common';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
-import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
+import { QueryHandler } from '@nestjs/cqrs';
+import type { IQueryHandler } from '@nestjs/cqrs';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { IReadingRoomReadRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-read.repository';
+import type { GetRoomHighlightsResult } from '@/modules/reading-rooms/application/reading-room.result';
 import { GetRoomHighlightsQuery } from './get-room-highlights.query';
 
 @QueryHandler(GetRoomHighlightsQuery)
-export class GetRoomHighlightsHandler implements IQueryHandler<GetRoomHighlightsQuery> {
-  constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
+export class GetRoomHighlightsHandler implements IQueryHandler<
+  GetRoomHighlightsQuery,
+  GetRoomHighlightsResult
+> {
+  constructor(
+    private readonly readingRoomReadRepository: IReadingRoomReadRepository,
+  ) {}
 
-  async execute(query: GetRoomHighlightsQuery) {
-    const page = await this.readingRoomRepository.findHighlightPage(
-      RoomId.create(query.code.toUpperCase()),
+  async execute(
+    query: GetRoomHighlightsQuery,
+  ): Promise<GetRoomHighlightsResult> {
+    const page = await this.readingRoomReadRepository.findHighlightPage(
+      query.code.toUpperCase(),
       query.userId,
-      query.offset,
-      query.limit,
+      { offset: query.offset, limit: query.limit },
     );
-    if (!page) throw new NotFoundException('Phòng không tồn tại');
+    if (!page) throw new NotFoundDomainException('Phòng không tồn tại');
     return page;
   }
 }

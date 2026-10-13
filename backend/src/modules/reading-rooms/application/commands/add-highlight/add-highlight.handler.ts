@@ -6,40 +6,43 @@ import {
 } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
+import { ReadingRoomHighlightResult } from '@/modules/reading-rooms/application/reading-room.result';
 
-import { withRetries } from '@/shared/platform/utils/with-retries.util';
+import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry';
 import { AddHighlightCommand } from './add-highlight.command';
 
 @CommandHandler(AddHighlightCommand)
 export class AddHighlightHandler implements ICommandHandler<
   AddHighlightCommand,
-  void
+  ReadingRoomHighlightResult
 > {
   constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
 
-  async execute(command: AddHighlightCommand) {
-    return withRetries(async () => {
+  async execute(
+    command: AddHighlightCommand,
+  ): Promise<ReadingRoomHighlightResult> {
+    return withOptimisticRetry(async () => {
       const room = await this.readingRoomRepository.findById(
         RoomId.create(command.roomId),
       );
 
       if (!room) {
-        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
+        throw new NotFoundDomainException('Phòng không tồn tại');
       }
 
       if (room.status === 'ended') {
         throw new BadRequestDomainException(
-          'PhÃ²ng Ä‘Ã£ káº¿t thÃºc, khÃ´ng thá»ƒ thÃªm highlight',
+          'Phòng đã kết thúc, không thể thêm highlight',
         );
       }
 
       if (!room.isMember(command.userId)) {
         throw new ForbiddenDomainException(
-          'Báº¡n khÃ´ng pháº£i lÃ  thÃ nh viÃªn cá»§a phÃ²ng nÃ y',
+          'Bạn không phải là thành viên của phòng này',
         );
       }
 
-      room.addHighlight({
+      const highlight = room.addHighlight({
         userId: command.userId,
         displayName: command.displayName,
         avatarUrl: command.avatarUrl,
@@ -50,7 +53,7 @@ export class AddHighlightHandler implements ICommandHandler<
 
       await this.readingRoomRepository.save(room);
 
-      return room;
-    }, 3);
+      return highlight;
+    });
   }
 }

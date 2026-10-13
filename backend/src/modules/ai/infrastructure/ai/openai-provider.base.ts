@@ -6,8 +6,12 @@ export abstract class OpenAIProviderBase implements IAIProviderPort {
 
   abstract getProviderName(): AIProviderName;
 
-  async generateText(prompt: string, systemPrompt?: string): Promise<string> {
-    return this.client.generateText(prompt, systemPrompt);
+  async generateText(
+    prompt: string,
+    systemPrompt?: string,
+    signal?: AbortSignal,
+  ): Promise<string> {
+    return this.client.generateText(prompt, systemPrompt, signal);
   }
 
   async generateJSON<T>(prompt: string, systemPrompt?: string): Promise<T> {

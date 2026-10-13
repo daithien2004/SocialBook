@@ -19,6 +19,11 @@ export interface ChapterFilter {
 
 export abstract class IChapterRepository {
   abstract findById(id: ChapterId): Promise<Chapter | null>;
+  abstract findByIdAndBookId(
+    id: ChapterId,
+    bookId: BookId,
+  ): Promise<Chapter | null>;
+  abstract touchIfInBook(id: ChapterId, bookId: BookId): Promise<string | null>;
   abstract findByParagraphId(paragraphId: string): Promise<Chapter | null>;
   abstract findBySlug(slug: string, bookId: BookId): Promise<Chapter | null>;
   abstract findAll(

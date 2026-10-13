@@ -1,150 +1,80 @@
-import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
-import { PostDocument } from '@/modules/posts/infrastructure/schemas/post.schema';
-import { Types } from 'mongoose';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { Post as PostEntity } from '@/modules/posts/domain/posts/entities/post.entity';
+import { ModerationStatus } from '@/modules/posts/domain/posts/enums/moderation-status.enum';
 
-interface PopulatedUser {
-  _id: Types.ObjectId;
-  username: string;
-  email: string;
-  image: string;
-  violationCount?: number;
-}
+export const postRelations = {
+  user: {
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      image: true,
+      violationCount: true,
+    },
+  },
+  book: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      coverUrl: true,
+      author: { select: { name: true, bio: true } },
+    },
+  },
+} satisfies Prisma.PostInclude;
 
-interface PopulatedBook {
-  _id: Types.ObjectId;
-  title: string;
-  slug?: string;
-  coverUrl: string;
-  authorId?: unknown;
-}
+export type PostWithRelations = Prisma.PostGetPayload<{
+  include: typeof postRelations;
+}>;
 
-function isPopulatedUser(field: unknown): field is PopulatedUser {
-  return (
-    typeof field === 'object' &&
-    field !== null &&
-    '_id' in field &&
-    'username' in field
-  );
-}
-
-function isPopulatedBook(field: unknown): field is PopulatedBook {
-  return (
-    typeof field === 'object' &&
-    field !== null &&
-    '_id' in field &&
-    'title' in field
-  );
-}
-
-interface PostWithVirtuals extends PostDocument {
-  likesCount?: number;
-  commentsCount?: number;
-  likedByCurrentUser?: boolean;
-}
-
-interface PostPersistence {
-  _id: Types.ObjectId;
-  userId: Types.ObjectId;
-  bookId?: Types.ObjectId;
-  content: string;
-  imageUrls: string[];
-  isDeleted: boolean;
-  isFlagged: boolean;
-  moderationReason?: string;
-  moderationStatus?: string;
+function toModerationStatus(value: string): ModerationStatus {
+  if (value === 'pending') return ModerationStatus.PENDING;
+  if (value === 'approved') return ModerationStatus.APPROVED;
+  if (value === 'rejected') return ModerationStatus.REJECTED;
+  throw new Error(`Unsupported post moderation status: ${value}`);
 }
 
 export class PostMapper {
-  static toDomain(postDoc: PostWithVirtuals): Post | null {
-    if (!postDoc) return null;
-
-    const id = postDoc._id.toString();
-
-    // Handle userId: could be ObjectId or populated User object
-    let userId: string;
-    let author:
-      | {
-          id: string;
-          username: string;
-          email: string;
-          image: string;
-          violationCount?: number;
-        }
-      | undefined;
-
-    const userIdField = postDoc.userId;
-    if (isPopulatedUser(userIdField)) {
-      userId = userIdField._id.toString();
-      author = {
-        id: userIdField._id.toString(),
-        username: userIdField.username,
-        email: userIdField.email,
-        image: userIdField.image,
-        violationCount: userIdField.violationCount,
-      };
-    } else {
-      userId = userIdField?.toString() || '';
-    }
-
-    // Handle bookId: could be ObjectId or populated Book object
-    let bookId: string | null = null;
-    let book:
-      | {
-          id: string;
-          title: string;
-          slug?: string;
-          coverUrl: string;
-          authorId?: { name: string; bio: string };
-        }
-      | undefined;
-
-    const bookIdField = postDoc.bookId;
-    if (bookIdField) {
-      if (isPopulatedBook(bookIdField)) {
-        bookId = bookIdField._id.toString();
-        book = {
-          id: bookIdField._id.toString(),
-          title: bookIdField.title,
-          slug: bookIdField.slug,
-          coverUrl: bookIdField.coverUrl,
-        };
-      } else {
-        bookId = bookIdField.toString();
-      }
-    }
-
-    return Post.reconstitute({
-      id,
-      userId,
-      bookId,
-      content: postDoc.content,
-      imageUrls: postDoc.imageUrls || [],
-      isDeleted: postDoc.isDeleted,
-      isFlagged: postDoc.isFlagged || false,
-      moderationReason: postDoc.moderationReason,
-      moderationStatus: postDoc.moderationStatus,
-      likesCount: postDoc.likesCount,
-      commentsCount: postDoc.commentsCount,
-      likedByCurrentUser: postDoc.likedByCurrentUser,
-      createdAt: postDoc.createdAt,
-      updatedAt: postDoc.updatedAt,
-      version: postDoc.version,
-      author,
-      book,
+  static toDomain(
+    row: PostWithRelations,
+    extra: {
+      likesCount?: number;
+      commentsCount?: number;
+      likedByCurrentUser?: boolean;
+    } = {},
+  ): PostEntity {
+    return PostEntity.reconstitute({
+      id: row.id,
+      userId: row.userId,
+      bookId: row.bookId,
+      content: row.content,
+      imageUrls: row.imageUrls,
+      isDeleted: row.isDeleted,
+      isFlagged: row.isFlagged,
+      moderationReason: row.moderationReason ?? undefined,
+      moderationStatus: toModerationStatus(row.moderationStatus),
+      likesCount: extra.likesCount,
+      commentsCount: extra.commentsCount,
+      likedByCurrentUser: extra.likedByCurrentUser,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      version: row.version,
+      author: {
+        id: row.user.id,
+        username: row.user.username,
+        email: row.user.email,
+        image: row.user.image ?? '',
+        violationCount: row.user.violationCount,
+      },
+      book: row.book
+        ? {
+            id: row.book.id,
+            title: row.book.title,
+            slug: row.book.slug,
+            coverUrl: row.book.coverUrl,
+            authorId: { name: row.book.author.name, bio: row.book.author.bio },
+          }
+        : undefined,
     });
-  }
-
-  static toPersistence(post: Post): PostPersistence {
-    return {
-      _id: new Types.ObjectId(post.id),
-      userId: new Types.ObjectId(post.userId),
-      bookId: post.bookId ? new Types.ObjectId(post.bookId) : undefined,
-      content: post.content,
-      imageUrls: post.imageUrls,
-      isDeleted: post.isDeleted,
-      isFlagged: post.isFlagged,
-      moderationReason: post.moderationReason,
-      moderationStatus: post.moderationStatus,
-    };
   }
 }

@@ -11,8 +11,12 @@ export class AIAdapter implements IAIPort {
     this.provider = this.providerFactory.getProvider();
   }
 
-  async generateText(prompt: string, systemPrompt?: string): Promise<string> {
-    return this.provider.generateText(prompt, systemPrompt);
+  async generateText(
+    prompt: string,
+    systemPrompt?: string,
+    signal?: AbortSignal,
+  ): Promise<string> {
+    return this.provider.generateText(prompt, systemPrompt, signal);
   }
 
   async generateJSON<T>(prompt: string, systemPrompt?: string): Promise<T> {

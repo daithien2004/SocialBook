@@ -1,19 +1,9 @@
 {
-  "src/config/env.validation.ts": {
-    "@typescript-eslint/no-deprecated": {
-      "count": 7
-    }
-  },
   "src/core/redis/cache/redis-cache.adapter.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     },
     "@typescript-eslint/no-unnecessary-type-parameters": {
-      "count": 1
-    }
-  },
-  "src/infrastructure/queue/notification-queue.adapter.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
   },
@@ -39,14 +29,6 @@
     }
   },
   "src/modules/ai/infrastructure/repositories/ai-requests/ai-request.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/modules/analytics/infrastructure/repositories/user-event.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
     }
@@ -175,27 +157,6 @@
       "count": 1
     }
   },
-  "src/modules/books/infrastructure/repositories/books/book-query.provider.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "src/modules/books/infrastructure/repositories/books/book.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 9
-    }
-  },
-  "src/modules/books/infrastructure/repositories/books/book.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 6
-    }
-  },
   "src/modules/books/presentation/books/books.controller.ts": {
     "@typescript-eslint/no-misused-spread": {
       "count": 5
@@ -269,30 +230,13 @@
     }
   },
   "src/modules/chapters/infrastructure/repositories/chapters/chapter-knowledge.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
     }
   },
   "src/modules/chapters/infrastructure/repositories/chapters/chapter.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    }
-  },
-  "src/modules/chapters/infrastructure/repositories/chapters/chapter.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 10
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
     }
   },
   "src/modules/chapters/presentation/chapters/chapters.controller.ts": {
@@ -301,11 +245,6 @@
     },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
-    }
-  },
-  "src/modules/chroma/application/chroma-reconciliation.cron.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
     }
   },
   "src/modules/chroma/application/commands/ask-chatbot/ask-chatbot.handler.ts": {
@@ -358,7 +297,7 @@
   },
   "src/modules/chroma/application/commands/reindex-all/reindex-all.handler.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 8
+      "count": 6
     }
   },
   "src/modules/chroma/application/commands/search/search.command.ts": {
@@ -379,11 +318,6 @@
     "@typescript-eslint/no-unsafe-member-access": {
       "count": 1
     },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/modules/chroma/application/processors/chroma.processor.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -458,18 +392,7 @@
     }
   },
   "src/modules/comments/infrastructure/repositories/comment.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
     "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    }
-  },
-  "src/modules/comments/infrastructure/repositories/comment.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 1
     }
   },
@@ -592,27 +515,11 @@
   "src/modules/follows/infrastructure/repositories/follow.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    }
-  },
-  "src/modules/follows/infrastructure/repositories/follow.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 8
     }
   },
   "src/modules/genres/infrastructure/repositories/genre.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
-    }
-  },
-  "src/modules/genres/infrastructure/repositories/genres.repository.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
     }
   },
   "src/modules/library/application/library/commands/process-reading-session/process-reading-session.handler.ts": {
@@ -651,49 +558,13 @@
       "count": 4
     }
   },
-  "src/modules/library/infrastructure/repositories/library/collection.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/library/infrastructure/repositories/library/library.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/library/infrastructure/repositories/library/reading-list.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 6
-    }
-  },
-  "src/modules/library/infrastructure/repositories/library/reading-progress.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/library/infrastructure/repositories/library/reading-progress.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
   "src/modules/library/presentation/library/library.controller.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
     }
   },
   "src/modules/likes/infrastructure/repositories/like.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/likes/infrastructure/repositories/like.repository.ts": {
-    "@typescript-eslint/no-unused-expressions": {
       "count": 1
     }
   },
@@ -761,18 +632,7 @@
     }
   },
   "src/modules/notifications/infrastructure/repositories/notification.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    }
-  },
-  "src/modules/notifications/infrastructure/schemas/notification.schema.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     }
   },
@@ -828,23 +688,14 @@
   "src/modules/posts/infrastructure/repositories/posts/post.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
     }
   },
   "src/modules/posts/infrastructure/repositories/posts/post.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 4
-    },
-    "@typescript-eslint/no-misused-spread": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
+      "count": 1
     }
   },
   "src/modules/posts/presentation/posts/dto/post.response.dto.ts": {
@@ -865,43 +716,9 @@
   },
   "src/modules/reading-rooms/application/commands/generate-highlight-insight/generate-highlight-insight.handler.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
-      "count": 3
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/modules/reading-rooms/application/mappers/reading-room.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/reading-rooms/domain/entities/reading-room.entity.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/modules/reading-rooms/domain/value-objects/room-mode.vo.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.mapper.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
       "count": 2
     },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/modules/reading-rooms/infrastructure/mongo/repositories/reading-room.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
+    "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
   },
@@ -916,20 +733,6 @@
   "src/modules/recommendations/application/queries/get-personalized-recommendations/get-personalized-recommendations.handler.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    }
-  },
-  "src/modules/recommendations/infrastructure/recommendation-data.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 6
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 1
     }
   },
   "src/modules/recommendations/infrastructure/recommendation.factory.ts": {
@@ -951,14 +754,6 @@
       "count": 6
     }
   },
-  "src/modules/recommendations/infrastructure/strategies/fallback-recommendation.strategy.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
-      "count": 3
-    }
-  },
   "src/modules/recommendations/presentation/recommendations.controller.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
@@ -972,14 +767,6 @@
   "src/modules/reviews/application/queries/get-review/get-review.query.ts": {
     "@typescript-eslint/no-useless-constructor": {
       "count": 1
-    }
-  },
-  "src/modules/reviews/infrastructure/repositories/review.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
     }
   },
   "src/modules/reviews/presentation/dto/review.response.dto.ts": {
@@ -1101,14 +888,6 @@
       "count": 2
     }
   },
-  "src/modules/text-to-speech/infrastructure/repositories/text-to-speech.repository.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
   "src/modules/text-to-speech/presentation/dto/text-to-speech.dto.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
@@ -1123,11 +902,6 @@
     },
     "@typescript-eslint/no-unsafe-assignment": {
       "count": 2
-    }
-  },
-  "src/modules/user-highlights/infrastructure/repositories/user-highlight.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
     }
   },
   "src/modules/user-highlights/presentation/user-highlights.controller.ts": {
@@ -1167,59 +941,31 @@
   "src/modules/users/infrastructure/repositories/users/user.mapper.ts": {
     "@typescript-eslint/no-extraneous-class": {
       "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 4
-    }
-  },
-  "src/presentation/gateways/core/redis-io.adapter.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/presentation/gateways/pipes/ws-validation.pipe.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
     }
   },
   "src/seeds/book-post-likes.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 4
+      "count": 1
     }
   },
   "src/seeds/chapter-discussions.seeder.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 6
+      "count": 1
     }
   },
   "src/seeds/comments.seeder.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
+      "count": 1
     }
   },
   "src/seeds/follows.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
+      "count": 1
     }
   },
   "src/seeds/likes.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
+      "count": 1
     }
   },
   "src/seeds/notifications.seeder.ts": {
@@ -1231,51 +977,28 @@
     }
   },
   "src/seeds/posts-diverse.seeder.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 6
+      "count": 1
     }
   },
   "src/seeds/posts.seeder.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
+      "count": 1
     }
   },
   "src/seeds/progress.seeder.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
+      "count": 1
     }
   },
   "src/seeds/read-progress-review.seeder.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
+      "count": 1
     }
   },
   "src/seeds/reading-rooms.seeder.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 3
-    }
-  },
-  "src/seeds/reviews.seeder.ts": {
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
+      "count": 1
     }
   },
   "src/seeds/users.seeder.ts": {
@@ -1297,14 +1020,6 @@
     }
   },
   "src/shared/domain/identifier.base.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/shared/presentation/error-normalizer.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
     }

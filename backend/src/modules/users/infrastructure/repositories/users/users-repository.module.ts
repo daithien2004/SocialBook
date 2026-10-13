@@ -1,31 +1,15 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  User,
-  UserSchema,
-} from '@/modules/users/infrastructure/schemas/user.schema';
 import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
 import { UsersRepository } from './users.repository';
-import { MongoPersistenceModule } from '@/core/database/mongo-persistence.module';
-import {
-  UserRoleChangeOutboxRecord,
-  UserRoleChangeOutboxSchema,
-} from '../../outbox/user-role-change-outbox.schema';
 import { UserRoleChangeOutboxRepository } from '../../outbox/user-role-change-outbox.repository';
 import { UserRoleChangeOutboxPort } from '@/modules/users/application/users/user-role-change-outbox.port';
+import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
+import { PrismaUnitOfWork } from '@/core/database/postgres/prisma-unit-of-work';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: User.name, schema: UserSchema },
-      {
-        name: UserRoleChangeOutboxRecord.name,
-        schema: UserRoleChangeOutboxSchema,
-      },
-    ]),
-    MongoPersistenceModule,
-  ],
   providers: [
+    PrismaUnitOfWork,
+    { provide: UnitOfWorkPort, useExisting: PrismaUnitOfWork },
     {
       provide: IUserRepository,
       useClass: UsersRepository,
@@ -36,6 +20,6 @@ import { UserRoleChangeOutboxPort } from '@/modules/users/application/users/user
       useExisting: UserRoleChangeOutboxRepository,
     },
   ],
-  exports: [IUserRepository, UserRoleChangeOutboxPort],
+  exports: [IUserRepository, UserRoleChangeOutboxPort, UnitOfWorkPort],
 })
 export class UsersRepositoryModule {}

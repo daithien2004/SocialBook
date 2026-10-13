@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 
 export class Paragraph {
@@ -35,9 +36,7 @@ export class Paragraph {
   }
 
   private static generateId(): string {
-    return Array.from({ length: 24 }, () =>
-      Math.floor(Math.random() * 16).toString(16),
-    ).join('');
+    return randomUUID();
   }
 
   toString(): string {

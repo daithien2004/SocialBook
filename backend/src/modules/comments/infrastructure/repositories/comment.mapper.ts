@@ -1,68 +1,45 @@
 import { Comment as CommentEntity } from '@/modules/comments/domain/entities/comment.entity';
-import { Comment } from '@/modules/comments/infrastructure/schemas/comment.schema';
-import { Types } from 'mongoose';
+import { Comment } from '@/core/database/generated/prisma/client';
 
-export interface CommentReadModelRaw {
-  _id: Types.ObjectId;
-  content: string;
-  targetId: Types.ObjectId;
-  targetType: string;
-  parentId: Types.ObjectId | null;
-  likesCount: number;
-  repliesCount?: number;
-  isLiked?: boolean;
-  isFlagged: boolean;
-  moderationStatus?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: {
-    _id: Types.ObjectId;
-    username: string;
-    image: string;
-  };
-}
-
-interface CommentPersistence {
-  userId: Types.ObjectId;
-  targetType: string;
-  targetId: Types.ObjectId;
-  parentId: Types.ObjectId | null;
-  content: string;
-  likesCount: number;
-  isFlagged: boolean;
+function moderationStatus(value: string): 'pending' | 'approved' | 'rejected' {
+  if (value === 'pending' || value === 'approved' || value === 'rejected') {
+    return value;
+  }
+  throw new Error(`Unsupported comment moderation status: ${value}`);
 }
 
 export class CommentMapper {
-  static toDomain(document: Comment): CommentEntity {
+  static toDomain(row: Comment): CommentEntity {
     return CommentEntity.reconstitute({
-      id: document._id.toString(),
-      userId: document.userId?.toString() || '',
-      targetType: document.targetType as 'book' | 'chapter' | 'post' | 'author',
-      targetId: document.targetId?.toString() || '',
-      parentId: document.parentId?.toString() || null,
-      content: document.content,
-      likesCount: document.likesCount || 0,
-      isFlagged: document.isFlagged || false,
-      moderationReason: document.moderationReason || '',
-      moderationStatus:
-        (document.moderationStatus as 'pending' | 'approved' | 'rejected') ||
-        'pending',
-      createdAt: document.createdAt,
-      updatedAt: document.updatedAt,
+      id: row.id,
+      userId: row.userId,
+      targetType: row.targetType,
+      targetId: row.targetId,
+      parentId: row.parentId,
+      content: row.content,
+      likesCount: row.likesCount,
+      isFlagged: row.isFlagged,
+      moderationReason: row.moderationReason ?? '',
+      moderationStatus: moderationStatus(row.moderationStatus),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 
-  static toPersistence(comment: CommentEntity): CommentPersistence {
+  static toCreateInput(comment: CommentEntity) {
     return {
-      userId: new Types.ObjectId(comment.userId.toString()),
+      id: comment.id.toString(),
+      userId: comment.userId.toString(),
       targetType: comment.targetType.toString(),
-      targetId: new Types.ObjectId(comment.targetId.toString()),
-      parentId: comment.parentId
-        ? new Types.ObjectId(comment.parentId.toString())
-        : null,
+      targetId: comment.targetId.toString(),
+      parentId: comment.parentId?.toString() ?? null,
       content: comment.content.toString(),
       likesCount: comment.likesCount,
       isFlagged: comment.isFlagged,
+      moderationReason: comment.moderationReason || null,
+      moderationStatus: comment.moderationStatus.toString(),
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
     };
   }
 }

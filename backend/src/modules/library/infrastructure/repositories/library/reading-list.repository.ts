@@ -1,3 +1,7 @@
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import {
   ReadingList,
   ReadingStatus,
@@ -6,117 +10,111 @@ import { LibraryItemReadModel } from '@/modules/library/domain/library/read-mode
 import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
 import {
-  ReadingListDocument,
-  ReadingList as ReadingListSchemaClass,
-} from '../../schemas/reading-list.schema';
-import { LibraryMapper, PopulatedReadingListDocument } from './library.mapper';
-import { MongoSessionContext } from '@/core/database/mongo-session.context';
+  LIBRARY_ITEM_WITH_RELATIONS,
+  READING_LIST_WITH_RELATIONS,
+  toLibraryItemReadModel,
+  toReadingListDomain,
+} from './library.mapper';
 
 @Injectable()
 export class ReadingListRepository implements IReadingListRepository {
   constructor(
-    @InjectModel(ReadingListSchemaClass.name)
-    private readonly readingListModel: Model<ReadingListDocument>,
-    private readonly sessionContext: MongoSessionContext,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
   async save(readingList: ReadingList): Promise<void> {
-    const persistenceData = LibraryMapper.toPersistence(readingList);
-
-    const query = this.readingListModel.findOneAndUpdate(
-      { _id: persistenceData._id },
-      { $set: persistenceData },
-      { upsert: true, new: true },
+    const collectionConnections = readingList.collectionIds.map(
+      (collectionId) => ({
+        collection: { connect: { id: collectionId } },
+      }),
     );
-    const session = this.sessionContext.currentSession;
-    if (session) query.session(session);
-    await query.exec();
+    const scalarData = {
+      userId: readingList.userId.toString(),
+      bookId: readingList.bookId.toString(),
+      status: readingList.status,
+      lastReadChapterId: readingList.lastReadChapterId?.toString() ?? null,
+      updatedAt: readingList.updatedAt,
+    };
+
+    await this.transactionHost.tx.readingList.upsert({
+      where: { id: readingList.id },
+      create: {
+        id: readingList.id,
+        ...scalarData,
+        createdAt: readingList.createdAt,
+        collections: { create: collectionConnections },
+      },
+      update: {
+        ...scalarData,
+        collections: {
+          deleteMany: {},
+          create: collectionConnections,
+        },
+      },
+    });
   }
 
   async findByUserIdAndBookId(
     userId: UserId,
     bookId: BookId,
   ): Promise<ReadingList | null> {
-    const query = this.readingListModel.findOne({
-      userId: new Types.ObjectId(userId.toString()),
-      bookId: new Types.ObjectId(bookId.toString()),
+    const row = await this.transactionHost.tx.readingList.findUnique({
+      where: {
+        userId_bookId: {
+          userId: userId.toString(),
+          bookId: bookId.toString(),
+        },
+      },
+      include: READING_LIST_WITH_RELATIONS,
     });
-    const session = this.sessionContext.currentSession;
-    if (session) query.session(session);
-    const doc = await query.exec();
-
-    return doc ? LibraryMapper.toDomain(doc) : null;
+    return row ? toReadingListDomain(row) : null;
   }
 
   async remove(userId: UserId, bookId: BookId): Promise<void> {
-    await this.readingListModel
-      .deleteOne({
-        userId: new Types.ObjectId(userId.toString()),
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .exec();
+    await this.transactionHost.tx.readingList.deleteMany({
+      where: { userId: userId.toString(), bookId: bookId.toString() },
+    });
   }
 
   async exists(userId: UserId, bookId: BookId): Promise<boolean> {
-    const result = await this.readingListModel.exists({
-      userId: new Types.ObjectId(userId.toString()),
-      bookId: new Types.ObjectId(bookId.toString()),
+    const count = await this.transactionHost.tx.readingList.count({
+      where: { userId: userId.toString(), bookId: bookId.toString() },
     });
-
-    return !!result;
+    return count > 0;
   }
 
-  async countByCollectionId(collectionId: string): Promise<number> {
-    return this.readingListModel
-      .countDocuments({ collectionIds: new Types.ObjectId(collectionId) })
-      .exec();
+  countByCollectionId(collectionId: string): Promise<number> {
+    return this.transactionHost.tx.readingListCollection.count({
+      where: { collectionId },
+    });
   }
 
   async findByCollectionId(
     collectionId: string,
   ): Promise<LibraryItemReadModel[]> {
-    const docs = await this.readingListModel
-      .find({ collectionIds: new Types.ObjectId(collectionId) })
-      .populate({
-        path: 'bookId',
-        populate: { path: 'authorId', select: 'name' },
-      })
-      .populate('lastReadChapterId')
-      .sort({ updatedAt: -1 })
-      .lean()
-      .exec();
-
-    return docs.map((doc) =>
-      LibraryMapper.toReadModel(doc as unknown as PopulatedReadingListDocument),
-    );
+    const rows = await this.transactionHost.tx.readingList.findMany({
+      where: { collections: { some: { collectionId } } },
+      include: LIBRARY_ITEM_WITH_RELATIONS,
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+    });
+    return rows.map((row) => toLibraryItemReadModel(row));
   }
 
   async findDetailByUserIdAndBookId(
     userId: UserId,
     bookId: BookId,
   ): Promise<LibraryItemReadModel | null> {
-    const doc = await this.readingListModel
-      .findOne({
-        userId: new Types.ObjectId(userId.toString()),
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .populate({
-        path: 'bookId',
-        populate: { path: 'authorId', select: 'name' },
-      })
-      .populate('lastReadChapterId')
-      .lean()
-      .exec();
-
-    return doc
-      ? LibraryMapper.toReadModel(
-          doc as unknown as PopulatedReadingListDocument,
-        )
-      : null;
+    const row = await this.transactionHost.tx.readingList.findUnique({
+      where: {
+        userId_bookId: {
+          userId: userId.toString(),
+          bookId: bookId.toString(),
+        },
+      },
+      include: LIBRARY_ITEM_WITH_RELATIONS,
+    });
+    return row ? toLibraryItemReadModel(row) : null;
   }
 
   async findAllDetailByUserId(
@@ -124,35 +122,20 @@ export class ReadingListRepository implements IReadingListRepository {
     status?: ReadingStatus | ReadingStatus[],
     limit?: number,
   ): Promise<LibraryItemReadModel[]> {
-    const query: FilterQuery<ReadingListDocument> = {
-      userId: new Types.ObjectId(userId.toString()),
-    };
-
-    if (status) {
-      if (Array.isArray(status)) {
-        query.status = { $in: status };
-      } else {
-        query.status = status;
-      }
-    }
-
-    let queryBuilder = this.readingListModel
-      .find(query)
-      .populate({
-        path: 'bookId',
-        populate: { path: 'authorId', select: 'name' },
-      })
-      .populate('lastReadChapterId')
-      .sort({ updatedAt: -1 });
-
-    if (limit) {
-      queryBuilder = queryBuilder.limit(limit);
-    }
-
-    const docs = await queryBuilder.lean().exec();
-
-    return docs.map((doc) =>
-      LibraryMapper.toReadModel(doc as unknown as PopulatedReadingListDocument),
-    );
+    const statusFilter: Prisma.ReadingListWhereInput['status'] = Array.isArray(
+      status,
+    )
+      ? { in: status }
+      : status;
+    const rows = await this.transactionHost.tx.readingList.findMany({
+      where: {
+        userId: userId.toString(),
+        ...(statusFilter ? { status: statusFilter } : {}),
+      },
+      include: LIBRARY_ITEM_WITH_RELATIONS,
+      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      ...(limit ? { take: limit } : {}),
+    });
+    return rows.map((row) => toLibraryItemReadModel(row));
   }
 }

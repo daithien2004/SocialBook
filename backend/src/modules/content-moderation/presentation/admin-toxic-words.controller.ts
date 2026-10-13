@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   HttpCode,
@@ -9,6 +9,7 @@ import {
   Param,
   Body,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -62,15 +63,17 @@ export class AdminToxicWordsController {
   async getToxicWords() {
     const query = new GetToxicWordsQuery();
     const words = await this.queryBus.execute(query);
-    return unpaginated(
-      words.map((w: any) => ({
-        id: w.id,
-        pattern: w.pattern,
-        group: w.group,
-        originalWord: w.originalWord,
-        createdAt: w.createdAt,
-      })),
-    );
+    const data = words.map((w: any) => ({
+      id: w.id,
+      pattern: w.pattern,
+      group: w.group,
+      originalWord: w.originalWord,
+      createdAt: w.createdAt,
+    }));
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 
   @Post()
@@ -94,7 +97,9 @@ export class AdminToxicWordsController {
   @HttpCode(204)
   @Delete(':id')
   @ApiOperation({ summary: 'XÃ³a má»™t tá»« khÃ³a toxic' })
-  async deleteToxicWord(@Param('id') id: string) {
+  async deleteToxicWord(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const command = new DeleteToxicWordCommand(id);
     await this.commandBus.execute(command);
     return undefined;

@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateCollectionCommand } from '@/modules/library/application/library/commands/update-collection/update-collection.command';
 import { GetCollectionByIdQuery } from '@/modules/library/application/library/queries/get-collection-by-id/get-collection-by-id.query';
@@ -30,6 +30,7 @@ import {
   Post,
   Query,
   Req,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { Request } from 'express';
 import {
@@ -80,11 +81,13 @@ export class CollectionsController {
     const results = await this.queryBus.execute(
       new GetAllCollectionsQuery(userId || '', viewerId),
     );
-    return unpaginated(
-      results.map((r) =>
-        CollectionResponseDto.fromResult(r.collection, r.bookCount),
-      ),
+    const data = results.map((r) =>
+      CollectionResponseDto.fromResult(r.collection, r.bookCount),
     );
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 
   @Public()
@@ -123,7 +126,7 @@ export class CollectionsController {
   })
   async findOne(
     @Req() req: Request & { user: { id: string } },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
     const result = await this.queryBus.execute(
       new GetCollectionByIdQuery(req.user.id, id),
@@ -141,7 +144,7 @@ export class CollectionsController {
   @ApiOkResponse({ type: CollectionResponseDto })
   async update(
     @Req() req: Request & { user: { id: string } },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateCollectionDto,
   ) {
@@ -162,7 +165,7 @@ export class CollectionsController {
   @ApiNoContentResponse()
   async remove(
     @Req() req: Request & { user: { id: string } },
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentAbility() ability: AppAbility,
   ) {
     await this.commandBus.execute(

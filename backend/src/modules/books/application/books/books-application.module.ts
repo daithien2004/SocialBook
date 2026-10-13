@@ -17,10 +17,12 @@ import { UpdateBookHandler } from './commands/update-book/update-book.handler';
 import { ToggleBookLikeHandler } from './commands/toggle-book-like/toggle-book-like.handler';
 import { LikesApplicationModule } from '@/modules/likes/application/public-api';
 import { ReviewsInfrastructureModule } from '@/modules/reviews/infrastructure/public-api';
+import { ReadingRoomsReferenceModule } from '@/modules/reading-rooms/infrastructure/integrations/public-api';
 
 @Module({
   imports: [
     BooksRepositoryModule,
+    ReadingRoomsReferenceModule,
     AuthorsInfrastructureModule,
     GenresInfrastructureModule,
     IdGeneratorModule,

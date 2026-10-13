@@ -1,3 +1,8 @@
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
+import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 import {
   buildPaginationMeta,
   PaginatedResult,
@@ -12,70 +17,105 @@ import {
 import { BookId } from '@/modules/chapters/domain/chapters/value-objects/book-id.vo';
 import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chapter-id.vo';
 import { ChapterTitle } from '@/modules/chapters/domain/chapters/value-objects/chapter-title.vo';
-import {
-  Chapter,
-  ChapterDocument,
-} from '@/modules/chapters/infrastructure/schemas/chapter.schema';
-import { Injectable } from '@nestjs/common';
-import { ConcurrencyException } from '@/shared/domain/common-exceptions';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import {
-  Book,
-  BookDocument,
-} from '@/modules/books/infrastructure/schemas/public-api';
-import { RawChapterDocument, RawChapterPersistence } from './chapter.mapper';
+import { ChapterMapper, CHAPTER_WITH_PARAGRAPHS } from './chapter.mapper';
+
+const MAX_PAGE_SIZE = 10_000;
 
 @Injectable()
 export class ChapterRepository implements IChapterRepository {
   constructor(
-    @InjectModel(Chapter.name)
-    private readonly chapterModel: Model<ChapterDocument>,
-    @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
+  private get client(): Prisma.TransactionClient {
+    return this.transactionHost.tx;
+  }
+
+  private inTransaction<T>(
+    operation: (client: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    if (this.transactionHost.isTransactionActive()) {
+      return operation(this.transactionHost.tx);
+    }
+    return this.transactionHost.withTransaction(() =>
+      operation(this.transactionHost.tx),
+    );
+  }
+
   async findById(id: ChapterId): Promise<ChapterEntity | null> {
-    const document = (await this.chapterModel
-      .findById(id.toString())
-      .lean()
-      .exec()) as unknown as RawChapterDocument | null;
-    return document ? this.mapToEntity(document) : null;
+    const row = await this.client.chapter.findFirst({
+      where: { id: id.toString(), isDeleted: false },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    return row ? ChapterMapper.toDomain(row) : null;
+  }
+
+  async findByIdAndBookId(
+    id: ChapterId,
+    bookId: BookId,
+  ): Promise<ChapterEntity | null> {
+    const row = await this.client.chapter.findFirst({
+      where: { id: id.toString(), bookId: bookId.toString(), isDeleted: false },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    return row ? ChapterMapper.toDomain(row) : null;
+  }
+
+  async touchIfInBook(id: ChapterId, bookId: BookId): Promise<string | null> {
+    return this.inTransaction(async (client) => {
+      const updated = await client.chapter.updateMany({
+        where: {
+          id: id.toString(),
+          bookId: bookId.toString(),
+          isDeleted: false,
+        },
+        data: { roomReferenceRevision: { increment: 1 } },
+      });
+      if (updated.count === 0) return null;
+
+      const chapter = await client.chapter.findUnique({
+        where: { id: id.toString() },
+        select: { slug: true },
+      });
+      return chapter?.slug ?? null;
+    });
   }
 
   async findByParagraphId(paragraphId: string): Promise<ChapterEntity | null> {
-    const document = (await this.chapterModel
-      .findOne({ 'paragraphs._id': new Types.ObjectId(paragraphId) })
-      .lean()
-      .exec()) as unknown as RawChapterDocument | null;
-    return document ? this.mapToEntity(document) : null;
+    const row = await this.client.chapter.findFirst({
+      where: {
+        isDeleted: false,
+        paragraphs: { some: { id: paragraphId } },
+      },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    return row ? ChapterMapper.toDomain(row) : null;
   }
 
   async findBySlug(
     slug: string,
     bookId: BookId,
   ): Promise<ChapterEntity | null> {
-    const document = (await this.chapterModel
-      .findOne({
-        slug,
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .lean()
-      .exec()) as unknown as RawChapterDocument | null;
-    return document ? this.mapToEntity(document) : null;
+    const row = await this.client.chapter.findFirst({
+      where: { slug, bookId: bookId.toString(), isDeleted: false },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    return row ? ChapterMapper.toDomain(row) : null;
   }
 
   async findByTitle(
     title: ChapterTitle,
     bookId: BookId,
   ): Promise<ChapterEntity | null> {
-    const document = (await this.chapterModel
-      .findOne({
+    const row = await this.client.chapter.findFirst({
+      where: {
         title: title.toString(),
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .lean()
-      .exec()) as unknown as RawChapterDocument | null;
-    return document ? this.mapToEntity(document) : null;
+        bookId: bookId.toString(),
+        isDeleted: false,
+      },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    return row ? ChapterMapper.toDomain(row) : null;
   }
 
   async findAll(
@@ -83,42 +123,39 @@ export class ChapterRepository implements IChapterRepository {
     pagination: PaginationOptions,
     sort?: SortOptions,
   ): Promise<PaginatedResult<ChapterEntity>> {
-    const queryFilter: FilterQuery<ChapterDocument> = {};
-
-    if (filter.title) {
-      queryFilter.title = { $regex: filter.title, $options: 'i' };
-    }
-
-    if (filter.bookId) {
-      queryFilter.bookId = new Types.ObjectId(filter.bookId);
-    }
-
-    if (filter.orderIndex !== undefined) {
-      queryFilter.orderIndex = filter.orderIndex;
-    }
-
+    const where: Prisma.ChapterWhereInput = {
+      isDeleted: false,
+      ...(filter.title
+        ? { title: { contains: filter.title, mode: 'insensitive' } }
+        : {}),
+      ...(filter.bookId ? { bookId: filter.bookId } : {}),
+      ...(filter.orderIndex === undefined
+        ? {}
+        : { orderIndex: filter.orderIndex }),
+    };
     const page = Math.max(1, pagination.page || 1);
-    const limit = Math.min(Math.max(1, pagination.limit || 10), 10000);
+    const limit = Math.min(Math.max(1, pagination.limit || 10), MAX_PAGE_SIZE);
     const sortField = sort?.sortBy ?? 'orderIndex';
-    const sortDirection = sort?.order === 'desc' ? -1 : 1;
-    const [documents, total] = await Promise.all([
-      this.chapterModel
-        .find(queryFilter)
-        .sort({ [sortField]: sortDirection })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean<RawChapterDocument[]>()
-        .exec(),
-      this.chapterModel.countDocuments(queryFilter).exec(),
+    const direction = sort?.order === 'desc' ? 'desc' : 'asc';
+
+    const [rows, total] = await Promise.all([
+      this.client.chapter.findMany({
+        where,
+        include: CHAPTER_WITH_PARAGRAPHS,
+        orderBy: [{ [sortField]: direction }, { id: direction }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.client.chapter.count({ where }),
     ]);
 
     return {
-      data: documents.map((document) => this.mapToEntity(document)),
+      data: rows.map((row) => ChapterMapper.toDomain(row)),
       meta: buildPaginationMeta(page, limit, total),
     };
   }
 
-  async findByBook(
+  findByBook(
     bookId: BookId,
     pagination: PaginationOptions,
     sort?: SortOptions,
@@ -127,66 +164,100 @@ export class ChapterRepository implements IChapterRepository {
   }
 
   async findFirstChapter(bookId: BookId): Promise<ChapterEntity | null> {
-    const document = (await this.chapterModel
-      .findOne({
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .sort({ orderIndex: 1 })
-      .lean()
-      .exec()) as unknown as RawChapterDocument | null;
-
-    return document ? this.mapToEntity(document) : null;
+    const row = await this.client.chapter.findFirst({
+      where: { bookId: bookId.toString(), isDeleted: false },
+      include: CHAPTER_WITH_PARAGRAPHS,
+      orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+    });
+    return row ? ChapterMapper.toDomain(row) : null;
   }
 
   async save(chapter: ChapterEntity): Promise<void> {
-    const persistenceData = this.mapToDocument(chapter);
-    const id = new Types.ObjectId(chapter.id.toString());
+    const nextVersion = chapter.isNew ? 0 : chapter.loadedVersion + 1;
+    const paragraphs = chapter.paragraphs.map((paragraph, orderIndex) => ({
+      id: paragraph.id,
+      orderIndex,
+      content: paragraph.content,
+    }));
 
     if (chapter.isNew) {
-      await this.chapterModel.create({
-        ...persistenceData,
-        _id: id,
-        version: 0,
-      });
+      await this.inTransaction((client) =>
+        client.chapter.create({
+          data: {
+            id: chapter.id.toString(),
+            bookId: chapter.bookId.toString(),
+            title: chapter.title.toString(),
+            slug: chapter.slug,
+            orderIndex: chapter.orderIndex.getValue(),
+            viewsCount: chapter.viewsCount,
+            version: 0,
+            ttsStatus: chapter.ttsStatus ?? null,
+            audioUrl: chapter.audioUrl ?? null,
+            createdAt: chapter.createdAt,
+            updatedAt: chapter.updatedAt,
+            paragraphs: { create: paragraphs },
+          },
+        }),
+      );
       chapter.markPersisted(0);
       return;
     }
 
     if (!chapter.isDirty) return;
 
-    const nextVersion = chapter.loadedVersion + 1;
-    const filter: FilterQuery<ChapterDocument> = {
-      _id: id,
-      version: chapter.loadedVersion,
-    };
-    if (chapter.loadedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
+    await this.inTransaction(async (client) => {
+      const result = await client.chapter.updateMany({
+        where: {
+          id: chapter.id.toString(),
+          isDeleted: false,
+          version: chapter.loadedVersion,
+        },
+        data: {
+          bookId: chapter.bookId.toString(),
+          title: chapter.title.toString(),
+          slug: chapter.slug,
+          orderIndex: chapter.orderIndex.getValue(),
+          viewsCount: chapter.viewsCount,
+          version: nextVersion,
+          ttsStatus: chapter.ttsStatus ?? null,
+          audioUrl: chapter.audioUrl ?? null,
+          updatedAt: chapter.updatedAt,
+        },
+      });
+      if (result.count === 0) {
+        throw new ConcurrencyException('Chapter changed after it was loaded');
+      }
 
-    const result = await this.chapterModel
-      .updateOne(filter, {
-        $set: { ...persistenceData, version: nextVersion },
-      })
-      .exec();
-
-    if (result.matchedCount === 0) {
-      throw new ConcurrencyException('Chapter changed after it was loaded');
-    }
+      await client.paragraph.deleteMany({
+        where: { chapterId: chapter.id.toString() },
+      });
+      if (paragraphs.length > 0) {
+        await client.paragraph.createMany({
+          data: paragraphs.map((paragraph) => ({
+            ...paragraph,
+            chapterId: chapter.id.toString(),
+          })),
+        });
+      }
+    });
 
     chapter.markPersisted(nextVersion);
   }
 
   async delete(id: ChapterId, expectedVersion: number): Promise<void> {
-    const filter: FilterQuery<ChapterDocument> = {
-      _id: new Types.ObjectId(id.toString()),
-      version: expectedVersion,
-    };
-    if (expectedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
-
-    const result = await this.chapterModel.deleteOne(filter).exec();
-    if (result.deletedCount === 0) {
+    const result = await this.client.chapter.updateMany({
+      where: {
+        id: id.toString(),
+        version: expectedVersion,
+        isDeleted: false,
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+        version: { increment: 1 },
+      },
+    });
+    if (result.count === 0) {
       throw new ConcurrencyException('Chapter changed before it was deleted');
     }
   }
@@ -196,17 +267,16 @@ export class ChapterRepository implements IChapterRepository {
     bookId: BookId,
     excludeId?: ChapterId,
   ): Promise<boolean> {
-    const query: FilterQuery<ChapterDocument> = {
-      title: title.toString(),
-      bookId: new Types.ObjectId(bookId.toString()),
-    };
-
-    if (excludeId) {
-      query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
-    }
-
-    const count = await this.chapterModel.countDocuments(query).exec();
-    return count > 0;
+    const row = await this.client.chapter.findFirst({
+      where: {
+        title: title.toString(),
+        bookId: bookId.toString(),
+        isDeleted: false,
+        ...(excludeId ? { id: { not: excludeId.toString() } } : {}),
+      },
+      select: { id: true },
+    });
+    return row !== null;
   }
 
   async existsByOrderIndex(
@@ -214,89 +284,68 @@ export class ChapterRepository implements IChapterRepository {
     bookId: BookId,
     excludeId?: ChapterId,
   ): Promise<boolean> {
-    const query: FilterQuery<ChapterDocument> = {
-      orderIndex,
-      bookId: new Types.ObjectId(bookId.toString()),
-    };
-
-    if (excludeId) {
-      query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
-    }
-
-    const count = await this.chapterModel.countDocuments(query).exec();
-    return count > 0;
+    const row = await this.client.chapter.findFirst({
+      where: {
+        orderIndex,
+        bookId: bookId.toString(),
+        isDeleted: false,
+        ...(excludeId ? { id: { not: excludeId.toString() } } : {}),
+      },
+      select: { id: true },
+    });
+    return row !== null;
   }
 
   async incrementViews(id: ChapterId): Promise<void> {
-    await this.chapterModel
-      .findByIdAndUpdate(id.toString(), {
-        $inc: { viewsCount: 1, version: 1 },
-        updatedAt: new Date(),
-      })
-      .exec();
+    await this.client.chapter.updateMany({
+      where: { id: id.toString(), isDeleted: false },
+      data: { viewsCount: { increment: 1 }, version: { increment: 1 } },
+    });
   }
 
   async incrementViewsBySlug(
     bookSlug: string,
     chapterSlug: string,
   ): Promise<void> {
-    const book = await this.bookModel
-      .findOne({ slug: bookSlug })
-      .select('_id')
-      .lean()
-      .exec();
+    const book = await this.client.book.findFirst({
+      where: { slug: bookSlug, isDeleted: false },
+      select: { id: true },
+    });
     if (!book) return;
 
-    await this.chapterModel
-      .findOneAndUpdate(
-        { slug: chapterSlug, bookId: book._id },
-        { $inc: { viewsCount: 1, version: 1 }, updatedAt: new Date() },
-      )
-      .exec();
+    await this.client.chapter.updateMany({
+      where: { bookId: book.id, slug: chapterSlug, isDeleted: false },
+      data: { viewsCount: { increment: 1 }, version: { increment: 1 } },
+    });
   }
 
   async countByBook(bookId: BookId): Promise<number> {
-    return await this.chapterModel
-      .countDocuments({
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .exec();
+    return this.client.chapter.count({
+      where: { bookId: bookId.toString(), isDeleted: false },
+    });
   }
 
   async countChaptersForBooks(bookIds: string[]): Promise<Map<string, number>> {
-    const objectIds = bookIds.map((id) => new Types.ObjectId(id));
-    const results = await this.chapterModel
-      .aggregate<{
-        _id: Types.ObjectId;
-        count: number;
-      }>([
-        { $match: { bookId: { $in: objectIds } } },
-        { $group: { _id: '$bookId', count: { $sum: 1 } } },
-      ])
-      .exec();
+    if (bookIds.length === 0) return new Map();
 
-    const map = new Map<string, number>();
-    results.forEach((item) => {
-      map.set(item._id.toString(), item.count);
+    const rows = await this.client.chapter.groupBy({
+      by: ['bookId'],
+      where: { bookId: { in: bookIds }, isDeleted: false },
+      _count: { _all: true },
     });
-    return map;
+    return new Map(rows.map((row) => [row.bookId, row._count._all]));
   }
 
   async countTotal(): Promise<number> {
-    return await this.chapterModel.countDocuments().exec();
+    return this.client.chapter.count({ where: { isDeleted: false } });
   }
 
   async getMaxOrderIndex(bookId: BookId): Promise<number> {
-    const chapter = await this.chapterModel
-      .findOne({
-        bookId: new Types.ObjectId(bookId.toString()),
-      })
-      .sort({ orderIndex: -1 })
-      .select('orderIndex')
-      .lean()
-      .exec();
-
-    return chapter ? chapter.orderIndex : 0;
+    const row = await this.client.chapter.aggregate({
+      where: { bookId: bookId.toString(), isDeleted: false },
+      _max: { orderIndex: true },
+    });
+    return row._max.orderIndex ?? 0;
   }
 
   async updateTtsStatus(
@@ -304,53 +353,14 @@ export class ChapterRepository implements IChapterRepository {
     ttsStatus: 'pending' | 'processing' | 'completed' | 'failed',
     audioUrl?: string,
   ): Promise<void> {
-    const setData: Record<string, unknown> = {
-      ttsStatus,
-      updatedAt: new Date(),
-    };
-    if (audioUrl) {
-      setData.audioUrl = audioUrl;
-    }
-    await this.chapterModel
-      .findByIdAndUpdate(chapterId, { $set: setData, $inc: { version: 1 } })
-      .exec();
-  }
-
-  private mapToEntity(document: RawChapterDocument): ChapterEntity {
-    return ChapterEntity.reconstitute({
-      id: document._id.toString(),
-      title: document.title,
-      slug: document.slug,
-      bookId: document.bookId?.toString() || '',
-      paragraphs: (document.paragraphs || []).map((p) => ({
-        id: p._id?.toString(),
-        content: p.content,
-      })),
-      viewsCount: document.viewsCount || 0,
-      orderIndex: document.orderIndex || 0,
-      createdAt: document.createdAt,
-      updatedAt: document.updatedAt ?? new Date(),
-      version: document.version,
-      ttsStatus: document.ttsStatus,
-      audioUrl: document.audioUrl,
+    await this.client.chapter.updateMany({
+      where: { id: chapterId, isDeleted: false },
+      data: {
+        ttsStatus,
+        ...(audioUrl === undefined ? {} : { audioUrl }),
+        updatedAt: new Date(),
+        version: { increment: 1 },
+      },
     });
-  }
-
-  private mapToDocument(chapter: ChapterEntity): RawChapterPersistence {
-    return {
-      title: chapter.title.toString(),
-      slug: chapter.slug,
-      bookId: new Types.ObjectId(chapter.bookId.toString()),
-      paragraphs: chapter.paragraphs.map((p) => ({
-        _id: new Types.ObjectId(p.id),
-        content: p.content,
-      })),
-      viewsCount: chapter.viewsCount,
-      orderIndex: chapter.orderIndex.getValue(),
-      version: chapter.loadedVersion,
-      updatedAt: chapter.updatedAt,
-      ttsStatus: chapter.ttsStatus,
-      audioUrl: chapter.audioUrl,
-    };
   }
 }

@@ -7,11 +7,10 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { MongoServerError } from 'mongodb';
-import mongoose from 'mongoose';
 import multer from 'multer';
 import { Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@/core/database/generated/prisma/client';
 import { DomainException } from '@/shared/domain/domain-exception.base';
 import {
   ProblemDetailsDto,
@@ -111,25 +110,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       code = exception.code;
       detail = status >= 500 ? 'Internal server error' : exception.message;
     } else if (
-      exception instanceof MongoServerError &&
-      Number(exception.code) === 11000
+      exception instanceof Prisma.PrismaClientKnownRequestError &&
+      exception.code === 'P2002'
     ) {
       status = HttpStatus.CONFLICT;
       code = 'DUPLICATE_KEY';
       detail = 'A record with the same unique value already exists';
-    } else if (exception instanceof mongoose.Error.CastError) {
-      status = HttpStatus.BAD_REQUEST;
-      code = 'INVALID_ID';
-      detail = `Invalid value for ${exception.path}`;
-    } else if (exception instanceof mongoose.Error.ValidationError) {
-      status = HttpStatus.BAD_REQUEST;
-      code = 'VALIDATION_ERROR';
-      detail = 'Data validation failed';
-      errors = Object.values(exception.errors).map((validationError) => ({
-        field: validationError.path,
-        code: 'VALIDATION_ERROR',
-        message: validationError.message,
-      }));
     } else if (
       exception instanceof multer.MulterError &&
       exception.code === 'LIMIT_FILE_SIZE'

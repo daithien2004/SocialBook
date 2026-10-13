@@ -1,9 +1,4 @@
-export interface PaginationMeta {
-  current: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
+import type { PaginationMeta } from '@/shared/domain/pagination.types';
 
 export interface BookStats {
   chapters: number;

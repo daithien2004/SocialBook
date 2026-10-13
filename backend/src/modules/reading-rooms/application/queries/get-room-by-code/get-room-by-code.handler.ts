@@ -1,59 +1,62 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { NotFoundException } from '@nestjs/common';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import { QueryHandler } from '@nestjs/cqrs';
+import type { IQueryHandler } from '@nestjs/cqrs';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { IReadingRoomReadRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-read.repository';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
-import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
-import { ReadingRoomResult } from '../../reading-room.interface';
+import type {
+  GetRoomByCodeResult,
+  ReadingRoomResult,
+} from '@/modules/reading-rooms/application/reading-room.result';
+
 import { GetRoomByCodeQuery } from './get-room-by-code.query';
-
-export interface ReadingRoomPreviewResult {
-  roomId: string;
-  bookId: string;
-  mode: string;
-  status: string;
-  currentChapterSlug: string;
-  maxMembers: number;
-  membersCount: number;
-  isFull: boolean;
-  isMember: false;
-  createdAt: Date;
-}
-
-export type GetRoomByCodeResult =
-  (ReadingRoomResult & { isMember: true }) | ReadingRoomPreviewResult;
 
 @QueryHandler(GetRoomByCodeQuery)
 export class GetRoomByCodeHandler implements IQueryHandler<
   GetRoomByCodeQuery,
   GetRoomByCodeResult
 > {
-  constructor(private readonly readingRoomRepository: IReadingRoomRepository) {}
+  constructor(
+    private readonly readingRoomReadRepository: IReadingRoomReadRepository,
+  ) {}
 
   async execute(query: GetRoomByCodeQuery): Promise<GetRoomByCodeResult> {
-    const room = await this.readingRoomRepository.findById(
-      RoomId.create(query.code.toUpperCase()),
+    const room = await this.readingRoomReadRepository.findDetailsById(
+      RoomId.create(query.code).toString(),
     );
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
-    const isMember = !!query.userId && room.isMember(query.userId);
-    if (isMember) {
-      const full = ReadingRoomApplicationMapper.toResult(room);
-      return { ...full, isMember: true };
-    }
-
-    return {
+    const activeMembers = room.members.filter(
+      (member) => member.leftAt === undefined || member.leftAt === null,
+    );
+    const isMember =
+      query.userId !== undefined &&
+      activeMembers.some((member) => member.userId === query.userId);
+    const roomDetails = {
       roomId: room.roomId,
       bookId: room.bookId,
       mode: room.mode,
       status: room.status,
       currentChapterSlug: room.currentChapterSlug,
       maxMembers: room.maxMembers,
-      membersCount: room.activeMembers.length,
-      isFull: room.activeMembers.length >= room.maxMembers,
-      isMember: false,
+      membersCount: activeMembers.length,
       createdAt: room.createdAt,
     };
+    if (!isMember) {
+      return {
+        ...roomDetails,
+        isFull: activeMembers.length >= room.maxMembers,
+        isMember: false,
+      };
+    }
+
+    const full: ReadingRoomResult = {
+      ...roomDetails,
+      currentChapterId: room.currentChapterId,
+      hostId: room.hostId,
+      members: activeMembers.map(({ userId, role }) => ({ userId, role })),
+    };
+    return { ...full, isMember: true };
   }
 }

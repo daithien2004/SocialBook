@@ -1,33 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User } from '@/modules/users/infrastructure/schemas/user.schema';
-import { RoleSchemaModel as Role } from '@/modules/roles';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { createSeedId } from './seed-id';
 
 @Injectable()
 export class UsersSeed {
   private readonly logger = new Logger(UsersSeed.name);
 
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-    @InjectModel(Role.name) private roleModel: Model<Role>,
+    private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {}
 
-  async run() {
+  run(): Promise<void> {
     return this.seedUsers();
   }
 
-  async seedUsers() {
-    await this.userModel.deleteMany({});
-
-    const adminRole = await this.roleModel.findOne({ name: 'admin' });
-    const userRole = await this.roleModel.findOne({ name: 'user' });
-
+  async seedUsers(): Promise<void> {
+    await this.prisma.user.deleteMany({});
+    const [adminRole, userRole] = await Promise.all([
+      this.prisma.role.findUnique({ where: { name: 'admin' } }),
+      this.prisma.role.findUnique({ where: { name: 'user' } }),
+    ]);
     if (!adminRole || !userRole) {
-      throw new Error('Roles not found! HÃ£y cháº¡y RolesSeed trÆ°á»›c.');
+      throw new Error('Roles not found. Run RolesSeed first.');
     }
 
     const adminPassword = this.configService.get<string>(
@@ -35,71 +32,68 @@ export class UsersSeed {
       '',
     );
     if (!adminPassword) {
-      throw new Error(
-        'ADMIN_PASSWORD is not set. Cannot seed admin user — set it in .env (see .env.example).',
-      );
+      throw new Error('ADMIN_PASSWORD is not set. Cannot seed admin users.');
     }
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-    const users = [
+    const password = await bcrypt.hash(adminPassword, 10);
+    const entries = [
       {
         username: this.configService.get<string>('env.ADMIN_USERNAME', 'admin'),
         email: this.configService.get<string>(
           'env.ADMIN_EMAIL',
           'admin@example.com',
         ),
-        password: hashedPassword,
+        password,
         isVerified: true,
         provider: 'local',
         image: '/user1.png',
         location: 'Vietnam',
-        roleId: adminRole._id,
+        roleId: adminRole.id,
       },
       {
         username: 'lyhung',
         email: 'lyhung10nctlop95@gmail.com',
-        password: hashedPassword,
+        password,
         isVerified: true,
         provider: 'local',
         image: '/user2.jpg',
         location: 'Vietnam',
-        roleId: adminRole._id,
+        roleId: adminRole.id,
       },
       {
         username: 'thien',
         email: 'thien@example.com',
-        password: hashedPassword,
+        password,
         isVerified: true,
         provider: 'local',
         image: '/user3.jpg',
         location: 'USA',
-        roleId: userRole._id,
+        roleId: userRole.id,
       },
       {
         username: 'vinh',
         email: 'vinh@example.com',
-        password: hashedPassword,
+        password,
         isVerified: true,
         provider: 'local',
         image: '/user4.jpg',
         location: 'UK',
-        roleId: userRole._id,
+        roleId: userRole.id,
       },
       {
         username: 'thanh',
         email: 'thanh@example.com',
-        password: hashedPassword,
+        password,
         isVerified: true,
         provider: 'local',
         image: '/user5.jpg',
         location: 'Japan',
-        roleId: userRole._id,
+        roleId: userRole.id,
       },
     ];
 
-    const createdUsers = await this.userModel.insertMany(users);
-    this.logger.log(`Seed users done! Created ${createdUsers.length} users.`);
-
-    return createdUsers;
+    await this.prisma.user.createMany({
+      data: entries.map((entry) => ({ id: createSeedId(), ...entry })),
+    });
+    this.logger.log(`Seeded ${entries.length} users.`);
   }
 }

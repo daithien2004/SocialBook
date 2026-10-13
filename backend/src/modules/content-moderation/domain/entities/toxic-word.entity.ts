@@ -60,7 +60,7 @@ export class ToxicWord extends Entity<string> {
     return this._props.group;
   }
 
-  get originalWord(): string | undefined {
+  get originalWord(): string {
     return this._props.originalWord;
   }
 }

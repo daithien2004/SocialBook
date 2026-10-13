@@ -4,12 +4,12 @@ import {
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
-import { ReadingRoomResult } from '../../reading-room.interface';
-import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
+import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import { toReadingRoomResult } from '../../mappers/reading-room-result.mapper';
 import { JoinRoomCommand } from './join-room.command';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 
-import { withRetries } from '@/shared/platform/utils/with-retries.util';
+import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry';
 
 @CommandHandler(JoinRoomCommand)
 export class JoinRoomHandler implements ICommandHandler<
@@ -19,24 +19,24 @@ export class JoinRoomHandler implements ICommandHandler<
   constructor(private readonly roomRepository: IReadingRoomRepository) {}
 
   async execute(command: JoinRoomCommand): Promise<ReadingRoomResult> {
-    return withRetries(async () => {
+    return withOptimisticRetry(async () => {
       const room = await this.roomRepository.findById(
         RoomId.create(command.roomCode),
       );
       if (!room) {
-        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
+        throw new NotFoundDomainException('Phòng không tồn tại');
       }
 
       if (room.status === 'ended') {
         if (!room.isMember(command.userId)) {
-          throw new ForbiddenDomainException('PhÃ²ng Ä‘Ã£ káº¿t thÃºc');
+          throw new ForbiddenDomainException('Phòng đã kết thúc');
         }
       } else {
         room.addMember(command.userId);
         await this.roomRepository.save(room);
       }
 
-      return ReadingRoomApplicationMapper.toResult(room);
-    }, 3);
+      return toReadingRoomResult(room);
+    });
   }
 }

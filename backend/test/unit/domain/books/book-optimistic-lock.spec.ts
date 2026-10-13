@@ -4,10 +4,10 @@ import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 describe('Book optimistic-lock state', () => {
   it('tracks new, dirty, and persisted versions', () => {
     const book = Book.create({
-      id: BookId.create('507f1f77bcf86cd799439011'),
+      id: BookId.create('00000000-0000-4000-8000-000000000011'),
       title: 'A Book',
-      authorId: '507f1f77bcf86cd799439012',
-      genres: ['507f1f77bcf86cd799439013'],
+      authorId: '00000000-0000-4000-8000-000000000012',
+      genres: ['00000000-0000-4000-8000-000000000013'],
     });
 
     expect(book.isNew).toBe(true);
@@ -26,11 +26,11 @@ describe('Book optimistic-lock state', () => {
 
   it('treats a legacy document without version as version zero', () => {
     const book = Book.reconstitute({
-      id: '507f1f77bcf86cd799439011',
+      id: '00000000-0000-4000-8000-000000000011',
       title: 'A Book',
       slug: 'a-book',
-      authorId: '507f1f77bcf86cd799439012',
-      genres: ['507f1f77bcf86cd799439013'],
+      authorId: '00000000-0000-4000-8000-000000000012',
+      genres: ['00000000-0000-4000-8000-000000000013'],
       description: '',
       publishedYear: '',
       coverUrl: '',

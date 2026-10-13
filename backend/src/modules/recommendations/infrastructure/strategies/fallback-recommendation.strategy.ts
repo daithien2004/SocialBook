@@ -1,14 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import {
-  Book,
-  BookDocument,
-} from '@/modules/books/infrastructure/schemas/public-api';
-import {
-  Genre,
-  GenreDocument,
-} from '@/modules/genres/infrastructure/schemas/public-api';
 import {
   IRecommendationStrategy,
   UserProfile,
@@ -19,77 +9,56 @@ import { PopulatedBook } from '@/modules/recommendations/domain/interfaces/recom
 
 @Injectable()
 export class FallbackRecommendationStrategy implements IRecommendationStrategy {
-  constructor(
-    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-    @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
-  ) {}
-
-  async generate(
-    userId: string,
+  generate(
+    _userId: string,
     userProfile: UserProfile,
     availableBooks: PopulatedBook[],
     limit: number,
   ): Promise<RecommendationResult> {
-    let recommendations: EnrichedRecommendation[] = [];
-    const favoriteGenreNames = userProfile.favoriteGenres || [];
-
-    // 1. Content-based filtering using genres
-    if (favoriteGenreNames.length > 0) {
-      const genres = await this.genreModel
-        .find({ name: { $in: favoriteGenreNames } })
-        .lean();
-      const genreIds = genres.map((g) => g._id);
-
-      if (genreIds.length > 0) {
-        const matchedBooks = await this.bookModel
-          .find({
-            genres: { $in: genreIds },
-            status: 'published',
-            isDeleted: false,
-            _id: { $in: availableBooks.map((b) => b._id) }, // Ensure only available books
-          })
-          .sort({ views: -1, likes: -1 })
-          .limit(limit)
-          .populate('genres authorId')
-          .lean<PopulatedBook[]>();
-
-        recommendations = matchedBooks.map((book) => ({
-          bookId: book._id.toString(),
+    const favoriteGenres = new Set(userProfile.favoriteGenres);
+    const matchedBooks = availableBooks
+      .filter((book) =>
+        book.genres?.some((genre) => favoriteGenres.has(genre.name)),
+      )
+      .sort(comparePopularity)
+      .slice(0, limit);
+    const recommendations: EnrichedRecommendation[] = matchedBooks.map(
+      (book) => {
+        const matchingGenre = book.genres?.find((genre) =>
+          favoriteGenres.has(genre.name),
+        );
+        return {
+          bookId: book._id,
           title: book.title,
-          reason: `Phù hợp với sở thích: ${book.genres?.find((g: { _id: string; name: string; slug: string }) => favoriteGenreNames.includes(g.name))?.name || 'Thể loại yêu thích'}`,
+          reason: matchingGenre
+            ? `Phù hợp với sở thích: ${matchingGenre.name}`
+            : 'Sách được đề xuất dựa trên hoạt động đọc của bạn',
           matchScore: 80,
           slug: book.slug,
-          book: book,
-        }));
-      }
-    }
+          book,
+        };
+      },
+    );
 
-    // 2. Popularity-based fallback (Recent & Popular)
     if (recommendations.length < limit) {
-      const existingIds = new Set(recommendations.map((r) => r.bookId));
-
-      // Sort available books by a combination of views and likes
-      const additional = availableBooks
-        .filter((b) => !existingIds.has(b._id.toString()))
-        .sort((a, b) => {
-          const scoreA = (a.views || 0) + (a.likes || 0) * 2;
-          const scoreB = (b.views || 0) + (b.likes || 0) * 2;
-          return scoreB - scoreA;
-        })
-        .slice(0, limit - recommendations.length)
-        .map((book) => ({
-          bookId: book._id.toString(),
+      const selectedIds = new Set(recommendations.map(({ bookId }) => bookId));
+      const remainingBooks = availableBooks
+        .filter((book) => !selectedIds.has(book._id))
+        .sort(comparePopularity)
+        .slice(0, limit - recommendations.length);
+      recommendations.push(
+        ...remainingBooks.map((book) => ({
+          bookId: book._id,
           title: book.title,
-          reason: `Sách hay được nhiều người quan tâm`,
+          reason: 'Sách được nhiều người quan tâm',
           matchScore: 50,
           slug: book.slug,
-          book: book,
-        }));
-
-      recommendations = [...recommendations, ...additional];
+          book,
+        })),
+      );
     }
 
-    return {
+    return Promise.resolve({
       analysis: {
         favoriteGenres: userProfile.favoriteGenres,
         readingPace: 'medium',
@@ -97,6 +66,12 @@ export class FallbackRecommendationStrategy implements IRecommendationStrategy {
         themes: [],
       },
       recommendations,
-    };
+    });
   }
+}
+
+function comparePopularity(left: PopulatedBook, right: PopulatedBook): number {
+  const leftScore = left.views + left.likes * 2;
+  const rightScore = right.views + right.likes * 2;
+  return rightScore - leftScore || left._id.localeCompare(right._id);
 }

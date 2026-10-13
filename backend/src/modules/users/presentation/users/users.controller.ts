@@ -1,4 +1,3 @@
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
@@ -15,6 +14,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -42,12 +42,12 @@ import { UpdateReadingPreferencesCommand } from '@/modules/users/application/use
 import { UpdateUserImageCommand } from '@/modules/users/application/users/commands/update-user-image/update-user-image.command';
 import { UpdateUserCommand } from '@/modules/users/application/users/commands/update-user/update-user.command';
 
-import { User } from '@/modules/users/domain/users/entities/user.entity';
 import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
 import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { paginate } from '@/shared/domain/pagination.types';
 
 @ApiProblemResponses()
 @Controller('users')
@@ -88,9 +88,8 @@ export class UsersController {
       filter.isVerified,
     );
     const result = await this.queryBus.execute(getUsersQuery);
-    return paginated(
-      result.data.map((user: User) => new UserResponseDto(user)),
-      result.meta,
+    return paginate(result.items, result.total, filter, (users) =>
+      users.map((user) => new UserResponseDto(user)),
     );
   }
 
@@ -108,9 +107,8 @@ export class UsersController {
       undefined,
     );
     const result = await this.queryBus.execute(getUsersQuery);
-    return paginated(
-      result.data.map((user: User) => new UserResponseDto(user)),
-      result.meta,
+    return paginate(result.items, result.total, filter, (users) =>
+      users.map((user) => new UserResponseDto(user)),
     );
   }
 
@@ -118,7 +116,9 @@ export class UsersController {
   @ApiOkResponse({ type: UserResponseDto })
   @UseGuards(RolesGuard)
   @Roles('admin')
-  async toggleBan(@Param('id') id: string) {
+  async toggleBan(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const command = new ToggleBanCommand(id);
     const user = await this.commandBus.execute(command);
     return new UserResponseDto(user);
@@ -151,7 +151,9 @@ export class UsersController {
       },
     },
   })
-  async getUserProfileOverview(@Param('id') id: string) {
+  async getUserProfileOverview(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const query = new GetUserProfileQuery(id);
     const data = await this.queryBus.execute(query);
     return data;
@@ -160,7 +162,9 @@ export class UsersController {
   @Public()
   @Get(':id/exist')
   @ApiOkResponse({ schema: { type: 'boolean' } })
-  async isUserExist(@Param('id') id: string) {
+  async isUserExist(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const query = new CheckUserExistQuery(undefined, undefined, id);
     const exists = await this.queryBus.execute(query);
     return exists;
@@ -261,9 +265,8 @@ export class UsersController {
     );
     const result = await this.queryBus.execute(query);
 
-    return paginated(
-      result.data.map((user: User) => new UserResponseDto(user)),
-      result.meta,
+    return paginate(result.items, result.total, filter, (users) =>
+      users.map((user) => new UserResponseDto(user)),
     );
   }
 }

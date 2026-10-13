@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   HttpCode,
@@ -10,6 +10,7 @@ import {
   Param,
   Patch,
   Delete,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
@@ -105,53 +106,57 @@ export class UserHighlightsController {
   @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByBook(
     @CurrentUser('id') userId: string,
-    @Param('bookId') bookId: string,
+    @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ) {
     const query = new GetUserHighlightsQuery(userId, bookId, undefined);
     const highlights = await this.queryBus.execute(query);
-    return unpaginated(
-      highlights.map((h: any) => ({
-        id: h.id,
-        bookId: h.bookId,
-        chapterId: h.chapterId,
-        paragraphId: h.paragraphId,
-        content: h.content,
-        color: h.color,
-        note: h.note,
-        createdAt: h.createdAt,
-        updatedAt: h.updatedAt,
-      })),
-    );
+    const data = highlights.map((h: any) => ({
+      id: h.id,
+      bookId: h.bookId,
+      chapterId: h.chapterId,
+      paragraphId: h.paragraphId,
+      content: h.content,
+      color: h.color,
+      note: h.note,
+      createdAt: h.createdAt,
+      updatedAt: h.updatedAt,
+    }));
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 
   @Get('chapter/:chapterId')
   @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByChapter(
     @CurrentUser('id') userId: string,
-    @Param('chapterId') chapterId: string,
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
   ) {
     const query = new GetUserHighlightsQuery(userId, undefined, chapterId);
     const highlights = await this.queryBus.execute(query);
-    return unpaginated(
-      highlights.map((h: any) => ({
-        id: h.id,
-        bookId: h.bookId,
-        chapterId: h.chapterId,
-        paragraphId: h.paragraphId,
-        content: h.content,
-        color: h.color,
-        note: h.note,
-        createdAt: h.createdAt,
-        updatedAt: h.updatedAt,
-      })),
-    );
+    const data = highlights.map((h: any) => ({
+      id: h.id,
+      bookId: h.bookId,
+      chapterId: h.chapterId,
+      paragraphId: h.paragraphId,
+      content: h.content,
+      color: h.color,
+      note: h.note,
+      createdAt: h.createdAt,
+      updatedAt: h.updatedAt,
+    }));
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 
   @Patch(':id')
   @ApiOkResponse({ type: UserHighlightResponseDto })
   async updateHighlight(
     @CurrentUser('id') userId: string,
-    @Param('id') highlightId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) highlightId: string,
     @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateUserHighlightDto,
   ) {
@@ -177,7 +182,7 @@ export class UserHighlightsController {
   @ApiNoContentResponse()
   async deleteHighlight(
     @CurrentUser('id') userId: string,
-    @Param('id') highlightId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) highlightId: string,
     @CurrentAbility() ability: AppAbility,
   ) {
     const command = new DeleteUserHighlightCommand(

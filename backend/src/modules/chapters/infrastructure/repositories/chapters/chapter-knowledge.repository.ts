@@ -1,41 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
 import { IChapterKnowledgeRepository } from '@/modules/chapters/domain/chapters/repositories/chapter-knowledge.repository.interface';
-import { ChapterKnowledge as ChapterKnowledgeEntity } from '@/modules/chapters/domain/chapters/entities/chapter-knowledge.entity';
-import {
-  ChapterKnowledge as ChapterKnowledgeSchema,
-  ChapterKnowledgeDocument,
-} from '../../schemas/chapter-knowledge.schema';
+import { ChapterKnowledge } from '@/modules/chapters/domain/chapters/entities/chapter-knowledge.entity';
 import { ChapterKnowledgeMapper } from './chapter-knowledge.mapper';
 
 @Injectable()
 export class ChapterKnowledgeRepository implements IChapterKnowledgeRepository {
-  constructor(
-    @InjectModel(ChapterKnowledgeSchema.name)
-    private readonly model: Model<ChapterKnowledgeDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async findByChapterId(
-    chapterId: string,
-  ): Promise<ChapterKnowledgeEntity | null> {
-    const doc = await this.model.findOne({ chapterId }).exec();
-    if (!doc) return null;
-    return ChapterKnowledgeMapper.toDomain(doc);
+  async findByChapterId(chapterId: string): Promise<ChapterKnowledge | null> {
+    const row = await this.prisma.chapterKnowledge.findUnique({
+      where: { chapterId },
+    });
+    return row ? ChapterKnowledgeMapper.toDomain(row) : null;
   }
 
-  async save(knowledge: ChapterKnowledgeEntity): Promise<void> {
-    const persistence = ChapterKnowledgeMapper.toPersistence(knowledge);
-    await this.model
-      .findByIdAndUpdate(
-        persistence._id,
-        { $set: persistence },
-        { upsert: true, new: true },
-      )
-      .exec();
+  async save(knowledge: ChapterKnowledge): Promise<void> {
+    const data = ChapterKnowledgeMapper.toCreateInput(knowledge);
+    const { id, chapterId, createdAt, ...update } = data;
+    await this.prisma.chapterKnowledge.upsert({
+      where: { chapterId },
+      create: data,
+      update: { ...update, id, createdAt },
+    });
   }
 
   async delete(id: string): Promise<void> {
-    await this.model.findByIdAndDelete(id).exec();
+    await this.prisma.chapterKnowledge.deleteMany({ where: { id } });
   }
 }

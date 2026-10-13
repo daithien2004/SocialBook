@@ -1,25 +1,41 @@
 export interface PaginationMeta {
-  current: number;
+  page: number;
   pageSize: number;
   total: number;
   totalPages: number;
 }
 
-export interface PaginatedResult<T> {
-  data: T[];
-  meta: PaginationMeta;
-}
-
-export interface CursorPaginatedResult<T> {
-  data: T[];
+export interface CursorMeta {
+  limit: number;
   nextCursor: string | null;
   hasMore: boolean;
+}
+
+export interface PaginatedResult<
+  T,
+  M extends PaginationMeta | CursorMeta = PaginationMeta,
+> {
+  data: T[];
+  meta: M;
+}
+
+export type CursorPaginatedResult<T> = PaginatedResult<T, CursorMeta>;
+
+/** Parameters passed from an application query to an offset-paginated repository. */
+export interface PageParams {
+  offset: number;
+  limit: number;
+}
+
+/** Internal repository result; HTTP metadata is built at the presentation boundary. */
+export interface PageResult<T> {
+  items: T[];
+  total: number;
 }
 
 export interface PaginationOptions {
   page: number;
   limit: number;
-  cursor?: string;
 }
 
 export interface SortOptions<T extends string = string> {
@@ -33,9 +49,25 @@ export function buildPaginationMeta(
   total: number,
 ): PaginationMeta {
   return {
-    current: page,
+    page,
     pageSize: limit,
     total,
     totalPages: Math.ceil(total / limit),
+  };
+}
+
+export function paginate<TItem, TResponse>(
+  items: TItem[],
+  total: number,
+  pagination: { actualPage: number; actualLimit: number },
+  map: (items: TItem[]) => TResponse[],
+): PaginatedResult<TResponse> {
+  return {
+    data: map(items),
+    meta: buildPaginationMeta(
+      pagination.actualPage,
+      pagination.actualLimit,
+      total,
+    ),
   };
 }

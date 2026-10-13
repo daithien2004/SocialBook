@@ -1,8 +1,10 @@
 import { readingRoomsKeys } from '@/lib/query-keys';
+import type { ChapterDetailData } from '@/features/chapters/types/chapter.interface';
 import {
   getMyActiveRooms,
   getMyHistory,
   getRoom,
+  getCurrentRoomChapter,
   getRoomHighlights,
   type RoomHistoryResponse,
   type RoomHighlightPage,
@@ -26,6 +28,10 @@ export const readingRoomQueries = {
   room: (code: string) => ({
     queryKey: readingRoomsKeys.room(code),
     queryFn: (): Promise<RoomResponse> => getRoom(code),
+  }),
+  currentChapter: (code: string, chapterSlug: string) => ({
+    queryKey: [...readingRoomsKeys.room(code), 'chapter', chapterSlug] as const,
+    queryFn: (): Promise<ChapterDetailData> => getCurrentRoomChapter(code),
   }),
   myActive: () => ({
     queryKey: readingRoomsKeys.myActive(),

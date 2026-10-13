@@ -28,4 +28,6 @@ export abstract class IUserAnalyticsRepository {
   ): Promise<
     { userId: string; username: string; avatar: string | null; score: number }[]
   >;
+
+  abstract deleteEventsBefore(date: Date): Promise<number>;
 }

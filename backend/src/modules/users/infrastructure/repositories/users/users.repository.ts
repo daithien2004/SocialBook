@@ -1,255 +1,217 @@
-import { PaginatedResult } from '@/shared/domain/pagination.types';
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { User as UserEntity } from '@/modules/users/domain/users/entities/user.entity';
 import {
   IUserRepository,
   UserFilter,
-  UserPaginationOptions,
 } from '@/modules/users/domain/users/repositories/user.repository.interface';
 import { UserEmail } from '@/modules/users/domain/users/value-objects/user-email.vo';
 import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import { User, UserDocument } from '../../schemas/user.schema';
+import { PageParams, PageResult } from '@/shared/domain/pagination.types';
+import { findPaginated } from '@/shared/infrastructure/database/find-paginated';
 import { UserMapper } from './user.mapper';
-import { UserPersistence } from './user.mapper';
-import { MongoSessionContext } from '@/core/database/mongo-session.context';
 
 @Injectable()
 export class UsersRepository implements IUserRepository {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-    private readonly sessionContext: MongoSessionContext,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
-  private toDomain(doc: UserDocument): UserEntity {
-    return UserMapper.toDomain(doc);
-  }
-
-  private toPersistence(entity: UserEntity): UserPersistence {
-    return UserMapper.toPersistence(entity);
+  private get client(): Prisma.TransactionClient {
+    return this.transactionHost.tx;
   }
 
   async findById(id: UserId): Promise<UserEntity | null> {
-    const doc = await this.userModel
-      .findById(id.toString())
-      .session(this.sessionContext.currentSession ?? null)
-      .lean()
-      .exec();
-    return doc ? this.toDomain(doc) : null;
+    const row = await this.client.user.findUnique({
+      where: { id: id.toString() },
+      include: { favoriteGenres: { select: { genreId: true } } },
+    });
+    return row ? UserMapper.toDomain(row) : null;
   }
 
   async findByEmail(email: UserEmail): Promise<UserEntity | null> {
-    const doc = await this.userModel
-      .findOne({ email: email.toString() })
-      .lean()
-      .exec();
-    return doc ? this.toDomain(doc) : null;
+    const row = await this.client.user.findUnique({
+      where: { email: email.toString() },
+      include: { favoriteGenres: { select: { genreId: true } } },
+    });
+    return row ? UserMapper.toDomain(row) : null;
   }
 
   async findByUsername(username: string): Promise<UserEntity | null> {
-    const doc = await this.userModel.findOne({ username }).lean().exec();
-    return doc ? this.toDomain(doc) : null;
+    const row = await this.client.user.findUnique({
+      where: { username },
+      include: { favoriteGenres: { select: { genreId: true } } },
+    });
+    return row ? UserMapper.toDomain(row) : null;
   }
 
   async findAll(
     filter: UserFilter,
-    pagination: UserPaginationOptions,
-  ): Promise<PaginatedResult<UserEntity>> {
-    const query: FilterQuery<UserDocument> = {};
-
+    pagination: PageParams,
+  ): Promise<PageResult<UserEntity>> {
+    const where: Prisma.UserWhereInput = {};
     if (filter.username) {
-      query.username = { $regex: filter.username, $options: 'i' };
+      where.username = { contains: filter.username, mode: 'insensitive' };
     }
     if (filter.email) {
-      query.email = { $regex: filter.email, $options: 'i' };
+      where.email = { contains: filter.email, mode: 'insensitive' };
     }
-    if (filter.roleId) {
-      query.roleId = new Types.ObjectId(filter.roleId);
-    }
-    if (filter.isBanned !== undefined) {
-      query.isBanned = filter.isBanned;
-    }
-    if (filter.isVerified !== undefined) {
-      query.isVerified = filter.isVerified;
-    }
+    if (filter.roleId) where.roleId = filter.roleId;
+    if (filter.isBanned !== undefined) where.isBanned = filter.isBanned;
+    if (filter.isVerified !== undefined) where.isVerified = filter.isVerified;
 
-    const skip = (pagination.page - 1) * pagination.limit;
-
-    const facetResult = await this.userModel
-      .aggregate<{ metadata: Array<{ total: number }>; data: UserDocument[] }>([
-        { $match: query },
-        {
-          $facet: {
-            metadata: [{ $count: 'total' }],
-            data: [
-              { $sort: { createdAt: -1 } },
-              { $skip: skip },
-              { $limit: pagination.limit },
-            ],
-          },
-        },
-      ])
-      .exec();
-
-    const result = facetResult[0] ?? { metadata: [], data: [] };
-    const total = result.metadata[0]?.total ?? 0;
-    const docs = result.data;
-
-    return {
-      data: docs.map((doc: UserDocument) => this.toDomain(doc)),
-      meta: {
-        total,
-        current: pagination.page,
-        pageSize: pagination.limit,
-        totalPages: Math.ceil(total / pagination.limit),
+    return findPaginated(
+      async () => {
+        const rows = await this.client.user.findMany({
+          where,
+          include: { favoriteGenres: { select: { genreId: true } } },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          skip: pagination.offset,
+          take: pagination.limit,
+        });
+        return rows.map((row) => UserMapper.toDomain(row));
       },
-    };
+      () => this.client.user.count({ where }),
+    );
   }
 
   async save(user: UserEntity): Promise<void> {
-    const persistenceData = this.toPersistence(user);
-    const { _id, ...updateData } = persistenceData;
+    const data = UserMapper.toPersistence(user);
+    const { id, roleId, createdAt, ...updateData } = data;
+    const favoriteGenres = {
+      deleteMany: {},
+      create: user.favoriteGenres.map((genreId) => ({ genreId })),
+    };
 
-    await this.userModel
-      .findOneAndUpdate(
-        { _id },
-        { $set: updateData },
-        {
-          upsert: true,
-          new: true,
-          session: this.sessionContext.currentSession,
+    await this.client.user.upsert({
+      where: { id },
+      create: {
+        ...updateData,
+        id,
+        createdAt,
+        roleId,
+        favoriteGenres: {
+          create: user.favoriteGenres.map((genreId) => ({ genreId })),
         },
-      )
-      .exec();
+      },
+      update: { ...updateData, roleId, favoriteGenres },
+    });
   }
 
   async delete(id: UserId): Promise<void> {
-    await this.userModel.findByIdAndDelete(id.toString()).exec();
+    await this.client.user.deleteMany({ where: { id: id.toString() } });
   }
 
   async existsByEmail(email: UserEmail, excludeId?: UserId): Promise<boolean> {
-    const query: FilterQuery<UserDocument> = { email: email.toString() };
-    if (excludeId) {
-      query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
-    }
-    const result = await this.userModel.exists(query);
-    return !!result;
+    const row = await this.client.user.findFirst({
+      where: {
+        email: email.toString(),
+        ...(excludeId ? { id: { not: excludeId.toString() } } : {}),
+      },
+      select: { id: true },
+    });
+    return row !== null;
   }
 
   async existsByUsername(
     username: string,
     excludeId?: UserId,
   ): Promise<boolean> {
-    const query: FilterQuery<UserDocument> = { username };
-    if (excludeId) {
-      query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
-    }
-    const result = await this.userModel.exists(query);
-    return !!result;
+    const row = await this.client.user.findFirst({
+      where: {
+        username,
+        ...(excludeId ? { id: { not: excludeId.toString() } } : {}),
+      },
+      select: { id: true },
+    });
+    return row !== null;
   }
 
-  // Statistics
   async countByDate(startDate: Date, endDate?: Date): Promise<number> {
-    const createdAtQuery: Record<string, unknown> = { $gte: startDate };
-    if (endDate) createdAtQuery.$lt = endDate;
-    const query: FilterQuery<UserDocument> = { createdAt: createdAtQuery };
-    return await this.userModel.countDocuments(query).exec();
+    return this.client.user.count({
+      where: {
+        createdAt: { gte: startDate, ...(endDate ? { lt: endDate } : {}) },
+      },
+    });
   }
 
   async countByProvider(): Promise<Map<string, number>> {
-    const result = await this.userModel
-      .aggregate<{
-        _id: string | null;
-        count: number;
-      }>([{ $group: { _id: '$provider', count: { $sum: 1 } } }])
-      .exec();
-
-    const map = new Map<string, number>();
-    result.forEach((item) => map.set(item._id ?? 'local', item.count));
-    return map;
+    const groups = await this.client.user.groupBy({
+      by: ['provider'],
+      _count: { _all: true },
+    });
+    return new Map(groups.map((group) => [group.provider, group._count._all]));
   }
 
   async getGeographicDistribution(): Promise<
     Array<{ country: string; userCount: number }>
   > {
-    const result = await this.userModel
-      .aggregate<{
-        _id: string;
-        userCount: number;
-      }>([
-        { $group: { _id: '$location', userCount: { $sum: 1 } } },
-        { $match: { _id: { $nin: [null, ''] } } },
-        { $sort: { userCount: -1 } },
-        { $limit: 20 },
-      ])
-      .exec();
+    const groups = await this.client.user.groupBy({
+      by: ['location'],
+      where: {
+        location: { not: null, notIn: ['', 'null', 'undefined'] },
+      },
+      _count: { _all: true },
+      orderBy: { _count: { location: 'desc' } },
+      take: 20,
+    });
 
-    return result.map((item) => ({
-      country: item._id,
-      userCount: item.userCount,
-    }));
+    return groups.flatMap((group) =>
+      group.location === null
+        ? []
+        : [{ country: group.location, userCount: group._count._all }],
+    );
   }
 
   async getGrowthMetrics(
     startDate: Date,
     groupBy: 'day' | 'month' | 'year',
   ): Promise<Array<{ _id: string; count: number }>> {
-    let dateFormat: string;
-    switch (groupBy) {
-      case 'month':
-        dateFormat = '%Y-%m';
-        break;
-      case 'year':
-        dateFormat = '%Y';
-        break;
-      case 'day':
-      default:
-        dateFormat = '%Y-%m-%d';
-        break;
-    }
-
-    return await this.userModel
-      .aggregate<{ _id: string; count: number }>([
-        { $match: { createdAt: { $gte: startDate } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ])
-      .exec();
+    const dateFormat =
+      groupBy === 'year'
+        ? 'YYYY'
+        : groupBy === 'month'
+          ? 'YYYY-MM'
+          : 'YYYY-MM-DD';
+    const rows = await this.client.$queryRaw<
+      Array<{ _id: string; count: number }>
+    >(Prisma.sql`
+      SELECT to_char(date_trunc(${groupBy}, "createdAt"), ${dateFormat}) AS "_id",
+             count(*)::int AS "count"
+      FROM "users"
+      WHERE "createdAt" >= ${startDate}
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `);
+    return rows;
   }
 
   async countAll(): Promise<number> {
-    return this.userModel.countDocuments().exec();
+    return this.client.user.count();
   }
 
   async countWithLocation(): Promise<number> {
-    return this.userModel
-      .countDocuments({
-        location: { $ne: null, $nin: ['', 'null', 'undefined'] },
-      })
-      .exec();
+    return this.client.user.count({
+      where: {
+        location: { not: null, notIn: ['', 'null', 'undefined'] },
+      },
+    });
   }
 
   async findSampleUsersWithLocation(
     limit: number,
   ): Promise<Array<{ username: string; location: string }>> {
-    const users = await this.userModel
-      .find({
-        location: { $ne: null, $nin: ['', 'null', 'undefined'] },
-      })
-      .limit(limit)
-      .select('username location')
-      .lean()
-      .exec();
-
-    return users.map((user) => ({
-      username: user.username,
-      location: user.location || '',
-    }));
+    const users = await this.client.user.findMany({
+      where: { location: { not: null, notIn: ['', 'null', 'undefined'] } },
+      take: limit,
+      select: { username: true, location: true },
+    });
+    return users.flatMap((user) =>
+      user.location === null
+        ? []
+        : [{ username: user.username, location: user.location }],
+    );
   }
 }

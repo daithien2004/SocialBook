@@ -1,16 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Like,
-  LikeSchema,
-} from '@/modules/likes/infrastructure/schemas/like.schema';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { ILikeRepository } from '@/modules/likes/domain/repositories/like.repository.interface';
 import { LikeRepository } from './like.repository';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Like.name, schema: LikeSchema }]),
-  ],
+  imports: [PostgresDatabaseModule],
   providers: [
     {
       provide: ILikeRepository,

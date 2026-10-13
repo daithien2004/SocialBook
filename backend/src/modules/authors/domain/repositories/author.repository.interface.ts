@@ -1,7 +1,4 @@
-import {
-  PaginatedResult,
-  PaginationOptions,
-} from '@/shared/domain/pagination.types';
+import { PageParams, PageResult } from '@/shared/domain/pagination.types';
 import { Author } from '../entities/author.entity';
 import { AuthorId } from '../value-objects/author-id.vo';
 import { AuthorName } from '../value-objects/author-name.vo';
@@ -19,8 +16,8 @@ export abstract class IAuthorRepository {
   abstract findByName(name: AuthorName): Promise<Author | null>;
   abstract findAll(
     filter: AuthorFilter,
-    pagination: PaginationOptions,
-  ): Promise<PaginatedResult<Author>>;
+    pagination: PageParams,
+  ): Promise<PageResult<Author>>;
 
   abstract save(author: Author): Promise<void>;
   abstract delete(id: AuthorId): Promise<void>;

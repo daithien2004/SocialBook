@@ -1,23 +1,13 @@
 import { Role } from '../../domain/entities/role.entity';
-import { RoleDocument } from '../schemas/role.schema';
-
-interface RolePersistence {
-  name: string;
-}
+import { Role as PrismaRole } from '@/core/database/generated/prisma/client';
 
 export class RoleMapper {
-  static toDomain(roleDoc: RoleDocument): Role {
+  static toDomain(roleRow: PrismaRole): Role {
     return Role.reconstitute({
-      id: roleDoc._id.toString(),
-      name: roleDoc.name,
-      createdAt: roleDoc.createdAt,
-      updatedAt: roleDoc.updatedAt,
+      id: roleRow.id,
+      name: roleRow.name,
+      createdAt: roleRow.createdAt,
+      updatedAt: roleRow.updatedAt,
     });
-  }
-
-  static toPersistence(role: Role): RolePersistence {
-    return {
-      name: role.name,
-    };
   }
 }

@@ -1,69 +1,56 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { UserHighlight } from '../../domain/entities/user-highlight.entity';
-import { IUserHighlightRepository } from '../../domain/repositories/user-highlight.repository.interface';
-import {
-  UserHighlightDocument,
-  UserHighlight as UserHighlightSchema,
-} from '../schemas/user-highlight.schema';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
+import { UserHighlight } from '@/modules/user-highlights/domain/entities/user-highlight.entity';
+import { IUserHighlightRepository } from '@/modules/user-highlights/domain/repositories/user-highlight.repository.interface';
 import { UserHighlightMapper } from './user-highlight.mapper';
 
 @Injectable()
 export class UserHighlightRepository implements IUserHighlightRepository {
   constructor(
-    @InjectModel(UserHighlightSchema.name)
-    private readonly highlightModel: Model<UserHighlightDocument>,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
   async save(highlight: UserHighlight): Promise<void> {
-    const data = UserHighlightMapper.toPersistence(highlight);
-    if (Types.ObjectId.isValid(highlight.id)) {
-      await this.highlightModel.findByIdAndUpdate(
-        highlight.id,
-        { $set: data },
-        { upsert: true, new: true },
-      );
-    } else {
-      // If it's a new entity, create it
-      await this.highlightModel.create(data);
-      // We don't update the entity ID here because Entity base class has readonly ID.
-      // In a real CQRS, we might pass generated IDs or use UUIDs in the domain.
-      // But this works for NestJS/Mongoose flow where domain is created first.
-    }
+    await this.transactionHost.tx.userHighlight.upsert({
+      where: { id: highlight.id },
+      create: UserHighlightMapper.toCreateInput(highlight),
+      update: {
+        content: highlight.content,
+        color: highlight.color,
+        note: highlight.note ?? null,
+        updatedAt: highlight.updatedAt,
+      },
+    });
   }
 
   async findById(id: string): Promise<UserHighlight | null> {
-    const doc = await this.highlightModel.findById(id).exec();
-    return doc ? UserHighlightMapper.toDomain(doc) : null;
+    const row = await this.transactionHost.tx.userHighlight.findUnique({
+      where: { id },
+    });
+    return row ? UserHighlightMapper.toDomain(row) : null;
   }
 
   async findByBookId(userId: string, bookId: string): Promise<UserHighlight[]> {
-    const docs = await this.highlightModel
-      .find({
-        userId: new Types.ObjectId(userId),
-        bookId: new Types.ObjectId(bookId),
-      })
-      .sort({ createdAt: 1 })
-      .exec();
-    return docs.map((doc) => UserHighlightMapper.toDomain(doc));
+    const rows = await this.transactionHost.tx.userHighlight.findMany({
+      where: { userId, bookId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map((row) => UserHighlightMapper.toDomain(row));
   }
 
   async findByChapterId(
     userId: string,
     chapterId: string,
   ): Promise<UserHighlight[]> {
-    const docs = await this.highlightModel
-      .find({
-        userId: new Types.ObjectId(userId),
-        chapterId: new Types.ObjectId(chapterId),
-      })
-      .sort({ createdAt: 1 })
-      .exec();
-    return docs.map((doc) => UserHighlightMapper.toDomain(doc));
+    const rows = await this.transactionHost.tx.userHighlight.findMany({
+      where: { userId, chapterId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map((row) => UserHighlightMapper.toDomain(row));
   }
 
   async delete(id: string): Promise<void> {
-    await this.highlightModel.findByIdAndDelete(id).exec();
+    await this.transactionHost.tx.userHighlight.deleteMany({ where: { id } });
   }
 }

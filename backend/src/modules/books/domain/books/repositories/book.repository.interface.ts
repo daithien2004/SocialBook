@@ -63,6 +63,7 @@ export abstract class IBookRepository {
     excludeId?: BookId,
   ): Promise<boolean>;
   abstract existsById(id: string): Promise<boolean>;
+  abstract touchIfActive(id: BookId): Promise<boolean>;
 
   abstract incrementViews(id: BookId): Promise<void>;
   abstract addLike(id: BookId, userId: string): Promise<void>;

@@ -1,12 +1,9 @@
 import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
-import { Type } from 'class-transformer';
-import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
-import { Types } from 'mongoose';
+import { IsUUID, IsNotEmpty, IsString } from 'class-validator';
 
 export class PaginationUserDto extends PaginationQueryDto {
   @IsNotEmpty({ message: 'userId is required' })
   @IsString()
-  @IsMongoId()
-  @Type(() => Types.ObjectId)
+  @IsUUID('4')
   userId!: string;
 }

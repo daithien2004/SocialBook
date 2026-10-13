@@ -1,5 +1,4 @@
 import { QueryBus } from '@nestjs/cqrs';
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 
 import { Controller, Get, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
@@ -109,7 +108,7 @@ export class RecommendationsController {
     const result = await this.queryBus.execute(query);
 
     return {
-      ...paginated(result.recommendations, result.meta),
+      ...{ data: result.recommendations, meta: result.meta },
       analysis: result.analysis,
     };
   }

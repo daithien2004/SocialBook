@@ -7,7 +7,7 @@ import { ReadingRoomEmitter } from './reading-room.emitter';
 import { AddHighlightCommand } from '@/modules/reading-rooms/application/commands/add-highlight/add-highlight.command';
 import { RemoveHighlightCommand } from '@/modules/reading-rooms/application/commands/remove-highlight/remove-highlight.command';
 import { GenerateHighlightInsightCommand } from '@/modules/reading-rooms/application/commands/generate-highlight-insight/generate-highlight-insight.command';
-import { ReadingRoomServerEvent } from '../../reading-room.events';
+import { ReadingRoomServerEvent } from '../../reading-room.socket-events';
 import { RoomSocket, SocketData } from './reading-room.types';
 import { AddHighlightDto } from './dto/add-highlight.dto';
 import { RemoveHighlightDto } from './dto/remove-highlight.dto';
@@ -62,10 +62,8 @@ export class ReadingRoomHighlightHandler {
       displayName,
       avatarUrl,
     );
-    const room = await this.commandBus.execute(command);
+    const newHighlight = await this.commandBus.execute(command);
 
-    const newHighlight = room.highlights[room.highlights.length - 1];
-    if (!newHighlight.createdAt) return;
     const authorName = newHighlight.displayName || displayName || 'Thành viên';
     const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
 

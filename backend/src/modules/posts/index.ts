@@ -4,8 +4,3 @@ export { PostsRepositoryModule } from './infrastructure/repositories/posts/posts
 export { Post } from './domain/posts/entities/post.entity';
 export { IPostRepository } from './domain/posts/repositories/post.repository.interface';
 export { ModerationStatus } from './domain/posts/enums/moderation-status.enum';
-export {
-  Post as PostSchemaModel,
-  PostSchema,
-} from './infrastructure/schemas/post.schema';
-export type { PostDocument } from './infrastructure/schemas/post.schema';

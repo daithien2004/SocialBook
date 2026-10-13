@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
 import { ICachePort } from '@/shared/domain/cache.port';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
 
 export interface AIRateLimitConfig {
   guestLimit: number;
@@ -13,6 +12,8 @@ export interface AIRateLimitConfig {
 
 const CACHE_KEY = 'config:rate_limit_ai';
 const LEGACY_CACHE_KEY = 'config:rate_limit_gemini';
+const CONFIG_KEY = 'rate_limit_ai';
+const LEGACY_CONFIG_KEY = 'rate_limit_gemini';
 const FALLBACK: AIRateLimitConfig = {
   guestLimit: 2,
   userLimit: 5,
@@ -46,7 +47,7 @@ export class RateLimitConfigService {
   private readonly logger = new Logger(RateLimitConfigService.name);
 
   constructor(
-    @InjectConnection() private readonly connection: Connection,
+    private readonly prisma: PrismaService,
     private readonly cacheService: ICachePort,
   ) {}
 
@@ -54,7 +55,7 @@ export class RateLimitConfigService {
     const cached = await this.cacheService.get<AIRateLimitConfig>(CACHE_KEY);
     if (cached) return cached;
 
-    const doc = await this.readConfig('rate_limit_ai');
+    const doc = await this.readConfig(CONFIG_KEY);
     if (doc) return this.cacheAndReturn(doc);
 
     const migrated = await this.migrateLegacyConfig();
@@ -66,11 +67,11 @@ export class RateLimitConfigService {
   async updateAIConfig(
     data: Partial<AIRateLimitConfig>,
   ): Promise<AIRateLimitConfig> {
-    const update: Record<string, unknown> = { ...data, updatedAt: new Date() };
-
-    await this.connection
-      .collection('configs')
-      .updateOne({ key: 'rate_limit_ai' }, { $set: update }, { upsert: true });
+    await this.prisma.systemConfig.upsert({
+      where: { key: CONFIG_KEY },
+      create: { key: CONFIG_KEY, value: data },
+      update: { value: data },
+    });
 
     await this.cacheService.del(CACHE_KEY);
 
@@ -81,13 +82,13 @@ export class RateLimitConfigService {
     key: string,
   ): Promise<Partial<AIRateLimitConfig> | null> {
     try {
-      const document: unknown = await this.connection
-        .collection('configs')
-        .findOne({ key });
-      return toPartialConfig(document);
+      const document = await this.prisma.systemConfig.findUnique({
+        where: { key },
+      });
+      return document ? toPartialConfig(document.value) : null;
     } catch (error) {
       this.logger.error(
-        `Failed to read config from MongoDB: ${getErrorMessage(error)}`,
+        `Failed to read config from PostgreSQL: ${getErrorMessage(error)}`,
       );
       return null;
     }
@@ -112,18 +113,16 @@ export class RateLimitConfigService {
 
   private async migrateLegacyConfig(): Promise<AIRateLimitConfig | null> {
     try {
-      const legacyConfig = await this.readConfig('rate_limit_gemini');
+      const legacyConfig = await this.readConfig(LEGACY_CONFIG_KEY);
       if (!legacyConfig) return null;
 
-      await this.connection
-        .collection('configs')
-        .updateOne(
-          { key: 'rate_limit_ai' },
-          { $set: legacyConfig },
-          { upsert: true },
-        );
-      await this.connection.collection('configs').deleteOne({
-        key: 'rate_limit_gemini',
+      await this.prisma.systemConfig.upsert({
+        where: { key: CONFIG_KEY },
+        create: { key: CONFIG_KEY, value: legacyConfig },
+        update: { value: legacyConfig },
+      });
+      await this.prisma.systemConfig.deleteMany({
+        where: { key: LEGACY_CONFIG_KEY },
       });
       await this.cacheService.del(LEGACY_CACHE_KEY);
 

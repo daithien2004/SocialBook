@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import {
-  READING_PROGRESS_QUEUE,
-  ReadingProgressQueuePort,
-} from '../../application/reading-progress-queue.port';
+import { READING_PROGRESS_QUEUE } from './reading-progress-queue.constants';
+import { IReadingProgressQueuePort } from '../../application/ports/external/reading-progress-queue.port';
 import { DEFAULT_JOB_OPTIONS } from '@/shared/queue/default-job-options';
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { ReadingProgressQueueAdapter } from './reading-progress-queue.adapter';
@@ -19,11 +17,11 @@ import { ReadingProgressQueueProcessor } from './reading-progress-queue.processo
   providers: [
     ReadingProgressQueueAdapter,
     {
-      provide: ReadingProgressQueuePort,
+      provide: IReadingProgressQueuePort,
       useExisting: ReadingProgressQueueAdapter,
     },
     ...(isWorkerProcess() ? [ReadingProgressQueueProcessor] : []),
   ],
-  exports: [ReadingProgressQueuePort],
+  exports: [IReadingProgressQueuePort],
 })
 export class ReadingProgressQueueModule {}

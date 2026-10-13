@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { readingRoomsKeys } from '@/lib/query-keys';
+import { IdempotencyRequestRunner } from '@/lib/idempotency';
 import {
   createRoom,
   reactivateRoom,
@@ -9,8 +11,12 @@ import {
 
 export function useCreateRoom() {
   const queryClient = useQueryClient();
+  const idempotencyRunner = useRef(new IdempotencyRequestRunner());
   return useMutation<RoomResponse, Error, CreateRoomPayload>({
-    mutationFn: createRoom,
+    mutationFn: (payload) =>
+      idempotencyRunner.current.execute(payload, (key) =>
+        createRoom(payload, key),
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: readingRoomsKeys.myActive() });
     },

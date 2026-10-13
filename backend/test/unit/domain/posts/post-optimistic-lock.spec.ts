@@ -3,8 +3,8 @@ import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 describe('Post optimistic-lock state', () => {
   it('tracks mutations and persisted versions', () => {
     const post = Post.create({
-      id: '507f1f77bcf86cd799439011',
-      userId: '507f1f77bcf86cd799439012',
+      id: '00000000-0000-4000-8000-000000000011',
+      userId: '00000000-0000-4000-8000-000000000012',
       content: 'original',
     });
 
@@ -24,8 +24,8 @@ describe('Post optimistic-lock state', () => {
 
   it('loads legacy records without a version as version zero', () => {
     const post = Post.reconstitute({
-      id: '507f1f77bcf86cd799439011',
-      userId: '507f1f77bcf86cd799439012',
+      id: '00000000-0000-4000-8000-000000000011',
+      userId: '00000000-0000-4000-8000-000000000012',
       bookId: null,
       content: 'existing',
       imageUrls: [],

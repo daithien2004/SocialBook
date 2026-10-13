@@ -11,10 +11,7 @@ import { Author } from '../domain/entities/author.entity';
 import { IAuthorRepository } from '../domain/repositories/author.repository.interface';
 import { AuthorId } from '../domain/value-objects/author-id.vo';
 import { AuthorName } from '../domain/value-objects/author-name.vo';
-import {
-  PaginatedResult,
-  PaginationOptions,
-} from '@/shared/domain/pagination.types';
+import { PageParams, PageResult } from '@/shared/domain/pagination.types';
 
 @Injectable()
 export class AuthorsService {
@@ -99,13 +96,11 @@ export class AuthorsService {
   }
 
   findAll(
-    page: number,
-    limit: number,
+    pagination: PageParams,
     name?: string,
     bio?: string,
-  ): Promise<PaginatedResult<Author>> {
+  ): Promise<PageResult<Author>> {
     const filter = { name, bio };
-    const pagination: PaginationOptions = { page, limit };
     return this.authorRepository.findAll(filter, pagination);
   }
 }

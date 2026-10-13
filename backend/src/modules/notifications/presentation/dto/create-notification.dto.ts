@@ -3,7 +3,7 @@ import {
   IsString,
   IsBoolean,
   IsOptional,
-  IsMongoId,
+  IsUUID,
   IsObject,
   ValidateNested,
 } from 'class-validator';
@@ -11,7 +11,7 @@ import { Type } from 'class-transformer';
 
 class NotificationMetaDto {
   @IsOptional()
-  @IsMongoId()
+  @IsUUID('4')
   actorId!: string;
 
   @IsOptional()
@@ -23,12 +23,12 @@ class NotificationMetaDto {
   image?: string;
 
   @IsOptional()
-  @IsMongoId()
+  @IsUUID('4')
   targetId!: string;
 }
 
 export class CreateNotificationDto {
-  @IsMongoId()
+  @IsUUID('4')
   userId!: string;
 
   @IsString()

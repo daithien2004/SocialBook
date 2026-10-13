@@ -1,4 +1,3 @@
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetModerationStatsQuery } from '@/modules/posts/application/posts/queries/get-moderation-stats/get-moderation-stats.query';
 
@@ -19,6 +18,7 @@ import {
   UploadedFiles,
   UseGuards,
   UseInterceptors,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
@@ -90,14 +90,10 @@ export class PostsController {
     @CurrentUser('id') userId: string,
     @Query() query: PaginationQueryDto,
   ) {
-    const limit = Math.min(query.actualLimit || 10, 100);
+    const limit = query.actualLimit;
     const postsQuery = new GetPostsQuery(limit, query.cursor, userId);
     const result = await this.queryBus.execute(postsQuery);
-    return paginated(PostResponseDto.fromArray(result.data), {
-      limit,
-      nextCursor: result.nextCursor,
-      hasMore: result.hasMore,
-    });
+    return { data: PostResponseDto.fromArray(result.data), meta: result.meta };
   }
 
   @Public()
@@ -107,7 +103,7 @@ export class PostsController {
     @CurrentUser('id') currentUserId: string,
     @Query() query: PaginationUserDto,
   ) {
-    const limit = Math.min(query.actualLimit || 10, 100);
+    const limit = query.actualLimit;
     const postsQuery = new GetPostsByUserQuery(
       query.userId,
       limit,
@@ -115,11 +111,7 @@ export class PostsController {
       currentUserId,
     );
     const result = await this.queryBus.execute(postsQuery);
-    return paginated(PostResponseDto.fromArray(result.data), {
-      limit,
-      nextCursor: result.nextCursor,
-      hasMore: result.hasMore,
-    });
+    return { data: PostResponseDto.fromArray(result.data), meta: result.meta };
   }
 
   @Public()
@@ -127,7 +119,7 @@ export class PostsController {
   @ApiOkResponse({ type: PostResponseDto })
   async findOne(
     @Query('userId') userId: string | undefined,
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
     const query = new GetPostQuery(id, userId);
     const data = await this.queryBus.execute(query);
@@ -177,7 +169,7 @@ export class PostsController {
     }),
   )
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() dto: UpdatePostDto,
     @UploadedFiles(
       new ParseFilePipe({
@@ -211,7 +203,7 @@ export class PostsController {
   @Delete(':id')
   @ApiNoContentResponse()
   async remove(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentUser('id') userId: string,
     @CurrentAbility() ability: AppAbility,
   ) {
@@ -226,7 +218,7 @@ export class PostsController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   async removeHard(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentUser('id') userId: string,
     @CurrentAbility() ability: AppAbility,
   ) {
@@ -239,7 +231,7 @@ export class PostsController {
   @Delete(':id/images')
   @ApiNoContentResponse()
   async removeImage(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body('imageUrl') imageUrl: string,
     @CurrentUser('id') userId: string,
     @CurrentAbility() ability: AppAbility,
@@ -257,7 +249,7 @@ export class PostsController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   async getFlaggedPosts(@Query() query: FlaggedPostsQueryDto) {
-    const limit = query.actualLimit > 100 ? 100 : query.actualLimit;
+    const limit = query.actualLimit;
     const flaggedQuery = new GetFlaggedPostsQuery(
       query.actualPage,
       limit,
@@ -267,7 +259,7 @@ export class PostsController {
       query.sortBy,
     );
     const result = await this.queryBus.execute(flaggedQuery);
-    return paginated(PostResponseDto.fromArray(result.data), result.meta);
+    return { data: PostResponseDto.fromArray(result.data), meta: result.meta };
   }
 
   @Get('admin/moderation/stats')
@@ -295,7 +287,9 @@ export class PostsController {
   @ApiNoContentResponse()
   @UseGuards(RolesGuard)
   @Roles('admin')
-  async approvePost(@Param('id') id: string) {
+  async approvePost(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const command = new ApprovePostCommand(id);
     await this.commandBus.execute(command);
     return undefined;
@@ -306,7 +300,9 @@ export class PostsController {
   @ApiNoContentResponse()
   @UseGuards(RolesGuard)
   @Roles('admin')
-  async rejectPost(@Param('id') id: string) {
+  async rejectPost(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const command = new RejectPostCommand(id, 'Rejected by admin');
     await this.commandBus.execute(command);
     return undefined;

@@ -1,9 +1,9 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { WsAuthService } from './core/ws-auth.service';
 
 import { ReadingRoomPresenceCoordinator } from './reading-room-presence.coordinator';
-import { ReadingProgressQueuePort } from '../../application/reading-progress-queue.port';
+import { IReadingProgressQueuePort } from '../../application/ports/external/reading-progress-queue.port';
 
 import { JoinRoomCommand } from '@/modules/reading-rooms/application/commands/join-room/join-room.command';
 import { LeaveRoomCommand } from '@/modules/reading-rooms/application/commands/leave-room/leave-room.command';
@@ -12,7 +12,7 @@ import { RoomSocket, SocketData, RoomSnapshot } from './reading-room.types';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { LeaveRoomDto } from './dto/leave-room.dto';
 import { HeartbeatDto } from './dto/heartbeat.dto';
-import { ReadingRoomServerEvent } from '../../reading-room.events';
+import { ReadingRoomServerEvent } from '../../reading-room.socket-events';
 
 import { toReadingRoomSnapshot } from './reading-room-snapshot.mapper';
 import { WsAckResponse } from '@/shared/platform/websocket/ws-ack.type';
@@ -29,7 +29,7 @@ export class ReadingRoomConnectionHandler {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly presenceCoordinator: ReadingRoomPresenceCoordinator,
-    private readonly progressQueue: ReadingProgressQueuePort,
+    private readonly progressQueue: IReadingProgressQueuePort,
     private readonly wsAuth: WsAuthService,
     private readonly namespaceProvider: ReadingRoomNamespaceProvider,
     private readonly userOperationLock: UserOperationLock,
@@ -194,7 +194,7 @@ export class ReadingRoomConnectionHandler {
    * 1. Cập nhật thời gian online cuối cùng của kết nối vào WsAuthService.
    * 2. Kiểm tra xem tab/socket này có đang bị "cướp quyền" bởi tab khác không (mất room channel). Nếu có, dừng xử lý.
    * 3. Ghi nhận thông tin hiện diện (tọa độ đọc, % tiến độ) vào PresenceCoordinator để không bị timeout.
-   * 4. Enqueue progress for BullMQ debounce by user/book/chapter and worker persistence to MongoDB.
+   * 4. Enqueue progress for BullMQ debounce by user/book/chapter and worker persistence to PostgreSQL.
    *
    * @param socket Socket của client.
    * @param sd Thông tin phiên hiện tại.

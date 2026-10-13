@@ -1,71 +1,44 @@
+import { Prisma } from '@/core/database/generated/prisma/client';
 import { Chapter as ChapterEntity } from '@/modules/chapters/domain/chapters/entities/chapter.entity';
-import { Types } from 'mongoose';
-import { RawParagraph } from '@/modules/books/infrastructure/repositories/books/public-api';
 
-export interface RawChapterDocument {
-  _id: Types.ObjectId;
-  bookId: Types.ObjectId;
-  title: string;
-  slug: string;
-  paragraphs: RawParagraph[];
-  viewsCount: number;
-  orderIndex: number;
-  version?: number;
-  createdAt: Date;
-  updatedAt: Date;
-  ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
-  audioUrl?: string;
-}
+export const CHAPTER_WITH_PARAGRAPHS = {
+  paragraphs: { orderBy: { orderIndex: 'asc' } },
+} satisfies Prisma.ChapterInclude;
 
-export interface RawChapterPersistence {
-  title: string;
-  slug: string;
-  bookId: Types.ObjectId;
-  paragraphs: RawParagraph[];
-  viewsCount: number;
-  orderIndex: number;
-  version: number;
-  updatedAt: Date | undefined;
-  ttsStatus?: 'pending' | 'processing' | 'completed' | 'failed';
-  audioUrl?: string;
-}
+export type ChapterWithParagraphs = Prisma.ChapterGetPayload<{
+  include: typeof CHAPTER_WITH_PARAGRAPHS;
+}>;
 
 export class ChapterMapper {
-  static toDomain(document: RawChapterDocument): ChapterEntity {
+  static toDomain(row: ChapterWithParagraphs): ChapterEntity {
     return ChapterEntity.reconstitute({
-      id: document._id.toString(),
-      title: document.title,
-      slug: document.slug,
-      bookId: document.bookId?.toString() || '',
-      paragraphs: (document.paragraphs || []).map((p) => ({
-        id: p._id?.toString(),
-        content: p.content,
-      })),
-      viewsCount: document.viewsCount || 0,
-      orderIndex: document.orderIndex || 0,
-      createdAt: document.createdAt,
-      updatedAt: document.updatedAt,
-      version: document.version,
-      ttsStatus: document.ttsStatus,
-      audioUrl: document.audioUrl,
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      bookId: row.bookId,
+      paragraphs: row.paragraphs.map(({ id, content }) => ({ id, content })),
+      viewsCount: row.viewsCount,
+      orderIndex: row.orderIndex,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      version: row.version,
+      ttsStatus: this.toTtsStatus(row.ttsStatus),
+      audioUrl: row.audioUrl ?? undefined,
     });
   }
 
-  static toPersistence(chapter: ChapterEntity): RawChapterPersistence {
-    return {
-      title: chapter.title.toString(),
-      slug: chapter.slug,
-      bookId: new Types.ObjectId(chapter.bookId.toString()),
-      paragraphs: chapter.paragraphs.map((p) => ({
-        _id: new Types.ObjectId(p.id),
-        content: p.content,
-      })),
-      viewsCount: chapter.viewsCount,
-      orderIndex: chapter.orderIndex.getValue(),
-      updatedAt: chapter.updatedAt,
-      version: chapter.loadedVersion,
-      ttsStatus: chapter.ttsStatus,
-      audioUrl: chapter.audioUrl,
-    };
+  static toTtsStatus(
+    value: string | null,
+  ): 'pending' | 'processing' | 'completed' | 'failed' | undefined {
+    switch (value) {
+      case 'pending':
+      case 'processing':
+      case 'completed':
+      case 'failed':
+        return value;
+      case null:
+      default:
+        return undefined;
+    }
   }
 }

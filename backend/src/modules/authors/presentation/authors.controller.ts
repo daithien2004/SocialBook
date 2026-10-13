@@ -1,4 +1,3 @@
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 import {
   ApiFileUpload,
   Public,
@@ -17,6 +16,7 @@ import {
   Query,
   UploadedFile,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { AuthorResponseDto } from './dto/author.response.dto';
@@ -33,6 +33,7 @@ import {
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { ApiPaginatedResponse } from '@/shared/platform/decorators/api-response.decorators';
+import { paginate } from '@/shared/domain/pagination.types';
 
 @ApiProblemResponses()
 @Controller('authors')
@@ -65,22 +66,20 @@ export class AuthorsController {
   @UseGuards(RolesGuard)
   async findAll(@Query() filter: FilterAuthorDto) {
     const result = await this.authorsService.findAll(
-      filter.actualPage,
-      filter.actualLimit,
+      { offset: filter.effectiveOffset, limit: filter.actualLimit },
       filter.name,
       filter.bio,
     );
 
-    return paginated(
-      result.data.map((author) => new AuthorResponseDto(author)),
-      result.meta,
+    return paginate(result.items, result.total, filter, (authors) =>
+      authors.map((author) => new AuthorResponseDto(author)),
     );
   }
 
   @Get(':id')
   @Public()
   @ApiOkResponse({ type: AuthorResponseDto })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     const author = await this.authorsService.findById(id);
     return new AuthorResponseDto(author);
   }
@@ -91,7 +90,7 @@ export class AuthorsController {
   @UseGuards(RolesGuard)
   @ApiFileUpload('photoUrl')
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateAuthorDto: UpdateAuthorDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
@@ -109,7 +108,7 @@ export class AuthorsController {
   @ApiNoContentResponse()
   @Roles('admin')
   @UseGuards(RolesGuard)
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     await this.authorsService.delete(id);
     return undefined;
   }
@@ -118,11 +117,11 @@ export class AuthorsController {
   @Public()
   @ApiPaginatedResponse(AuthorResponseDto, 'offset')
   async getForSelect() {
-    const result = await this.authorsService.findAll(1, 1000);
+    const pagination = { actualPage: 1, actualLimit: 100 };
+    const result = await this.authorsService.findAll({ offset: 0, limit: 100 });
 
-    return paginated(
-      result.data.map((author) => new AuthorResponseDto(author)),
-      result.meta,
+    return paginate(result.items, result.total, pagination, (authors) =>
+      authors.map((author) => new AuthorResponseDto(author)),
     );
   }
 

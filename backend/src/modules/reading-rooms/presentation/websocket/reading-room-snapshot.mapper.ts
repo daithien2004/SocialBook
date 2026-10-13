@@ -1,5 +1,5 @@
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.interface';
-import { PresenceData } from '@/modules/reading-rooms/domain/interfaces/presence-cache.port';
+import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import { PresenceData } from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
 import { RoomSnapshot } from './reading-room.types';
 
 export function toReadingRoomSnapshot(

@@ -5,11 +5,3 @@ export { IReadingListRepository } from './domain/library/repositories/reading-li
 export { IReadingProgressRepository } from './domain/library/repositories/reading-progress.repository.interface';
 export { ReadingList } from './domain/library/entities/reading-list.entity';
 export { ReadingProgress } from './domain/library/entities/reading-progress.entity';
-export {
-  ReadingList as ReadingListSchemaModel,
-  ReadingListSchema,
-} from './infrastructure/schemas/reading-list.schema';
-export {
-  Collection as CollectionSchemaModel,
-  CollectionSchema,
-} from './infrastructure/schemas/collection.schema';

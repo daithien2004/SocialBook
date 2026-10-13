@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
@@ -54,11 +55,17 @@ export class NotificationController {
 
     const result = await this.queryBus.execute(query);
 
-    return unpaginated(
-      result.map(
-        (notification: any) => new NotificationResponseDto(notification),
-      ),
+    const data = result.map(
+      (notification: any) => new NotificationResponseDto(notification),
     );
+    return {
+      data: data,
+      meta: buildPaginationMeta(
+        filter.actualPage,
+        Math.max(data.length, 1),
+        data.length,
+      ),
+    };
   }
 
   @Patch('read-all')
@@ -73,7 +80,10 @@ export class NotificationController {
   @Patch(':id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
-  async markRead(@Param('id') id: string, @CurrentUser('id') userId: string) {
+  async markRead(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentUser('id') userId: string,
+  ) {
     const command = new MarkNotificationReadCommand(userId, id);
     await this.commandBus.execute(command);
     return undefined;

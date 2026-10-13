@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { BookmarksService } from '../application/bookmarks.service';
 
 import {
@@ -10,6 +10,7 @@ import {
   Param,
   Body,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
@@ -82,7 +83,8 @@ export class BookmarkController {
   @ApiNoContentResponse()
   async deleteBookmark(
     @CurrentUser('id') userId: string,
-    @Param('paragraphId') paragraphId: string,
+    @Param('paragraphId', new ParseUUIDPipe({ version: '4' }))
+    paragraphId: string,
   ) {
     await this.bookmarksService.delete(userId, paragraphId);
     return undefined;
@@ -92,19 +94,21 @@ export class BookmarkController {
   @ApiPaginatedResponse(BookmarkResponseDto, 'offset')
   async getBookmarksByBook(
     @CurrentUser('id') userId: string,
-    @Param('bookId') bookId: string,
+    @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ) {
     const bookmarks = await this.bookmarksService.findByBook(userId, bookId);
-    return unpaginated(
-      bookmarks.map((b) => ({
-        id: b.id,
-        userId: b.userId,
-        bookId: b.bookId,
-        chapterId: b.chapterId,
-        chapterSlug: b.chapterSlug,
-        paragraphId: b.paragraphId,
-        textPreview: b.textPreview,
-      })),
-    );
+    const data = bookmarks.map((b) => ({
+      id: b.id,
+      userId: b.userId,
+      bookId: b.bookId,
+      chapterId: b.chapterId,
+      chapterSlug: b.chapterSlug,
+      paragraphId: b.paragraphId,
+      textPreview: b.textPreview,
+    }));
+    return {
+      data: data,
+      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
+    };
   }
 }

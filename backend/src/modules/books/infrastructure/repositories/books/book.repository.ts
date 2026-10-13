@@ -1,3 +1,8 @@
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
+import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 import {
   buildPaginationMeta,
   PaginatedResult,
@@ -15,98 +20,120 @@ import {
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
 import { GenreId } from '@/modules/books/domain/books/value-objects/genre-id.vo';
-import { Injectable } from '@nestjs/common';
-import { ConcurrencyException } from '@/shared/domain/common-exceptions';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, PipelineStage, Types } from 'mongoose';
-import { Book, BookDocument } from '../../schemas/book.schema';
-import { BookMapper, RawBookDocument } from './book.mapper';
-import { MongoSessionContext } from '@/core/database/mongo-session.context';
+import { BOOK_WITH_RELATIONS, PrismaBookMapper } from './prisma-book.mapper';
+
+const MAX_PAGE_SIZE = 10_000;
+
+export function buildBookFilter(filter: BookFilter): Prisma.BookWhereInput {
+  return {
+    isDeleted: false,
+    ...(filter.title
+      ? { title: { contains: filter.title, mode: 'insensitive' } }
+      : {}),
+    ...(filter.authorIds?.length
+      ? { authorId: { in: filter.authorIds } }
+      : filter.authorId
+        ? { authorId: filter.authorId }
+        : {}),
+    ...(filter.genres?.length
+      ? { genres: { some: { genreId: { in: filter.genres } } } }
+      : {}),
+    ...(filter.tags?.length ? { tags: { hasSome: filter.tags } } : {}),
+    ...(filter.status ? { status: filter.status } : {}),
+    ...(filter.search
+      ? {
+          OR: [
+            { title: { contains: filter.search, mode: 'insensitive' } },
+            { description: { contains: filter.search, mode: 'insensitive' } },
+            { tags: { has: filter.search } },
+          ],
+        }
+      : {}),
+    ...(filter.publishedYear ? { publishedYear: filter.publishedYear } : {}),
+    ...(filter.ids?.length ? { id: { in: filter.ids } } : {}),
+  };
+}
+
+export function buildBookSort(
+  sort?: SortOptions,
+): Prisma.BookOrderByWithRelationInput[] {
+  const direction = sort?.order === 'asc' ? 'asc' : 'desc';
+  switch (sort?.sortBy) {
+    case undefined:
+      return [{ createdAt: direction }, { id: direction }];
+    case 'title':
+      return [{ title: direction }, { id: direction }];
+    case 'updatedAt':
+      return [{ updatedAt: direction }, { id: direction }];
+    case 'views':
+      return [{ views: direction }, { id: direction }];
+    case 'likes':
+      return [{ likes: direction }, { id: direction }];
+    case 'publishedYear':
+      return [{ publishedYear: direction }, { id: direction }];
+    case 'createdAt':
+    default:
+      return [{ createdAt: direction }, { id: direction }];
+  }
+}
 
 @Injectable()
 export class BookRepository implements IBookRepository {
   constructor(
-    @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
-    private readonly sessionContext: MongoSessionContext,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
-  async findUnindexedBooks(limit: number): Promise<BookEntity[]> {
-    const documents = await this.bookModel
-      .find({
-        status: 'published',
-        $or: [
-          { vectorIndexedAt: null },
-          { vectorIndexedAt: { $exists: false } },
-        ],
-      })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .populate<{ genres: RawBookDocument['genres'] }>('genres')
-      .lean<RawBookDocument[]>()
-      .exec();
+  private get client(): Prisma.TransactionClient {
+    return this.transactionHost.tx;
+  }
 
-    return documents.map((doc) => BookMapper.toDomain(doc));
+  private inTransaction<T>(
+    operation: (client: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    if (this.transactionHost.isTransactionActive()) {
+      return operation(this.transactionHost.tx);
+    }
+    return this.transactionHost.withTransaction(() =>
+      operation(this.transactionHost.tx),
+    );
+  }
+
+  async findUnindexedBooks(limit: number): Promise<BookEntity[]> {
+    const rows = await this.client.book.findMany({
+      where: {
+        status: 'published',
+        isDeleted: false,
+        vectorIndexedAt: null,
+      },
+      include: BOOK_WITH_RELATIONS,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+    });
+    return rows.map((row) => PrismaBookMapper.toDomain(row));
   }
 
   async findById(id: BookId): Promise<BookEntity | null> {
-    const document = await this.bookModel
-      .findById(id.toString())
-      .populate<{ genres: RawBookDocument['genres'] }>('genres')
-      .lean<RawBookDocument>()
-      .exec();
-    return document ? BookMapper.toDomain(document) : null;
+    const row = await this.client.book.findFirst({
+      where: { id: id.toString(), isDeleted: false },
+      include: BOOK_WITH_RELATIONS,
+    });
+    return row ? PrismaBookMapper.toDomain(row) : null;
   }
 
   async findBySlug(slug: string): Promise<BookEntity | null> {
-    const document = await this.bookModel
-      .findOne({ slug, isDeleted: false })
-      .populate<{ genres: RawBookDocument['genres'] }>('genres')
-      .lean<RawBookDocument>()
-      .exec();
-    return document ? BookMapper.toDomain(document) : null;
+    const row = await this.client.book.findFirst({
+      where: { slug, isDeleted: false },
+      include: BOOK_WITH_RELATIONS,
+    });
+    return row ? PrismaBookMapper.toDomain(row) : null;
   }
 
   async findByTitle(title: BookTitle): Promise<BookEntity | null> {
-    const document = await this.bookModel
-      .findOne({ title: title.toString(), isDeleted: false })
-      .lean<RawBookDocument>()
-      .exec();
-    return document ? BookMapper.toDomain(document) : null;
-  }
-
-  private buildQueryFilter(filter: BookFilter): FilterQuery<BookDocument> {
-    const queryFilter: FilterQuery<BookDocument> = { isDeleted: false };
-
-    if (filter.title) {
-      queryFilter.title = { $regex: filter.title, $options: 'i' };
-    }
-    if (filter.authorIds && filter.authorIds.length > 0) {
-      queryFilter.authorId = {
-        $in: filter.authorIds.map((id) => new Types.ObjectId(id)),
-      };
-    } else if (filter.authorId) {
-      queryFilter.authorId = new Types.ObjectId(filter.authorId);
-    }
-    if (filter.genres && filter.genres.length > 0) {
-      queryFilter.genres = { $in: filter.genres };
-    }
-    if (filter.tags && filter.tags.length > 0) {
-      queryFilter.tags = { $in: filter.tags };
-    }
-    if (filter.status) {
-      queryFilter.status = filter.status;
-    }
-    if (filter.search) {
-      queryFilter.$text = { $search: filter.search };
-    }
-    if (filter.publishedYear) {
-      queryFilter.publishedYear = filter.publishedYear;
-    }
-    if (filter.ids && filter.ids.length > 0) {
-      queryFilter._id = { $in: filter.ids.map((id) => new Types.ObjectId(id)) };
-    }
-
-    return queryFilter;
+    const row = await this.client.book.findFirst({
+      where: { title: title.toString(), isDeleted: false },
+      include: BOOK_WITH_RELATIONS,
+    });
+    return row ? PrismaBookMapper.toDomain(row) : null;
   }
 
   async findAll(
@@ -114,109 +141,24 @@ export class BookRepository implements IBookRepository {
     pagination: PaginationOptions,
     sort?: SortOptions,
   ): Promise<PaginatedResult<BookEntity>> {
-    const queryFilter = this.buildQueryFilter(filter);
-    const skip = (pagination.page - 1) * pagination.limit;
-    const total = await this.bookModel.countDocuments(queryFilter).exec();
-
-    let query = this.bookModel.find(queryFilter);
-
-    if (sort?.sortBy) {
-      const sortOrder = sort.order === 'desc' ? -1 : 1;
-      query = query.sort({ [sort.sortBy]: sortOrder });
-    } else {
-      query = query.sort({ createdAt: -1 });
-    }
-
-    const documents = (await query
-      .skip(skip)
-      .limit(pagination.limit)
-      .populate('authorId', 'name')
-      .populate('genres', 'name slug')
-      .lean()
-      .exec()) as unknown as RawBookDocument[];
-
+    const where = buildBookFilter(filter);
+    const page = Math.max(1, Math.trunc(pagination.page || 1));
+    const limit = Math.min(
+      Math.max(1, Math.trunc(pagination.limit || 10)),
+      MAX_PAGE_SIZE,
+    );
+    const [rows, total] = await Promise.all([
+      this.client.book.findMany({
+        where,
+        include: BOOK_WITH_RELATIONS,
+        orderBy: buildBookSort(sort),
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.client.book.count({ where }),
+    ]);
     return {
-      data: documents.map((doc) => BookMapper.toDomain(doc)),
-      meta: buildPaginationMeta(pagination.page, pagination.limit, total),
-    };
-  }
-
-  async findAllList(
-    filter: BookFilter,
-    pagination: PaginationOptions,
-    sort?: SortOptions,
-  ): Promise<PaginatedResult<BookListReadModel>> {
-    const queryFilter = this.buildQueryFilter(filter);
-
-    const postFacetStages: PipelineStage.FacetPipelineStage[] = [
-      {
-        $lookup: {
-          from: 'genres',
-          localField: 'genres',
-          foreignField: '_id',
-          as: 'genres',
-        },
-      },
-      {
-        $lookup: {
-          from: 'authors',
-          localField: 'authorId',
-          foreignField: '_id',
-          pipeline: [{ $project: { _id: 1, name: 1 } }],
-          as: '_authorArr',
-        },
-      },
-      {
-        $addFields: {
-          authorId: { $arrayElemAt: ['$_authorArr', 0] },
-        },
-      },
-      {
-        $lookup: {
-          from: 'chapters',
-          localField: '_id',
-          foreignField: 'bookId',
-          pipeline: [{ $project: { _id: 1 } }],
-          as: '_chapters',
-        },
-      },
-      {
-        $addFields: {
-          chapterCount: { $size: '$_chapters' },
-        },
-      },
-      { $project: { _chapters: 0, _authorArr: 0 } },
-    ];
-
-    const page = Math.max(1, pagination.page || 1);
-    const limit = Math.min(Math.max(1, pagination.limit || 10), 10000);
-    const sortOrder = sort?.order === 'asc' ? 1 : -1;
-    const sortStage: Record<string, 1 | -1> = sort?.sortBy
-      ? { [sort.sortBy]: sortOrder }
-      : { createdAt: -1 };
-    const [result] = await this.bookModel
-      .aggregate<{
-        metadata: Array<{ total: number }>;
-        data: RawBookDocument[];
-      }>([
-        { $match: queryFilter },
-        {
-          $facet: {
-            metadata: [{ $count: 'total' }],
-            data: [
-              { $sort: sortStage },
-              { $skip: (page - 1) * limit },
-              { $limit: limit },
-              ...postFacetStages,
-            ],
-          },
-        },
-      ])
-      .exec();
-    const total = result.metadata[0]?.total ?? 0;
-
-    return {
-      data: result.data.map((document) => BookMapper.toListReadModel(document)),
+      data: rows.map((row) => PrismaBookMapper.toDomain(row)),
       meta: buildPaginationMeta(page, limit, total),
     };
   }
@@ -229,348 +171,304 @@ export class BookRepository implements IBookRepository {
     return this.findAll({ genres: [genreId.toString()] }, pagination, sort);
   }
 
-  async findPopular(
+  findPopular(
     pagination: PaginationOptions,
   ): Promise<PaginatedResult<BookEntity>> {
     return this.findAll({}, pagination, { sortBy: 'likes', order: 'desc' });
   }
 
   async save(book: BookEntity): Promise<void> {
-    const persistenceData = BookMapper.toPersistence(book);
-    const id = new Types.ObjectId(book.id.toString());
+    const data = PrismaBookMapper.persistenceData(book);
+    const { genres, likesByUser, ...fields } = data;
 
     if (book.isNew) {
-      const session = this.sessionContext.currentSession;
-      await this.bookModel.create(
-        [{ ...persistenceData, _id: id, version: 0 }],
-        { session },
-      );
-      if (!session) book.markPersisted(0);
+      await this.client.book.create({
+        data: { ...fields, genres, likesByUser },
+      });
+      book.markPersisted(0);
       return;
     }
-
     if (!book.isDirty) return;
 
     const nextVersion = book.loadedVersion + 1;
-    const filter: FilterQuery<BookDocument> = {
-      _id: id,
-      version: book.loadedVersion,
-    };
-    if (book.loadedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
+    await this.inTransaction(async (transaction) => {
+      const result = await transaction.book.updateMany({
+        where: {
+          id: book.id.toString(),
+          version: book.loadedVersion,
+          isDeleted: false,
+        },
+        data: { ...fields, version: nextVersion },
+      });
+      if (result.count === 0) {
+        throw new ConcurrencyException('Book changed after it was loaded');
+      }
 
-    const query = this.bookModel.updateOne(filter, {
-      $set: { ...persistenceData, version: nextVersion },
+      await transaction.bookGenre.deleteMany({
+        where: { bookId: book.id.toString() },
+      });
+      await transaction.bookLike.deleteMany({
+        where: { bookId: book.id.toString() },
+      });
+      if (book.genres.length > 0) {
+        await transaction.bookGenre.createMany({
+          data: book.genres.map((genreId) => ({
+            bookId: book.id.toString(),
+            genreId: genreId.toString(),
+          })),
+        });
+      }
+      if (book.likedBy.length > 0) {
+        await transaction.bookLike.createMany({
+          data: book.likedBy.map((userId) => ({
+            bookId: book.id.toString(),
+            userId,
+          })),
+        });
+      }
     });
-    if (this.sessionContext.currentSession) {
-      query.session(this.sessionContext.currentSession);
-    }
-    const result = await query.exec();
-
-    if (result.matchedCount === 0) {
-      throw new ConcurrencyException('Book changed after it was loaded');
-    }
-
-    if (!this.sessionContext.currentSession) {
-      book.markPersisted(nextVersion);
-    }
+    book.markPersisted(nextVersion);
   }
 
   async delete(id: BookId, expectedVersion: number): Promise<void> {
-    const filter: FilterQuery<BookDocument> = {
-      _id: new Types.ObjectId(id.toString()),
-      version: expectedVersion,
-    };
-    if (expectedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
-
-    const query = this.bookModel.deleteOne(filter);
-    if (this.sessionContext.currentSession) {
-      query.session(this.sessionContext.currentSession);
-    }
-    const result = await query.exec();
-    if (result.deletedCount === 0) {
+    const result = await this.client.book.deleteMany({
+      where: { id: id.toString(), version: expectedVersion },
+    });
+    if (result.count === 0) {
       throw new ConcurrencyException('Book changed before it was deleted');
     }
   }
 
   async softDelete(id: BookId, expectedVersion: number): Promise<void> {
-    const filter: FilterQuery<BookDocument> = {
-      _id: new Types.ObjectId(id.toString()),
-      version: expectedVersion,
-    };
-    if (expectedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
-
-    const query = this.bookModel.updateOne(filter, {
-      $set: {
+    const result = await this.client.book.updateMany({
+      where: {
+        id: id.toString(),
+        version: expectedVersion,
+        isDeleted: false,
+      },
+      data: {
         isDeleted: true,
         deletedAt: new Date(),
         updatedAt: new Date(),
         version: expectedVersion + 1,
       },
     });
-    if (this.sessionContext.currentSession) {
-      query.session(this.sessionContext.currentSession);
-    }
-    const result = await query.exec();
-    if (result.matchedCount === 0) {
+    if (result.count === 0) {
       throw new ConcurrencyException('Book changed before it was deleted');
     }
   }
 
   async existsByTitle(title: BookTitle, excludeId?: BookId): Promise<boolean> {
-    const query: FilterQuery<BookDocument> = {
-      title: title.toString(),
-      isDeleted: false,
-    };
-
-    if (excludeId) {
-      query._id = { $ne: excludeId.toString() };
-    }
-
-    const count = await this.bookModel.countDocuments(query).exec();
-    return count > 0;
+    const row = await this.client.book.findFirst({
+      where: {
+        title: title.toString(),
+        isDeleted: false,
+        ...(excludeId ? { id: { not: excludeId.toString() } } : {}),
+      },
+      select: { id: true },
+    });
+    return row !== null;
   }
 
   async existsById(id: string): Promise<boolean> {
-    const count = await this.bookModel
-      .countDocuments({ _id: id, isDeleted: false })
-      .exec();
-    return count > 0;
+    const row = await this.client.book.findFirst({
+      where: { id, isDeleted: false },
+      select: { id: true },
+    });
+    return row !== null;
+  }
+
+  async touchIfActive(id: BookId): Promise<boolean> {
+    const result = await this.client.book.updateMany({
+      where: { id: id.toString(), isDeleted: false },
+      data: { roomReferenceRevision: { increment: 1 } },
+    });
+    return result.count > 0;
   }
 
   async incrementViews(id: BookId): Promise<void> {
-    await this.bookModel
-      .findByIdAndUpdate(id.toString(), {
-        $inc: { views: 1, version: 1 },
-        updatedAt: new Date(),
-      })
-      .exec();
+    await this.client.book.updateMany({
+      where: { id: id.toString(), isDeleted: false },
+      data: { views: { increment: 1 }, version: { increment: 1 } },
+    });
   }
 
   async addLike(id: BookId, userId: string): Promise<void> {
-    await this.bookModel
-      .findByIdAndUpdate(id.toString(), {
-        $inc: { likes: 1, version: 1 },
-        $addToSet: { likedBy: userId },
-        updatedAt: new Date(),
-      })
-      .exec();
+    await this.inTransaction(async (transaction) => {
+      const inserted = await transaction.bookLike.createMany({
+        data: [{ bookId: id.toString(), userId }],
+        skipDuplicates: true,
+      });
+      if (inserted.count > 0) {
+        await transaction.book.updateMany({
+          where: { id: id.toString(), isDeleted: false },
+          data: { likes: { increment: 1 }, version: { increment: 1 } },
+        });
+      }
+    });
   }
 
   async removeLike(id: BookId, userId: string): Promise<void> {
-    await this.bookModel
-      .findByIdAndUpdate(id.toString(), {
-        $inc: { likes: -1, version: 1 },
-        $pull: { likedBy: userId },
-        updatedAt: new Date(),
-      })
-      .exec();
+    await this.inTransaction(async (transaction) => {
+      const removed = await transaction.bookLike.deleteMany({
+        where: { bookId: id.toString(), userId },
+      });
+      if (removed.count > 0) {
+        await transaction.book.updateMany({
+          where: { id: id.toString(), likes: { gt: 0 } },
+          data: { likes: { decrement: 1 }, version: { increment: 1 } },
+        });
+      }
+    });
   }
 
-  async countByGenre(genreId: string): Promise<number> {
-    return await this.bookModel
-      .countDocuments({
-        genres: { $in: [genreId] },
+  countByGenre(genreId: string): Promise<number> {
+    return this.client.book.count({
+      where: {
         isDeleted: false,
-      })
-      .exec();
+        genres: { some: { genreId } },
+      },
+    });
   }
 
-  // Statistics
-  async countTotal(): Promise<number> {
-    return await this.bookModel.countDocuments({ isDeleted: false }).exec();
+  countTotal(): Promise<number> {
+    return this.client.book.count({ where: { isDeleted: false } });
   }
 
   async countByGenreName(): Promise<
     Array<{ id: string; name: string; slug: string; count: number }>
   > {
-    const result = await this.bookModel
-      .aggregate<{
-        _id: Types.ObjectId;
-        name: string;
-        slug: string;
-        count: number;
-      }>([
-        { $match: { isDeleted: false } },
-        { $unwind: '$genres' },
-        {
-          $lookup: {
-            from: 'genres',
-            localField: 'genres',
-            foreignField: '_id',
-            as: 'genreInfo',
-          },
-        },
-        { $unwind: '$genreInfo' },
-        {
-          $group: {
-            _id: '$genreInfo._id',
-            name: { $first: '$genreInfo.name' },
-            slug: { $first: '$genreInfo.slug' },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { count: -1 } },
-      ])
-      .exec();
-
-    return result.map((item) => ({
-      id: item._id.toString(),
-      name: item.name,
-      slug: item.slug,
-      count: item.count,
-    }));
+    const groups = await this.client.bookGenre.groupBy({
+      by: ['genreId'],
+      where: { book: { isDeleted: false } },
+      _count: { _all: true },
+    });
+    const genres = await this.client.genre.findMany({
+      where: { id: { in: groups.map((group) => group.genreId) } },
+      select: { id: true, name: true, slug: true },
+    });
+    const counts = new Map(
+      groups.map((group) => [group.genreId, group._count._all]),
+    );
+    return genres
+      .map((genre) => ({
+        ...genre,
+        count: counts.get(genre.id) ?? 0,
+      }))
+      .sort((left, right) => right.count - left.count);
   }
 
-  async countByTags(): Promise<Array<{ name: string; count: number }>> {
-    const result = await this.bookModel
-      .aggregate<{ _id: string; count: number }>([
-        {
-          $match: {
-            isDeleted: false,
-            tags: { $exists: true, $not: { $size: 0 } },
-          },
-        },
-        { $unwind: '$tags' },
-        {
-          $group: {
-            _id: '$tags',
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { count: -1 } },
-      ])
-      .exec();
-
-    return result.map((item) => ({
-      name: item._id,
-      count: item.count,
-    }));
+  countByTags(): Promise<Array<{ name: string; count: number }>> {
+    return this.client.$queryRaw<Array<{ name: string; count: number }>>(
+      Prisma.sql`SELECT tag AS name, COUNT(*)::int AS count
+        FROM "books" CROSS JOIN LATERAL unnest("tags") AS tag
+        WHERE "isDeleted" = false
+        GROUP BY tag ORDER BY count DESC`,
+    );
   }
 
   async findByIds(ids: BookId[]): Promise<BookEntity[]> {
-    const objectIds = ids.map((id) => id.toString());
-    const documents = (await this.bookModel
-      .find({
-        _id: { $in: objectIds },
-        isDeleted: false,
-      })
-      .populate('authorId', 'name avatar')
-      .populate('genres', 'name slug')
-      .lean()
-      .exec()) as unknown as RawBookDocument[];
-
-    return documents.map((doc) => BookMapper.toDomain(doc));
+    if (ids.length === 0) return [];
+    const rows = await this.client.book.findMany({
+      where: { id: { in: ids.map((id) => id.toString()) }, isDeleted: false },
+      include: BOOK_WITH_RELATIONS,
+    });
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    return ids.flatMap((id) => {
+      const row = byId.get(id.toString());
+      return row ? [PrismaBookMapper.toDomain(row)] : [];
+    });
   }
 
   async findIdsByFilter(filter: BookFilter): Promise<string[]> {
-    const queryFilter = this.buildQueryFilter(filter);
-    const documents = await this.bookModel
-      .find(queryFilter, { _id: 1 })
-      .lean()
-      .exec();
-
-    return documents.map((doc) => doc._id.toString());
+    const rows = await this.client.book.findMany({
+      where: buildBookFilter(filter),
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
   }
 
   async findSearchCandidates(
     filter: BookFilter,
     limit: number,
   ): Promise<BookSearchCandidate[]> {
-    const queryFilter = this.buildQueryFilter(filter);
-    const documents = (await this.bookModel
-      .find(queryFilter)
-      .select('_id title authorId description')
-      .limit(limit)
-      .populate('authorId', 'name')
-      .lean()
-      .exec()) as unknown as Array<{
-      _id: Types.ObjectId;
-      title: string;
-      authorId: { name: string } | null;
-      description?: string;
-    }>;
-
-    return documents.map((doc) => ({
-      id: doc._id.toString(),
-      title: doc.title,
-      authorName: doc.authorId?.name,
-      description: doc.description,
+    const rows = await this.client.book.findMany({
+      where: buildBookFilter(filter),
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        author: { select: { name: true } },
+      },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      authorName: row.author.name,
     }));
   }
 
   async getFilters(): Promise<BookFilters> {
-    const [genresResult, tagsResult] = await Promise.all([
-      this.bookModel
-        .aggregate<{ id: string; name: string; slug: string; count: number }>([
-          { $match: { isDeleted: false, status: 'published' } },
-          { $unwind: '$genres' },
-          {
-            $lookup: {
-              from: 'genres',
-              localField: 'genres',
-              foreignField: '_id',
-              as: 'genreInfo',
-            },
-          },
-          { $unwind: '$genreInfo' },
-          {
-            $group: {
-              _id: '$genreInfo._id',
-              name: { $first: '$genreInfo.name' },
-              slug: { $first: '$genreInfo.slug' },
-              count: { $sum: 1 },
-            },
-          },
-          { $sort: { count: -1 } },
-          { $limit: 20 },
-          {
-            $project: {
-              _id: 0,
-              id: '$_id',
-              name: 1,
-              slug: 1,
-              count: 1,
-            },
-          },
-        ])
-        .exec(),
-      this.bookModel
-        .aggregate<{ name: string; count: number }>([
-          { $match: { isDeleted: false, status: 'published' } },
-          { $unwind: '$tags' },
-          {
-            $group: {
-              _id: '$tags',
-              count: { $sum: 1 },
-            },
-          },
-          { $sort: { count: -1 } },
-          { $limit: 20 },
-          {
-            $project: {
-              _id: 0,
-              name: '$_id',
-              count: 1,
-            },
-          },
-        ])
-        .exec(),
+    const [genres, tags] = await Promise.all([
+      this.client.bookGenre.groupBy({
+        by: ['genreId'],
+        where: { book: { isDeleted: false, status: 'published' } },
+        _count: { _all: true },
+        orderBy: { _count: { genreId: 'desc' } },
+        take: 20,
+      }),
+      this.client.$queryRaw<Array<{ name: string; count: number }>>(
+        Prisma.sql`SELECT tag AS name, COUNT(*)::int AS count
+          FROM "books" CROSS JOIN LATERAL unnest("tags") AS tag
+          WHERE "isDeleted" = false AND "status" = 'published'
+          GROUP BY tag ORDER BY count DESC LIMIT 20`,
+      ),
     ]);
+    const genreRows = await this.client.genre.findMany({
+      where: { id: { in: genres.map((item) => item.genreId) } },
+      select: { id: true, name: true, slug: true },
+    });
+    const counts = new Map(
+      genres.map((item) => [item.genreId, item._count._all]),
+    );
+    const genreById = new Map(genreRows.map((genre) => [genre.id, genre]));
 
     return {
-      genres: genresResult.map((g) => ({
-        id: g.id,
-        name: g.name,
-        slug: g.slug,
-        count: g.count,
-      })),
-      tags: tagsResult,
+      genres: genres.flatMap((item) => {
+        const genre = genreById.get(item.genreId);
+        return genre ? [{ ...genre, count: counts.get(genre.id) ?? 0 }] : [];
+      }),
+      tags,
+    };
+  }
+
+  async findAllList(
+    filter: BookFilter,
+    pagination: PaginationOptions,
+    sort?: SortOptions,
+  ): Promise<PaginatedResult<BookListReadModel>> {
+    const page = Math.max(1, Math.trunc(pagination.page || 1));
+    const limit = Math.min(
+      Math.max(1, Math.trunc(pagination.limit || 10)),
+      MAX_PAGE_SIZE,
+    );
+    const where = buildBookFilter(filter);
+    const [rows, total] = await Promise.all([
+      this.client.book.findMany({
+        where,
+        include: BOOK_WITH_RELATIONS,
+        orderBy: buildBookSort(sort),
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.client.book.count({ where }),
+    ]);
+    return {
+      data: rows.map((row) => PrismaBookMapper.toListReadModel(row)),
+      meta: buildPaginationMeta(page, limit, total),
     };
   }
 }

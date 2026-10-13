@@ -12,15 +12,27 @@ import { UpdateChapterCommand } from './update-chapter.command';
 import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
 import { ChapterResult } from '../../queries/get-chapters/get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
+import { IReadingRoomReferencePort } from '@/modules/reading-rooms/application/public-api';
+import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
 
 @CommandHandler(UpdateChapterCommand)
 export class UpdateChapterHandler implements ICommandHandler<
   UpdateChapterCommand,
   ChapterResult
 > {
-  constructor(private readonly chapterRepository: IChapterRepository) {}
+  constructor(
+    private readonly chapterRepository: IChapterRepository,
+    private readonly readingRoomReferences: IReadingRoomReferencePort,
+    private readonly unitOfWork: UnitOfWorkPort,
+  ) {}
 
   async execute(command: UpdateChapterCommand): Promise<ChapterResult> {
+    return this.unitOfWork.execute(() => this.updateChapter(command));
+  }
+
+  private async updateChapter(
+    command: UpdateChapterCommand,
+  ): Promise<ChapterResult> {
     const chapterId = ChapterId.create(command.id);
 
     const chapter = await this.chapterRepository.findById(chapterId);
@@ -47,6 +59,16 @@ export class UpdateChapterHandler implements ICommandHandler<
       }
 
       chapter.changeTitle(command.title);
+    }
+
+    if (
+      command.bookId !== undefined &&
+      command.bookId !== chapter.bookId.toString() &&
+      (await this.readingRoomReferences.hasActiveRoomForChapter(command.id))
+    ) {
+      throw new ConflictDomainException(
+        'Không thể chuyển chương đang được phòng đọc sử dụng sang sách khác',
+      );
     }
 
     if (command.bookId !== undefined) {

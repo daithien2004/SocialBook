@@ -67,7 +67,7 @@ export class Comment extends Entity<CommentId> {
   static reconstitute(props: {
     id: string;
     userId: string;
-    targetType: 'book' | 'chapter' | 'post' | 'author' | 'paragraph';
+    targetType: string;
     targetId: string;
     parentId: string | null;
     content: string;

@@ -5,8 +5,8 @@ SocialBook is a social platform for book lovers. It combines book discovery and 
 ## Tech stack
 
 - **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS
-- **Backend:** NestJS 11, TypeScript, MongoDB/Mongoose, Redis, Socket.IO, BullMQ
-- **Search and AI:** MongoDB text search, ChromaDB vector search, AI and text-to-speech integrations
+- **Backend:** NestJS 11, TypeScript, PostgreSQL/Prisma, Redis, Socket.IO, BullMQ
+- **Search and AI:** PostgreSQL text search, ChromaDB vector search, AI and text-to-speech integrations
 - **Infrastructure:** Docker Compose, Nginx, GitHub Actions
 
 ## Repository layout
@@ -42,7 +42,7 @@ backend/src/
 
 `core/queue` configures the BullMQ connection. A feature registers its own queues and workers. `shared/queue` contains only reusable payload schemas and job options. `CoreModule` composes the core modules; security providers and CQRS/event/scheduler setup are packaged in their own core modules. `src/migrations/` contains database migrations/maintenance scripts; `src/seeds/` contains seed entry points and may depend on feature APIs, while features must not depend on seeds.
 
-Feature code must use another feature's public API. The architecture checker enforces these boundaries, inward layer dependencies, and direct cycles between Nest modules. Domain code cannot import NestJS or Mongoose. The checker runs in pull request and deployment workflows.
+Feature code must use another feature's public API. The architecture checker enforces these boundaries, inward layer dependencies, and direct cycles between Nest modules. Domain code cannot import NestJS or persistence ORM clients. The checker runs in pull request and deployment workflows.
 
 ### API and worker processes
 
@@ -63,10 +63,10 @@ Install workspace dependencies from the repository root:
 npm ci
 ```
 
-Create `backend/.env` and `frontend/.env.local`, then start the required infrastructure. MongoDB runs as a single-node replica set so transaction-dependent backend features work locally.
+Create `backend/.env` and `frontend/.env.local`, then start PostgreSQL and the supporting services.
 
 ```bash
-docker compose up -d mongo mongo-init-replica redis redis-queue chroma
+docker compose up -d postgres redis redis-queue chroma
 ```
 
 Run the API, worker, and frontend together:

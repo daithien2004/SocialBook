@@ -1,4 +1,4 @@
-import { paginated, unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import {
   Controller,
   Get,
@@ -52,7 +52,7 @@ export class SearchController {
       timeoutPromise,
     ]);
 
-    return paginated(result.data, result.meta);
+    return { data: result.data, meta: result.meta };
   }
 
   @Public()
@@ -61,7 +61,14 @@ export class SearchController {
   async getTrendingKeywords() {
     const keywords = await this.trendingKeywordCache.getTrendingKeywords();
 
-    return unpaginated(keywords);
+    return {
+      data: keywords,
+      meta: buildPaginationMeta(
+        1,
+        Math.max(keywords.length, 1),
+        keywords.length,
+      ),
+    };
   }
 
   @Public()

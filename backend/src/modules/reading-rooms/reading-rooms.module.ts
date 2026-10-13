@@ -1,8 +1,21 @@
 import { Module } from '@nestjs/common';
 
-import { ReadingRoomsApplicationModule } from './application/reading-rooms-application.module';
-import { ReadingRoomPresenceModule } from './application/presence/reading-room-presence.module';
+import { CreateRoomHandler } from './application/commands/create-room/create-room.handler';
+import { JoinRoomHandler } from './application/commands/join-room/join-room.handler';
+import { LeaveRoomHandler } from './application/commands/leave-room/leave-room.handler';
+import { ReactivateRoomHandler } from './application/commands/reactivate-room/reactivate-room.handler';
+import { AddHighlightHandler } from './application/commands/add-highlight/add-highlight.handler';
+import { GenerateHighlightInsightHandler } from './application/commands/generate-highlight-insight/generate-highlight-insight.handler';
+import { RemoveHighlightHandler } from './application/commands/remove-highlight/remove-highlight.handler';
+import { GetMyActiveRoomsHandler } from './application/queries/get-my-active-rooms/get-my-active-rooms.handler';
+import { GetMyHistoryHandler } from './application/queries/get-my-history/get-my-history.handler';
+import { GetRoomByCodeHandler } from './application/queries/get-room-by-code/get-room-by-code.handler';
+import { GetRoomHighlightsHandler } from './application/queries/get-room-highlights/get-room-highlights.handler';
+import { GetCurrentRoomChapterHandler } from './application/queries/get-current-room-chapter/get-current-room-chapter.handler';
 import { ReadingRoomsInfrastructureModule } from './infrastructure/reading-rooms-infrastructure.module';
+import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
+import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
+import { AIApplicationModule } from '@/modules/ai/application/public-api';
 import { ReadingRoomsController } from './presentation/http/reading-rooms.controller';
 import { WsAuthService } from './presentation/websocket/core/ws-auth.service';
 import { WsRateLimiter } from './presentation/websocket/core/ws-rate-limiter.service';
@@ -19,9 +32,10 @@ import { UserOperationLock } from './presentation/websocket/user-operation-lock'
 
 @Module({
   imports: [
-    ReadingRoomsApplicationModule,
-    ReadingRoomPresenceModule,
     ReadingRoomsInfrastructureModule,
+    BooksRepositoryModule,
+    ChaptersRepositoryModule,
+    AIApplicationModule,
   ],
   controllers: [ReadingRoomsController],
   providers: [
@@ -37,6 +51,18 @@ import { UserOperationLock } from './presentation/websocket/user-operation-lock'
     WsRoomGuard,
     WsThrottleGuard,
     WsRateLimiter,
+    CreateRoomHandler,
+    JoinRoomHandler,
+    LeaveRoomHandler,
+    ReactivateRoomHandler,
+    AddHighlightHandler,
+    GenerateHighlightInsightHandler,
+    RemoveHighlightHandler,
+    GetMyActiveRoomsHandler,
+    GetMyHistoryHandler,
+    GetRoomByCodeHandler,
+    GetRoomHighlightsHandler,
+    GetCurrentRoomChapterHandler,
   ],
 })
 export class ReadingRoomsModule {}

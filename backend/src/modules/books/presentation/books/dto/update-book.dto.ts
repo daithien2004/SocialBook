@@ -4,7 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsEnum,
-  IsMongoId,
+  IsUUID,
   IsOptional,
   IsString,
   Length,
@@ -21,7 +21,7 @@ export class UpdateBookDto {
   slug?: string;
 
   @IsOptional()
-  @IsMongoId({ message: 'Author ID không hợp lệ' })
+  @IsUUID('4', { message: 'Author ID không hợp lệ' })
   authorId?: string;
 
   @Transform(({ value }: { value: unknown }) => {
@@ -35,7 +35,7 @@ export class UpdateBookDto {
   @IsArray()
   @ArrayMinSize(1, { message: 'Phải chọn ít nhất 1 thể loại' })
   @ArrayMaxSize(5, { message: 'Tối đa 5 thể loại' })
-  @IsMongoId({ each: true, message: 'Mỗi genres ID phải là MongoId hợp lệ' })
+  @IsUUID('4', { each: true, message: 'Mỗi genre ID phải là UUID hợp lệ' })
   genres?: string[];
 
   @IsOptional()

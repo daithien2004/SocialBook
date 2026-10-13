@@ -1,19 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import {
-  ToxicWordSchemaModel as ToxicWord,
-  ToxicWordDocument,
-} from '@/modules/content-moderation/infrastructure';
+import { randomUUID } from 'node:crypto';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
 
 @Injectable()
 export class ToxicWordsSeed {
   private readonly logger = new Logger(ToxicWordsSeed.name);
 
-  constructor(
-    @InjectModel(ToxicWord.name)
-    private readonly toxicWordModel: Model<ToxicWordDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async run() {
     const defaultToxicWords = [
@@ -53,17 +46,14 @@ export class ToxicWordsSeed {
       { pattern: 'v[aãả]i\\s*l', group: 'thô tục nhẹ', originalWord: 'vãi l' },
     ];
 
-    for (const word of defaultToxicWords) {
-      const existed = await this.toxicWordModel
-        .findOne({ pattern: word.pattern })
-        .lean();
-      if (existed) {
-        this.logger.log(`Toxic word exists: ${word.pattern}`);
-        continue;
-      }
+    const result = await this.prisma.toxicWord.createMany({
+      data: defaultToxicWords.map((word) => ({ id: randomUUID(), ...word })),
+      skipDuplicates: true,
+    });
+    this.logger.log(`Created ${String(result.count)} default toxic words`);
+  }
 
-      await this.toxicWordModel.create(word);
-      this.logger.log(`Toxic word created: ${word.pattern}`);
-    }
+  async clear(): Promise<void> {
+    await this.prisma.toxicWord.deleteMany();
   }
 }

@@ -4,7 +4,7 @@ import type { Redis } from 'ioredis';
 import type {
   IPresenceCachePort,
   PresenceData,
-} from '@/modules/reading-rooms/domain/interfaces/presence-cache.port';
+} from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
 import {
   PRESENCE_HASH_TTL_SECONDS,
   ROOM_MEMBERS_SET_TTL_SECONDS,

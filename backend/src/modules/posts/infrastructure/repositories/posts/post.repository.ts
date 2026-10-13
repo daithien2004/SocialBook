@@ -1,3 +1,8 @@
+import { Injectable } from '@nestjs/common';
+import { z } from 'zod';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 import {
   buildPaginationMeta,
   CursorPaginatedResult,
@@ -9,481 +14,251 @@ import {
   FindFlaggedOptions,
   IPostRepository,
 } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
-import { PostMapper } from '@/modules/posts/infrastructure/repositories/posts/post.mapper';
-import {
-  Injectable,
-  Logger,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types, PipelineStage } from 'mongoose';
-import { CommentDocument } from '@/modules/comments/infrastructure/schemas/public-api';
-import { LikeDocument } from '@/modules/likes/infrastructure/schemas/public-api';
-import { Post, PostDocument } from '../../schemas/post.schema';
-import { ConcurrencyException } from '@/shared/domain/common-exceptions';
+import { PostMapper, postRelations, PostWithRelations } from './post.mapper';
 
-const POPULATE_USER = {
-  path: 'userId',
-  select: 'username email image violationCount',
-};
-const POPULATE_BOOK = {
-  path: 'bookId',
-  select: 'title slug coverUrl',
-  populate: { path: 'authorId', select: 'name bio' },
-};
+const personalizedPostRowSchema = z.object({
+  id: z.string(),
+  score: z.coerce.number(),
+});
+const growthMetricSchema = z.object({
+  bucket: z.string(),
+  count: z.coerce.number(),
+});
 
 @Injectable()
 export class PostRepository implements IPostRepository {
-  constructor(
-    @InjectModel(Post.name) private readonly model: Model<PostDocument>,
-    @InjectModel('Comment')
-    private readonly commentModel: Model<CommentDocument>,
-    @InjectModel('Like') private readonly likeModel: Model<LikeDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(post: PostEntity): Promise<PostEntity> {
-    const created = await this.model.create(PostMapper.toPersistence(post));
-
-    const populated = await this.model
-      .findById(created._id)
-      .populate(POPULATE_USER)
-      .populate(POPULATE_BOOK)
-      .exec();
-
-    const domain = PostMapper.toDomain(populated as PostDocument);
-    if (!domain)
-      throw new InternalServerErrorException('Failed to create post');
-    domain.markPersisted(created.version);
+    const row = await this.prisma.post.create({
+      data: {
+        id: post.id,
+        userId: post.userId,
+        bookId: post.bookId,
+        content: post.content,
+        imageUrls: post.imageUrls,
+        isDeleted: post.isDeleted,
+        isFlagged: post.isFlagged,
+        moderationReason: post.moderationReason ?? null,
+        moderationStatus: post.moderationStatus ?? 'pending',
+      },
+      include: postRelations,
+    });
+    const domain = PostMapper.toDomain(row);
+    domain.markPersisted(row.version);
     return domain;
   }
 
   async update(post: PostEntity): Promise<PostEntity> {
-    const persistenceModel = PostMapper.toPersistence(post);
-    const { _id, ...updateFields } = persistenceModel;
-    const filter: FilterQuery<PostDocument> = {
-      _id,
-      version: post.loadedVersion,
-    };
-    if (post.loadedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
-
-    const updated = await this.model
-      .findOneAndUpdate(
-        filter,
-        { $set: updateFields, $inc: { version: 1 } },
-        { new: true },
-      )
-      .populate(POPULATE_USER)
-      .populate(POPULATE_BOOK)
-      .exec();
-
-    if (!updated)
+    const result = await this.prisma.post.updateMany({
+      where: { id: post.id, version: post.loadedVersion },
+      data: {
+        bookId: post.bookId,
+        content: post.content,
+        imageUrls: post.imageUrls,
+        isDeleted: post.isDeleted,
+        isFlagged: post.isFlagged,
+        moderationReason: post.moderationReason ?? null,
+        moderationStatus: post.moderationStatus ?? 'pending',
+        version: { increment: 1 },
+      },
+    });
+    if (result.count === 0)
       throw new ConcurrencyException('Post changed after it was loaded');
-    const domain = PostMapper.toDomain(updated);
-    if (!domain)
-      throw new InternalServerErrorException('Failed to map updated post');
-    return domain;
+    const row = await this.prisma.post.findUnique({
+      where: { id: post.id },
+      include: postRelations,
+    });
+    if (!row)
+      throw new ConcurrencyException('Post disappeared after it was updated');
+    return PostMapper.toDomain(row);
   }
 
   async findById(
     id: string,
     viewerUserId?: string,
   ): Promise<PostEntity | null> {
-    const found = await this.model
-      .findOne({ _id: id, isDeleted: false })
-      .populate(POPULATE_USER)
-      .populate(POPULATE_BOOK)
-      .lean()
-      .exec();
-    if (!found) {
-      return null;
-    }
-
-    const [enriched] = await this.enrichPosts([found], viewerUserId);
-    return PostMapper.toDomain(enriched);
+    const row = await this.prisma.post.findFirst({
+      where: { id, isDeleted: false },
+      include: postRelations,
+    });
+    if (!row) return null;
+    const [enriched] = await this.enrichPosts([row], viewerUserId);
+    return enriched ?? null;
   }
 
   async findAll(
     options: FindAllOptions,
   ): Promise<CursorPaginatedResult<PostEntity>> {
-    if (options.userId || !options.viewerUserId) {
-      const filter: FilterQuery<PostDocument> = { isDeleted: false };
-
-      if (options.userId) {
-        filter.userId = new Types.ObjectId(options.userId);
-      }
-      if (options.cursor) {
-        const cursorId = options.cursor.includes('_')
-          ? options.cursor.split('_')[1]
-          : options.cursor;
-
-        if (Types.ObjectId.isValid(cursorId)) {
-          filter._id = { $lt: new Types.ObjectId(cursorId) };
-        }
-      }
-
-      if (options.isFlagged !== undefined) {
-        filter.isFlagged = options.isFlagged;
-      } else if (!(options.userId && options.viewerUserId === options.userId)) {
-        filter.isFlagged = { $ne: true };
-      }
-
-      const docs = await this.model
-        .find(filter)
-        .sort({ _id: -1 })
-        .limit(options.limit + 1)
-        .populate(POPULATE_USER)
-        .populate(POPULATE_BOOK)
-        .lean()
-        .exec();
-
-      const hasMore = docs.length > options.limit;
-      if (hasMore) docs.pop();
-
-      const enrichedDocs = await this.enrichPosts(docs, options.viewerUserId);
-
-      const data = enrichedDocs
-        .map((doc) => PostMapper.toDomain(doc))
-        .filter((p): p is PostEntity => p !== null);
-
-      return {
-        data,
-        nextCursor: hasMore ? docs[docs.length - 1]._id.toString() : null,
-        hasMore,
-      };
-    }
-
-    // Otherwise, we calculate the personalized feed!
-    const viewerObjId = new Types.ObjectId(options.viewerUserId);
-
-    interface PostAggregationResult {
-      score: number;
-      likesCount: number;
-      commentsCount: number;
-      genreScore: number;
-      followScore: number;
-      engagementScore: number;
-      hoursAge: number;
-    }
-
-    type PostAggregateDoc = PostDocument & PostAggregationResult;
-
-    let cursorScore: number | null = null;
-    let cursorId: string | null = null;
-
-    if (options.cursor) {
-      if (options.cursor.includes('_')) {
-        const parts = options.cursor.split('_');
-        cursorScore = parseFloat(parts[0]);
-        cursorId = parts[1];
-      } else if (Types.ObjectId.isValid(options.cursor)) {
-        cursorId = options.cursor;
-        const legacyPost = await this.model.findById(cursorId).lean().exec();
-        if (legacyPost) {
-          const hoursAge =
-            (Date.now() - new Date(legacyPost.createdAt).getTime()) / 3600000;
-          cursorScore = 1 / Math.pow(hoursAge + 2, 1.5);
-        } else {
-          cursorScore = 0;
-        }
-      }
-    }
-
-    const pipeline: PipelineStage[] = [
-      { $match: { isDeleted: false, isFlagged: { $ne: true } } },
-      // 1. Lookup likes count
-      {
-        $lookup: {
-          from: 'likes',
-          let: { postId: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$targetId', '$$postId'] },
-                    { $eq: ['$targetType', 'post'] },
-                    { $eq: ['$status', true] },
-                  ],
-                },
-              },
+    if (options.viewerUserId && !options.userId)
+      return this.findPersonalized(options);
+    const where: Prisma.PostWhereInput = {
+      isDeleted: false,
+      ...(options.userId ? { userId: options.userId } : {}),
+      ...(options.isFlagged !== undefined
+        ? { isFlagged: options.isFlagged }
+        : !(options.userId && options.viewerUserId === options.userId)
+          ? { isFlagged: false }
+          : {}),
+      ...(options.cursor
+        ? {
+            id: {
+              lt: options.cursor.includes('_')
+                ? options.cursor.split('_').at(-1)
+                : options.cursor,
             },
-            { $count: 'count' },
-          ],
-          as: 'likesInfo',
-        },
-      },
-      // 2. Lookup comments count
-      {
-        $lookup: {
-          from: 'comments',
-          let: { postId: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$targetId', '$$postId'] },
-                    { $eq: ['$targetType', 'post'] },
-                    { $eq: ['$isDeleted', false] },
-                  ],
-                },
-              },
-            },
-            { $count: 'count' },
-          ],
-          as: 'commentsInfo',
-        },
-      },
-      // 3. Lookup book info
-      {
-        $lookup: {
-          from: 'books',
-          localField: 'bookId',
-          foreignField: '_id',
-          as: 'bookInfo',
-        },
-      },
-      // 4. Lookup user preferences
-      {
-        $lookup: {
-          from: 'user_preferences',
-          let: {
-            bookGenres: {
-              $ifNull: [{ $arrayElemAt: ['$bookInfo.genres', 0] }, []],
-            },
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$userId', viewerObjId] },
-                    { $in: ['$genreId', '$$bookGenres'] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'prefInfo',
-        },
-      },
-      // 5. Lookup follow info
-      {
-        $lookup: {
-          from: 'follows',
-          let: { authorId: '$userId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ['$userId', viewerObjId] },
-                    { $eq: ['$targetId', '$$authorId'] },
-                    { $eq: ['$status', true] },
-                    { $eq: ['$isDeleted', false] },
-                  ],
-                },
-              },
-            },
-          ],
-          as: 'followInfo',
-        },
-      },
-      // 6. Compute scores
-      {
-        $addFields: {
-          likesCount: {
-            $ifNull: [{ $arrayElemAt: ['$likesInfo.count', 0] }, 0],
-          },
-          commentsCount: {
-            $ifNull: [{ $arrayElemAt: ['$commentsInfo.count', 0] }, 0],
-          },
-          genreScore: { $sum: '$prefInfo.score' },
-          followScore: {
-            $cond: {
-              if: { $gt: [{ $size: '$followInfo' }, 0] },
-              then: 100,
-              else: 0,
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          engagementScore: {
-            $add: ['$likesCount', { $multiply: ['$commentsCount', 3] }],
-          },
-          hoursAge: {
-            $divide: [{ $subtract: [new Date(), '$createdAt'] }, 3600000],
-          },
-        },
-      },
-      {
-        $addFields: {
-          score: {
-            $divide: [
-              { $add: ['$followScore', '$genreScore', '$engagementScore', 1] },
-              { $pow: [{ $add: ['$hoursAge', 2] }, 1.5] },
-            ],
-          },
-        },
-      },
-    ];
-
-    // Filter by cursor
-    if (cursorScore !== null && cursorId !== null) {
-      pipeline.push({
-        $match: {
-          $or: [
-            { score: { $lt: cursorScore } },
-            { score: cursorScore, _id: { $lt: new Types.ObjectId(cursorId) } },
-          ],
-        },
-      });
-    }
-
-    pipeline.push({ $sort: { score: -1, _id: -1 } });
-    pipeline.push({ $limit: options.limit + 1 });
-
-    const aggDocs = await this.model
-      .aggregate<PostAggregateDoc>(pipeline)
-      .exec();
-
-    if (aggDocs.length > 0) {
-      const logger = new Logger(PostRepository.name);
-      logger.debug(
-        `Personalized feed: ${aggDocs.length} posts fetched (score sample: ${aggDocs[0]?.score ?? 'N/A'})`,
-      );
-    }
-
-    let docs: PostDocument[] = [];
-    if (aggDocs.length > 0) {
-      docs = await this.model.populate(aggDocs, [POPULATE_USER, POPULATE_BOOK]);
-    }
-
-    const hasMore = docs.length > options.limit;
-    if (hasMore) docs.pop();
-
-    const enrichedDocs = await this.enrichPosts(docs, options.viewerUserId);
-
-    const data = enrichedDocs
-      .map((doc) => PostMapper.toDomain(doc))
-      .filter((p): p is PostEntity => p !== null);
-
+          }
+        : {}),
+    };
+    const rows = await this.prisma.post.findMany({
+      where,
+      orderBy: [{ id: 'desc' }],
+      take: options.limit + 1,
+      include: postRelations,
+    });
+    const hasMore = rows.length > options.limit;
+    const pageRows = rows.slice(0, options.limit);
+    const data = await this.enrichPosts(pageRows, options.viewerUserId);
     return {
       data,
-      nextCursor: hasMore
-        ? `${aggDocs[aggDocs.length - 1].score}_${aggDocs[aggDocs.length - 1]._id.toString()}`
-        : null,
-      hasMore,
+      meta: {
+        limit: options.limit,
+        nextCursor: hasMore ? (pageRows.at(-1)?.id ?? null) : null,
+        hasMore,
+      },
+    };
+  }
+
+  private async findPersonalized(
+    options: FindAllOptions,
+  ): Promise<CursorPaginatedResult<PostEntity>> {
+    const viewerUserId = options.viewerUserId;
+    if (!viewerUserId)
+      return {
+        data: [],
+        meta: { limit: options.limit, nextCursor: null, hasMore: false },
+      };
+    const cursorParts = options.cursor?.split('_') ?? [];
+    let cursorScore: number | null = null;
+    let cursorId: string | null = null;
+    if (cursorParts.length > 1) {
+      const parsed = Number(cursorParts[0]);
+      if (Number.isFinite(parsed)) {
+        cursorScore = parsed;
+        cursorId = cursorParts.slice(1).join('_');
+      }
+    } else if (options.cursor) {
+      const cursorPost = await this.prisma.post.findUnique({
+        where: { id: options.cursor },
+        select: { id: true, createdAt: true },
+      });
+      if (cursorPost) {
+        const ageHours =
+          (Date.now() - cursorPost.createdAt.getTime()) / 3_600_000;
+        cursorScore = 1 / Math.pow(ageHours + 2, 1.5);
+        cursorId = cursorPost.id;
+      }
+    }
+    const cursorFilter =
+      cursorScore !== null && cursorId !== null
+        ? Prisma.sql`WHERE ranked.score < ${cursorScore} OR (ranked.score = ${cursorScore} AND ranked.id < ${cursorId})`
+        : Prisma.empty;
+    const rawRows = await this.prisma.$queryRaw<unknown[]>(Prisma.sql`
+      WITH ranked AS (
+        SELECT p."id",
+          (
+            1
+            + COALESCE((SELECT SUM(up."score") FROM "book_genres" bg JOIN "user_preferences" up ON up."genreId" = bg."genreId" WHERE bg."bookId" = p."bookId" AND up."userId" = ${viewerUserId}), 0)
+            + CASE WHEN EXISTS (SELECT 1 FROM "follows" f WHERE f."userId" = ${viewerUserId} AND f."targetId" = p."userId" AND f."status" = true AND f."isDeleted" = false) THEN 100 ELSE 0 END
+            + (SELECT COUNT(*) FROM "likes" l WHERE l."targetType" = 'post' AND l."targetId" = p."id" AND l."status" = true)
+            + 3 * (SELECT COUNT(*) FROM "comments" c WHERE c."targetType" = 'post' AND c."targetId" = p."id" AND c."isDeleted" = false)
+          ) / POWER((EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - p."createdAt")) / 3600 + 2), 1.5) AS score
+        FROM "posts" p WHERE p."isDeleted" = false AND p."isFlagged" = false
+      )
+      SELECT ranked."id", ranked.score FROM ranked ${cursorFilter}
+      ORDER BY ranked.score DESC, ranked."id" DESC LIMIT ${options.limit + 1}
+    `);
+    const ranks = z.array(personalizedPostRowSchema).parse(rawRows);
+    const hasMore = ranks.length > options.limit;
+    const pageRanks = ranks.slice(0, options.limit);
+    const rows = await this.prisma.post.findMany({
+      where: { id: { in: pageRanks.map((rank) => rank.id) } },
+      include: postRelations,
+    });
+    const rowById = new Map(rows.map((row) => [row.id, row]));
+    const orderedRows = pageRanks.flatMap((rank) => {
+      const row = rowById.get(rank.id);
+      return row ? [{ row, score: rank.score }] : [];
+    });
+    const data = await this.enrichPosts(
+      orderedRows.map(({ row }) => row),
+      viewerUserId,
+    );
+    return {
+      data,
+      meta: {
+        limit: options.limit,
+        nextCursor: hasMore
+          ? `${orderedRows.at(-1)?.score ?? 0}_${orderedRows.at(-1)?.row.id ?? ''}`
+          : null,
+        hasMore,
+      },
     };
   }
 
   async delete(id: string, expectedVersion: number): Promise<void> {
-    const filter: FilterQuery<PostDocument> = {
-      _id: new Types.ObjectId(id),
-      version: expectedVersion,
-    };
-    if (expectedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
-    const result = await this.model.deleteOne(filter).exec();
-    if (result.deletedCount === 0) {
+    const result = await this.prisma.post.deleteMany({
+      where: { id, version: expectedVersion },
+    });
+    if (!result.count)
       throw new ConcurrencyException('Post changed before it was deleted');
-    }
   }
 
   async softDelete(id: string, expectedVersion: number): Promise<void> {
-    const filter: FilterQuery<PostDocument> = {
-      _id: new Types.ObjectId(id),
-      version: expectedVersion,
-    };
-    if (expectedVersion === 0) {
-      filter.$or = [{ version: 0 }, { version: { $exists: false } }];
-    }
-    const result = await this.model
-      .updateOne(filter, {
-        $set: { isDeleted: true, updatedAt: new Date() },
-        $inc: { version: 1 },
-      })
-      .exec();
-    if (result.matchedCount === 0) {
+    const result = await this.prisma.post.updateMany({
+      where: { id, version: expectedVersion },
+      data: { isDeleted: true, version: { increment: 1 } },
+    });
+    if (!result.count)
       throw new ConcurrencyException('Post changed before it was deleted');
-    }
   }
 
   async findFlagged(
     options: FindFlaggedOptions,
   ): Promise<PaginatedResult<PostEntity>> {
-    const filter: FilterQuery<PostDocument> = {
+    const where: Prisma.PostWhereInput = {
       isFlagged: true,
       isDeleted: false,
+      ...(options.reason
+        ? {
+            moderationReason: { contains: options.reason, mode: 'insensitive' },
+          }
+        : {}),
+      ...(options.startDate || options.endDate
+        ? {
+            createdAt: {
+              ...(options.startDate ? { gte: options.startDate } : {}),
+              ...(options.endDate ? { lte: options.endDate } : {}),
+            },
+          }
+        : {}),
     };
-    if (options.reason) {
-      filter.moderationReason = { $regex: options.reason, $options: 'i' };
-    }
-    if (options.startDate || options.endDate) {
-      const dateFilter: { $gte?: Date; $lte?: Date } = {};
-      if (options.startDate) dateFilter.$gte = options.startDate;
-      if (options.endDate) dateFilter.$lte = options.endDate;
-      filter.createdAt = dateFilter;
-    }
-    const skip = (options.page - 1) * options.limit;
-
-    const pipeline: PipelineStage[] = [{ $match: filter }];
-
-    if (options.sortBy === 'violations') {
-      pipeline.push(
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'userId',
-            foreignField: '_id',
-            as: 'userInfo',
-          },
-        },
-        { $unwind: { path: '$userInfo', preserveNullAndEmptyArrays: true } },
-      );
-    }
-
-    const sortStage: PipelineStage.Sort =
+    const orderBy: Prisma.PostOrderByWithRelationInput =
       options.sortBy === 'violations'
-        ? { $sort: { 'userInfo.violationCount': -1, createdAt: -1 } }
-        : options.sortBy === 'oldest'
-          ? { $sort: { createdAt: 1 } }
-          : { $sort: { createdAt: -1 } };
-
-    pipeline.push({
-      $facet: {
-        metadata: [{ $count: 'total' }],
-        data: [sortStage, { $skip: skip }, { $limit: options.limit }],
-      },
-    });
-
-    const facetResult = await this.model
-      .aggregate<{
-        metadata: Array<{ total: number }>;
-        data: PostDocument[];
-      }>(pipeline)
-      .exec();
-
-    const result = facetResult[0] ?? { metadata: [], data: [] };
-    const total: number = result.metadata[0]?.total ?? 0;
-    let documents = result.data;
-
-    if (documents.length > 0) {
-      documents = await this.model.populate(documents, [
-        POPULATE_USER,
-        POPULATE_BOOK,
-      ]);
-    }
-
+        ? { user: { violationCount: 'desc' } }
+        : { createdAt: options.sortBy === 'oldest' ? 'asc' : 'desc' };
+    const [rows, total] = await Promise.all([
+      this.prisma.post.findMany({
+        where,
+        orderBy: [orderBy, { id: 'desc' }],
+        skip: (options.page - 1) * options.limit,
+        take: options.limit,
+        include: postRelations,
+      }),
+      this.prisma.post.count({ where }),
+    ]);
     return {
-      data: documents
-        .map((doc: PostDocument) => PostMapper.toDomain(doc))
-        .filter((p: PostEntity | null): p is PostEntity => p !== null),
+      data: rows.map((row) => PostMapper.toDomain(row)),
       meta: buildPaginationMeta(options.page, options.limit, total),
     };
   }
@@ -494,175 +269,112 @@ export class PostRepository implements IPostRepository {
     spoiler: number;
     other: number;
   }> {
-    const result = await this.model
-      .aggregate<{ total: number; toxic: number; spoiler: number }>([
-        { $match: { isFlagged: true, isDeleted: false } },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: 1 },
-            toxic: {
-              $sum: {
-                $cond: [
-                  {
-                    $regexMatch: {
-                      input: { $ifNull: ['$moderationReason', ''] },
-                      regex: /thÃ´ tá»¥c|toxic/i,
-                    },
-                  },
-                  1,
-                  0,
-                ],
-              },
-            },
-            spoiler: {
-              $sum: {
-                $cond: [
-                  {
-                    $regexMatch: {
-                      input: { $ifNull: ['$moderationReason', ''] },
-                      regex: /spoiler|tiáº¿t lá»™/i,
-                    },
-                  },
-                  1,
-                  0,
-                ],
-              },
-            },
-          },
+    const where = { isFlagged: true, isDeleted: false };
+    const [total, toxic, spoiler] = await Promise.all([
+      this.prisma.post.count({ where }),
+      this.prisma.post.count({
+        where: {
+          ...where,
+          OR: [
+            { moderationReason: { contains: 'toxic', mode: 'insensitive' } },
+            { moderationReason: { contains: 'thô tục', mode: 'insensitive' } },
+          ],
         },
-      ])
-      .exec();
-
-    if (!result || result.length === 0) {
-      return { total: 0, toxic: 0, spoiler: 0, other: 0 };
-    }
-
-    const stats = result[0];
+      }),
+      this.prisma.post.count({
+        where: {
+          ...where,
+          OR: [
+            { moderationReason: { contains: 'spoiler', mode: 'insensitive' } },
+            { moderationReason: { contains: 'tiết lộ', mode: 'insensitive' } },
+          ],
+        },
+      }),
+    ]);
     return {
-      total: stats.total,
-      toxic: stats.toxic,
-      spoiler: stats.spoiler,
-      other: stats.total - stats.toxic - stats.spoiler,
+      total,
+      toxic,
+      spoiler,
+      other: Math.max(0, total - toxic - spoiler),
     };
   }
 
-  async countByUser(userId: string): Promise<number> {
-    return this.model
-      .countDocuments({
-        userId: new Types.ObjectId(userId),
-        isDeleted: false,
-        isFlagged: false,
-      })
-      .exec();
+  countByUser(userId: string): Promise<number> {
+    return this.prisma.post.count({
+      where: { userId, isDeleted: false, isFlagged: false },
+    });
   }
 
-  async countTotal(): Promise<number> {
-    return this.model.countDocuments().exec();
+  countTotal(): Promise<number> {
+    return this.prisma.post.count();
   }
-
-  async countActive(): Promise<number> {
-    return this.model.countDocuments({ isDeleted: false }).exec();
+  countActive(): Promise<number> {
+    return this.prisma.post.count({ where: { isDeleted: false } });
   }
 
   async getGrowthMetrics(
     startDate: Date,
     groupBy: 'day' | 'month' | 'year',
   ): Promise<Array<{ _id: string; count: number }>> {
-    const dateFormat =
-      groupBy === 'month' ? '%Y-%m' : groupBy === 'year' ? '%Y' : '%Y-%m-%d';
-
-    return this.model
-      .aggregate<{ _id: string; count: number }>([
-        { $match: { createdAt: { $gte: startDate } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ])
-      .exec();
+    const format =
+      groupBy === 'year'
+        ? 'YYYY'
+        : groupBy === 'month'
+          ? 'YYYY-MM'
+          : 'YYYY-MM-DD';
+    const raw = await this.prisma.$queryRaw<unknown[]>(Prisma.sql`
+      SELECT to_char(date_trunc(${groupBy}, "createdAt"), ${format}) AS bucket, COUNT(*)::integer AS count
+      FROM "posts" WHERE "createdAt" >= ${startDate}
+      GROUP BY date_trunc(${groupBy}, "createdAt") ORDER BY date_trunc(${groupBy}, "createdAt") ASC
+    `);
+    return z
+      .array(growthMetricSchema)
+      .parse(raw)
+      .map((row) => ({ _id: row.bucket, count: row.count }));
   }
 
   private async enrichPosts(
-    docs: PostDocument[],
+    rows: PostWithRelations[],
     viewerUserId?: string,
-  ): Promise<PostDocument[]> {
-    if (!docs.length) {
-      return docs;
-    }
-
-    const postIds = docs.map((doc) => new Types.ObjectId(doc._id));
-    const [commentCounts, likeCounts, likedDocs] = await Promise.all([
-      this.commentModel
-        .aggregate<{ _id: Types.ObjectId; count: number }>([
-          {
-            $match: {
-              targetType: 'post',
-              targetId: { $in: postIds },
-              isDeleted: false,
-            },
-          },
-          {
-            $group: {
-              _id: '$targetId',
-              count: { $sum: 1 },
-            },
-          },
-        ])
-        .exec(),
-      this.likeModel
-        .aggregate<{ _id: Types.ObjectId; count: number }>([
-          {
-            $match: {
-              targetType: 'post',
-              targetId: { $in: postIds },
-              status: true,
-            },
-          },
-          {
-            $group: {
-              _id: '$targetId',
-              count: { $sum: 1 },
-            },
-          },
-        ])
-        .exec(),
+  ): Promise<PostEntity[]> {
+    if (!rows.length) return [];
+    const ids = rows.map((row) => row.id);
+    const [likeGroups, commentGroups, viewerLikes] = await Promise.all([
+      this.prisma.like.groupBy({
+        by: ['targetId'],
+        where: { targetType: 'post', targetId: { in: ids }, status: true },
+        _count: { _all: true },
+      }),
+      this.prisma.comment.groupBy({
+        by: ['targetId'],
+        where: { targetType: 'post', targetId: { in: ids }, isDeleted: false },
+        _count: { _all: true },
+      }),
       viewerUserId
-        ? this.likeModel
-            .find({
-              userId: new Types.ObjectId(viewerUserId),
+        ? this.prisma.like.findMany({
+            where: {
+              userId: viewerUserId,
               targetType: 'post',
-              targetId: { $in: postIds },
+              targetId: { in: ids },
               status: true,
-            })
-            .select('targetId')
-            .lean()
-            .exec()
-        : Promise.resolve([] as Array<{ targetId: Types.ObjectId }>),
+            },
+            select: { targetId: true },
+          })
+        : Promise.resolve([]),
     ]);
-
-    const commentCountMap = new Map<string, number>(
-      commentCounts.map((item) => [item._id.toString(), item.count]),
+    const likesById = new Map(
+      likeGroups.map((item) => [item.targetId, item._count._all]),
     );
-    const likeCountMap = new Map<string, number>(
-      likeCounts.map((item) => [item._id.toString(), item.count]),
+    const commentsById = new Map(
+      commentGroups.map((item) => [item.targetId, item._count._all]),
     );
-    const likedPostIds = new Set(
-      likedDocs.map((item) => item.targetId.toString()),
+    const likedIds = new Set(viewerLikes.map((item) => item.targetId));
+    return rows.map((row) =>
+      PostMapper.toDomain(row, {
+        likesCount: likesById.get(row.id) ?? 0,
+        commentsCount: commentsById.get(row.id) ?? 0,
+        likedByCurrentUser: likedIds.has(row.id),
+      }),
     );
-
-    return docs.map((doc) => {
-      return {
-        ...doc,
-        likesCount: likeCountMap.get(doc._id.toString()) ?? 0,
-        commentsCount: commentCountMap.get(doc._id.toString()) ?? 0,
-        likedByCurrentUser: viewerUserId
-          ? likedPostIds.has(doc._id.toString())
-          : false,
-      } as unknown as PostDocument;
-    });
   }
 }

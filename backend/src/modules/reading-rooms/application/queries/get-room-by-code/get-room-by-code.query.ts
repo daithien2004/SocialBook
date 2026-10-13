@@ -1,5 +1,5 @@
 import { Query } from '@nestjs/cqrs';
-import { GetRoomByCodeResult } from './get-room-by-code.handler';
+import type { GetRoomByCodeResult } from '@/modules/reading-rooms/application/reading-room.result';
 
 export class GetRoomByCodeQuery extends Query<GetRoomByCodeResult> {
   constructor(

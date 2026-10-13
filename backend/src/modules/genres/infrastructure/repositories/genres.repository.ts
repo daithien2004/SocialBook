@@ -1,8 +1,10 @@
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { Prisma } from '@/core/database/generated/prisma/client';
 import {
-  buildPaginationMeta,
-  PaginatedResult,
-  PaginationOptions,
-} from '@/shared/domain/pagination.types';
+  PrismaTransactionClient,
+  PrismaTransactionalAdapter,
+} from '@/core/database/postgres/prisma-transaction.types';
 import { Genre as GenreEntity } from '@/modules/genres/domain/entities/genre.entity';
 import {
   GenreFilter,
@@ -10,131 +12,112 @@ import {
 } from '@/modules/genres/domain/repositories/genre.repository.interface';
 import { GenreId } from '@/modules/genres/domain/value-objects/genre-id.vo';
 import { GenreName } from '@/modules/genres/domain/value-objects/genre-name.vo';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import { Genre, GenreDocument } from '../schemas/genre.schema';
+import {
+  PaginatedResult,
+  PaginationOptions,
+  buildPaginationMeta,
+} from '@/shared/domain/pagination.types';
 import { GenreMapper } from './genre.mapper';
-import { GenrePersistence } from './genre.mapper';
-
-import { MongoSessionContext } from '@/core/database/mongo-session.context';
 
 @Injectable()
 export class GenresRepository implements IGenreRepository {
   constructor(
-    @InjectModel(Genre.name) private readonly genreModel: Model<GenreDocument>,
-    private readonly sessionContext: MongoSessionContext,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
-  protected toDomain(doc: GenreDocument): GenreEntity {
-    return GenreMapper.toDomain(doc);
-  }
-
-  protected toPersistence(entity: GenreEntity): GenrePersistence {
-    return GenreMapper.toPersistence(entity);
+  private get prisma(): PrismaTransactionClient {
+    return this.transactionHost.tx;
   }
 
   async findById(id: GenreId): Promise<GenreEntity | null> {
-    const doc = await this.genreModel.findById(id.toString()).lean().exec();
-    return doc ? this.toDomain(doc) : null;
+    const row = await this.prisma.genre.findUnique({
+      where: { id: id.toString() },
+    });
+    return row ? GenreMapper.toDomain(row) : null;
   }
 
   async findByName(name: GenreName): Promise<GenreEntity | null> {
-    const query = this.genreModel.findOne({ name: name.toString() });
-    if (this.sessionContext.currentSession) {
-      query.session(this.sessionContext.currentSession);
-    }
-    const doc = await query.lean().exec();
-    return doc ? this.toDomain(doc) : null;
+    const row = await this.prisma.genre.findUnique({
+      where: { name: name.toString() },
+    });
+    return row ? GenreMapper.toDomain(row) : null;
   }
 
   async findBySlugs(slugs: string[]): Promise<GenreEntity[]> {
-    const docs = await this.genreModel
-      .find({ slug: { $in: slugs } })
-      .lean()
-      .exec();
-    return docs.map((doc) => this.toDomain(doc));
+    const rows = await this.prisma.genre.findMany({
+      where: { slug: { in: slugs } },
+    });
+    return rows.map((row) => GenreMapper.toDomain(row));
   }
 
   async findAll(
     filter: GenreFilter,
     pagination: PaginationOptions,
   ): Promise<PaginatedResult<GenreEntity>> {
-    const query: FilterQuery<GenreDocument> = {};
+    const where: Prisma.GenreWhereInput = filter.name
+      ? { name: { contains: filter.name, mode: 'insensitive' } }
+      : {};
+    const offset = (pagination.page - 1) * pagination.limit;
 
-    if (filter.name) {
-      query.name = { $regex: filter.name, $options: 'i' };
-    }
-
-    const skip = (pagination.page - 1) * pagination.limit;
-
-    const [docs, total] = await Promise.all([
-      this.genreModel
-        .find(query)
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(pagination.limit)
-        .lean()
-        .exec(),
-      this.genreModel.countDocuments(query).exec(),
+    const [rows, total] = await Promise.all([
+      this.prisma.genre.findMany({
+        where,
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
+        skip: offset,
+        take: pagination.limit,
+      }),
+      this.prisma.genre.count({ where }),
     ]);
 
     return {
-      data: docs.map((doc) => this.toDomain(doc)),
+      data: rows.map((row) => GenreMapper.toDomain(row)),
       meta: buildPaginationMeta(pagination.page, pagination.limit, total),
     };
   }
 
   async findAllSimple(): Promise<GenreEntity[]> {
-    const docs = await this.genreModel
-      .find()
-      .select('name slug createdAt updatedAt')
-      .sort({ name: 1 })
-      .lean()
-      .exec();
-    return docs.map((doc) =>
-      GenreEntity.reconstitute({
-        id: doc._id.toString(),
-        name: doc.name,
-        slug: doc.slug,
-        description: '',
-        createdAt: doc.createdAt || new Date(),
-        updatedAt: doc.updatedAt || new Date(),
-      }),
-    );
+    const rows = await this.prisma.genre.findMany({
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map((row) => GenreMapper.toDomain(row));
   }
 
   async findByNames(names: string[]): Promise<GenreEntity[]> {
-    const docs = await this.genreModel
-      .find({ name: { $in: names.map((n) => new RegExp(`^${n}$`, 'i')) } })
-      .lean()
-      .exec();
-    return docs.map((doc) => this.toDomain(doc));
+    if (names.length === 0) return [];
+
+    const rows = await this.prisma.genre.findMany({
+      where: {
+        OR: names.map((name) => ({
+          name: { equals: name, mode: 'insensitive' },
+        })),
+      },
+    });
+    return rows.map((row) => GenreMapper.toDomain(row));
   }
 
   async existsByName(name: GenreName, excludeId?: GenreId): Promise<boolean> {
-    const query: FilterQuery<GenreDocument> = { name: name.toString() };
-    if (excludeId) {
-      query._id = { $ne: new Types.ObjectId(excludeId.toString()) };
-    }
-    const result = await this.genreModel.exists(query);
-    return !!result;
+    const row = await this.prisma.genre.findFirst({
+      where: {
+        name: name.toString(),
+        ...(excludeId ? { id: { not: excludeId.toString() } } : {}),
+      },
+      select: { id: true },
+    });
+    return row !== null;
   }
 
   async save(genre: GenreEntity): Promise<void> {
-    const id = new Types.ObjectId(genre.id.toString());
-    const query = this.genreModel.findOneAndUpdate(
-      { _id: id },
-      { $set: this.toPersistence(genre), $setOnInsert: { _id: id } },
-      { upsert: true, new: true },
-    );
-    if (this.sessionContext.currentSession) {
-      query.session(this.sessionContext.currentSession);
-    }
-    await query.exec();
+    const data = GenreMapper.toPersistence(genre);
+    const { id, createdAt: _createdAt, ...updateData } = data;
+
+    await this.prisma.genre.upsert({
+      where: { id },
+      create: data,
+      update: updateData,
+    });
   }
 
   async delete(id: GenreId): Promise<void> {
-    await this.genreModel.findByIdAndDelete(id.toString()).exec();
+    await this.prisma.genre.deleteMany({ where: { id: id.toString() } });
   }
 }

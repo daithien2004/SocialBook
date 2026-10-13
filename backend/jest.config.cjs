@@ -20,6 +20,7 @@ const config = {
 
     // Map path alias "@/*" → "src/*" (giống tsconfig.json paths)
     moduleNameMapper: {
+      '^(\\.{1,2}/.*)\\.js$': '$1',
         '^@/(.*)$': '<rootDir>/src/$1',
     },
 
@@ -37,6 +38,7 @@ const config = {
             transform: { '^.+\\.(t|j)s$': 'ts-jest' },
             moduleFileExtensions: ['js', 'json', 'ts'],
             moduleNameMapper: {
+                '^(\\.{1,2}/.*)\\.js$': '$1',
                 '^@/(.*)$': '<rootDir>/src/$1',
             },
             testEnvironment: 'node',
@@ -51,6 +53,7 @@ const config = {
             transform: { '^.+\\.(t|j)s$': 'ts-jest' },
             moduleFileExtensions: ['js', 'json', 'ts'],
             moduleNameMapper: {
+                '^(\\.{1,2}/.*)\\.js$': '$1',
                 '^@/(.*)$': '<rootDir>/src/$1',
             },
             testEnvironment: 'node',
@@ -65,6 +68,7 @@ const config = {
             transform: { '^.+\\.(t|j)s$': 'ts-jest' },
             moduleFileExtensions: ['js', 'json', 'ts'],
             moduleNameMapper: {
+                '^(\\.{1,2}/.*)\\.js$': '$1',
                 '^@/(.*)$': '<rootDir>/src/$1',
             },
             testEnvironment: 'node',

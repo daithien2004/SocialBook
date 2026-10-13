@@ -17,7 +17,7 @@ export interface CreateSingleChapterJobData {
 
 @Processor(CREATE_SINGLE_CHAPTER_QUEUE, {
   // concurrency: 5 — 50 chương tạo song song, không còn xếp hàng tuần tự.
-  // Điều chỉnh theo giới hạn write của MongoDB.
+  // Giới hạn batch ghi để giữ tải database ổn định.
   concurrency: 5,
 })
 export class SingleChapterProcessor extends WorkerHost {

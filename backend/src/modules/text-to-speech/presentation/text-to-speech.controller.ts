@@ -8,6 +8,7 @@ import {
   Body,
   Param,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import {
@@ -38,7 +39,7 @@ export class TextToSpeechController {
   @UseGuards(RolesGuard)
   @Post('chapter/:chapterId')
   async generateChapterAudio(
-    @Param('chapterId') chapterId: string,
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
     @Body() dto: GenerateChapterAudioDto,
   ) {
     const command = new GenerateChapterAudioCommand(
@@ -54,7 +55,7 @@ export class TextToSpeechController {
   @UseGuards(RolesGuard)
   @Post('book/:bookId/all')
   async generateBookAudio(
-    @Param('bookId') bookId: string,
+    @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
     @Body() dto: GenerateBookAudioDto,
   ) {
     const command = new GenerateBookAudioCommand(
@@ -68,7 +69,9 @@ export class TextToSpeechController {
 
   @Public()
   @Get('chapter/:chapterId')
-  async getChapterAudio(@Param('chapterId') chapterId: string) {
+  async getChapterAudio(
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
+  ) {
     const query = new GetChapterAudioQuery(chapterId);
     const result = await this.queryBus.execute(query);
 
@@ -83,7 +86,9 @@ export class TextToSpeechController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Delete('chapter/:chapterId')
-  async deleteChapterAudio(@Param('chapterId') chapterId: string) {
+  async deleteChapterAudio(
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
+  ) {
     const command = new DeleteChapterAudioCommand(chapterId);
     await this.commandBus.execute(command);
   }
@@ -92,7 +97,9 @@ export class TextToSpeechController {
   @Post('chapter/:chapterId/play')
   @HttpCode(204)
   @ApiNoContentResponse()
-  async incrementPlayCount(@Param('chapterId') chapterId: string) {
+  async incrementPlayCount(
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
+  ) {
     const command = new IncrementPlayCountCommand(chapterId);
     await this.commandBus.execute(command);
   }

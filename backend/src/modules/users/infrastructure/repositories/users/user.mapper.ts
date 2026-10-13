@@ -1,75 +1,119 @@
 import { User as UserEntity } from '@/modules/users/domain/users/entities/user.entity';
-import { UserDocument } from '@/modules/users/infrastructure/schemas/user.schema';
-import { Types } from 'mongoose';
 import { ReadingPreferencesProps } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
+import { ReadingPreferences } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
+import { Prisma } from '@/core/database/generated/prisma/client';
 
-export interface UserPersistence {
-  _id: Types.ObjectId;
-  roleId: Types.ObjectId;
-  username: string;
-  email: string;
-  password?: string;
-  isVerified: boolean;
-  isBanned: boolean;
-  violationCount: number;
-  provider: string;
-  providerId?: string;
-  image?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  hashedRt?: string;
-  previousHashedRt?: string;
-  refreshRotatedAt?: Date;
-  lastLoginIp?: string;
-  lastLoginUa?: string;
-  favoriteGenres: Types.ObjectId[];
-  readingPreferences?: ReadingPreferencesProps;
-  createdAt: Date;
-  updatedAt: Date;
+type UserWithFavoriteGenres = Prisma.UserGetPayload<{
+  include: { favoriteGenres: { select: { genreId: true } } };
+}>;
+
+function isJsonObject(value: Prisma.JsonValue): value is Prisma.JsonObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readString(
+  value: Prisma.JsonObject,
+  key: keyof ReadingPreferencesProps,
+): string | undefined {
+  const field = value[key];
+  return typeof field === 'string' ? field : undefined;
+}
+
+function readNumber(
+  value: Prisma.JsonObject,
+  key: keyof ReadingPreferencesProps,
+): number | undefined {
+  const field = value[key];
+  return typeof field === 'number' ? field : undefined;
+}
+
+function readStringArray(
+  value: Prisma.JsonObject,
+  key: keyof ReadingPreferencesProps,
+): string[] | undefined {
+  const field = value[key];
+  return Array.isArray(field) && field.every((item) => typeof item === 'string')
+    ? field
+    : undefined;
+}
+
+function toReadingPreferences(
+  value: Prisma.JsonValue | null,
+): ReadingPreferencesProps | undefined {
+  if (!value || !isJsonObject(value)) return undefined;
+
+  return ReadingPreferences.create({
+    theme: readString(value, 'theme'),
+    fontSize: readNumber(value, 'fontSize'),
+    fontFamily: readString(value, 'fontFamily'),
+    lineHeight: readNumber(value, 'lineHeight'),
+    letterSpacing: readNumber(value, 'letterSpacing'),
+    backgroundColor: readString(value, 'backgroundColor'),
+    textColor: readString(value, 'textColor'),
+    textAlign: readString(value, 'textAlign'),
+    marginWidth: readNumber(value, 'marginWidth'),
+    warmth: readNumber(value, 'warmth'),
+    brightness: readNumber(value, 'brightness'),
+    preferredGenres: readStringArray(value, 'preferredGenres'),
+    dailyReadingGoal: readNumber(value, 'dailyReadingGoal'),
+  });
+}
+
+function toReadingPreferencesJson(
+  preferences: ReadingPreferencesProps,
+): Prisma.InputJsonObject {
+  return {
+    theme: preferences.theme,
+    fontSize: preferences.fontSize,
+    fontFamily: preferences.fontFamily,
+    lineHeight: preferences.lineHeight,
+    letterSpacing: preferences.letterSpacing,
+    backgroundColor: preferences.backgroundColor,
+    textColor: preferences.textColor,
+    textAlign: preferences.textAlign,
+    marginWidth: preferences.marginWidth,
+    warmth: preferences.warmth,
+    brightness: preferences.brightness,
+    preferredGenres: preferences.preferredGenres ?? [],
+    dailyReadingGoal: preferences.dailyReadingGoal ?? 0,
+  };
 }
 
 export class UserMapper {
-  static toDomain(doc: UserDocument): UserEntity {
+  static toDomain(row: UserWithFavoriteGenres): UserEntity {
     return UserEntity.reconstitute({
-      id: doc._id.toString(),
-      roleId: doc.roleId.toString(),
-      username: doc.username,
-      email: doc.email,
-      password: doc.password,
-      isVerified: doc.isVerified,
-      isBanned: doc.isBanned,
-      violationCount: doc.violationCount,
-      provider: doc.provider,
-      providerId: doc.providerId,
-      image: doc.image,
-      bio: doc.bio,
-      location: doc.location,
-      website: doc.website,
-      hashedRt: doc.hashedRt,
-      previousHashedRt: doc.previousHashedRt,
-      refreshRotatedAt: doc.refreshRotatedAt,
-      lastLoginIp: doc.lastLoginIp,
-      lastLoginUa: doc.lastLoginUa,
-      favoriteGenres: (doc.favoriteGenres || []).map((g: Types.ObjectId) =>
-        g.toString(),
-      ),
-      readingPreferences: doc.readingPreferences
-        ? {
-            ...doc.readingPreferences,
-            warmth: doc.readingPreferences.warmth ?? 0,
-            brightness: doc.readingPreferences.brightness ?? 100,
-          }
-        : undefined,
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
+      id: row.id,
+      roleId: row.roleId,
+      username: row.username,
+      email: row.email,
+      password: row.password ?? undefined,
+      isVerified: row.isVerified,
+      isBanned: row.isBanned,
+      violationCount: row.violationCount,
+      provider: row.provider,
+      providerId: row.providerId ?? undefined,
+      image: row.image ?? undefined,
+      bio: row.bio ?? undefined,
+      location: row.location ?? undefined,
+      website: row.website ?? undefined,
+      hashedRt: row.hashedRt ?? undefined,
+      previousHashedRt: row.previousHashedRt ?? undefined,
+      refreshRotatedAt: row.refreshRotatedAt ?? undefined,
+      lastLoginIp: row.lastLoginIp ?? undefined,
+      lastLoginUa: row.lastLoginUa ?? undefined,
+      favoriteGenres: row.favoriteGenres.map(({ genreId }) => genreId),
+      readingPreferences: toReadingPreferences(row.readingPreferences),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   }
 
-  static toPersistence(entity: UserEntity): UserPersistence {
+  static toPersistence(entity: UserEntity): Prisma.UserUncheckedCreateInput {
+    const preferences = entity.readingPreferences;
+
     return {
-      _id: new Types.ObjectId(entity.id.toString()),
-      roleId: new Types.ObjectId(entity.roleId),
+      id: entity.id.toString(),
+      roleId: entity.roleId,
       username: entity.username,
       email: entity.email.toString(),
       password: entity.password,
@@ -87,10 +131,9 @@ export class UserMapper {
       refreshRotatedAt: entity.refreshRotatedAt,
       lastLoginIp: entity.lastLoginIp,
       lastLoginUa: entity.lastLoginUa,
-      favoriteGenres: (entity.favoriteGenres || []).map(
-        (g) => new Types.ObjectId(g),
-      ),
-      readingPreferences: entity.readingPreferences,
+      readingPreferences: preferences
+        ? toReadingPreferencesJson(preferences)
+        : Prisma.DbNull,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };

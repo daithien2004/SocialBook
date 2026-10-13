@@ -1,7 +1,7 @@
 import { Command } from '@nestjs/cqrs';
-import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
+import { ReadingRoomHighlightResult } from '@/modules/reading-rooms/application/reading-room.result';
 
-export class AddHighlightCommand extends Command<ReadingRoom> {
+export class AddHighlightCommand extends Command<ReadingRoomHighlightResult> {
   constructor(
     public readonly roomId: string,
     public readonly userId: string,

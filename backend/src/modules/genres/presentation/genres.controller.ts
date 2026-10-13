@@ -1,4 +1,3 @@
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { GenresService } from '../application/genres.service';
 import { CreateGenreDto } from '@/modules/genres/presentation/dto/create-genre.dto';
@@ -16,6 +15,7 @@ import {
   Post,
   Query,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
@@ -57,10 +57,10 @@ export class GenresController {
       filter.name,
     );
 
-    return paginated(
-      result.data.map((genre) => new GenreResponseDto(genre)),
-      result.meta,
-    );
+    return {
+      data: result.data.map((genre) => new GenreResponseDto(genre)),
+      meta: result.meta,
+    };
   }
 
   @Get('admin')
@@ -74,16 +74,16 @@ export class GenresController {
       filter.name,
     );
 
-    return paginated(
-      result.data.map((genre) => new GenreResponseDto(genre)),
-      result.meta,
-    );
+    return {
+      data: result.data.map((genre) => new GenreResponseDto(genre)),
+      meta: result.meta,
+    };
   }
 
   @Public()
   @Get(':id')
   @ApiOkResponse({ type: GenreResponseDto })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     const genre = await this.genresService.findById(id);
     return new GenreResponseDto(genre);
   }
@@ -93,7 +93,7 @@ export class GenresController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateGenreDto: UpdateGenreDto,
   ) {
     const genre = await this.genresService.update(
@@ -109,7 +109,7 @@ export class GenresController {
   @ApiNoContentResponse()
   @Roles('admin')
   @UseGuards(RolesGuard)
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     await this.genresService.delete(id);
     return undefined;
   }

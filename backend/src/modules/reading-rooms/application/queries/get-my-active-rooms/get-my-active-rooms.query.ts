@@ -1,9 +1,15 @@
 import { Query } from '@nestjs/cqrs';
 
-import { ReadingRoomSummaryResult } from '@/modules/reading-rooms/application/reading-room.interface';
+import type { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import type { PageParams, PageResult } from '@/shared/domain/pagination.types';
 
-export class GetMyActiveRoomsQuery extends Query<ReadingRoomSummaryResult[]> {
-  constructor(public readonly userId: string) {
+export class GetMyActiveRoomsQuery extends Query<
+  PageResult<ReadingRoomResult>
+> {
+  constructor(
+    public readonly userId: string,
+    public readonly pagination: PageParams,
+  ) {
     super();
   }
 }

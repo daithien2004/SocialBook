@@ -1,42 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  MAX_OFFSET_PAGE_LIMIT,
+  OffsetPaginationQueryDto,
+} from './offset-pagination-query.dto';
 
-export class PaginationQueryDto {
-  @ApiPropertyOptional({ default: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number;
+export const MAX_LIMIT = MAX_OFFSET_PAGE_LIMIT;
 
-  @ApiPropertyOptional({ default: 10 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  limit?: number;
-
-  @ApiPropertyOptional({
-    default: 1,
-    description: 'Alias for page, used by ProTable',
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  current?: number;
-
-  @ApiPropertyOptional({
-    default: 10,
-    description: 'Alias for limit, used by ProTable',
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  pageSize?: number;
-
+export class PaginationQueryDto extends OffsetPaginationQueryDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
@@ -53,13 +24,4 @@ export class PaginationQueryDto {
   @IsOptional()
   @IsString()
   cursor?: string;
-
-  // Getter helpers
-  get actualPage(): number {
-    return this.page ?? this.current ?? 1;
-  }
-
-  get actualLimit(): number {
-    return this.limit ?? this.pageSize ?? 10;
-  }
 }

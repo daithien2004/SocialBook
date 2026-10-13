@@ -1,34 +1,36 @@
-import { UserHighlight } from '../../domain/entities/user-highlight.entity';
-import { UserHighlightDocument } from '../schemas/user-highlight.schema';
-import { Types } from 'mongoose';
+import { UserHighlight as UserHighlightEntity } from '@/modules/user-highlights/domain/entities/user-highlight.entity';
+import { UserHighlight as PrismaUserHighlight } from '@/core/database/generated/prisma/client';
 
-export class UserHighlightMapper {
-  static toDomain(doc: UserHighlightDocument): UserHighlight {
-    return UserHighlight.reconstitute(
-      doc._id.toString(),
+export const UserHighlightMapper = {
+  toDomain(row: PrismaUserHighlight): UserHighlightEntity {
+    return UserHighlightEntity.reconstitute(
+      row.id,
       {
-        userId: doc.userId.toString(),
-        bookId: doc.bookId.toString(),
-        chapterId: doc.chapterId.toString(),
-        paragraphId: doc.paragraphId,
-        content: doc.content,
-        color: doc.color,
-        note: doc.note,
+        userId: row.userId,
+        bookId: row.bookId,
+        chapterId: row.chapterId,
+        paragraphId: row.paragraphId,
+        content: row.content,
+        color: row.color,
+        note: row.note ?? undefined,
       },
-      doc.createdAt,
-      doc.updatedAt,
+      row.createdAt,
+      row.updatedAt,
     );
-  }
+  },
 
-  static toPersistence(entity: UserHighlight): Record<string, unknown> {
+  toCreateInput(highlight: UserHighlightEntity) {
     return {
-      userId: new Types.ObjectId(entity.userId),
-      bookId: new Types.ObjectId(entity.bookId),
-      chapterId: new Types.ObjectId(entity.chapterId),
-      paragraphId: entity.paragraphId,
-      content: entity.content,
-      color: entity.color,
-      note: entity.note,
+      id: highlight.id,
+      userId: highlight.userId,
+      bookId: highlight.bookId,
+      chapterId: highlight.chapterId,
+      paragraphId: highlight.paragraphId,
+      content: highlight.content,
+      color: highlight.color,
+      note: highlight.note ?? null,
+      createdAt: highlight.createdAt,
+      updatedAt: highlight.updatedAt,
     };
-  }
-}
+  },
+};

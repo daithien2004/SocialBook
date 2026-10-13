@@ -40,7 +40,7 @@ export interface FollowWithUserInfo {
 export interface PaginatedFollowsWithUserInfo {
   data: FollowWithUserInfo[];
   meta: {
-    current: number;
+    page: number;
     pageSize: number;
     total: number;
     totalPages: number;

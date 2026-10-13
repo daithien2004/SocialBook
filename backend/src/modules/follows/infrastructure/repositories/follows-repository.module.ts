@@ -1,18 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Follow,
-  FollowSchema,
-} from '@/modules/follows/infrastructure/schemas/follow.schema';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.repository.interface';
-import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { FollowRepository } from './follow.repository';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Follow.name, schema: FollowSchema }]),
-    IdGeneratorModule,
-  ],
+  imports: [PostgresDatabaseModule],
   providers: [
     {
       provide: IFollowRepository,

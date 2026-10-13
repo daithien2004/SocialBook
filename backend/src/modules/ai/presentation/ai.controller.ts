@@ -7,6 +7,7 @@ import {
   Req,
   BadRequestException,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { GenerateTextCommand } from '@/modules/ai/application/commands/generate-text/generate-text.command';
@@ -41,7 +42,7 @@ export class AIController {
   @UseGuards(AIThrottleGuard)
   @Post('summarize-chapter/:chapterId')
   async summarizeChapter(
-    @Param('chapterId') chapterId: string,
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
     @Body() body: { userId?: string },
     @Req() req: { user?: { id: string } },
   ) {

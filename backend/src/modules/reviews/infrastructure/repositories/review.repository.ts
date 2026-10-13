@@ -1,97 +1,116 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { Review as ReviewEntity } from '@/modules/reviews/domain/entities/review.entity';
 import { IReviewRepository } from '@/modules/reviews/domain/repositories/review.repository.interface';
-import { ReviewMapper } from '@/modules/reviews/infrastructure/repositories/review.mapper';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Review, ReviewDocument } from '../schemas/review.schema';
+import {
+  REVIEW_WITH_RELATIONS,
+  toReviewCreateData,
+  toReviewDomain,
+} from './review.mapper';
 
 @Injectable()
 export class ReviewRepository implements IReviewRepository {
   constructor(
-    @InjectModel(Review.name)
-    private readonly reviewModel: Model<ReviewDocument>,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
   async create(review: ReviewEntity): Promise<ReviewEntity> {
-    const persistenceModel = ReviewMapper.toPersistence(review);
-    const createdReview = await this.reviewModel.create(persistenceModel);
-    // Populate immediately to return full entity
-    const populated = await createdReview.populate('userId', 'username image');
-    return ReviewMapper.toDomain(populated);
+    const row = await this.transactionHost.tx.review.create({
+      data: toReviewCreateData(review),
+      include: REVIEW_WITH_RELATIONS,
+    });
+    return toReviewDomain(row);
   }
 
   async update(review: ReviewEntity): Promise<ReviewEntity> {
-    const updated = await this.reviewModel
-      .findByIdAndUpdate(
-        review.id,
-        {
-          content: review.content,
-          rating: review.rating,
-          moderationStatus: review.moderationStatus,
-          updatedAt: new Date(),
-        },
-        { new: true },
-      )
-      .populate('userId', 'username image');
+    const updated = await this.transactionHost.tx.review.updateMany({
+      where: { id: review.id },
+      data: {
+        content: review.content,
+        rating: review.rating,
+        moderationStatus: review.moderationStatus,
+        updatedAt: review.updatedAt,
+      },
+    });
+    if (updated.count === 0) throw new NotFoundException('Review not found');
 
-    if (!updated) throw new NotFoundException('Review not found');
-    return ReviewMapper.toDomain(updated);
+    const row = await this.transactionHost.tx.review.findUnique({
+      where: { id: review.id },
+      include: REVIEW_WITH_RELATIONS,
+    });
+    if (!row) throw new NotFoundException('Review not found');
+    return toReviewDomain(row);
   }
 
   async delete(id: string): Promise<void> {
-    await this.reviewModel.findByIdAndDelete(id);
+    await this.transactionHost.tx.review.deleteMany({ where: { id } });
   }
 
   async findById(id: string): Promise<ReviewEntity | null> {
-    const review = await this.reviewModel
-      .findById(id)
-      .populate('userId', 'username image')
-      .populate('bookId', 'title coverUrl');
-    return review ? ReviewMapper.toDomain(review) : null;
+    const row = await this.transactionHost.tx.review.findUnique({
+      where: { id },
+      include: REVIEW_WITH_RELATIONS,
+    });
+    return row ? toReviewDomain(row) : null;
   }
 
   async findByBookId(bookId: string): Promise<ReviewEntity[]> {
-    const reviews = await this.reviewModel
-      .find({ bookId: new Types.ObjectId(bookId) })
-      .sort({ createdAt: -1 })
-      .populate('userId', 'username image');
-    return reviews.map((r) => ReviewMapper.toDomain(r));
+    const rows = await this.transactionHost.tx.review.findMany({
+      where: { bookId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      include: REVIEW_WITH_RELATIONS,
+    });
+    return rows.map((row) => toReviewDomain(row));
   }
 
   async toggleLike(
     reviewId: string,
     userId: string,
   ): Promise<ReviewEntity | null> {
-    const uid = new Types.ObjectId(userId);
+    const toggle = async (): Promise<ReviewEntity | null> => {
+      const exists = await this.transactionHost.tx.review.findUnique({
+        where: { id: reviewId },
+        select: { id: true },
+      });
+      if (!exists) return null;
 
-    // Kiểm tra xem user đã like chưa bằng 1 query siêu tốc độ (lean, select _id)
-    const existing = await this.reviewModel
-      .findOne({ _id: new Types.ObjectId(reviewId), likedBy: uid }, { _id: 1 })
-      .lean()
-      .exec();
+      const removed = await this.transactionHost.tx.reviewLike.deleteMany({
+        where: { reviewId, userId },
+      });
+      if (removed.count > 0) {
+        await this.transactionHost.tx.review.update({
+          where: { id: reviewId },
+          data: { likesCount: { decrement: 1 } },
+        });
+      } else {
+        const created = await this.transactionHost.tx.reviewLike.createMany({
+          data: [{ reviewId, userId }],
+          skipDuplicates: true,
+        });
+        if (created.count > 0) {
+          await this.transactionHost.tx.review.update({
+            where: { id: reviewId },
+            data: { likesCount: { increment: 1 } },
+          });
+        }
+      }
 
-    const updateQuery = existing
-      ? { $pull: { likedBy: uid }, $inc: { likesCount: -1 } }
-      : { $addToSet: { likedBy: uid }, $inc: { likesCount: 1 } };
+      const row = await this.transactionHost.tx.review.findUnique({
+        where: { id: reviewId },
+        include: REVIEW_WITH_RELATIONS,
+      });
+      return row ? toReviewDomain(row) : null;
+    };
 
-    // Update Atomic và populate trả về ngay lập tức
-    const updated = await this.reviewModel
-      .findOneAndUpdate({ _id: new Types.ObjectId(reviewId) }, updateQuery, {
-        new: true,
-      })
-      .populate('userId', 'username image')
-      .exec();
-
-    if (!updated) return null;
-
-    return ReviewMapper.toDomain(updated);
+    return this.transactionHost.isTransactionActive()
+      ? toggle()
+      : this.transactionHost.withTransaction(toggle);
   }
 
   async existsByUserAndBook(userId: string, bookId: string): Promise<boolean> {
-    const count = await this.reviewModel.countDocuments({
-      userId: new Types.ObjectId(userId),
-      bookId: new Types.ObjectId(bookId),
+    const count = await this.transactionHost.tx.review.count({
+      where: { userId, bookId },
     });
     return count > 0;
   }
@@ -99,36 +118,25 @@ export class ReviewRepository implements IReviewRepository {
   async getStatsForBooks(
     bookIds: string[],
   ): Promise<Map<string, { rating: number; count: number }>> {
-    const objectIds = bookIds.map((id) => new Types.ObjectId(id));
-    const results = await this.reviewModel
-      .aggregate<{
-        _id: Types.ObjectId;
-        avgRating: number;
-        reviewCount: number;
-      }>([
-        { $match: { bookId: { $in: objectIds } } },
-        {
-          $group: {
-            _id: '$bookId',
-            avgRating: { $avg: '$rating' },
-            reviewCount: { $sum: 1 },
-          },
-        },
-      ])
-      .exec();
-
-    const map = new Map<string, { rating: number; count: number }>();
-    results.forEach((item) => {
-      map.set(item._id.toString(), {
-        rating: Math.round((item.avgRating || 0) * 10) / 10,
-        count: item.reviewCount,
-      });
+    if (bookIds.length === 0) return new Map();
+    const rows = await this.transactionHost.tx.review.groupBy({
+      by: ['bookId'],
+      where: { bookId: { in: bookIds } },
+      _avg: { rating: true },
+      _count: { _all: true },
     });
-    return map;
+    return new Map(
+      rows.map((row) => [
+        row.bookId,
+        {
+          rating: Math.round((row._avg.rating ?? 0) * 10) / 10,
+          count: row._count._all,
+        },
+      ]),
+    );
   }
 
-  // Statistics
-  async countTotal(): Promise<number> {
-    return this.reviewModel.countDocuments().exec();
+  countTotal(): Promise<number> {
+    return this.transactionHost.tx.review.count();
   }
 }

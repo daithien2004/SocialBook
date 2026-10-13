@@ -2,11 +2,11 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
-import { LeaveRoomResult } from '../../reading-room.interface';
-import { ReadingRoomApplicationMapper } from '../../mappers/reading-room.mapper';
+import { LeaveRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import { toReadingRoomResult } from '../../mappers/reading-room-result.mapper';
 import { LeaveRoomCommand } from './leave-room.command';
 
-import { withOptimisticRetry } from '@/shared/platform/utils/with-retries.util';
+import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry';
 
 @CommandHandler(LeaveRoomCommand)
 export class LeaveRoomHandler implements ICommandHandler<
@@ -21,12 +21,12 @@ export class LeaveRoomHandler implements ICommandHandler<
         RoomId.create(command.roomId),
       );
       if (!room) {
-        throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
+        throw new NotFoundDomainException('Phòng không tồn tại');
       }
 
       if (!room.isMember(command.userId)) {
         return {
-          ...ReadingRoomApplicationMapper.toResult(room),
+          ...toReadingRoomResult(room),
           roomEnded: room.status === 'ended',
         };
       }
@@ -40,7 +40,7 @@ export class LeaveRoomHandler implements ICommandHandler<
 
       const roomEnded = room.status === 'ended';
 
-      const baseResult = ReadingRoomApplicationMapper.toResult(room);
+      const baseResult = toReadingRoomResult(room);
       return {
         ...baseResult,
         roomEnded,

@@ -1,4 +1,3 @@
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
@@ -24,6 +23,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -68,7 +68,7 @@ export class ChaptersController {
 
   @Get(':chapterId/knowledge')
   async getKnowledge(
-    @Param('chapterId') chapterId: string,
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
     @Query('force') force?: string,
   ) {
     const query = new GetChapterKnowledgeQuery(chapterId, force === 'true');
@@ -91,7 +91,7 @@ export class ChaptersController {
   })
   async askAI(
     @Param('bookSlug') bookSlug: string,
-    @Param('chapterId') chapterId: string,
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
     @Body('question') question: string,
     @CurrentUser('id') userId: string,
   ) {
@@ -236,16 +236,18 @@ export class ChaptersController {
     }
 
     const paginatedResult = result;
-    return paginated(
-      ChapterResponseDto.fromArray(paginatedResult.data),
-      paginatedResult.meta,
-    );
+    return {
+      data: ChapterResponseDto.fromArray(paginatedResult.data),
+      meta: paginatedResult.meta,
+    };
   }
 
   @Get('id/:chapterId')
   @Roles('admin')
   @UseGuards(RolesGuard)
-  async getChapterByIdWithPrefix(@Param('chapterId') chapterId: string) {
+  async getChapterByIdWithPrefix(
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
+  ) {
     const query = new GetChapterByIdQuery(chapterId);
     const chapter = await this.queryBus.execute(query);
     return new ChapterResponseDto(chapter);
@@ -302,7 +304,7 @@ export class ChaptersController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   async update(
-    @Param('chapterId') chapterId: string,
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
     @Body() updateChapterDto: UpdateChapterDto,
   ) {
     const command = new UpdateChapterCommand({
@@ -322,7 +324,9 @@ export class ChaptersController {
   @Delete(':chapterId')
   @Roles('admin')
   @UseGuards(RolesGuard)
-  async remove(@Param('chapterId') chapterId: string) {
+  async remove(
+    @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
+  ) {
     const command = new DeleteChapterCommand(chapterId);
     await this.commandBus.execute(command);
     return undefined;

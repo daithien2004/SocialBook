@@ -1,29 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Book,
-  BookSchema,
-} from '@/modules/books/infrastructure/schemas/public-api';
-import {
-  Genre,
-  GenreSchema,
-} from '@/modules/genres/infrastructure/schemas/public-api';
-import {
-  ReadingList,
-  ReadingListSchema,
-} from '@/modules/library/infrastructure/schemas/public-api';
-import {
-  Progress,
-  ProgressSchema,
-} from '@/modules/library/infrastructure/schemas/public-api';
-import {
-  Review,
-  ReviewSchema,
-} from '@/modules/reviews/infrastructure/schemas/public-api';
-import {
-  UserPreference,
-  UserPreferenceSchema,
-} from '@/modules/analytics/infrastructure/schemas/public-api';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { AIRecommendationStrategy } from './strategies/ai-recommendation.strategy';
 import { FallbackRecommendationStrategy } from './strategies/fallback-recommendation.strategy';
 import { RecommendationFactory } from './recommendation.factory';
@@ -35,17 +11,7 @@ import { IRecommendationDataRepository } from '@/modules/recommendations/domain/
 import { IRecommendationFactory } from '@/modules/recommendations/domain/interfaces/recommendation-factory.interface';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Book.name, schema: BookSchema },
-      { name: Genre.name, schema: GenreSchema },
-      { name: ReadingList.name, schema: ReadingListSchema },
-      { name: Progress.name, schema: ProgressSchema },
-      { name: Review.name, schema: ReviewSchema },
-      { name: UserPreference.name, schema: UserPreferenceSchema },
-    ]),
-    AIInfrastructureModule,
-  ],
+  imports: [PostgresDatabaseModule, AIInfrastructureModule],
   providers: [
     AIRecommendationStrategy,
     FallbackRecommendationStrategy,

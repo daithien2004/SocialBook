@@ -1,7 +1,7 @@
 import { Query } from '@nestjs/cqrs';
-import { ReadingRoomHighlightPage } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import type { GetRoomHighlightsResult } from '@/modules/reading-rooms/application/reading-room.result';
 
-export class GetRoomHighlightsQuery extends Query<ReadingRoomHighlightPage> {
+export class GetRoomHighlightsQuery extends Query<GetRoomHighlightsResult> {
   constructor(
     public readonly code: string,
     public readonly userId: string,

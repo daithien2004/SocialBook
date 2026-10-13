@@ -131,6 +131,26 @@ function collectImportPaths(filePath, content) {
 
 const files = await collectTypeScriptFiles(sourceDirectory);
 
+for (const [entryPoint, modeImport] of [
+  ['main.ts', "import './api-mode';"],
+  ['worker.ts', "import './worker-mode';"],
+]) {
+  const entryPath = path.join(sourceDirectory, entryPoint);
+  const content = await readFile(entryPath, 'utf8');
+  const modeImportIndex = content.indexOf(modeImport);
+  const appModuleImportIndex = content.indexOf("from './app.module'");
+
+  if (
+    modeImportIndex < 0 ||
+    appModuleImportIndex < 0 ||
+    modeImportIndex > appModuleImportIndex
+  ) {
+    errors.push(
+      `${entryPoint}: ${modeImport} must appear before the AppModule import`,
+    );
+  }
+}
+
 for (const filePath of files) {
   const content = await readFile(filePath, 'utf8');
   const relativePath = path.relative(sourceDirectory, filePath);
@@ -158,10 +178,12 @@ for (const filePath of files) {
       (importPath) =>
         importPath.startsWith('@nestjs/') ||
         importPath === 'mongoose' ||
-        importPath.startsWith('mongoose/'),
+        importPath.startsWith('mongoose/') ||
+        importPath === '@prisma/client' ||
+        importPath.startsWith('@/core/database/generated/prisma'),
     )
   ) {
-    errors.push(`${relativePath}: domain code must not import NestJS or Mongoose`);
+    errors.push(`${relativePath}: domain code must not import NestJS or persistence ORM clients`);
   }
 
   const sourceModule = moduleNameFromPath(filePath);

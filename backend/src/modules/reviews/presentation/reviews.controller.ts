@@ -1,4 +1,4 @@
-import { unpaginated } from '@/shared/platform/dto/paginated.dto';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   HttpCode,
@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { CreateReviewDto } from '@/modules/reviews/presentation/dto/create-review.dto';
@@ -47,7 +48,7 @@ export class ReviewsController {
   @ApiPaginatedResponse(ReviewResponseDto, 'offset')
   async findAllByBook(
     @CurrentUser('id') userId: string | undefined,
-    @Param('bookId') bookId: string,
+    @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ) {
     const reviews = await this.queryBus.execute(
       new GetBookReviewsQuery(bookId),
@@ -61,7 +62,14 @@ export class ReviewsController {
       };
     });
 
-    return unpaginated(responseDtos);
+    return {
+      data: responseDtos,
+      meta: buildPaginationMeta(
+        1,
+        Math.max(responseDtos.length, 1),
+        responseDtos.length,
+      ),
+    };
   }
 
   @Post()
@@ -79,7 +87,7 @@ export class ReviewsController {
   @Patch(':id')
   @ApiOkResponse({ type: ReviewResponseDto })
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateReviewDto,
   ) {
@@ -100,7 +108,10 @@ export class ReviewsController {
       },
     },
   })
-  async toggleLike(@CurrentUser('id') userId: string, @Param('id') id: string) {
+  async toggleLike(
+    @CurrentUser('id') userId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+  ) {
     const review = await this.commandBus.execute(
       new ToggleReviewLikeCommand(id, userId),
     );
@@ -114,7 +125,10 @@ export class ReviewsController {
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()
-  async remove(@Param('id') id: string, @CurrentAbility() ability: AppAbility) {
+  async remove(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @CurrentAbility() ability: AppAbility,
+  ) {
     await this.commandBus.execute(new DeleteReviewCommand(id, ability));
     return undefined;
   }

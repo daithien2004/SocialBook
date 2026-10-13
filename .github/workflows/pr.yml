@@ -11,7 +11,7 @@ jobs:
     env:
       NODE_ENV: test
       PORT: '5000'
-      MONGO_URI: 'mongodb://localhost:27017/socialbook?replicaSet=rs0&directConnection=true'
+      DATABASE_URL: 'postgresql://socialbook:socialbook_dev@localhost:5432/socialbook?schema=public'
       JWT_ACCESS_SECRET: contract-check-access-secret-at-least-32-chars
       JWT_REFRESH_SECRET: contract-check-refresh-secret-at-least-32-chars
       GOOGLE_CLIENT_ID: contract-check-client
@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.12.0
           cache: 'npm'
 
       - name: Install dependencies
@@ -42,29 +42,10 @@ jobs:
         run: npm run build:shared
 
       - name: Start API contract dependencies
-        run: docker compose -f backend/docker-compose.openapi.yml up -d
+        run: docker compose -f backend/docker-compose.openapi.yml up -d --wait
 
-      - name: Initialize MongoDB replica set
-        run: |
-          mongo_container="$(docker compose -f backend/docker-compose.openapi.yml ps -q mongo)"
-          for attempt in $(seq 1 60); do
-            if docker exec "$mongo_container" mongosh --quiet --eval \
-              "db.adminCommand('ping').ok" | grep -q 1; then
-              break
-            fi
-            sleep 1
-          done
-          docker exec "$mongo_container" mongosh --quiet --eval \
-            "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"
-          for attempt in $(seq 1 30); do
-            if docker exec "$mongo_container" mongosh --quiet --eval \
-              "rs.status().myState === 1" | grep -q true; then
-              exit 0
-            fi
-            sleep 1
-          done
-          echo 'MongoDB replica set did not become primary.'
-          exit 1
+      - name: Apply PostgreSQL schema
+        run: npm run db:migrate:deploy --workspace=backend
 
       - name: Build backend
         run: npm run build --workspace=backend
@@ -108,6 +89,25 @@ jobs:
   backend:
     name: Backend - Lint & Test & Build
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://socialbook:socialbook_dev@localhost:5432/socialbook?schema=public
+      JWT_ACCESS_SECRET: backend-check-access-secret-at-least-32-chars
+      JWT_REFRESH_SECRET: backend-check-refresh-secret-at-least-32-chars
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: socialbook
+          POSTGRES_USER: socialbook
+          POSTGRES_PASSWORD: socialbook_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U socialbook -d socialbook"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -115,7 +115,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.12.0
           cache: 'npm'
 
       - name: Install dependencies (root workspaces)
@@ -123,6 +123,9 @@ jobs:
 
       - name: Build shared package
         run: npm run build:shared
+
+      - name: Apply PostgreSQL schema
+        run: npm run db:migrate:deploy --workspace=backend
 
       - name: Lint
         run: cd backend && npm run lint
@@ -149,7 +152,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.12.0
           cache: 'npm'
 
       - name: Install dependencies (root workspaces)

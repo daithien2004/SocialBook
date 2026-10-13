@@ -70,14 +70,19 @@ export function ReadingRoomsHubClient() {
       toast.error('Sách này chưa có chương nào. Không thể tạo phòng đọc.');
       return;
     }
+    const firstChapter = chaptersData?.chapters?.[0];
+    if (!firstChapter) {
+      toast.error('Không tìm thấy chương để tạo phòng đọc.');
+      return;
+    }
     try {
-      const firstChapterSlug = chaptersData?.chapters?.[0]?.slug || 'chuong-1';
-      const res = await createRoom.mutateAsync({
+      const payload = {
         bookId: selectedBook,
-        currentChapterSlug: firstChapterSlug,
-        mode: 'sync',
+        chapterId: firstChapter.id,
+        mode: 'sync' as const,
         maxMembers,
-      });
+      };
+      const res = await createRoom.mutateAsync(payload);
       toast.success('Tạo phòng thành công!');
       router.push(`/reading-rooms/${res.roomId}`);
     } catch {

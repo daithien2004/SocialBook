@@ -1,13 +1,13 @@
 import {
   IsBoolean,
-  IsMongoId,
+  IsUUID,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
 
 export class CreateFollowDto {
-  @IsMongoId()
+  @IsUUID('4')
   @IsNotEmpty()
   targetId!: string;
 
@@ -23,17 +23,17 @@ export class UpdateFollowDto {
 }
 
 export class FollowStatusDto {
-  @IsMongoId()
+  @IsUUID('4')
   @IsNotEmpty()
   userId!: string;
 
-  @IsMongoId()
+  @IsUUID('4')
   @IsNotEmpty()
   targetId!: string;
 }
 
 export class FollowStatsDto {
-  @IsMongoId()
+  @IsUUID('4')
   @IsNotEmpty()
   userId!: string;
 }
@@ -42,11 +42,11 @@ import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
 
 export class FilterFollowDto extends PaginationQueryDto {
   @IsOptional()
-  @IsMongoId()
+  @IsUUID('4')
   userId?: string;
 
   @IsOptional()
-  @IsMongoId()
+  @IsUUID('4')
   targetId?: string;
 
   @IsOptional()

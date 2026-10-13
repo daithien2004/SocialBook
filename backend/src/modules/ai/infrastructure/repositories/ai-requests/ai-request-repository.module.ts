@@ -1,23 +1,18 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  AIRequest,
-  AIRequestSchema,
-} from '@/modules/ai/infrastructure/schemas/ai-request.schema';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { IAIRequestRepository } from '@/modules/ai/domain';
 import { AIRequestRepository } from './ai-request.repository';
+import { AIRequestRetentionWorker } from './ai-request-retention.worker';
+import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: AIRequest.name, schema: AIRequestSchema },
-    ]),
-  ],
+  imports: [PostgresDatabaseModule],
   providers: [
     {
       provide: IAIRequestRepository,
       useClass: AIRequestRepository,
     },
+    ...(isWorkerProcess() ? [AIRequestRetentionWorker] : []),
   ],
   exports: [IAIRequestRepository],
 })

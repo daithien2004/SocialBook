@@ -1,4 +1,3 @@
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import {
@@ -10,6 +9,7 @@ import {
   Param,
   Post,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { Public } from '@/shared/platform/decorators/custom.decorator';
@@ -56,10 +56,10 @@ export class FollowsController {
     const query = new GetFollowingQuery(userId);
     const result = await this.queryBus.execute(query);
 
-    return paginated(
-      result.data.map((item) => new FollowResponseDto(item)),
-      result.meta,
-    );
+    return {
+      data: result.data.map((item) => new FollowResponseDto(item)),
+      meta: result.meta,
+    };
   }
 
   @Get('followers')
@@ -68,10 +68,10 @@ export class FollowsController {
     const query = new GetFollowersQuery(targetUserId);
     const result = await this.queryBus.execute(query);
 
-    return paginated(
-      result.data.map((item) => new FollowResponseDto(item)),
-      result.meta,
-    );
+    return {
+      data: result.data.map((item) => new FollowResponseDto(item)),
+      meta: result.meta,
+    };
   }
 
   @Get('status')
@@ -109,7 +109,7 @@ export class FollowsController {
   @ApiNoContentResponse()
   async unfollow(
     @CurrentUser('id') userId: string,
-    @Param('targetId') targetId: string,
+    @Param('targetId', new ParseUUIDPipe({ version: '4' })) targetId: string,
   ) {
     const command = new DeleteFollowCommand(userId, targetId);
     await this.commandBus.execute(command);
@@ -136,9 +136,9 @@ export class FollowsController {
     );
     const result = await this.queryBus.execute(query);
 
-    return paginated(
-      result.data.map((follow) => new FollowResponseDto(follow)),
-      result.meta,
-    );
+    return {
+      data: result.data.map((follow) => new FollowResponseDto(follow)),
+      meta: result.meta,
+    };
   }
 }

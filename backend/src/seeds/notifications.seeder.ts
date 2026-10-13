@@ -1,184 +1,80 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import {
-  Notification,
-  NotificationDocument,
-} from '@/modules/notifications/infrastructure/schemas/notification.schema';
-import {
-  User,
-  UserDocument,
-} from '@/modules/users/infrastructure/schemas/user.schema';
-import {
-  Post,
-  PostDocument,
-} from '@/modules/posts/infrastructure/schemas/post.schema';
-import {
-  CommentSchemaModel as Comment,
-  CommentDocument,
-} from '@/modules/comments';
-
-interface NotificationSeedData {
-  userId: Types.ObjectId;
-  title: string;
-  message: string;
-  type: string;
-  isRead: boolean;
-  sentAt: Date;
-  meta?: {
-    actorId?: Types.ObjectId;
-    username?: string;
-    image?: string;
-    targetId?: Types.ObjectId;
-  };
-  actionUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { Prisma } from '@/core/database/generated/prisma/client';
 
 @Injectable()
 export class NotificationSeed {
   private readonly logger = new Logger(NotificationSeed.name);
 
-  constructor(
-    @InjectModel(Notification.name)
-    private notificationModel: Model<NotificationDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Post.name) private postModel: Model<PostDocument>,
-    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async run(): Promise<void> {
-    this.logger.log('🔔 Seeding notifications...');
-
-    const existingCount = await this.notificationModel.countDocuments();
+    const existingCount = await this.prisma.notification.count();
     if (existingCount > 0) {
+      this.logger.warn(`Found ${existingCount} notifications. Skipping seed.`);
+      return;
+    }
+
+    const users = await this.prisma.user.findMany({
+      select: { id: true, username: true, image: true },
+      orderBy: { id: 'asc' },
+    });
+    if (users.length < 2) {
       this.logger.warn(
-        `⚠️ Found ${existingCount} existing notifications. Skipping...`,
+        'At least two PostgreSQL users are required to seed notifications.',
       );
       return;
     }
 
-    const users = await this.userModel.find();
-    const posts = await this.postModel.find().limit(20);
-    const comments = await this.commentModel
-      .find({ targetType: 'post' })
-      .limit(30);
+    const now = new Date();
+    const notifications: Prisma.NotificationCreateManyInput[] = [];
+    for (const [index, user] of users.entries()) {
+      const actor = users[(index + 1) % users.length];
+      if (!actor) continue;
 
-    if (users.length === 0) {
-      this.logger.error('❌ Users not found.');
-      return;
-    }
-
-    const notifications: NotificationSeedData[] = [];
-
-    for (const user of users) {
-      const others = users.filter(
-        (u) => u._id.toString() !== user._id.toString(),
-      );
-
-      if (others.length === 0) continue;
-
-      // 1. System welcome
-      notifications.push({
-        userId: user._id,
-        title: 'Chào mừng đến với SocialBook!',
-        message:
-          'Cảm ơn bạn đã tham gia SocialBook. Hãy khám phá thư viện sách và kết nối với những người yêu sách nhé!',
-        type: 'system',
-        isRead: Math.random() > 0.5,
-        sentAt: new Date(Date.now() - Math.random() * 25 * 24 * 60 * 60 * 1000),
-        actionUrl: '/books',
-        createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      });
-
-      // 2. Follow notification
-      const randomFollower = others[Math.floor(Math.random() * others.length)];
-      notifications.push({
-        userId: user._id,
-        title: 'Theo dõi mới',
-        message: `${randomFollower.username} đã theo dõi bạn.`,
-        type: 'follow',
-        isRead: Math.random() > 0.6,
-        sentAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        meta: {
-          actorId: randomFollower._id,
-          username: randomFollower.username,
-          image: randomFollower.image,
+      const createdAt = new Date(now.getTime() - (index + 1) * 60 * 60 * 1000);
+      notifications.push(
+        {
+          id: randomUUID(),
+          userId: user.id,
+          title: 'Chào mừng đến với SocialBook!',
+          message:
+            'Cảm ơn bạn đã tham gia SocialBook. Hãy khám phá thư viện sách và kết nối với những người yêu sách nhé!',
+          type: 'system',
+          isRead: index % 2 === 0,
+          sentAt: createdAt,
+          actionUrl: '/books',
+          createdAt,
+          updatedAt: now,
         },
-        actionUrl: `/users/${randomFollower._id.toString()}`,
-        createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      });
-
-      // 3. Like notification — someone liked user's post
-      if (posts.length === 0) continue;
-      const userPosts = posts.filter(
-        (p) => p.userId && p.userId.toString() === user._id.toString(),
-      );
-      const likedPost =
-        userPosts.length > 0
-          ? userPosts[Math.floor(Math.random() * userPosts.length)]
-          : posts[Math.floor(Math.random() * posts.length)];
-      const randomLiker = others[Math.floor(Math.random() * others.length)];
-      notifications.push({
-        userId: user._id,
-        title: 'Lượt thích mới',
-        message: `${randomLiker.username} đã thích bài viết của bạn.`,
-        type: 'like',
-        isRead: Math.random() > 0.7,
-        sentAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000),
-        meta: {
-          actorId: randomLiker._id,
-          username: randomLiker.username,
-          image: randomLiker.image,
-          targetId: likedPost._id,
-        },
-        actionUrl: `/posts/${likedPost._id.toString()}`,
-        createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date(),
-      });
-    }
-
-    // 4. Comment notifications — use real comments from DB
-    if (comments.length > 0) {
-      for (const comment of comments) {
-        const commenter = users.find(
-          (u) => u._id.toString() === comment.userId.toString(),
-        );
-        const post = posts.find(
-          (p) => p._id.toString() === comment.targetId.toString(),
-        );
-        const recipient = users.find(
-          (u) => post?.userId && u._id.toString() === post.userId.toString(),
-        );
-
-        if (!commenter || !recipient) continue;
-
-        notifications.push({
-          userId: recipient._id,
-          title: 'Bình luận mới',
-          message: `${commenter.username} đã bình luận bài viết của bạn.`,
-          type: 'comment',
-          isRead: Math.random() > 0.8,
-          sentAt: new Date(
-            Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000,
-          ),
+        {
+          id: randomUUID(),
+          userId: user.id,
+          title: 'Theo dõi mới',
+          message: `${actor.username} đã theo dõi bạn.`,
+          type: 'follow',
+          isRead: index % 3 === 0,
+          sentAt: createdAt,
+          actionUrl: `/users/${actor.id}`,
           meta: {
-            actorId: commenter._id,
-            username: commenter.username,
-            image: commenter.image,
-            targetId: comment._id,
-          },
-          actionUrl: `/posts/${comment.targetId.toString()}`,
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(),
-        });
-      }
+            actorId: actor.id,
+            username: actor.username,
+            ...(actor.image === null ? {} : { image: actor.image }),
+          } satisfies Prisma.InputJsonObject,
+          createdAt,
+          updatedAt: now,
+        },
+      );
     }
 
-    await this.notificationModel.insertMany(notifications);
-    this.logger.log(`✅ Seeded ${notifications.length} notification records`);
+    const result = await this.prisma.notification.createMany({
+      data: notifications,
+    });
+    this.logger.log(`Seeded ${result.count} notification records`);
+  }
+
+  async clear(): Promise<void> {
+    await this.prisma.notification.deleteMany();
   }
 }

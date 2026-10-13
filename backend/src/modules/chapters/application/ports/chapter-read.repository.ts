@@ -9,9 +9,16 @@ import {
 } from '@/shared/domain/pagination.types';
 
 export abstract class IChapterReadRepository {
+  abstract findSlugsByIds(chapterIds: string[]): Promise<Map<string, string>>;
+
   abstract findDetailBySlug(
     chapterSlug: string,
     bookSlug: string,
+  ): Promise<ChapterDetailReadModel | null>;
+
+  abstract findCurrentRoomChapterById(
+    bookId: string,
+    chapterId: string,
   ): Promise<ChapterDetailReadModel | null>;
 
   abstract findPaginated(

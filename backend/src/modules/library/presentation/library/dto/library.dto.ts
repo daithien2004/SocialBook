@@ -2,17 +2,17 @@ import { ReadingStatus } from '@/modules/library/domain/library/entities/reading
 import {
   IsArray,
   IsEnum,
-  IsMongoId,
+  IsUUID,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 
 export class UpdateProgressDto {
-  @IsMongoId()
+  @IsUUID('4')
   bookId!: string;
 
-  @IsMongoId()
+  @IsUUID('4')
   chapterId!: string;
 
   @IsNumber()
@@ -21,7 +21,7 @@ export class UpdateProgressDto {
 }
 
 export class UpdateLibraryStatusDto {
-  @IsMongoId()
+  @IsUUID('4')
   bookId!: string;
 
   @IsEnum(ReadingStatus)
@@ -29,24 +29,23 @@ export class UpdateLibraryStatusDto {
 }
 
 export class AddToCollectionsDto {
-  @IsMongoId()
+  @IsUUID('4')
   bookId!: string;
 
   @IsArray()
   @IsString({ each: true })
-  @IsMongoId({
+  @IsUUID('4', {
     each: true,
-    message:
-      'Each value in collectionIds must be a valid 24-character hexadecimal MongoDB ID',
+    message: 'Each value in collectionIds must be a valid UUID',
   })
   collectionIds!: string[];
 }
 
 export class UpdateReadingTimeDto {
-  @IsMongoId()
+  @IsUUID('4')
   bookId!: string;
 
-  @IsMongoId()
+  @IsUUID('4')
   chapterId!: string;
 
   @IsNumber()

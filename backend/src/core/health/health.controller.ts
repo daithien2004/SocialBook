@@ -2,7 +2,6 @@ import { Controller, Get, VERSION_NEUTRAL, Version } from '@nestjs/common';
 import {
   HealthCheck,
   HealthCheckService,
-  MongooseHealthIndicator,
   MicroserviceHealthIndicator,
 } from '@nestjs/terminus';
 import { RedisOptions, Transport } from '@nestjs/microservices';
@@ -11,13 +10,14 @@ import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 import { ApiOkResponse } from '@nestjs/swagger';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
 
 @ApiProblemResponses()
 @Controller('health')
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
-    private readonly mongoose: MongooseHealthIndicator,
+    private readonly prisma: PrismaService,
     private readonly microservice: MicroserviceHealthIndicator,
     private readonly configService: ConfigService,
   ) {}
@@ -66,7 +66,10 @@ export class HealthController {
     );
 
     return this.health.check([
-      () => this.mongoose.pingCheck('mongodb'),
+      async () => {
+        await this.prisma.$queryRaw`SELECT 1`;
+        return { postgres: { status: 'up' } };
+      },
       () =>
         this.microservice.pingCheck<RedisOptions>('redis', {
           transport: Transport.REDIS,

@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ReadingRoomPresenceService } from '@/modules/reading-rooms/application/presence/reading-room-presence.service';
-import { ReadingRoomServerEvent } from '../../reading-room.events';
+import {
+  IPresenceCachePort,
+  PresenceData,
+} from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
+import { ReadingRoomServerEvent } from '../../reading-room.socket-events';
 import { PRESENCE_BROADCAST_DEBOUNCE_MS } from './reading-room.constants';
 import { RoomSocket } from './reading-room.types';
-import { PresenceData } from '@/modules/reading-rooms/domain/interfaces/presence-cache.port';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';
 
 @Injectable()
@@ -17,7 +19,7 @@ export class ReadingRoomPresenceCoordinator {
   >();
 
   constructor(
-    private readonly presenceService: ReadingRoomPresenceService,
+    private readonly presenceCache: IPresenceCachePort,
     private readonly namespaceProvider: ReadingRoomNamespaceProvider,
   ) {}
 
@@ -109,12 +111,12 @@ export class ReadingRoomPresenceCoordinator {
     socketId: string,
     data: Omit<PresenceData, 'lastSeen'>,
   ): Promise<PresenceData[]> {
-    await this.presenceService.upsertPresence(roomId, userId, socketId, data);
+    await this.presenceCache.upsertPresence(roomId, userId, socketId, data);
     this.scheduleBroadcast(roomId, 'urgent', {
       action: 'upsert',
       presence: { ...data, lastSeen: Date.now() },
     });
-    return this.presenceService.getRoomPresences(roomId);
+    return this.presenceCache.getRoomPresences(roomId);
   }
 
   /**
@@ -129,16 +131,12 @@ export class ReadingRoomPresenceCoordinator {
     options: { forceRemove?: boolean } = {},
   ): Promise<PresenceData[]> {
     if (options.forceRemove) {
-      await this.presenceService.removeUserPresences(roomId, userId);
+      await this.presenceCache.removeUserPresences(roomId, userId);
     } else {
       const anotherSocketRemains =
-        await this.presenceService.removeSocketPresence(
-          roomId,
-          userId,
-          socketId,
-        );
+        await this.presenceCache.removeSocketPresence(roomId, userId, socketId);
       if (anotherSocketRemains) {
-        const presences = await this.presenceService.getRoomPresences(roomId);
+        const presences = await this.presenceCache.getRoomPresences(roomId);
         const remainingPresence = presences.find(
           (presence) => presence.userId === userId,
         );
@@ -152,7 +150,7 @@ export class ReadingRoomPresenceCoordinator {
       }
     }
     this.scheduleBroadcast(roomId, 'urgent', { action: 'remove', userId });
-    return this.presenceService.getRoomPresences(roomId);
+    return this.presenceCache.getRoomPresences(roomId);
   }
 
   async onHeartbeat(
@@ -161,13 +159,12 @@ export class ReadingRoomPresenceCoordinator {
     socketId: string,
     payload: Omit<PresenceData, 'lastSeen'>,
   ): Promise<void> {
-    const { created, chapterChanged } =
-      await this.presenceService.upsertPresence(
-        roomId,
-        userId,
-        socketId,
-        payload,
-      );
+    const { created, chapterChanged } = await this.presenceCache.upsertPresence(
+      roomId,
+      userId,
+      socketId,
+      payload,
+    );
     const urgency = created || chapterChanged ? 'urgent' : 'lazy';
     this.scheduleBroadcast(roomId, urgency, {
       action: 'upsert',
@@ -181,7 +178,7 @@ export class ReadingRoomPresenceCoordinator {
 
     try {
       const anotherSocketRemains =
-        await this.presenceService.removeSocketPresence(
+        await this.presenceCache.removeSocketPresence(
           roomId,
           userId,
           socket.id,
@@ -190,7 +187,7 @@ export class ReadingRoomPresenceCoordinator {
       if (!anotherSocketRemains) {
         this.scheduleBroadcast(roomId, 'urgent', { action: 'remove', userId });
       } else {
-        const presences = await this.presenceService.getRoomPresences(roomId);
+        const presences = await this.presenceCache.getRoomPresences(roomId);
         const remainingPresence = presences.find(
           (presence) => presence.userId === userId,
         );
@@ -210,7 +207,7 @@ export class ReadingRoomPresenceCoordinator {
   }
 
   async removeAllFromRoom(roomId: string): Promise<void> {
-    await this.presenceService.removeRoomPresences(roomId);
+    await this.presenceCache.removeRoomPresences(roomId);
   }
 }
 

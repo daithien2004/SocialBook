@@ -1,14 +1,11 @@
 import { Query } from '@nestjs/cqrs';
-import { ReadingRoomSummaryResult } from '@/modules/reading-rooms/application/reading-room.interface';
+import type { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import type { PageParams, PageResult } from '@/shared/domain/pagination.types';
 
-export class GetMyHistoryQuery extends Query<{
-  items: ReadingRoomSummaryResult[];
-  total: number;
-}> {
+export class GetMyHistoryQuery extends Query<PageResult<ReadingRoomResult>> {
   constructor(
     public readonly userId: string,
-    public readonly skip?: number,
-    public readonly limit?: number,
+    public readonly pagination: PageParams,
   ) {
     super();
   }

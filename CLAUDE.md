@@ -225,6 +225,12 @@ Project craft rules at `.claude/rules/craftsman.md` (read before any task).
 
 `.claude/agents/` holds subagent definitions for delegated tasks (`backend.md`, `frontend.md`, `reviewer.md`).
 
+## Backend Skill Routing
+
+- Before writing or changing backend write logic, use `backend-consistency-design` and provide a short design note.
+- Follow `nest-module-conventions` for feature structure, dependencies, modules, DTOs, and worker/API wiring.
+- For Socket.IO, presence, Redis, or BullMQ work, use `realtime-queue-reliability`.
+- For backend flow reviews, use `backend-flow-audit`.
 ## Environment Variables
 
 **Backend `.env`**:

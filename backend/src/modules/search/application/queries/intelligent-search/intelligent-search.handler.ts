@@ -162,7 +162,7 @@ export class IntelligentSearchHandler {
       const resultToReturn = {
         data: finalResult,
         meta: {
-          current: page,
+          page,
           pageSize: limit,
           total,
           totalPages: Math.ceil(total / (limit || 1)),
@@ -395,7 +395,7 @@ export class IntelligentSearchHandler {
     return {
       data: [],
       meta: {
-        current: page,
+        page,
         pageSize: limit,
         total,
         totalPages: Math.ceil(total / divisor),

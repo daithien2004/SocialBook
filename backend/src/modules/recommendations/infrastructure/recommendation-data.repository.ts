@@ -1,35 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FlattenMaps, Model, Types } from 'mongoose';
-import {
-  Book,
-  BookDocument,
-} from '@/modules/books/infrastructure/schemas/public-api';
-import {
-  ReadingList,
-  ReadingListDocument,
-  ReadingStatus,
-} from '@/modules/library/infrastructure/schemas/public-api';
-import {
-  Progress,
-  ProgressDocument,
-} from '@/modules/library/infrastructure/schemas/public-api';
-import {
-  Review,
-  ReviewDocument,
-} from '@/modules/reviews/infrastructure/schemas/public-api';
-import {
-  UserPreference,
-  UserPreferenceDocument,
-} from '@/modules/analytics/infrastructure/schemas/public-api';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import {
   IRecommendationDataRepository,
   PopulatedBook,
 } from '@/modules/recommendations/domain/interfaces/recommendation-data.repository.interface';
 import { UserProfile } from '@/modules/recommendations/domain/interfaces/recommendation-strategy.interface';
-import { ChapterStatus } from '@/modules/library/domain/public-api';
 
-const BOOK_STATUS_PUBLISHED = 'published';
+const BOOK_WITH_CATALOG = {
+  author: { select: { id: true, name: true, photoUrl: true } },
+  genres: {
+    include: { genre: { select: { id: true, name: true, slug: true } } },
+  },
+} satisfies Prisma.BookInclude;
+
+const READING_LIST_ACTIVITY = {
+  status: true,
+  book: { include: BOOK_WITH_CATALOG },
+} satisfies Prisma.ReadingListSelect;
+
+const PROGRESS_ACTIVITY = {
+  status: true,
+  timeSpent: true,
+  lastReadAt: true,
+  book: { include: BOOK_WITH_CATALOG },
+} satisfies Prisma.ReadingProgressSelect;
+
+const REVIEW_ACTIVITY = {
+  rating: true,
+  content: true,
+  book: { include: BOOK_WITH_CATALOG },
+} satisfies Prisma.ReviewSelect;
+
+const BOOK_CATALOG = {
+  include: BOOK_WITH_CATALOG,
+} satisfies Prisma.BookDefaultArgs;
+
+type ProgressActivity = Prisma.ReadingProgressGetPayload<{
+  select: typeof PROGRESS_ACTIVITY;
+}>;
+type CatalogBook = Prisma.BookGetPayload<typeof BOOK_CATALOG>;
+
 const HIGH_RATING_THRESHOLD = 4;
 const MAX_RECENT_PROGRESSES = 20;
 const MAX_RECENT_ACTIVITY = 10;
@@ -37,109 +49,88 @@ const MAX_FAVORITE_GENRES = 5;
 const MAX_PREFERENCE_GENRES = 10;
 const MAX_AVAILABLE_BOOKS = 100;
 
-type LeanedReadingList = {
-  _id: Types.ObjectId;
-  bookId: PopulatedBook | null;
-  status: ReadingStatus;
-};
-
-type LeanedProgress = FlattenMaps<Progress> & {
-  bookId: PopulatedBook | null;
-  status: ChapterStatus;
-};
-
-type LeanedReview = FlattenMaps<Review> & {
-  bookId: PopulatedBook | null;
-};
-
-interface GenreInfo {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
-type LeanedPreference = FlattenMaps<UserPreference> & {
-  genreId: GenreInfo | null;
-};
-
 @Injectable()
 export class RecommendationDataRepository implements IRecommendationDataRepository {
   constructor(
-    @InjectModel(Book.name) private bookModel: Model<BookDocument>,
-    @InjectModel(ReadingList.name)
-    private readingListModel: Model<ReadingListDocument>,
-    @InjectModel(Progress.name) private progressModel: Model<ProgressDocument>,
-    @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
-    @InjectModel(UserPreference.name)
-    private preferenceModel: Model<UserPreferenceDocument>,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
   async getInteractionCount(userId: string): Promise<number> {
-    const userObjectId = new Types.ObjectId(userId);
     const [completedCount, reviewCount, likedCount] = await Promise.all([
-      this.readingListModel.countDocuments({
-        userId: userObjectId,
-        status: ReadingStatus.COMPLETED,
+      this.transactionHost.tx.readingList.count({
+        where: { userId, status: 'COMPLETED' },
       }),
-      this.reviewModel.countDocuments({ userId: userObjectId }),
-      this.bookModel.countDocuments({ likedBy: userObjectId }),
+      this.transactionHost.tx.review.count({ where: { userId } }),
+      this.transactionHost.tx.bookLike.count({ where: { userId } }),
     ]);
     return completedCount + reviewCount + likedCount;
   }
 
   async buildUserProfile(userId: string): Promise<UserProfile> {
-    const userObjectId = new Types.ObjectId(userId);
-
-    const [readingLists, progresses, reviews, likedBooks, preferences] =
+    const [readingLists, progresses, reviews, likes, preferences] =
       await Promise.all([
-        this.readingListModel
-          .find({ userId: userObjectId })
-          .populate({ path: 'bookId', populate: { path: 'genres authorId' } })
-          .lean<LeanedReadingList[]>(),
-        this.progressModel
-          .find({ userId: userObjectId })
-          .sort({ lastReadAt: -1 })
-          .limit(MAX_RECENT_PROGRESSES)
-          .populate({ path: 'bookId', populate: { path: 'genres' } })
-          .lean<LeanedProgress[]>(),
-        this.reviewModel
-          .find({ userId: userObjectId })
-          .populate({ path: 'bookId', populate: { path: 'genres' } })
-          .lean<LeanedReview[]>(),
-        this.bookModel
-          .find({ likedBy: userObjectId })
-          .populate('genres')
-          .lean<PopulatedBook[]>(),
-        this.preferenceModel
-          .find({ userId: userObjectId })
-          .populate('genreId')
-          .sort({ score: -1 })
-          .limit(MAX_PREFERENCE_GENRES)
-          .lean<LeanedPreference[]>(),
+        this.transactionHost.tx.readingList.findMany({
+          where: { userId, book: { isDeleted: false } },
+          select: READING_LIST_ACTIVITY,
+        }),
+        this.transactionHost.tx.readingProgress.findMany({
+          where: { userId, book: { isDeleted: false } },
+          select: PROGRESS_ACTIVITY,
+          orderBy: [{ lastReadAt: 'desc' }, { id: 'desc' }],
+          take: MAX_RECENT_PROGRESSES,
+        }),
+        this.transactionHost.tx.review.findMany({
+          where: { userId, book: { isDeleted: false } },
+          select: REVIEW_ACTIVITY,
+        }),
+        this.transactionHost.tx.bookLike.findMany({
+          where: { userId, book: { isDeleted: false } },
+          select: { book: { include: BOOK_WITH_CATALOG } },
+        }),
+        this.transactionHost.tx.userPreference.findMany({
+          where: { userId },
+          include: { genre: { select: { name: true } } },
+          orderBy: [{ score: 'desc' }, { genreId: 'asc' }],
+          take: MAX_PREFERENCE_GENRES,
+        }),
       ]);
 
-    const validReadingLists = readingLists.filter((rl) => rl.bookId != null);
-    const validProgresses = progresses.filter((p) => p.bookId != null);
-    const validReviews = reviews.filter((r) => r.bookId != null);
-
-    const completedBooks = this.buildCompletedBooks(validReadingLists);
-    const currentlyReading = this.buildCurrentlyReading(
-      validReadingLists,
-      validProgresses,
+    const completedBooks = readingLists
+      .filter((row) => row.status === 'COMPLETED')
+      .map((row) => ({ book: toPopulatedBook(row.book) }));
+    const currentlyReading = readingLists
+      .filter((row) => row.status === 'READING')
+      .map((row) => ({
+        book: toPopulatedBook(row.book),
+        progress: countCompletedChapters(row.book.id, progresses),
+      }));
+    const highRatedBooks = reviews
+      .filter((row) => row.rating >= HIGH_RATING_THRESHOLD)
+      .map((row) => ({
+        book: toPopulatedBook(row.book),
+        rating: row.rating,
+        review: row.content,
+      }));
+    const recentActivity = progresses
+      .slice(0, MAX_RECENT_ACTIVITY)
+      .map((row) => ({
+        book: toPopulatedBook(row.book),
+        timeSpent: row.timeSpent,
+        lastRead: row.lastReadAt,
+      }));
+    const likedBooks = likes.map((row) => toPopulatedBook(row.book));
+    const preferredGenreNames = preferences.map(
+      (preference) => preference.genre.name,
     );
-    const highRatedBooks = this.buildHighRatedBooks(validReviews);
-    const recentActivity = this.buildRecentActivity(validProgresses);
-    const favoriteGenres = this.resolveFavoriteGenres(
-      preferences,
-      completedBooks,
-      currentlyReading,
-      highRatedBooks,
-      likedBooks,
-    );
-    const totalReadingTime = validProgresses.reduce(
-      (sum, p) => sum + (p.timeSpent || 0),
-      0,
-    );
+    const favoriteGenres =
+      preferredGenreNames.length > 0
+        ? preferredGenreNames.slice(0, MAX_FAVORITE_GENRES)
+        : inferFavoriteGenres(
+            completedBooks,
+            currentlyReading,
+            highRatedBooks,
+            likedBooks,
+          );
 
     return {
       completedBooks,
@@ -147,137 +138,86 @@ export class RecommendationDataRepository implements IRecommendationDataReposito
       highRatedBooks,
       recentActivity,
       favoriteGenres,
-      totalReadingTime,
+      totalReadingTime: progresses.reduce(
+        (total, row) => total + row.timeSpent,
+        0,
+      ),
     };
   }
 
   async getAvailableBooks(userId: string): Promise<PopulatedBook[]> {
-    const userObjectId = new Types.ObjectId(userId);
-    const readingLists = await this.readingListModel
-      .find({ userId: userObjectId })
-      .select('bookId')
-      .lean<Array<{ _id: Types.ObjectId; bookId: Types.ObjectId | null }>>();
-    const readBookIds = readingLists
-      .filter((rl) => rl.bookId != null)
-      .map((rl) => rl.bookId as Types.ObjectId);
-
-    return this.bookModel
-      .find({
-        _id: { $nin: readBookIds },
-        status: BOOK_STATUS_PUBLISHED,
+    const rows = await this.transactionHost.tx.book.findMany({
+      where: {
+        status: 'published',
         isDeleted: false,
-      })
-      .populate('genres authorId')
-      .limit(MAX_AVAILABLE_BOOKS)
-      .lean<PopulatedBook[]>();
+        readingLists: { none: { userId } },
+      },
+      ...BOOK_CATALOG,
+      orderBy: [{ views: 'desc' }, { likes: 'desc' }, { id: 'asc' }],
+      take: MAX_AVAILABLE_BOOKS,
+    });
+    return rows.map(toPopulatedBook);
   }
+}
 
-  private buildCompletedBooks(
-    readingLists: LeanedReadingList[],
-  ): UserProfile['completedBooks'] {
-    return readingLists
-      .filter((rl) => rl.status === ReadingStatus.COMPLETED && rl.bookId)
-      .map((rl) => ({ book: rl.bookId! }));
-  }
+function toPopulatedBook(book: CatalogBook): PopulatedBook {
+  return {
+    _id: book.id,
+    title: book.title,
+    slug: book.slug,
+    description: book.description,
+    coverUrl: book.coverUrl,
+    views: book.views,
+    likes: book.likes,
+    status: book.status,
+    isDeleted: book.isDeleted,
+    genres: book.genres.map(({ genre }) => ({
+      _id: genre.id,
+      name: genre.name,
+      slug: genre.slug,
+    })),
+    authorId: {
+      _id: book.author.id,
+      name: book.author.name,
+      avatar: book.author.photoUrl,
+    },
+  };
+}
 
-  private buildCurrentlyReading(
-    readingLists: LeanedReadingList[],
-    progresses: LeanedProgress[],
-  ): UserProfile['currentlyReading'] {
-    return readingLists
-      .filter((rl) => rl.status === ReadingStatus.READING && rl.bookId)
-      .map((rl) => ({
-        book: rl.bookId!,
-        progress: this.countCompletedChapters(
-          rl.bookId!._id.toString(),
-          progresses,
-        ),
-      }));
-  }
+function countCompletedChapters(
+  bookId: string,
+  progresses: ProgressActivity[],
+): number {
+  return progresses.filter(
+    (progress) =>
+      progress.book.id === bookId && progress.status === 'COMPLETED',
+  ).length;
+}
 
-  private buildHighRatedBooks(
-    reviews: LeanedReview[],
-  ): UserProfile['highRatedBooks'] {
-    return reviews
-      .filter((r) => r.rating >= HIGH_RATING_THRESHOLD)
-      .map((r) => ({
-        book: r.bookId,
-        rating: r.rating,
-        review: r.content,
-      }));
-  }
+function inferFavoriteGenres(
+  completedBooks: UserProfile['completedBooks'],
+  currentlyReading: UserProfile['currentlyReading'],
+  highRatedBooks: UserProfile['highRatedBooks'],
+  likedBooks: PopulatedBook[],
+): string[] {
+  const genreCounts = new Map<string, number>();
+  const books = [
+    ...completedBooks.map(({ book }) => book),
+    ...currentlyReading.map(({ book }) => book),
+    ...highRatedBooks.map(({ book }) => book),
+    ...likedBooks,
+  ];
 
-  private buildRecentActivity(
-    progresses: LeanedProgress[],
-  ): UserProfile['recentActivity'] {
-    return progresses.slice(0, MAX_RECENT_ACTIVITY).map((p) => ({
-      book: p.bookId,
-      timeSpent: p.timeSpent,
-      lastRead: p.lastReadAt,
-    }));
-  }
-
-  private resolveFavoriteGenres(
-    preferences: LeanedPreference[],
-    completedBooks: UserProfile['completedBooks'],
-    currentlyReading: UserProfile['currentlyReading'],
-    highRatedBooks: UserProfile['highRatedBooks'],
-    likedBooks: PopulatedBook[],
-  ): string[] {
-    const fromPreferences = preferences
-      .filter((p) => p.genreId?.name)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_FAVORITE_GENRES)
-      .map((p) => p.genreId.name);
-
-    if (fromPreferences.length > 0) {
-      return fromPreferences;
+  for (const book of books) {
+    for (const genre of book.genres ?? []) {
+      genreCounts.set(genre.name, (genreCounts.get(genre.name) ?? 0) + 1);
     }
-
-    return this.inferGenresFromHistory(
-      completedBooks,
-      currentlyReading,
-      highRatedBooks,
-      likedBooks,
-    );
   }
 
-  private inferGenresFromHistory(
-    completedBooks: UserProfile['completedBooks'],
-    currentlyReading: UserProfile['currentlyReading'],
-    highRatedBooks: UserProfile['highRatedBooks'],
-    likedBooks: PopulatedBook[],
-  ): string[] {
-    const allBooks = [
-      ...completedBooks.map((cb) => cb.book),
-      ...currentlyReading.map((cr) => cr.book),
-      ...highRatedBooks.map((hr) => hr.book),
-      ...likedBooks,
-    ].filter((book): book is PopulatedBook => book != null);
-
-    const genreCounts = new Map<string, number>();
-    for (const book of allBooks) {
-      for (const genre of book.genres ?? []) {
-        if (genre?.name) {
-          genreCounts.set(genre.name, (genreCounts.get(genre.name) ?? 0) + 1);
-        }
-      }
-    }
-
-    return Array.from(genreCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, MAX_FAVORITE_GENRES)
-      .map(([name]) => name);
-  }
-
-  private countCompletedChapters(
-    bookId: string,
-    progresses: LeanedProgress[],
-  ): number {
-    return progresses.filter(
-      (p) =>
-        p.bookId?._id.toString() === bookId &&
-        p.status === ChapterStatus.COMPLETED,
-    ).length;
-  }
+  return Array.from(genreCounts.entries())
+    .sort(
+      (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
+    )
+    .slice(0, MAX_FAVORITE_GENRES)
+    .map(([name]) => name);
 }

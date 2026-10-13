@@ -1,54 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { IToxicWordRepository } from '@/modules/content-moderation/domain/repositories/toxic-word.repository.interface';
 import { ToxicWord as ToxicWordEntity } from '@/modules/content-moderation/domain/entities/toxic-word.entity';
-import {
-  ToxicWordSchemaModel as ToxicWordSchema,
-  ToxicWordDocument,
-} from '@/modules/content-moderation/infrastructure';
+import { ToxicWordMapper } from './toxic-word.mapper';
 
 @Injectable()
 export class ToxicWordRepository implements IToxicWordRepository {
   constructor(
-    @InjectModel(ToxicWordSchema.name)
-    private readonly toxicWordModel: Model<ToxicWordDocument>,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
   async create(word: ToxicWordEntity): Promise<ToxicWordEntity> {
-    const created = new this.toxicWordModel({
-      _id: word.id,
-      pattern: word.pattern,
-      group: word.group,
-      originalWord: word.originalWord,
+    const row = await this.transactionHost.tx.toxicWord.create({
+      data: ToxicWordMapper.toCreateInput(word),
     });
-    const saved = await created.save();
-    return this.toEntity(saved);
+    return ToxicWordMapper.toDomain(row);
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.toxicWordModel.deleteOne({ _id: id }).exec();
-    return result.deletedCount > 0;
+    const result = await this.transactionHost.tx.toxicWord.deleteMany({
+      where: { id },
+    });
+    return result.count > 0;
   }
 
   async findAll(): Promise<ToxicWordEntity[]> {
-    const documents = await this.toxicWordModel.find().exec();
-    return documents.map((doc) => this.toEntity(doc));
+    const rows = await this.transactionHost.tx.toxicWord.findMany({
+      orderBy: [{ pattern: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map((row) => ToxicWordMapper.toDomain(row));
   }
 
   async existsByPattern(pattern: string): Promise<boolean> {
-    const count = await this.toxicWordModel.countDocuments({ pattern }).exec();
-    return count > 0;
-  }
-
-  private toEntity(doc: ToxicWordDocument): ToxicWordEntity {
-    return ToxicWordEntity.reconstitute({
-      id: String(doc._id),
-      pattern: doc.pattern,
-      group: doc.group,
-      originalWord: doc.originalWord,
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
+    const row = await this.transactionHost.tx.toxicWord.findUnique({
+      where: { pattern },
+      select: { id: true },
     });
+    return row !== null;
   }
 }

@@ -1,5 +1,5 @@
 import { Command } from '@nestjs/cqrs';
-import { LeaveRoomResult } from '../../reading-room.interface';
+import { LeaveRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
 
 export class LeaveRoomCommand extends Command<LeaveRoomResult> {
   constructor(

@@ -2,14 +2,17 @@ import { Entity } from '@/shared/domain/entity.base';
 import {
   BadRequestDomainException,
   ForbiddenDomainException,
+  InternalServerDomainException,
   RoomFullDomainException,
 } from '@/shared/domain/common-exceptions';
 import { BookId } from '@/modules/books/domain/public-api';
+import { ChapterId } from '@/modules/chapters/domain/public-api';
 import { UserId } from '@/modules/users/domain/public-api';
 import { RoomId } from '../value-objects/room-id.vo';
 import { RoomMode } from '../value-objects/room-mode.vo';
+import type { RoomModeType } from '../value-objects/room-mode.vo';
 import { RoomMember } from './room-member.entity';
-import { DEFAULT_MAX_MEMBERS } from '../enums/constants';
+import { DEFAULT_MAX_MEMBERS } from '../constants/reading-room.constants';
 
 export interface RoomHighlightProps {
   id?: string;
@@ -25,9 +28,10 @@ export interface RoomHighlightProps {
 
 export interface ReadingRoomProps {
   bookId: BookId;
+  currentChapterId: ChapterId;
   hostId: UserId;
   mode: RoomMode;
-  status: 'active' | 'ended';
+  status: ReadingRoomStatus;
   currentChapterSlug: string;
   maxMembers: number;
   members: RoomMember[];
@@ -36,11 +40,16 @@ export interface ReadingRoomProps {
   version: number;
 }
 
+export type ReadingRoomStatus = 'active' | 'ended';
+
 export class ReadingRoom extends Entity<RoomId> {
   private _props: ReadingRoomProps;
   private _loadedVersion = 0;
   private _isNew = true;
   private _dirty = false;
+  private readonly _changedMemberIds = new Set<string>();
+  private readonly _addedHighlightIds = new Set<string>();
+  private readonly _removedHighlightIds = new Set<string>();
 
   private constructor(
     id: RoomId,
@@ -58,6 +67,7 @@ export class ReadingRoom extends Entity<RoomId> {
 
   static create(props: {
     bookId: string;
+    currentChapterId: string;
     hostId: string;
     mode: string;
     maxMembers?: number;
@@ -81,6 +91,7 @@ export class ReadingRoom extends Entity<RoomId> {
       roomId,
       {
         bookId: BookId.create(props.bookId),
+        currentChapterId: ChapterId.create(props.currentChapterId),
         hostId: UserId.create(props.hostId),
         mode,
         status: 'active',
@@ -100,9 +111,10 @@ export class ReadingRoom extends Entity<RoomId> {
   static reconstitute(props: {
     id: string;
     bookId: string;
+    currentChapterId: string;
     hostId: string;
     mode: string;
-    status: 'active' | 'ended';
+    status: ReadingRoomStatus;
     currentChapterSlug: string;
     maxMembers: number;
     members: Array<{
@@ -117,11 +129,12 @@ export class ReadingRoom extends Entity<RoomId> {
     endedAt?: Date;
     version: number;
   }): ReadingRoom {
-    const loadedVer = props.version ?? 0;
+    const loadedVer = props.version;
     return new ReadingRoom(
       RoomId.create(props.id),
       {
         bookId: BookId.create(props.bookId),
+        currentChapterId: ChapterId.create(props.currentChapterId),
         hostId: UserId.create(props.hostId),
         mode: RoomMode.create(props.mode),
         status: props.status,
@@ -146,13 +159,16 @@ export class ReadingRoom extends Entity<RoomId> {
   get bookId(): string {
     return this._props.bookId.toString();
   }
+  get currentChapterId(): string {
+    return this._props.currentChapterId.toString();
+  }
   get hostId(): string {
     return this._props.hostId.toString();
   }
-  get mode(): string {
-    return this._props.mode.toString();
+  get mode(): RoomModeType {
+    return this._props.mode.modeType;
   }
-  get status(): 'active' | 'ended' {
+  get status(): ReadingRoomStatus {
     return this._props.status;
   }
   get currentChapterSlug(): string {
@@ -185,12 +201,24 @@ export class ReadingRoom extends Entity<RoomId> {
   get version(): number {
     return this._loadedVersion;
   }
+  get changedMemberIds(): string[] {
+    return [...this._changedMemberIds];
+  }
+  get addedHighlightIds(): string[] {
+    return [...this._addedHighlightIds];
+  }
+  get removedHighlightIds(): string[] {
+    return [...this._removedHighlightIds];
+  }
 
-  markPersisted(): void {
-    this._loadedVersion += 1;
-    this._props.version = this._loadedVersion;
+  markPersisted(version: number): void {
+    this._loadedVersion = version;
+    this._props.version = version;
     this._isNew = false;
     this._dirty = false;
+    this._changedMemberIds.clear();
+    this._addedHighlightIds.clear();
+    this._removedHighlightIds.clear();
   }
 
   protected override markAsUpdated(): void {
@@ -206,7 +234,7 @@ export class ReadingRoom extends Entity<RoomId> {
     chapterSlug: string;
     paragraphId: string;
     content: string;
-  }): void {
+  }): RoomHighlightProps & { id: string; createdAt: Date } {
     if (this._props.status === 'ended') {
       throw new BadRequestDomainException(
         'Không thể highlight trong phòng đã kết thúc',
@@ -245,7 +273,7 @@ export class ReadingRoom extends Entity<RoomId> {
       );
     }
 
-    this._props.highlights.push({
+    const highlight: RoomHighlightProps & { id: string; createdAt: Date } = {
       id: crypto.randomUUID(),
       userId: props.userId,
       displayName: props.displayName,
@@ -254,15 +282,11 @@ export class ReadingRoom extends Entity<RoomId> {
       paragraphId: props.paragraphId,
       content: trimmedContent,
       createdAt: new Date(),
-    });
+    };
+    this._props.highlights.push(highlight);
+    this._addedHighlightIds.add(highlight.id);
     this.markAsUpdated();
-  }
-
-  updateHighlightInsight(highlightIndex: number, insight: string): void {
-    if (this._props.highlights[highlightIndex]) {
-      this._props.highlights[highlightIndex].aiInsight = insight;
-      this.markAsUpdated();
-    }
+    return { ...highlight };
   }
 
   removeHighlight(highlightId: string, userId: string): void {
@@ -274,6 +298,12 @@ export class ReadingRoom extends Entity<RoomId> {
       throw new ForbiddenDomainException(
         'Chỉ chủ sở hữu mới có thể gỡ highlight',
       );
+    }
+    if (this._props.highlights[index].id) {
+      const highlightId = this._props.highlights[index].id;
+      if (!this._addedHighlightIds.delete(highlightId)) {
+        this._removedHighlightIds.add(highlightId);
+      }
     }
     this._props.highlights.splice(index, 1);
     this.markAsUpdated();
@@ -295,12 +325,14 @@ export class ReadingRoom extends Entity<RoomId> {
     if (existingMember) {
       if (!existingMember.isActive) {
         existingMember.rejoin();
+        this._changedMemberIds.add(existingMember.userId);
         this.markAsUpdated();
       }
       return;
     }
 
     this._props.members.push(RoomMember.create({ userId }));
+    this._changedMemberIds.add(userId);
     this.markAsUpdated();
   }
 
@@ -330,9 +362,11 @@ export class ReadingRoom extends Entity<RoomId> {
     );
     if (oldHost) {
       oldHost.changeRole('member');
+      this._changedMemberIds.add(oldHost.userId);
     }
 
     newHost.changeRole('host');
+    this._changedMemberIds.add(newHost.userId);
     this._props.hostId = UserId.create(newHostId);
     this.markAsUpdated();
   }
@@ -341,6 +375,7 @@ export class ReadingRoom extends Entity<RoomId> {
     const member = this._props.members.find((m) => m.userId === userId);
     if (member && member.isActive) {
       member.markAsLeft();
+      this._changedMemberIds.add(member.userId);
 
       if (userId === this.hostId) {
         if (member.role === 'host') {
@@ -354,6 +389,7 @@ export class ReadingRoom extends Entity<RoomId> {
         if (remainingMembers.length > 0) {
           const nextHost = remainingMembers[0];
           nextHost.changeRole('host');
+          this._changedMemberIds.add(nextHost.userId);
           this._props.hostId = UserId.create(nextHost.userId);
 
           if (this._props.mode.toString() === 'sync') {
@@ -377,25 +413,31 @@ export class ReadingRoom extends Entity<RoomId> {
   }
 
   reactivate(userId: string): void {
-    if (this._props.status !== 'ended') {
-      throw new BadRequestDomainException('Phòng chưa kết thúc');
-    }
-
     if (this.hostId !== userId) {
       throw new ForbiddenDomainException(
-        'Chỉ chủ phòng mới có thể mở lại phòng',
+        'Ch\u1ec9 ch\u1ee7 ph\u00f2ng m\u1edbi c\u00f3 th\u1ec3 m\u1edf l\u1ea1i ph\u00f2ng',
       );
     }
 
-    this._props.status = 'active';
-    this._props.endedAt = undefined;
-
     const hostMember = this._props.members.find((m) => m.userId === userId);
-    if (hostMember && !hostMember.isActive) {
-      hostMember.rejoin();
-      hostMember.changeRole('host');
+    if (!hostMember) {
+      throw new InternalServerDomainException(
+        'Reading room host membership is missing',
+      );
     }
 
+    if (this._props.status === 'active') {
+      return;
+    }
+
+    if (!hostMember.isActive) {
+      hostMember.rejoin();
+    }
+    hostMember.changeRole('host');
+    this._changedMemberIds.add(hostMember.userId);
+
+    this._props.status = 'active';
+    this._props.endedAt = undefined;
     this.markAsUpdated();
   }
 

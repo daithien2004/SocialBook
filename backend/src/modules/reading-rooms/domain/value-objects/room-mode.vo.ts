@@ -4,8 +4,11 @@ import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 export type RoomModeType = 'sync' | 'free';
 
 export class RoomMode extends Identifier {
+  private readonly _modeType: RoomModeType;
+
   private constructor(value: RoomModeType) {
     super(value);
+    this._modeType = value;
   }
 
   static create(value: string): RoomMode {
@@ -14,10 +17,14 @@ export class RoomMode extends Identifier {
         `Invalid room mode: ${value}. Allowed: sync, free`,
       );
     }
-    return new RoomMode(value as RoomModeType);
+    return new RoomMode(value);
   }
 
-  static isValid(value: string): boolean {
+  static isValid(value: string): value is RoomModeType {
     return ['sync', 'free'].includes(value);
+  }
+
+  get modeType(): RoomModeType {
+    return this._modeType;
   }
 }

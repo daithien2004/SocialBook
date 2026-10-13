@@ -7,21 +7,9 @@ export default registerAs('env', () => ({
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
 
   // Database
-  MONGO_URI:
-    process.env.MONGO_URI ||
-    'mongodb://localhost:27017/socialbook?replicaSet=rs0&directConnection=true',
-  MONGO_MAX_POOL_SIZE:
-    parseInt(process.env.MONGO_MAX_POOL_SIZE ?? '', 10) || 20,
-  MONGO_MIN_POOL_SIZE: parseInt(process.env.MONGO_MIN_POOL_SIZE ?? '', 10) || 0,
-  MONGO_CONNECT_TIMEOUT_MS:
-    parseInt(process.env.MONGO_CONNECT_TIMEOUT_MS ?? '', 10) || 10000,
-  MONGO_SERVER_SELECTION_TIMEOUT_MS:
-    parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS ?? '', 10) || 10000,
-  MONGO_SOCKET_TIMEOUT_MS:
-    parseInt(process.env.MONGO_SOCKET_TIMEOUT_MS ?? '', 10) || 45000,
-  MONGO_WAIT_QUEUE_TIMEOUT_MS:
-    parseInt(process.env.MONGO_WAIT_QUEUE_TIMEOUT_MS ?? '', 10) || 5000,
-
+  DATABASE_URL:
+    process.env.DATABASE_URL ||
+    'postgresql://socialbook:socialbook_dev@localhost:5432/socialbook?schema=public',
   // Redis
   REDIS_HOST: process.env.REDIS_HOST || 'localhost',
   REDIS_PORT: parseInt(process.env.REDIS_PORT ?? '', 10) || 6379,

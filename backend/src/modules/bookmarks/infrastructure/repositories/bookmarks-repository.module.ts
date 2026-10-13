@@ -1,19 +1,14 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Bookmark, BookmarkSchema } from '../schemas/bookmark.schema';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { IBookmarkRepository } from '../../domain/repositories/bookmark.repository.interface';
-import { MongooseBookmarkRepository } from './mongoose-bookmark.repository';
+import { PrismaBookmarkRepository } from './prisma-bookmark.repository';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Bookmark.name, schema: BookmarkSchema },
-    ]),
-  ],
+  imports: [PostgresDatabaseModule],
   providers: [
     {
       provide: IBookmarkRepository,
-      useClass: MongooseBookmarkRepository,
+      useClass: PrismaBookmarkRepository,
     },
   ],
   exports: [IBookmarkRepository],

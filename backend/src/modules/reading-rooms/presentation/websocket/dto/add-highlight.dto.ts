@@ -10,7 +10,7 @@ import {
 
 export class AddHighlightDto {
   /**
-   * Mã phòng 6–10 ký tự chữ/ối (`^[A-Za-z0-9]{6,10}$`) — KHÔNG phải ObjectId.
+   * Mã phòng là chuỗi ngắn do domain sinh, không phải entity UUID.
    * Xem DEC-01 trong docs/reading-room-hardening/DECISIONS.md.
    */
   @IsString()

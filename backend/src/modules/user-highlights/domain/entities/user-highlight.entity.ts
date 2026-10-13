@@ -23,8 +23,10 @@ export class UserHighlight extends Entity<string> {
     this._props = props;
   }
 
-  static create(props: Omit<UserHighlightProps, 'id'>): UserHighlight {
-    const id = new Date().getTime().toString(); // Temporary id generation, normally replaced by DB ObjectId or UUID
+  static create(
+    id: string,
+    props: Omit<UserHighlightProps, 'id'>,
+  ): UserHighlight {
     return new UserHighlight(id, props);
   }
 

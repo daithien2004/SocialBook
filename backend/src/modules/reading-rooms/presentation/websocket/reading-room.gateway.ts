@@ -1,4 +1,4 @@
-﻿import {
+import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayConnection,
@@ -17,7 +17,7 @@ import { WsRoomGuard } from './core/ws-room.guard';
 import { ReadingRoomConnectionHandler } from './reading-room-connection.handler';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';
 import { OnEvent } from '@nestjs/event-emitter';
-import { ReadingRoomClientEvent } from '../../reading-room.events';
+import { ReadingRoomClientEvent } from '../../reading-room.socket-events';
 import type {
   RoomSocket,
   SocketData,

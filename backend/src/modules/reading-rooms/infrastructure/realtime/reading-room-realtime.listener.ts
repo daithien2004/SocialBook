@@ -4,7 +4,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 import { Emitter } from '@socket.io/redis-emitter';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
-import { ReadingRoomServerEvent } from '@/modules/reading-rooms/reading-room.events';
+import { ReadingRoomServerEvent } from '@/modules/reading-rooms/reading-room.socket-events';
 
 @Injectable()
 export class ReadingRoomRealtimeListener {
@@ -32,6 +32,4 @@ export class ReadingRoomRealtimeListener {
         insight: payload.insight,
       });
   }
-
-  // Náº¿u cÃ³ NEW_NOTIFICATION, cÃ³ thá»ƒ thÃªm vÃ o Ä‘Ã¢y
 }

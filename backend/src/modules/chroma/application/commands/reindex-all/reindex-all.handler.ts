@@ -70,8 +70,8 @@ export class ReindexAllHandler {
       failed: 0,
       errors: [],
     };
-    let currentPage = 1;
-    let totalPages = 1;
+    let offset = 0;
+    let total = 0;
     let batchBuffer: VectorDocument[] = [];
     const failedEntityIds = new Set<string>();
 
@@ -80,16 +80,14 @@ export class ReindexAllHandler {
     do {
       const result = await this.authorRepository.findAll(
         {},
-        { page: currentPage, limit: this.PAGE_LIMIT },
+        { offset, limit: this.PAGE_LIMIT },
       );
-      const authors = result.data;
-      totalPages = result.meta.totalPages;
+      const authors = result.items;
+      total = result.total;
 
-      if (currentPage === 1) {
-        stats.total = result.meta.total;
-        this.logger.log(
-          `ðŸ“š Total authors: ${stats.total} (${totalPages} pages)`,
-        );
+      if (offset === 0) {
+        stats.total = result.total;
+        this.logger.log(`ðŸ“š Total authors: ${stats.total}`);
       }
 
       for (const author of authors) {
@@ -118,8 +116,8 @@ export class ReindexAllHandler {
           );
         }
       }
-      currentPage++;
-    } while (currentPage <= totalPages);
+      offset += this.PAGE_LIMIT;
+    } while (offset < total);
 
     if (batchBuffer.length > 0) {
       await this.flushBatch(batchBuffer, failedEntityIds, stats.errors);
@@ -154,9 +152,7 @@ export class ReindexAllHandler {
 
       if (currentPage === 1) {
         stats.total = result.meta.total;
-        this.logger.log(
-          `ðŸ“– Total books: ${stats.total} (${totalPages} pages)`,
-        );
+        this.logger.log(`ðŸ“– Total books: ${stats.total}`);
       }
 
       for (const book of books) {

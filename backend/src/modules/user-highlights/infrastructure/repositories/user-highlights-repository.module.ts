@@ -1,18 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  UserHighlight,
-  UserHighlightSchema,
-} from '../schemas/user-highlight.schema';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { IUserHighlightRepository } from '../../domain/repositories/user-highlight.repository.interface';
 import { UserHighlightRepository } from './user-highlight.repository';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: UserHighlight.name, schema: UserHighlightSchema },
-    ]),
-  ],
+  imports: [PostgresDatabaseModule],
   providers: [
     {
       provide: IUserHighlightRepository,

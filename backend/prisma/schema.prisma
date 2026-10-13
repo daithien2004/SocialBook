@@ -1,0 +1,684 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/core/database/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Role {
+  id        String   @id @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+
+  @@map("roles")
+}
+
+model Author {
+  id        String   @id @db.Uuid
+  name      String   @unique
+  slug      String   @unique
+  bio       String   @default("")
+  photoUrl  String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  books     Book[]
+
+  @@index([createdAt, id])
+  @@map("authors")
+}
+
+model Genre {
+  id          String              @id @db.Uuid
+  name        String              @unique
+  slug        String              @unique
+  description String              @default("")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  favorites   UserFavoriteGenre[]
+  bookGenres  BookGenre[]
+  preferences UserPreference[]
+
+  @@index([name, id])
+  @@map("genres")
+}
+
+model Book {
+  id                    String            @id @db.Uuid
+  authorId              String            @db.Uuid
+  title                 String
+  slug                  String
+  publishedYear         String            @default("")
+  description           String            @default("")
+  coverUrl              String            @default("")
+  status                String            @default("draft")
+  tags                  String[]          @default([])
+  views                 Int               @default(0)
+  likes                 Int               @default(0)
+  vectorIndexedAt       DateTime?
+  version               Int               @default(0)
+  roomReferenceRevision Int               @default(0)
+  isDeleted             Boolean           @default(false)
+  deletedAt             DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  author                Author            @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  genres                BookGenre[]
+  likesByUser           BookLike[]
+  chapters              Chapter[]
+  readingRooms          ReadingRoom[]
+  readingProgress       ReadingProgress[]
+  readingLists          ReadingList[]
+  reviews               Review[]
+  userEvents            UserEvent[]
+  textToSpeech          TextToSpeech[]
+  posts                 Post[]
+
+  @@index([status, updatedAt, id])
+  @@index([authorId, createdAt, id])
+  @@index([createdAt, id])
+  @@index([views, id])
+  @@index([likes, id])
+  @@index([isDeleted, status, createdAt, id])
+  @@map("books")
+}
+
+model BookGenre {
+  bookId  String @db.Uuid
+  genreId String @db.Uuid
+  book    Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Restrict)
+
+  @@id([bookId, genreId])
+  @@index([genreId, bookId])
+  @@map("book_genres")
+}
+
+model BookLike {
+  bookId    String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, userId])
+  @@index([userId, bookId])
+  @@map("book_likes")
+}
+
+model Chapter {
+  id                    String            @id @db.Uuid
+  bookId                String            @db.Uuid
+  title                 String
+  slug                  String
+  viewsCount            Int               @default(0)
+  orderIndex            Int
+  version               Int               @default(0)
+  roomReferenceRevision Int               @default(0)
+  isDeleted             Boolean           @default(false)
+  deletedAt             DateTime?
+  ttsStatus             String?
+  audioUrl              String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  book                  Book              @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  paragraphs            Paragraph[]
+  readingRooms          ReadingRoom[]
+  readingProgress       ReadingProgress[]
+  readingLists          ReadingList[]
+  userEvents            UserEvent[]
+  bookmarks             Bookmark[]        @relation("BookmarkChapter")
+  userHighlights        UserHighlight[]   @relation("UserHighlightChapter")
+  textToSpeech          TextToSpeech[]
+  knowledge             ChapterKnowledge?
+
+  @@unique([bookId, slug])
+  @@unique([bookId, id])
+  @@index([bookId, isDeleted, orderIndex, id])
+  @@index([bookId, title, isDeleted])
+  @@index([isDeleted, createdAt, id])
+  @@map("chapters")
+}
+
+model Paragraph {
+  id             String          @id @db.Uuid
+  chapterId      String          @db.Uuid
+  orderIndex     Int
+  content        String
+  chapter        Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  bookmarks      Bookmark[]      @relation("BookmarkParagraph")
+  userHighlights UserHighlight[] @relation("UserHighlightParagraph")
+
+  @@unique([chapterId, orderIndex])
+  @@unique([chapterId, id])
+  @@index([chapterId, id])
+  @@map("paragraphs")
+}
+
+model User {
+  id                 String                 @id @db.Uuid
+  roleId             String                 @db.Uuid
+  username           String                 @unique
+  email              String                 @unique
+  password           String?
+  isVerified         Boolean                @default(false)
+  isBanned           Boolean                @default(false)
+  violationCount     Int                    @default(0)
+  provider           String                 @default("local")
+  providerId         String?
+  image              String?
+  bio                String?
+  location           String?
+  website            String?
+  hashedRt           String?
+  previousHashedRt   String?
+  refreshRotatedAt   DateTime?
+  lastLoginIp        String?
+  lastLoginUa        String?
+  readingPreferences Json?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  role               Role                   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  favoriteGenres     UserFavoriteGenre[]
+  bookLikes          BookLike[]
+  hostedReadingRooms ReadingRoom[]          @relation("ReadingRoomHost")
+  readingRoomMembers ReadingRoomMember[]
+  readingHighlights  ReadingRoomHighlight[]
+  readingProgress    ReadingProgress[]
+  readingLists       ReadingList[]
+  collections        LibraryCollection[]
+  reviews            Review[]
+  reviewLikes        ReviewLike[]
+  preferences        UserPreference[]
+  userEvents         UserEvent[]
+  bookmarks          Bookmark[]
+  userHighlights     UserHighlight[]
+  notifications      Notification[]
+  aiRequests         AIRequest[]
+  posts              Post[]
+  comments           Comment[]
+  likes              Like[]
+  following          Follow[]               @relation("FollowSource")
+  followers          Follow[]               @relation("FollowTarget")
+
+  @@index([createdAt, id])
+  @@index([provider])
+  @@index([isBanned])
+  @@index([isVerified])
+  @@index([roleId])
+  @@map("users")
+}
+
+model UserFavoriteGenre {
+  userId  String @db.Uuid
+  genreId String @db.Uuid
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Restrict)
+
+  @@id([userId, genreId])
+  @@index([genreId, userId])
+  @@map("user_favorite_genres")
+}
+
+model UserRoleChangeOutbox {
+  eventId     String    @id @db.Uuid
+  userId      String    @db.Uuid
+  roleId      String    @db.Uuid
+  status      String    @default("pending")
+  leaseUntil  DateTime?
+  availableAt DateTime  @default(now())
+  publishedAt DateTime?
+  attempts    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, availableAt, createdAt])
+  @@index([status, leaseUntil, createdAt])
+  @@index([publishedAt])
+  @@map("user_role_change_outbox")
+}
+
+model BookOutbox {
+  eventId     String    @id @db.Uuid
+  type        String
+  bookId      String    @db.Uuid
+  status      String    @default("pending")
+  leaseUntil  DateTime?
+  availableAt DateTime  @default(now())
+  publishedAt DateTime?
+  attempts    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, availableAt, createdAt])
+  @@index([status, leaseUntil, createdAt])
+  @@index([publishedAt])
+  @@map("book_outbox")
+}
+
+model ReadingRoom {
+  id                       String                 @id @db.VarChar(6)
+  bookId                   String                 @db.Uuid
+  hostId                   String                 @db.Uuid
+  mode                     String
+  status                   String                 @default("active")
+  currentChapterId         String                 @db.Uuid
+  currentChapterSlug       String
+  maxMembers               Int                    @default(10)
+  endedAt                  DateTime?
+  version                  Int                    @default(0)
+  createRequestKey         String?
+  createRequestFingerprint String?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  book                     Book                   @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  chapter                  Chapter                @relation(fields: [currentChapterId], references: [id], onDelete: Restrict)
+  host                     User                   @relation("ReadingRoomHost", fields: [hostId], references: [id], onDelete: Restrict)
+  members                  ReadingRoomMember[]
+  highlights               ReadingRoomHighlight[]
+
+  @@unique([hostId, createRequestKey], map: "uniq_reading_rooms_host_create_request")
+  @@index([status, updatedAt, id])
+  @@index([bookId, status])
+  @@index([status, endedAt, id])
+  @@map("reading_rooms")
+}
+
+model ReadingRoomMember {
+  roomId   String      @db.VarChar(6)
+  userId   String      @db.Uuid
+  role     String
+  joinedAt DateTime    @default(now())
+  leftAt   DateTime?
+  room     ReadingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@id([roomId, userId])
+  @@index([userId, leftAt, roomId])
+  @@index([userId, roomId])
+  @@map("reading_room_members")
+}
+
+model ReadingRoomHighlight {
+  id          String      @id @db.Uuid
+  roomId      String      @db.VarChar(6)
+  userId      String      @db.Uuid
+  displayName String?
+  avatarUrl   String?
+  chapterSlug String
+  paragraphId String      @db.Uuid
+  content     String
+  aiInsight   String?
+  createdAt   DateTime    @default(now())
+  room        ReadingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([roomId, createdAt, id])
+  @@index([roomId, userId])
+  @@map("reading_room_highlights")
+}
+
+model ReadingProgress {
+  id         String   @id @db.Uuid
+  userId     String   @db.Uuid
+  bookId     String   @db.Uuid
+  chapterId  String   @db.Uuid
+  progress   Int      @default(0)
+  timeSpent  Int      @default(0)
+  status     String   @default("READING")
+  xpEarned   Int      @default(0)
+  pagesRead  Int      @default(0)
+  wordsRead  Int      @default(0)
+  lastReadAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  chapter    Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chapterId])
+  @@index([userId, bookId])
+  @@index([lastReadAt])
+  @@index([userId, lastReadAt])
+  @@index([bookId, lastReadAt])
+  @@map("reading_progress")
+}
+
+model ReadingList {
+  id                String                  @id @db.Uuid
+  userId            String                  @db.Uuid
+  bookId            String                  @db.Uuid
+  status            String                  @default("READING")
+  lastReadChapterId String?                 @db.Uuid
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  user              User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book              Book                    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  lastReadChapter   Chapter?                @relation(fields: [lastReadChapterId], references: [id], onDelete: SetNull)
+  collections       ReadingListCollection[]
+
+  @@unique([userId, bookId])
+  @@index([userId, status, updatedAt])
+  @@map("reading_lists")
+}
+
+model LibraryCollection {
+  id           String                  @id @db.Uuid
+  userId       String                  @db.Uuid
+  name         String
+  description  String                  @default("")
+  isPublic     Boolean                 @default(false)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readingLists ReadingListCollection[]
+
+  @@unique([userId, name])
+  @@map("collections")
+}
+
+model ReadingListCollection {
+  readingListId String            @db.Uuid
+  collectionId  String            @db.Uuid
+  readingList   ReadingList       @relation(fields: [readingListId], references: [id], onDelete: Cascade)
+  collection    LibraryCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([readingListId, collectionId])
+  @@index([collectionId, readingListId])
+  @@map("reading_list_collections")
+}
+
+model Review {
+  id               String       @id @db.Uuid
+  userId           String       @db.Uuid
+  bookId           String       @db.Uuid
+  content          String
+  rating           Int
+  likesCount       Int          @default(0)
+  verifiedPurchase Boolean      @default(false)
+  isFlagged        Boolean      @default(false)
+  moderationReason String?
+  moderationStatus String       @default("pending")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book             Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  likes            ReviewLike[]
+
+  @@unique([userId, bookId])
+  @@index([bookId, createdAt])
+  @@map("reviews")
+}
+
+model ReviewLike {
+  reviewId  String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([reviewId, userId])
+  @@index([userId, reviewId])
+  @@map("review_likes")
+}
+
+model Bookmark {
+  id          String    @id @db.Uuid
+  userId      String    @db.Uuid
+  bookId      String    @db.Uuid
+  chapterId   String    @db.Uuid
+  paragraphId String    @db.Uuid
+  chapterSlug String
+  textPreview String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter     Chapter   @relation("BookmarkChapter", fields: [bookId, chapterId], references: [bookId, id], onDelete: Cascade)
+  paragraph   Paragraph @relation("BookmarkParagraph", fields: [chapterId, paragraphId], references: [chapterId, id], onDelete: Cascade)
+
+  @@unique([userId, paragraphId])
+  @@index([userId, bookId, createdAt])
+  @@map("bookmarks")
+}
+
+model ToxicWord {
+  id           String   @id @db.Uuid
+  pattern      String   @unique
+  group        String
+  originalWord String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("toxic_words")
+}
+
+model UserHighlight {
+  id          String    @id @db.Uuid
+  userId      String    @db.Uuid
+  bookId      String    @db.Uuid
+  chapterId   String    @db.Uuid
+  paragraphId String    @db.Uuid
+  content     String
+  color       String    @default("#ffeb3b")
+  note        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter     Chapter   @relation("UserHighlightChapter", fields: [bookId, chapterId], references: [bookId, id], onDelete: Cascade)
+  paragraph   Paragraph @relation("UserHighlightParagraph", fields: [chapterId, paragraphId], references: [chapterId, id], onDelete: Cascade)
+
+  @@index([userId, bookId, createdAt, id])
+  @@index([userId, chapterId, createdAt, id])
+  @@map("user_highlights")
+}
+
+model Notification {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  sentAt    DateTime @default(now())
+  actionUrl String?
+  meta      Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model TextToSpeech {
+  id             String    @id @db.Uuid
+  chapterId      String    @db.Uuid
+  bookId         String    @db.Uuid
+  text           String
+  voice          String
+  language       String
+  speed          Float     @default(1)
+  status         String    @default("pending")
+  audioUrl       String?
+  audioFormat    String?   @default("mp3")
+  audioDuration  Float?
+  characterCount Int?
+  paragraphCount Int?
+  errorMessage   String?
+  provider       String?
+  playCount      Int       @default(0)
+  lastPlayedAt   DateTime?
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  chapter        Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  book           Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([chapterId, status, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([bookId])
+  @@map("text_to_speech")
+}
+
+model ChapterKnowledge {
+  id            String   @id @db.Uuid
+  chapterId     String   @unique @db.Uuid
+  entities      Json     @default("[]")
+  relationships Json     @default("[]")
+  summary       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  chapter       Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@map("chapter_knowledge")
+}
+
+model AIRequest {
+  id        String   @id @db.Uuid
+  prompt    String   @db.VarChar(10000)
+  response  String?
+  type      String
+  userId    String   @db.Uuid
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("ai_requests")
+}
+
+model SystemConfig {
+  key       String   @id @db.VarChar(128)
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+model Post {
+  id               String   @id @db.Uuid
+  userId           String   @db.Uuid
+  bookId           String?  @db.Uuid
+  content          String
+  imageUrls        String[] @default([])
+  isDeleted        Boolean  @default(false)
+  isFlagged        Boolean  @default(false)
+  moderationReason String?
+  moderationStatus String   @default("pending")
+  version          Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book             Book?    @relation(fields: [bookId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([bookId])
+  @@index([isFlagged, isDeleted, createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id               String    @id @db.Uuid
+  userId           String    @db.Uuid
+  targetType       String
+  targetId         String    @db.Uuid
+  parentId         String?   @db.Uuid
+  content          String
+  likesCount       Int       @default(0)
+  isDeleted        Boolean   @default(false)
+  isFlagged        Boolean   @default(false)
+  moderationReason String?
+  moderationStatus String    @default("pending")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent           Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies          Comment[] @relation("CommentReplies")
+
+  @@index([targetId, targetType, isDeleted, createdAt(sort: Desc)])
+  @@index([parentId, isDeleted])
+  @@index([userId, isDeleted])
+  @@index([moderationStatus, createdAt(sort: Desc)])
+  @@map("comments")
+}
+
+model Like {
+  id         String   @id @db.Uuid
+  userId     String   @db.Uuid
+  targetType String
+  targetId   String   @db.Uuid
+  status     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId, status])
+  @@map("likes")
+}
+
+model Follow {
+  id        String   @id @db.Uuid
+  userId    String   @db.Uuid
+  targetId  String   @db.Uuid
+  status    Boolean  @default(true)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation("FollowSource", fields: [userId], references: [id], onDelete: Cascade)
+  target    User     @relation("FollowTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetId])
+  @@index([targetId, status, createdAt(sort: Desc)])
+  @@index([userId, status, createdAt(sort: Desc)])
+  @@map("follows")
+}
+
+model UserPreference {
+  userId    String   @db.Uuid
+  genreId   String   @db.Uuid
+  score     Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  genre     Genre    @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([userId, genreId])
+  @@index([userId, score])
+  @@map("user_preferences")
+}
+
+model UserEvent {
+  id              String   @id @db.Uuid
+  userId          String   @db.Uuid
+  sessionId       String?
+  eventType       String
+  bookId          String?  @db.Uuid
+  chapterId       String?  @db.Uuid
+  durationSeconds Int?     @default(0)
+  progressPercent Float?
+  source          String?
+  deviceType      String?
+  metadata        Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book            Book?    @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  chapter         Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([bookId, eventType])
+  @@index([eventType, createdAt])
+  @@index([createdAt])
+  @@map("user_events")
+}

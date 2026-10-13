@@ -7,7 +7,7 @@ import {
   MinLength,
   ValidateNested,
   ArrayMinSize,
-  IsMongoId,
+  IsUUID,
   IsNumber,
 } from 'class-validator';
 
@@ -28,7 +28,7 @@ export class UpdateChapterDto {
   title?: string;
 
   @IsOptional()
-  @IsMongoId({ message: 'Book ID không hợp lệ' })
+  @IsUUID('4', { message: 'Book ID không hợp lệ' })
   bookId?: string;
 
   @IsOptional()

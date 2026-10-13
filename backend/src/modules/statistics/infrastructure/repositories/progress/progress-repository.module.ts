@@ -1,18 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Progress,
-  ProgressSchema,
-} from '@/modules/library/infrastructure/schemas/public-api';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { IProgressRepository } from '@/modules/statistics/domain/repositories/progress.repository.interface';
 import { ProgressRepository } from './progress.repository';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Progress.name, schema: ProgressSchema },
-    ]),
-  ],
+  imports: [PostgresDatabaseModule],
   providers: [
     {
       provide: IProgressRepository,

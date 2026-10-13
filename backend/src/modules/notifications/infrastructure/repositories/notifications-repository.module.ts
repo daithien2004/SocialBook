@@ -1,18 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  Notification,
-  NotificationSchema,
-} from '@/modules/notifications/infrastructure/schemas/notification.schema';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
 import { INotificationRepository } from '@/modules/notifications/domain/repositories/notification.repository.interface';
 import { NotificationRepository } from './notification.repository';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: Notification.name, schema: NotificationSchema },
-    ]),
-  ],
+  imports: [PostgresDatabaseModule],
   providers: [
     {
       provide: INotificationRepository,

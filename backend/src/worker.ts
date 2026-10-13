@@ -20,13 +20,11 @@ process.on('uncaughtException', (err: Error) => {
 });
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.createApplicationContext(AppModule, {
     bufferLogs: true,
   });
   app.useLogger(app.get(Logger));
   app.enableShutdownHooks();
-
-  await app.init();
 
   app
     .get(Logger)

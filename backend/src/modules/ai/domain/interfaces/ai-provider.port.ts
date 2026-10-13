@@ -7,7 +7,11 @@ export type AIProviderName =
   (typeof AI_PROVIDER_NAMES)[keyof typeof AI_PROVIDER_NAMES];
 
 export abstract class IAIProviderPort {
-  abstract generateText(prompt: string, systemPrompt?: string): Promise<string>;
+  abstract generateText(
+    prompt: string,
+    systemPrompt?: string,
+    signal?: AbortSignal,
+  ): Promise<string>;
   abstract generateJSON<T>(prompt: string, systemPrompt?: string): Promise<T>;
   abstract embedText(text: string): Promise<number[]>;
   abstract getProviderName(): AIProviderName;

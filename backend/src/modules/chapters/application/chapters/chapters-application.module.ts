@@ -18,10 +18,12 @@ import { FilesInfrastructureModule } from '@/modules/media/infrastructure/public
 import { StartChaptersImportHandler } from './commands/start-chapters-import/start-chapters-import.handler';
 import { GetChaptersImportStatusHandler } from './queries/get-chapters-import-status/get-chapters-import-status.handler';
 import { ChaptersImportModule } from '@/modules/chapters/infrastructure/queues/chapters-import/chapters-import.module';
+import { ReadingRoomsReferenceModule } from '@/modules/reading-rooms/infrastructure/integrations/public-api';
 
 @Module({
   imports: [
     ChaptersRepositoryModule,
+    ReadingRoomsReferenceModule,
     IdGeneratorModule,
     AIApplicationModule,
     BooksRepositoryModule,

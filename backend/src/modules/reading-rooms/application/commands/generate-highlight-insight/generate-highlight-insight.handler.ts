@@ -1,36 +1,51 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { randomUUID } from 'node:crypto';
 import { Logger } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  NotFoundDomainException,
-  ForbiddenDomainException,
-} from '@/shared/domain/common-exceptions';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import { IAIPort } from '@/modules/ai';
 import { IBookRepository } from '@/modules/books/domain/public-api';
+import { getChapterContext } from '@/modules/chapters/application/public-api';
 import { IChapterRepository } from '@/modules/chapters/domain/public-api';
+import { IHighlightInsightLockPort } from '@/modules/reading-rooms/application/ports/external/highlight-insight-lock.port';
+import { IHighlightInsightStore } from '@/modules/reading-rooms/application/ports/persistence/highlight-insight.store';
+import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 import { BookId } from '@/modules/books/domain/public-api';
-import { IAIPort } from '@/modules/ai';
-import { getChapterContext } from '@/modules/chapters/application/public-api';
 import { GenerateHighlightInsightCommand } from './generate-highlight-insight.command';
+import {
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import Redis from 'ioredis';
 
-const INSIGHT_LOCK_TTL_SECONDS = 60;
+const AI_REQUEST_TIMEOUT_MS = 15_000;
 
-async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  let timeoutId: NodeJS.Timeout;
-  const timeoutPromise = new Promise<never>((_, reject) => {
+async function withTimeout<T>(
+  operation: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  const controller = new AbortController();
+  let timeoutId: NodeJS.Timeout | undefined;
+  const timeoutError = new Error(`AI request timed out after ${timeoutMs}ms`);
+  const request = operation(controller.signal);
+  const timeout = new Promise<never>(() => {
     timeoutId = setTimeout(() => {
-      reject(new Error(`Timeout after ${ms}ms`));
-    }, ms);
+      controller.abort();
+    }, timeoutMs);
   });
 
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    clearTimeout(timeoutId);
-  });
+  try {
+    const result = await Promise.race([request, timeout]);
+    if (controller.signal.aborted) throw timeoutError;
+    return result;
+  } catch (error: unknown) {
+    if (controller.signal.aborted) throw timeoutError;
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
+
 @CommandHandler(GenerateHighlightInsightCommand)
 export class GenerateHighlightInsightHandler implements ICommandHandler<
   GenerateHighlightInsightCommand,
@@ -40,105 +55,86 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
 
   constructor(
     private readonly readingRoomRepository: IReadingRoomRepository,
+    private readonly highlightInsightStore: IHighlightInsightStore,
+    private readonly insightLock: IHighlightInsightLockPort,
     private readonly bookRepository: IBookRepository,
     private readonly chapterRepository: IChapterRepository,
     private readonly aiService: IAIPort,
     private readonly eventEmitter: EventEmitter2,
-    @InjectRedis() private readonly redis: Redis,
   ) {}
 
-  async execute(command: GenerateHighlightInsightCommand) {
-    const room = await this.readingRoomRepository.findById(
-      RoomId.create(command.roomId),
-    );
-
+  async execute(command: GenerateHighlightInsightCommand): Promise<void> {
+    const roomId = RoomId.create(command.roomId);
+    const room = await this.readingRoomRepository.findById(roomId);
     if (!room) {
-      throw new NotFoundDomainException('PhÃ²ng khÃ´ng tá»“n táº¡i');
+      throw new NotFoundDomainException('Phòng không tồn tại');
     }
 
     if (!room.isMember(command.userId)) {
       throw new ForbiddenDomainException(
-        'Báº¡n khÃ´ng pháº£i lÃ  thÃ nh viÃªn cá»§a phÃ²ng nÃ y',
+        'Bạn không phải là thành viên của phòng này',
       );
     }
 
-    const highlightIndex = room.highlights.findIndex(
-      (h) => h.id === command.highlightId,
+    const highlight = room.highlights.find(
+      (item) => item.id === command.highlightId,
     );
-    if (highlightIndex === -1) {
-      throw new NotFoundDomainException('Highlight khÃ´ng tá»“n táº¡i');
+    if (!highlight) {
+      throw new NotFoundDomainException('Highlight không tồn tại');
     }
 
-    const highlight = room.highlights[highlightIndex];
-
-    if (highlight.aiInsight) {
-      // Already generated
-      return room;
-    }
+    if (highlight.aiInsight) return;
 
     if (room.status === 'ended') {
-      throw new ForbiddenDomainException('PhÃ²ng Ä‘Ã£ káº¿t thÃºc');
+      throw new ForbiddenDomainException('Phòng đã kết thúc');
     }
 
-    const lockKey = `insight:lock:${command.highlightId}`;
-    const gotLock = await this.redis.set(
-      lockKey,
-      command.userId,
-      'EX',
-      INSIGHT_LOCK_TTL_SECONDS,
-      'NX',
+    const lockToken = randomUUID();
+    const lockAcquired = await this.insightLock.tryAcquire(
+      command.roomId,
+      command.highlightId,
+      lockToken,
     );
-    if (!gotLock) {
-      return room; // Äang sinh bá»Ÿi ngÆ°á»i khÃ¡c, bá» qua
-    }
+    if (!lockAcquired) return;
 
     try {
+      const bookId = BookId.create(room.bookId);
       const [book, chapter] = await Promise.all([
-        this.bookRepository.findById(BookId.create(room.bookId)),
-        this.chapterRepository.findBySlug(
-          highlight.chapterSlug, // Use highlight's chapter
-          BookId.create(room.bookId),
-        ),
+        this.bookRepository.findById(bookId),
+        this.chapterRepository.findBySlug(highlight.chapterSlug, bookId),
       ]);
 
-      const bookTitle = book?.title?.getValue() || 'Unknown';
-      const chapterTitle = chapter?.title?.getValue() || highlight.chapterSlug;
-
+      const bookTitle = book?.title?.getValue() ?? 'Không rõ tên sách';
+      const chapterTitle = chapter?.title?.getValue() ?? highlight.chapterSlug;
       const content = highlight.content.slice(0, 500);
-
-      let contextBlock = '';
-      if (chapter?.paragraphs?.length) {
-        const context = getChapterContext(chapter.paragraphs, content);
-        contextBlock = `\nNgá»¯ cáº£nh xung quanh Ä‘oáº¡n vÄƒn:\n${context}\n`;
-      }
-
-      const prompt = `
-PhÃ¢n tÃ­ch Ä‘oáº¡n vÄƒn sau tá»« cuá»‘n sÃ¡ch "${bookTitle}" (chÆ°Æ¡ng: "${chapterTitle}").
-Ná»™i dung cÃ³ thá»ƒ lÃ  má»™t cÃ¢u nÃ³i hay, má»™t áº©n dá»¥, má»™t sá»± kiá»‡n lá»‹ch sá»­ hoáº·c má»™t khÃ¡i niá»‡m khÃ³ hiá»ƒu.
-HÃ£y giáº£i thÃ­ch Ã½ nghÄ©a hoáº·c cung cáº¥p thÃªm thÃ´ng tin thÃº vá»‹ liÃªn quan.
-${contextBlock}
-NgÃ´n ngá»¯: Tiáº¿ng Viá»‡t.
-Äá»™ dÃ i: Tá»‘i Ä‘a 2 cÃ¢u.
-
-Äoáº¡n vÄƒn cáº§n phÃ¢n tÃ­ch:
-"""
-${content}
-"""
-`;
+      const contextBlock = chapter?.paragraphs.length
+        ? `\nNgữ cảnh xung quanh đoạn văn:\n${getChapterContext(chapter.paragraphs, content)}\n`
+        : '';
+      const prompt = [
+        `Phân tích đoạn văn sau từ cuốn sách "${bookTitle}" (chương: "${chapterTitle}").`,
+        'Nội dung có thể là một câu nói hay, một ẩn dụ, một sự kiện lịch sử hoặc một khái niệm khó hiểu.',
+        'Hãy giải thích ý nghĩa hoặc cung cấp thêm thông tin thú vị liên quan.',
+        contextBlock,
+        'Ngôn ngữ: Tiếng Việt.',
+        'Độ dài: Tối đa 2 câu.',
+        '',
+        'Đoạn văn cần phân tích:',
+        '"""',
+        content,
+        '"""',
+      ].join('\n');
 
       const insight = await withTimeout(
-        this.aiService.generateText(prompt),
-        15_000,
+        (signal) => this.aiService.generateText(prompt, undefined, signal),
+        AI_REQUEST_TIMEOUT_MS,
       );
-
-      const saved = await this.readingRoomRepository.setHighlightInsightIfEmpty(
-        RoomId.create(command.roomId),
+      const saved = await this.highlightInsightStore.setIfEmpty(
+        roomId,
         command.highlightId,
         insight,
       );
 
       if (saved) {
-        // Notify gateway via local event
         this.eventEmitter.emit(
           EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED,
           {
@@ -147,19 +143,24 @@ ${content}
             insight,
           },
         );
-
-        // Cáº­p nháº­t memory object Ä‘á»ƒ tráº£ vá» káº¿t quáº£ má»›i nháº¥t cho caller (tuy caller khÃ´ng báº¯t buá»™c dÃ¹ng insight tá»« returned room)
-        room.updateHighlightInsight(highlightIndex, insight);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.warn(
-        `AI failed for highlight ${command.highlightId}. ${error instanceof Error ? error.message : String(error)}`,
+        `AI insight generation failed for highlight ${command.highlightId}: ${error instanceof Error ? error.message : String(error)}`,
       );
-      throw error; // NÃ©m ra Ä‘á»ƒ gateway báº¯t vÃ  emit ERROR cho user
+      throw error;
     } finally {
-      await this.redis.del(lockKey);
+      try {
+        await this.insightLock.release(
+          command.roomId,
+          command.highlightId,
+          lockToken,
+        );
+      } catch (error: unknown) {
+        this.logger.warn(
+          `Failed to release insight lock for highlight ${command.highlightId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
-
-    return room;
   }
 }

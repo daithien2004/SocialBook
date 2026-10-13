@@ -33,6 +33,18 @@ export class BookOutboxRelayCron implements OnModuleDestroy {
     }
   }
 
+  @Cron('0 0 2 * * *')
+  async cleanupPublishedEvents(): Promise<void> {
+    const olderThan = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    try {
+      await this.outbox.deletePublishedBefore(olderThan);
+    } catch (error: unknown) {
+      this.logger.error(
+        `Failed to clean published book outbox events: ${this.errorMessage(error)}`,
+      );
+    }
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.activeRun;
   }

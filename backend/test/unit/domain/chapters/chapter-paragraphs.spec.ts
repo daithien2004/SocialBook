@@ -15,7 +15,7 @@ describe('Chapter paragraph replacement', () => {
     });
   }
 
-  it('preserves existing paragraph IDs and creates Mongo-compatible IDs for new paragraphs', () => {
+  it('preserves existing paragraph IDs and creates UUIDs for new paragraphs', () => {
     const chapter = createChapter();
 
     chapter.replaceParagraphs([
@@ -27,7 +27,9 @@ describe('Chapter paragraph replacement', () => {
       id: existingParagraphId,
       content: 'Edited paragraph',
     });
-    expect(chapter.paragraphs[1].id).toMatch(/^[a-f\d]{24}$/i);
+    expect(chapter.paragraphs[1].id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
   });
 
   it('rejects replacing the chapter paragraphs with an empty list', () => {

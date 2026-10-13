@@ -1,6 +1,5 @@
 import { Comment } from '@/modules/comments/domain/entities/comment.entity';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { paginated } from '@/shared/platform/dto/paginated.dto';
 
 import {
   HttpCode,
@@ -13,6 +12,7 @@ import {
   Put,
   Query,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { Public } from '@/shared/platform/decorators/custom.decorator';
@@ -96,7 +96,7 @@ export class CommentsController {
     );
     const result = await this.queryBus.execute(getQuery);
 
-    return paginated(result.data, result.meta);
+    return { data: result.data, meta: result.meta };
   }
 
   @Public()
@@ -125,7 +125,7 @@ export class CommentsController {
   @Put(':id')
   @ApiOkResponse({ type: CommentResponseDto })
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentUser('id') userId: string,
     @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateCommentDto,
@@ -141,7 +141,7 @@ export class CommentsController {
   @Delete(':id')
   @ApiNoContentResponse()
   async remove(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentUser('id') userId: string,
     @CurrentAbility() ability: AppAbility,
   ) {
@@ -165,7 +165,10 @@ export class CommentsController {
   @ApiNoContentResponse()
   @Roles('admin')
   @UseGuards(RolesGuard)
-  async moderate(@Param('id') id: string, @Body() dto: ModerateCommentDto) {
+  async moderate(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: ModerateCommentDto,
+  ) {
     const command = new ModerateCommentCommand(id, dto.status, dto.reason);
 
     await this.commandBus.execute(command);
@@ -186,7 +189,10 @@ export class CommentsController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   getPendingModeration() {
-    return paginated([], { page: 1, pageSize: 10, total: 0, totalPages: 0 });
+    return {
+      data: [],
+      meta: { page: 1, pageSize: 10, total: 0, totalPages: 0 },
+    };
   }
 
   @Get('moderation/flagged')
@@ -194,6 +200,9 @@ export class CommentsController {
   @Roles('admin')
   @UseGuards(RolesGuard)
   getFlagged() {
-    return paginated([], { page: 1, pageSize: 10, total: 0, totalPages: 0 });
+    return {
+      data: [],
+      meta: { page: 1, pageSize: 10, total: 0, totalPages: 0 },
+    };
   }
 }

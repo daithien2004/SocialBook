@@ -1,33 +1,32 @@
-import { Bookmark as BookmarkEntity } from '../../domain/entities/bookmark.entity';
-import { BookmarkDocument } from '../schemas/bookmark.schema';
-import { Types } from 'mongoose';
+import { Bookmark as PrismaBookmark } from '@/core/database/generated/prisma/client';
+import { Bookmark as BookmarkEntity } from '@/modules/bookmarks/domain/entities/bookmark.entity';
 
 export const BookmarkMapper = {
-  toDomain(doc: BookmarkDocument): BookmarkEntity {
+  toDomain(row: PrismaBookmark): BookmarkEntity {
     return BookmarkEntity.reconstitute({
-      id: doc._id.toString(),
-      userId: doc.userId.toString(),
-      bookId: doc.bookId.toString(),
-      chapterId: doc.chapterId.toString(),
-      chapterSlug: doc.chapterSlug,
-      paragraphId: doc.paragraphId,
-      textPreview: doc.textPreview,
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
+      id: row.id,
+      userId: row.userId,
+      bookId: row.bookId,
+      chapterId: row.chapterId,
+      chapterSlug: row.chapterSlug,
+      paragraphId: row.paragraphId,
+      textPreview: row.textPreview,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     });
   },
 
-  toPersistence(entity: BookmarkEntity): Record<string, unknown> {
+  toCreateInput(bookmark: BookmarkEntity) {
     return {
-      _id: new Types.ObjectId(entity.id),
-      userId: new Types.ObjectId(entity.userId),
-      bookId: new Types.ObjectId(entity.bookId),
-      chapterId: new Types.ObjectId(entity.chapterId),
-      chapterSlug: entity.chapterSlug,
-      paragraphId: entity.paragraphId,
-      textPreview: entity.textPreview,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
+      id: bookmark.id,
+      userId: bookmark.userId,
+      bookId: bookmark.bookId,
+      chapterId: bookmark.chapterId,
+      chapterSlug: bookmark.chapterSlug,
+      paragraphId: bookmark.paragraphId,
+      textPreview: bookmark.textPreview,
+      createdAt: bookmark.createdAt,
+      updatedAt: bookmark.updatedAt,
     };
   },
 };

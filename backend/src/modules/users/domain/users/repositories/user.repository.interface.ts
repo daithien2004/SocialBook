@@ -1,4 +1,4 @@
-import { PaginatedResult } from '@/shared/domain/pagination.types';
+import { PageParams, PageResult } from '@/shared/domain/pagination.types';
 import { User } from '../entities/user.entity';
 import { UserEmail } from '../value-objects/user-email.vo';
 import { UserId } from '../value-objects/user-id.vo';
@@ -11,11 +11,6 @@ export interface UserFilter {
   isVerified?: boolean;
 }
 
-export interface UserPaginationOptions {
-  page: number;
-  limit: number;
-}
-
 export abstract class IUserRepository {
   abstract findById(id: UserId): Promise<User | null>;
   abstract findByEmail(email: UserEmail): Promise<User | null>;
@@ -23,8 +18,8 @@ export abstract class IUserRepository {
 
   abstract findAll(
     filter: UserFilter,
-    pagination: UserPaginationOptions,
-  ): Promise<PaginatedResult<User>>;
+    pagination: PageParams,
+  ): Promise<PageResult<User>>;
 
   abstract save(user: User): Promise<void>;
   abstract delete(id: UserId): Promise<void>;

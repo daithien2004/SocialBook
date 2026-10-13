@@ -1,75 +1,58 @@
-import { Like } from '@/modules/likes/domain/entities/like.entity';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@/core/database/postgres/prisma.service';
 import { ILikeRepository } from '@/modules/likes/domain/repositories/like.repository.interface';
+import { Like as LikeEntity } from '@/modules/likes/domain/entities/like.entity';
 import { TargetId } from '@/modules/likes/domain/value-objects/target-id.vo';
 import { TargetType } from '@/modules/likes/domain/value-objects/target-type.vo';
 import { UserId } from '@/modules/likes/domain/value-objects/user-id.vo';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { LikeDocument } from '../schemas/like.schema';
 import { LikeMapper } from './like.mapper';
-import { LikePersistence } from './like.mapper';
 
 @Injectable()
 export class LikeRepository implements ILikeRepository {
-  constructor(
-    @InjectModel('Like')
-    private readonly likeModel: Model<LikeDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  private toDomain(doc: LikeDocument): Like {
-    return LikeMapper.toDomain(doc);
-  }
-
-  private toPersistence(like: Like): LikePersistence {
-    return LikeMapper.toPersistence(like);
-  }
-
-  async save(like: Like): Promise<void> {
-    const persistenceData = this.toPersistence(like);
-    const { _id, ...updateData } = persistenceData;
-    _id;
-
-    await this.likeModel
-      .findOneAndUpdate(
-        {
-          userId: persistenceData.userId,
-          targetId: persistenceData.targetId,
-          targetType: persistenceData.targetType,
+  async save(like: LikeEntity): Promise<void> {
+    await this.prisma.like.upsert({
+      where: {
+        userId_targetType_targetId: {
+          userId: like.userId.toString(),
+          targetType: like.targetType,
+          targetId: like.targetId.toString(),
         },
-        { $set: updateData },
-        { upsert: true, new: true },
-      )
-      .exec();
+      },
+      create: {
+        id: like.id,
+        userId: like.userId.toString(),
+        targetId: like.targetId.toString(),
+        targetType: like.targetType,
+        status: like.status,
+        createdAt: like.createdAt,
+        updatedAt: like.updatedAt,
+      },
+      update: { status: like.status, updatedAt: like.updatedAt },
+    });
   }
 
   async findByUserAndTarget(
     userId: UserId,
     targetId: TargetId,
     targetType: TargetType,
-  ): Promise<Like | null> {
-    const doc = await this.likeModel
-      .findOne({
-        userId: new Types.ObjectId(userId.toString()),
-        targetId: new Types.ObjectId(targetId.toString()),
-        targetType,
-      })
-      .lean()
-      .exec();
-
-    return doc ? this.toDomain(doc) : null;
+  ): Promise<LikeEntity | null> {
+    const row = await this.prisma.like.findUnique({
+      where: {
+        userId_targetType_targetId: {
+          userId: userId.toString(),
+          targetType,
+          targetId: targetId.toString(),
+        },
+      },
+    });
+    return row ? LikeMapper.toDomain(row) : null;
   }
 
-  async countByTarget(
-    targetId: TargetId,
-    targetType: TargetType,
-  ): Promise<number> {
-    return await this.likeModel
-      .countDocuments({
-        targetId: new Types.ObjectId(targetId.toString()),
-        targetType,
-        status: true,
-      })
-      .exec();
+  countByTarget(targetId: TargetId, targetType: TargetType): Promise<number> {
+    return this.prisma.like.count({
+      where: { targetId: targetId.toString(), targetType, status: true },
+    });
   }
 }

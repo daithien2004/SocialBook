@@ -1,110 +1,56 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { LikeSchemaModel as Like, LikeDocument } from '@/modules/likes';
-import { ReviewSchemaModel as Review, ReviewDocument } from '@/modules/reviews';
-import {
-  CommentSchemaModel as Comment,
-  CommentDocument,
-} from '@/modules/comments';
-import {
-  User,
-  UserDocument,
-} from '@/modules/users/infrastructure/schemas/user.schema';
-
-interface LikeSeedData {
-  userId: Types.ObjectId;
-  targetType: string;
-  targetId: Types.ObjectId;
-  status: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { createSeedId } from './seed-id';
 
 @Injectable()
 export class LikesSeed {
   private readonly logger = new Logger(LikesSeed.name);
 
-  constructor(
-    @InjectModel(Like.name) private likeModel: Model<LikeDocument>,
-    @InjectModel(Review.name) private reviewModel: Model<ReviewDocument>,
-    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async run(): Promise<void> {
-    this.logger.log('❤️ Seeding likes...');
+    const [existingLikes, existingReviewLikes] = await Promise.all([
+      this.prisma.like.count(),
+      this.prisma.reviewLike.count(),
+    ]);
+    if (existingLikes || existingReviewLikes) return;
+    const [users, posts, comments, reviews] = await Promise.all([
+      this.prisma.user.findMany({ select: { id: true } }),
+      this.prisma.post.findMany({ select: { id: true }, take: 40 }),
+      this.prisma.comment.findMany({ select: { id: true }, take: 40 }),
+      this.prisma.review.findMany({ select: { id: true, userId: true } }),
+    ]);
+    if (!users.length) return;
+    const likes = [
+      ...posts.map((post, index) => ({
+        id: createSeedId(),
+        userId: users[index % users.length].id,
+        targetType: 'post',
+        targetId: post.id,
+      })),
+      ...comments.map((comment, index) => ({
+        id: createSeedId(),
+        userId: users[(index + 1) % users.length].id,
+        targetType: 'comment',
+        targetId: comment.id,
+      })),
+    ];
+    await this.prisma.like.createMany({ data: likes, skipDuplicates: true });
 
-    const existingCount = await this.likeModel.countDocuments();
-    if (existingCount > 0) {
-      this.logger.warn(`⚠️ Found ${existingCount} existing likes. Skipping...`);
-      return;
+    for (const [index, review] of reviews.entries()) {
+      const user = users.find((candidate) => candidate.id !== review.userId);
+      if (!user) continue;
+      await this.prisma.reviewLike.upsert({
+        where: { reviewId_userId: { reviewId: review.id, userId: user.id } },
+        create: { reviewId: review.id, userId: user.id },
+        update: {},
+      });
+      await this.prisma.review.update({
+        where: { id: review.id },
+        data: { likesCount: { increment: 1 } },
+      });
+      if (index >= 49) break;
     }
-
-    const users = await this.userModel.find();
-    const reviews = await this.reviewModel.find();
-    const comments = await this.commentModel.find().limit(50);
-
-    if (users.length === 0) {
-      this.logger.error('❌ Users not found.');
-      return;
-    }
-
-    const likes: LikeSeedData[] = [];
-    const pairs = new Set<string>();
-
-    for (const review of reviews) {
-      const numLikes = Math.floor(Math.random() * users.length) + 1;
-      const shuffled = [...users].sort(() => Math.random() - 0.5);
-
-      for (let i = 0; i < Math.min(numLikes, users.length); i++) {
-        const pair = `review:${shuffled[i]._id.toString()}:${review._id.toString()}`;
-        if (!pairs.has(pair)) {
-          pairs.add(pair);
-          likes.push({
-            userId: shuffled[i]._id,
-            targetType: 'review',
-            targetId: review._id,
-            status: true,
-            createdAt: new Date(
-              Date.now() - Math.random() * 20 * 24 * 60 * 60 * 1000,
-            ),
-            updatedAt: new Date(),
-          });
-          await this.reviewModel.updateOne(
-            { _id: review._id },
-            { $inc: { likesCount: 1 } },
-          );
-        }
-      }
-    }
-
-    for (const comment of comments) {
-      const numLikes = Math.floor(Math.random() * users.length) + 1;
-      const shuffled = [...users].sort(() => Math.random() - 0.5);
-
-      for (let i = 0; i < Math.min(numLikes, users.length); i++) {
-        const pair = `comment:${shuffled[i]._id.toString()}:${comment._id.toString()}`;
-        if (!pairs.has(pair)) {
-          pairs.add(pair);
-          likes.push({
-            userId: shuffled[i]._id,
-            targetType: 'comment',
-            targetId: comment._id,
-            status: true,
-            createdAt: new Date(
-              Date.now() - Math.random() * 20 * 24 * 60 * 60 * 1000,
-            ),
-            updatedAt: new Date(),
-          });
-        }
-      }
-    }
-
-    if (likes.length > 0) {
-      await this.likeModel.insertMany(likes);
-    }
-
-    this.logger.log(`✅ Seeded ${likes.length} likes`);
+    this.logger.log(`Seeded ${likes.length} social likes.`);
   }
 }

@@ -7,7 +7,7 @@ import {
   MinLength,
   ValidateNested,
   ArrayMinSize,
-  IsMongoId,
+  IsUUID,
   IsNumber,
 } from 'class-validator';
 
@@ -27,7 +27,7 @@ export class CreateChapterDto {
   @MinLength(3, { message: 'Tiêu đề phải có ít nhất 3 ký tự' })
   title!: string;
 
-  @IsMongoId({ message: 'Book ID không hợp lệ' })
+  @IsUUID('4', { message: 'Book ID không hợp lệ' })
   @IsNotEmpty({ message: 'Book ID là bắt buộc' })
   bookId!: string;
 

@@ -1,77 +1,80 @@
+import { Injectable } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { Prisma } from '@/core/database/generated/prisma/client';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { Collection } from '@/modules/library/domain/library/entities/collection.entity';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import {
-  CollectionDocument,
-  Collection as CollectionSchemaClass,
-} from '../../schemas/collection.schema';
-import { CollectionMapper } from './collection.mapper';
 
 @Injectable()
 export class CollectionRepository implements ICollectionRepository {
   constructor(
-    @InjectModel(CollectionSchemaClass.name)
-    private readonly collectionModel: Model<CollectionDocument>,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}
 
   async save(collection: Collection): Promise<void> {
-    const persistenceData = CollectionMapper.toPersistence(collection);
-    const { _id, ...updateData } = persistenceData;
-
-    await this.collectionModel
-      .findOneAndUpdate(
-        { _id },
-        { $set: updateData },
-        { upsert: true, new: true },
-      )
-      .exec();
+    const data = {
+      userId: collection.userId.toString(),
+      name: collection.name,
+      description: collection.description,
+      isPublic: collection.isPublic,
+      updatedAt: collection.updatedAt,
+    };
+    await this.transactionHost.tx.libraryCollection.upsert({
+      where: { id: collection.id },
+      create: { id: collection.id, ...data, createdAt: collection.createdAt },
+      update: data,
+    });
   }
 
   async findById(id: string): Promise<Collection | null> {
-    const doc = await this.collectionModel
-      .findById(new Types.ObjectId(id))
-      .lean()
-      .exec();
-    return doc ? CollectionMapper.toDomain(doc) : null;
+    const row = await this.transactionHost.tx.libraryCollection.findUnique({
+      where: { id },
+    });
+    return row ? toDomain(row) : null;
   }
 
   async findByUserId(userId: string): Promise<Collection[]> {
-    const docs = await this.collectionModel
-      .find({ userId: new Types.ObjectId(userId) })
-      .sort({ name: 1 })
-      .lean()
-      .exec();
-    return docs.map((doc) => CollectionMapper.toDomain(doc));
+    const rows = await this.transactionHost.tx.libraryCollection.findMany({
+      where: { userId },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map(toDomain);
   }
 
   async findByUserIdAndName(
     userId: string,
     name: string,
   ): Promise<Collection | null> {
-    const doc = await this.collectionModel
-      .findOne({
-        userId: new Types.ObjectId(userId),
-        name: name,
-      })
-      .lean()
-      .exec();
-    return doc ? CollectionMapper.toDomain(doc) : null;
+    const row = await this.transactionHost.tx.libraryCollection.findUnique({
+      where: { userId_name: { userId, name } },
+    });
+    return row ? toDomain(row) : null;
   }
 
   async findByIds(ids: string[]): Promise<Collection[]> {
-    const objectIds = ids.map((id) => new Types.ObjectId(id));
-    const docs = await this.collectionModel
-      .find({ _id: { $in: objectIds } })
-      .lean()
-      .exec();
-    return docs.map((doc) => CollectionMapper.toDomain(doc));
+    if (ids.length === 0) return [];
+    const rows = await this.transactionHost.tx.libraryCollection.findMany({
+      where: { id: { in: ids } },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map(toDomain);
   }
 
   async delete(id: string): Promise<void> {
-    await this.collectionModel
-      .deleteOne({ _id: new Types.ObjectId(id) })
-      .exec();
+    await this.transactionHost.tx.libraryCollection.deleteMany({
+      where: { id },
+    });
   }
+}
+
+function toDomain(row: Prisma.LibraryCollectionGetPayload<object>): Collection {
+  return Collection.reconstitute({
+    id: row.id,
+    userId: row.userId,
+    name: row.name,
+    description: row.description,
+    isPublic: row.isPublic,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  });
 }

@@ -48,7 +48,7 @@ export class AnalyticsFlushCron {
       }
 
       this.logger.log(
-        `Flushing ${String(rawEvents.length)} analytics events to MongoDB...`,
+        `Flushing ${String(rawEvents.length)} analytics events to PostgreSQL...`,
       );
 
       const entitiesToInsert: UserEvent[] = [];
@@ -109,8 +109,23 @@ export class AnalyticsFlushCron {
       }
     } catch (error) {
       this.logger.error(
-        'Failed to flush analytics events from Redis to MongoDB',
+        'Failed to flush analytics events from Redis to PostgreSQL',
         error,
+      );
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  async removeExpiredEvents(): Promise<void> {
+    if (!isWorkerProcess()) return;
+    const retentionDays = 30;
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() - retentionDays);
+    const removedCount =
+      await this.analyticsRepository.deleteEventsBefore(expirationDate);
+    if (removedCount > 0) {
+      this.logger.log(
+        `Removed ${String(removedCount)} expired analytics events.`,
       );
     }
   }

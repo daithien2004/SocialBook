@@ -1,5 +1,6 @@
-import { apiRequest } from '@/lib/api-client';
+import { apiRequest, idempotentApiRequest } from '@/lib/api-client';
 import type { ApiRequestBody, ApiResponse } from '@/lib/api-types';
+import type { ChapterDetailData } from '@/features/chapters/types/chapter.interface';
 
 export type RoomResponse = ApiResponse<'/api/v1/reading-rooms/{code}', 'get'>;
 
@@ -49,6 +50,15 @@ export async function getRoom(code: string): Promise<RoomResponse> {
   });
 }
 
+export async function getCurrentRoomChapter(
+  code: string,
+): Promise<ChapterDetailData> {
+  return apiRequest<ChapterDetailData>({
+    url: `/reading-rooms/${code}/current-chapter`,
+    method: 'GET',
+  });
+}
+
 export async function getRoomHighlights(
   code: string,
   offset: number,
@@ -84,12 +94,16 @@ export async function getMyHistory(): Promise<RoomHistoryResponse> {
 
 export async function createRoom(
   body: CreateRoomPayload,
+  idempotencyKey: string,
 ): Promise<RoomResponse> {
-  return apiRequest<RoomResponse>({
-    url: '/reading-rooms',
-    method: 'POST',
-    data: body,
-  });
+  return idempotentApiRequest<RoomResponse>(
+    {
+      url: '/reading-rooms',
+      method: 'POST',
+      data: body,
+    },
+    idempotencyKey,
+  );
 }
 
 export async function reactivateRoom(code: string): Promise<RoomResponse> {

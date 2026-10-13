@@ -43,6 +43,9 @@ class FakeBookOutbox extends BookOutboxPort {
     this.retryDelays.push(retryDelayMs);
     return Promise.resolve();
   }
+  deletePublishedBefore(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 describe('BookOutboxRelayCron', () => {
@@ -108,7 +111,7 @@ describe('BookOutboxRelayCron', () => {
 
   it('logs claim failures without rejecting the cron callback', async () => {
     const outbox = new FakeBookOutbox([]);
-    outbox.claimError = new Error('Mongo unavailable');
+    outbox.claimError = new Error('PostgreSQL unavailable');
     const queue = { add: jest.fn().mockResolvedValue(undefined) };
     const module = await Test.createTestingModule({
       providers: [
@@ -124,7 +127,7 @@ describe('BookOutboxRelayCron', () => {
     ).resolves.toBeUndefined();
 
     expect(errorLog).toHaveBeenCalledWith(
-      'Failed to claim book outbox events: Mongo unavailable',
+      'Failed to claim book outbox events: PostgreSQL unavailable',
     );
     await module.close();
   });
@@ -133,7 +136,7 @@ describe('BookOutboxRelayCron', () => {
     const outbox = new FakeBookOutbox([
       { id: 'event-1', type: 'book.updated', bookId: 'book-1' },
     ]);
-    outbox.releaseError = new Error('Mongo unavailable');
+    outbox.releaseError = new Error('PostgreSQL unavailable');
     const queue = { add: jest.fn().mockRejectedValue(new Error('Queue down')) };
     const module = await Test.createTestingModule({
       providers: [
@@ -149,7 +152,7 @@ describe('BookOutboxRelayCron', () => {
     ).resolves.toBeUndefined();
 
     expect(errorLog).toHaveBeenCalledWith(
-      'Failed to release book outbox event event-1 after Queue down: Mongo unavailable. Its processing lease will expire before it can be retried.',
+      'Failed to release book outbox event event-1 after Queue down: PostgreSQL unavailable. Its processing lease will expire before it can be retried.',
     );
     await module.close();
   });

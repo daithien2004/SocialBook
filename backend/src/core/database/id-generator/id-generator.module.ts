@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { MongoIdGenerator } from './mongo-id-generator';
+import { RandomIdGenerator } from './random-id-generator';
 
 @Module({
   providers: [
     {
       provide: IIdGenerator,
-      useClass: MongoIdGenerator,
+      useClass: RandomIdGenerator,
     },
   ],
   exports: [IIdGenerator],

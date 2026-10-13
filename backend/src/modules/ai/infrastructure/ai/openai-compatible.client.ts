@@ -33,7 +33,11 @@ export class OpenAICompatibleClient {
     });
   }
 
-  async generateText(prompt: string, systemPrompt?: string): Promise<string> {
+  async generateText(
+    prompt: string,
+    systemPrompt?: string,
+    signal?: AbortSignal,
+  ): Promise<string> {
     try {
       const messages = systemPrompt
         ? [
@@ -48,6 +52,7 @@ export class OpenAICompatibleClient {
           model: this.model,
           messages,
         },
+        { signal },
       );
 
       const content = response.data.choices?.[0]?.message?.content?.trim();
